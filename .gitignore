@@ -1,41 +1,71 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+# https://dart.dev/guides/libraries/private-files
 
-# dependencies
-node_modules/
-
-# Expo
-.expo/
-dist/
-web-build/
-expo-env.d.ts
-
-# Native
-.kotlin/
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
-
-# Metro
-.metro-health-check*
-
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
 .DS_Store
-*.pem
+.atom/
+.buildlog/
+.history
+.project
+.idea/
+.vscode/
+.settings/
+.directory
+*.iml
 
-# local env files
-.env*.local
+# Flutter/Dart-specific
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
 
-# typescript
-*.tsbuildinfo
+# Android-specific
+/android/app/local.properties
+/android/app/GeneratedPluginRegistrant.java
+/android/key.properties
 
-# generated native folders
-/ios
-/android
+# iOS-specific
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/flutter_export_environment.sh
+/ios/Flutter/flutter_settings.gradle
+/ios/Flutter/Flutter.podspec
+/ios/Flutter/App.framework
+/ios/Flutter/Flutter.framework
+/ios/Flutter/GeneratedPluginRegistrant.h
+/ios/Flutter/GeneratedPluginRegistrant.m
+/ios/Flutter/GeneratedPluginRegistrant.swift
+/ios/Flutter/flutter_assets/
+/ios/Flutter/ephemeral/
+/ios/Pods/
+/ios/.symlinks/
+/ios/Flutter/generated_config.xcconfig
+/ios/Flutter/generated_podhelper.gradle
+*.xcworkspace
+xcuserdata/
+Pods/
+Podfile.lock
+
+# Web-specific
+.dart_tool/web/
+
+# Windows-specific
+/windows/flutter/ephemeral/
+/windows/flutter/generated_config.xcconfig
+
+# macOS-specific
+/macos/Flutter/ephemeral/
+/macos/Flutter/GeneratedPluginRegistrant.swift
+/macos/Flutter/generated_config.xcconfig
+
+# Linux-specific
+/linux/flutter/ephemeral/
+/linux/flutter/generated_config.xcconfig
+
+# Coverage
+coverage/
