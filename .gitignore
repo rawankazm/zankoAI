@@ -1,0 +1,36 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildpath
+.cproject
+.project
+.settings
+.vscode/
+.claude/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Flutter/Dart specific
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+
+# Web / node dependencies (if any)
+node_modules/
+.expo/
+dist/
+web-build/
+
+# Local env
+.env*.local
+.env
