@@ -7,6 +7,8 @@ import '../models/flashcard_model.dart';
 import '../models/study_plan_model.dart';
 import 'package:google_generative_ai/google_generative_ai.dart' as gemini;
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 abstract class AiService extends ChangeNotifier {
   String? get apiKey;
   set apiKey(String? key);
@@ -25,12 +27,29 @@ abstract class AiService extends ChangeNotifier {
 class ZankoAiService extends ChangeNotifier implements AiService {
   String? _apiKey;
 
+  ZankoAiService() {
+    _loadApiKey();
+  }
+
+  Future<void> _loadApiKey() async {
+    final prefs = await SharedPreferences.getInstance();
+    _apiKey = prefs.getString('gemini_api_key');
+    notifyListeners();
+  }
+
   @override
   String? get apiKey => _apiKey;
 
   @override
   set apiKey(String? key) {
     _apiKey = key;
+    SharedPreferences.getInstance().then((prefs) {
+      if (key != null && key.trim().isNotEmpty) {
+        prefs.setString('gemini_api_key', key.trim());
+      } else {
+        prefs.remove('gemini_api_key');
+      }
+    });
     notifyListeners();
   }
 
@@ -68,7 +87,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   @override
   Future<String> askTeacher(String userPrompt, List<Map<String, String>> chatHistory) async {
-    await Future.delayed(const Duration(milliseconds: 800));
+    await Future.delayed(const Duration(milliseconds: 600));
 
     if (hasRealApiKey) {
       try {
@@ -85,42 +104,17 @@ class ZankoAiService extends ChangeNotifier implements AiService {
         return await _callGemini(prompt, systemInstruction: systemInstruction);
       } catch (e) {
         if (_isNetworkError(e)) {
-          return "📡 **(شێوازی ئۆفلاین - بەستنەوە بەستراو نییە)**\n\n" + 
-                 _getMockTeacherResponse(userPrompt);
+          return "📡 **هێڵی ئینتەرنێتەکەت تێکچووە (No Internet Connection)**\n\n"
+                 "نەتوانرا بەستنەوە لەگەڵ سێرڤەری Google AI دروست بکرێت. تکایە هێڵی ئینتەرنێتەکەت چاک بکەرەوە و دووبارە هەوڵبدەرەوە.\n\n"
+                 "Please check your internet connection and try again.";
         }
-        return "هەڵەیەک ڕوویدا لە بەستنەوە بە AI: $e";
+        return "⚠️ هەڵەیەک ڕوویدا لە بەستنەوە بە AI: $e\n\nتکایە API Key یان بەستنەوەی ئینتەرنێتەکەت بپشکنە.";
       }
     }
 
-    return _getMockTeacherResponse(userPrompt);
-  }
-
-  String _getMockTeacherResponse(String userPrompt) {
-    final query = userPrompt.toLowerCase();
-    if (query.contains('operating system') || query.contains('سیستەمی کارپێکردن')) {
-      return "وەک مامۆستایەکی سیستەمی کارپێکردن (OS)، با ئەمەت بۆ ڕوون بکەمەوە:\n\n"
-          "سیستەمی کارپێکردن گرنگترین نەرمەکاڵایە کە لەسەر کۆمپیوتەر کاردەکات. بەرپرسە لە بەڕێوەبردنی یادگەی کۆمپیوتەرەکە و پرۆسەکان، هەروەها ڕێکخستنی هەموو ڕەقەکاڵا و نەرمەکاڵاکان.\n\n"
-          "سێ ئەرکی سەرەکی OS بریتیین لە:\n"
-          "١. **Processor Management:** دابەشکردنی کات و توانای CPU بەسەر پرۆسە جیاوازەکاندا.\n"
-          "٢. **Memory Management:** چاودێریکردنی چی لە یادگەدایە و کێ بەکاری دەهێنێت.\n"
-          "٣. **File System:** چۆنێتی پاشەکەوتکردن و ڕێکخستنی زانیارییەکان لەسەر دیسک.";
-    } 
-    
-    if (query.contains('کۆد') || query.contains('code') || query.contains('program')) {
-      return "با وەک مامۆستایەکی بەرنامەسازی سەیری ئەم کۆدە بکەین:\n\n"
-          "لە فلاتەر و دارتدا، کاتێک دەتەوێت گۆڕانکاری لە ڕوکاری ئەپەکەدا بکەیت، پێویستە `setState` بەکاربهێنیت بۆ ئەوەی فلاتەر بزانێت کە دەبێت ڕوکارەکە نوێ بکاتەوە.\n\n"
-          "بۆ نموونە:\n"
-          "```dart\n"
-          "int count = 0;\n"
-          "void increment() {\n"
-          "  setState(() {\n"
-          "    count++; \n"
-          "  });\n"
-          "}\n"
-          "```";
-    }
-
-    return "سڵاو خوێندکاری خۆشەویست! من ZankoAI مامۆستای زیرەکی تۆم. لەبەر ئەوەی بەشی ئۆفلاین چالاکە، دەتوانیت پرسیارم لێ بکەیت لەسەر 'سیستەمی کارپێکردن' یان 'کۆدنووسین' بۆ بینینی وەڵامی نموونەیی.";
+    return "🔑 **تکایە API Key زیاد بکە (API Key Required)**\n\n"
+           "تکایە کلیک لەسەر دوگمەی 🔑 (کلیل) لە دەستە ڕاستی سەرەوەی شاشەکە بکە بۆ داغڵکردنی Gemini API Key پاشان دووبارە هەوڵبدەرەوە.\n\n"
+           "Please add your Gemini API Key by tapping the 🔑 icon at the top right of the screen, or check your internet connection.";
   }
 
   @override

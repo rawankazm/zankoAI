@@ -118,14 +118,14 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
               children: [
                 const Text(
                   'فایلی تاقیکاری هەڵبژێرە:',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Noto Sans Arabic'),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 ..._mockPdfs.map((pdf) {
                   return ListTile(
                     leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
-                    title: Text(pdf['name']!, style: const TextStyle(fontFamily: 'Noto Sans Arabic', fontSize: 13)),
-                    subtitle: Text(pdf['size']!, style: const TextStyle(fontFamily: 'Noto Sans Arabic')),
+                    title: Text(pdf['name']!, style: const TextStyle(fontSize: 13)),
+                    subtitle: Text(pdf['size']!, style: const TextStyle()),
                     onTap: () {
                       setState(() {
                         _selectedFileName = pdf['name'];
@@ -207,13 +207,13 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
                       const SizedBox(height: 12),
                       Text(
                         t('upload_area_title'),
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Noto Sans Arabic'),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         t('upload_area_desc'),
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withOpacity(0.6), fontFamily: 'Noto Sans Arabic'),
+                        style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withOpacity(0.6)),
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton.icon(
@@ -233,7 +233,7 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
                                 children: [
                                   Text(
                                     _selectedFileName!,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'Noto Sans Arabic'),
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -247,7 +247,7 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
                             if (_pdfSummary == null && !_isProcessing)
                               IconButton(
                                 icon: const Icon(Icons.auto_awesome, color: Colors.blue),
-                                onPressed: () => _generateSummary(_selectedFileContent ?? 'No text could be extracted.'),
+                                onPressed: () => _generateSummary(_selectedFileContent ?? t('no_text_extracted')),
                                 tooltip: t('generate_summary_tooltip'),
                               ),
                           ],
@@ -270,7 +270,7 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
                         const SizedBox(height: 16),
                         Text(
                           t('analyzing_wait'),
-                          style: const TextStyle(fontFamily: 'Noto Sans Arabic', fontSize: 13),
+                          style: const TextStyle(fontSize: 13),
                         ),
                       ],
                     ),
@@ -285,9 +285,8 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
                     Text(
                       t('analysis_result'),
                       style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Noto Sans Arabic',
-                      ),
+                  fontWeight: FontWeight.bold,
+                ),
                     ),
                     ElevatedButton.icon(
                       onPressed: () {
@@ -295,14 +294,14 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => DocumentReaderScreen(
-                              fileName: _selectedFileName ?? 'Document',
+                              fileName: _selectedFileName ?? t('document'),
                               fileContent: _selectedFileContent ?? 'دەقی بەڵگەنامەکە بەردەست نییە یان دەرهێنانی دەقەکە کێشەی تێدایە.',
                             ),
                           ),
                         );
                       },
                       icon: const Icon(Icons.chrome_reader_mode_rounded),
-                      label: const Text('خوێندنەوە / Read', style: TextStyle(fontFamily: 'Noto Sans Arabic', fontSize: 12)),
+                      label: const Text('خوێندنەوە / Read', style: TextStyle(fontSize: 12)),
                     ),
                   ],
                 ),
@@ -321,14 +320,14 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
                             const SizedBox(width: 8),
                             Text(
                               t('pdf_summary_card'),
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, fontFamily: 'Noto Sans Arabic'),
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                             ),
                           ],
                         ),
                         const SizedBox(height: 8),
                         Text(
                           _pdfSummary!,
-                          style: const TextStyle(fontFamily: 'Noto Sans Arabic', height: 1.4),
+                          style: const TextStyle(height: 1.4),
                         ),
                       ],
                     ),
@@ -350,7 +349,7 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
                               const SizedBox(width: 8),
                               Text(
                                 t('key_points_card'),
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, fontFamily: 'Noto Sans Arabic'),
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                               ),
                             ],
                           ),
@@ -365,7 +364,7 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
                                   Expanded(
                                     child: Text(
                                       point,
-                                      style: const TextStyle(fontFamily: 'Noto Sans Arabic'),
+                                      style: const TextStyle(),
                                     ),
                                   ),
                                 ],
@@ -392,14 +391,14 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
                               const SizedBox(width: 8),
                               Text(
                                 t('translation_card'),
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, fontFamily: 'Noto Sans Arabic'),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _translation!,
-                            style: const TextStyle(fontFamily: 'Noto Sans Arabic', height: 1.4),
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _translation!,
+                          style: const TextStyle(height: 1.4),
                           ),
                         ],
                       ),
@@ -469,7 +468,6 @@ class _DocumentReaderScreenState extends State<DocumentReaderScreen> {
             widget.fileContent,
             style: TextStyle(
               fontSize: _fontSize,
-              fontFamily: 'Noto Sans Arabic',
               height: 1.6,
             ),
           ),

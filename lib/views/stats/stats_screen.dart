@@ -8,6 +8,8 @@ class StatsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final __lang = Provider.of<LanguageProvider>(context);
+    String t(String key) => __lang.translate(key);
     final theme = Theme.of(context);
     final dbService = Provider.of<DatabaseService>(context);
     final langProvider = Provider.of<LanguageProvider>(context);
@@ -19,47 +21,13 @@ class StatsScreen extends StatelessWidget {
     final notes = dbService.notes.length;
 
     // Translations
-    final String title = langProvider.currentLanguage == AppLanguage.english
-        ? 'Study Statistics & Achievements'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'إحصائيات الدراسة والإنجازات'
-            : 'ئاماری خوێندن و دەستکەوتەکانم';
-
-    final String statsHeader = langProvider.currentLanguage == AppLanguage.english
-        ? 'Weekly Activity'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'النشاط الأسبوعي'
-            : 'چالاکییەکانی خوێندنم';
-
-    final String badgesHeader = langProvider.currentLanguage == AppLanguage.english
-        ? 'Earned Badges'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'الشارات والميداليات المستحقة'
-            : 'میدالیا و دەستکەوتەکانم';
-
-    final String statPomodoros = langProvider.currentLanguage == AppLanguage.english
-        ? 'Pomodoros'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'جلسات بومودورو'
-            : 'خولەکانی تەرکیز';
-
-    final String statQuizzes = langProvider.currentLanguage == AppLanguage.english
-        ? 'Quizzes Done'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'الاختبارات المنجزة'
-            : 'کویزە تەواوکراوەکان';
-
-    final String statCards = langProvider.currentLanguage == AppLanguage.english
-        ? 'Cards Flipped'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'البطاقات المراجعة'
-            : 'فلاشکاردەکان';
-
-    final String statNotes = langProvider.currentLanguage == AppLanguage.english
-        ? 'Notes Kept'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'الملاحظات المحفوظة'
-            : 'تێبینییە ڕێکخراوەکان';
+    final String title = t('stats_title');
+    final String statsHeader = t('stats_weekly_activity');
+    final String badgesHeader = t('stats_badges');
+    final String statPomodoros = t('stats_pomodoros');
+    final String statQuizzes = t('stats_quizzes_done');
+    final String statCards = t('stats_cards_flipped');
+    final String statNotes = t('stats_notes_kept');
 
     // Badge lock evaluations
     final hasScholar = notes >= 2;
@@ -83,7 +51,6 @@ class StatsScreen extends StatelessWidget {
                 statsHeader,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'Noto Sans Arabic',
                 ),
               ),
               const SizedBox(height: 12),
@@ -110,7 +77,6 @@ class StatsScreen extends StatelessWidget {
                 badgesHeader,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'Noto Sans Arabic',
                 ),
               ),
               const SizedBox(height: 12),
@@ -127,32 +93,32 @@ class StatsScreen extends StatelessWidget {
                   _buildBadgeCard(
                     context,
                     icon: Icons.school_rounded,
-                    title: 'AI Scholar / زانای AI',
-                    desc: 'Organized 2+ AI Notes',
+                    title: t('ai_scholar'),
+                    desc: t('stat_organized_notes'),
                     color: Colors.amber,
                     isUnlocked: hasScholar,
                   ),
                   _buildBadgeCard(
                     context,
                     icon: Icons.workspace_premium_rounded,
-                    title: 'Quiz Master / پاڵەوانی کویز',
-                    desc: 'Completed 1+ Quiz tests',
+                    title: t('quiz_master'),
+                    desc: t('stat_completed_quiz'),
                     color: Colors.cyan,
                     isUnlocked: hasQuizMaster,
                   ),
                   _buildBadgeCard(
                     context,
                     icon: Icons.flash_on_rounded,
-                    title: 'Focus Guru / پسپۆڕی تەرکیز',
-                    desc: 'Completed 1+ Pomodoros',
+                    title: t('focus_guru'),
+                    desc: t('stat_completed_pomodoro'),
                     color: Colors.redAccent,
                     isUnlocked: hasPomodoroGuru,
                   ),
                   _buildBadgeCard(
                     context,
                     icon: Icons.auto_stories_rounded,
-                    title: 'Deep Reader / خوێنەری زیرەک',
-                    desc: 'Extracted 1+ PDF notes',
+                    title: t('deep_reader'),
+                    desc: t('stat_extracted_pdf'),
                     color: Colors.green,
                     isUnlocked: hasDeepReader,
                   ),
@@ -180,7 +146,7 @@ class StatsScreen extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   title,
-                  style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withOpacity(0.6), fontFamily: 'Noto Sans Arabic'),
+                  style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withOpacity(0.6)),
                 ),
               ],
             ),
@@ -258,7 +224,6 @@ class StatsScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
                 color: isUnlocked ? theme.colorScheme.onSurface : Colors.grey.shade500,
-                fontFamily: 'Noto Sans Arabic',
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -270,7 +235,6 @@ class StatsScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 9,
                 color: isUnlocked ? theme.colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade500,
-                fontFamily: 'Noto Sans Arabic',
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,

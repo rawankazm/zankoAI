@@ -17,24 +17,28 @@ class MockAuthService extends ChangeNotifier implements AuthService {
   final Map<String, UserModel> _registeredUsers = {};
 
   MockAuthService() {
-    // Preload a default student for easy testing
-    _registeredUsers['aras@zanko.edu'] = UserModel(
+    final defaultStudent = UserModel(
       id: 'mock_user_123',
-      name: 'ئاراس ئەحمەد',
+      name: 'Student',
       email: 'aras@zanko.edu',
       role: UserRole.student,
-      universityName: 'زانکۆی سلێمانی',
-      departmentName: 'تەکنەلۆجیای زانیاری',
+      universityName: 'Zanko University',
+      departmentName: 'Computer Science',
       gpa: 3.65,
     );
+    // Preload default student
+    _registeredUsers['aras@zanko.edu'] = defaultStudent;
+    // Auto-login by default on app start / restart
+    _currentUser = defaultStudent;
+
     // Preload a default teacher for easy testing
     _registeredUsers['teacher@zanko.edu'] = UserModel(
       id: 'mock_teacher_001',
-      name: 'د. سارا محمد',
+      name: 'Dr. Sarah',
       email: 'teacher@zanko.edu',
       role: UserRole.teacher,
-      universityName: 'زانکۆی سلێمانی',
-      departmentName: 'تەکنەلۆجیای زانیاری',
+      universityName: 'Zanko University',
+      departmentName: 'Computer Science',
       gpa: null,
     );
   }

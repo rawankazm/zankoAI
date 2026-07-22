@@ -11,8 +11,15 @@ import 'services/language_provider.dart';
 import 'services/theme_provider.dart';
 import 'views/splash_screen.dart';
 
+import 'package:device_preview/device_preview.dart';
+
 void main() {
-  runApp(const ZankoApp());
+  runApp(
+    DevicePreview(
+      enabled: !const bool.fromEnvironment('dart.vm.product'),
+      builder: (context) => const ZankoApp(),
+    ),
+  );
 }
 
 class ZankoApp extends StatelessWidget {
@@ -43,8 +50,9 @@ class ZankoApp extends StatelessWidget {
           return MaterialApp(
             title: 'ZankoAI',
             debugShowCheckedModeBanner: false,
-            theme: ZankoTheme.getLightTheme(themeProvider.activeTheme),
-            darkTheme: ZankoTheme.getDarkTheme(themeProvider.activeTheme),
+            builder: DevicePreview.appBuilder,
+            theme: ZankoTheme.getLightTheme(themeProvider.activeTheme, languageFontFamily: langProvider.fontFamily),
+            darkTheme: ZankoTheme.getDarkTheme(themeProvider.activeTheme, languageFontFamily: langProvider.fontFamily),
             themeMode: themeProvider.themeMode,
             localizationsDelegates: const [
               _KurdishMaterialLocalizationsDelegate(),

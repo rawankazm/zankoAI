@@ -61,7 +61,7 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('هەڵەیەک ڕوویدا لە دروستکردنی کویز: $e',
-                style: const TextStyle(fontFamily: 'Noto Sans Arabic')),
+                style: const TextStyle()),
             backgroundColor: Colors.red,
           ),
         );
@@ -81,7 +81,7 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(t('teacher_quiz_title'),
-              style: const TextStyle(fontFamily: 'Noto Sans Arabic')),
+              style: const TextStyle()),
           centerTitle: true,
           backgroundColor: purple,
           foregroundColor: Colors.white,
@@ -100,7 +100,7 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14)),
                 ),
-                style: const TextStyle(fontFamily: 'Noto Sans Arabic'),
+                style: const TextStyle(),
               ),
               const SizedBox(height: 14),
 
@@ -115,7 +115,7 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
                       borderRadius: BorderRadius.circular(14)),
                 ),
                 maxLines: 2,
-                style: const TextStyle(fontFamily: 'Noto Sans Arabic'),
+                style: const TextStyle(),
               ),
               const SizedBox(height: 20),
 
@@ -124,7 +124,6 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
                 children: [
                   Text(t('quiz_num_questions'),
                       style: const TextStyle(
-                          fontFamily: 'Noto Sans Arabic',
                           fontWeight: FontWeight.w600)),
                   const Spacer(),
                   Container(
@@ -136,7 +135,6 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
                     ),
                     child: Text('$_numQuestions',
                         style: const TextStyle(
-                            fontFamily: 'Noto Sans Arabic',
                             fontWeight: FontWeight.bold,
                             color: purple,
                             fontSize: 16)),
@@ -156,7 +154,6 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
               // ─── Difficulty ─────────────────────────────────────
               Text(t('quiz_difficulty'),
                   style: const TextStyle(
-                      fontFamily: 'Noto Sans Arabic',
                       fontWeight: FontWeight.w600)),
               const SizedBox(height: 10),
               Row(
@@ -189,7 +186,6 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
                           label,
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontFamily: 'Noto Sans Arabic',
                             fontWeight: FontWeight.bold,
                             color: isSelected ? Colors.white : color,
                             fontSize: 13,
@@ -217,7 +213,6 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
                       ? t('generating_quiz_wait')
                       : t('generate_and_share'),
                   style: const TextStyle(
-                      fontFamily: 'Noto Sans Arabic',
                       fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -239,7 +234,6 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
                     const SizedBox(width: 8),
                     Text(t('quiz_created_success'),
                         style: const TextStyle(
-                            fontFamily: 'Noto Sans Arabic',
                             color: Color(0xFF059669),
                             fontWeight: FontWeight.bold)),
                   ],
@@ -260,7 +254,6 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
                       children: [
                         Text('${i + 1}. ${q.questionText}',
                             style: const TextStyle(
-                                fontFamily: 'Noto Sans Arabic',
                                 fontWeight: FontWeight.w600)),
                         const SizedBox(height: 8),
                         if (q.options != null)
@@ -268,7 +261,6 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
                                 padding: const EdgeInsets.only(top: 4),
                                 child: Text(opt,
                                     style: TextStyle(
-                                        fontFamily: 'Noto Sans Arabic',
                                         color: theme.colorScheme.onSurface
                                             .withOpacity(0.7))),
                               )),
@@ -283,15 +275,14 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('کویزەکە بە قوتابییەکان ناردرا! 🎉',
-                            style: const TextStyle(
-                                fontFamily: 'Noto Sans Arabic')),
+                            style: const TextStyle()),
                         backgroundColor: const Color(0xFF059669),
                       ),
                     );
                   },
                   icon: const Icon(Icons.share_rounded),
                   label: Text(t('generate_and_share'),
-                      style: const TextStyle(fontFamily: 'Noto Sans Arabic')),
+                      style: const TextStyle()),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: purple,
                     side: const BorderSide(color: Color(0xFF7C3AED)),

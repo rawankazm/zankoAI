@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../services/ai_service.dart';
 import '../../services/database_service.dart';
 import '../../services/language_provider.dart';
-import '../../models/flashcard_model.dart';
 import 'qr_share_sheet.dart';
 
 class FlashcardsScreen extends StatefulWidget {
@@ -29,7 +28,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
     final topic = _topicController.text.trim();
     if (topic.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تکایە بابەتێک بنووسە', style: TextStyle(fontFamily: 'Noto Sans Arabic'))),
+        SnackBar(content: Text(Provider.of<LanguageProvider>(context, listen: false).translate('snackbar_enter_topic'), style: const TextStyle())),
       );
       return;
     }
@@ -57,13 +56,15 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
         _isGenerating = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to generate cards: $e')),
+        SnackBar(content: Text('${Provider.of<LanguageProvider>(context, listen: false).translate('failed_to_generate')}: $e')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final __lang = Provider.of<LanguageProvider>(context);
+    String t(String key) => __lang.translate(key);
     final theme = Theme.of(context);
     final dbService = Provider.of<DatabaseService>(context);
     final langProvider = Provider.of<LanguageProvider>(context);
@@ -71,35 +72,11 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
     final cards = dbService.flashcards;
 
     // Translation maps
-    final String title = langProvider.currentLanguage == AppLanguage.english
-        ? 'AI Study Flashcards'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'بطاقات المراجعة الذكية'
-            : 'فلاشکاردی خوێندنەوە';
-
-    final String inputLabel = langProvider.currentLanguage == AppLanguage.english
-        ? 'Enter topic or copy text'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'اكتب الموضوع أو انسخ النص'
-            : 'بابەتێک بنووسە یان دەقێک لێرە دابنێ';
-
-    final String generateBtn = langProvider.currentLanguage == AppLanguage.english
-        ? 'Generate Flashcards'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'إنشاء البطاقات'
-            : 'دروستکردنی فلاشکارد';
-
-    final String emptyState = langProvider.currentLanguage == AppLanguage.english
-        ? 'No flashcards generated yet.'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'لا توجد بطاقات مراجعة منشأة حالياً.'
-            : 'تا ئێستا هیچ فلاشکاردێک دروست نەکراوە.';
-
-    final String tapToFlip = langProvider.currentLanguage == AppLanguage.english
-        ? 'Tap to Flip card'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'اضغط لقلب البطاقة'
-            : 'کلیک بکە بۆ گۆڕینی لای کارتەکە';
+    final String title = t('flashcards_title');
+    final String inputLabel = t('flashcards_input_label');
+    final String generateBtn = t('flashcards_generate_btn');
+    final String emptyState = t('flashcards_empty_state');
+    final String tapToFlip = t('flashcards_tap_to_flip');
 
     return Directionality(
       textDirection: langProvider.textDirection,
@@ -109,7 +86,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
           actions: [
             IconButton(
               icon: const Icon(Icons.qr_code_scanner_rounded),
-              tooltip: 'Scan QR Deck',
+              tooltip: t('scan_qr_deck'),
               onPressed: () async {
                 final success = await Navigator.push(
                   context,
@@ -125,7 +102,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
             if (cards.isNotEmpty)
               IconButton(
                 icon: const Icon(Icons.qr_code_2_rounded),
-                tooltip: 'Share QR Deck',
+                tooltip: t('share_qr_deck'),
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -154,7 +131,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                         maxLines: 2,
                         decoration: InputDecoration(
                           labelText: inputLabel,
-                          hintText: 'e.g. OSI model layers, CPU execution cycle',
+                          hintText: t('flashcards_hint'),
                           alignLabelWithHint: true,
                         ),
                       ),
@@ -182,7 +159,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                 Center(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 40),
-                    child: Text(emptyState, style: const TextStyle(fontFamily: 'Noto Sans Arabic')),
+                    child: Text(emptyState, style: const TextStyle()),
                   ),
                 )
               else ...[
@@ -226,7 +203,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                     ),
                     Text(
                       '${_currentIndex + 1} / ${cards.length}',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Noto Sans Arabic'),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.arrow_forward_ios_rounded),
@@ -284,7 +261,6 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
               fontWeight: FontWeight.bold,
               color: textColor.withOpacity(0.8),
               letterSpacing: 1.2,
-              fontFamily: 'Noto Sans Arabic',
             ),
           ),
           const Spacer(),
@@ -295,7 +271,6 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'Noto Sans Arabic',
                 height: 1.4,
               ),
             ),
@@ -308,7 +283,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
               const SizedBox(width: 6),
               Text(
                 tip,
-                style: TextStyle(fontSize: 10, color: textColor.withOpacity(0.6), fontFamily: 'Noto Sans Arabic'),
+                style: TextStyle(fontSize: 10, color: textColor.withOpacity(0.6), ),
               ),
             ],
           ),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
-import '../../services/ai_service.dart';
 import '../ai_teacher/ai_teacher_screen.dart';
 import 'teacher_quiz_create_screen.dart';
 import 'teacher_courses_screen.dart';
@@ -69,7 +68,6 @@ class TeacherDashboardScreen extends StatelessWidget {
                                     style: const TextStyle(
                                       color: Colors.white70,
                                       fontSize: 14,
-                                      fontFamily: 'Noto Sans Arabic',
                                     ),
                                   ),
                                   Text(
@@ -78,7 +76,6 @@ class TeacherDashboardScreen extends StatelessWidget {
                                       color: Colors.white,
                                       fontSize: 22,
                                       fontWeight: FontWeight.bold,
-                                      fontFamily: 'Noto Sans Arabic',
                                     ),
                                   ),
                                 ],
@@ -113,7 +110,6 @@ class TeacherDashboardScreen extends StatelessWidget {
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: theme.colorScheme.onSurface,
-                        fontFamily: 'Noto Sans Arabic',
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -127,7 +123,6 @@ class TeacherDashboardScreen extends StatelessWidget {
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: theme.colorScheme.onSurface,
-                        fontFamily: 'Noto Sans Arabic',
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -183,7 +178,6 @@ class _StatsRow extends StatelessWidget {
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: color,
-                    fontFamily: 'Noto Sans Arabic',
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -192,7 +186,6 @@ class _StatsRow extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     color: theme.colorScheme.onSurface.withOpacity(0.6),
-                    fontFamily: 'Noto Sans Arabic',
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -284,7 +277,6 @@ class _QuickActionsGrid extends StatelessWidget {
                     color: Colors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'Noto Sans Arabic',
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -341,7 +333,6 @@ class _RecentActivityList extends StatelessWidget {
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: theme.colorScheme.onSurface,
-                        fontFamily: 'Noto Sans Arabic',
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -350,7 +341,6 @@ class _RecentActivityList extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         color: theme.colorScheme.onSurface.withOpacity(0.5),
-                        fontFamily: 'Noto Sans Arabic',
                       ),
                     ),
                   ],

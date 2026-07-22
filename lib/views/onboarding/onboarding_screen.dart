@@ -56,63 +56,41 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   List<_OnboardPage> get _pages {
     final lang = Provider.of<LanguageProvider>(context, listen: false);
-    String l(String en, String ar, String ku) =>
-        lang.currentLanguage == AppLanguage.english ? en : lang.currentLanguage == AppLanguage.arabic ? ar : ku;
 
     return [
       _OnboardPage(
         gradient: const [Color(0xFF007AFF), Color(0xFF5856D6)],
         icon: Icons.auto_awesome_rounded,
-        title: l('Welcome to ZankoAI', 'مرحباً بك في ZankoAI', 'بەخێرهاتیت بۆ ZankoAI'),
-        body: l(
-          'Your all-in-one AI-powered study companion designed for university students.',
-          'مرافقك الدراسي الشامل المدعوم بالذكاء الاصطناعي لطلاب الجامعات.',
-          'هاوڕێی خوێندنی گشتگیرت کە بە هێزی AI بۆ خوێندکارانی زانکۆ دروستکراوە.',
-        ),
+        title: lang.translate('onboarding_welcome'),
+        body: lang.translate('onboarding_subtitle'),
         badge: '🎓',
       ),
       _OnboardPage(
         gradient: const [Color(0xFFFF3B30), Color(0xFFFF6B35)],
         icon: Icons.picture_as_pdf_rounded,
-        title: l('Summarize Your Courses', 'لخّص موادك الدراسية', 'وانەکانت کورت بکەرەوە'),
-        body: l(
-          'Upload PDFs or paste text — get instant AI summaries and translations.',
-          'ارفع ملفات PDF أو الصق النص للحصول على ملخصات فورية.',
-          'PDF باربکە یان دەق بنووسە — دەستبەجێ کورتکراوە و وەرگێڕان وەربگرە.',
-        ),
+        title: lang.translate('onboarding_summarize'),
+        body: lang.translate('onboarding_summarize_sub'),
         badge: '📄',
       ),
       _OnboardPage(
         gradient: const [Color(0xFF34C759), Color(0xFF00C896)],
         icon: Icons.event_note_rounded,
-        title: l('Plan Your Study Week', 'خطط لأسبوعك الدراسي', 'هەفتەی خوێندنت پلان بکە'),
-        body: l(
-          'AI builds a personalized day-by-day study plan for your exams.',
-          'الذكاء يبني خطة دراسة يومية شخصية لامتحاناتك.',
-          'AI پلانی خوێندنی ڕۆژانەی تایبەتت بۆ تاقیکردنەوەکانت دروست دەکات.',
-        ),
+        title: lang.translate('onboarding_plan'),
+        body: lang.translate('onboarding_plan_sub'),
         badge: '📅',
       ),
       _OnboardPage(
         gradient: const [Color(0xFFFF9500), Color(0xFFFFCC00)],
         icon: Icons.quiz_rounded,
-        title: l('Test Yourself', 'اختبر نفسك', 'خۆت بتاقیبکەرەوە'),
-        body: l(
-          'Generate quizzes, flashcards, and predicted exam questions with AI.',
-          'أنشئ اختبارات وبطاقات مراجعة وأسئلة متوقعة بالذكاء الاصطناعي.',
-          'تاقیکردنەوە، فلاشکارد، و پرسیاری پێشبینیکراو بە AI دروست بکە.',
-        ),
+        title: lang.translate('onboarding_test'),
+        body: lang.translate('onboarding_test_sub'),
         badge: '🧠',
       ),
       _OnboardPage(
         gradient: const [Color(0xFFAF52DE), Color(0xFF5856D6)],
         icon: Icons.rocket_launch_rounded,
-        title: l('Ready to Start?', 'مستعد للبدء؟', 'ئامادەیت دەست پێبکەیت؟'),
-        body: l(
-          'Set your Gemini API key from the home screen to unlock all AI features.',
-          'أضف مفتاح Gemini API من الشاشة الرئيسية لتفعيل كل ميزات الذكاء.',
-          'کلیلی Gemini API لە پەڕەی سەرەکییەکەوە زیاد بکە بۆ کردنەوەی هەموو ئامرازەکانی AI.',
-        ),
+        title: lang.translate('onboarding_ready'),
+        body: lang.translate('onboarding_ready_sub'),
         badge: '🚀',
       ),
     ];
@@ -122,8 +100,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context);
     final isRTL = lang.currentLanguage != AppLanguage.english;
-    String l(String en, String ar, String ku) =>
-        lang.currentLanguage == AppLanguage.english ? en : lang.currentLanguage == AppLanguage.arabic ? ar : ku;
+    String t(String key) => lang.translate(key);
 
     final pages = _pages;
     final page = pages[_currentPage];
@@ -187,7 +164,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       ),
                       child: Text(
-                        l('Skip', 'تخطي', 'تێپەڕکردن'),
+                        t('onboarding_skip'),
                         style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                       ),
                     ),
@@ -249,8 +226,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                               children: [
                                 Text(
                                   isLast
-                                      ? l("Let's Go! 🚀", 'هيا نبدأ! 🚀', 'با بچینە ناو! 🚀')
-                                      : l('Next →', 'التالي →', 'دواتر →'),
+                                      ? t('onboarding_lets_go')
+                                      : t('onboarding_next'),
                                   style: TextStyle(
                                     fontSize: 17,
                                     fontWeight: FontWeight.w700,

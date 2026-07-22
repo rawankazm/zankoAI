@@ -30,7 +30,7 @@ class _StudyPlannerScreenState extends State<StudyPlannerScreen> {
 
     if (topic.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تکایە ناوی بابەتەکە بنووسە', style: TextStyle(fontFamily: 'Noto Sans Arabic'))),
+        SnackBar(content: Text(Provider.of<LanguageProvider>(context, listen: false).translate('snackbar_enter_subject'), style: const TextStyle())),
       );
       return;
     }
@@ -52,52 +52,25 @@ class _StudyPlannerScreenState extends State<StudyPlannerScreen> {
         _isGenerating = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to generate study plan: $e')),
+        SnackBar(content: Text('${Provider.of<LanguageProvider>(context, listen: false).translate('failed_to_generate')}: $e')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final __lang = Provider.of<LanguageProvider>(context);
+    String t(String key) => __lang.translate(key);
     final theme = Theme.of(context);
     final langProvider = Provider.of<LanguageProvider>(context);
 
     // Translations
-    final String title = langProvider.currentLanguage == AppLanguage.english
-        ? 'AI Study Planner'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'مخطط الدراسة الذكي'
-            : 'داڕشتنی پلانی خوێندن بە AI';
-
-    final String cardTitle = langProvider.currentLanguage == AppLanguage.english
-        ? 'Create Study Schedule'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'إنشاء جدول دراسة جديد'
-            : 'پلانێکی نوێ داڕێژە';
-
-    final String topicLabel = langProvider.currentLanguage == AppLanguage.english
-        ? 'Course / Exam Topic'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'المادة أو موضوع الامتحان'
-            : 'ناوی بابەت یان تاقیکردنەوە';
-
-    final String daysLabel = langProvider.currentLanguage == AppLanguage.english
-        ? 'Days Remaining'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'الأيام المتبقية'
-            : 'ڕۆژەکانی ماوە بۆ تاقیکردنەوە';
-
-    final String generateBtn = langProvider.currentLanguage == AppLanguage.english
-        ? 'Generate Study Plan'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'توليد خطة الدراسة'
-            : 'پلانی خوێندن داڕێژە';
-
-    final String emptyState = langProvider.currentLanguage == AppLanguage.english
-        ? 'Your generated study schedule will appear here.'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'ستظهر خطتك الدراسية المقترحة هنا.'
-            : 'پلانەکەت لێرەدا نیشان دەدرێت.';
+    final String title = t('study_planner_title');
+    final String cardTitle = t('study_planner_card_title');
+    final String topicLabel = t('study_planner_topic_label');
+    final String daysLabel = t('study_planner_days_label');
+    final String generateBtn = t('study_planner_generate_btn');
+    final String emptyState = t('study_planner_empty');
 
     return Directionality(
       textDirection: langProvider.textDirection,
@@ -119,14 +92,14 @@ class _StudyPlannerScreenState extends State<StudyPlannerScreen> {
                     children: [
                       Text(
                         cardTitle,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'Noto Sans Arabic'),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       const SizedBox(height: 16),
                       TextField(
                         controller: _topicController,
                         decoration: InputDecoration(
                           labelText: topicLabel,
-                          hintText: 'e.g. Operating Systems Final Exam',
+                          hintText: t('planner_hint_exam'),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -162,7 +135,7 @@ class _StudyPlannerScreenState extends State<StudyPlannerScreen> {
                 Center(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 40),
-                    child: Text(emptyState, style: const TextStyle(fontFamily: 'Noto Sans Arabic', color: Colors.grey)),
+                    child: Text(emptyState, style: const TextStyle(color: Colors.grey)),
                   ),
                 )
               else ...[
@@ -220,13 +193,12 @@ class _StudyPlannerScreenState extends State<StudyPlannerScreen> {
                                           fontWeight: FontWeight.bold,
                                           fontSize: 14,
                                           color: theme.colorScheme.primary,
-                                          fontFamily: 'Noto Sans Arabic',
                                         ),
                                       ),
                                       const SizedBox(height: 6),
                                       Text(
                                         day.taskDescription,
-                                        style: const TextStyle(fontFamily: 'Noto Sans Arabic', height: 1.4, fontSize: 13),
+                                        style: const TextStyle(height: 1.4, fontSize: 13),
                                       ),
                                     ],
                                   ),

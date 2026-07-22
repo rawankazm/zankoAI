@@ -49,7 +49,7 @@ class _TeacherCoursesScreenState extends State<TeacherCoursesScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(t('teacher_courses_title'),
-              style: const TextStyle(fontFamily: 'Noto Sans Arabic')),
+              style: const TextStyle()),
           centerTitle: true,
           backgroundColor: green,
           foregroundColor: Colors.white,
@@ -60,7 +60,7 @@ class _TeacherCoursesScreenState extends State<TeacherCoursesScreen> {
           onPressed: () => _showAddCourseDialog(context, lang, t),
           icon: const Icon(Icons.add_rounded),
           label: Text(t('teacher_add_course'),
-              style: const TextStyle(fontFamily: 'Noto Sans Arabic')),
+              style: const TextStyle()),
         ),
         body: _courses.isEmpty
             ? _EmptyState(t: t, theme: theme)
@@ -121,7 +121,6 @@ class _TeacherCoursesScreenState extends State<TeacherCoursesScreen> {
                                         color: Colors.white,
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
-                                        fontFamily: 'Noto Sans Arabic',
                                       ),
                                     ),
                                     Text(
@@ -129,7 +128,6 @@ class _TeacherCoursesScreenState extends State<TeacherCoursesScreen> {
                                       style: const TextStyle(
                                         color: Colors.white70,
                                         fontSize: 12,
-                                        fontFamily: 'Noto Sans Arabic',
                                       ),
                                     ),
                                   ],
@@ -143,8 +141,8 @@ class _TeacherCoursesScreenState extends State<TeacherCoursesScreen> {
                                   }
                                 },
                                 itemBuilder: (_) => [
-                                  const PopupMenuItem(value: 'edit', child: Text('دەستکاری')),
-                                  const PopupMenuItem(value: 'delete', child: Text('سڕینەوە')),
+                                  PopupMenuItem(value: 'edit', child: Text(t('edit'))),
+                                  PopupMenuItem(value: 'delete', child: Text(t('delete'))),
                                 ],
                               ),
                             ],
@@ -173,7 +171,6 @@ class _TeacherCoursesScreenState extends State<TeacherCoursesScreen> {
                                 onPressed: () {},
                                 child: Text(t('view_all'),
                                     style: TextStyle(
-                                        fontFamily: 'Noto Sans Arabic',
                                         color: color)),
                               ),
                             ],
@@ -211,7 +208,6 @@ class _TeacherCoursesScreenState extends State<TeacherCoursesScreen> {
             children: [
               Text(t('teacher_add_course_title'),
                   style: const TextStyle(
-                      fontFamily: 'Noto Sans Arabic',
                       fontSize: 18,
                       fontWeight: FontWeight.bold)),
               const SizedBox(height: 20),
@@ -221,7 +217,7 @@ class _TeacherCoursesScreenState extends State<TeacherCoursesScreen> {
                   labelText: t('course_title_field'),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                style: const TextStyle(fontFamily: 'Noto Sans Arabic'),
+                style: const TextStyle(),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -231,7 +227,7 @@ class _TeacherCoursesScreenState extends State<TeacherCoursesScreen> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 maxLines: 2,
-                style: const TextStyle(fontFamily: 'Noto Sans Arabic'),
+                style: const TextStyle(),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
@@ -257,7 +253,7 @@ class _TeacherCoursesScreenState extends State<TeacherCoursesScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
                 child: Text(t('teacher_add_course'),
-                    style: const TextStyle(fontFamily: 'Noto Sans Arabic')),
+                    style: const TextStyle()),
               ),
             ],
           ),
@@ -280,9 +276,7 @@ class _CourseStat extends StatelessWidget {
       children: [
         Icon(icon, color: color, size: 16),
         const SizedBox(width: 4),
-        Text('$value $label',
-            style: TextStyle(
-                fontFamily: 'Noto Sans Arabic',
+        Text('$value $label',                style: TextStyle(
                 fontSize: 12,
                 color: color,
                 fontWeight: FontWeight.w600)),
@@ -307,13 +301,11 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: 16),
           Text(t('no_courses_yet'),
               style: TextStyle(
-                  fontFamily: 'Noto Sans Arabic',
                   fontSize: 16,
                   color: theme.colorScheme.onSurface.withOpacity(0.5))),
           const SizedBox(height: 8),
           Text(t('add_first_course'),
               style: TextStyle(
-                  fontFamily: 'Noto Sans Arabic',
                   fontSize: 13,
                   color: theme.colorScheme.onSurface.withOpacity(0.35))),
         ],

@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 enum AppLanguage { kurdish, arabic, english }
 
 class LanguageProvider extends ChangeNotifier {
-  AppLanguage _currentLanguage = AppLanguage.kurdish;
+  AppLanguage _currentLanguage = AppLanguage.english;
+
+  LanguageProvider() {
+    _loadLanguageFromPrefs();
+  }
 
   AppLanguage get currentLanguage => _currentLanguage;
   
@@ -24,9 +29,35 @@ class LanguageProvider extends ChangeNotifier {
         : TextDirection.rtl;
   }
 
-  void setLanguage(AppLanguage language) {
+  /// Returns the appropriate font family for the current language.
+  /// Kurdish uses DroidKufi, Arabic uses Noto Sans Arabic, English uses default (Inter via GoogleFonts).
+  String? get fontFamily {
+    switch (_currentLanguage) {
+      case AppLanguage.kurdish:
+        return 'DroidKufi';
+      case AppLanguage.arabic:
+        return 'Noto Sans Arabic';
+      case AppLanguage.english:
+        return null;
+    }
+  }
+
+  Future<void> _loadLanguageFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final langStr = prefs.getString('app_language');
+    if (langStr != null) {
+      if (langStr == 'ku') _currentLanguage = AppLanguage.kurdish;
+      if (langStr == 'ar') _currentLanguage = AppLanguage.arabic;
+      if (langStr == 'en') _currentLanguage = AppLanguage.english;
+      notifyListeners();
+    }
+  }
+
+  Future<void> setLanguage(AppLanguage language) async {
     _currentLanguage = language;
     notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('app_language', languageCode);
   }
 
   String translate(String key) {
@@ -44,761 +75,347 @@ class LanguageProvider extends ChangeNotifier {
   }
 
   static const Map<String, Map<String, String>> _localizedValues = {
-    // Splash & Auth Screen
-    'slogan': {
-      'ku': 'هاوڕێی زیرەکی خوێندنت',
-      'ar': 'مرافق دراستك الذكي',
-      'en': 'Your smart study companion',
-    },
-    'login': {
-      'ku': 'چوونەژوورەوە',
-      'ar': 'تسجيل الدخول',
-      'en': 'Login',
-    },
-    'register': {
-      'ku': 'تۆمارکردن',
-      'ar': 'إنشاء حساب',
-      'en': 'Register',
-    },
-    'email': {
-      'ku': 'ئیمەیڵ',
-      'ar': 'البريد الإلكتروني',
-      'en': 'Email',
-    },
-    'password': {
-      'ku': 'وشەی نهێنی',
-      'ar': 'كلمة المرور',
-      'en': 'Password',
-    },
-    'fullname': {
-      'ku': 'ناوی تەواو',
-      'ar': 'الاسم الكامل',
-      'en': 'Full Name',
-    },
-    'user_role': {
-      'ku': 'ڕۆڵی بەکارهێنەر',
-      'ar': 'دور المستخدم',
-      'en': 'User Role',
-    },
-    'student': {
-      'ku': 'خوێندکار',
-      'ar': 'طالب',
-      'en': 'Student',
-    },
-    'teacher': {
-      'ku': 'مامۆستا',
-      'ar': 'أستاذ',
-      'en': 'Teacher',
-    },
-    'admin': {
-      'ku': 'بەڕێوەبەر',
-      'ar': 'مدير',
-      'en': 'Admin',
-    },
-    'no_account': {
-      'ku': 'هەژمارت نییە؟ تۆمارکردن بکە',
-      'ar': 'ليس لديك حساب؟ سجل الآن',
-      'en': "Don't have an account? Register",
-    },
-    'has_account': {
-      'ku': 'پێشتر هەژمارت دروستکردووە؟ بچۆ ژوورەوە',
-      'ar': 'لديك حساب بالفعل؟ سجل دخول',
-      'en': 'Already have an account? Login',
-    },
-    'google_login': {
-      'ku': 'چوونەژوورەوە بە گووگڵ',
-      'ar': 'الدخول بواسطة جوجل',
-      'en': 'Login with Google',
-    },
-    'please_enter_name': {
-      'ku': 'تکایە ناوت بنووسە',
-      'ar': 'يرجى كتابة اسمك',
-      'en': 'Please enter your name',
-    },
-    'please_enter_email': {
-      'ku': 'تکایە ئیمەیڵێکی دروست بنووسە',
-      'ar': 'يرجى كتابة بريد إلكتروني صحيح',
-      'en': 'Please enter a valid email',
-    },
-    'please_enter_password': {
-      'ku': 'وشەی نهێنی نابێت کەمتر بێت لە ٦ پیت',
-      'ar': 'كلمة المرور يجب ألا تقل عن 6 أحرف',
-      'en': 'Password must be at least 6 characters',
-    },
-    
     // Bottom Navigation
-    'nav_home': {
-      'ku': 'سەرەکی',
-      'ar': 'الرئيسية',
-      'en': 'Home',
-    },
-    'nav_ai_teacher': {
-      'ku': 'AI مامۆستا',
-      'ar': 'أستاذ AI',
-      'en': 'AI Teacher',
-    },
-    'nav_courses': {
-      'ku': 'وانەکان',
-      'ar': 'المواد',
-      'en': 'Courses',
-    },
-    'nav_quiz': {
-      'ku': 'کویز',
-      'ar': 'اختبار',
-      'en': 'Quiz',
-    },
-    'nav_notes': {
-      'ku': 'تێبینی',
-      'ar': 'الملاحظات',
-      'en': 'Notes',
-    },
+    'nav_home': {'ku': 'سەرەکی', 'ar': 'الرئيسية', 'en': 'Home'},
+    'nav_courses': {'ku': 'وانەکان', 'ar': 'المواد', 'en': 'Courses'},
+    'nav_ai_teacher': {'ku': 'مامۆستا AI', 'ar': 'معلم AI', 'en': 'AI Tutor'},
+    'nav_quiz': {'ku': 'کویز', 'ar': 'اختبار', 'en': 'Quiz'},
+    'nav_profile': {'ku': 'پڕۆفایل', 'ar': 'الملف', 'en': 'Profile'},
 
-    // Home / Dashboard
-    'hello': {
-      'ku': 'سڵاو',
-      'ar': 'مرحباً',
-      'en': 'Hello',
+    // Home / Dashboard Header & Search
+    'greeting': {'ku': 'بەیانیت باش،', 'ar': 'صباح الخير،', 'en': 'Good morning,'},
+    'ask_ai_anything': {'ku': 'پرسیار لە AI بکه...', 'ar': 'اسأل الذكاء الاصطناعي...', 'en': 'Ask AI anything...'},
+    'ai_tutor': {'ku': 'مامۆستای زیرەک', 'ar': 'المعلم الذكي', 'en': 'AI Tutor'},
+    'ai_tutor_subtitle': {
+      'ku': 'هاوکاری تایبەتی فێربوونت.\nپرسیار بکە، فێربە و گەشە بکە.',
+      'ar': 'مساعدك الشخصي للتعلم.\nاسأل، تعلم وتطور.',
+      'en': 'Your personal learning assistant.\nAsk, learn and grow together.'
     },
-    'hello_companion': {
-      'ku': 'هاوڕێی زیرەکی خوێندنت لەگەڵتە',
-      'ar': 'مرافق دراستك الذكي معك',
-      'en': 'Your smart study companion is here',
-    },
-    'gpa_title': {
-      'ku': 'کۆنمرەی گشتی (GPA)',
-      'ar': 'المعدل التراكمي (GPA)',
-      'en': 'Cumulative GPA',
-    },
-    'gpa_progress': {
-      'ku': 'ڕێژەی پێشکەوتن: ٨٥٪ زۆر باشە!',
-      'ar': 'نسبة التقدم: ٨٥٪ ممتاز!',
-      'en': 'Progress rate: 85% Excellent!',
-    },
-    'ai_suggest_title': {
-      'ku': 'پێشنیاری ئەمڕۆی ZankoAI',
-      'ar': 'اقتراح ZankoAI اليوم',
-      'en': "Today's ZankoAI Suggestion",
-    },
-    'ai_suggest_content': {
-      'ku': 'خوێندنەوەی کورتەی PDFی وانەی "تۆڕەکان" یارمەتیدەر دەبێت بۆ کویزی بەیانی.',
-      'ar': 'قراءة ملخص PDF لدرس "الشبكات" ستساعدك في اختبار الغد.',
-      'en': 'Reading the PDF summary of "Networks" will help with tomorrow\'s quiz.',
-    },
-    'today_lectures': {
-      'ku': 'وانەکانی ئەمڕۆ',
-      'ar': 'محاضرات اليوم',
-      'en': 'Today\'s Lectures',
-    },
-    'view_all': {
-      'ku': 'بینینی هەمووی',
-      'ar': 'عرض الكل',
-      'en': 'View All',
-    },
-    'no_lectures_today': {
-      'ku': 'هیچ وانەیەک بۆ ئەمڕۆ نییە',
-      'ar': 'لا توجد محاضرات اليوم',
-      'en': 'No lectures for today',
-    },
-    'quick_access': {
-      'ku': 'دەستپێگەیشتنی خێرا',
-      'ar': 'الوصول السريع',
-      'en': 'Quick Access',
-    },
-    'ask_and_learn': {
-      'ku': 'پرسیار بکە و فێربە',
-      'ar': 'اسأل وتعلم',
-      'en': 'Ask and learn',
-    },
-    'summarize_and_translate': {
-      'ku': 'کورتکردنەوە و وەرگێڕان',
-      'ar': 'التلخيص والترجمة',
-      'en': 'Summarize & Translate',
-    },
+    'start_learning': {'ku': 'دەستپێکردنی فێربوون', 'ar': 'ابدأ التعلم', 'en': 'Start Learning'},
+    'explain': {'ku': 'ڕوونکردنەوە', 'ar': 'شرح', 'en': 'Explain'},
+    'summarize': {'ku': 'کورتکردنەوە', 'ar': 'تلخيص', 'en': 'Summarize'},
+    'voice_tutor': {'ku': 'مامۆستای دەنگی', 'ar': 'المعلم الصوتي', 'en': 'Voice Tutor'},
+    'pdf_chat': {'ku': 'چاتی PDF', 'ar': 'محادثة PDF', 'en': 'PDF Chat'},
 
-    // AI Teacher
-    'ask_teacher_hint': {
-      'ku': 'پرسیار لە مامۆستا بکە...',
-      'ar': 'اسأل الأستاذ...',
-      'en': 'Ask the teacher...',
-    },
-    'gemini_active': {
-      'ku': 'باری چالاک: وەڵامی ڕاستەقینەی Gemini',
-      'ar': 'الوضع النشط: إجابات Gemini الحقيقية',
-      'en': 'Active mode: Real Gemini responses',
-    },
-    'mock_active': {
-      'ku': 'باری چالاک: شێوازی تاقیکاری (ئۆفلاین)',
-      'ar': 'الوضع النشط: التجريبي (بدون إنترنت)',
-      'en': 'Active mode: Mock mode (offline)',
-    },
-    'ai_thinking': {
-      'ku': 'AI مامۆستا لە فیکردایە...',
-      'ar': 'الأستاذ يفكر...',
-      'en': 'AI Teacher is thinking...',
-    },
+    // Cards
+    'current_gpa': {'ku': 'کۆنمرەی گشتی (GPA)', 'ar': 'المعدل التراكمي', 'en': 'Current GPA'},
+    'excellent': {'ku': 'زۆر باشە', 'ar': 'ممتاز', 'en': 'Excellent'},
+    'continue_learning': {'ku': 'بەردەوامبوون لە خوێندن', 'ar': 'متابعة التعلم', 'en': 'Continue Learning'},
+    'continue': {'ku': 'بەردەوامبە', 'ar': 'متابعة', 'en': 'Continue'},
+    'see_all': {'ku': 'بینینی هەمووی', 'ar': 'عرض الكل', 'en': 'See all'},
+    'quick_ai_tools': {'ku': 'ئامرازە خێراکانی AI', 'ar': 'أدوات الذكاء الاصطناعي', 'en': 'Quick AI Tools'},
+    'recommended_courses': {'ku': 'وانە پێشنیارکراوەکان', 'ar': 'المواد المقترحة', 'en': 'Recommended Courses'},
 
-    // PDF Summary
-    'pdf_title': {
-      'ku': 'وانەکان و کورتکردنەوەی PDF',
-      'ar': 'المواد وتلخيص ملفات PDF',
-      'en': 'Courses & PDF Summarization',
-    },
-    'upload_area_title': {
-      'ku': 'وانەکە یان فایلی PDF باربکە',
-      'ar': 'ارفع درسك أو ملف PDF',
-      'en': 'Upload your Course or PDF file',
-    },
-    'upload_area_desc': {
-      'ku': 'ZankoAI یارمەتیدەرت دەبێت لە خوێندنەوە و کورتکردنەوەی',
-      'ar': 'سوف يساعدك ZankoAI في قراءته وتلخيصه',
-      'en': 'ZankoAI will help you read and summarize it',
-    },
-    'pick_file': {
-      'ku': 'دیاریکردنی فایل',
-      'ar': 'اختر ملفاً',
-      'en': 'Choose File',
-    },
-    'generate_summary_tooltip': {
-      'ku': 'شیکردنەوەی AI',
-      'ar': 'تحليل الذكاء الاصطناعي',
-      'en': 'AI Analysis',
-    },
-    'analyzing_wait': {
-      'ku': 'AI مامۆستا خەریکی شیکردنەوە و کورتکردنەوەیە...',
-      'ar': 'يقوم المعلم بالتحليل والتلخيص الآن...',
-      'en': 'AI Teacher is analyzing and summarizing...',
-    },
-    'analysis_result': {
-      'ku': '📊 ئەنجامی شیکردنەوەی AI',
-      'ar': '📊 نتائج تحليل الذكاء الاصطناعي',
-      'en': '📊 AI Analysis Results',
-    },
-    'pdf_summary_card': {
-      'ku': 'کورتەی وانە',
-      'ar': 'ملخص الدرس',
-      'en': 'Course Summary',
-    },
-    'key_points_card': {
-      'ku': 'خاڵە گرنگەکان',
-      'ar': 'النقاط الرئيسية',
-      'en': 'Key Points',
-    },
-    'translation_card': {
-      'ku': 'وەرگێڕان یان زانیاری زیاتر',
-      'ar': 'الترجمة أو معلومات إضافية',
-      'en': 'Translation or Extra Info',
-    },
+    // Settings & Profile
+    'settings_profile': {'ku': 'ڕێکخستنەکان و پرۆفایل', 'ar': 'الإعدادات والملف الشخصي', 'en': 'Settings & Profile'},
+    'official_student_verification': {'ku': 'پشکنینی فەرمی قوتابی', 'ar': 'التحقق الرسمي من الطالب', 'en': 'Official Student Verification'},
+    'learning_stats': {'ku': 'ئامارەکانی فێربوون', 'ar': 'إحصائيات التعلم', 'en': 'Learning Stats'},
+    'study_time': {'ku': 'کاتی خوێندن', 'ar': 'وقت الدراسة', 'en': 'Study Time'},
+    'quizzes': {'ku': 'کویزەکان', 'ar': 'الاختبارات', 'en': 'Quizzes'},
+    'gpa': {'ku': 'کۆنمرە (GPA)', 'ar': 'المعدل', 'en': 'GPA'},
+    'preferences': {'ku': 'هەڵبژاردنەکان', 'ar': 'التفضيلات', 'en': 'Preferences'},
+    'dark_mode': {'ku': 'باری تاریک', 'ar': 'الوضع الداكن', 'en': 'Dark Mode'},
+    'app_language': {'ku': 'زمانی ئەپڵیکەیشن', 'ar': 'لغة التطبيق', 'en': 'App Language'},
+    'notifications': {'ku': 'ئاگادارییەکان', 'ar': 'الإشعارات', 'en': 'Notifications'},
+    'privacy_security': {'ku': 'تایبەتمەندی و ئاسایش', 'ar': 'الخصوصية والأمان', 'en': 'Privacy & Security'},
+    'about_zanko': {'ku': 'دەربارەی ZankoAI', 'ar': 'عن ZankoAI', 'en': 'About ZankoAI'},
 
-    // Quiz
-    'quiz_title': {
-      'ku': 'تاقیکردنەوەی خێرا (Quiz)',
-      'ar': 'الاختبار السريع (Quiz)',
-      'en': 'Quick Quiz',
-    },
-    'generate_quiz_title': {
-      'ku': 'دروستکردنی کویزی نوێ بە AI 🪄',
-      'ar': 'إنشاء اختبار جديد بالذكاء الاصطناعي 🪄',
-      'en': 'Create new Quiz with AI 🪄',
-    },
-    'generate_quiz_desc': {
-      'ku': 'بابەتەکە بنووسە و AI کویزێکی تاقیکاری تایبەتت بۆ دروست دەکات',
-      'ar': 'اكتب الموضوع وسيقوم الذكاء الاصطناعي بإنشاء اختبار مخصص لك',
-      'en': 'Enter the topic and AI will generate a custom quiz for you',
-    },
-    'course_name_field': {
-      'ku': 'ناوی وانە',
-      'ar': 'اسم المادة',
-      'en': 'Course Name',
-    },
-    'topic_field': {
-      'ku': 'بابەتی دیاریکراو',
-      'ar': 'الموضوع المحدد',
-      'en': 'Specific Topic',
-    },
-    'generate_quiz_btn': {
-      'ku': 'دروستکردنی تاقیکردنەوە',
-      'ar': 'إنشاء الاختبار',
-      'en': 'Generate Quiz',
-    },
-    'previous_quizzes': {
-      'ku': 'تاقیکردنەوەکانی پێشوو',
-      'ar': 'الاختبارات السابقة',
-      'en': 'Previous Quizzes',
-    },
-    'generating_quiz_wait': {
-      'ku': 'AI خەریکی دروستکردنی پرسیارەکانە...',
-      'ar': 'يقوم الذكاء الاصطناعي بإنشاء الأسئلة الآن...',
-      'en': 'AI is generating the questions...',
-    },
-    'question_progress': {
-      'ku': 'پرسیار',
-      'ar': 'سؤال',
-      'en': 'Question',
-    },
-    'previous_btn': {
-      'ku': 'پێشوو',
-      'ar': 'السابق',
-      'en': 'Previous',
-    },
-    'next_btn': {
-      'ku': 'داهاتوو',
-      'ar': 'التالي',
-      'en': 'Next',
-    },
-    'submit_btn': {
-      'ku': 'ناردنی وەڵامەکان',
-      'ar': 'إرسال الإجابات',
-      'en': 'Submit Answers',
-    },
-    'quiz_completed': {
-      'ku': 'تاقیکردنەوەکە تەواو بوو!',
-      'ar': 'انتهى الاختبار!',
-      'en': 'Quiz Completed!',
-    },
-    'your_score': {
-      'ku': 'نمرەکەت',
-      'ar': 'درجتك',
-      'en': 'Your Score',
-    },
-    'score_perfect': {
-      'ku': 'ناوازەیە! زانیارییەکانت زۆر باشن.',
-      'ar': 'رائع! معلوماتك ممتازة جداً.',
-      'en': 'Excellent! Your knowledge is outstanding.',
-    },
-    'score_good': {
-      'ku': 'کارێکی باش بوو! هەمیشە دەتوانیت سەرلەنوێ تاقیکردنەوە بکەیتەوە بۆ فێربوونی زیاتر.',
-      'ar': 'عمل جيد! يمكنك دائماً إعادة المحاولة لتعلم المزيد.',
-      'en': 'Good job! You can always retake the quiz to learn more.',
-    },
-    'back_to_quiz_home': {
-      'ku': 'گەڕانەوە بۆ پێشەکی کویز',
-      'ar': 'العودة لصفحة الاختبارات',
-      'en': 'Back to Quiz Home',
-    },
+    // Courses & Lessons
+    'all_courses': {'ku': 'سەرجەم وانەکان', 'ar': 'جميع المواد', 'en': 'All Courses'},
+    'search_courses': {'ku': 'گەڕان لە وانەکاندا...', 'ar': 'البحث في المواد...', 'en': 'Search courses...'},
+    'lessons': {'ku': 'وانە', 'ar': 'دروس', 'en': 'Lessons'},
 
-    // Notes
-    'notes_title': {
-      'ku': 'تێبینییەکانم',
-      'ar': 'ملاحظاتي',
-      'en': 'My Notes',
-    },
-    'no_notes_yet': {
-      'ku': 'تا ئێستا هیچ تێبینییەک نەنووسراوە',
-      'ar': 'لم يتم كتابة أي ملاحظة بعد',
-      'en': 'No notes written yet',
-    },
-    'no_notes_desc': {
-      'ku': 'دوگمەی خوارەوە بەکاربهێنە بۆ زیادکردن و ڕێکخستنی بە AI',
-      'ar': 'استخدم الزر في الأسفل لإضافة ملاحظة وتنظيمها بواسطة AI',
-      'en': 'Use the button below to add and organize notes with AI',
-    },
-    'new_note_title': {
-      'ku': 'تێبینی نوێ بنووسە',
-      'ar': 'اكتب ملاحظة جديدة',
-      'en': 'Write new note',
-    },
-    'edit_note_title': {
-      'ku': 'دەستکاریکردنی تێبینی',
-      'ar': 'تعديل الملاحظة',
-      'en': 'Edit Note',
-    },
-    'note_title_label': {
-      'ku': 'سەردێڕ',
-      'ar': 'العنوان',
-      'en': 'Title',
-    },
-    'note_course_label': {
-      'ku': 'وانە',
-      'ar': 'المادة',
-      'en': 'Course',
-    },
-    'note_content_label': {
-      'ku': 'ناوەڕۆکی تێبینی',
-      'ar': 'محتوى الملاحظة',
-      'en': 'Note Content',
-    },
-    'note_content_hint': {
-      'ku': 'تێبینییە خێراکانی خۆت لێرە بنووسە...',
-      'ar': 'اكتب ملاحظاتك السريعة هنا...',
-      'en': 'Write your quick notes here...',
-    },
-    'ai_organize_wait': {
-      'ku': 'AI خەریکی پۆلێنکردن و ڕێکخستنی دەقەکەیە...',
-      'ar': 'يقوم الذكاء الاصطناعي بتنظيم النص الآن...',
-      'en': 'AI is organizing the text...',
-    },
-    'ai_organize_btn': {
-      'ku': 'ڕێکخستن بە AI مامۆستا',
-      'ar': 'تنظيم بواسطة أستاذ AI',
-      'en': 'Organize with AI Teacher',
-    },
-    'ai_organized_tag': {
-      'ku': 'AI رێکخراو',
-      'ar': 'منظم بـ AI',
-      'en': 'AI Organized',
-    },
-    'save_note_success': {
-      'ku': 'تێبینی بە سەرکەوتوویی پاشەکەوت کرا',
-      'ar': 'تم حفظ الملاحظة بنجاح',
-      'en': 'Note saved successfully',
-    },
-    'delete_note_success': {
-      'ku': 'تێبینی سڕایەوە',
-      'ar': 'تم حذف الملاحظة',
-      'en': 'Note deleted',
-    },
+    // Quiz Maker
+    'quiz_maker': {'ku': 'دروستکەری کویز بە AI', 'ar': 'منشئ الاختبارات', 'en': 'AI Quiz Maker'},
+    'select_course': {'ku': 'وانەکە هەڵبژێرە', 'ar': 'اختر المادة', 'en': 'Select Course'},
+    'select_topic': {'ku': 'بابەتەکە هەڵبژێرە', 'ar': 'اختر الموضوع', 'en': 'Select Topic'},
+    'generate_quiz': {'ku': 'دروستکردنی کویز', 'ar': 'إنشاء الاختبار', 'en': 'Generate Quiz'},
+
+    'notes_title': {'ku': 'تێبینییەکانم', 'ar': 'ملاحظاتي', 'en': 'My Notes'},
+    'search_notes': {'ku': 'گەڕان لە تێبینییەکاندا...', 'ar': 'البحث في الملاحظات...', 'en': 'Search notes...'},
+    'new_note': {'ku': 'تێبینی نوێ', 'ar': 'ملاحظة جديدة', 'en': 'New Note'},
+
+    // Common Actions
+    'edit': {'ku': 'دەستکاری', 'ar': 'تعديل', 'en': 'Edit'},
+    'delete': {'ku': 'سڕینەوە', 'ar': 'حذف', 'en': 'Delete'},
+    'cancel': {'ku': 'هەڵوەشاندنەوە', 'ar': 'إلغاء', 'en': 'Cancel'},
+    'ok': {'ku': 'باشە', 'ar': 'حسناً', 'en': 'OK'},
+    'save': {'ku': 'خەزنکردن', 'ar': 'حفظ', 'en': 'Save'},
+    'clear': {'ku': 'سڕینەوە', 'ar': 'مسح', 'en': 'Clear'},
+    
+    // Common Errors/Messages
+    'error': {'ku': 'هەڵەیەک ڕوویدا', 'ar': 'حدث خطأ', 'en': 'Error'},
+    'failed_to_load': {'ku': 'نەتوانرا باربکرێت', 'ar': 'فشل التحميل', 'en': 'Failed to load'},
+    'empty_record': {'ku': 'سجلەکە چۆڵە', 'ar': 'السجل فارغ', 'en': 'Empty record'},
+    'scan_error': {'ku': 'هەڵە لە سکانکەر', 'ar': 'خطأ في المسح', 'en': 'Scan Error'},
+    
+    // File / Chat
+    'add_pdf': {'ku': 'زیادکردنی PDF', 'ar': 'إضافة PDF', 'en': 'Add PDF'},
+    'gemini_api_key': {'ku': 'کلیلێ APIی Gemini', 'ar': 'مفتاح Gemini API', 'en': 'Gemini API Key'},
+    'save_key': {'ku': 'خەزنکردنی کلیل', 'ar': 'حفظ المفتاح', 'en': 'Save Key'},
+    'clear_chat_history': {'ku': 'سڕینەوەی مێژووی چات؟', 'ar': 'مسح سجل الدردشة؟', 'en': 'Clear Chat History?'},
+    'clear_chat_desc': {'ku': 'ئەمە چاتە خەزنکراوەکان دەسڕێتەوە.', 'ar': 'سيؤدي هذا إلى حذف المحادثات المحفوظة.', 'en': 'This will delete saved conversations.'},
+    'please_enter_topic': {'ku': 'تکایە سەرەتا بابەتێک بنووسە.', 'ar': 'يرجى إدخال موضوع أولاً.', 'en': 'Please enter a topic first.'},
+    'please_enter_notes': {'ku': 'تکایە سەرەتا تێبینییەکان بنووسە یان فایلێک بەرزبکەرەوە.', 'ar': 'يرجى إدخال ملاحظات أو رفع ملف أولاً.', 'en': 'Please enter notes or upload a file first.'},
+    'note_saved': {'ku': 'تێبینییەکە بە سەرکەوتوویی خەزنکرا!', 'ar': 'تم حفظ الملاحظة بنجاح!', 'en': 'Note saved successfully!'},
+    'note_deleted': {'ku': 'تێبینییەکە سڕایەوە', 'ar': 'تم حذف الملاحظة', 'en': 'Note deleted'},
+    'provide_title_content': {'ku': 'تکایە هەم ناونیشان و هەم ناوەڕۆک دابین بکە', 'ar': 'يرجى تقديم كل من العنوان والمحتوى', 'en': 'Please provide both title and content'},
+    
+    // Stats / Profile Extras
+    'english_us': {'ku': 'English (US)', 'ar': 'English (US)', 'en': 'English (US)'},
+    'english_desc': {'ku': 'زمانی نێودەوڵەتی', 'ar': 'اللغة الدولية', 'en': 'Default International Language'},
+    'kurdish_name': {'ku': 'کوردی (Kurdish)', 'ar': 'کوردی (Kurdish)', 'en': 'کوردی (Kurdish)'},
+    'kurdish_desc': {'ku': 'زمانی کوردیی سۆرانی', 'ar': 'زمانی کوردیی سۆرانی', 'en': 'زمانی کوردیی سۆرانی'},
+    'arabic_name': {'ku': 'العربية (Arabic)', 'ar': 'العربية (Arabic)', 'en': 'العربية (Arabic)'},
+    'arabic_desc': {'ku': 'اللغة العربية الفصحى', 'ar': 'اللغة العربية الفصحى', 'en': 'اللغة العربية الفصحى'},
+    'daily_reminders': {'ku': 'بیرخستنەوەی ڕۆژانە', 'ar': 'تذكير يومي', 'en': 'Daily Study Reminders'},
+    'version': {'ku': 'v1.0.0', 'ar': 'v1.0.0', 'en': 'v1.0.0'},
+    
+    // Labels
+    'questions_label': {'ku': 'پرسیارەکان', 'ar': 'الأسئلة', 'en': 'Questions'},
+    'accuracy_label': {'ku': 'ووردی', 'ar': 'الدقة', 'en': 'Accuracy'},
+    'courses_label': {'ku': 'کۆرسەکان', 'ar': 'المواد', 'en': 'Courses'},
+    'target_gpa': {'ku': 'کۆنمرەی ئامانج', 'ar': 'المعدل المستهدف', 'en': 'Target GPA'},
+    'remaining_semesters': {'ku': 'وەرزی ماوە', 'ar': 'الفصول المتبقية', 'en': 'Remaining Semesters'},
+    'task_subject_label': {'ku': 'ناوی ئەرکەکە / بابەت', 'ar': 'اسم المهمة / الموضوع', 'en': 'Task / Subject Name'},
+    'course_name_label': {'ku': 'ناوی وانە / کۆرس', 'ar': 'اسم المادة / الدورة', 'en': 'Course Name'},
+    
+    // Badges
+    'ai_scholar': {'ku': 'زانای AI', 'ar': 'عالم AI', 'en': 'AI Scholar'},
+    'quiz_master': {'ku': 'پاڵەوانی کویز', 'ar': 'بطل الاختبارات', 'en': 'Quiz Master'},
+    'focus_guru': {'ku': 'پسپۆڕی تەرکیز', 'ar': 'خبير التركيز', 'en': 'Focus Guru'},
+    'deep_reader': {'ku': 'خوێنەری زیرەک', 'ar': 'القارئ المتعمق', 'en': 'Deep Reader'},
+
+    // Notifications
+    'notif_ai_summary': {'ku': 'کورتەی AI ئامادەیە', 'ar': 'ملخص AI جاهز', 'en': 'AI Summary Ready'},
+    'notif_quiz_high': {'ku': 'ئاستێکی بەرزی کویز!', 'ar': 'أداء عالي في الاختبار!', 'en': 'Quiz Performance High!'},
+    'notif_assignment': {'ku': 'بیرخستنەوەی کاتی کۆتایی ئەرک', 'ar': 'تذكير بموعد التسليم', 'en': 'Assignment Deadline Reminder'},
+    'notif_new_material': {'ku': 'ماددەی نوێی وانە بەردەستە', 'ar': 'مواد دراسية جديدة متاحة', 'en': 'New Course Material Available'},
+    'notif_gpa_update': {'ku': 'نوێکردنەوەی کۆنمرە', 'ar': 'تحديث المعدل', 'en': 'GPA Update Calculated'},
+
+    // Hints & Tooltips
+    'type_answer': {'ku': 'وەڵامەکە بنووسە...', 'ar': 'اكتب الإجابة...', 'en': 'Type answer...'},
+    'note_title_hint': {'ku': 'ناونیشانی تێبینی...', 'ar': 'عنوان الملاحظة...', 'en': 'Note Title...'},
+    'note_content_hint': {'ku': 'ناوەڕۆکی تێبینییەکە بنووسە یان بڵێ...', 'ar': 'اكتب أو أملِ محتوى الملاحظة...', 'en': 'Write or dictate note content...'},
+    'planner_hint_exam': {'ku': 'نموونە: تاقیکردنەوەی کۆتایی سیستمەکانی کارپێکردن', 'ar': 'مثال: الامتحان النهائي لأنظمة التشغيل', 'en': 'e.g. Operating Systems Final Exam'},
+    'flashcards_hint': {'ku': 'نموونە: چینی مۆدێلی OSI', 'ar': 'مثال: طبقات نموذج OSI', 'en': 'e.g. OSI model layers, CPU execution cycle'},
+    'toggle_view': {'ku': 'گۆڕینی بینین', 'ar': 'تغيير العرض', 'en': 'Toggle View'},
+    'dictate_voice_note': {'ku': 'نووسین بە دەنگی کوردی', 'ar': 'الإملاء الصوتي', 'en': 'Dictate Kurdish Voice Note'},
+    'scan_qr_deck': {'ku': 'سکانکردنی کارتی QR', 'ar': 'مسح بطاقة QR', 'en': 'Scan QR Deck'},
+    'share_qr_deck': {'ku': 'هاوبەشکردنی کارتی QR', 'ar': 'مشاركة بطاقة QR', 'en': 'Share QR Deck'},
+    'tts_tooltip': {'ku': 'خوێندنەوە بە دەنگ', 'ar': 'قراءة صوتية', 'en': 'Text to Speech'},
+    'clear_chat_tooltip': {'ku': 'سڕینەوەی چات', 'ar': 'مسح الدردشة', 'en': 'Clear Chat'},
+    'config_api_key_tooltip': {'ku': 'ڕێکخستنی کلیلێ API', 'ar': 'إعداد مفتاح API', 'en': 'Configure API Key'},
+    'email_hint': {'ku': 'نموونە@zanko.edu', 'ar': 'مثال@zanko.edu', 'en': 'example@zanko.edu'},
+
+    // Notifications Screen
+    'no_notifications': {'ku': 'هیچ ئاگادارییەک نییە', 'ar': 'لا توجد إشعارات', 'en': 'No Notifications'},
+    'all_caught_up': {'ku': 'هەموو شتێکت خوێندووەتەوە!', 'ar': 'أنت على اطلاع تام!', 'en': "You're all caught up!"},
+    'mark_read': {'ku': 'نیشانەکردن بە خوێنراو', 'ar': 'تحديد كمقروء', 'en': 'Mark Read'},
+    'filter_all': {'ku': 'هەموو', 'ar': 'الكل', 'en': 'All'},
+    'filter_unread': {'ku': 'نەخوێنراو', 'ar': 'غير مقروء', 'en': 'Unread'},
+    'filter_ai_tutor': {'ku': 'مامۆستای AI', 'ar': 'معلم AI', 'en': 'AI Tutor'},
+    'filter_course': {'ku': 'وانە', 'ar': 'المادة', 'en': 'Course'},
+    'filter_quiz': {'ku': 'کویز', 'ar': 'اختبار', 'en': 'Quiz'},
+    'filter_reminder': {'ku': 'بیرخستنەوە', 'ar': 'تذكير', 'en': 'Reminder'},
+
+    // Focus Screen
+    'focus_timer_title': {'ku': 'کاتژمێری تەرکیزکردن', 'ar': 'مؤقت التركيز', 'en': 'Pomodoro Focus Timer'},
+    'focus_session': {'ku': 'خولی تەرکیزکردن', 'ar': 'جلسة التركيز', 'en': 'Study Focus Session'},
+    'break_session': {'ku': 'خولی پشوودان', 'ar': 'وقت الاستراحة', 'en': 'Relax Break Session'},
+    'switch_to_focus': {'ku': 'بگۆڕە بۆ تەرکیز', 'ar': 'التبديل للدراسة', 'en': 'Switch to Focus'},
+    'switch_to_break': {'ku': 'بگۆڕە بۆ پشوو', 'ar': 'التبديل للاستراحة', 'en': 'Switch to Break'},
+    'focus_complete': {'ku': 'تەرکیز تەواو بوو!', 'ar': 'انتهت جلسة التركيز!', 'en': 'Focus Complete!'},
+    'break_complete': {'ku': 'پشوو تەواو بوو!', 'ar': 'انتهت الاستراحة!', 'en': 'Break Complete!'},
+    'focus_label': {'ku': 'تەرکیز', 'ar': 'تركيز', 'en': 'FOCUS'},
+    'break_label': {'ku': 'پشوو', 'ar': 'استراحة', 'en': 'BREAK'},
+
+    // Notes Screen
+    'no_notes_found': {'ku': 'هیچ تێبینییەک نەدۆزرایەوە', 'ar': 'لم يتم العثور على ملاحظات', 'en': 'No Notes Found'},
+    'recording_voice_note': {'ku': 'تۆمارکردنی تێبینی دەنگی', 'ar': 'تسجيل ملاحظة صوتية', 'en': 'Recording Voice Note'},
+    'ai_organizing_note': {'ku': 'AI ئەو تێبینییە ڕیکدەخات...', 'ar': 'الذكاء الاصطناعي ينظم الملاحظة...', 'en': 'AI is polishing & organizing note...'},
+    'general': {'ku': 'گشتی', 'ar': 'عام', 'en': 'General'},
+    'save_note': {'ku': 'خەزنکردنی تێبینی', 'ar': 'حفظ الملاحظة', 'en': 'Save Note'},
+
+    // Stats / Achievement labels
+    'stat_organized_notes': {'ku': 'کەمێک تێبینی AI ڕیکخست', 'ar': 'نظّم ملاحظات AI', 'en': 'Organized 2+ AI Notes'},
+    'stat_completed_quiz': {'ku': 'تاقیکردنەوەی کویز تەواو کرد', 'ar': 'أكمل اختبارات', 'en': 'Completed 1+ Quiz tests'},
+    'stat_completed_pomodoro': {'ku': 'پۆمۆدۆرۆ تەواو کرد', 'ar': 'أكمل جلسات بومودورو', 'en': 'Completed 1+ Pomodoros'},
+    'stat_extracted_pdf': {'ku': 'تێبینی PDF دەرکرد', 'ar': 'استخرج ملاحظات PDF', 'en': 'Extracted 1+ PDF notes'},
+
+    // Profile Screen
+    'full_name': {'ku': 'ناوی تەواو', 'ar': 'الاسم الكامل', 'en': 'Full Name'},
+    'university_email': {'ku': 'ئیمەیلی زانکۆ', 'ar': 'البريد الإلكتروني الجامعي', 'en': 'University Email'},
+    'university': {'ku': 'زانکۆ', 'ar': 'الجامعة', 'en': 'University'},
+    'faculty_major': {'ku': 'فاکەڵتی و پسپۆڕی', 'ar': 'الكلية والتخصص', 'en': 'Faculty & Major'},
+    'academic_stage': {'ku': 'قۆناغی ئەکادیمی', 'ar': 'المرحلة الأكاديمية', 'en': 'Academic Stage'},
+    'campus_status': {'ku': 'بارودۆخی کامپس', 'ar': 'الحالة في الحرم الجامعي', 'en': 'Campus Status'},
+    'select_app_language': {'ku': 'زمانی ئەپڵیکەیشن دیاری بکە', 'ar': 'اختر لغة التطبيق', 'en': 'Select App Language'},
+    'digital_id': {'ku': 'ناسنامەی دیجیتاڵ', 'ar': 'الهوية الرقمية', 'en': 'DIGITAL ID'},
+    'tap_for_campus_qr': {'ku': 'دەست بدە بۆ کۆدی QR', 'ar': 'اضغط لرمز QR الجامعي', 'en': 'Tap for Campus QR & Details'},
+    'valid_until': {'ku': 'VALID 2024 - 2026', 'ar': 'VALID 2024 - 2026', 'en': 'VALID 2024 - 2026'},
+    'done': {'ku': 'تەواو', 'ar': 'تم', 'en': 'Done'},
+
+    // Onboarding Screen
+    'onboarding_welcome': {'ku': 'بەخێربێن بۆ ZankoAI', 'ar': 'مرحباً بك في ZankoAI', 'en': 'Welcome to ZankoAI'},
+    'onboarding_subtitle': {'ku': 'هاوکارت بۆ خوێندن بە هێزی AI', 'ar': 'مساعدك الذكي للدراسة الجامعية', 'en': 'Your all-in-one AI-powered study companion designed for university students.'},
+    'onboarding_summarize': {'ku': 'کورتکردنەوەی وانەکانت', 'ar': 'لخّص موادك الدراسية', 'en': 'Summarize Your Courses'},
+    'onboarding_plan': {'ku': 'ئامادەکردنی پلانی خوێندن', 'ar': 'خطط لأسبوعك الدراسي', 'en': 'Plan Your Study Week'},
+    'onboarding_plan_sub': {'ku': 'AI پلانی ڕۆژانەی تایبەتی بۆ تاقیکردنەوەکانت ئامادە دەکات.', 'ar': 'الذكاء الاصطناعي يبني خطة دراسية مخصصة يوماً بيوم.', 'en': 'AI builds a personalized day-by-day study plan for your exams.'},
+    'onboarding_test': {'ku': 'خۆت تاقی بکەرەوە', 'ar': 'اختبر نفسك', 'en': 'Test Yourself'},
+    'onboarding_test_sub': {'ku': 'کویز، کارتی فلاش، و پرسیاری تاقیکردنەوە بە AI دروستبکە.', 'ar': 'أنشئ اختبارات وبطاقات تعليمية وأسئلة متوقعة بالذكاء الاصطناعي.', 'en': 'Generate quizzes, flashcards, and predicted exam questions with AI.'},
+    'onboarding_ready': {'ku': 'ئامادەی دەستپێکردن؟', 'ar': 'مستعد للبدء؟', 'en': 'Ready to Start?'},
+    'onboarding_ready_sub': {'ku': 'کلیلێ Gemini API لە ئەکاونتی Google AI Studio دابگرە.', 'ar': 'أدخل مفتاح Gemini API من الصفحة الرئيسية لفتح ميزات الذكاء الاصطناعي.', 'en': 'Set your Gemini API key from the home screen to unlock all AI features.'},
+
+    // Course Detail Screen
+    'no_pdf_uploaded': {'ku': 'هیچ PDF ئەپلۆد نەکراوە', 'ar': 'لم يتم رفع ملفات PDF', 'en': 'No PDF Lectures Uploaded'},
+    'upload_pdf_desc': {'ku': 'سلایدەکانی وانەت یان تێبینییەکانت ئەپلۆد بکە بۆ چات بەکارهێنانی AI و دروستکردنی کورتە.', 'ar': 'ارفع شرائح المحاضرة أو ملاحظاتك للدردشة مع AI وإنشاء الملخصات.', 'en': 'Upload your lecture slides or notes to chat with AI and generate summaries.'},
+    'chat_with_ai': {'ku': 'چاتی AI', 'ar': 'محادثة AI', 'en': 'Chat with AI'},
+    'ai_summary': {'ku': 'کورتەی AI', 'ar': 'ملخص AI', 'en': 'AI Summary'},
+    'lecture_title_hint': {'ku': 'نموونە: تێبینییەکانی بابی 3', 'ar': 'مثال: ملاحظات الفصل 3', 'en': 'Enter Lecture Title (e.g. Chapter 3 Notes)'},
+    'yesterday': {'ku': 'دوێنێ', 'ar': 'أمس', 'en': 'Yesterday'},
+    'just_now': {'ku': 'ئێستا', 'ar': 'الآن', 'en': 'Just now'},
+
+    // Home Screen
+    'todays_progress': {'ku': 'پێشکەوتنی ئەمڕۆ', 'ar': 'تقدم اليوم', 'en': "Today's Progress"},
+    'todays_breakdown': {'ku': 'وردەکاری فێربوونی ئەمڕۆ', 'ar': 'تفاصيل تعلم اليوم', 'en': "Today's Learning Breakdown"},
+    'recommended_for_you': {'ku': 'پێشنیارکراو بۆ تۆ', 'ar': 'موصى به لك', 'en': 'Recommended for You'},
+    'student_role': {'ku': 'قوتابی', 'ar': 'طالب', 'en': 'Student'},
+    'goal_2_hours': {'ku': 'ئامانج: ٢ کاتژمێر', 'ar': 'الهدف: ساعتان', 'en': 'Goal: 2 hours'},
+    'goal_30': {'ku': 'ئامانج: ٣٠', 'ar': 'الهدف: 30', 'en': 'Goal: 30'},
+    'top_5_percent': {'ku': 'تاپ ٥٪ی پۆل', 'ar': 'أعلى 5% من الصف', 'en': 'Top 5% of class'},
+
+    // PDF / Summary Screen
+    'no_text_extracted': {'ku': 'هیچ دەقێک دەرنەکرا.', 'ar': 'لم يتم استخراج نص.', 'en': 'No text could be extracted.'},
+    'document': {'ku': 'بەڵگەنامە', 'ar': 'مستند', 'en': 'Document'},
+
+    // QR Share Sheet
+    'invalid_qr_format': {'ku': 'فۆرماتی کۆدی QR نادروستە.', 'ar': 'تنسيق رمز QR غير صالح.', 'en': 'Invalid QR code format for ZankoAI.'},
+    'qr_data_too_large': {'ku': 'داتای کارتەکان زۆر گەورەیە بۆ QR.', 'ar': 'بيانات البطاقات كبيرة جدًا لرمز QR.', 'en': 'Flashcard data too large for QR.'},
+
+    // Teacher screens
+    'general_topics': {'ku': 'بابەتە گشتییەکان', 'ar': 'مواضيع عامة', 'en': 'General Topics'},
+
+    // failed_to_generate
+    'failed_to_generate': {'ku': 'شکستی هێنا لە دروستکردن', 'ar': 'فشل في الإنشاء', 'en': 'Failed to generate'},
+
+    // Study planner
+    'study_planner_title': {'ku': 'پلانی خوێندنم', 'ar': 'خطة دراستي', 'en': 'My Study Plan'},
+
+    // GPA tracker hints
+    'gpa_hint_375': {'ku': 'نموونە: ٣.٧٥', 'ar': 'مثال: 3.75', 'en': 'e.g. 3.75'},
+    'gpa_hint_38': {'ku': 'نموونە: ٣.٨', 'ar': 'مثال: 3.8', 'en': 'e.g. 3.8'},
+    'gpa_hint_3': {'ku': 'نموونە: ٣', 'ar': 'مثال: 3', 'en': 'e.g. 3'},
+    'schedule_time_hint': {'ku': 'نموونە: ١٠:١٥ - ١١:٤٥', 'ar': 'مثال: 10:15 - 11:45', 'en': 'e.g. 10:15 - 11:45'},
+
+    // Flashcards screen
+    'flashcards_title': {'ku': 'فلاشکاردی خوێندنەوە', 'ar': 'بطاقات المراجعة الذكية', 'en': 'AI Study Flashcards'},
+    'flashcards_input_label': {'ku': 'بابەتێک بنووسە یان دەقێک لێرە دابنێ', 'ar': 'اكتب الموضوع أو انسخ النص', 'en': 'Enter topic or copy text'},
+    'flashcards_generate_btn': {'ku': 'دروستکردنی فلاشکارد', 'ar': 'إنشاء البطاقات', 'en': 'Generate Flashcards'},
+    'flashcards_empty_state': {'ku': 'تا ئێستا هیچ فلاشکاردێک دروست نەکراوە.', 'ar': 'لا توجد بطاقات مراجعة منشأة حالياً.', 'en': 'No flashcards generated yet.'},
+    'flashcards_tap_to_flip': {'ku': 'کلیک بکە بۆ گۆڕینی لای کارتەکە', 'ar': 'اضغط لقلب البطاقة', 'en': 'Tap to Flip card'},
+
+    // Exam Predictor
+    'exam_predictor_title': {'ku': 'پێشبینیکەری تاقیکردنەوە', 'ar': 'مستشار الامتحان الذكي', 'en': 'Exam Predictor'},
+    'exam_predictor_input_label': {'ku': 'تێبینییەکانی خوێندن یان دەقی بابەتەکە لێرە دابنێ', 'ar': 'الصق ملاحظات الدراسة أو محتوى الدرس', 'en': 'Paste your study notes or lesson contents'},
+    'exam_predictor_or_label': {'ku': 'یاخود', 'ar': 'أو', 'en': 'OR'},
+    'exam_predictor_upload_btn': {'ku': 'بارکردنی فایلی دەقی (Text/Markdown)', 'ar': 'تحميل ملف نصي (Text/Markdown)', 'en': 'Upload Text/Markdown File'},
+    'exam_predictor_predict_btn': {'ku': 'پێشبینیکردنی پرسیارەکان', 'ar': 'توقع أسئلة الامتحان', 'en': 'Predict Exam Questions'},
+    'exam_predictor_result_label': {'ku': 'پرسیارە پێشبینیکراوەکان و ڕێنماییەکان', 'ar': 'الأسئلة المتوقعة والنصائح', 'en': 'Predicted Questions & Tips'},
+    'exam_predictor_loading': {'ku': 'ژیری دەستکرد خەریکی شیکردنەوەی تێبینییەکان و پێشبینیکردنی پرسیارەکانە...', 'ar': 'يقوم الذكاء الاصطناعي بتحليل الملاحظات وتوقع الأسئلة...', 'en': 'AI is analyzing your notes & predicting questions...'},
+    'exam_predictor_info': {'ku': 'تێبینییەکانی وانەکەت یان دەستپێکی بەشەکە بنووسە بۆ ئەوەی ژیری دەستکرد پێشبینی ئەو پرسیارانە بکات کە ئەگەری زۆرە لە تاقیکردنەوەدا بێنەوە.', 'ar': 'أدخل ملاحظات المحاضرة أو المنهج ليقوم الذكاء الاصطناعي بتوقع الأسئلة المتوقعة في الامتحان.', 'en': 'Enter your lectures notes, syllabus, or content to let Gemini AI predict what is likely to show up in your exam.'},
+    'exam_predictor_hint': {'ku': 'لێرە بنووسە یان کۆپی بکە...', 'ar': 'اكتب أو الصق هنا...', 'en': 'Type or paste here...'},
+
+    // Mind Map
+    'mind_map_title': {'ku': 'نەخشەی مێشکی زیرەک', 'ar': 'خريطة المفاهيم الذكية', 'en': 'AI Mind Map'},
+    'mind_map_placeholder': {'ku': 'بابەتێک بنووسە (بۆ نموونە: بیرۆکەی کۆمپیوتەر)', 'ar': 'أدخل موضوع الخريطة (مثال: إدارة الذاكرة)', 'en': 'Enter topic (e.g. Memory Management)'},
+    'mind_map_empty': {'ku': 'نەخشەیەکی بینراو دروست بکە بۆ تێگەیشتن لە چەمکەکان.', 'ar': 'أنشئ خريطة بصرية لربط موضوعات دراستك.', 'en': 'Generate a visual map to connect study topics.'},
+    'mind_map_no_desc': {'ku': 'هیچ ڕوونکردنەوەیەک نییە.', 'ar': 'لا يوجد وصف.', 'en': 'No description available.'},
+
+    // Audio Summarizer
+    'audio_summarizer_title': {'ku': 'کورتکەرەوەی دەنگی وانەکان', 'ar': 'مستخلص المحاضرات الصوتية', 'en': 'Audio Summarizer'},
+    'audio_summarizer_info': {'ku': 'دەنگی مامۆستا لە کاتی وتنەوەی وانەکەدا تۆمار بکە یان فایلێکی دەنگی باربکە بۆ ئەوەی دەستبەجێ بیکاتە نووسین و کورتکراوەی نایاب.', 'ar': 'سجل صوت المحاضر أثناء الدرس أو حمل تسجيلاً صوتياً ليتم تفريغه وتلخيصه فوراً.', 'en': 'Record your professor during the lecture or upload an audio recording to transcribe and summarize instantly.'},
+    'audio_summarizer_upload_btn': {'ku': 'بارکردنی فایلی دەنگی', 'ar': 'تحميل ملف صوتي', 'en': 'Upload Audio File'},
+    'audio_summarizer_result_label': {'ku': 'کورتکراوەی دەنگی وانەکە', 'ar': 'ملخص المحاضرة الصوتية', 'en': 'Audio Lecture Summary'},
+    'audio_summarizer_loading': {'ku': 'خەریکی وەرگێڕانی دەنگ بۆ نووسین و کورتکردنەوەی دەنگەکەیە...', 'ar': 'جاري التفريغ الصوتي وتلخيص المحاضرة...', 'en': 'Transcribing and generating AI summary...'},
+    'audio_summarizer_tap_record': {'ku': 'کلیک بکە بۆ دەستپێکردنی تۆمارکردن', 'ar': 'اضغط لبدء التسجيل', 'en': 'Tap to start recording'},
+
+    // Stats Screen
+    'stats_title': {'ku': 'ئاماری خوێندن و دەستکەوتەکانم', 'ar': 'إحصائيات الدراسة والإنجازات', 'en': 'Study Statistics & Achievements'},
+    'stats_weekly_activity': {'ku': 'چالاکییەکانی خوێندنم', 'ar': 'النشاط الأسبوعي', 'en': 'Weekly Activity'},
+    'stats_badges': {'ku': 'میدالیا و دەستکەوتەکانم', 'ar': 'الشارات والميداليات المستحقة', 'en': 'Earned Badges'},
+    'stats_pomodoros': {'ku': 'خولەکانی تەرکیز', 'ar': 'جلسات بومودورو', 'en': 'Pomodoros'},
+    'stats_quizzes_done': {'ku': 'کویزە تەواوکراوەکان', 'ar': 'الاختبارات المنجزة', 'en': 'Quizzes Done'},
+    'stats_cards_flipped': {'ku': 'فلاشکاردەکان', 'ar': 'البطاقات المراجعة', 'en': 'Cards Flipped'},
+    'stats_notes_kept': {'ku': 'تێبینییە ڕێکخراوەکان', 'ar': 'الملاحظات المحفوظة', 'en': 'Notes Kept'},
+
+    // GPA Tracker
+    'gpa_title': {'ku': 'خەمڵاندنی نمرە و نەخشەی GPA', 'ar': 'حساب المعدل ومخطط التقدم', 'en': 'GPA Calculator & Progress Chart'},
+    'gpa_total': {'ku': 'کۆنمرەی گشتی (GPA)', 'ar': 'المعدل التراكمي العام', 'en': 'Total Cumulative GPA'},
+    'gpa_chart_header': {'ku': 'نەخشەی پێشکەوتنی وەرزەکان', 'ar': 'مخطط تقدم الفصول الدراسية', 'en': 'Semester Progress Chart'},
+    'gpa_add_label': {'ku': 'نمرەی وەرزێکی نوێ زیاد بکە (0.0 - 4.0)', 'ar': 'أضف معدل فصل دراسي (0.0 - 4.0)', 'en': 'Add Semester GPA (0.0 - 4.0)'},
+    'gpa_add_btn': {'ku': 'زیادکردن', 'ar': 'إضافة', 'en': 'Add'},
+    'gpa_list_header': {'ku': 'سجلی نمرەکانی پێشوو', 'ar': 'سجل الفصول الدراسية', 'en': 'Semester History'},
+    'gpa_semester_label': {'ku': 'وەرز', 'ar': 'فصل دراسي', 'en': 'Semester'},
+
+    // Study Planner
+    'study_planner_card_title': {'ku': 'پلانێکی نوێ داڕێژە', 'ar': 'إنشاء جدول دراسة جديد', 'en': 'Create Study Schedule'},
+    'study_planner_topic_label': {'ku': 'ناوی بابەت یان تاقیکردنەوە', 'ar': 'المادة أو موضوع الامتحان', 'en': 'Course / Exam Topic'},
+    'study_planner_days_label': {'ku': 'ڕۆژەکانی ماوە بۆ تاقیکردنەوە', 'ar': 'الأيام المتبقية', 'en': 'Days Remaining'},
+    'study_planner_generate_btn': {'ku': 'پلانی خوێندن داڕێژە', 'ar': 'توليد خطة الدراسة', 'en': 'Generate Study Plan'},
+    'study_planner_empty': {'ku': 'پلانەکەت لێرەدا نیشان دەدرێت.', 'ar': 'ستظهر خطتك الدراسية المقترحة هنا.', 'en': 'Your generated study schedule will appear here.'},
+
+    // Reminders
+    'reminders_title': {'ku': 'ئەرک و یاددەهێنەرەکانم', 'ar': 'المهام والتذكيرات الدراسية', 'en': 'Task & Homework Reminders'},
+    'reminders_active': {'ku': 'ئەرکە چالاکەکان', 'ar': 'المهام النشطة', 'en': 'Active Tasks'},
+    'reminders_completed': {'ku': 'تەواوکراوەکان', 'ar': 'المهام المكتملة', 'en': 'Completed'},
+    'reminders_no_tasks': {'ku': 'هیچ یاددەهێنەرێکی چالاک نییە.', 'ar': 'لا توجد تذكيرات نشطة حالياً.', 'en': 'No active reminders.'},
+    'reminders_add_title': {'ku': 'یاددەهێنەر یان ئەرکی نوێ زیاد بکە', 'ar': 'إضافة مهمة أو تذكير جديد', 'en': 'Add New Task or Reminder'},
+    'reminders_passed': {'ku': 'وادەکەی بەسەرچوو', 'ar': 'انتهى الوقت', 'en': 'Passed / Completed'},
+    'reminders_time_left': {'ku': 'ماوە بۆ جێبەجێکردن: {days} ڕۆژ، {hours} سەعات', 'ar': 'المتبقي: {days} يوم، {hours} ساعة', 'en': 'Time left: {days} days, {hours} hrs'},
+    'reminders_no_deadline': {'ku': 'هیچ وادەیەک دیاری نەکراوە', 'ar': 'لم يتم تحديد موعد', 'en': 'No deadline set'},
+    'close': {'ku': 'داخستن', 'ar': 'إغلاق', 'en': 'Close'},
 
     // Schedule
-    'schedule_title': {
-      'ku': 'خشتەی وانەکانم',
-      'ar': 'جدول محاضراتي',
-      'en': 'My Class Schedule',
-    },
-    'no_lectures_day': {
-      'ku': 'هیچ وانەیەک نییە لەم ڕۆژەدا',
-      'ar': 'لا توجد محاضرات في هذا اليوم',
-      'en': 'No lectures on this day',
-    },
-    'add_lecture': {
-      'ku': 'وانەیەکی نوێ زیادبکە',
-      'ar': 'إضافة محاضرة جديدة',
-      'en': 'Add a new lecture',
-    },
-    'lecture_name': {
-      'ku': 'ناوی وانە',
-      'ar': 'اسم المادة',
-      'en': 'Lecture Name',
-    },
-    'lecture_day': {
-      'ku': 'ڕۆژی وانە',
-      'ar': 'يوم المحاضرة',
-      'en': 'Lecture Day',
-    },
-    'lecture_time': {
-      'ku': 'کات (کاژێر)',
-      'ar': 'الوقت (الساعة)',
-      'en': 'Time (Hour)',
-    },
-    'lecture_location': {
-      'ku': 'شوێن / هۆڵ',
-      'ar': 'المكان / القاعة',
-      'en': 'Location / Hall',
-    },
-    'lecture_teacher': {
-      'ku': 'ناوی مامۆستا',
-      'ar': 'اسم الأستاذ',
-      'en': 'Teacher\'s Name',
-    },
-    'lecture_save_success': {
-      'ku': 'وانەکە بە سەرکەوتوویی زیادکرا',
-      'ar': 'تمت إضافة المحاضرة بنجاح',
-      'en': 'Lecture added successfully',
-    },
-    'lecture_delete_success': {
-      'ku': 'وانەکە سڕایەوە',
-      'ar': 'تم حذف المحاضرة',
-      'en': 'Lecture deleted',
-    },
-    
-    // Languages Settings
-    'language_settings': {
-      'ku': 'زمان / اللغة / Language',
-      'ar': 'زمان / اللغة / Language',
-      'en': 'Language Settings',
-    },
+    'schedule_lectures_count': {'ku': 'وانە', 'ar': 'محاضرات', 'en': 'lectures'},
 
-    // Role Selection
-    'select_role': {
-      'ku': 'کێیت؟',
-      'ar': 'من أنت؟',
-      'en': 'Who are you?',
-    },
-    'select_role_desc': {
-      'ku': 'ڕۆڵت هەڵبژێرە بۆ دەستپێکردن',
-      'ar': 'اختر دورك للبدء',
-      'en': 'Select your role to get started',
-    },
-    'role_student_desc': {
-      'ku': 'فێربە، تاقیبکەرەوە و پێشبکەوە',
-      'ar': 'تعلم، اختبر وتقدم',
-      'en': 'Learn, test and progress',
-    },
-    'role_teacher_desc': {
-      'ku': 'وانەبێژ، ڕێنمایی بکە و بەڕێوەبە',
-      'ar': 'درّس، أرشد وأدر',
-      'en': 'Teach, guide and manage',
-    },
-    'continue_btn': {
-      'ku': 'بەردەوامبوون',
-      'ar': 'متابعة',
-      'en': 'Continue',
-    },
+    // General snackbar / dialog translations
+    'snackbar_enter_topic': {'ku': 'تکایە بابەتێک بنووسە.', 'ar': 'يرجى كتابة موضوع.', 'en': 'Please enter a topic.'},
+    'snackbar_fill_all_fields': {'ku': 'تکایە هەموو خانەکان پڕبکەرەوە.', 'ar': 'يرجى ملء جميع الحقول.', 'en': 'Please fill in all fields.'},
+    'snackbar_enter_subject': {'ku': 'تکایە ناوی بابەتەکە بنووسە.', 'ar': 'يرجى كتابة اسم الموضوع.', 'en': 'Please enter the subject name.'},
 
-    // Teacher Navigation
-    'nav_teacher_dashboard': {
-      'ku': 'داشبۆرد',
-      'ar': 'لوحة التحكم',
-      'en': 'Dashboard',
-    },
-    'nav_teacher_courses': {
-      'ku': 'وانەکانم',
-      'ar': 'موادي',
-      'en': 'My Courses',
-    },
-    'nav_teacher_quiz': {
-      'ku': 'کویز',
-      'ar': 'الاختبارات',
-      'en': 'Quizzes',
-    },
-    'nav_teacher_students': {
-      'ku': 'قوتابییەکان',
-      'ar': 'الطلاب',
-      'en': 'Students',
-    },
-    'nav_teacher_ai': {
-      'ku': 'هاوکاری AI',
-      'ar': 'مساعد AI',
-      'en': 'AI Helper',
-    },
+    // AI Teacher
+    'ai_teacher_voice_active': {'ku': 'خوێندنەوەی دەنگی چالاکە 🔊', 'ar': 'القراءة الصوتية نشطة 🔊', 'en': 'Voice Reading Active 🔊'},
+    'ai_teacher_voice_stop': {'ku': 'وەستان / Stop', 'ar': 'إيقاف / Stop', 'en': 'Stop / إيقاف'},
+    'ai_teacher_read_aloud': {'ku': 'Read Aloud', 'ar': 'القراءة بصوت عال', 'en': 'Read Aloud'},
 
-    // Teacher Dashboard
-    'teacher_welcome': {
-      'ku': 'بەخێربێیت، مامۆستا',
-      'ar': 'أهلاً بك، أستاذ',
-      'en': 'Welcome, Teacher',
-    },
-    'teacher_stats_students': {
-      'ku': 'قوتابی',
-      'ar': 'طالب',
-      'en': 'Students',
-    },
-    'teacher_stats_courses': {
-      'ku': 'وانە',
-      'ar': 'مادة',
-      'en': 'Courses',
-    },
-    'teacher_stats_quizzes': {
-      'ku': 'کویز',
-      'ar': 'اختبار',
-      'en': 'Quizzes',
-    },
-    'teacher_quick_actions': {
-      'ku': 'کردارە خێراکان',
-      'ar': 'الإجراءات السريعة',
-      'en': 'Quick Actions',
-    },
-    'teacher_create_quiz': {
-      'ku': 'دروستکردنی کویز',
-      'ar': 'إنشاء اختبار',
-      'en': 'Create Quiz',
-    },
-    'teacher_add_course': {
-      'ku': 'زیادکردنی وانە',
-      'ar': 'إضافة مادة',
-      'en': 'Add Course',
-    },
-    'teacher_view_students': {
-      'ku': 'بینینی قوتابییەکان',
-      'ar': 'عرض الطلاب',
-      'en': 'View Students',
-    },
-    'teacher_ai_content': {
-      'ku': 'دروستکردنی ناوەڕۆکی AI',
-      'ar': 'إنشاء محتوى بـ AI',
-      'en': 'Generate AI Content',
-    },
-    'teacher_recent_activity': {
-      'ku': 'چالاکییەکانی دواین',
-      'ar': 'النشاطات الأخيرة',
-      'en': 'Recent Activity',
-    },
+    // Onboarding - additional keys
+    'onboarding_summarize_sub': {'ku': 'PDF باربکە یان دەق بنووسە — دەستبەجێ کورتکراوە و وەرگێڕان وەربگرە.', 'ar': 'ارفع ملفات PDF أو الصق النص للحصول على ملخصات فورية.', 'en': 'Upload PDFs or paste text — get instant AI summaries and translations.'},
+    'onboarding_skip': {'ku': 'تێپەڕکردن', 'ar': 'تخطي', 'en': 'Skip'},
+    'onboarding_next': {'ku': 'دواتر →', 'ar': 'التالي →', 'en': 'Next →'},
+    'onboarding_lets_go': {'ku': 'با بچینە ناو! 🚀', 'ar': 'هيا نبدأ! 🚀', 'en': "Let's Go! 🚀"},
 
-    // Teacher Courses
-    'teacher_courses_title': {
-      'ku': 'وانەکانم',
-      'ar': 'موادي الدراسية',
-      'en': 'My Courses',
-    },
-    'teacher_add_course_title': {
-      'ku': 'وانەیەکی نوێ زیادبکە',
-      'ar': 'إضافة مادة جديدة',
-      'en': 'Add New Course',
-    },
-    'course_title_field': {
-      'ku': 'ناوی وانە',
-      'ar': 'اسم المادة',
-      'en': 'Course Title',
-    },
-    'course_desc_field': {
-      'ku': 'وەسفی وانە',
-      'ar': 'وصف المادة',
-      'en': 'Course Description',
-    },
-    'course_students_count': {
-      'ku': 'قوتابی',
-      'ar': 'طالب',
-      'en': 'Students',
-    },
-    'no_courses_yet': {
-      'ku': 'هیچ وانەیەک نەنووسراوە تا ئێستا',
-      'ar': 'لا توجد مواد بعد',
-      'en': 'No courses added yet',
-    },
-    'add_first_course': {
-      'ku': 'یەکەمین وانەکەت زیادبکە',
-      'ar': 'أضف مادتك الأولى',
-      'en': 'Add your first course',
-    },
+    // Shared buttons
+    'add': {'ku': 'زیادکردن', 'ar': 'إضافة', 'en': 'Add'},
 
-    // Teacher Quiz Creation
-    'teacher_quiz_title': {
-      'ku': 'دروستکردنی کویزی نوێ',
-      'ar': 'إنشاء اختبار جديد',
-      'en': 'Create New Quiz',
-    },
-    'quiz_for_course': {
-      'ku': 'بۆ کام وانە؟',
-      'ar': 'لأي مادة؟',
-      'en': 'For which course?',
-    },
-    'quiz_topic_hint': {
-      'ku': 'بابەتی کویز بنووسە...',
-      'ar': 'اكتب موضوع الاختبار...',
-      'en': 'Enter quiz topic...',
-    },
-    'quiz_num_questions': {
-      'ku': 'ژمارەی پرسیارەکان',
-      'ar': 'عدد الأسئلة',
-      'en': 'Number of Questions',
-    },
-    'quiz_difficulty': {
-      'ku': 'ئاستی گرانی',
-      'ar': 'مستوى الصعوبة',
-      'en': 'Difficulty Level',
-    },
-    'difficulty_easy': {
-      'ku': 'ئاسان',
-      'ar': 'سهل',
-      'en': 'Easy',
-    },
-    'difficulty_medium': {
-      'ku': 'مامناوەند',
-      'ar': 'متوسط',
-      'en': 'Medium',
-    },
-    'difficulty_hard': {
-      'ku': 'گران',
-      'ar': 'صعب',
-      'en': 'Hard',
-    },
-    'generate_and_share': {
-      'ku': 'دروستکردن و بەشکردن',
-      'ar': 'إنشاء ومشاركة',
-      'en': 'Generate & Share',
-    },
-    'quiz_created_success': {
-      'ku': 'کویزەکە بە سەرکەوتوویی دروست کرا',
-      'ar': 'تم إنشاء الاختبار بنجاح',
-      'en': 'Quiz created successfully',
-    },
+    // QR Share
+    'qr_share_title': {'ku': 'هاوبەشکردنی فلاشکاردەکان', 'ar': 'مشاركة مجموعة الكروت', 'en': 'Share Deck'},
+    'qr_share_desc': {'ku': 'با هاوڕێکەت ئەم کۆدی QRە سکان بکات بۆ ئەوەی فلاشکاردەکانت وەربگرێت!', 'ar': 'دع صديقك يمسح هذا الكود لاستيراد الكروت فوراً!', 'en': 'Let your friend scan this QR code to import this deck instantly!'},
+    'qr_scan_instructions': {'ku': 'کۆدی QR لە ناو چوارگۆشەکە دابنێ', 'ar': 'ضع رمز QR داخل المربع للمسح', 'en': 'Align QR code inside the box to scan'},
+    'calculate': {'ku': 'هەژمارکردن', 'ar': 'حساب', 'en': 'Calculate'},
+    'target_planner_title': {'ku': 'دیاریکردنی ئامانجی کۆنمرە', 'ar': 'مخطط المعدل المستهدف', 'en': 'Target GPA Planner'},
+    'planner_input_error': {'ku': 'تکایە خانەکان بە دروستی پڕبکەرەوە.', 'ar': 'يرجى ملء الحقول بشكل صحيح.', 'en': 'Please fill in the fields correctly.'},
+    'planner_cannot_reach': {'ku': '⚠️ بەم ژمارە وەرزە ناگەیتە ئامانجەکەت! پێویستت بە GPA {required} هەیە لە هەر وەرزێکدا', 'ar': '⚠️ لا يمكنك الوصول للهدف بهذا العدد من الفصول! تحتاج GPA {required} في كل فصل', 'en': '⚠️ You cannot reach your target in this many semesters! You need GPA {required} each semester'},
+    'planner_already_met': {'ku': '🎉 ئامانجەکەت مسۆگەرە!', 'ar': '🎉 هدفك مضمون بالفعل!', 'en': '🎉 Your target is already guaranteed!'},
+    'planner_required': {'ku': '🎯 پێویستە تێکڕای نمرەی وەرزی داهاتووت لە {required} کەمتر نەبێت', 'ar': '🎯 يجب ألا يقل معدلك في الفصول القادمة عن {required}', 'en': '🎯 You need at least GPA {required} in remaining semesters'},
 
-    // Teacher Students
-    'teacher_students_title': {
-      'ku': 'قوتابییەکانم',
-      'ar': 'طلابي',
-      'en': 'My Students',
-    },
-    'student_performance': {
-      'ku': 'بارودۆخی قوتابی',
-      'ar': 'أداء الطالب',
-      'en': 'Student Performance',
-    },
-    'avg_score': {
-      'ku': 'نمرەی ناوەند',
-      'ar': 'متوسط الدرجات',
-      'en': 'Average Score',
-    },
-    'quizzes_taken': {
-      'ku': 'کویزی تاقیکردووە',
-      'ar': 'اختبارات مكتملة',
-      'en': 'Quizzes Taken',
-    },
-    'no_students_yet': {
-      'ku': 'هیچ قوتابییەک تازیامان نییە',
-      'ar': 'لا يوجد طلاب بعد',
-      'en': 'No students yet',
-    },
+    // QR / Deck import-export
+    'deck_imported': {'ku': 'فلاشکاردەکان بە سەرکەوتوویی هاوردە کران! ✅', 'ar': 'تم استيراد البطاقات بنجاح! ✅', 'en': 'Deck imported successfully! ✅'},
 
-    // Enrollment Flow
-    'course_enrollment': {
-      'ku': 'تۆماربوون لە وانەکان',
-      'ar': 'التسجيل في المواد',
-      'en': 'Course Enrollment',
-    },
-    'request_enrollment': {
-      'ku': 'داواکردنی تۆماربوون',
-      'ar': 'طلب تسجيل',
-      'en': 'Request Enrollment',
-    },
-    'pending_approval': {
-      'ku': 'چاوەڕوانی قبوڵکردن',
-      'ar': 'قيد الانتظار',
-      'en': 'Pending Approval',
-    },
-    'approved': {
-      'ku': 'قبوڵکراو',
-      'ar': 'تم القبول',
-      'en': 'Approved',
-    },
-    'rejected': {
-      'ku': 'ڕەتکراوە',
-      'ar': 'مرفوض',
-      'en': 'Rejected',
-    },
-    'enroll_success': {
-      'ku': 'داواکاری تۆمارکردن نێردرا بە سەرکەوتوویی!',
-      'ar': 'تم إرسال طلب التسجيل بنجاح!',
-      'en': 'Enrollment request sent successfully!',
-    },
-    'enrollment_requests': {
-      'ku': 'داواکارییەکانی تۆماربوون',
-      'ar': 'طلبات التسجيل',
-      'en': 'Enrollment Requests',
-    },
-    'approve': {
-      'ku': 'قبوڵکردن',
-      'ar': 'قبول',
-      'en': 'Approve',
-    },
-    'reject': {
-      'ku': 'ڕەتکردنەوە',
-      'ar': 'رفض',
-      'en': 'Reject',
-    },
-    'no_pending_requests': {
-      'ku': 'هیچ داواکارییەکی چاوەڕوانکراو نییە',
-      'ar': 'لا توجد طلبات معلقة',
-      'en': 'No pending requests',
-    },
-    'new_request_title': {
-      'ku': 'داواکاری تۆماربوونی نوێ',
-      'ar': 'طلب تسجيل جديد',
-      'en': 'New Enrollment Request',
-    },
-    'new_request_body': {
-      'ku': 'قوتابیەک داواکاری تۆمارکردنی نارد بۆ وانەکەت',
-      'ar': 'أرسل طالب طلب تسجيل لمادتك',
-      'en': 'A student sent an enrollment request for your course',
-    },
-    'request_approved_title': {
-      'ku': 'تۆماربوون قبوڵکرا!',
-      'ar': 'تم قبول التسجيل!',
-      'en': 'Enrollment Approved!',
-    },
-    'request_approved_body': {
-      'ku': 'مامۆستا داواکاری تۆمارکردنەکەت قبوڵ کرد لە وانەی',
-      'ar': 'وافق المعلم على طلب تسجيلك في مادة',
-      'en': 'The teacher approved your enrollment in',
-    },
+    // Profile / University ID card (extra detail rows)
+    'cumulative_gpa': {'ku': 'کۆنمرەی گشتی (GPA)', 'ar': 'المعدل التراكمي', 'en': 'Cumulative GPA'},
+    'credits_completed': {'ku': 'کرێدیتی تەواوکراو', 'ar': 'الساعات المعتمدة المكتملة', 'en': 'Credits Completed'},
+    'academic_advisor': {'ku': 'مامۆستای ئەکادیمی', 'ar': 'المرشد الأكاديمي', 'en': 'Academic Advisor'},
   };
 }
+

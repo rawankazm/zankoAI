@@ -64,7 +64,7 @@ class _FocusScreenState extends State<FocusScreen> {
         _totalSeconds = 300;
         _isRunning = false;
       });
-      _showCompletionDialog('Focus Complete!', 'کاتژمێری تەرکیز بە سەرکەوتوویی تەواو بوو! ئێستا کاتی پشووە ☕');
+      _showCompletionDialog(Provider.of<LanguageProvider>(context, listen: false).translate('focus_complete'), Provider.of<LanguageProvider>(context, listen: false).translate('break_session'));
     } else {
       // Switched back to work mode
       setState(() {
@@ -73,7 +73,7 @@ class _FocusScreenState extends State<FocusScreen> {
         _totalSeconds = 1500;
         _isRunning = false;
       });
-      _showCompletionDialog('Break Complete!', 'کاتژمێری پشوو تەواو بوو! با بگەڕێینەوە سەر خوێندنەوە 📚');
+      _showCompletionDialog(Provider.of<LanguageProvider>(context, listen: false).translate('break_complete'), Provider.of<LanguageProvider>(context, listen: false).translate('focus_session'));
     }
   }
 
@@ -82,11 +82,11 @@ class _FocusScreenState extends State<FocusScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        content: Text(desc, style: const TextStyle(fontFamily: 'Noto Sans Arabic')),
+        content: Text(desc, style: const TextStyle()),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('باشە'),
+            child: Text(Provider.of<LanguageProvider>(context, listen: false).translate('ok')),
           ),
         ],
       ),
@@ -119,39 +119,17 @@ class _FocusScreenState extends State<FocusScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final __lang = Provider.of<LanguageProvider>(context);
+    String t(String key) => __lang.translate(key);
     final theme = Theme.of(context);
     final langProvider = Provider.of<LanguageProvider>(context);
 
     // Translations
-    final title = langProvider.currentLanguage == AppLanguage.english
-        ? 'Pomodoro Focus Timer'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'مؤقت التركيز (بومودورو)'
-            : 'کاتژمێری تەرکیزکردن';
-
-    final modeStudy = langProvider.currentLanguage == AppLanguage.english
-        ? 'Study Focus Session'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'جلسة التركيز والدراسة'
-            : 'خولی تەرکیزکردن';
-
-    final modeBreak = langProvider.currentLanguage == AppLanguage.english
-        ? 'Relax Break Session'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'وقت الاستراحة والراحة'
-            : 'خولی پشوودان';
-
-    final toggleStudy = langProvider.currentLanguage == AppLanguage.english
-        ? 'Switch to Focus'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'التبديل للدراسة'
-            : 'بگۆڕە بۆ تەرکیز';
-
-    final toggleBreak = langProvider.currentLanguage == AppLanguage.english
-        ? 'Switch to Break'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'التبديل للاستراحة'
-            : 'بگۆڕە بۆ پشوو';
+    final title = t('focus_timer_title');
+    final modeStudy = t('focus_session');
+    final modeBreak = t('break_session');
+    final toggleStudy = t('switch_to_focus');
+    final toggleBreak = t('switch_to_break');
 
     final progress = _secondsRemaining / _totalSeconds;
     final activeColor = _isBreakMode ? Colors.green.shade600 : Colors.deepOrange.shade600;
@@ -185,7 +163,6 @@ class _FocusScreenState extends State<FocusScreen> {
                         style: TextStyle(
                           color: activeColor,
                           fontWeight: FontWeight.bold,
-                          fontFamily: 'Noto Sans Arabic',
                           fontSize: 13,
                         ),
                       ),
@@ -215,7 +192,7 @@ class _FocusScreenState extends State<FocusScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            _isBreakMode ? 'BREAK' : 'FOCUS',
+                            _isBreakMode ? t('break_label') : t('focus_label'),
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,

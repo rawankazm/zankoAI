@@ -200,7 +200,7 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
           actions: [
             IconButton(
               icon: Icon(_isTtsEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded),
-              tooltip: 'Text to Speech (بەدەنگ خوێندنەوە)',
+              tooltip: t('tts_tooltip'),
               onPressed: () {
                 setState(() {
                   _isTtsEnabled = !_isTtsEnabled;
@@ -240,8 +240,7 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: aiService.hasRealApiKey ? Colors.green.shade300 : Colors.amber.shade300,
-                        fontFamily: 'Noto Sans Arabic',
-                      ),
+                        ),
                     ),
                   ),
                 ],
@@ -287,7 +286,6 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
                               color: isUser 
                                   ? Colors.white 
                                   : theme.colorScheme.onSurfaceVariant,
-                              fontFamily: 'Noto Sans Arabic',
                               height: 1.4,
                             ),
                           ),
@@ -308,9 +306,9 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
                                             children: [
                                               const Icon(Icons.record_voice_over_rounded, size: 60, color: Colors.blue),
                                               const SizedBox(height: 16),
-                                              const Text(
-                                                'خوێندنەوەی دەنگی چالاکە 🔊',
-                                                style: TextStyle(fontFamily: 'Noto Sans Arabic', fontWeight: FontWeight.bold),
+                                              Text(
+                                                t('ai_teacher_voice_active'),
+                                                style: const TextStyle(fontWeight: FontWeight.bold),
                                               ),
                                               const SizedBox(height: 12),
                                               Row(
@@ -328,7 +326,7 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
                                               const SizedBox(height: 16),
                                               ElevatedButton(
                                                 onPressed: () => Navigator.pop(context),
-                                                child: const Text('وەستان / Stop', style: TextStyle(fontFamily: 'Noto Sans Arabic')),
+                                                child: Text(t('ai_teacher_voice_stop'), style: const TextStyle()),
                                               ),
                                             ],
                                           ),
@@ -342,7 +340,7 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
                                       Icon(Icons.volume_up_rounded, size: 16, color: theme.colorScheme.primary),
                                       const SizedBox(width: 4),
                                       Text(
-                                        'Read Aloud',
+                                        t('ai_teacher_read_aloud'),
                                         style: TextStyle(fontSize: 10, color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
                                       ),
                                     ],
@@ -370,7 +368,6 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
                     style: TextStyle(
                       fontStyle: FontStyle.italic,
                       color: theme.colorScheme.onSurface.withOpacity(0.5),
-                      fontFamily: 'Noto Sans Arabic',
                       fontSize: 12,
                     ),
                   ),
@@ -391,7 +388,7 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
                       child: ActionChip(
                         label: Text(
                           presets[index],
-                          style: const TextStyle(fontFamily: 'Noto Sans Arabic', fontSize: 11),
+                          style: const TextStyle(fontSize: 11),
                         ),
                         onPressed: () => _sendMessage(presets[index]),
                       ),
@@ -412,7 +409,7 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
                       controller: _messageController,
                       decoration: InputDecoration(
                         hintText: t('ask_teacher_hint'),
-                        hintStyle: const TextStyle(fontFamily: 'Noto Sans Arabic', fontSize: 13),
+                        hintStyle: const TextStyle(fontSize: 13),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),

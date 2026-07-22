@@ -56,7 +56,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
 
     if (title.isEmpty || course.isEmpty || _selectedDate == null || _selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تکایە هەموو خانەکان پڕبکەرەوە و وادەکە دیاری بکە', style: TextStyle(fontFamily: 'Noto Sans Arabic'))),
+        SnackBar(content: Text(t('snackbar_fill_all_fields'), style: const TextStyle())),
       );
       return;
     }
@@ -117,19 +117,19 @@ class _RemindersScreenState extends State<RemindersScreen> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Text(
-                        'یاددەهێنەر یان ئەرکی نوێ زیاد بکە',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, fontFamily: 'Noto Sans Arabic'),
+                      Text(
+                        t('reminders_add_title'),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                       ),
                       const SizedBox(height: 16),
                       TextField(
                         controller: _taskController,
-                        decoration: const InputDecoration(labelText: 'ناوی ئەرکەکە / بابەت'),
+                        decoration: InputDecoration(labelText: Provider.of<LanguageProvider>(context, listen: false).translate('task_subject_label')),
                       ),
                       const SizedBox(height: 12),
                       TextField(
                         controller: _courseController,
-                        decoration: const InputDecoration(labelText: 'ناوی وانە / کۆرس'),
+                        decoration: InputDecoration(labelText: Provider.of<LanguageProvider>(context, listen: false).translate('course_name_label')),
                       ),
                       const SizedBox(height: 16),
                       Row(
@@ -137,9 +137,9 @@ class _RemindersScreenState extends State<RemindersScreen> {
                         children: [
                           Text(
                             _selectedDate == null 
-                                ? 'هیچ وادەیەک دیاری نەکراوە' 
-                                : 'وادە: ${_selectedDate!.year}-${_selectedDate!.month}-${_selectedDate!.day}  ${_selectedTime?.format(context) ?? ""}',
-                            style: const TextStyle(fontFamily: 'Noto Sans Arabic', fontSize: 13),
+                                ? t('reminders_no_deadline') 
+                                : '${t('add')}: ${_selectedDate!.year}-${_selectedDate!.month}-${_selectedDate!.day}  ${_selectedTime?.format(context) ?? ""}',
+                            style: const TextStyle(fontSize: 13),
                           ),
                           TextButton.icon(
                             onPressed: () async {
@@ -147,7 +147,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                               setModalState(() {});
                             },
                             icon: const Icon(Icons.calendar_month_outlined),
-                            label: const Text('دیاریکردن'),
+                            label: Text(t('ok')),
                           ),
                         ],
                       ),
@@ -184,23 +184,15 @@ class _RemindersScreenState extends State<RemindersScreen> {
   String _formatCountdown(DateTime deadline, LanguageProvider lang) {
     final diff = deadline.difference(DateTime.now());
     if (diff.isNegative) {
-      return lang.currentLanguage == AppLanguage.english
-          ? 'Passed / Completed'
-          : lang.currentLanguage == AppLanguage.arabic
-              ? 'انتهى الوقت'
-              : 'وادەکەی بەسەرچوو';
+      return lang.translate('reminders_passed');
     }
 
     final days = diff.inDays;
     final hours = diff.inHours % 24;
 
-    if (lang.currentLanguage == AppLanguage.english) {
-      return 'Time left: $days days, $hours hrs';
-    } else if (lang.currentLanguage == AppLanguage.arabic) {
-      return 'المتبقي: $days يوم، $hours ساعة';
-    } else {
-      return 'ماوە بۆ جێبەجێکردن: $days ڕۆژ، $hours سەعات';
-    }
+    return lang.translate('reminders_time_left')
+        .replaceAll('{days}', days.toString())
+        .replaceAll('{hours}', hours.toString());
   }
 
   Color _getCountdownColor(DateTime deadline) {
@@ -223,29 +215,10 @@ class _RemindersScreenState extends State<RemindersScreen> {
     final completedTasks = dbService.reminders.where((r) => r.isCompleted).toList();
 
     // Translations
-    final String title = langProvider.currentLanguage == AppLanguage.english
-        ? 'Task & Homework Reminders'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'المهام والتذكيرات الدراسية'
-            : 'ئەرک و یاددەهێنەرەکانم';
-
-    final String activeLabel = langProvider.currentLanguage == AppLanguage.english
-        ? 'Active Tasks'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'المهام النشطة'
-            : 'ئەرکە چالاکەکان';
-
-    final String completedLabel = langProvider.currentLanguage == AppLanguage.english
-        ? 'Completed'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'المهام المكتملة'
-            : 'تەواوکراوەکان';
-
-    final String noTasks = langProvider.currentLanguage == AppLanguage.english
-        ? 'No active reminders.'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'لا توجد تذكيرات نشطة حالياً.'
-            : 'هیچ یاددەهێنەرێکی چالاک نییە.';
+    final String title = t('reminders_title');
+    final String activeLabel = t('reminders_active');
+    final String completedLabel = t('reminders_completed');
+    final String noTasks = t('reminders_no_tasks');
 
     return Directionality(
       textDirection: langProvider.textDirection,
@@ -263,7 +236,6 @@ class _RemindersScreenState extends State<RemindersScreen> {
                 activeLabel,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'Noto Sans Arabic',
                 ),
               ),
               const SizedBox(height: 12),
@@ -272,7 +244,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                 Center(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 24),
-                    child: Text(noTasks, style: const TextStyle(fontFamily: 'Noto Sans Arabic')),
+                    child: Text(noTasks, style: const TextStyle()),
                   ),
                 )
               else
@@ -291,14 +263,14 @@ class _RemindersScreenState extends State<RemindersScreen> {
                       ),
                       title: Text(
                         reminder.title,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Noto Sans Arabic', fontSize: 14),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                       ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             reminder.courseName,
-                            style: const TextStyle(fontFamily: 'Noto Sans Arabic', fontSize: 11),
+                            style: const TextStyle(fontSize: 11),
                           ),
                           const SizedBox(height: 4),
                           Container(
@@ -313,7 +285,6 @@ class _RemindersScreenState extends State<RemindersScreen> {
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
                                 color: theme.brightness == Brightness.dark ? color : color.withRed(150),
-                                fontFamily: 'Noto Sans Arabic',
                               ),
                             ),
                           ),
@@ -337,7 +308,6 @@ class _RemindersScreenState extends State<RemindersScreen> {
                   completedLabel,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'Noto Sans Arabic',
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -356,13 +326,12 @@ class _RemindersScreenState extends State<RemindersScreen> {
                         style: const TextStyle(
                           decoration: TextDecoration.lineThrough,
                           fontWeight: FontWeight.bold,
-                          fontFamily: 'Noto Sans Arabic',
                           fontSize: 14,
                         ),
                       ),
                       subtitle: Text(
                         reminder.courseName,
-                        style: const TextStyle(fontFamily: 'Noto Sans Arabic', fontSize: 11),
+                        style: const TextStyle(fontSize: 11),
                       ),
                       trailing: IconButton(
                         icon: const Icon(Icons.delete_outline, color: Colors.red),

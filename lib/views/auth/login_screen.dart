@@ -165,13 +165,11 @@ class _LoginScreenState extends State<LoginScreen>
                   const SizedBox(height: 16),
                   Text(
                     'ZankoAI',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.primary,
-                      fontFamily: 'Noto Sans Arabic',
-                    ),
+                    textAlign: TextAlign.center,style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.primary,
+                        ),
                   ),
                   Text(
                     _isLoginMode ? t('slogan') : t('register'),
@@ -179,7 +177,6 @@ class _LoginScreenState extends State<LoginScreen>
                     style: TextStyle(
                       fontSize: 16,
                       color: theme.colorScheme.onSurface.withOpacity(0.6),
-                      fontFamily: 'Noto Sans Arabic',
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -198,7 +195,6 @@ class _LoginScreenState extends State<LoginScreen>
                         _errorMessage!,
                         style: TextStyle(
                           color: theme.colorScheme.error,
-                          fontFamily: 'Noto Sans Arabic',
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -239,7 +235,7 @@ class _LoginScreenState extends State<LoginScreen>
                                   labelText: t('email'),
                                   prefixIcon:
                                       const Icon(Icons.email_outlined),
-                                  hintText: 'example@zanko.edu',
+                                  hintText: t('email_hint'),
                                 ),
                                 validator: (value) =>
                                     value == null || !value.contains('@')
@@ -297,7 +293,6 @@ class _LoginScreenState extends State<LoginScreen>
                                           borderRadius:
                                               BorderRadius.circular(14)),
                                       textStyle: const TextStyle(
-                                          fontFamily: 'Noto Sans Arabic',
                                           fontWeight: FontWeight.bold),
                                     ),
                                   ),
@@ -318,7 +313,6 @@ class _LoginScreenState extends State<LoginScreen>
                                       ? t('no_account')
                                       : t('has_account'),
                                   style: const TextStyle(
-                                      fontFamily: 'Noto Sans Arabic',
                                       fontWeight: FontWeight.w600),
                                 ),
                               ),
@@ -338,194 +332,3 @@ class _LoginScreenState extends State<LoginScreen>
   }
 }
 
-/// ─── Role Selection Section ───────────────────────────────────────────────────
-class _RoleSelectionSection extends StatelessWidget {
-  final UserRole selectedRole;
-  final bool roleSelected;
-  final void Function(UserRole) onRoleSelected;
-  final String Function(String) t;
-  final ThemeData theme;
-
-  const _RoleSelectionSection({
-    required this.selectedRole,
-    required this.roleSelected,
-    required this.onRoleSelected,
-    required this.t,
-    required this.theme,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          t('select_role'),
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-            fontFamily: 'Noto Sans Arabic',
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          t('select_role_desc'),
-          style: TextStyle(
-            fontSize: 13,
-            color: theme.colorScheme.onSurface.withOpacity(0.55),
-            fontFamily: 'Noto Sans Arabic',
-          ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _RoleCard(
-                role: UserRole.student,
-                icon: Icons.school_rounded,
-                label: t('student'),
-                description: t('role_student_desc'),
-                isSelected: roleSelected && selectedRole == UserRole.student,
-                primaryColor: const Color(0xFF2196F3),
-                onTap: () => onRoleSelected(UserRole.student),
-                theme: theme,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _RoleCard(
-                role: UserRole.teacher,
-                icon: Icons.cast_for_education_rounded,
-                label: t('teacher'),
-                description: t('role_teacher_desc'),
-                isSelected: roleSelected && selectedRole == UserRole.teacher,
-                primaryColor: const Color(0xFF7C3AED),
-                onTap: () => onRoleSelected(UserRole.teacher),
-                theme: theme,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _RoleCard extends StatelessWidget {
-  final UserRole role;
-  final IconData icon;
-  final String label;
-  final String description;
-  final bool isSelected;
-  final Color primaryColor;
-  final VoidCallback onTap;
-  final ThemeData theme;
-
-  const _RoleCard({
-    required this.role,
-    required this.icon,
-    required this.label,
-    required this.description,
-    required this.isSelected,
-    required this.primaryColor,
-    required this.onTap,
-    required this.theme,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeInOut,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? primaryColor
-                : theme.colorScheme.outline.withOpacity(0.3),
-            width: isSelected ? 2.5 : 1.5,
-          ),
-          gradient: isSelected
-              ? LinearGradient(
-                  colors: [
-                    primaryColor.withOpacity(0.15),
-                    primaryColor.withOpacity(0.05),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : null,
-          color: isSelected ? null : theme.colorScheme.surface,
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: primaryColor.withOpacity(0.25),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
-                  )
-                ]
-              : [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  )
-                ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 280),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isSelected
-                    ? primaryColor.withOpacity(0.18)
-                    : theme.colorScheme.surfaceVariant,
-              ),
-              child: Icon(
-                icon,
-                size: 32,
-                color: isSelected
-                    ? primaryColor
-                    : theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: isSelected
-                    ? primaryColor
-                    : theme.colorScheme.onSurface,
-                fontFamily: 'Noto Sans Arabic',
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              description,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 11,
-                color: theme.colorScheme.onSurface.withOpacity(0.55),
-                fontFamily: 'Noto Sans Arabic',
-                height: 1.4,
-              ),
-            ),
-            if (isSelected) ...[
-              const SizedBox(height: 10),
-              Icon(Icons.check_circle_rounded, color: primaryColor, size: 20),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
