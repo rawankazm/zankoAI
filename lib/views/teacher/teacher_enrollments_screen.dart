@@ -46,7 +46,7 @@ class _TeacherEnrollmentsScreenState extends State<TeacherEnrollmentsScreen> {
         SnackBar(
           content: Text(
             approve ? 'داواکارییەکە قبوڵکرا! ✅' : 'داواکارییەکە ڕەتکرایەوە. ❌',
-            style: const TextStyle(fontFamily: 'Noto Sans Arabic'),
+            style: const TextStyle(),
           ),
           backgroundColor: approve ? const Color(0xFF059669) : const Color(0xFFDC2626),
         ),
@@ -77,7 +77,7 @@ class _TeacherEnrollmentsScreenState extends State<TeacherEnrollmentsScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(t('enrollment_requests'),
-              style: const TextStyle(fontFamily: 'Noto Sans Arabic')),
+              style: const TextStyle()),
           centerTitle: true,
           backgroundColor: purple,
           foregroundColor: Colors.white,
@@ -96,7 +96,6 @@ class _TeacherEnrollmentsScreenState extends State<TeacherEnrollmentsScreen> {
                     Text(
                       t('no_pending_requests'),
                       style: TextStyle(
-                        fontFamily: 'Noto Sans Arabic',
                         fontSize: 16,
                         color: theme.colorScheme.onSurface.withOpacity(0.5),
                       ),
@@ -144,7 +143,6 @@ class _TeacherEnrollmentsScreenState extends State<TeacherEnrollmentsScreen> {
                                 style: const TextStyle(
                                   color: purple,
                                   fontWeight: FontWeight.bold,
-                                  fontFamily: 'Noto Sans Arabic',
                                 ),
                               ),
                             ),
@@ -158,7 +156,6 @@ class _TeacherEnrollmentsScreenState extends State<TeacherEnrollmentsScreen> {
                                     style: const TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.bold,
-                                      fontFamily: 'Noto Sans Arabic',
                                     ),
                                   ),
                                   Text(
@@ -189,7 +186,6 @@ class _TeacherEnrollmentsScreenState extends State<TeacherEnrollmentsScreen> {
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 color: theme.colorScheme.onSurface.withOpacity(0.6),
-                                fontFamily: 'Noto Sans Arabic',
                               ),
                             ),
                             Text(
@@ -198,7 +194,6 @@ class _TeacherEnrollmentsScreenState extends State<TeacherEnrollmentsScreen> {
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
                                 color: purple,
-                                fontFamily: 'Noto Sans Arabic',
                               ),
                             ),
                           ],
@@ -231,7 +226,6 @@ class _TeacherEnrollmentsScreenState extends State<TeacherEnrollmentsScreen> {
                                   t('reject'),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontFamily: 'Noto Sans Arabic',
                                   ),
                                 ),
                               ),
@@ -262,7 +256,6 @@ class _TeacherEnrollmentsScreenState extends State<TeacherEnrollmentsScreen> {
                                   t('approve'),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontFamily: 'Noto Sans Arabic',
                                   ),
                                 ),
                               ),

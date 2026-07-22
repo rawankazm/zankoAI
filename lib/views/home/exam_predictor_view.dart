@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
@@ -38,7 +37,7 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking file: $e')),
+        SnackBar(content: Text('${Provider.of<LanguageProvider>(context, listen: false).translate('error')}: $e')),
       );
     }
   }
@@ -47,7 +46,7 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
     final notes = _textController.text.trim();
     if (notes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter notes or upload a file first.')),
+        SnackBar(content: Text(Provider.of<LanguageProvider>(context, listen: false).translate('please_enter_notes'))),
       );
       return;
     }
@@ -79,48 +78,17 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
     final theme = Theme.of(context);
     final langProvider = Provider.of<LanguageProvider>(context);
 
+    final lang = Provider.of<LanguageProvider>(context);
+    String t(String key) => lang.translate(key);
+
     // Translations
-    final String title = langProvider.currentLanguage == AppLanguage.english
-        ? 'Exam Predictor'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'مستشار الامتحان الذكي'
-            : 'پێشبینیکەری تاقیکردنەوە';
-
-    final String inputLabel = langProvider.currentLanguage == AppLanguage.english
-        ? 'Paste your study notes or lesson contents'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'الصق ملاحظات الدراسة أو محتوى الدرس'
-            : 'تێبینییەکانی خوێندن یان دەقی بابەتەکە لێرە دابنێ';
-
-    final String orLabel = langProvider.currentLanguage == AppLanguage.english
-        ? 'OR'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'أو'
-            : 'یاخود';
-
-    final String uploadButton = langProvider.currentLanguage == AppLanguage.english
-        ? 'Upload Text/Markdown File'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'تحميل ملف نصي (Text/Markdown)'
-            : 'بارکردنی فایلی دەقی (Text/Markdown)';
-
-    final String predictButton = langProvider.currentLanguage == AppLanguage.english
-        ? 'Predict Exam Questions'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'توقع أسئلة الامتحان'
-            : 'پێشبینیکردنی پرسیارەکان';
-
-    final String resultLabel = langProvider.currentLanguage == AppLanguage.english
-        ? 'Predicted Questions & Tips'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'الأسئلة المتوقعة والنصائح'
-            : 'پرسیارە پێشبینیکراوەکان و ڕێنماییەکان';
-
-    final String loadingText = langProvider.currentLanguage == AppLanguage.english
-        ? 'AI is analyzing your notes & predicting questions...'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'يقوم الذكاء الاصطناعي بتحليل الملاحظات وتوقع الأسئلة...'
-            : 'ژیری دەستکرد خەریکی شیکردنەوەی تێبینییەکان و پێشبینیکردنی پرسیارەکانە...';
+    final String title = t('exam_predictor_title');
+    final String inputLabel = t('exam_predictor_input_label');
+    final String orLabel = t('exam_predictor_or_label');
+    final String uploadButton = t('exam_predictor_upload_btn');
+    final String predictButton = t('exam_predictor_predict_btn');
+    final String resultLabel = t('exam_predictor_result_label');
+    final String loadingText = t('exam_predictor_loading');
 
     return Directionality(
       textDirection: langProvider.textDirection,
@@ -144,16 +112,11 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: Text(
-                          langProvider.currentLanguage == AppLanguage.english
-                              ? 'Enter your lectures notes, syllabus, or content to let Gemini AI predict what is likely to show up in your exam.'
-                              : langProvider.currentLanguage == AppLanguage.arabic
-                                  ? 'أدخل ملاحظات المحاضرة أو المنهج ليقوم الذكاء الاصطناعي بتوقع الأسئلة المتوقعة في الامتحان.'
-                                  : 'تێبینییەکانی وانەکەت یان دەستپێکی بەشەکە بنووسە بۆ ئەوەی ژیری دەستکرد پێشبینی ئەو پرسیارانە بکات کە ئەگەری زۆرە لە تاقیکردنەوەدا بێنەوە.',
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontFamily: 'Noto Sans Arabic',
-                            height: 1.5,
+                          t('exam_predictor_info'),
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: theme.colorScheme.onSurfaceVariant,
+                          height: 1.5,
                           ),
                         ),
                       ),
@@ -166,19 +129,15 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
               // Text Field Input
               Text(
                 inputLabel,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, fontFamily: 'Noto Sans Arabic'),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, ),
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: _textController,
                 maxLines: 8,
                 decoration: InputDecoration(
-                  hintText: langProvider.currentLanguage == AppLanguage.english
-                      ? 'Type or paste here...'
-                      : langProvider.currentLanguage == AppLanguage.arabic
-                          ? 'اكتب أو الصق هنا...'
-                          : 'لێرە بنووسە یان کۆپی بکە...',
-                  hintStyle: const TextStyle(fontSize: 13, fontFamily: 'Noto Sans Arabic'),
+                  hintText: t('exam_predictor_hint'),
+                  hintStyle: const TextStyle(fontSize: 13, ),
                 ),
                 style: const TextStyle(fontSize: 14),
               ),
@@ -198,7 +157,7 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
                 child: OutlinedButton.icon(
                   onPressed: _pickFile,
                   icon: const Icon(Icons.upload_file_outlined),
-                  label: Text(uploadButton, style: const TextStyle(fontFamily: 'Noto Sans Arabic')),
+                  label: Text(uploadButton, style: const TextStyle()),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(0, 50),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -232,7 +191,7 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
                           height: 24,
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
                         )
-                      : Text(predictButton, style: const TextStyle(fontSize: 15, fontFamily: 'Noto Sans Arabic')),
+                      : Text(predictButton, style: const TextStyle(fontSize: 15, )),
                 ),
               ),
               const SizedBox(height: 24),
@@ -246,7 +205,7 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
                       const SizedBox(height: 16),
                       Text(
                         loadingText,
-                        style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic, fontFamily: 'Noto Sans Arabic'),
+                        style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic, ),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -258,7 +217,7 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
               if (_predictionResult.isNotEmpty) ...[
                 Text(
                   resultLabel,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, fontFamily: 'Noto Sans Arabic'),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, ),
                 ),
                 const SizedBox(height: 10),
                 Card(
@@ -272,7 +231,6 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
                         style: const TextStyle(
                           fontSize: 13.5,
                           height: 1.6,
-                          fontFamily: 'Noto Sans Arabic',
                         ),
                       ),
                     ),

@@ -132,7 +132,7 @@ class _TeacherStudentsScreenState extends State<TeacherStudentsScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(t('teacher_students_title'),
-              style: const TextStyle(fontFamily: 'Noto Sans Arabic')),
+              style: const TextStyle()),
           centerTitle: true,
           backgroundColor: blue,
           foregroundColor: Colors.white,
@@ -171,7 +171,7 @@ class _TeacherStudentsScreenState extends State<TeacherStudentsScreen> {
                 onChanged: (v) => setState(() => _searchQuery = v),
                 decoration: InputDecoration(
                   hintText: '${t("teacher_stats_students")}...',
-                  hintStyle: const TextStyle(fontFamily: 'Noto Sans Arabic'),
+                  hintStyle: const TextStyle(),
                   prefixIcon: const Icon(Icons.search_rounded),
                   filled: true,
                   fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.5),
@@ -180,7 +180,7 @@ class _TeacherStudentsScreenState extends State<TeacherStudentsScreen> {
                     borderSide: BorderSide.none,
                   ),
                 ),
-                style: const TextStyle(fontFamily: 'Noto Sans Arabic'),
+                style: const TextStyle(),
               ),
             ),
 
@@ -190,7 +190,6 @@ class _TeacherStudentsScreenState extends State<TeacherStudentsScreen> {
                   ? Center(
                       child: Text(t('no_students_yet'),
                           style: TextStyle(
-                              fontFamily: 'Noto Sans Arabic',
                               color: theme.colorScheme.onSurface.withOpacity(0.5))))
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -228,11 +227,11 @@ class _TeacherStudentsScreenState extends State<TeacherStudentsScreen> {
                                   backgroundColor: color.withOpacity(0.15),
                                   child: Text(
                                     s['avatar'] as String,
-                                    style: TextStyle(
+                                    style:                                TextStyle(
                                         color: color,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 18,
-                                        fontFamily: 'Noto Sans Arabic'),
+                                      ),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -242,14 +241,12 @@ class _TeacherStudentsScreenState extends State<TeacherStudentsScreen> {
                                     children: [
                                       Text(s['name'] as String,
                                           style: const TextStyle(
-                                              fontFamily: 'Noto Sans Arabic',
                                               fontWeight: FontWeight.bold,
                                               fontSize: 14)),
                                       const SizedBox(height: 2),
                                       Text(
                                         '${s['course']} • ${s['quizzesTaken']} ${t('quizzes_taken')}',
                                         style: TextStyle(
-                                            fontFamily: 'Noto Sans Arabic',
                                             fontSize: 11,
                                             color: theme.colorScheme.onSurface.withOpacity(0.55)),
                                       ),
@@ -265,7 +262,6 @@ class _TeacherStudentsScreenState extends State<TeacherStudentsScreen> {
                                   child: Text(
                                     '${studentAvgScore.toStringAsFixed(0)}%',
                                     style: TextStyle(
-                                        fontFamily: 'Noto Sans Arabic',
                                         fontWeight: FontWeight.bold,
                                         color: scoreColor,
                                         fontSize: 13),
@@ -307,17 +303,15 @@ class _TeacherStudentsScreenState extends State<TeacherStudentsScreen> {
                         color: color,
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'Noto Sans Arabic')),
+                      )),
               ),
               const SizedBox(height: 12),
               Text(s['name'] as String,
                   style: const TextStyle(
-                      fontFamily: 'Noto Sans Arabic',
                       fontSize: 20,
                       fontWeight: FontWeight.bold)),
               Text(s['email'] as String,
                   style: TextStyle(
-                      fontFamily: 'Noto Sans Arabic',
                       color: theme.colorScheme.onSurface.withOpacity(0.55))),
               const SizedBox(height: 20),
               Row(
@@ -331,7 +325,7 @@ class _TeacherStudentsScreenState extends State<TeacherStudentsScreen> {
               const SizedBox(height: 20),
               // Score bar
               Text(t('student_performance'),
-                  style: const TextStyle(fontFamily: 'Noto Sans Arabic', fontWeight: FontWeight.w600)),
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
               const SizedBox(height: 10),
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
@@ -377,10 +371,10 @@ class _SummaryChip extends StatelessWidget {
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      fontFamily: 'Noto Sans Arabic')),
+                    )),
               Text(sublabel,
                   style: const TextStyle(
-                      color: Colors.white70, fontSize: 11, fontFamily: 'Noto Sans Arabic')),
+                      color: Colors.white70, fontSize: 11)),
             ],
           ),
         ],
@@ -401,14 +395,12 @@ class _DetailStat extends StatelessWidget {
       children: [
         Text(value,
             style: TextStyle(
-                fontFamily: 'Noto Sans Arabic',
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: color)),
         const SizedBox(height: 4),
         Text(label,
             style: TextStyle(
-                fontFamily: 'Noto Sans Arabic',
                 fontSize: 11,
                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.55))),
       ],

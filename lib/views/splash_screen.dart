@@ -140,7 +140,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                         letterSpacing: 1.5,
-                        fontFamily: 'Cairo',
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -149,7 +148,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       style: TextStyle(
                         fontSize: 18,
                         color: Colors.white.withOpacity(0.85),
-                        fontFamily: 'Cairo',
                         fontWeight: FontWeight.w500,
                       ),
                     ),

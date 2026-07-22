@@ -19,6 +19,38 @@ class _QuizScreenState extends State<QuizScreen> {
   final TextEditingController _topicController = TextEditingController();
   final TextEditingController _courseController = TextEditingController();
 
+  String _selectedCourse = 'Operating Systems';
+  String _selectedTopic = 'Memory Management';
+
+  final List<String> _courses = [
+    'Operating Systems',
+    'Calculus & Linear Algebra',
+    'Machine Learning Fundamentals',
+    'Data Structures & Algorithms',
+    'Python & Data Science',
+    'Computer Networks & Security',
+    'Database Systems & SQL',
+    'Software Engineering',
+  ];
+
+  final Map<String, List<String>> _courseTopics = {
+    'Operating Systems': ['Memory Management', 'Process Scheduling', 'Deadlocks & Threads', 'File Systems'],
+    'Calculus & Linear Algebra': ['Derivatives & Integrals', 'Matrix Multiplication', 'Vector Spaces', 'Eigenvalues'],
+    'Machine Learning Fundamentals': ['Neural Networks', 'Supervised Learning', 'Regression & Classification', 'Deep Learning'],
+    'Data Structures & Algorithms': ['Trees & Binary Search', 'Graph Algorithms', 'Sorting & Searching', 'Dynamic Programming'],
+    'Python & Data Science': ['Pandas & DataFrames', 'NumPy Arrays', 'Data Visualization', 'Scikit-Learn ML'],
+    'Computer Networks & Security': ['TCP/IP Protocol Stack', 'IP Addressing & Subnetting', 'Network Security & Firewalls', 'HTTP/HTTPS Protocols'],
+    'Database Systems & SQL': ['Relational Database Design', 'SQL Queries & Joins', 'Indexing & Transactions', 'Normalization'],
+    'Software Engineering': ['Agile & Scrum', 'Design Patterns', 'Git Version Control', 'Software Testing & QA'],
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _courseController.text = _selectedCourse;
+    _topicController.text = _selectedTopic;
+  }
+
   String? _quizFileName;
   String? _quizFileContent;
   bool _isGenerating = false;
@@ -102,7 +134,7 @@ class _QuizScreenState extends State<QuizScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load file: $e')),
+        SnackBar(content: Text('${Provider.of<LanguageProvider>(context, listen: false).translate('failed_to_load')}: $e')),
       );
     }
   }
@@ -113,14 +145,14 @@ class _QuizScreenState extends State<QuizScreen> {
     
     if (course.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تکایە ناوی وانە بنووسە', style: TextStyle(fontFamily: 'Noto Sans Arabic'))),
+        SnackBar(content: Text('تکایە ناوی وانە بنووسە', style: TextStyle(fontFamily: 'Noto Sans Arabic'))),
       );
       return;
     }
 
     if (topic.isEmpty && _quizFileContent == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تکایە بابەت یان فایلێک دیاری بکە', style: TextStyle(fontFamily: 'Noto Sans Arabic'))),
+        SnackBar(content: Text('تکایە بابەت یان فایلێک دیاری بکە', style: TextStyle(fontFamily: 'Noto Sans Arabic'))),
       );
       return;
     }
@@ -235,7 +267,7 @@ class _QuizScreenState extends State<QuizScreen> {
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: text));
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('کۆپیکرا بۆ Clipboard!', style: TextStyle(fontFamily: 'Noto Sans Arabic'))),
+                  SnackBar(content: Text('کۆپیکرا بۆ Clipboard!', style: TextStyle(fontFamily: 'Noto Sans Arabic'))),
                 );
                 Navigator.pop(context);
               },
@@ -274,7 +306,7 @@ class _QuizScreenState extends State<QuizScreen> {
       textDirection: langProvider.textDirection,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(t('quiz_title')),
+          title: Text(Provider.of<LanguageProvider>(context, listen: false).translate('quiz_title')),
           centerTitle: true,
         ),
         body: SingleChildScrollView(
@@ -291,23 +323,48 @@ class _QuizScreenState extends State<QuizScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          t('generate_quiz_title'),
+                          Provider.of<LanguageProvider>(context, listen: false).translate('generate_quiz_title'),
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'Noto Sans Arabic'),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          t('generate_quiz_desc'),
+                          Provider.of<LanguageProvider>(context, listen: false).translate('generate_quiz_desc'),
                           style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withOpacity(0.6), fontFamily: 'Noto Sans Arabic'),
                         ),
                         const SizedBox(height: 20),
-                        TextField(
-                          controller: _courseController,
+                        // Course Selection Dropdown
+                        DropdownButtonFormField<String>(
+                          value: _selectedCourse,
+                          isExpanded: true,
                           decoration: InputDecoration(
-                            labelText: t('course_name_field'),
-                            hintText: 'e.g. Operating Systems, Networks',
+                            labelText: Provider.of<LanguageProvider>(context, listen: false).translate('course_name_field'),
+                            prefixIcon: const Icon(Icons.school_rounded, color: Colors.blueAccent),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                           ),
+                          items: _courses.map((c) {
+                            return DropdownMenuItem<String>(
+                              value: c,
+                              child: Text(
+                                c,
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() {
+                                _selectedCourse = val;
+                                _courseController.text = val;
+                                final topics = _courseTopics[val] ?? [t('general_topics')];
+                                _selectedTopic = topics.first;
+                                _topicController.text = _selectedTopic;
+                              });
+                            }
+                          },
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 16),
                         
                         // Option 1: File Pick
                         SizedBox(
@@ -327,21 +384,45 @@ class _QuizScreenState extends State<QuizScreen> {
                         const Center(child: Text('یان / Or', style: TextStyle(fontSize: 12, color: Colors.grey))),
                         const SizedBox(height: 12),
                         
-                        // Option 2: Topic name text
-                        TextField(
-                          controller: _topicController,
+                        // Topic Dropdown Selection
+                        DropdownButtonFormField<String>(
+                          value: (_courseTopics[_selectedCourse]?.contains(_selectedTopic) == true)
+                              ? _selectedTopic
+                              : _courseTopics[_selectedCourse]?.first,
+                          isExpanded: true,
                           decoration: InputDecoration(
-                            labelText: t('topic_field'),
-                            hintText: 'e.g. Memory management, TCP/IP',
+                            labelText: Provider.of<LanguageProvider>(context, listen: false).translate('topic_field'),
+                            prefixIcon: const Icon(Icons.topic_rounded, color: Colors.blueAccent),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                           ),
-                          enabled: _quizFileContent == null,
+                          items: (_courseTopics[_selectedCourse] ?? [t('general_topics')]).map((top) {
+                            return DropdownMenuItem<String>(
+                              value: top,
+                              child: Text(
+                                top,
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: _quizFileContent != null
+                              ? null
+                              : (val) {
+                                  if (val != null) {
+                                    setState(() {
+                                      _selectedTopic = val;
+                                      _topicController.text = val;
+                                    });
+                                  }
+                                },
                         ),
                         const SizedBox(height: 20),
                         SizedBox(
                           width: double.maxFinite,
                           child: ElevatedButton(
                             onPressed: _generateQuiz,
-                            child: Text(t('generate_quiz_btn')),
+                            child: Text(Provider.of<LanguageProvider>(context, listen: false).translate('generate_quiz_btn')),
                           ),
                         ),
                       ],
@@ -352,7 +433,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
                 // Quiz History
                 Text(
-                  t('previous_quizzes'),
+                  Provider.of<LanguageProvider>(context, listen: false).translate('previous_quizzes'),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Noto Sans Arabic',
@@ -406,7 +487,7 @@ class _QuizScreenState extends State<QuizScreen> {
                         const CircularProgressIndicator(),
                         const SizedBox(height: 16),
                         Text(
-                          t('generating_quiz_wait'),
+                          Provider.of<LanguageProvider>(context, listen: false).translate('generating_quiz_wait'),
                           style: const TextStyle(fontFamily: 'Noto Sans Arabic'),
                         ),
                       ],
@@ -429,7 +510,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '${t('question_progress')} ${_currentQuestionIndex + 1} / ${_activeQuiz!.questions.length}',
+                      '${Provider.of<LanguageProvider>(context, listen: false).translate('question_progress')} ${_currentQuestionIndex + 1} / ${_activeQuiz!.questions.length}',
                       style: const TextStyle(fontSize: 12, fontFamily: 'Noto Sans Arabic'),
                     ),
                   ],
@@ -474,7 +555,7 @@ class _QuizScreenState extends State<QuizScreen> {
                               _currentQuestionIndex--;
                             });
                           },
-                          child: Text(t('previous_btn')),
+                          child: Text(Provider.of<LanguageProvider>(context, listen: false).translate('previous_btn')),
                         ),
                       )
                     else
@@ -490,7 +571,7 @@ class _QuizScreenState extends State<QuizScreen> {
                               _currentQuestionIndex++;
                             });
                           },
-                          child: Text(t('next_btn')),
+                          child: Text(Provider.of<LanguageProvider>(context, listen: false).translate('next_btn')),
                         ),
                       )
                     else
@@ -498,7 +579,7 @@ class _QuizScreenState extends State<QuizScreen> {
                         child: ElevatedButton(
                           onPressed: _submitQuiz,
                           style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                          child: Text(t('submit_btn')),
+                          child: Text(Provider.of<LanguageProvider>(context, listen: false).translate('submit_btn')),
                         ),
                       ),
                   ],
@@ -515,12 +596,12 @@ class _QuizScreenState extends State<QuizScreen> {
                         const Icon(Icons.workspace_premium_rounded, size: 80, color: Colors.orange),
                         const SizedBox(height: 16),
                         Text(
-                          t('quiz_completed'),
+                          Provider.of<LanguageProvider>(context, listen: false).translate('quiz_completed'),
                           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Noto Sans Arabic'),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '${t('your_score')}: $_score / ${_activeQuiz!.questions.length}',
+                          '${Provider.of<LanguageProvider>(context, listen: false).translate('your_score')}: $_score / ${_activeQuiz!.questions.length}',
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
@@ -531,8 +612,8 @@ class _QuizScreenState extends State<QuizScreen> {
                         const SizedBox(height: 8),
                         Text(
                           _score == _activeQuiz!.questions.length
-                              ? t('score_perfect')
-                              : t('score_good'),
+                              ? Provider.of<LanguageProvider>(context, listen: false).translate('score_perfect')
+                              : Provider.of<LanguageProvider>(context, listen: false).translate('score_good'),
                           textAlign: TextAlign.center,
                           style: TextStyle(fontFamily: 'Noto Sans Arabic', color: theme.colorScheme.onSurface.withOpacity(0.7)),
                         ),
@@ -542,7 +623,7 @@ class _QuizScreenState extends State<QuizScreen> {
                           children: [
                             ElevatedButton(
                               onPressed: _resetScreen,
-                              child: Text(t('back_to_quiz_home')),
+                              child: Text(Provider.of<LanguageProvider>(context, listen: false).translate('back_to_quiz_home')),
                             ),
                             const SizedBox(width: 12),
                             OutlinedButton.icon(
@@ -612,8 +693,8 @@ class _QuizScreenState extends State<QuizScreen> {
       return [
         TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            hintText: 'Type answer...',
+          decoration: InputDecoration(
+            hintText: Provider.of<LanguageProvider>(context, listen: false).translate('type_answer'),
           ),
           onChanged: (value) {
             _userAnswers[questionIndex] = value.trim();

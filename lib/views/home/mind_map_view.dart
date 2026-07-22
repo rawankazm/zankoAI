@@ -17,7 +17,6 @@ class _MindMapViewState extends State<MindMapView> {
   bool _isLoading = false;
   Map<String, dynamic>? _mindMapData;
   Offset _panOffset = Offset.zero;
-  double _zoomScale = 1.0;
 
   // Custom layout variables
   List<MindMapNode> _nodes = [];
@@ -27,7 +26,7 @@ class _MindMapViewState extends State<MindMapView> {
     final topic = _topicController.text.trim();
     if (topic.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a topic first.')),
+        SnackBar(content: Text(Provider.of<LanguageProvider>(context, listen: false).translate('please_enter_topic'))),
       );
       return;
     }
@@ -38,7 +37,6 @@ class _MindMapViewState extends State<MindMapView> {
       _nodes = [];
       _edges = [];
       _panOffset = Offset.zero;
-      _zoomScale = 1.0;
     });
 
     try {
@@ -183,27 +181,28 @@ class _MindMapViewState extends State<MindMapView> {
   void _showNodeDetails(MindMapNode node) {
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (ctx) {
+        final locLang = Provider.of<LanguageProvider>(context, listen: false);
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
             node.label,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Noto Sans Arabic'),
+            style: const TextStyle(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           content: Text(
-            node.description.isNotEmpty ? node.description : 'هیچ ڕوونکردنەوەیەک نییە.',
-            style: const TextStyle(height: 1.5, fontFamily: 'Noto Sans Arabic', fontSize: 13.5),
+            node.description.isNotEmpty ? node.description : locLang.translate('mind_map_no_desc'),
+            style: const TextStyle(height: 1.5, fontSize: 13.5),
             textAlign: TextAlign.center,
           ),
           actions: [
             Center(
               child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.pop(ctx),
                 style: ElevatedButton.styleFrom(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('باشە', style: TextStyle(fontFamily: 'Noto Sans Arabic')),
+                child: Text(locLang.translate('ok'), style: const TextStyle()),
               ),
             )
           ],
@@ -214,20 +213,12 @@ class _MindMapViewState extends State<MindMapView> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final langProvider = Provider.of<LanguageProvider>(context);
+    String t(String key) => langProvider.translate(key);
+    final theme = Theme.of(context);
 
-    final String title = langProvider.currentLanguage == AppLanguage.english
-        ? 'AI Mind Map'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'خريطة المفاهيم الذكية'
-            : 'نەخشەی مێشکی زیرەک';
-
-    final String placeholder = langProvider.currentLanguage == AppLanguage.english
-        ? 'Enter topic (e.g. Memory Management)'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'أدخل موضوع الخريطة (مثال: إدارة الذاكرة)'
-            : 'بابەتێک بنووسە (بۆ نموونە: بیرۆکەی کۆمپیوتەر)';
+    final String title = t('mind_map_title');
+    final String placeholder = t('mind_map_placeholder');
 
     return Directionality(
       textDirection: langProvider.textDirection,
@@ -247,7 +238,7 @@ class _MindMapViewState extends State<MindMapView> {
                       controller: _topicController,
                       decoration: InputDecoration(
                         hintText: placeholder,
-                        hintStyle: const TextStyle(fontSize: 12, fontFamily: 'Noto Sans Arabic'),
+                        hintStyle: const TextStyle(fontSize: 12),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       ),
                     ),
@@ -277,12 +268,8 @@ class _MindMapViewState extends State<MindMapView> {
                           Icon(Icons.hub_outlined, size: 64, color: theme.colorScheme.primary.withOpacity(0.3)),
                           const SizedBox(height: 16),
                           Text(
-                            langProvider.currentLanguage == AppLanguage.english
-                                ? 'Generate a visual map to connect study topics.'
-                                : langProvider.currentLanguage == AppLanguage.arabic
-                                    ? 'أنشئ خريطة بصرية لربط موضوعات دراستك.'
-                                    : 'نەخشەیەکی بینراو دروست بکە بۆ تێگەیشتن لە چەمکەکان.',
-                            style: const TextStyle(fontFamily: 'Noto Sans Arabic', fontSize: 13, color: Colors.grey),
+                            t('mind_map_empty'),
+                            style: const TextStyle(fontSize: 13, color: Colors.grey)
                           ),
                         ],
                       ),
@@ -356,7 +343,6 @@ class _MindMapViewState extends State<MindMapView> {
                                                   color: Colors.white,
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 10,
-                                                  fontFamily: 'Noto Sans Arabic',
                                                 ),
                                                 maxLines: 3,
                                                 overflow: TextOverflow.ellipsis,

@@ -16,6 +16,7 @@ class QrShareSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final langProvider = Provider.of<LanguageProvider>(context);
+    String t(String key) => langProvider.translate(key);
 
     // Serialize deck
     final cardsData = deck.map((c) => {'f': c.front, 'b': c.back}).toList();
@@ -24,11 +25,7 @@ class QrShareSheet extends StatelessWidget {
       'cards': cardsData,
     });
 
-    final String title = langProvider.currentLanguage == AppLanguage.english
-        ? 'Share Deck'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'مشاركة مجموعة الكروت'
-            : 'هاوبەشکردنی فلاشکاردەکان';
+    final String title = t('qr_share_title');
 
     return Scaffold(
       appBar: AppBar(
@@ -49,15 +46,10 @@ class QrShareSheet extends StatelessWidget {
                   child: Column(
                     children: [
                       Text(
-                        langProvider.currentLanguage == AppLanguage.english
-                            ? 'Let your friend scan this QR code to import this deck instantly!'
-                            : langProvider.currentLanguage == AppLanguage.arabic
-                                ? 'دع صديقك يمسح هذا الكود لاستيراد الكروت فوراً!'
-                                : 'با هاوڕێکەت ئەم کۆدی QRە سکان بکات بۆ ئەوەی فلاشکاردەکانت وەربگرێت!',
+                        t('qr_share_desc'),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 13,
-                          fontFamily: 'Noto Sans Arabic',
                           fontWeight: FontWeight.bold,
                           height: 1.5,
                         ),
@@ -69,7 +61,7 @@ class QrShareSheet extends StatelessWidget {
                         size: 260.0,
                         backgroundColor: Colors.white,
                         errorStateBuilder: (cxt, err) {
-                          return const Center(child: Text("Data too large for QR Code. Try sharing a smaller deck."));
+                          return Center(child: Text(Provider.of<LanguageProvider>(context, listen: false).translate('qr_data_too_large')));
                         },
                       ),
                       const SizedBox(height: 16),
@@ -94,7 +86,7 @@ class QrShareSheet extends StatelessWidget {
                     minimumSize: const Size(0, 50),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('دابخە (Close)', style: TextStyle(fontFamily: 'Noto Sans Arabic')),
+                  child: Text(t('close'), style: const TextStyle()),
                 ),
               ),
             ],
@@ -153,15 +145,14 @@ class _QrScannerViewState extends State<QrScannerView> {
 
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Deck imported successfully! / فلاشکاردەکان بە سەرکەوتوویی هاوردە کران!', 
-                    style: TextStyle(fontFamily: 'Noto Sans Arabic')),
+                SnackBar(
+                  content: Text(Provider.of<LanguageProvider>(context, listen: false).translate('deck_imported')),
                 ),
               );
               Navigator.pop(context, true); // Return success
             }
           } else {
-            throw Exception('Invalid QR code format for ZankoAI.');
+            throw Exception(Provider.of<LanguageProvider>(context, listen: false).translate('invalid_qr_format'));
           }
         } catch (e) {
           setState(() {
@@ -169,7 +160,7 @@ class _QrScannerViewState extends State<QrScannerView> {
           });
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Scan Error: $e')),
+              SnackBar(content: Text('${Provider.of<LanguageProvider>(context, listen: false).translate('scan_error')}: $e')),
             );
           }
         }
@@ -181,12 +172,9 @@ class _QrScannerViewState extends State<QrScannerView> {
   @override
   Widget build(BuildContext context) {
     final langProvider = Provider.of<LanguageProvider>(context);
+    String t(String key) => langProvider.translate(key);
 
-    final String scanTitle = langProvider.currentLanguage == AppLanguage.english
-        ? 'Scan Deck QR'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'مسح كود البطاقات'
-            : 'سکانکردنی کۆدی فلاشکارد';
+    final String scanTitle = t('scan_qr_deck');
 
     return Scaffold(
       appBar: AppBar(
@@ -229,10 +217,10 @@ class _QrScannerViewState extends State<QrScannerView> {
                 color: Colors.black54,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Text(
-                'Align QR code inside the box to scan\nکۆدی QR لە ناو چوارگۆشەکە دابنێ',
+              child: Text(
+                t('qr_scan_instructions'),
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white, fontSize: 13, fontFamily: 'Noto Sans Arabic'),
+                style: const TextStyle(color: Colors.white, fontSize: 13, ),
               ),
             ),
           ),

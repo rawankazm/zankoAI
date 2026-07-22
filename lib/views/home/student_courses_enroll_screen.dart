@@ -70,7 +70,7 @@ class _StudentCoursesEnrollScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(t('enroll_success'),
-              style: const TextStyle(fontFamily: 'Noto Sans Arabic')),
+              style: const TextStyle()),
           backgroundColor: const Color(0xFF059669),
         ),
       );
@@ -94,7 +94,7 @@ class _StudentCoursesEnrollScreenState
       child: Scaffold(
         appBar: AppBar(
           title: Text(t('course_enrollment'),
-              style: const TextStyle(fontFamily: 'Noto Sans Arabic')),
+              style: const TextStyle()),
           centerTitle: true,
           flexibleSpace: Container(
             decoration: const BoxDecoration(
@@ -198,7 +198,6 @@ class _StudentCoursesEnrollScreenState
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            fontFamily: 'Noto Sans Arabic',
                           ),
                         ),
                         const SizedBox(height: 3),
@@ -213,7 +212,6 @@ class _StudentCoursesEnrollScreenState
                               style: TextStyle(
                                 fontSize: 13,
                                 color: theme.colorScheme.onSurface.withOpacity(0.6),
-                                fontFamily: 'Noto Sans Arabic',
                               ),
                             ),
                           ],
@@ -238,7 +236,6 @@ class _StudentCoursesEnrollScreenState
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                           color: statusColor,
-                          fontFamily: 'Noto Sans Arabic',
                         ),
                       ),
                     )
@@ -268,7 +265,6 @@ class _StudentCoursesEnrollScreenState
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          fontFamily: 'Noto Sans Arabic',
                         ),
                       ),
                     ),

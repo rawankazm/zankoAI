@@ -81,7 +81,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     children: [
                       Text(
                         t('add_lecture'),
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, fontFamily: 'Noto Sans Arabic'),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                       ),
                       const SizedBox(height: 16),
                       TextField(
@@ -166,7 +166,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
     if (course.isEmpty || time.isEmpty || location.isEmpty || teacher.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تکایە هەموو خانەکان پڕبکەرەوە', style: TextStyle(fontFamily: 'Noto Sans Arabic'))),
+        SnackBar(content: Text(t('snackbar_fill_all_fields'), style: const TextStyle())),
       );
       return;
     }
@@ -184,7 +184,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     dbService.addScheduleItem(newLecture);
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(t('lecture_save_success'), style: const TextStyle(fontFamily: 'Noto Sans Arabic'))),
+      SnackBar(content: Text(t('lecture_save_success'), style: const TextStyle())),
     );
   }
 
@@ -192,7 +192,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final dbService = Provider.of<DatabaseService>(context, listen: false);
     dbService.deleteScheduleItem(id);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(t('lecture_delete_success'), style: const TextStyle(fontFamily: 'Noto Sans Arabic'))),
+      SnackBar(content: Text(t('lecture_delete_success'), style: const TextStyle())),
     );
   }
 
@@ -222,17 +222,17 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 initiallyExpanded: true,
                 title: Text(
                   _translateDay(day, langProvider),
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Noto Sans Arabic'),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text(
-                  '${lectures.length} ${langProvider.currentLanguage == AppLanguage.english ? 'lectures' : 'وانە'}',
-                  style: const TextStyle(fontSize: 11, fontFamily: 'Noto Sans Arabic'),
+                  '${lectures.length} ${t('schedule_lectures_count')}',
+                  style: const TextStyle(fontSize: 11),
                 ),
                 children: [
                   if (lectures.isEmpty)
                     Padding(
                       padding: const EdgeInsets.all(16.0),
-                      child: Text(t('no_lectures_day'), style: const TextStyle(fontFamily: 'Noto Sans Arabic', fontSize: 13)),
+                      child: Text(t('no_lectures_day'), style: const TextStyle(fontSize: 13)),
                     )
                   else
                     ...lectures.map((lecture) {
@@ -243,11 +243,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         ),
                         title: Text(
                           lecture.courseName,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Noto Sans Arabic', fontSize: 14),
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                         ),
                         subtitle: Text(
                           '${lecture.time} • ${lecture.location} • ${lecture.teacherName}',
-                          style: const TextStyle(fontSize: 12, fontFamily: 'Noto Sans Arabic'),
+                          style: const TextStyle(fontSize: 12),
                         ),
                         trailing: IconButton(
                           icon: const Icon(Icons.delete_outline, color: Colors.red),

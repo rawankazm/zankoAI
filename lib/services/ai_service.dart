@@ -7,6 +7,8 @@ import '../models/flashcard_model.dart';
 import '../models/study_plan_model.dart';
 import 'package:google_generative_ai/google_generative_ai.dart' as gemini;
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 abstract class AiService extends ChangeNotifier {
   String? get apiKey;
   set apiKey(String? key);
@@ -25,12 +27,29 @@ abstract class AiService extends ChangeNotifier {
 class ZankoAiService extends ChangeNotifier implements AiService {
   String? _apiKey;
 
+  ZankoAiService() {
+    _loadApiKey();
+  }
+
+  Future<void> _loadApiKey() async {
+    final prefs = await SharedPreferences.getInstance();
+    _apiKey = prefs.getString('gemini_api_key');
+    notifyListeners();
+  }
+
   @override
   String? get apiKey => _apiKey;
 
   @override
   set apiKey(String? key) {
     _apiKey = key;
+    SharedPreferences.getInstance().then((prefs) {
+      if (key != null && key.trim().isNotEmpty) {
+        prefs.setString('gemini_api_key', key.trim());
+      } else {
+        prefs.remove('gemini_api_key');
+      }
+    });
     notifyListeners();
   }
 
@@ -68,7 +87,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   @override
   Future<String> askTeacher(String userPrompt, List<Map<String, String>> chatHistory) async {
-    await Future.delayed(const Duration(milliseconds: 800));
+    await Future.delayed(const Duration(milliseconds: 600));
 
     if (hasRealApiKey) {
       try {
@@ -85,42 +104,17 @@ class ZankoAiService extends ChangeNotifier implements AiService {
         return await _callGemini(prompt, systemInstruction: systemInstruction);
       } catch (e) {
         if (_isNetworkError(e)) {
-          return "ðŸ“¡ **(Ø´ÛŽÙˆØ§Ø²ÛŒ Ø¦Û†ÙÙ„Ø§ÛŒÙ† - Ø¨Û•Ø³ØªÙ†Û•ÙˆÛ• Ø¨Û•Ø³ØªØ±Ø§Ùˆ Ù†ÛŒÛŒÛ•)**\n\n" + 
-                 _getMockTeacherResponse(userPrompt);
+          return "ðŸ“¡ **Ù‡ÛŽÚµÛŒ Ø¦ÛŒÙ†ØªÛ•Ø±Ù†ÛŽØªÛ•Ú©Û•Øª ØªÛŽÚ©Ú†ÙˆÙˆÛ• (No Internet Connection)**\n\n"
+                 "Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ Ø¨Û•Ø³ØªÙ†Û•ÙˆÛ• Ù„Û•Ú¯Û•Úµ Ø³ÛŽØ±Ú¤Û•Ø±ÛŒ Google AI Ø¯Ø±ÙˆØ³Øª Ø¨Ú©Ø±ÛŽØª. ØªÚ©Ø§ÛŒÛ• Ù‡ÛŽÚµÛŒ Ø¦ÛŒÙ†ØªÛ•Ø±Ù†ÛŽØªÛ•Ú©Û•Øª Ú†Ø§Ú© Ø¨Ú©Û•Ø±Û•ÙˆÛ• Ùˆ Ø¯ÙˆÙˆØ¨Ø§Ø±Û• Ù‡Û•ÙˆÚµØ¨Ø¯Û•Ø±Û•ÙˆÛ•.\n\n"
+                 "Please check your internet connection and try again.";
         }
-        return "Ù‡Û•ÚµÛ•ÛŒÛ•Ú© Ú•ÙˆÙˆÛŒØ¯Ø§ Ù„Û• Ø¨Û•Ø³ØªÙ†Û•ÙˆÛ• Ø¨Û• AI: $e";
+        return "âš ï¸ Ù‡Û•ÚµÛ•ÛŒÛ•Ú© Ú•ÙˆÙˆÛŒØ¯Ø§ Ù„Û• Ø¨Û•Ø³ØªÙ†Û•ÙˆÛ• Ø¨Û• AI: $e\n\nØªÚ©Ø§ÛŒÛ• API Key ÛŒØ§Ù† Ø¨Û•Ø³ØªÙ†Û•ÙˆÛ•ÛŒ Ø¦ÛŒÙ†ØªÛ•Ø±Ù†ÛŽØªÛ•Ú©Û•Øª Ø¨Ù¾Ø´Ú©Ù†Û•.";
       }
     }
 
-    return _getMockTeacherResponse(userPrompt);
-  }
-
-  String _getMockTeacherResponse(String userPrompt) {
-    final query = userPrompt.toLowerCase();
-    if (query.contains('operating system') || query.contains('Ø³ÛŒØ³ØªÛ•Ù…ÛŒ Ú©Ø§Ø±Ù¾ÛŽÚ©Ø±Ø¯Ù†')) {
-      return "ÙˆÛ•Ú© Ù…Ø§Ù…Û†Ø³ØªØ§ÛŒÛ•Ú©ÛŒ Ø³ÛŒØ³ØªÛ•Ù…ÛŒ Ú©Ø§Ø±Ù¾ÛŽÚ©Ø±Ø¯Ù† (OS)ØŒ Ø¨Ø§ Ø¦Û•Ù…Û•Øª Ø¨Û† Ú•ÙˆÙˆÙ† Ø¨Ú©Û•Ù…Û•ÙˆÛ•:\n\n"
-          "Ø³ÛŒØ³ØªÛ•Ù…ÛŒ Ú©Ø§Ø±Ù¾ÛŽÚ©Ø±Ø¯Ù† Ú¯Ø±Ù†Ú¯ØªØ±ÛŒÙ† Ù†Û•Ø±Ù…Û•Ú©Ø§ÚµØ§ÛŒÛ• Ú©Û• Ù„Û•Ø³Û•Ø± Ú©Û†Ù…Ù¾ÛŒÙˆØªÛ•Ø± Ú©Ø§Ø±Ø¯Û•Ú©Ø§Øª. Ø¨Û•Ø±Ù¾Ø±Ø³Û• Ù„Û• Ø¨Û•Ú•ÛŽÙˆÛ•Ø¨Ø±Ø¯Ù†ÛŒ ÛŒØ§Ø¯Ú¯Û•ÛŒ Ú©Û†Ù…Ù¾ÛŒÙˆØªÛ•Ø±Û•Ú©Û• Ùˆ Ù¾Ø±Û†Ø³Û•Ú©Ø§Ù†ØŒ Ù‡Û•Ø±ÙˆÛ•Ù‡Ø§ Ú•ÛŽÚ©Ø®Ø³ØªÙ†ÛŒ Ù‡Û•Ù…ÙˆÙˆ Ú•Û•Ù‚Û•Ú©Ø§ÚµØ§ Ùˆ Ù†Û•Ø±Ù…Û•Ú©Ø§ÚµØ§Ú©Ø§Ù†.\n\n"
-          "Ø³ÛŽ Ø¦Û•Ø±Ú©ÛŒ Ø³Û•Ø±Û•Ú©ÛŒ OS Ø¨Ø±ÛŒØªÛŒÛŒÙ† Ù„Û•:\n"
-          "Ù¡. **Processor Management:** Ø¯Ø§Ø¨Û•Ø´Ú©Ø±Ø¯Ù†ÛŒ Ú©Ø§Øª Ùˆ ØªÙˆØ§Ù†Ø§ÛŒ CPU Ø¨Û•Ø³Û•Ø± Ù¾Ø±Û†Ø³Û• Ø¬ÛŒØ§ÙˆØ§Ø²Û•Ú©Ø§Ù†Ø¯Ø§.\n"
-          "Ù¢. **Memory Management:** Ú†Ø§ÙˆØ¯ÛŽØ±ÛŒÚ©Ø±Ø¯Ù†ÛŒ Ú†ÛŒ Ù„Û• ÛŒØ§Ø¯Ú¯Û•Ø¯Ø§ÛŒÛ• Ùˆ Ú©ÛŽ Ø¨Û•Ú©Ø§Ø±ÛŒ Ø¯Û•Ù‡ÛŽÙ†ÛŽØª.\n"
-          "Ù£. **File System:** Ú†Û†Ù†ÛŽØªÛŒ Ù¾Ø§Ø´Û•Ú©Û•ÙˆØªÚ©Ø±Ø¯Ù† Ùˆ Ú•ÛŽÚ©Ø®Ø³ØªÙ†ÛŒ Ø²Ø§Ù†ÛŒØ§Ø±ÛŒÛŒÛ•Ú©Ø§Ù† Ù„Û•Ø³Û•Ø± Ø¯ÛŒØ³Ú©.";
-    } 
-    
-    if (query.contains('Ú©Û†Ø¯') || query.contains('code') || query.contains('program')) {
-      return "Ø¨Ø§ ÙˆÛ•Ú© Ù…Ø§Ù…Û†Ø³ØªØ§ÛŒÛ•Ú©ÛŒ Ø¨Û•Ø±Ù†Ø§Ù…Û•Ø³Ø§Ø²ÛŒ Ø³Û•ÛŒØ±ÛŒ Ø¦Û•Ù… Ú©Û†Ø¯Û• Ø¨Ú©Û•ÛŒÙ†:\n\n"
-          "Ù„Û• ÙÙ„Ø§ØªÛ•Ø± Ùˆ Ø¯Ø§Ø±ØªØ¯Ø§ØŒ Ú©Ø§ØªÛŽÚ© Ø¯Û•ØªÛ•ÙˆÛŽØª Ú¯Û†Ú•Ø§Ù†Ú©Ø§Ø±ÛŒ Ù„Û• Ú•ÙˆÚ©Ø§Ø±ÛŒ Ø¦Û•Ù¾Û•Ú©Û•Ø¯Ø§ Ø¨Ú©Û•ÛŒØªØŒ Ù¾ÛŽÙˆÛŒØ³ØªÛ• `setState` Ø¨Û•Ú©Ø§Ø±Ø¨Ù‡ÛŽÙ†ÛŒØª Ø¨Û† Ø¦Û•ÙˆÛ•ÛŒ ÙÙ„Ø§ØªÛ•Ø± Ø¨Ø²Ø§Ù†ÛŽØª Ú©Û• Ø¯Û•Ø¨ÛŽØª Ú•ÙˆÚ©Ø§Ø±Û•Ú©Û• Ù†ÙˆÛŽ Ø¨Ú©Ø§ØªÛ•ÙˆÛ•.\n\n"
-          "Ø¨Û† Ù†Ù…ÙˆÙˆÙ†Û•:\n"
-          "```dart\n"
-          "int count = 0;\n"
-          "void increment() {\n"
-          "  setState(() {\n"
-          "    count++; \n"
-          "  });\n"
-          "}\n"
-          "```";
-    }
-
-    return "Ø³ÚµØ§Ùˆ Ø®ÙˆÛŽÙ†Ø¯Ú©Ø§Ø±ÛŒ Ø®Û†Ø´Û•ÙˆÛŒØ³Øª! Ù…Ù† ZankoAI Ù…Ø§Ù…Û†Ø³ØªØ§ÛŒ Ø²ÛŒØ±Û•Ú©ÛŒ ØªÛ†Ù…. Ù„Û•Ø¨Û•Ø± Ø¦Û•ÙˆÛ•ÛŒ Ø¨Û•Ø´ÛŒ Ø¦Û†ÙÙ„Ø§ÛŒÙ† Ú†Ø§Ù„Ø§Ú©Û•ØŒ Ø¯Û•ØªÙˆØ§Ù†ÛŒØª Ù¾Ø±Ø³ÛŒØ§Ø±Ù… Ù„ÛŽ Ø¨Ú©Û•ÛŒØª Ù„Û•Ø³Û•Ø± 'Ø³ÛŒØ³ØªÛ•Ù…ÛŒ Ú©Ø§Ø±Ù¾ÛŽÚ©Ø±Ø¯Ù†' ÛŒØ§Ù† 'Ú©Û†Ø¯Ù†ÙˆÙˆØ³ÛŒÙ†' Ø¨Û† Ø¨ÛŒÙ†ÛŒÙ†ÛŒ ÙˆÛ•ÚµØ§Ù…ÛŒ Ù†Ù…ÙˆÙˆÙ†Û•ÛŒÛŒ.";
+    return "ðŸ”‘ **ØªÚ©Ø§ÛŒÛ• API Key Ø²ÛŒØ§Ø¯ Ø¨Ú©Û• (API Key Required)**\n\n"
+           "ØªÚ©Ø§ÛŒÛ• Ú©Ù„ÛŒÚ© Ù„Û•Ø³Û•Ø± Ø¯ÙˆÚ¯Ù…Û•ÛŒ ðŸ”‘ (Ú©Ù„ÛŒÙ„) Ù„Û• Ø¯Û•Ø³ØªÛ• Ú•Ø§Ø³ØªÛŒ Ø³Û•Ø±Û•ÙˆÛ•ÛŒ Ø´Ø§Ø´Û•Ú©Û• Ø¨Ú©Û• Ø¨Û† Ø¯Ø§ØºÚµÚ©Ø±Ø¯Ù†ÛŒ Gemini API Key Ù¾Ø§Ø´Ø§Ù† Ø¯ÙˆÙˆØ¨Ø§Ø±Û• Ù‡Û•ÙˆÚµØ¨Ø¯Û•Ø±Û•ÙˆÛ•.\n\n"
+           "Please add your Gemini API Key by tapping the ðŸ”‘ icon at the top right of the screen, or check your internet connection.";
   }
 
   @override

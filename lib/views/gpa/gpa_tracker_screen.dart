@@ -34,48 +34,17 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
     final gpaHistory = user?.gpaHistory ?? [3.2, 3.4, 3.65, 3.8];
     final currentGpa = user?.gpa ?? 3.65;
 
+    final lang = Provider.of<LanguageProvider>(context);
+    String t(String key) => lang.translate(key);
+
     // Translations
-    final title = langProvider.currentLanguage == AppLanguage.english
-        ? 'GPA Calculator & Progress Chart'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'حساب المعدل ومخطط التقدم'
-            : 'خەمڵاندنی نمرە و نەخشەی GPA';
-
-    final totalGpaText = langProvider.currentLanguage == AppLanguage.english
-        ? 'Total Cumulative GPA'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'المعدل التراكمي العام'
-            : 'کۆنمرەی گشتی (GPA)';
-
-    final chartHeader = langProvider.currentLanguage == AppLanguage.english
-        ? 'Semester Progress Chart'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'مخطط تقدم الفصول الدراسية'
-            : 'نەخشەی پێشکەوتنی وەرزەکان';
-
-    final addGpaLabel = langProvider.currentLanguage == AppLanguage.english
-        ? 'Add Semester GPA (0.0 - 4.0)'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'أضف معدل فصل دراسي (0.0 - 4.0)'
-            : 'نمرەی وەرزێکی نوێ زیاد بکە (0.0 - 4.0)';
-
-    final addBtn = langProvider.currentLanguage == AppLanguage.english
-        ? 'Add'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'إضافة'
-            : 'زیادکردن';
-
-    final listHeader = langProvider.currentLanguage == AppLanguage.english
-        ? 'Semester History'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'سجل الفصول الدراسية'
-            : 'سجلی نمرەکانی پێشوو';
-
-    final semesterLabel = langProvider.currentLanguage == AppLanguage.english
-        ? 'Semester'
-        : langProvider.currentLanguage == AppLanguage.arabic
-            ? 'فصل دراسي'
-            : 'وەرز';
+    final title = t('gpa_title');
+    final totalGpaText = t('gpa_total');
+    final chartHeader = t('gpa_chart_header');
+    final addGpaLabel = t('gpa_add_label');
+    final addBtn = t('gpa_add_btn');
+    final listHeader = t('gpa_list_header');
+    final semesterLabel = t('gpa_semester_label');
 
     return Directionality(
       textDirection: langProvider.textDirection,
@@ -101,7 +70,6 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                           color: theme.colorScheme.onPrimaryContainer.withOpacity(0.8),
-                          fontFamily: 'Noto Sans Arabic',
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -111,7 +79,6 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                           fontSize: 48,
                           fontWeight: FontWeight.bold,
                           color: theme.colorScheme.onPrimaryContainer,
-                          fontFamily: 'Noto Sans Arabic',
                         ),
                       ),
                     ],
@@ -129,7 +96,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                     children: [
                       Text(
                         chartHeader,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'Noto Sans Arabic'),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, ),
                       ),
                       const SizedBox(height: 24),
                       // Line chart container
@@ -189,9 +156,9 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Text(
-                        'دیاریکردنی ئامانجی کۆنمرە / Target GPA Planner',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'Noto Sans Arabic'),
+                      Text(
+                        t('target_planner_title'),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, ),
                       ),
                       const SizedBox(height: 12),
                       Row(
@@ -200,8 +167,8 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                             child: TextField(
                               controller: _targetGpaController,
                               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              decoration: const InputDecoration(
-                                labelText: 'کۆنمرەی ئامانج / Target GPA',
+                              decoration: InputDecoration(
+                                labelText: Provider.of<LanguageProvider>(context, listen: false).translate('target_gpa'),
                                 hintText: 'e.g. 3.8',
                               ),
                             ),
@@ -211,8 +178,8 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                             child: TextField(
                               controller: _semestersRemainingController,
                               keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                labelText: 'وەرزی ماوە / Remaining Semesters',
+                              decoration: InputDecoration(
+                                labelText: Provider.of<LanguageProvider>(context, listen: false).translate('remaining_semesters'),
                                 hintText: 'e.g. 3',
                               ),
                             ),
@@ -226,7 +193,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                           final remaining = int.tryParse(_semestersRemainingController.text.trim());
                           if (target == null || target < 0.0 || target > 4.0 || remaining == null || remaining <= 0) {
                             setState(() {
-                              _gpaPlannerResult = 'تکایە خانەکان بە دروستی پڕبکەرەوە.';
+                              _gpaPlannerResult = t('planner_input_error');
                             });
                             return;
                           }
@@ -240,17 +207,18 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                           final requiredGpa = requiredSum / remaining;
 
                           setState(() {
+                            final gpaStr = requiredGpa.toStringAsFixed(2);
                             if (requiredGpa > 4.0) {
-                              _gpaPlannerResult = '⚠️ بەم ژمارە وەرزە ناگەیتە ئامانجەکەت! (پێویستت بە GPA ${requiredGpa.toStringAsFixed(2)} هەیە لە هەر وەرزێکدا)';
+                              _gpaPlannerResult = t('planner_cannot_reach').replaceAll('{required}', gpaStr);
                             } else if (requiredGpa < 0.0) {
-                              _gpaPlannerResult = '🎉 ئامانجەکەت مسۆگەرە! (تەنانەت بە کەمترین کۆنمرەش دەگەیتە ئامانج)';
+                              _gpaPlannerResult = t('planner_already_met');
                             } else {
-                              _gpaPlannerResult = '🎯 پێویستە تێکڕای نمرەی وەرزی داهاتووت لە هەر وەرزێکدا کەمتر نەبێت لە ${requiredGpa.toStringAsFixed(2)}';
+                              _gpaPlannerResult = t('planner_required').replaceAll('{required}', gpaStr);
                             }
                           });
                         },
                         style: ElevatedButton.styleFrom(backgroundColor: Colors.teal.shade700),
-                        child: const Text('هەژمارکردن / Calculate', style: TextStyle(fontFamily: 'Noto Sans Arabic')),
+                        child: Text(t('calculate'), style: const TextStyle()),
                       ),
                       if (_gpaPlannerResult.isNotEmpty) ...[
                         const SizedBox(height: 12),
@@ -264,7 +232,6 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                             _gpaPlannerResult,
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontFamily: 'Noto Sans Arabic',
                               fontSize: 13,
                               color: Colors.teal,
                             ),
@@ -282,12 +249,11 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                 listHeader,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'Noto Sans Arabic',
                 ),
               ),
               const SizedBox(height: 8),
               if (gpaHistory.isEmpty)
-                const Center(child: Padding(padding: EdgeInsets.all(16), child: Text('سجلەکە چۆڵە')))
+                Center(child: Padding(padding: EdgeInsets.all(16), child: Text(Provider.of<LanguageProvider>(context, listen: false).translate('empty_record'))))
               else
                 ListView.builder(
                   shrinkWrap: true,
@@ -302,7 +268,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                         ),
                         title: Text(
                           '$semesterLabel ${index + 1}',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Noto Sans Arabic'),
+                          style: const TextStyle(fontWeight: FontWeight.bold, ),
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
