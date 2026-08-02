@@ -50,6 +50,8 @@ class QuizModel {
   final String courseName;
   final List<QuestionModel> questions;
   final int durationMinutes;
+  final bool isExam;
+  final double passingScorePercentage;
 
   QuizModel({
     required this.id,
@@ -57,6 +59,8 @@ class QuizModel {
     required this.courseName,
     required this.questions,
     this.durationMinutes = 10,
+    this.isExam = false,
+    this.passingScorePercentage = 60.0,
   });
 
   Map<String, dynamic> toMap() {
@@ -66,6 +70,8 @@ class QuizModel {
       'courseName': courseName,
       'questions': questions.map((q) => q.toMap()).toList(),
       'durationMinutes': durationMinutes,
+      'isExam': isExam,
+      'passingScorePercentage': passingScorePercentage,
     };
   }
 
@@ -80,6 +86,8 @@ class QuizModel {
               .toList()
           : [],
       durationMinutes: map['durationMinutes'] ?? 10,
+      isExam: map['isExam'] ?? false,
+      passingScorePercentage: (map['passingScorePercentage'] as num?)?.toDouble() ?? 60.0,
     );
   }
 }

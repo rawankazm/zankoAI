@@ -16,6 +16,7 @@ import '../pdf/pdf_chat_screen.dart';
 import '../profile/profile_screen.dart';
 import '../quiz/quiz_screen.dart';
 import '../schedule/schedule_screen.dart';
+import '../teacher/teacher_dashboard_screen.dart';
 
 // ─── Home Screen ─────────────────────────────────────────────────────────────
 class HomeScreen extends StatefulWidget {

@@ -24,6 +24,7 @@
 .pub-cache/
 .pub/
 /build/
+android/build/
 
 # Web / node dependencies (if any)
 node_modules/

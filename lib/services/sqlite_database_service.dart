@@ -7,6 +7,8 @@ import '../models/schedule_model.dart';
 import '../models/quiz_model.dart';
 import '../models/flashcard_model.dart';
 import '../models/reminder_model.dart';
+import '../models/lecture_model.dart';
+import '../models/announcement_model.dart';
 import 'database_service.dart';
 
 class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
@@ -18,6 +20,8 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
   final List<FlashcardModel> _flashcards = [];
   final List<ReminderModel> _reminders = [];
   final List<Map<String, dynamic>> _enrollmentRequests = [];
+  final List<LectureModel> _lectures = [];
+  final List<AnnouncementModel> _announcements = [];
 
   int _completedPomodoros = 0;
   int _quizzesTaken = 0;
@@ -35,6 +39,10 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
   List<ReminderModel> get reminders => _reminders;
   @override
   List<Map<String, dynamic>> get enrollmentRequests => _enrollmentRequests;
+  @override
+  List<LectureModel> get lectures => _lectures;
+  @override
+  List<AnnouncementModel> get announcements => _announcements;
 
   @override
   int get completedPomodoros => _completedPomodoros;
@@ -552,6 +560,30 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
     final db = await database;
     await db.update('enrollment_requests', {'status': 'rejected'}, where: 'id = ?', whereArgs: [requestId]);
     await loadData();
+  }
+
+  @override
+  Future<void> addLecture(LectureModel lecture) async {
+    _lectures.insert(0, lecture);
+    notifyListeners();
+  }
+
+  @override
+  Future<void> deleteLecture(String id) async {
+    _lectures.removeWhere((l) => l.id == id);
+    notifyListeners();
+  }
+
+  @override
+  Future<void> addAnnouncement(AnnouncementModel announcement) async {
+    _announcements.insert(0, announcement);
+    notifyListeners();
+  }
+
+  @override
+  Future<void> deleteAnnouncement(String id) async {
+    _announcements.removeWhere((a) => a.id == id);
+    notifyListeners();
   }
 
   @override

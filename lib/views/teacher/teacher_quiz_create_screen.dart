@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/language_provider.dart';
 import '../../services/ai_service.dart';
+import '../../services/database_service.dart';
 import '../../models/quiz_model.dart';
 
 class TeacherQuizCreateScreen extends StatefulWidget {
@@ -17,6 +18,9 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
   final _courseController = TextEditingController();
   int _numQuestions = 5;
   String _difficulty = 'medium';
+  bool _isExam = false;
+  int _durationMinutes = 15;
+  double _passingScore = 60.0;
   bool _isGenerating = false;
   bool _quizCreated = false;
   List<QuestionModel> _generatedQuestions = [];
@@ -38,6 +42,7 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
     });
 
     final aiService = Provider.of<AiService>(context, listen: false);
+    final db = Provider.of<DatabaseService>(context, listen: false);
 
     try {
       final quiz = await aiService.generateQuiz(
@@ -46,6 +51,18 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
             ? 'تۆڕەکان'
             : _courseController.text.trim(),
       );
+
+      final fullQuiz = QuizModel(
+        id: 'quiz_${DateTime.now().millisecondsSinceEpoch}',
+        title: quiz.title,
+        courseName: quiz.courseName,
+        questions: quiz.questions,
+        durationMinutes: _durationMinutes,
+        isExam: _isExam,
+        passingScorePercentage: _passingScore,
+      );
+
+      await db.addQuiz(fullQuiz);
 
       setState(() {
         _isGenerating = false;
@@ -60,8 +77,7 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('هەڵەیەک ڕوویدا لە دروستکردنی کویز: $e',
-                style: const TextStyle()),
+            content: Text('هەڵەیەک ڕوویدا لە دروستکردن: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -80,8 +96,7 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
       textDirection: lang.textDirection,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(t('teacher_quiz_title'),
-              style: const TextStyle()),
+          title: Text(_isExam ? t('create_exam') : t('quiz_maker')),
           centerTitle: true,
           backgroundColor: purple,
           foregroundColor: Colors.white,
@@ -91,16 +106,70 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // ─── Mode Switcher (Quiz vs Exam) ─────────────────────
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: purple.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _isExam = false),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: !_isExam ? purple : Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            t('nav_quiz'),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: !_isExam ? Colors.white : purple,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _isExam = true),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: _isExam ? purple : Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            'تاقیکردنەوەی فەرمی (Exam)',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: _isExam ? Colors.white : purple,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
               // ─── Course field ───────────────────────────────────
               TextField(
                 controller: _courseController,
                 decoration: InputDecoration(
-                  labelText: t('quiz_for_course'),
+                  labelText: t('select_course'),
                   prefixIcon: const Icon(Icons.book_rounded),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                 ),
-                style: const TextStyle(),
               ),
               const SizedBox(height: 14),
 
@@ -108,36 +177,81 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
               TextField(
                 controller: _topicController,
                 decoration: InputDecoration(
-                  labelText: t('topic_field'),
-                  hintText: t('quiz_topic_hint'),
+                  labelText: t('select_topic'),
                   prefixIcon: const Icon(Icons.lightbulb_outline_rounded),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                 ),
                 maxLines: 2,
-                style: const TextStyle(),
               ),
               const SizedBox(height: 20),
+
+              // ─── Time & Passing Score Controls ────────────────
+              if (_isExam) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(t('duration_minutes'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          const SizedBox(height: 6),
+                          DropdownButtonFormField<int>(
+                            value: _durationMinutes,
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            items: const [
+                              DropdownMenuItem(value: 15, child: Text('١٥ خولەک')),
+                              DropdownMenuItem(value: 30, child: Text('٣٠ خولەک')),
+                              DropdownMenuItem(value: 45, child: Text('٤٥ خولەک')),
+                              DropdownMenuItem(value: 60, child: Text('٦٠ خولەک')),
+                            ],
+                            onChanged: (v) => setState(() => _durationMinutes = v ?? 15),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(t('passing_score'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          const SizedBox(height: 6),
+                          DropdownButtonFormField<double>(
+                            value: _passingScore,
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            items: const [
+                              DropdownMenuItem(value: 50.0, child: Text('50%')),
+                              DropdownMenuItem(value: 60.0, child: Text('60%')),
+                              DropdownMenuItem(value: 70.0, child: Text('70%')),
+                              DropdownMenuItem(value: 80.0, child: Text('80%')),
+                            ],
+                            onChanged: (v) => setState(() => _passingScore = v ?? 60.0),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+              ],
 
               // ─── Number of Questions slider ─────────────────────
               Row(
                 children: [
-                  Text(t('quiz_num_questions'),
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w600)),
+                  Text(t('quizzes'), style: const TextStyle(fontWeight: FontWeight.w600)),
                   const Spacer(),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                     decoration: BoxDecoration(
                       color: purple.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text('$_numQuestions',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: purple,
-                            fontSize: 16)),
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: purple, fontSize: 16)),
                   ),
                 ],
               ),
@@ -152,17 +266,13 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
               const SizedBox(height: 14),
 
               // ─── Difficulty ─────────────────────────────────────
-              Text(t('quiz_difficulty'),
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w600)),
-              const SizedBox(height: 10),
               Row(
                 children: ['easy', 'medium', 'hard'].map((d) {
                   final label = d == 'easy'
-                      ? t('difficulty_easy')
+                      ? 'ئاسان'
                       : d == 'medium'
-                          ? t('difficulty_medium')
-                          : t('difficulty_hard');
+                          ? 'ناوەند'
+                          : 'سەخت';
                   final color = d == 'easy'
                       ? const Color(0xFF059669)
                       : d == 'medium'
@@ -179,8 +289,7 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
                           color: isSelected ? color : color.withOpacity(0.08),
-                          border:
-                              Border.all(color: color, width: isSelected ? 0 : 1),
+                          border: Border.all(color: color, width: isSelected ? 0 : 1),
                         ),
                         child: Text(
                           label,
@@ -205,22 +314,21 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
                     ? const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                     : const Icon(Icons.auto_awesome_rounded),
                 label: Text(
                   _isGenerating
-                      ? t('generating_quiz_wait')
-                      : t('generate_and_share'),
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold),
+                      ? 'دروستکردن لەڕێگەی AI...'
+                      : _isExam
+                          ? 'دروستکردنی تاقیکردنەوە بە AI 🚀'
+                          : 'دروستکردنی کویز بە AI 🚀',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: purple,
                   foregroundColor: Colors.white,
                   minimumSize: const Size(double.infinity, 54),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
               ),
               const SizedBox(height: 24),
@@ -229,13 +337,12 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
               if (_quizCreated && _generatedQuestions.isNotEmpty) ...[
                 Row(
                   children: [
-                    const Icon(Icons.check_circle_rounded,
-                        color: Color(0xFF059669)),
+                    const Icon(Icons.check_circle_rounded, color: Color(0xFF059669)),
                     const SizedBox(width: 8),
-                    Text(t('quiz_created_success'),
-                        style: const TextStyle(
-                            color: Color(0xFF059669),
-                            fontWeight: FontWeight.bold)),
+                    Text(
+                      _isExam ? 'تاقیکردنەوەکە دروستکرا و خەزنکرا! ✅' : 'کویزەکە دروستکرا و خەزنکرا! ✅',
+                      style: const TextStyle(color: Color(0xFF059669), fontWeight: FontWeight.bold),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 14),
@@ -245,54 +352,25 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                      color: theme.colorScheme.surface,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: purple.withOpacity(0.15)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('${i + 1}. ${q.questionText}',
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w600)),
+                        Text('${i + 1}. ${q.questionText}', style: const TextStyle(fontWeight: FontWeight.w600)),
                         const SizedBox(height: 8),
                         if (q.options != null)
                           ...q.options!.map((opt) => Padding(
                                 padding: const EdgeInsets.only(top: 4),
-                                child: Text(opt,
-                                    style: TextStyle(
-                                        color: theme.colorScheme.onSurface
-                                            .withOpacity(0.7))),
+                                child: Text(opt, style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7))),
                               )),
                       ],
                     ),
                   );
                 }),
-                const SizedBox(height: 12),
-                // Share button
-                OutlinedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('کویزەکە بە قوتابییەکان ناردرا! 🎉',
-                            style: const TextStyle()),
-                        backgroundColor: const Color(0xFF059669),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.share_rounded),
-                  label: Text(t('generate_and_share'),
-                      style: const TextStyle()),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: purple,
-                    side: const BorderSide(color: Color(0xFF7C3AED)),
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                  ),
-                ),
               ],
-              const SizedBox(height: 40),
             ],
           ),
         ),

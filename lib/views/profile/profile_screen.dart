@@ -7,6 +7,7 @@ import '../../widgets/apple_ui_components.dart';
 import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
 import '../../services/theme_provider.dart';
+import '../auth/login_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -570,6 +571,24 @@ class ProfileScreen extends StatelessWidget {
               padding: EdgeInsets.zero,
               child: Column(
                 children: [
+                  _buildSettingsTile(
+                    context,
+                    icon: CupertinoIcons.arrow_right_square_fill,
+                    iconColor: const Color(0xFFE11D48),
+                    title: 'چوونەدەرەوە / گۆڕینی هەژمار (Switch Role / Logout)',
+                    subtitle: 'تۆماربوون یان چوونەژوورەوە وەک مامۆستا یان قوتابی',
+                    onTap: () async {
+                      await authService.logout();
+                      if (context.mounted) {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                          (route) => false,
+                        );
+                      }
+                    },
+                  ),
+                  const Divider(height: 1, indent: 56),
                   _buildSettingsTile(
                     context,
                     icon: CupertinoIcons.moon_fill,

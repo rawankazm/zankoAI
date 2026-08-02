@@ -181,7 +181,114 @@ class _LoginScreenState extends State<LoginScreen>
                   ),
                   const SizedBox(height: 32),
 
-                  const SizedBox(height: 20),
+                  // ─── Role Selection Segment (Student vs Teacher) ───
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 24),
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: theme.colorScheme.outline.withOpacity(0.15)),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _selectedRole = UserRole.student),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              decoration: BoxDecoration(
+                                color: _selectedRole == UserRole.student
+                                    ? theme.colorScheme.primary
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: _selectedRole == UserRole.student
+                                    ? [
+                                        BoxShadow(
+                                          color: theme.colorScheme.primary.withOpacity(0.3),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 3),
+                                        )
+                                      ]
+                                    : [],
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.school_rounded,
+                                    size: 20,
+                                    color: _selectedRole == UserRole.student
+                                        ? Colors.white
+                                        : theme.colorScheme.onSurface.withOpacity(0.6),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'قوتابی (Student)',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: _selectedRole == UserRole.student
+                                          ? Colors.white
+                                          : theme.colorScheme.onSurface.withOpacity(0.7),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _selectedRole = UserRole.teacher),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              decoration: BoxDecoration(
+                                color: _selectedRole == UserRole.teacher
+                                    ? const Color(0xFF7C3AED)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: _selectedRole == UserRole.teacher
+                                    ? [
+                                        BoxShadow(
+                                          color: const Color(0xFF7C3AED).withOpacity(0.3),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 3),
+                                        )
+                                      ]
+                                    : [],
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.cast_for_education_rounded,
+                                    size: 20,
+                                    color: _selectedRole == UserRole.teacher
+                                        ? Colors.white
+                                        : theme.colorScheme.onSurface.withOpacity(0.6),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'مامۆستا (Teacher)',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: _selectedRole == UserRole.teacher
+                                          ? Colors.white
+                                          : theme.colorScheme.onSurface.withOpacity(0.7),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
 
                   // ─── Error Message ───
                   if (_errorMessage != null) ...[
@@ -202,7 +309,7 @@ class _LoginScreenState extends State<LoginScreen>
                     const SizedBox(height: 16),
                   ],
 
-                  // ─── Form (shown only after role selection) ───
+                  // ─── Form ───
                   if (_roleSelected) ...[
                     FadeTransition(
                       opacity: _fadeAnim,

@@ -5,6 +5,9 @@ import '../models/quiz_model.dart';
 import '../models/flashcard_model.dart';
 import '../models/reminder_model.dart';
 
+import '../models/lecture_model.dart';
+import '../models/announcement_model.dart';
+
 abstract class DatabaseService extends ChangeNotifier {
   List<NoteModel> get notes;
   List<ScheduleModel> get schedule;
@@ -12,6 +15,8 @@ abstract class DatabaseService extends ChangeNotifier {
   List<FlashcardModel> get flashcards;
   List<ReminderModel> get reminders;
   List<Map<String, dynamic>> get enrollmentRequests;
+  List<LectureModel> get lectures;
+  List<AnnouncementModel> get announcements;
 
   int get completedPomodoros;
   int get quizzesTaken;
@@ -31,6 +36,11 @@ abstract class DatabaseService extends ChangeNotifier {
   Future<void> toggleReminder(String id);
   Future<void> deleteReminder(String id);
 
+  Future<void> addLecture(LectureModel lecture);
+  Future<void> deleteLecture(String id);
+  Future<void> addAnnouncement(AnnouncementModel announcement);
+  Future<void> deleteAnnouncement(String id);
+
   Future<void> requestEnrollment(String studentName, String studentEmail, String courseName, String teacherName);
   Future<void> approveEnrollment(String requestId);
   Future<void> rejectEnrollment(String requestId);
@@ -47,6 +57,8 @@ class MockDatabaseService extends ChangeNotifier implements DatabaseService {
   final List<FlashcardModel> _flashcards = [];
   final List<ReminderModel> _reminders = [];
   final List<Map<String, dynamic>> _enrollmentRequests = [];
+  final List<LectureModel> _lectures = [];
+  final List<AnnouncementModel> _announcements = [];
 
   int _completedPomodoros = 1;
   int _quizzesTaken = 2;
@@ -64,6 +76,10 @@ class MockDatabaseService extends ChangeNotifier implements DatabaseService {
   List<ReminderModel> get reminders => _reminders;
   @override
   List<Map<String, dynamic>> get enrollmentRequests => _enrollmentRequests;
+  @override
+  List<LectureModel> get lectures => _lectures;
+  @override
+  List<AnnouncementModel> get announcements => _announcements;
 
   @override
   int get completedPomodoros => _completedPomodoros;
@@ -338,6 +354,30 @@ class MockDatabaseService extends ChangeNotifier implements DatabaseService {
       _enrollmentRequests[index]['status'] = 'rejected';
       notifyListeners();
     }
+  }
+
+  @override
+  Future<void> addLecture(LectureModel lecture) async {
+    _lectures.insert(0, lecture);
+    notifyListeners();
+  }
+
+  @override
+  Future<void> deleteLecture(String id) async {
+    _lectures.removeWhere((l) => l.id == id);
+    notifyListeners();
+  }
+
+  @override
+  Future<void> addAnnouncement(AnnouncementModel announcement) async {
+    _announcements.insert(0, announcement);
+    notifyListeners();
+  }
+
+  @override
+  Future<void> deleteAnnouncement(String id) async {
+    _announcements.removeWhere((a) => a.id == id);
+    notifyListeners();
   }
 
   @override

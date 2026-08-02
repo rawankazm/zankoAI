@@ -337,9 +337,61 @@ class _TeacherStudentsScreenState extends State<TeacherStudentsScreen> {
                 ),
               ),
               const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: color,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  icon: const Icon(Icons.send_rounded, size: 18),
+                  label: Text(t('send_feedback'), style: const TextStyle(fontWeight: FontWeight.bold)),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _showFeedbackDialog(context, s['name'] as String, t);
+                  },
+                ),
+              ),
+              const SizedBox(height: 12),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showFeedbackDialog(BuildContext context, String studentName, String Function(String) t) {
+    final feedbackController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('${t("send_feedback")}: $studentName'),
+        content: TextField(
+          controller: feedbackController,
+          maxLines: 3,
+          decoration: const InputDecoration(
+            hintText: 'تێبینی و ڕێنمایی بۆ قوتابی بنووسە...',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(t('cancel')),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0284C7), foregroundColor: Colors.white),
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('فێدباک بە سەرکەوتوویی نێردرا بۆ $studentName ✅')),
+              );
+            },
+            child: Text(t('save')),
+          ),
+        ],
       ),
     );
   }
