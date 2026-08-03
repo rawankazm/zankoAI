@@ -105,17 +105,17 @@ $deptsSummary
 
   String _buildLocalKurdishAdvisorSummary(double studentMark, String trackName, List<ZankolineDepartmentModel> matchedDepts) {
     final buffer = StringBuffer();
-    buffer.writeln('بەپێی تێکڕای نمرەکەت ($studentMark%) لە لقی $trackName، ئەم بەشانەی خوارەوە لە زانکۆکانی هەرێمی کوردستان لەگەڵ نمرەکەت دەگونجێن:\n');
+    buffer.writeln('بەپێی تێکڕای نمرەکەت %$studentMark لە لقی $trackName، ئەم بەشانەی خوارەوە لە زانکۆکانی هەرێمی کوردستان لەگەڵ نمرەکەت دەگونجێن:\n');
 
     for (var i = 0; i < matchedDepts.length; i++) {
       final dept = matchedDepts[i];
-      buffer.writeln('${i + 1}. ${dept.college} (${dept.university})');
-      buffer.writeln('   • لانی کەم نمرەی وەرگرتن: ${dept.minMark}%');
-      buffer.writeln('   • شار: ${dept.city}');
-      buffer.writeln('   • دەربارەی بەشەکە: ${dept.description}\n');
+      buffer.writeln('${i + 1} - ${dept.college} - ${dept.university}');
+      buffer.writeln('  - لانی کەم نمرەی وەرگرتن: %${dept.minMark}');
+      buffer.writeln('  - شار: ${dept.city}');
+      buffer.writeln('  - دەربارەی بەشەکە: ${dept.description}\n');
     }
 
-    buffer.writeln('💡 ڕێنمایی: بەپێی ئارەزووی خۆت و دووری شارەکەت بەشەکان لە سیستەمی فەرمی زانکۆلاین ڕیزبەند بکە.');
+    buffer.writeln('💡 ڕێنمایی: بەپێی ئارەزووی خۆت و نزیکی شارەکەت، بەشەکان لە سیستەمی زانکۆلاین کۆپ بکەرەوە و داواکاری پێشکەش بکە.');
     return buffer.toString();
   }
 }

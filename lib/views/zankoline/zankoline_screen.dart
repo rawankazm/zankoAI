@@ -60,12 +60,24 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
   }
 
   Future<void> _openZankolinePortal() async {
-    final uri = Uri.parse('https://www.regayzanko.com');
-    try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final urls = [
+      'https://www.regayzanko.com',
+      'https://regayzanko.gov.krd',
+      'https://www.zankoline.org',
+    ];
+
+    for (final urlStr in urls) {
+      final uri = Uri.parse(urlStr);
+      try {
+        final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+        if (launched) return;
+      } catch (_) {
+        try {
+          final launchedFallback = await launchUrl(uri, mode: LaunchMode.platformDefault);
+          if (launchedFallback) return;
+        } catch (_) {}
       }
-    } catch (_) {}
+    }
   }
 
   @override
@@ -304,25 +316,30 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                           Text('AI داواکارییەکەت شیدەکاتەوە...'),
                         ],
                       )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(CupertinoIcons.sparkles, color: ZankoColors.primary, size: 20),
-                              const SizedBox(width: 8),
-                              Text(
-                                'شیکاری و پێشنیاری مامۆستا AI',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: ZankoColors.primary),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            _aiAdvice ?? '',
-                            style: const TextStyle(fontSize: 13, height: 1.6),
-                          ),
-                        ],
+                    : Directionality(
+                        textDirection: TextDirection.rtl,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(CupertinoIcons.sparkles, color: ZankoColors.primary, size: 20),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'شیکاری و پێشنیاری مامۆستا AI',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: ZankoColors.primary),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              _aiAdvice ?? '',
+                              textAlign: TextAlign.right,
+                              textDirection: TextDirection.rtl,
+                              style: const TextStyle(fontSize: 13, height: 1.7),
+                            ),
+                          ],
+                        ),
                       ),
               ),
             ],
@@ -330,92 +347,101 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
             // ─── Matched KRG Departments List ───
             if (_matchedDepartments.isNotEmpty) ...[
               const SizedBox(height: 24),
-              Row(
-                children: [
-                  Text(
-                    t('department_matcher'),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white : ZankoColors.textPrimary,
+              Directionality(
+                textDirection: TextDirection.rtl,
+                child: Row(
+                  children: [
+                    Text(
+                      t('department_matcher'),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? Colors.white : ZankoColors.textPrimary,
+                      ),
                     ),
-                  ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: ZankoColors.primary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: ZankoColors.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        'بەشی گونجاو: ${_matchedDepartments.length}',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: ZankoColors.primary),
+                      ),
                     ),
-                    child: Text(
-                      'بەشی گونجاو: ${_matchedDepartments.length}',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: ZankoColors.primary),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: 12),
               ..._matchedDepartments.map((dept) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: AppCard(
                       padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: ZankoColors.primary.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(8),
+                      child: Directionality(
+                        textDirection: TextDirection.rtl,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: ZankoColors.primary.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    'لانی کەم: %${dept.minMark}',
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: ZankoColors.primary),
+                                  ),
                                 ),
-                                child: Text(
-                                  'لانی کەم: ${dept.minMark}%',
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: ZankoColors.primary),
+                                const Spacer(),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    dept.city,
+                                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                                  ),
                                 ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              dept.college,
+                              textAlign: TextAlign.right,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: isDark ? Colors.white : ZankoColors.textPrimary,
                               ),
-                              const Spacer(),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  dept.city,
-                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                                ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              dept.university,
+                              textAlign: TextAlign.right,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            dept.college,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              color: isDark ? Colors.white : ZankoColors.textPrimary,
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            dept.university,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                            const SizedBox(height: 8),
+                            Text(
+                              dept.description,
+                              textAlign: TextAlign.right,
+                              style: TextStyle(
+                                fontSize: 12,
+                                height: 1.5,
+                                color: isDark ? Colors.grey[300] : ZankoColors.textSecondary,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            dept.description,
-                            style: TextStyle(
-                              fontSize: 12,
-                              height: 1.5,
-                              color: isDark ? Colors.grey[300] : ZankoColors.textSecondary,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   )),
