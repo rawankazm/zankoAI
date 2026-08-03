@@ -1,0 +1,380 @@
+[
+  {
+    "id": "med_slemani",
+    "university": "زانکۆی سلێمانی",
+    "college": "کۆلێژی پزیشکی گشتی",
+    "min_mark": 96.5,
+    "track": "scientific",
+    "city": "سلێمانی",
+    "description": "خوێندنی پزیشکی گشتی بۆ ماوەی ٦ ساڵ. خولەکانی ڕاهێنانی کلینیکی لە نەخۆشخانەکانی فێرکاری سلێمانی."
+  },
+  {
+    "id": "med_hawler",
+    "university": "زانکۆی پزیشکی هەولێر",
+    "college": "کۆلێژی پزیشکی گشتی",
+    "min_mark": 96.8,
+    "track": "scientific",
+    "city": "هەولێر",
+    "description": "خوێندنی پزیشکی گشتی بەخۆڕایی، ماوەی ٦ ساڵ و دامەزراندنی راستەوخۆی نیشتەجێی خولاو."
+  },
+  {
+    "id": "dent_slemani",
+    "university": "زانکۆی سلێمانی",
+    "college": "کۆلێژی پزیشکی ددان",
+    "min_mark": 94.8,
+    "track": "scientific",
+    "city": "سلێمانی",
+    "description": "خوێندنی پزیشکی ددان بۆ ماوەی ٥ ساڵ. پێگەیاندنی پزیشکانی پسپۆڕ لە تەندروستی ددان و شەویلگە."
+  },
+  {
+    "id": "dent_duhok",
+    "university": "زانکۆی دهۆک",
+    "college": "کۆلێژی پزیشکی ددان",
+    "min_mark": 94.2,
+    "track": "scientific",
+    "city": "دهۆک",
+    "description": "خوێندنی نەشتەرگەری و پزیشکی ددان بە نوێترین تاقیگەکانی فێرکاری."
+  },
+  {
+    "id": "pharm_slemani",
+    "university": "زانکۆی سلێمانی",
+    "college": "کۆلێژی دەرمانسازی",
+    "min_mark": 93.2,
+    "track": "scientific",
+    "city": "سلێمانی",
+    "description": "خوێندنی دەرمانسازی بۆ ماوەی ٥ ساڵ. کارکردن لە تاقیگەکانی دەرمان و دروستکردنی دەرمان."
+  },
+  {
+    "id": "arch_eng_salahaddin",
+    "university": "زانکۆی سەڵاحەدین",
+    "college": "کۆلێژی ئەندازیاری - تەلارسازی (Architecture)",
+    "min_mark": 92.0,
+    "track": "scientific",
+    "city": "هەولێر",
+    "description": "نەخشەسازی و دیزاینی بیناسازی، نەخشەسازی شارستانی و هونەری تەلارسازی."
+  },
+  {
+    "id": "anesthesia_hawler",
+    "university": "زانکۆی پزیشکی هەولێر",
+    "college": "کۆلێژی زانستە تەندروستییەکان - بێهۆشکاری",
+    "min_mark": 91.0,
+    "track": "scientific",
+    "city": "هەولێر",
+    "description": "فێربوونی بێهۆشکاری کلینیکی بۆ هۆڵەکانی نەشتەرگەری و چاودێری ورد."
+  },
+  {
+    "id": "mls_slemani",
+    "university": "زانکۆی سلێمانی",
+    "college": "کۆلێژی زانستە تەندروستییەکان - شیکاری نەخۆشییەکان (MLS)",
+    "min_mark": 89.5,
+    "track": "scientific",
+    "city": "سلێمانی",
+    "description": "شیکاری تاقیگەیی خوێن، بەکتریۆلۆجی، و پشکنینە پزیشکییە کان."
+  },
+  {
+    "id": "comp_eng_salahaddin",
+    "university": "زانکۆی سەڵاحەدین",
+    "college": "کۆلێژی ئەندازیاری - کۆمپیوتەر",
+    "min_mark": 89.5,
+    "track": "scientific",
+    "city": "هەولێر",
+    "description": "خوێندنی ئەندازیاری سوفتوێر و هۆشێری دەستکرد بۆ ماوەی ٤ ساڵ."
+  },
+  {
+    "id": "petroleum_eng_karkuk",
+    "university": "زانکۆی گەرمیان / کەرکووک",
+    "college": "کۆلێژی ئەندازیاری - نەوت",
+    "min_mark": 88.0,
+    "track": "scientific",
+    "city": "کەرکووک",
+    "description": "دەرهێنان و پاڵاوتنی نەوت و گاز، کۆنتڕۆڵکردنی کێڵگە نەوتییەکان."
+  },
+  {
+    "id": "vet_slemani",
+    "university": "زانکۆی سلێمانی",
+    "college": "کۆلێژی پزیشکی ڤێتێرنەری (پزیشکی ئاژەڵان)",
+    "min_mark": 86.5,
+    "track": "scientific",
+    "city": "سلێمانی",
+    "description": "خوێندنی پزیشکی ئاژەڵان، کۆنتڕۆڵکردنی نەخۆشییە گوازراوەکان و سەلامەتی خۆراک."
+  },
+  {
+    "id": "civil_eng_duhok",
+    "university": "زانکۆی دهۆک",
+    "college": "کۆلێژی ئەندازیاری - شارستانی (Civil)",
+    "min_mark": 85.0,
+    "track": "scientific",
+    "city": "دهۆک",
+    "description": "دیزاینی پرد و بیناسازی، نەخشەسازی ژێرخان و ئەندازیاری ڕێگاوبان."
+  },
+  {
+    "id": "it_poly_slemani",
+    "university": "زانکۆی پۆلیتەکنیکی سلێمانی",
+    "college": "کۆلێژی ئینفۆرماتیک - تەکنەلۆجیای زانیاری (IT)",
+    "min_mark": 84.0,
+    "track": "scientific",
+    "city": "سلێمانی",
+    "description": "بەشی تەکنەلۆجیای زانیاری IT، کارگێڕی سیستەمی تۆڕەکان و ئاسایشی زانیاری."
+  },
+  {
+    "id": "nursing_duhok",
+    "university": "زانکۆی دهۆک",
+    "college": "کۆلێژی پەرستاری",
+    "min_mark": 82.5,
+    "track": "scientific",
+    "city": "دهۆک",
+    "description": "پێگەیاندنی پەرستارانی پیشەیی بۆ کارکردن لە بەشە فریاگوزاری و تەندروستییەکان."
+  },
+  {
+    "id": "cs_slemani",
+    "university": "زانکۆی سلێمانی",
+    "college": "کۆلێژی زانست - زانستی کۆمپیوتەر",
+    "min_mark": 78.5,
+    "track": "scientific",
+    "city": "سلێمانی",
+    "description": "فێربوونی بەرنامەسازی Python, Flutter, و سیستەمەکانی کارپێکردن."
+  },
+  {
+    "id": "law_salahaddin",
+    "university": "زانکۆی سەڵاحەدین",
+    "college": "کۆلێژی یاسا",
+    "min_mark": 76.0,
+    "track": "literary",
+    "city": "هەولێر",
+    "description": "خوێندنی یاسا و یاسای نێودەوڵەتی، پێگەیاندنی پارێزەران و یاساناسان."
+  },
+  {
+    "id": "chemistry_halabja",
+    "university": "زانکۆی هەڵەبجە",
+    "college": "کۆلێژی زانست - کیمیا",
+    "min_mark": 75.0,
+    "track": "scientific",
+    "city": "هەڵەبجە",
+    "description": "شیکاری کیمیایی، کیمیای ئەندامی و کارکردن لە تاقیگەکانی پیشەسازی."
+  },
+  {
+    "id": "lang_eng_slemani",
+    "university": "زانکۆی سلێمانی",
+    "college": "کۆلێژی زمان - بەشی ئینگلیزی",
+    "min_mark": 74.5,
+    "track": "literary",
+    "city": "سلێمانی",
+    "description": "خوێندنی ئەدەب و زمانی ئینگلیزی، پێگەیاندنی وەرگێڕان و مامۆستایانی زمان."
+  },
+  {
+    "id": "translation_salahaddin",
+    "university": "زانکۆی سەڵاحەدین",
+    "college": "کۆلێژی زمان - بەشی وەرگێڕان",
+    "min_mark": 72.0,
+    "track": "literary",
+    "city": "هەولێر",
+    "description": "وەرگێڕانی هاوکات و نووسراو لە نێوان زمانی کوردی، ئینگلیزی و عەرەبی."
+  },
+  {
+    "id": "media_slemani",
+    "university": "زانکۆی سلێمانی",
+    "college": "کۆلێژی زانستە مرۆڤایەتییەکان - ڕاگەیاندن",
+    "min_mark": 69.5,
+    "track": "literary",
+    "city": "سلێمانی",
+    "description": "ڕۆژنامەنووسی دیجیتاڵی، ڕاگەیاندن، بەرهەمهێنانی ڕادیۆ و تلویزیۆن."
+  },
+  {
+    "id": "business_halabja",
+    "university": "زانکۆی هەڵەبجە",
+    "college": "کۆلێژی کارگێڕی و ئابووری",
+    "min_mark": 68.0,
+    "track": "literary",
+    "city": "هەڵەبجە",
+    "description": "فێربوونی کارگێڕی کار، ژمێریاری و ئابووری بازاڕ."
+  },
+  {
+    "id": "physics_garmian",
+    "university": "زانکۆی گەرمیان",
+    "college": "کۆلێژی پەروەردە - فیزیا",
+    "min_mark": 68.5,
+    "track": "scientific",
+    "city": "کەرکووک",
+    "description": "تیۆرییەکانی فیزیا، ئەلیکترۆنیات و پێگەیاندنی مامۆستایانی زانستی فیزیا."
+  },
+  {
+    "id": "geography_duhok",
+    "university": "زانکۆی دهۆک",
+    "college": "کۆلێژی زانستە مرۆڤایەتییەکان - جوگرافیا",
+    "min_mark": 62.0,
+    "track": "literary",
+    "city": "دهۆک",
+    "description": "سیستەمی زانیارییە جوگرافییەکان (GIS)، سەرچاوەکانی سروشت و کەشوهەوا."
+  },
+  {
+    "id": "sports_slemani",
+    "university": "زانکۆی سلێمانی",
+    "college": "کۆلێژی پەروەردەی وەرزش",
+    "min_mark": 60.0,
+    "track": "literary",
+    "city": "سلێمانی",
+    "description": "فێربوونی بەڕێوەبردنی وەرزشی، پێگەیاندنی ڕاهێنەران و مامۆستایانی وەرزش."
+  },
+  {
+    "id": "tech_admin_poly",
+    "university": "زانکۆی پۆلیتەکنیکی سلێمانی",
+    "college": "پەیمانگەی تەکنیکی - کارگێڕی",
+    "min_mark": 58.0,
+    "track": "literary",
+    "city": "سلێمانی",
+    "description": "کارگێڕی نوسینگە، ژمێریاری پڕاکتیکی و بانکگەری."
+  },
+  {
+    "id": "biomed_salahaddin",
+    "university": "زانکۆی سەڵاحەدین",
+    "college": "کۆلێژی ئەندازیاری - ئەندازیاری بایۆمەدیکاڵ",
+    "min_mark": 91.5,
+    "track": "scientific",
+    "city": "هەولێر",
+    "description": "تەکنەلۆجیای ئامێرە پزیشکییەکان، دیزاینی ئامێری نەخۆشخانە و سیستەمی تەندروستی دیجیتاڵی."
+  },
+  {
+    "id": "optometry_poly",
+    "university": "زانکۆی پۆلیتەکنیکی هەولێر",
+    "college": "کۆلێژی تەکنیکی - چاوناسی (Optometry)",
+    "min_mark": 88.5,
+    "track": "scientific",
+    "city": "هەولێر",
+    "description": "پشکنینی چاو، دروستکردنی بۆریلەی چاو و چارەسەری نەخۆشییەکانی چاو."
+  },
+  {
+    "id": "radiology_slemani",
+    "university": "زانکۆی پۆلیتەکنیکی سلێمانی",
+    "college": "کۆلێژی تەکنیکی - تەکنەلۆجیای ئایناوی (Radiology)",
+    "min_mark": 87.0,
+    "track": "scientific",
+    "city": "سلێمانی",
+    "description": "شیکردنەوەی پزیشکی بە ئایناو و MRI، پژاری دیجیتاڵی و ئایناوی ناشیراو."
+  },
+  {
+    "id": "food_tech_duhok",
+    "university": "زانکۆی دهۆک",
+    "college": "کۆلێژی ئەندازیاری - تەکنەلۆجیای خۆراک",
+    "min_mark": 80.0,
+    "track": "scientific",
+    "city": "دهۆک",
+    "description": "دروستکردنی خۆراک، کۆنتڕۆڵی کوالیتی و بەرپرسیاریەتی خۆراکی پارێزراو."
+  },
+  {
+    "id": "env_eng_slemani",
+    "university": "زانکۆی سلێمانی",
+    "college": "کۆلێژی ئەندازیاری - ژینگەیی (Environmental)",
+    "min_mark": 79.5,
+    "track": "scientific",
+    "city": "سلێمانی",
+    "description": "بەڕێوەبردنی ئاو و قازل، کۆنتڕۆڵی گەمارۆ و هەژمارکردنی کاربۆن."
+  },
+  {
+    "id": "elec_eng_hawler",
+    "university": "زانکۆی سەڵاحەدین",
+    "college": "کۆلێژی ئەندازیاری - کارەبا (Electrical)",
+    "min_mark": 87.5,
+    "track": "scientific",
+    "city": "هەولێر",
+    "description": "دیزاینی سیستەمی کارەبا، ئەلیکترۆنیکس و تەکنەلۆجیای وزەی تازە."
+  },
+  {
+    "id": "mech_eng_salahaddin",
+    "university": "زانکۆی سەڵاحەدین",
+    "college": "کۆلێژی ئەندازیاری - مەکانیکی (Mechanical)",
+    "min_mark": 86.0,
+    "track": "scientific",
+    "city": "هەولێر",
+    "description": "دیزاینی مەکینە و ئامێر، دینامیکی شلەجامد و تەکنەلۆجیای بەرهەمهێنان."
+  },
+  {
+    "id": "agriculture_duhok",
+    "university": "زانکۆی دهۆک",
+    "college": "کۆلێژی کشتوکاڵ (Agriculture)",
+    "min_mark": 72.5,
+    "track": "scientific",
+    "city": "دهۆک",
+    "description": "بەرهەمهێنانی کشتوکاڵ دیجیتاڵی، زانستی خاک و ئابوری کشتوکاڵ."
+  },
+  {
+    "id": "math_slemani",
+    "university": "زانکۆی سلێمانی",
+    "college": "کۆلێژی زانست - بیرکاری (Mathematics)",
+    "min_mark": 70.0,
+    "track": "scientific",
+    "city": "سلێمانی",
+    "description": "بیرکاری مۆڵەت، ئاماریەکان و کارکردن لە بوارە ئەکادیمییەکان."
+  },
+  {
+    "id": "statistics_hawler",
+    "university": "زانکۆی سەڵاحەدین",
+    "college": "کۆلێژی ئیدارە و ئابووری - ئاماری",
+    "min_mark": 68.0,
+    "track": "scientific",
+    "city": "هەولێر",
+    "description": "ئامارگەری، داتا ئانالیسیس و بەکارهێنانی ئاماری لە بوارە ئابووری و پزیشکییەکان."
+  },
+  {
+    "id": "finance_slemani",
+    "university": "زانکۆی سلێمانی",
+    "college": "کۆلێژی ئیدارە و ئابووری - دارایی",
+    "min_mark": 67.5,
+    "track": "literary",
+    "city": "سلێمانی",
+    "description": "بەڕێوەبردنی داراییی، بانکگەری و بازارگانی دیجیتاڵی."
+  },
+  {
+    "id": "kurdish_lit_salahaddin",
+    "university": "زانکۆی سەڵاحەدین",
+    "college": "کۆلێژی زمانی کوردی - ئەدەبی کوردی",
+    "min_mark": 63.0,
+    "track": "literary",
+    "city": "هەولێر",
+    "description": "ئەدەب و ڕۆشنبیری کوردی، کلتوری کوردستانی و ڕۆژنامەنووسی کوردی."
+  },
+  {
+    "id": "arabic_lit_duhok",
+    "university": "زانکۆی دهۆک",
+    "college": "کۆلێژی زمانی عەرەبی",
+    "min_mark": 61.0,
+    "track": "literary",
+    "city": "دهۆک",
+    "description": "زمان و ئەدەبی عەرەبی، بلاغەت و ئەدەبی کلاسیکی عەرەبی."
+  },
+  {
+    "id": "history_slemani",
+    "university": "زانکۆی سلێمانی",
+    "college": "کۆلێژی زانستە مرۆڤایەتییەکان - مێژوو",
+    "min_mark": 60.0,
+    "track": "literary",
+    "city": "سلێمانی",
+    "description": "مێژووی کوردستان و ناوچەی کوردنشین، ئارکیۆلۆجی و مێژووی کەلەپووری."
+  },
+  {
+    "id": "sociology_halabja",
+    "university": "زانکۆی هەڵەبجە",
+    "college": "کۆلێژی زانستە مرۆڤایەتییەکان - کۆمەڵناسی",
+    "min_mark": 59.0,
+    "track": "literary",
+    "city": "هەڵەبجە",
+    "description": "کۆمەڵناسی، نوێکردنەوەی کۆمەڵگا و لێکۆڵینەوەی بارودۆخی مرۆڤایەتی."
+  },
+  {
+    "id": "fine_arts_salahaddin",
+    "university": "زانکۆی سەڵاحەدین",
+    "college": "کۆلێژی هونەرە جوانەکان",
+    "min_mark": 58.5,
+    "track": "literary",
+    "city": "هەولێر",
+    "description": "هونەری وێنەکێشی، مۆسیقا، تیاتر و دیزاینی گرافیک."
+  },
+  {
+    "id": "physical_edu_duhok",
+    "university": "زانکۆی دهۆک",
+    "college": "کۆلێژی پەروەردەی وەرزش",
+    "min_mark": 57.0,
+    "track": "literary",
+    "city": "دهۆک",
+    "description": "پێگەیاندنی ڕاهێنەری وەرزشی، بەڕێوەبردنی یارییەکانی ئۆلیمپیک و تایبەتی."
+  }
+]

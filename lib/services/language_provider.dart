@@ -107,12 +107,18 @@ class LanguageProvider extends ChangeNotifier {
     'login_register_desc': {'ku': 'بچۆرە ژوورەوە یان هەژماری نوێ دروستبکە', 'ar': 'قم بتسجيل الدخول أو إنشاء حساب جديد', 'en': 'Log in or register a new account'},
     'version': {'ku': 'وەشانی v1.0.0', 'ar': 'الإصدار v1.0.0', 'en': 'Version v1.0.0'},
     'daily_reminders': {'ku': 'ئاگاداری ڕۆژانە', 'ar': 'التذكيرات اليومية', 'en': 'Daily Reminders'},
+    'zankoline': {'ku': 'زانکۆلاین', 'ar': 'زانكولاين', 'en': 'ZankoLine'},
+    'zankoline_subtitle': {'ku': 'سیستەمی وەرگرتنی قوتابییان و ڕاوێژکاری زانکۆلاین', 'ar': 'نظام القبول الجامعي والاستشارات', 'en': 'KRG University Admission System & Calculator'},
+    'zankoline_calculator': {'ku': 'ئەژمارکردنی نمرەی پۆلی ۱۲', 'ar': 'حساب معدل السادس الإعدادي', 'en': '12th Grade Mark Calculator'},
+    'zankoline_portal': {'ku': 'ماڵپەڕی فەرمی زانکۆلاین', 'ar': 'بوابة زانكولاين الرسمية', 'en': 'Official ZankoLine Portal'},
+    'department_matcher': {'ku': 'دۆزینەوەی بەشە گونجاوەکان', 'ar': 'البحث عن التخصصات المناسبة', 'en': 'Matching Departments'},
 
     // Bottom Navigation
     'nav_home': {'ku': 'سەرەکی', 'ar': 'الرئيسية', 'en': 'Home'},
     'nav_courses': {'ku': 'وانەکان', 'ar': 'المواد', 'en': 'Courses'},
     'nav_ai_teacher': {'ku': 'مامۆستا AI', 'ar': 'معلم AI', 'en': 'AI Tutor'},
     'nav_quiz': {'ku': 'کویز', 'ar': 'اختبار', 'en': 'Quiz'},
+    'nav_pdf_chat': {'ku': 'پەڕەی PDF', 'ar': 'ملف PDF', 'en': 'PDF Chat'},
     'nav_profile': {'ku': 'پڕۆفایل', 'ar': 'الملف', 'en': 'Profile'},
 
     // Home / Dashboard Header & Search

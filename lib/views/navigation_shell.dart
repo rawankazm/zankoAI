@@ -6,6 +6,7 @@ import 'home/home_screen.dart';
 import 'home/courses_screen.dart';
 import 'ai_teacher/ai_teacher_chat_screen.dart';
 import 'pdf/pdf_chat_screen.dart';
+import 'zankoline/zankoline_screen.dart';
 import 'profile/profile_screen.dart';
 
 class NavigationShell extends StatefulWidget {
@@ -18,19 +19,14 @@ class NavigationShell extends StatefulWidget {
 class _NavigationShellState extends State<NavigationShell> {
   int _selectedIndex = 0;
 
-  late final List<Widget> _studentScreens;
-
-  @override
-  void initState() {
-    super.initState();
-    _studentScreens = [
-      const HomeScreen(),
-      const CoursesScreen(),
-      const AiTeacherChatScreen(),
-      const PdfChatScreen(),
-      const ProfileScreen(),
-    ];
-  }
+  List<Widget> get _studentScreens => const [
+        HomeScreen(),
+        CoursesScreen(),
+        AiTeacherChatScreen(),
+        PdfChatScreen(),
+        ZankolineScreen(),
+        ProfileScreen(),
+      ];
 
   void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);

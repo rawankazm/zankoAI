@@ -878,8 +878,9 @@ class GlassBottomNavigation extends StatelessWidget {
                 _buildNavItem(context, 0, CupertinoIcons.house_fill, CupertinoIcons.house, langProvider.translate('nav_home')),
                 _buildNavItem(context, 1, CupertinoIcons.book_fill, CupertinoIcons.book, langProvider.translate('nav_courses')),
                 _buildCenterAiItem(2),
-                _buildNavItem(context, 3, CupertinoIcons.chat_bubble_2_fill, CupertinoIcons.chat_bubble_2, langProvider.translate('nav_ai_teacher')),
-                _buildNavItem(context, 4, CupertinoIcons.person_fill, CupertinoIcons.person, langProvider.translate('nav_profile')),
+                _buildNavItem(context, 3, CupertinoIcons.doc_text_fill, CupertinoIcons.doc_text, langProvider.translate('nav_pdf_chat')),
+                _buildNavItem(context, 4, Icons.school_rounded, Icons.school_outlined, langProvider.translate('zankoline')),
+                _buildNavItem(context, 5, CupertinoIcons.person_fill, CupertinoIcons.person, langProvider.translate('nav_profile')),
               ],
             ),
           ),
@@ -892,34 +893,39 @@ class GlassBottomNavigation extends StatelessWidget {
     final isSelected = currentIndex == index;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return GestureDetector(
-      onTap: () => onTap(index),
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isSelected ? activeIcon : inactiveIcon,
-              color: isSelected
-                  ? ZankoColors.primary
-                  : (isDark ? Colors.grey[400]! : ZankoColors.textSecondary),
-              size: 24,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-          fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => onTap(index),
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isSelected ? activeIcon : inactiveIcon,
                 color: isSelected
                     ? ZankoColors.primary
                     : (isDark ? Colors.grey[400]! : ZankoColors.textSecondary),
+                size: 24,
               ),
-            ),
-          ],
+              const SizedBox(height: 4),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected
+                      ? ZankoColors.primary
+                      : (isDark ? Colors.grey[400]! : ZankoColors.textSecondary),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

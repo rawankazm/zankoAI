@@ -13,6 +13,8 @@ import 'services/language_provider.dart';
 import 'services/theme_provider.dart';
 import 'views/splash_screen.dart';
 
+import 'services/zankoline_service.dart';
+
 import 'package:device_preview/device_preview.dart';
 
 void main() async {
@@ -66,6 +68,10 @@ class ZankoApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<ThemeProvider>(
           create: (_) => ThemeProvider(),
+        ),
+        ChangeNotifierProxyProvider<AiService, ZankolineService>(
+          create: (context) => ZankolineService(Provider.of<AiService>(context, listen: false)),
+          update: (context, aiService, previous) => previous ?? ZankolineService(aiService),
         ),
       ],
       child: Consumer2<LanguageProvider, ThemeProvider>(

@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.birdev.tomar_tv"
+    namespace = "com.zanko.student"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "28.2.13676358"
 
@@ -22,7 +22,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.birdev.tomar_tv"
+        applicationId = "com.zanko.student"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
