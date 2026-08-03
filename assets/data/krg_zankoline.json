@@ -4,6 +4,7 @@
     "university": "زانکۆی سلێمانی",
     "college": "کۆلێژی پزیشکی گشتی",
     "min_mark": 96.5,
+    "parallel_fee_iqd": 5500000,
     "track": "scientific",
     "city": "سلێمانی",
     "description": "خوێندنی پزیشکی گشتی بۆ ماوەی ٦ ساڵ. خولەکانی ڕاهێنانی کلینیکی لە نەخۆشخانەکانی فێرکاری سلێمانی."
@@ -13,6 +14,7 @@
     "university": "زانکۆی پزیشکی هەولێر",
     "college": "کۆلێژی پزیشکی گشتی",
     "min_mark": 96.8,
+    "parallel_fee_iqd": 5500000,
     "track": "scientific",
     "city": "هەولێر",
     "description": "خوێندنی پزیشکی گشتی بەخۆڕایی، ماوەی ٦ ساڵ و دامەزراندنی راستەوخۆی نیشتەجێی خولاو."
@@ -22,6 +24,7 @@
     "university": "زانکۆی سلێمانی",
     "college": "کۆلێژی پزیشکی ددان",
     "min_mark": 94.8,
+    "parallel_fee_iqd": 4500000,
     "track": "scientific",
     "city": "سلێمانی",
     "description": "خوێندنی پزیشکی ددان بۆ ماوەی ٥ ساڵ. پێگەیاندنی پزیشکانی پسپۆڕ لە تەندروستی ددان و شەویلگە."
@@ -31,6 +34,7 @@
     "university": "زانکۆی دهۆک",
     "college": "کۆلێژی پزیشکی ددان",
     "min_mark": 94.2,
+    "parallel_fee_iqd": 4500000,
     "track": "scientific",
     "city": "دهۆک",
     "description": "خوێندنی نەشتەرگەری و پزیشکی ددان بە نوێترین تاقیگەکانی فێرکاری."
@@ -40,6 +44,7 @@
     "university": "زانکۆی سلێمانی",
     "college": "کۆلێژی دەرمانسازی",
     "min_mark": 93.2,
+    "parallel_fee_iqd": 4000000,
     "track": "scientific",
     "city": "سلێمانی",
     "description": "خوێندنی دەرمانسازی بۆ ماوەی ٥ ساڵ. کارکردن لە تاقیگەکانی دەرمان و دروستکردنی دەرمان."
@@ -49,6 +54,7 @@
     "university": "زانکۆی سەڵاحەدین",
     "college": "کۆلێژی ئەندازیاری - تەلارسازی (Architecture)",
     "min_mark": 92.0,
+    "parallel_fee_iqd": 2750000,
     "track": "scientific",
     "city": "هەولێر",
     "description": "نەخشەسازی و دیزاینی بیناسازی، نەخشەسازی شارستانی و هونەری تەلارسازی."
@@ -58,6 +64,7 @@
     "university": "زانکۆی پزیشکی هەولێر",
     "college": "کۆلێژی زانستە تەندروستییەکان - بێهۆشکاری",
     "min_mark": 91.0,
+    "parallel_fee_iqd": 2200000,
     "track": "scientific",
     "city": "هەولێر",
     "description": "فێربوونی بێهۆشکاری کلینیکی بۆ هۆڵەکانی نەشتەرگەری و چاودێری ورد."
@@ -67,9 +74,48 @@
     "university": "زانکۆی سلێمانی",
     "college": "کۆلێژی زانستە تەندروستییەکان - شیکاری نەخۆشییەکان (MLS)",
     "min_mark": 89.5,
+    "parallel_fee_iqd": 2200000,
     "track": "scientific",
     "city": "سلێمانی",
     "description": "شیکاری تاقیگەیی خوێن، بەکتریۆلۆجی، و پشکنینە پزیشکییە کان."
+  },
+  {
+    "id": "ise_epu",
+    "university": "زانکۆی پۆلیتەکنیکی هەولێر",
+    "college": "کۆلێژی تەکنیکی ئەندازیاری - ئەندازیاری سیستەمەکانی زانیاری (ISE / Informatic)",
+    "min_mark": 91.5,
+    "parallel_fee_iqd": 2750000,
+    "track": "scientific",
+    "city": "هەولێر",
+    "description": "ئەندازیاری سیستەمەکانی زانیاری (ISE)، گەشەپێدانی سۆفتوێر، داتابەیس و ئەندازیاری ئینفۆرماتیک."
+  },
+  {
+    "id": "soft_eng_salahaddin",
+    "university": "زانکۆی سەڵاحەدین",
+    "college": "کۆلێژی ئەندازیاری - ئەندازیاری سوفتوێر و کۆمپیوتەر",
+    "min_mark": 92.5,
+    "parallel_fee_iqd": 2750000,
+    "track": "scientific",
+    "city": "هەولێر",
+    "description": "ئەندازیاری کۆمپیوتەر و سۆفتوێر، دیزاینی سیستمە ژیرەکان و زیرەکی دەستکرد."
+  },
+  {
+    "id": "informatic_spu",
+    "university": "زانکۆی پۆلیتەکنیکی سلێمانی",
+    "college": "کۆلێژی تەکنیکی ئینفۆرماتیک - ئەندازیاری تۆڕ و داتابەیس",
+    "min_mark": 90.5,
+    "track": "scientific",
+    "city": "سلێمانی",
+    "description": "ئەندازیاری ئینفۆرماتیک، بەڕێوەبردنی داتابەیس، تۆڕی کۆمپیوتەر و ئاسایشی زانیاری."
+  },
+  {
+    "id": "comp_informatic_duhok",
+    "university": "زانکۆی دهۆک",
+    "college": "کۆلێژی ئەندازیاری - ئەندازیاری کۆمپیوتەر و ئینفۆرماتیک",
+    "min_mark": 89.5,
+    "track": "scientific",
+    "city": "دهۆک",
+    "description": "ئەندازیاری کۆمپیوتەر و ئینفۆرماتیک، پرۆگرامسازی پێشکەوتوو و سیستمەکانی داتابەیس."
   },
   {
     "id": "comp_eng_salahaddin",
@@ -218,7 +264,7 @@
   {
     "id": "tech_admin_poly",
     "university": "زانکۆی پۆلیتەکنیکی سلێمانی",
-    "college": "پەیمانگەی تەکنیکی - کارگێڕی",
+    "college": "پەیمانگەی تەکنیکی سلێمانی - کارگێڕی کار",
     "min_mark": 58.0,
     "track": "literary",
     "city": "سلێمانی",
@@ -236,7 +282,7 @@
   {
     "id": "optometry_poly",
     "university": "زانکۆی پۆلیتەکنیکی هەولێر",
-    "college": "کۆلێژی تەکنیکی - چاوناسی (Optometry)",
+    "college": "کۆلێژی تەکنیکی تەندروستی هەولێر - چاوناسی (Optometry)",
     "min_mark": 88.5,
     "track": "scientific",
     "city": "هەولێر",
@@ -245,7 +291,7 @@
   {
     "id": "radiology_slemani",
     "university": "زانکۆی پۆلیتەکنیکی سلێمانی",
-    "college": "کۆلێژی تەکنیکی - تەکنەلۆجیای ئایناوی (Radiology)",
+    "college": "کۆلێژی تەکنیکی تەندروستی سلێمانی - تیشک (Radiology)",
     "min_mark": 87.0,
     "track": "scientific",
     "city": "سلێمانی",
@@ -466,5 +512,221 @@
     "track": "scientific",
     "city": "کەلار",
     "description": "تۆڕ و پرۆگرامسازی کۆمپیوتەر و پشتیوانی تەکنیکی."
+  },
+  {
+    "id": "raparin_nursing",
+    "university": "زانکۆی ڕاپەڕین",
+    "college": "کۆلێژی پەرستاری",
+    "min_mark": 87.5,
+    "track": "scientific",
+    "city": "ڕانیە",
+    "description": "خوێندنی پەرستاری ٤ ساڵە لە نەخۆشخانەکانی فێرکاری ڕانیە و قەڵادزێ."
+  },
+  {
+    "id": "raparin_cs",
+    "university": "زانکۆی ڕاپەڕین",
+    "college": "کۆلێژی زانست - زانستی کۆمپیوتەر",
+    "min_mark": 79.5,
+    "track": "scientific",
+    "city": "ڕانیە",
+    "description": "پرۆگرامسازی، هۆشی دەستکرد، و ئاسایشی زانیاری (Cybersecurity)."
+  },
+  {
+    "id": "raparin_english",
+    "university": "زانکۆی ڕاپەڕین",
+    "college": "کۆلێژی زانستە مرۆڤایەتییەکان - زمانی ئینگلیزی",
+    "min_mark": 66.0,
+    "track": "literary",
+    "city": "ڕانیە",
+    "description": "زمان و ئەدەبی ئینگلیزی، تەرجومە و وەرگێڕانی وێژەیی."
+  },
+  {
+    "id": "koya_petro_eng",
+    "university": "زانکۆی کۆیە",
+    "college": "کۆلێژی ئەندازیاری - نەوت (Petroleum Engineering)",
+    "min_mark": 90.5,
+    "track": "scientific",
+    "city": "کۆیە",
+    "description": "ئەندازیاری دەرهێنان و پاڵاوتنی نەوت و گاز، تاقیگەی زەویناسی."
+  },
+  {
+    "id": "koya_health_sci",
+    "university": "زانکۆی کۆیە",
+    "college": "کۆلێژی زانستە تەندروستییەکان - پەرستاری کلینیکی",
+    "min_mark": 88.0,
+    "track": "scientific",
+    "city": "کۆیە",
+    "description": "پەرستاری پێشکەوتوو و چاودێری پزیشکی تەندروستی گشتی."
+  },
+  {
+    "id": "koya_math",
+    "university": "زانکۆی کۆیە",
+    "college": "کۆلێژی پەروەردە - بیرکاری",
+    "min_mark": 71.0,
+    "track": "scientific",
+    "city": "کۆیە",
+    "description": "بیرکاری پەپێکراو، ئامار و پێگەیاندنی مامۆستای بیرکاری."
+  },
+  {
+    "id": "zakho_health",
+    "university": "زانکۆی زاخۆ",
+    "college": "کۆلێژی زانستە تەندروستییەکان - شیکاری پزیشکی",
+    "min_mark": 87.0,
+    "track": "scientific",
+    "city": "زاخۆ",
+    "description": "شیکاری تاقیگەی پزیشکی، بایۆکیمیایی و مۆلیکولار."
+  },
+  {
+    "id": "zakho_eng",
+    "university": "زانکۆی زاخۆ",
+    "college": "کۆلێژی ئەندازیاری - شارستانی (Civil Engineering)",
+    "min_mark": 83.5,
+    "track": "scientific",
+    "city": "زاخۆ",
+    "description": "ئەندازیاری بیناسازی، ڕێگاوبان و نەخشەسازی ژێرخان."
+  },
+  {
+    "id": "zakho_kurdish",
+    "university": "زانکۆی زاخۆ",
+    "college": "کۆلێژی پەروەردە - زمانی کوردی",
+    "min_mark": 61.5,
+    "track": "literary",
+    "city": "زاخۆ",
+    "description": "ڕێزمان و ئەدەبی کوردی، کلتور و کەلەپووری ناوچەی بادینان."
+  },
+  {
+    "id": "garmian_chemistry",
+    "university": "زانکۆی گەرمیان",
+    "college": "کۆلێژی پەروەردە - کیمیا",
+    "min_mark": 74.5,
+    "track": "scientific",
+    "city": "کەلار",
+    "description": "کیمیای ئەندامی و نا-ئەندامی، ڕاهێنانی تاقیگەی پەروەردەیی."
+  },
+  {
+    "id": "garmian_english",
+    "university": "زانکۆی گەرمیان",
+    "college": "کۆلێژی پەروەردە - زمانی ئینگلیزی",
+    "min_mark": 65.5,
+    "track": "literary",
+    "city": "کەلار",
+    "description": "زمانەوانی ئینگلیزی، ڕێبازەکانی وانەوتنەوە و وەرگێڕان."
+  },
+  {
+    "id": "chamchamal_tech",
+    "university": "زانکۆی پۆلیتەکنیکی سلێمانی",
+    "college": "پەیمانگەی تەکنیکی چەمچەماڵ - IT",
+    "min_mark": 69.0,
+    "track": "scientific",
+    "city": "چەمچەماڵ",
+    "description": "تەکنەلۆجیای زانیاری ۲ ساڵە، دیزاینی ماڵپەڕ و بەڕێوەبردنی تۆڕ."
+  },
+  {
+    "id": "darbandikhan_tech",
+    "university": "زانکۆی پۆلیتەکنیکی سلێمانی",
+    "college": "پەیمانگەی تەکنیکی دەربەندیخان - بێهۆشکاری",
+    "min_mark": 83.0,
+    "track": "scientific",
+    "city": "دەربەندیخان",
+    "description": "تەندروستی بێهۆشکاری و ڕاهێنانی پراکتیکی لە نەخۆشخانەکان."
+  },
+  {
+    "id": "akre_tech_inst",
+    "university": "زانکۆی پۆلیتەکنیکی دهۆک",
+    "college": "پەیمانگەی تەکنیکی ئاکرێ - پەرستاری",
+    "min_mark": 81.0,
+    "track": "scientific",
+    "city": "ئاکرێ",
+    "description": "پەرستاری گشتی، فریاکەوتنی خێرا و ڕاهێنانی کلینیکی."
+  },
+  {
+    "id": "shekhan_tech_inst",
+    "university": "زانکۆی پۆلیتەکنیکی دهۆک",
+    "college": "پەیمانگەی تەکنیکی شێخان - شیکاری پزیشکی",
+    "min_mark": 82.0,
+    "track": "scientific",
+    "city": "شێخان",
+    "description": "تەکنەلۆجیای تاقیگەی پزیشکی و پشکنینی خوێن."
+  },
+  {
+    "id": "soran_tech_inst",
+    "university": "زانکۆی پۆلیتەکنیکی هەولێر",
+    "college": "پەیمانگەی تەکنیکی سۆران - IT",
+    "min_mark": 70.0,
+    "track": "scientific",
+    "city": "سۆران",
+    "description": "بەڕێوەبردنی سیستمەکانی زانیاری و پرۆگرامسازی کۆمپیوتەر."
+  },
+  {
+    "id": "soran_nursing",
+    "university": "زانکۆی پۆلیتەکنیکی هەولێر",
+    "college": "پەیمانگەی تەکنیکی سۆران - پەرستاری",
+    "min_mark": 81.5,
+    "track": "scientific",
+    "city": "سۆران",
+    "description": "پەرستاری تەندروستی، ڕاهێنانی فێرکاری لە نەخۆشخانەی فێرکاری سۆران."
+  },
+  {
+    "id": "med_koya",
+    "university": "زانکۆی کۆیە",
+    "college": "کۆلێژی پزیشکی گشتی",
+    "min_mark": 95.8,
+    "track": "scientific",
+    "city": "کۆیە",
+    "description": "خوێندنی پزیشکی گشتی ٦ ساڵە و ڕاهێنانی کلینیکی لە نەخۆشخانەی کۆیە."
+  },
+  {
+    "id": "med_zakho",
+    "university": "زانکۆی زاخۆ",
+    "college": "کۆلێژی پزیشکی گشتی",
+    "min_mark": 95.5,
+    "track": "scientific",
+    "city": "زاخۆ",
+    "description": "خوێندنی پزیشکی گشتی ٦ ساڵە لە نەخۆشخانەی فێرکاری زاخۆ."
+  },
+  {
+    "id": "arch_slemani",
+    "university": "زانکۆی سلێمانی",
+    "college": "کۆلێژی ئەندازیاری - تەلارسازی (Architecture)",
+    "min_mark": 91.8,
+    "track": "scientific",
+    "city": "سلێمانی",
+    "description": "دیزاین و تەلارسازی، نەخشەسازی شارستانی و هونەری بیناسازی."
+  },
+  {
+    "id": "elec_slemani",
+    "university": "زانکۆی سلێمانی",
+    "college": "کۆلێژی ئەندازیاری - کارەبا (Electrical)",
+    "min_mark": 86.8,
+    "track": "scientific",
+    "city": "سلێمانی",
+    "description": "سیستەمەکانی کارەبا، ئەلیکترۆنیکس و ئەندازیاری کۆنترۆڵ."
+  },
+  {
+    "id": "polisci_salahaddin",
+    "university": "زانکۆی سەڵاحەدین",
+    "college": "کۆلێژی زانستە سیاسییەکان",
+    "min_mark": 70.5,
+    "track": "literary",
+    "city": "هەولێر",
+    "description": "پەیوەندییە نێودەوڵەتییەکان، فیکری سیاسی و زانستی بەڕێوەبردنی دەوڵەت."
+  },
+  {
+    "id": "polisci_slemani",
+    "university": "زانکۆی سلێمانی",
+    "college": "کۆلێژی زانستە سیاسییەکان",
+    "min_mark": 69.5,
+    "track": "literary",
+    "city": "سلێمانی",
+    "description": "دیپلۆماسی، سیاسەتی نێودەوڵەتی و سیستەمی سیاسی هەرێمی و جیهانی."
+  },
+  {
+    "id": "bus_admin_salahaddin",
+    "university": "زانکۆی سەڵاحەدین",
+    "college": "کۆلێژی بەڕێوەبردن و ئابووری - بەڕێوەبردنی کار",
+    "min_mark": 71.0,
+    "track": "literary",
+    "city": "هەولێر",
+    "description": "کارگێڕیی بازرگانی، بەڕێوەبردنی پرۆژەکان و گەشەپێدانی ئابووری."
   }
 ]

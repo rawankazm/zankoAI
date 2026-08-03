@@ -16,11 +16,43 @@ class ZankolineScreen extends StatefulWidget {
 
 class _ZankolineScreenState extends State<ZankolineScreen> {
   bool _isScientific = true;
+  bool _isParallel = false;
+  String? _selectedCity;
   final TextEditingController _markController = TextEditingController();
 
   List<ZankolineDepartmentModel> _matchedDepartments = [];
   String? _aiAdvice;
   bool _isAiLoading = false;
+
+  Widget _buildCityChip(String label, bool isSelected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? ZankoColors.primary : Colors.grey.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            color: isSelected ? Colors.white : Colors.grey[700],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ZankolineService>(context, listen: false).loadDepartments();
+    });
+  }
 
   @override
   void dispose() {
@@ -41,7 +73,7 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
 
     final track = _isScientific ? 'scientific' : 'literary';
     final zankolineService = Provider.of<ZankolineService>(context, listen: false);
-    final matched = zankolineService.filterMatchingDepartments(mark, track);
+    final matched = await zankolineService.filterMatchingDepartments(mark, track, isParallel: _isParallel);
 
     setState(() {
       _matchedDepartments = matched;
@@ -49,13 +81,23 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
       _isAiLoading = true;
     });
 
-    final aiAdvice = await zankolineService.askZankolineAiAdvisor(mark, track, matched);
+    final aiAdvice = await zankolineService.askZankolineAiAdvisor(mark, track, matched, isParallel: _isParallel);
 
     if (mounted) {
       setState(() {
         _aiAdvice = aiAdvice;
         _isAiLoading = false;
       });
+    }
+  }
+
+  void _onModeOrTrackChanged({bool? isScientific, bool? isParallel}) {
+    setState(() {
+      if (isScientific != null) _isScientific = isScientific;
+      if (isParallel != null) _isParallel = isParallel;
+    });
+    if (_markController.text.trim().isNotEmpty) {
+      _matchDepartments();
     }
   }
 
@@ -187,7 +229,7 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
 
             // ─── Single Average Mark Form ───
             Text(
-              'تێکڕای نمرەی پۆلی ۱۲',
+              t('zankoline_avg_label'),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -205,21 +247,24 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                     children: [
                       Expanded(
                         child: GestureDetector(
-                          onTap: () => setState(() => _isScientific = true),
+                          onTap: () => _onModeOrTrackChanged(isScientific: true),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
                             decoration: BoxDecoration(
                               color: _isScientific ? ZankoColors.primary : Colors.transparent,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Center(
-                              child: Text(
-                                'زانستی (Scientific)',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                  color: _isScientific ? Colors.white : (isDark ? Colors.grey[400] : ZankoColors.textSecondary),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  t('zankoline_track_scientific'),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                    color: _isScientific ? Colors.white : (isDark ? Colors.grey[400] : ZankoColors.textSecondary),
+                                  ),
                                 ),
                               ),
                             ),
@@ -229,21 +274,24 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: GestureDetector(
-                          onTap: () => setState(() => _isScientific = false),
+                          onTap: () => _onModeOrTrackChanged(isScientific: false),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
                             decoration: BoxDecoration(
                               color: !_isScientific ? ZankoColors.primary : Colors.transparent,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Center(
-                              child: Text(
-                                'وێژەیی (Literary)',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                  color: !_isScientific ? Colors.white : (isDark ? Colors.grey[400] : ZankoColors.textSecondary),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  t('zankoline_track_literary'),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                    color: !_isScientific ? Colors.white : (isDark ? Colors.grey[400] : ZankoColors.textSecondary),
+                                  ),
                                 ),
                               ),
                             ),
@@ -252,11 +300,79 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 14),
 
-                  const Text(
-                    'تێکڕای نمرەکەت داخڵ بکە (%):',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  // ─── General vs Parallel Study System Selector ───
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => _onModeOrTrackChanged(isParallel: false),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                              decoration: BoxDecoration(
+                                color: !_isParallel ? ZankoColors.primary.withValues(alpha: 0.85) : Colors.transparent,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Center(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    t('zankoline_mode_general'),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      color: !_isParallel ? Colors.white : (isDark ? Colors.grey[400] : ZankoColors.textSecondary),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => _onModeOrTrackChanged(isParallel: true),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                              decoration: BoxDecoration(
+                                color: _isParallel ? const Color(0xFFFF9500) : Colors.transparent,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Center(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    t('zankoline_mode_parallel'),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      color: _isParallel ? Colors.white : (isDark ? Colors.grey[400] : ZankoColors.textSecondary),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  Text(
+                    t('zankoline_input_hint'),
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                   ),
                   const SizedBox(height: 8),
 
@@ -266,7 +382,7 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                     decoration: InputDecoration(
-                      hintText: 'نموونە: 88.5',
+                      hintText: '88.5',
                       hintStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
                       suffixText: '%',
                       contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -281,12 +397,15 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                     child: ElevatedButton(
                       onPressed: _matchDepartments,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: ZankoColors.primary,
+                        backgroundColor: _isParallel ? const Color(0xFFFF9500) : ZankoColors.primary,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
-                      child: const Text(
-                        'دۆزینەوەی بەشە گونجاوەکان',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          _isParallel ? t('zankoline_search_btn_parallel') : t('zankoline_search_btn_general'),
+                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
                       ),
                     ),
                   ),
@@ -298,7 +417,7 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
             if (_isAiLoading || _aiAdvice != null) ...[
               const SizedBox(height: 24),
               Text(
-                'ڕاوێژکاری زیرەکی زانکۆلاین (AI Advisor)',
+                t('zankoline_ai_advisor_title'),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -313,11 +432,11 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                         children: [
                           CupertinoActivityIndicator(),
                           SizedBox(width: 14),
-                          Text('AI داواکارییەکەت شیدەکاتەوە...'),
+                          Text('AI ...'),
                         ],
                       )
                     : Directionality(
-                        textDirection: TextDirection.rtl,
+                        textDirection: langProvider.textDirection,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -325,17 +444,25 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                               children: [
                                 const Icon(CupertinoIcons.sparkles, color: ZankoColors.primary, size: 20),
                                 const SizedBox(width: 8),
-                                Text(
-                                  'شیکاری و پێشنیاری مامۆستا AI',
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: ZankoColors.primary),
+                                Expanded(
+                                  child: Text(
+                                    _isParallel ? t('zankoline_ai_card_header_parallel') : t('zankoline_ai_card_header_general'),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: _isParallel ? const Color(0xFFFF9500) : ZankoColors.primary,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 12),
                             Text(
                               _aiAdvice ?? '',
-                              textAlign: TextAlign.right,
-                              textDirection: TextDirection.rtl,
+                              textAlign: langProvider.currentLanguage == AppLanguage.english ? TextAlign.left : TextAlign.right,
+                              textDirection: langProvider.textDirection,
                               style: const TextStyle(fontSize: 13, height: 1.7),
                             ),
                           ],
@@ -348,103 +475,178 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
             if (_matchedDepartments.isNotEmpty) ...[
               const SizedBox(height: 24),
               Directionality(
-                textDirection: TextDirection.rtl,
-                child: Row(
+                textDirection: langProvider.textDirection,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      t('department_matcher'),
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white : ZankoColors.textPrimary,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            t('department_matcher'),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: isDark ? Colors.white : ZankoColors.textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: (_isParallel ? const Color(0xFFFF9500) : ZankoColors.primary).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '${t('zankoline_matched_count')}: ${_matchedDepartments.length}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: _isParallel ? const Color(0xFFFF9500) : ZankoColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: ZankoColors.primary.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        'بەشی گونجاو: ${_matchedDepartments.length}',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: ZankoColors.primary),
+                    const SizedBox(height: 10),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      child: Row(
+                        children: [
+                          _buildCityChip(t('zankoline_city_all'), _selectedCity == null, () => setState(() => _selectedCity = null)),
+                          const SizedBox(width: 8),
+                          _buildCityChip(t('city_erbil'), _selectedCity == 'هەولێر', () => setState(() => _selectedCity = 'هەولێر')),
+                          const SizedBox(width: 8),
+                          _buildCityChip(t('city_slemani'), _selectedCity == 'سلێمانی', () => setState(() => _selectedCity = 'سلێمانی')),
+                          const SizedBox(width: 8),
+                          _buildCityChip(t('city_duhok'), _selectedCity == 'دهۆک', () => setState(() => _selectedCity = 'دهۆک')),
+                          const SizedBox(width: 8),
+                          _buildCityChip(t('city_halabja'), _selectedCity == 'هەڵەبجە', () => setState(() => _selectedCity = 'هەڵەبجە')),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 12),
-              ..._matchedDepartments.map((dept) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: AppCard(
-                      padding: const EdgeInsets.all(16),
-                      child: Directionality(
-                        textDirection: TextDirection.rtl,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
+              ...(_selectedCity == null
+                      ? _matchedDepartments
+                      : _matchedDepartments.where((d) => d.city.contains(_selectedCity!)).toList())
+                  .map((dept) {
+                final cutoff = _isParallel ? dept.parallelMinMark : dept.minMark;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: AppCard(
+                    padding: const EdgeInsets.all(16),
+                    child: Directionality(
+                      textDirection: TextDirection.rtl,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: ZankoColors.primary.withValues(alpha: 0.15),
+                                    color: (_isParallel ? const Color(0xFFFF9500) : ZankoColors.primary).withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
-                                    'لانی کەم: %${dept.minMark}',
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: ZankoColors.primary),
+                                    _isParallel ? 'پاڕاڵێڵ: %$cutoff (گشتی: %${dept.minMark})' : 'گشتی: %$cutoff',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      color: _isParallel ? const Color(0xFFFF9500) : ZankoColors.primary,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                const Spacer(),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    dept.city,
-                                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                                  ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                              ],
+                                child: Text(
+                                  dept.city,
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            dept.college,
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: isDark ? Colors.white : ZankoColors.textPrimary,
                             ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            dept.university,
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            dept.description,
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                              fontSize: 12,
+                              height: 1.5,
+                              color: isDark ? Colors.grey[300] : ZankoColors.textSecondary,
+                            ),
+                          ),
+                          if (_isParallel) ...[
                             const SizedBox(height: 10),
-                            Text(
-                              dept.college,
-                              textAlign: TextAlign.right,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: isDark ? Colors.white : ZankoColors.textPrimary,
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFF9500).withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: const Color(0xFFFF9500).withValues(alpha: 0.3)),
                               ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              dept.university,
-                              textAlign: TextAlign.right,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              dept.description,
-                              textAlign: TextAlign.right,
-                              style: TextStyle(
-                                fontSize: 12,
-                                height: 1.5,
-                                color: isDark ? Colors.grey[300] : ZankoColors.textSecondary,
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.payments_rounded, color: Color(0xFFFF9500), size: 16),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      '${t('zankoline_fee_discount_tag')}: ${dept.formattedParallelFee}',
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFFFF9500),
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
-                        ),
+                        ],
                       ),
                     ),
-                  )),
+                  ),
+                );
+              }),
             ],
 
             const SizedBox(height: 40),

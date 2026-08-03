@@ -112,6 +112,73 @@ class LanguageProvider extends ChangeNotifier {
     'zankoline_calculator': {'ku': 'ئەژمارکردنی نمرەی پۆلی ۱۲', 'ar': 'حساب معدل السادس الإعدادي', 'en': '12th Grade Mark Calculator'},
     'zankoline_portal': {'ku': 'ماڵپەڕی فەرمی زانکۆلاین', 'ar': 'بوابة زانكولاين الرسمية', 'en': 'Official ZankoLine Portal'},
     'department_matcher': {'ku': 'دۆزینەوەی بەشە گونجاوەکان', 'ar': 'البحث عن التخصصات المناسبة', 'en': 'Matching Departments'},
+    'zankoline_avg_label': {
+      'ku': 'تێکڕای نمرەی پۆلی ۱۲',
+      'ar': 'معدل الصف 12 الإعدادي',
+      'en': '12th Grade Average Mark'
+    },
+    'zankoline_track_scientific': {
+      'ku': 'زانستی (Scientific)',
+      'ar': 'علمي (Scientific)',
+      'en': 'Scientific Track'
+    },
+    'zankoline_track_literary': {
+      'ku': 'وێژەیی (Literary)',
+      'ar': 'أدبي (Literary)',
+      'en': 'Literary Track'
+    },
+    'zankoline_mode_general': {
+      'ku': 'خوێندنی گشتی (بەخۆڕایی)',
+      'ar': 'التعليم العام (مجاني)',
+      'en': 'General Admission (Free)'
+    },
+    'zankoline_mode_parallel': {
+      'ku': 'سیستەمی پاڕاڵێڵ (تێچوو)',
+      'ar': 'النظام الموازي (مدفوع)',
+      'en': 'Parallel Admission (Tuition)'
+    },
+    'zankoline_input_hint': {
+      'ku': 'تێکڕای نمرەکەت داخڵ بکە (%):',
+      'ar': 'أدخل معدلك النهائي (%):',
+      'en': 'Enter your average mark (%):'
+    },
+    'zankoline_search_btn_general': {
+      'ku': 'دۆزینەوەی بەشەکان (خوێندنی گشتی)',
+      'ar': 'البحث عن التخصصات (القبول العام)',
+      'en': 'Find Departments (General Admission)'
+    },
+    'zankoline_search_btn_parallel': {
+      'ku': 'دۆزینەوەی بەشەکان (سیستەمی پاڕاڵێڵ)',
+      'ar': 'البحث عن التخصصات (النظام الموازي)',
+      'en': 'Find Departments (Parallel Admission)'
+    },
+    'zankoline_ai_advisor_title': {
+      'ku': 'ڕاوێژکاری زیرەکی زانکۆلاین (AI Advisor)',
+      'ar': 'مستشار زانكولاين الذكي (AI Advisor)',
+      'en': 'ZankoLine Smart AI Advisor'
+    },
+    'zankoline_ai_card_header_general': {
+      'ku': 'شیکاری و پێشنیاری مامۆستا AI',
+      'ar': 'تحليل وتوصيات معلم الذكاء الاصطناعي',
+      'en': 'AI Teacher Analysis & Guidance'
+    },
+    'zankoline_ai_card_header_parallel': {
+      'ku': 'شیکاری پاڕاڵێڵ و پێشنیاری مامۆستا AI',
+      'ar': 'تحليل النظام الموازي وتوصيات AI',
+      'en': 'Parallel AI Analysis & Guidance'
+    },
+    'zankoline_city_all': {'ku': 'سەرجەم شارەکان', 'ar': 'جميع المدن', 'en': 'All Cities'},
+    'zankoline_matched_count': {'ku': 'بەشی گونجاو', 'ar': 'التخصصات المناسبة', 'en': 'Matched Departments'},
+    'zankoline_fee_discount_tag': {
+      'ku': 'تێچووی ساڵانەی پاڕاڵێڵ',
+      'ar': 'القسط السنوي الموازي',
+      'en': 'Yearly Parallel Fee'
+    },
+    'zankoline_discount_note': {
+      'ku': '(دوای %40 داشکاندن)',
+      'ar': '(بعد خصم 40%)',
+      'en': '(40% Discount Applied)'
+    },
 
     // Bottom Navigation
     'nav_home': {'ku': 'سەرەکی', 'ar': 'الرئيسية', 'en': 'Home'},
