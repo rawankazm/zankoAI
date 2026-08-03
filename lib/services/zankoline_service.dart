@@ -72,26 +72,50 @@ class ZankolineService extends ChangeNotifier {
   }
 
   Future<String> askZankolineAiAdvisor(double studentMark, String track, List<ZankolineDepartmentModel> matchedDepts) async {
-    final deptsSummary = matchedDepts.map((d) => '• ${d.university} - ${d.college}\n  - لانی کەم نمرە: ${d.minMark}%\n  - شار: ${d.city}\n  - وەسفی بەش: ${d.description}').join('\n\n');
+    final trackName = track == 'scientific' ? 'زانستی' : 'وێژەیی';
+
+    if (matchedDepts.isEmpty) {
+      return 'بەپێی تێکڕای نمرەکەت ($studentMark%) لە لقی $trackName، هیچ بەشێک لە نمرەی نزمتر نەدۆزرایەوە. تکایە نمرەیەکی بەرزتر داخڵ بکە یان بەشە هەڵبژێردراوەکانی پۆلی ۱۲ بپشکنە.';
+    }
+
+    final deptsSummary = matchedDepts.map((d) => '• ${d.university} - ${d.college}\n  - لانی کەم نمرە: ${d.minMark}%\n  - شار: ${d.city}\n  - وەسف: ${d.description}').join('\n\n');
 
     final prompt = '''
 تۆ ڕاوێژکاری فەرمی زیرەکی زانکۆلاینیت (ZankoLine AI Advisor) بۆ زانکۆکانی هەرێمی کوردستان.
-تێکڕای نمرەی قوتابی لە پۆلی ۱۲: $studentMark% (لقی: ${track == 'scientific' ? 'زانستی' : 'وێژەیی'}).
+تێکڕای نمرەی قوتابی لە پۆلی ۱۲: $studentMark% (لقی: $trackName).
 
 ئەمەش کۆمەڵەی بەشەکانن کە لەگەڵ نمرەکەی گونجاون:
 $deptsSummary
 
 تکایە وەڵامەکەت بە شێوازێکی پڕۆفێشناڵ و ڕوون بە کوردی (سۆرانی) بەم جۆرە بنووسە:
-
 ١. دەستپێک: "بەپێی تێکڕای نمرەکەت ($studentMark%)، ئەم بەشانەی خوارەوە لە زانکۆکان دەتوانیت لێیان وەربگیرێیت:"
-٢. لیستی بەشەکان: بۆ هەر بەشێک ناو، لانی کەم نمرەی وەرگرتن، و وەسفێکی تێروتەسەل دەربارەی داهاتووی بەشەکە و بوارەکانی کارکردنی روونبکەرەوە.
-٣. کۆتایی: ئامۆژگاری و ڕێنمایی کورت بۆ داواکاری پێشکەشکردن لە زانکۆلاین.
+٢. لیستی بەشەکان لەگەڵ شیکاری کورت.
 ''';
 
     try {
-      return await _aiService.askTeacher(prompt, []);
-    } catch (e) {
-      return 'بەپێی تێکڕای نمرەکەت ($studentMark%)، دەتوانیت لە بەشە دەستنیشانکراوەکانی سەرەوە داواکاری لە سیستەمی زانکۆلاین پێشکەش بکەیت.';
+      final res = await _aiService.askTeacher(prompt, []);
+      if (res.contains('API Key Required') || res.contains('تکایە API Key')) {
+        return _buildLocalKurdishAdvisorSummary(studentMark, trackName, matchedDepts);
+      }
+      return res;
+    } catch (_) {
+      return _buildLocalKurdishAdvisorSummary(studentMark, trackName, matchedDepts);
     }
+  }
+
+  String _buildLocalKurdishAdvisorSummary(double studentMark, String trackName, List<ZankolineDepartmentModel> matchedDepts) {
+    final buffer = StringBuffer();
+    buffer.writeln('بەپێی تێکڕای نمرەکەت ($studentMark%) لە لقی $trackName، ئەم بەشانەی خوارەوە لە زانکۆکانی هەرێمی کوردستان لەگەڵ نمرەکەت دەگونجێن:\n');
+
+    for (var i = 0; i < matchedDepts.length; i++) {
+      final dept = matchedDepts[i];
+      buffer.writeln('${i + 1}. ${dept.college} (${dept.university})');
+      buffer.writeln('   • لانی کەم نمرەی وەرگرتن: ${dept.minMark}%');
+      buffer.writeln('   • شار: ${dept.city}');
+      buffer.writeln('   • دەربارەی بەشەکە: ${dept.description}\n');
+    }
+
+    buffer.writeln('💡 ڕێنمایی: بەپێی ئارەزووی خۆت و دووری شارەکەت بەشەکان لە سیستەمی فەرمی زانکۆلاین ڕیزبەند بکە.');
+    return buffer.toString();
   }
 }
