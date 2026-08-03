@@ -16,61 +16,40 @@ class ZankolineScreen extends StatefulWidget {
 
 class _ZankolineScreenState extends State<ZankolineScreen> {
   bool _isScientific = true;
+  final TextEditingController _markController = TextEditingController();
 
-  final Map<String, TextEditingController> _controllers = {
-    'kurdish': TextEditingController(),
-    'arabic': TextEditingController(),
-    'english': TextEditingController(),
-    'math': TextEditingController(),
-    'physics': TextEditingController(),
-    'chemistry': TextEditingController(),
-    'biology': TextEditingController(),
-  };
-
-  double? _totalScore;
-  double? _percentage;
   List<ZankolineDepartmentModel> _matchedDepartments = [];
   String? _aiAdvice;
   bool _isAiLoading = false;
 
   @override
   void dispose() {
-    for (var controller in _controllers.values) {
-      controller.dispose();
-    }
+    _markController.dispose();
     super.dispose();
   }
 
-  void _calculateAndMatch() async {
-    double total = 0;
-    int count = 0;
+  void _matchDepartments() async {
+    final markText = _markController.text.trim();
+    final mark = double.tryParse(markText);
 
-    _controllers.forEach((key, controller) {
-      final val = double.tryParse(controller.text.trim());
-      if (val != null) {
-        total += val;
-        count++;
-      }
-    });
+    if (mark == null || mark <= 0 || mark > 100) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تکایە نمرەیەکی دروست داخڵ بکە (لە نێوان 0 بۆ 100)')),
+      );
+      return;
+    }
 
-    if (count == 0) return;
-
-    final maxTotal = count * 100.0;
-    final percentage = (total / maxTotal) * 100.0;
     final track = _isScientific ? 'scientific' : 'literary';
-
     final zankolineService = Provider.of<ZankolineService>(context, listen: false);
-    final matched = zankolineService.filterMatchingDepartments(percentage, track);
+    final matched = zankolineService.filterMatchingDepartments(mark, track);
 
     setState(() {
-      _totalScore = total;
-      _percentage = percentage;
       _matchedDepartments = matched;
       _aiAdvice = null;
       _isAiLoading = true;
     });
 
-    final aiAdvice = await zankolineService.askZankolineAiAdvisor(percentage, track, matched);
+    final aiAdvice = await zankolineService.askZankolineAiAdvisor(mark, track, matched);
 
     if (mounted) {
       setState(() {
@@ -115,7 +94,7 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.all(20),
           children: [
-            // ─── Zankoline Top Hero Banner ───
+            // ─── Hero Banner ───
             Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
@@ -173,19 +152,19 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 18),
                   ElevatedButton.icon(
                     onPressed: _openZankolinePortal,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: const Color(0xFF1E1B4B),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      minimumSize: const Size(double.infinity, 46),
+                      minimumSize: const Size(double.infinity, 44),
                     ),
-                    icon: const Icon(Icons.open_in_browser_rounded, size: 20),
+                    icon: const Icon(Icons.open_in_browser_rounded, size: 18),
                     label: Text(
                       t('zankoline_portal'),
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                     ),
                   ),
                 ],
@@ -194,9 +173,9 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
 
             const SizedBox(height: 24),
 
-            // ─── 12th Grade Mark Calculator Card ───
+            // ─── Single Average Mark Form ───
             Text(
-              t('zankoline_calculator'),
+              'تێکڕای نمرەی پۆلی ۱۲',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -208,6 +187,7 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
             AppCard(
               padding: const EdgeInsets.all(18),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
@@ -223,9 +203,10 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                             ),
                             child: Center(
                               child: Text(
-                                'پۆلی ۱۲ - زانستی',
+                                'زانستی (Scientific)',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
+                                  fontSize: 13,
                                   color: _isScientific ? Colors.white : (isDark ? Colors.grey[400] : ZankoColors.textSecondary),
                                 ),
                               ),
@@ -246,9 +227,10 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                             ),
                             child: Center(
                               child: Text(
-                                'پۆلی ۱۲ - وێژەیی',
+                                'وێژەیی (Literary)',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
+                                  fontSize: 13,
                                   color: !_isScientific ? Colors.white : (isDark ? Colors.grey[400] : ZankoColors.textSecondary),
                                 ),
                               ),
@@ -258,78 +240,49 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 20),
 
-                  _buildSubjectInput('کوردی (Kurdish)', _controllers['kurdish']!),
-                  _buildSubjectInput('عەرەبی (Arabic)', _controllers['arabic']!),
-                  _buildSubjectInput('ئینگلیزی (English)', _controllers['english']!),
-                  _buildSubjectInput('بیرکاری (Mathematics)', _controllers['math']!),
-                  if (_isScientific) ...[
-                    _buildSubjectInput('فیزیا (Physics)', _controllers['physics']!),
-                    _buildSubjectInput('کیمیا (Chemistry)', _controllers['chemistry']!),
-                    _buildSubjectInput('زیندەوەرناسی (Biology)', _controllers['biology']!),
-                  ],
+                  const Text(
+                    'تێکڕای نمرەکەت داخڵ بکە (%):',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
+                  const SizedBox(height: 8),
 
+                  TextField(
+                    controller: _markController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    decoration: InputDecoration(
+                      hintText: 'نموونە: 88.5',
+                      hintStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
+                      suffixText: '%',
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
                   const SizedBox(height: 16),
 
                   SizedBox(
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: _calculateAndMatch,
+                      onPressed: _matchDepartments,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: ZankoColors.primary,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
                       child: const Text(
-                        'ئەژمارکردن و ڕاوێژکاری زانکۆلاین',
+                        'دۆزینەوەی بەشە گونجاوەکان',
                         style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                     ),
                   ),
-
-                  if (_percentage != null) ...[
-                    const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: ZankoColors.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.3)),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Column(
-                            children: [
-                              const Text('کۆی گشتی نمرە', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${_totalScore?.toStringAsFixed(0)}',
-                                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: ZankoColors.primary),
-                              ),
-                            ],
-                          ),
-                          Container(width: 1, height: 36, color: Colors.grey.withValues(alpha: 0.3)),
-                          Column(
-                            children: [
-                              const Text('تێکڕای ڕێژەی سەدی', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${_percentage?.toStringAsFixed(2)}%',
-                                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF34C759)),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
 
-            // ─── AI Advisor Kurdish Guidance ───
+            // ─── AI Advisor Kurdish Detailed Analysis ───
             if (_isAiLoading || _aiAdvice != null) ...[
               const SizedBox(height: 24),
               Text(
@@ -364,7 +317,7 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 12),
                           Text(
                             _aiAdvice ?? '',
                             style: const TextStyle(fontSize: 13, height: 1.6),
@@ -374,16 +327,32 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
               ),
             ],
 
-            // ─── Matched KRG Departments ───
+            // ─── Matched KRG Departments List ───
             if (_matchedDepartments.isNotEmpty) ...[
               const SizedBox(height: 24),
-              Text(
-                t('department_matcher'),
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : ZankoColors.textPrimary,
-                ),
+              Row(
+                children: [
+                  Text(
+                    t('department_matcher'),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : ZankoColors.textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: ZankoColors.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      'بەشی گونجاو: ${_matchedDepartments.length}',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: ZankoColors.primary),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               ..._matchedDepartments.map((dept) => Padding(
@@ -455,36 +424,6 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
             const SizedBox(height: 40),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildSubjectInput(String label, TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 3,
-            child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-          ),
-          Expanded(
-            flex: 2,
-            child: SizedBox(
-              height: 42,
-              child: TextField(
-                controller: controller,
-                keyboardType: TextInputType.number,
-                textAlign: TextAlign.center,
-                decoration: InputDecoration(
-                  hintText: '100 - 0',
-                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
