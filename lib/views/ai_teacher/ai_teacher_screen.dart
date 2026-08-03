@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import '../../services/ai_service.dart';
+import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
 
 class AiTeacherScreen extends StatefulWidget {
@@ -43,15 +44,26 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
   Future<void> _speak(String text) async {
     if (!_isTtsEnabled) return;
     String cleanText = text
-        .replaceAll(RegExp(r'[\*\#\_]'), '')
-        .replaceAll(RegExp(r'`{3}[\s\S]*?`{3}'), '[کۆدی بەرنامەسازی]')
-        .replaceAll(RegExp(r'`[\s\S]*?`'), '[کۆد]');
+        .replaceAll(RegExp(r'[\*\#\_\🔹\🔸\🎯\⭐]'), '')
+        .replaceAll(RegExp(r'`{3}[\s\S]*?`{3}'), '')
+        .replaceAll(RegExp(r'`[\s\S]*?`'), '');
 
-    if (RegExp(r'[\u0600-\u06FF]').hasMatch(cleanText)) {
-      await _flutterTts.setLanguage("ar");
-    } else {
+    try {
+      final isCkbAvailable = await _flutterTts.isLanguageAvailable("ckb") ?? false;
+      if (isCkbAvailable) {
+        await _flutterTts.setLanguage("ckb");
+      } else {
+        final isKuAvailable = await _flutterTts.isLanguageAvailable("ku") ?? false;
+        if (isKuAvailable) {
+          await _flutterTts.setLanguage("ku");
+        } else {
+          await _flutterTts.setLanguage("en-US");
+        }
+      }
+    } catch (_) {
       await _flutterTts.setLanguage("en-US");
     }
+
     await _flutterTts.speak(cleanText);
   }
 
@@ -138,8 +150,14 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
     _scrollToBottom();
 
     final aiService = Provider.of<AiService>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final isVip = authService.currentUser?.isVip ?? false;
     try {
-      final response = await aiService.askTeacher(text, _messages.sublist(0, _messages.length - 1));
+      final response = await aiService.askTeacher(
+        text,
+        _messages.sublist(0, _messages.length - 1),
+        isVip: isVip,
+      );
       
       setState(() {
         _messages.add({'role': 'assistant', 'content': response});

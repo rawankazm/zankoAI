@@ -8,6 +8,7 @@ import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
 import '../../services/theme_provider.dart';
 import '../auth/login_screen.dart';
+import '../payment/vip_upgrade_sheet.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -726,6 +727,76 @@ class ProfileScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+              ),
+            ),
+
+            const SizedBox(height: 18),
+
+            // ─── VIP Membership Status & FIB / FastPay Upgrade Banner ───
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: user?.isVip == true
+                      ? [const Color(0xFF10B981), const Color(0xFF059669)]
+                      : [const Color(0xFFFF9500), const Color(0xFFEA580C)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: (user?.isVip == true ? const Color(0xFF10B981) : const Color(0xFFFF9500)).withValues(alpha: 0.3),
+                    blurRadius: 14,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: const BoxDecoration(color: Colors.white24, shape: BoxShape.circle),
+                    child: Icon(
+                      user?.isVip == true ? CupertinoIcons.checkmark_seal_fill : CupertinoIcons.star_fill,
+                      color: Colors.white,
+                      size: 26,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user?.isVip == true ? 'بەشداربووی فەرمی VIP (VIP Member 👑)' : 'بەشداربوونی VIP (FIB & FastPay)',
+                          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: Colors.white),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          user?.isVip == true
+                              ? 'پەیامی بێسنوور + PDF + وێنەی کامێرا چالاککراوە'
+                              : 'پەیامی بێسنوور + کورتکردنەوەی PDF و وێنەی پرسیارەکان',
+                          style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.9)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () => VipUpgradeSheet.show(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: user?.isVip == true ? const Color(0xFF059669) : const Color(0xFFEA580C),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                    child: Text(
+                      user?.isVip == true ? 'VIP' : 'چالاککردن',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
+                  ),
+                ],
               ),
             ),
 

@@ -158,7 +158,7 @@ $deptsSummary
 ''';
 
     try {
-      final res = await _aiService.askTeacher(prompt, []);
+      final res = await _aiService.askTeacher(prompt, [], isVip: true);
       if (res.contains('API Key Required') || res.contains('تکایە API Key')) {
         return _buildLocalKurdishAdvisorSummary(studentMark, trackName, matchedDepts, isParallel: isParallel);
       }

@@ -62,7 +62,7 @@ class _MindMapViewState extends State<MindMapView> {
           "}\n\n"
           "بابەتەکە: $topic";
 
-      String responseText = await aiService.askTeacher(prompt, []);
+      String responseText = await aiService.askTeacher(prompt, [], isVip: true);
       
       // Clean up markdown block if present
       responseText = responseText.replaceAll('```json', '').replaceAll('```', '').trim();

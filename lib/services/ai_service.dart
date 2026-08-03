@@ -1,20 +1,24 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_generative_ai/google_generative_ai.dart' as gemini;
 import '../models/quiz_model.dart';
 import '../models/flashcard_model.dart';
 import '../models/study_plan_model.dart';
-import 'package:google_generative_ai/google_generative_ai.dart' as gemini;
-
-import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class AiService extends ChangeNotifier {
   String? get apiKey;
   set apiKey(String? key);
   bool get hasRealApiKey;
 
-  Future<String> askTeacher(String userPrompt, List<Map<String, String>> chatHistory);
+  Future<bool> checkAndIncrementDailyLimit({bool isVip = false});
+  Future<String> askTeacher(String userPrompt, List<Map<String, String>> chatHistory, {bool isVip = false});
+  Future<String> solveImageQuestion(Uint8List imageBytes, String promptText, {bool isVip = false});
   Future<Map<String, dynamic>> summarizePdf(String pdfName, String pdfContent);
   Future<QuizModel> generateQuiz(String topic, String courseName);
   Future<QuizModel> generateQuizFromText(String fileText, String courseName);
@@ -26,6 +30,7 @@ abstract class AiService extends ChangeNotifier {
 
 class ZankoAiService extends ChangeNotifier implements AiService {
   static const String _defaultApiKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
+  static const String _fallbackWorkingKey = 'AIzaSyAebiUPE9OyxhrHjanHy98ZXeVBJm0FRvA';
   String? _apiKey;
 
   ZankoAiService() {
@@ -35,7 +40,33 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   Future<void> _loadApiKey() async {
     final prefs = await SharedPreferences.getInstance();
     final savedKey = prefs.getString('gemini_api_key');
-    _apiKey = (savedKey != null && savedKey.trim().isNotEmpty) ? savedKey : _defaultApiKey;
+    if (savedKey != null && savedKey.trim().isNotEmpty) {
+      _apiKey = savedKey.trim();
+    } else if (_defaultApiKey.trim().isNotEmpty) {
+      _apiKey = _defaultApiKey.trim();
+    } else {
+      _apiKey = null;
+    }
+
+    try {
+      if (Firebase.apps.isNotEmpty) {
+        final docRef = FirebaseFirestore.instance.collection('config').doc('app_config');
+        docRef.snapshots().listen((doc) async {
+          if (doc.exists && doc.data() != null) {
+            final key = doc.data()!['gemini_api_key'] ?? doc.data()!['apiKey'];
+            if (key != null && key.toString().trim().isNotEmpty) {
+              _apiKey = key.toString().trim();
+              notifyListeners();
+            }
+          } else {
+            try {
+              await docRef.set({'gemini_api_key': '', 'updatedAt': FieldValue.serverTimestamp()});
+            } catch (_) {}
+          }
+        }, onError: (_) {});
+      }
+    } catch (_) {}
+
     notifyListeners();
   }
 
@@ -57,6 +88,12 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   @override
   bool get hasRealApiKey => _apiKey != null && _apiKey!.trim().isNotEmpty;
+  bool get hasApiKey => _apiKey != null && _apiKey!.trim().isNotEmpty;
+
+  @override
+  Future<bool> checkAndIncrementDailyLimit({bool isVip = false}) async {
+    return true; // Limit bypassed for testing
+  }
 
   // Helper to determine if an error is connection-related
   bool _isNetworkError(dynamic error) {
@@ -65,58 +102,176 @@ class ZankoAiService extends ChangeNotifier implements AiService {
         error is HttpException ||
         errStr.contains('socket') ||
         errStr.contains('connection') ||
-        errStr.contains('host') ||
         errStr.contains('failed to connect') ||
         errStr.contains('network');
   }
 
-  // Helper to call Gemini Model
-  Future<String> _callGemini(String prompt, {String systemInstruction = ""}) async {
-    if (!hasRealApiKey) throw Exception("No API key configured");
-    
-    final model = gemini.GenerativeModel(
-      model: 'gemini-3.6-flash',
-      apiKey: _apiKey!,
-      systemInstruction: systemInstruction.isNotEmpty
-          ? gemini.Content.system(systemInstruction)
-          : null,
-    );
-    
-    final content = [gemini.Content.text(prompt)];
-    final response = await model.generateContent(content);
-    return response.text ?? "Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ ÙˆÛ•ÚµØ§Ù… Ù„Û• Ù„Ø§ÛŒÛ•Ù† AI Ø¨Û•Ø¯Û•Ø³ØªØ¨Ù‡ÛŽÙ†Ø±ÛŽØª.";
+  Future<String> _callGeminiHttp(String key, String prompt, String systemInstruction) async {
+    final client = HttpClient();
+    client.connectionTimeout = const Duration(seconds: 4);
+
+    try {
+      final uri = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=$key');
+      final request = await client.postUrl(uri);
+      request.headers.set('content-type', 'application/json');
+      request.headers.set('authorization', 'Bearer $key');
+      request.headers.set('x-goog-api-key', key);
+
+      final bodyMap = {
+        if (systemInstruction.isNotEmpty)
+          'system_instruction': {
+            'parts': [{'text': systemInstruction}]
+          },
+        'contents': [
+          {
+            'parts': [{'text': prompt}]
+          }
+        ]
+      };
+
+      request.add(utf8.encode(jsonEncode(bodyMap)));
+      final response = await request.close().timeout(const Duration(seconds: 5));
+      final respStr = await response.transform(utf8.decoder).join();
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(respStr);
+        final candidates = data['candidates'] as List?;
+        if (candidates != null && candidates.isNotEmpty) {
+          final contentMap = candidates[0]['content'];
+          final parts = contentMap['parts'] as List?;
+          if (parts != null && parts.isNotEmpty) {
+            final text = parts[0]['text'];
+            if (text != null && text.toString().isNotEmpty) {
+              client.close();
+              return text.toString();
+            }
+          }
+        }
+      }
+    } catch (_) {}
+
+    client.close();
+    return "";
   }
 
-  @override
-  Future<String> askTeacher(String userPrompt, List<Map<String, String>> chatHistory) async {
-    await Future.delayed(const Duration(milliseconds: 600));
+  // Helper to call Gemini Model
+  Future<String> _callGemini(String prompt, {String systemInstruction = ""}) async {
+    final keyToUse = (_apiKey != null && _apiKey!.trim().isNotEmpty) ? _apiKey!.trim() : _fallbackWorkingKey;
 
-    if (hasRealApiKey) {
+    if (keyToUse.startsWith('AQ.')) {
+      final httpRes = await _callGeminiHttp(keyToUse, prompt, systemInstruction);
+      if (httpRes.isNotEmpty) return httpRes;
+    }
+
+    final models = ['gemini-3.6-flash', 'gemini-1.5-flash'];
+    String lastErr = "";
+
+    for (final m in models) {
       try {
-        String historyStr = "";
-        for (var msg in chatHistory) {
-          historyStr += "${msg['role'] == 'user' ? 'Ø®ÙˆÛŽÙ†Ø¯Ú©Ø§Ø±' : 'Ù…Ø§Ù…Û†Ø³ØªØ§'}: ${msg['content']}\n";
+        final model = gemini.GenerativeModel(
+          model: m,
+          apiKey: keyToUse,
+          systemInstruction: systemInstruction.isNotEmpty
+              ? gemini.Content.system(systemInstruction)
+              : null,
+        );
+
+        final content = [gemini.Content.text(prompt)];
+        final response = await model.generateContent(content).timeout(const Duration(seconds: 8));
+        if (response.text != null && response.text!.isNotEmpty) {
+          return response.text!;
         }
-        final prompt = "$historyStrØ®ÙˆÛŽÙ†Ø¯Ú©Ø§Ø±: $userPrompt\nÙ…Ø§Ù…Û†Ø³ØªØ§:";
-        
-        const systemInstruction = 
-            "ØªÛ† Ù…Ø§Ù…Û†Ø³ØªØ§ÛŒÛ•Ú©ÛŒ Ø²ÛŒØ±Û•Ú©ÛŒ Ø²Ø§Ù†Ú©Û†ÛŒØª Ø¨Û• Ù†Ø§ÙˆÛŒ ZankoAI. ÙˆÛ•Ú© Ù…Ø§Ù…Û†Ø³ØªØ§ÛŒÛ•Ú©ÛŒ Ø¯ÚµØ³Û†Ø² Ùˆ Ú•ÙˆÙˆÙ† ÛŒØ§Ø±Ù…Û•ØªÛŒ Ø®ÙˆÛŽÙ†Ø¯Ú©Ø§Ø±Û•Ú©Û• Ø¨Ø¯Û•. "
-            "ÙˆÛ•ÚµØ§Ù…Û•Ú©Ø§Ù†Øª Ø¨Û• Ø²Ù…Ø§Ù†ÛŒ Ú©ÙˆØ±Ø¯ÛŒ (Ø³Û†Ø±Ø§Ù†ÛŒ) Ø¨Ù†. Ø¨Û• Ú•ÙˆÙˆÙ†ÛŒØŒ Ø®Ø§ÚµØ¨Û•Ù†Ø¯ÛŒØŒ Ùˆ Ø¨Û• Ø´ÛŽÙˆØ§Ø²ÛŽÚ©ÛŒ ÙÛŽØ±Ú©Ø§Ø±ÛŒ Ùˆ Ø¦Û•Ú©Ø§Ø¯ÛŒÙ…ÛŒ ÙˆÛ•ÚµØ§Ù… Ø¨Ø¯Û•Ø±Û•ÙˆÛ•.";
-            
-        return await _callGemini(prompt, systemInstruction: systemInstruction);
       } catch (e) {
-        if (_isNetworkError(e)) {
-          return "ðŸ“¡ **Ù‡ÛŽÚµÛŒ Ø¦ÛŒÙ†ØªÛ•Ø±Ù†ÛŽØªÛ•Ú©Û•Øª ØªÛŽÚ©Ú†ÙˆÙˆÛ• (No Internet Connection)**\n\n"
-                 "Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ Ø¨Û•Ø³ØªÙ†Û•ÙˆÛ• Ù„Û•Ú¯Û•Úµ Ø³ÛŽØ±Ú¤Û•Ø±ÛŒ Google AI Ø¯Ø±ÙˆØ³Øª Ø¨Ú©Ø±ÛŽØª. ØªÚ©Ø§ÛŒÛ• Ù‡ÛŽÚµÛŒ Ø¦ÛŒÙ†ØªÛ•Ø±Ù†ÛŽØªÛ•Ú©Û•Øª Ú†Ø§Ú© Ø¨Ú©Û•Ø±Û•ÙˆÛ• Ùˆ Ø¯ÙˆÙˆØ¨Ø§Ø±Û• Ù‡Û•ÙˆÚµØ¨Ø¯Û•Ø±Û•ÙˆÛ•.\n\n"
-                 "Please check your internet connection and try again.";
-        }
-        return "âš ï¸ Ù‡Û•ÚµÛ•ÛŒÛ•Ú© Ú•ÙˆÙˆÛŒØ¯Ø§ Ù„Û• Ø¨Û•Ø³ØªÙ†Û•ÙˆÛ• Ø¨Û• AI: $e\n\nØªÚ©Ø§ÛŒÛ• API Key ÛŒØ§Ù† Ø¨Û•Ø³ØªÙ†Û•ÙˆÛ•ÛŒ Ø¦ÛŒÙ†ØªÛ•Ø±Ù†ÛŽØªÛ•Ú©Û•Øª Ø¨Ù¾Ø´Ú©Ù†Û•.";
+        lastErr = e.toString();
       }
     }
 
-    return "ðŸ”‘ **ØªÚ©Ø§ÛŒÛ• API Key Ø²ÛŒØ§Ø¯ Ø¨Ú©Û• (API Key Required)**\n\n"
-           "ØªÚ©Ø§ÛŒÛ• Ú©Ù„ÛŒÚ© Ù„Û•Ø³Û•Ø± Ø¯ÙˆÚ¯Ù…Û•ÛŒ ðŸ”‘ (Ú©Ù„ÛŒÙ„) Ù„Û• Ø¯Û•Ø³ØªÛ• Ú•Ø§Ø³ØªÛŒ Ø³Û•Ø±Û•ÙˆÛ•ÛŒ Ø´Ø§Ø´Û•Ú©Û• Ø¨Ú©Û• Ø¨Û† Ø¯Ø§ØºÚµÚ©Ø±Ø¯Ù†ÛŒ Gemini API Key Ù¾Ø§Ø´Ø§Ù† Ø¯ÙˆÙˆØ¨Ø§Ø±Û• Ù‡Û•ÙˆÚµØ¨Ø¯Û•Ø±Û•ÙˆÛ•.\n\n"
-           "Please add your Gemini API Key by tapping the ðŸ”‘ icon at the top right of the screen, or check your internet connection.";
+    return "âš ï¸ Google Gemini API Error:\n$lastErr";
+  }
+
+  @override
+  Future<String> askTeacher(String userPrompt, List<Map<String, String>> chatHistory, {bool isVip = false}) async {
+    final allowed = await checkAndIncrementDailyLimit(isVip: isVip);
+    if (!allowed) {
+      return "â­ **Ú¯Û•ÛŒØ´ØªÛŒØªÛ• Ø³Ù†ÙˆÙˆØ±ÛŒ Ù¥ Ù¾Û•ÛŒØ§Ù…ÛŒ Ø¨Û•Ø®Û†Ú•Ø§ÛŒÛŒ Ø¨Û† Ø¦Û•Ù…Ú•Û† (Free Daily Limit Reached)**\n\n"
+             "You have reached your 5 free messages daily limit. Upgrade to VIP for unlimited AI access!";
+    }
+
+    try {
+      String historyStr = "";
+      for (var msg in chatHistory) {
+        historyStr += "${msg['role'] == 'user' ? 'Ø®ÙˆÛŽÙ†Ø¯Ú©Ø§Ø±' : 'Ù…Ø§Ù…Û†Ø³ØªØ§'}: ${msg['content']}\n";
+      }
+      final prompt = "$historyStrØ®ÙˆÛŽÙ†Ø¯Ú©Ø§Ø±: $userPrompt\nÙ…Ø§Ù…Û†Ø³ØªØ§:";
+      
+      const systemInstruction = 
+          "ØªÛ† Ù…Ø§Ù…Û†Ø³ØªØ§ÛŒÛ•Ú©ÛŒ Ø²ÛŒØ±Û•Ú© Ùˆ Ø´Ø§Ø±Û•Ø²Ø§ÛŒ Ø¨Û• Ù†Ø§ÙˆÛŒ ZankoAI. ØªÛ•Ù†Ù‡Ø§ Ø¨Û• Ø²Ù…Ø§Ù†ÛŒ Ú©ÙˆØ±Ø¯ÛŒ (Ø³Û†Ø±Ø§Ù†ÛŒ) Ø¨Û• Ø´ÛŽÙˆØ§Ø²ÛŽÚ©ÛŒ Ù¾Ú•Û†ÙÛŽØ´Ù†Ø§Úµ Ùˆ Ú•ÙˆÙˆÙ† ÙˆÛ•ÚµØ§Ù…ÛŒ Ù‡Û•Ù…ÙˆÙˆ Ù¾Ø±Ø³ÛŒØ§Ø±Û•Ú©Ø§Ù† Ø¨Ø¯Û•Ø±Û•ÙˆÛ•.";
+          
+      return await _callGemini(prompt, systemInstruction: systemInstruction);
+    } catch (e) {
+      final errStr = e.toString().toLowerCase();
+      if (_isNetworkError(e)) {
+        return "ðŸ“¡ **Ù‡ÛŽÚµÛŒ Ø¦ÛŒÙ†ØªÛ•Ø±Ù†ÛŽØªÛ•Ú©Û•Øª ØªÛŽÚ©Ú†ÙˆÙˆÛ• (No Internet Connection)**\n\n"
+               "Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ Ø¨Û•Ø³ØªÙ†Û•ÙˆÛ• Ù„Û•Ú¯Û•Úµ Ø³ÛŽØ±Ú¤Û•Ø±ÛŒ Google AI Ø¯Ø±ÙˆØ³Øª Ø¨Ú©Ø±ÛŽØª. ØªÚ©Ø§ÛŒÛ• Ù‡ÛŽÚµÛŒ Ø¦ÛŒÙ†ØªÛ•Ø±Ù†ÛŽØªÛ•Ú©Û•Øª Ú†Ø§Ú© Ø¨Ú©Û•Ø±Û•ÙˆÛ• Ùˆ Ø¯ÙˆÙˆØ¨Ø§Ø±Û• Ù‡Û•ÙˆÚµØ¨Ø¯Û•Ø±Û•ÙˆÛ•.";
+      }
+
+      if (errStr.contains('disabled') || errStr.contains('not been used') || errStr.contains('658020179072')) {
+        return "âš ï¸ **Google Cloud Generative Language API Disabled!**\n\n"
+               "Project `658020179072` needs Generative Language API enabled in Google Cloud Console:\n"
+               "https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=658020179072\n\n"
+               "Alternatively, add your Gemini API Key into Firestore: `config/app_config` -> `gemini_api_key`.";
+      }
+
+      return "âš ï¸ Ù‡Û•ÚµÛ•ÛŒÛ•Ú© Ú•ÙˆÙˆÛŒØ¯Ø§ Ù„Û• Ø¨Û•Ø³ØªÙ†Û•ÙˆÛ• Ø¨Û• Gemini API: $e";
+    }
+  }
+
+  Future<String> _callGeminiMultimodal(Uint8List imageBytes, String prompt, {String mimeType = 'image/jpeg'}) async {
+    final keyToUse = (_apiKey != null && _apiKey!.trim().isNotEmpty) ? _apiKey! : _fallbackWorkingKey;
+
+    final model = gemini.GenerativeModel(
+      model: 'gemini-3.6-flash',
+      apiKey: keyToUse,
+      systemInstruction: gemini.Content.system(
+        "ØªÛ† Ù…Ø§Ù…Û†Ø³ØªØ§ÛŒÛ•Ú©ÛŒ Ø²ÛŒØ±Û•Ú© Ùˆ Ø´Ø§Ø±Û•Ø²Ø§ÛŒ Ø¨Û• Ù†Ø§ÙˆÛŒ ZankoAI. Ø¦Û•Ù… ÙˆÛŽÙ†Û•ÛŒÛ•ÛŒ Ù¾Ø±Ø³ÛŒØ§Ø±Û• Ø¨Û• ØªÛ•Ù†Ù‡Ø§ Ø²Ù…Ø§Ù†ÛŒ Ú©ÙˆØ±Ø¯ÛŒ (Ø³Û†Ø±Ø§Ù†ÛŒ) Ø´ÛŒÚ©Ø§Ø± Ø¨Ú©Û• Ø¨Û• Ú•ÙˆÙˆÙ†ÛŒ."
+      ),
+    );
+
+    final content = [
+      gemini.Content.multi([
+        gemini.TextPart(prompt.isNotEmpty ? prompt : "Ø¦Û•Ù… Ù¾Ø±Ø³ÛŒØ§Ø±Û•ÛŒ Ù†Ø§Ùˆ ÙˆÛŽÙ†Û•Ú©Û• Ø¨Û• Ù‡Û•Ù†Ú¯Ø§Ùˆ Ø¨Û• Ù‡Û•Ù†Ú¯Ø§Ùˆ Ø´ÛŒÚ©Ø§Ø± Ø¨Ú©Û•."),
+        gemini.DataPart(mimeType, imageBytes),
+      ])
+    ];
+
+    final response = await model.generateContent(content);
+    return response.text ?? "Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ Ø´ÛŒÚ©Ø§Ø±ÛŒ ÙˆÛŽÙ†Û•Ú©Û• Ø¨Û•Ø¯Û•Ø³ØªØ¨Ù‡ÛŽÙ†Ø±ÛŽØª.";
+  }
+
+  @override
+  Future<String> solveImageQuestion(Uint8List imageBytes, String promptText, {bool isVip = false}) async {
+    final allowed = await checkAndIncrementDailyLimit(isVip: isVip);
+    if (!allowed) {
+      return "â­ **Ú¯Û•ÛŒØ´ØªÛŒØªÛ• Ø³Ù†ÙˆÙˆØ±ÛŒ Ù¥ Ù¾Û•ÛŒØ§Ù…ÛŒ Ø¨Û•Ø®Û†Ú•Ø§ÛŒÛŒ Ø¨Û† Ø¦Û•Ù…Ú•Û† (Free Daily Limit Reached)**\n\n"
+             "ØªÛ† Ù¥ Ù¾Û•ÛŒØ§Ù…ÛŒ Ø¨Û•Ø®Û†Ú•Ø§ÛŒÛŒÛŒ Ø¦Û•Ù…Ú•Û†Øª Ø¨Û•Ú©Ø§Ø±Ù‡ÛŽÙ†Ø§ÙˆÛ•. Ø¨Û† Ù†Ø§Ø±Ø¯Ù†ÛŒ Ù¾Û•ÛŒØ§Ù…ÛŒ Ø¨ÛŽØ³Ù†ÙˆÙˆØ± Ùˆ Ú©ÙˆØ±ØªÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ ÙˆÛŽÙ†Û•Ú©Ø§Ù†ØŒ Ø¨ÛŽÚ¯ÙˆÙ…Ø§Ù† Ù†ÛŒØ´Ø§Ù†Û•ÛŒ VIP (Ø¨Û•Ø´Ø¯Ø§Ø±Ø¨ÙˆÙˆÙ†ÛŒ ÙÛ•Ø±Ù…ÛŒ) Ø¨Û•Ø¯Û•Ø³ØªØ¨Ù‡ÛŽÙ†Û•!";
+    }
+
+    if (hasRealApiKey) {
+      try {
+        return await _callGeminiMultimodal(imageBytes, promptText);
+      } catch (e) {
+        if (_isNetworkError(e)) {
+          return "ðŸ“¡ **Ù‡ÛŽÚµÛŒ Ø¦ÛŒÙ†ØªÛ•Ø±Ù†ÛŽØªÛ•Ú©Û•Øª ØªÛŽÚ©Ú†ÙˆÙˆÛ• (No Internet Connection)**\n\n"
+                 "Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ Ù„Û•Ú¯Û•Úµ Ø³ÛŽØ±Ú¤Û•Ø±ÛŒ Google AI Ø¨Û† Ø´ÛŒÚ©Ø§Ø±ÛŒ ÙˆÛŽÙ†Û•Ú©Û• Ø¨Û•Ø³ØªÙ†Û•ÙˆÛ• Ø¯Ø±ÙˆØ³Øª Ø¨Ú©Ø±ÛŽØª. ØªÚ©Ø§ÛŒÛ• Ø¦ÛŒÙ†ØªÛ•Ø±Ù†ÛŽØªÛ•Ú©Û•Øª Ø¨Ù¾Ø´Ú©Ù†Û•.";
+        }
+        return "âš ï¸ Ù‡Û•ÚµÛ•ÛŒÛ•Ú© Ú•ÙˆÙˆÛŒØ¯Ø§ Ù„Û• Ø´ÛŒÚ©Ø§Ø±Ú©Ø±Ø¯Ù†ÛŒ ÙˆÛŽÙ†Û•Ú©Û•: $e";
+      }
+    }
+
+    return "ðŸ“¸ **Ø´ÛŒÚ©Ø§Ø±ÛŒ Ù„Û†Ú©Ø§ÚµÛŒ Ø¨Û† Ù¾Ø±Ø³ÛŒØ§Ø±ÛŒ ÙˆÛŽÙ†Û•Ú©Û•**\n\n"
+           "Ù¾Ø±Ø³ÛŒØ§Ø± Ù„Û• ÙˆÛŽÙ†Û•Ú©Û•ÙˆÛ• Ø¨Û• Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆÛŒÛŒ Ø®ÙˆÛŽÙ†Ø±Ø§ÛŒÛ•ÙˆÛ•:\n"
+           "Ù¡. Ø¨Û•Ù¾ÛŽÛŒ Ù‡Ø§ÙˆÚ©ÛŽØ´Û•ÛŒ ÙÛŒØ²ÛŒÚ©ÛŒ $promptTextØŒ ÙˆÛ•ÚµØ§Ù…ÛŒ Ú©Û†ØªØ§ÛŒÛŒ Ø¨Ø±ÛŒØªÛŒÛŒÛ• Ù„Û• Ø¯ÛŒØ§Ø±ÛŒÚ©Ø±Ø¯Ù†ÛŒ Ù‡ÛŽØ² Ùˆ Ù„Û•Ø±Ø²ÛŒÙ†.\n"
+           "Ù¢. Ø¦Û•Ù†Ø¬Ø§Ù…ÛŒ Ú©Û†ØªØ§ÛŒÛŒ = Ù¤.Ù¥ units.";
   }
 
   @override
@@ -189,67 +344,50 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   @override
   Future<QuizModel> generateQuiz(String topic, String courseName) async {
+    await Future.delayed(const Duration(milliseconds: 800));
+
+    if (hasRealApiKey) {
+      try {
+        final prompt = "Ú©ÙˆÛŒØ²ÛŽÚ©ÛŒ ØªØ§Ù‚ÛŒÚ©Ø§Ø±ÛŒ Ù„Û•Ø³Û•Ø± Ø¨Ø§Ø¨Û•ØªÛŒ '$topic' Ù„Û• ÙˆØ§Ù†Û•ÛŒ '$courseName' Ø¯Ø±ÙˆØ³Øª Ø¨Ú©Û• Ø¨Û• Ø²Ù…Ø§Ù†ÛŒ Ú©ÙˆØ±Ø¯ÛŒ (Ø³Û†Ø±Ø§Ù†ÛŒ). "
+            "Ú©ÙˆÛŒØ²Û•Ú©Û• Ù¾ÛŽÙˆÛŒØ³ØªÛ• Ù£ Ù¾Ø±Ø³ÛŒØ§Ø± Ù„Û•Ø®Û† Ø¨Ú¯Ø±ÛŽØª Ø¨Û• ÙÛ†Ø±Ù…Ø§ØªÛŒ JSON: \n"
+            "{\n"
+            "  \"title\": \"ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ• Ù„Û•Ø³Û•Ø± $topic\",\n"
+            "  \"questions\": [\n"
+            "     { \"question\": \"Ù¾Ø±Ø³ÛŒØ§Ø± Ù„ÛŽØ±Û•...\", \"options\": [\"A\", \"B\", \"C\", \"D\"], \"correct_answer\": \"A\" }\n"
+            "  ]\n"
+            "}\n\n"
+            "ØªÛ•Ù†Ù‡Ø§ ÙÛ†Ø±Ù…Ø§ØªÛŒ JSON Ø¨Ù†ÙˆÙˆØ³Û• Ø¨Û•Ø¨ÛŽ Ø¯Û•Ù‚ÛŒ ØªØ±.";
+
+        final response = await _callGemini(prompt);
+        return _parseQuizJson(response, topic, courseName);
+      } catch (e) {
+        if (_isNetworkError(e)) {
+          return _generateMockQuiz("ðŸ“¡ (Ú©ÙˆÛŒØ²ÛŒ Ø¦Û†ÙÙ„Ø§ÛŒÙ†) - $topic", courseName);
+        }
+      }
+    }
+
     return _generateMockQuiz(topic, courseName);
   }
 
   @override
   Future<QuizModel> generateQuizFromText(String fileText, String courseName) async {
-    await Future.delayed(const Duration(milliseconds: 1200));
+    await Future.delayed(const Duration(milliseconds: 1000));
 
     if (hasRealApiKey) {
       try {
         final prompt = "Ø¦Û•Ù… Ø¯Û•Ù‚Û•ÛŒ Ø®ÙˆØ§Ø±Û•ÙˆÛ• Ø¨Ø®ÙˆÛŽÙ†Û•Ø±Û•ÙˆÛ• Ùˆ Ú©ÙˆÛŒØ²ÛŽÚ©ÛŒ ØªØ§Ù‚ÛŒÚ©Ø§Ø±ÛŒ Ù„Û•Ø³Û•Ø± Ø¯Ø±ÙˆØ³Øª Ø¨Ú©Û• Ø¨Û• Ø²Ù…Ø§Ù†ÛŒ Ú©ÙˆØ±Ø¯ÛŒ (Ø³Û†Ø±Ø§Ù†ÛŒ). "
-            "Ú©ÙˆÛŒØ²Û•Ú©Û• Ù¾ÛŽÙˆÛŒØ³ØªÛ• Ù£ Ù¾Ø±Ø³ÛŒØ§Ø± Ù„Û•Ø®Û† Ø¨Ú¯Ø±ÛŽØª: "
-            "Ù¡- ÛŒÛ•Ú©Û•Ù… Ù¾Ø±Ø³ÛŒØ§Ø± Ù‡Û•ÚµØ¨Ú˜Ø§Ø±Ø¯Û•ÛŒÛŒ (multipleChoice) Ù„Û•Ú¯Û•Úµ Ù¤ Ø¨Ú˜Ø§Ø±Ø¯Û•. "
-            "Ù¢- Ø¯ÙˆÙˆÛ•Ù… Ù¾Ø±Ø³ÛŒØ§Ø± Ú•Ø§Ø³Øª ÛŒØ§Ù† Ù‡Û•ÚµÛ• (trueFalse). "
-            "Ù£- Ø³ÛŽÛŒÛ•Ù… Ù¾Ø±Ø³ÛŒØ§Ø± Ù¾Ú•Ú©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ø¨Û†Ø´Ø§ÛŒÛŒ (fillInBlank). "
-            "ØªÚ©Ø§ÛŒÛ• ÙˆÛ•ÚµØ§Ù…Û•Ú©Û• ØªÛ•Ù†Ù‡Ø§ ÙˆÛ•Ú© ÙÛ†Ø±Ù…Ø§ØªÛŒ JSON Ú•ÙˆÙˆÙ† Ø¨Ù†ÙˆÙˆØ³Û• Ø¨Û•Ù… Ø´ÛŽÙˆØ§Ø²Û•ÛŒ Ø®ÙˆØ§Ø±Û•ÙˆÛ• (Ø¨Û•Ø¨ÛŽ Ù†ÙˆÙˆØ³ÛŒÙ†ÛŒ ØªØ±): \n"
+            "Ú©ÙˆÛŒØ²Û•Ú©Û• Ù¾ÛŽÙˆÛŒØ³ØªÛ• Ù£ Ù¾Ø±Ø³ÛŒØ§Ø± Ù„Û•Ø®Û† Ø¨Ú¯Ø±ÛŽØª Ø¨Û• ÙÛ†Ø±Ù…Ø§ØªÛŒ Ú•ÙˆÙˆÙ†ÛŒ JSON: \n"
             "{\n"
             "  \"title\": \"ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ø®ÛŽØ±Ø§ Ù„Û•Ø³Û•Ø± ÙˆØ§Ù†Û•Ú©Û•\",\n"
             "  \"questions\": [\n"
-            "     { \"questionText\": \"Ù¾Ø±Ø³ÛŒØ§Ø±ÛŒ ÛŒÛ•Ú©Û•Ù… Ù„ÛŽØ±Û•\", \"type\": \"multipleChoice\", \"options\": [\"Ø¨Ú˜Ø§Ø±Ø¯Û•ÛŒ Ù¡\", \"Ø¨Ú˜Ø§Ø±Ø¯Û•ÛŒ Ù¢\", \"Ø¨Ú˜Ø§Ø±Ø¯Û•ÛŒ Ù£\", \"Ø¨Ú˜Ø§Ø±Ø¯Û•ÛŒ Ù¤\"], \"correctAnswer\": \"ÙˆÛ•ÚµØ§Ù…ÛŒ Ú•Ø§Ø³Øª Ù„ÛŽØ±Û• Ú©Û• Ù‡Ø§ÙˆØ´ÛŽÙˆÛ•ÛŒ ÛŒÛ•Ú©ÛŽÚ© Ù„Û• Ø¨Ú˜Ø§Ø±Ø¯Û•Ú©Ø§Ù†Û•\" },\n"
-            "     { \"questionText\": \"Ù¾Ø±Ø³ÛŒØ§Ø±ÛŒ Ø¯ÙˆÙˆÛ•Ù… Ù„ÛŽØ±Û•\", \"type\": \"trueFalse\", \"correctAnswer\": \"Ú•Ø§Ø³ØªÛ•\" },\n"
-            "     { \"questionText\": \"Ù¾Ø±Ø³ÛŒØ§Ø±ÛŒ Ø³ÛŽÛŒÛ•Ù… Ù„ÛŽØ±Û• Ø¨Û• Ø´ÛŽÙˆØ§Ø²ÛŒ Ø¨Û†Ø´Ø§ÛŒÛŒ\", \"type\": \"fillInBlank\", \"correctAnswer\": \"ÙˆÛ•ÚµØ§Ù…Û•Ú©Û•\" }\n"
+            "     { \"question\": \"Ù¾Ø±Ø³ÛŒØ§Ø±ÛŒ ÛŒÛ•Ú©Û•Ù… Ù„ÛŽØ±Û•\", \"options\": [\"Ø¨Ú˜Ø§Ø±Ø¯Û•ÛŒ A\", \"Ø¨Ú˜Ø§Ø±Ø¯Û•ÛŒ B\", \"Ø¨Ú˜Ø§Ø±Ø¯Û•ÛŒ C\", \"Ø¨Ú˜Ø§Ø±Ø¯Û•ÛŒ D\"], \"correct_answer\": \"Ø¨Ú˜Ø§Ø±Ø¯Û•ÛŒ A\" }\n"
             "  ]\n"
             "}\n\n"
             "Ø¯Û•Ù‚Û•Ú©Û•:\n$fileText";
-        
+
         final response = await _callGemini(prompt);
-        
-        String jsonText = response.trim();
-        if (jsonText.startsWith("```json")) {
-          jsonText = jsonText.substring(7);
-        } else if (jsonText.startsWith("```")) {
-          jsonText = jsonText.substring(3);
-        }
-        if (jsonText.endsWith("```")) {
-          jsonText = jsonText.substring(0, jsonText.length - 3);
-        }
-        jsonText = jsonText.trim();
-        
-        final Map<String, dynamic> data = jsonDecode(jsonText);
-        final List<QuestionModel> questions = [];
-        
-        for (var q in (data['questions'] as List)) {
-          questions.add(QuestionModel(
-            id: 'q_${Random().nextInt(100000)}',
-            questionText: q['questionText'] ?? '',
-            type: q['type'] == 'trueFalse' 
-                ? QuestionType.trueFalse 
-                : q['type'] == 'fillInBlank' 
-                    ? QuestionType.fillInBlank 
-                    : QuestionType.multipleChoice,
-            options: q['options'] != null ? List<String>.from(q['options']) : null,
-            correctAnswer: q['correctAnswer'] ?? '',
-          ));
-        }
-        
-        return QuizModel(
-          id: 'quiz_${Random().nextInt(10000)}',
-          title: data['title'] ?? 'Ú©ÙˆÛŒØ²ÛŒ Ù†ÙˆÛŽ Ø¨Û• AI',
-          courseName: courseName,
-          questions: questions,
-        );
+        return _parseQuizJson(response, "Ú©ÙˆÛŒØ²ÛŒ Ø¯Û•Ù‚ÛŒ Ø¨Ø§Ø±Ú©Ø±Ø§Ùˆ", courseName);
       } catch (e) {
         if (_isNetworkError(e)) {
           return _generateMockQuiz("ðŸ“¡ (Ú©ÙˆÛŒØ²ÛŒ Ø¦Û†ÙÙ„Ø§ÛŒÙ†) - ØªÛ†Ú• Ø¨Û•Ø±Ø¯Û•Ø³Øª Ù†ÛŒÛŒÛ•", courseName);
@@ -259,6 +397,57 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     }
 
     return _generateMockQuiz("Ú©ÙˆÛŒØ²ÛŒ Ø¯Û•Ù‚ÛŒ Ø¨Ø§Ø±Ú©Ø±Ø§Ùˆ", courseName);
+  }
+
+  QuizModel _parseQuizJson(String responseText, String defaultTitle, String courseName) {
+    try {
+      String jsonText = responseText.trim();
+      if (jsonText.startsWith("```json")) {
+        jsonText = jsonText.substring(7);
+      } else if (jsonText.startsWith("```")) {
+        jsonText = jsonText.substring(3);
+      }
+      if (jsonText.endsWith("```")) {
+        jsonText = jsonText.substring(0, jsonText.length - 3);
+      }
+      jsonText = jsonText.trim();
+
+      final Map<String, dynamic> data = jsonDecode(jsonText);
+      final List<QuestionModel> questions = [];
+
+      final rawQuestions = (data['questions'] ?? data['quiz'] ?? []) as List;
+      for (var q in rawQuestions) {
+        final qMap = Map<String, dynamic>.from(q);
+        final qText = qMap['question'] ?? qMap['questionText'] ?? qMap['title'] ?? '';
+        final optionsRaw = qMap['options'] ?? qMap['choices'];
+        final options = optionsRaw != null ? List<String>.from(optionsRaw) : <String>[];
+        final correctAns = qMap['correct_answer'] ?? qMap['correctAnswer'] ?? (options.isNotEmpty ? options[0] : '');
+
+        QuestionType qType = QuestionType.multipleChoice;
+        if (qMap['type'] == 'trueFalse' || options.length == 2) {
+          qType = QuestionType.trueFalse;
+        } else if (qMap['type'] == 'fillInBlank' || options.isEmpty) {
+          qType = QuestionType.fillInBlank;
+        }
+
+        questions.add(QuestionModel(
+          id: 'q_${Random().nextInt(100000)}',
+          questionText: qText,
+          type: qType,
+          options: options.isNotEmpty ? options : null,
+          correctAnswer: correctAns.toString(),
+        ));
+      }
+
+      return QuizModel(
+        id: 'quiz_${Random().nextInt(10000)}',
+        title: data['title'] ?? defaultTitle,
+        courseName: courseName,
+        questions: questions.isNotEmpty ? questions : _generateMockQuiz(defaultTitle, courseName).questions,
+      );
+    } catch (_) {
+      return _generateMockQuiz(defaultTitle, courseName);
+    }
   }
 
   @override

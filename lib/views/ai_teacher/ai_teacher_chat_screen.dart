@@ -3,8 +3,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import '../../services/language_provider.dart';
 import '../../services/ai_service.dart';
+import '../../services/auth_service.dart';
 import '../../theme.dart';
 
 class AiTeacherChatScreen extends StatefulWidget {
@@ -22,6 +25,35 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   final List<Map<String, String>> _messages = [];
   bool _isTyping = false;
   bool _isRecording = false;
+
+  final FlutterTts _flutterTts = FlutterTts();
+
+  Future<void> _speakKurdish(String text) async {
+    String cleanText = text
+        .replaceAll(RegExp(r'[\*\#\_\🔹\🔸\🎯\⭐]'), '')
+        .replaceAll(RegExp(r'`{3}[\s\S]*?`{3}'), '')
+        .replaceAll(RegExp(r'`[\s\S]*?`'), '');
+
+    try {
+      final isCkbAvailable = await _flutterTts.isLanguageAvailable("ckb") ?? false;
+      if (isCkbAvailable) {
+        await _flutterTts.setLanguage("ckb");
+      } else {
+        final isKuAvailable = await _flutterTts.isLanguageAvailable("ku") ?? false;
+        if (isKuAvailable) {
+          await _flutterTts.setLanguage("ku");
+        } else {
+          await _flutterTts.setLanguage("en-US");
+        }
+      }
+    } catch (_) {
+      await _flutterTts.setLanguage("en-US");
+    }
+
+    await _flutterTts.setSpeechRate(0.48);
+    await _flutterTts.setVolume(1.0);
+    await _flutterTts.speak(cleanText);
+  }
 
   final List<String> _suggestions = [
     'Explain this topic',
@@ -80,36 +112,14 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       }
     }
 
-    // Default demo conversation matching user reference image
+    // Default clean welcome message
     setState(() {
       _messages.clear();
-      _messages.addAll([
-        {
-          'role': 'user',
-          'content': 'Hello, How are you?',
-          'time': '4:09 pm',
-        },
-        {
-          'role': 'assistant',
-          'content': 'Hey, Bruce! Its been awhile',
-          'time': '4:09 pm',
-        },
-        {
-          'role': 'assistant',
-          'content': "What's up?",
-          'time': '4:09 pm',
-        },
-        {
-          'role': 'user',
-          'content': 'I wonder if you would like to watch movie tonight?',
-          'time': '4:09 pm',
-        },
-        {
-          'role': 'assistant',
-          'content': 'Sounds like a good idea!',
-          'time': '4:09 pm',
-        },
-      ]);
+      _messages.add({
+        'role': 'assistant',
+        'content': 'Hello! I am your AI Tutor powered by Apple Intelligence & ZankoAI. How can I help you excel today?',
+        'time': _formatTime(),
+      });
     });
   }
 
@@ -127,7 +137,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       _messages.clear();
       _messages.add({
         'role': 'assistant',
-        'content': 'Hello! I am Kathy, your AI Assistant. How can I help you today?',
+        'content': 'Hello! I am your AI Tutor powered by Apple Intelligence & ZankoAI. How can I help you excel today?',
         'time': _formatTime(),
       });
     });
@@ -156,6 +166,8 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     if (text.trim().isEmpty) return;
 
     final aiService = Provider.of<AiService>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final isVip = authService.currentUser?.isVip ?? false;
     final timestamp = _formatTime();
 
     setState(() {
@@ -171,6 +183,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       final response = await aiService.askTeacher(
         text,
         _messages.sublist(0, _messages.length - 1),
+        isVip: isVip,
       );
       if (mounted) {
         setState(() {
@@ -197,6 +210,54 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       }
     }
     _scrollToBottom();
+  }
+
+  Future<void> _pickAndSolveImage() async {
+    try {
+      final picker = ImagePicker();
+      final image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+      if (image == null) return;
+
+      final bytes = await image.readAsBytes();
+      final promptText = _controller.text.trim();
+      _controller.clear();
+
+      final timestamp = _formatTime();
+      setState(() {
+        _messages.add({
+          'role': 'user',
+          'content': '📷 [وێنەی تاقیکردنەوە/پرسیار بارکرا]: ${image.name}\n${promptText.isNotEmpty ? promptText : ""}',
+          'time': timestamp,
+        });
+        _isTyping = true;
+      });
+
+      _scrollToBottom();
+      await _saveChatHistory();
+
+      final aiService = Provider.of<AiService>(context, listen: false);
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final isVip = authService.currentUser?.isVip ?? false;
+
+      final response = await aiService.solveImageQuestion(bytes, promptText, isVip: isVip);
+
+      if (mounted) {
+        setState(() {
+          _messages.add({
+            'role': 'assistant',
+            'content': response,
+            'time': _formatTime(),
+          });
+          _isTyping = false;
+        });
+        await _saveChatHistory();
+        _scrollToBottom();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isTyping = false);
+      }
+    }
   }
 
   Widget _buildNeumorphicButton({
@@ -316,83 +377,126 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     );
   }
 
+  String? _currentlySpeakingMsg;
+
   Widget _buildMessageBubble(Map<String, String> msg, bool isUser) {
     final content = msg['content'] ?? '';
     final time = msg['time'] ?? '4:09 pm';
+    final isSpeaking = _currentlySpeakingMsg == content;
 
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.78,
+          maxWidth: MediaQuery.of(context).size.width * 0.84,
         ),
-        decoration: isUser
-            ? BoxDecoration(
-                color: ZankoColors.primary,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
-                  bottomLeft: Radius.circular(16),
-                  bottomRight: Radius.circular(4),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: ZankoColors.primary.withValues(alpha: 0.35),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              )
-            : BoxDecoration(
-                color: const Color(0xFF1E222A),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
-                  bottomLeft: Radius.circular(4),
-                  bottomRight: Radius.circular(16),
-                ),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.06),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.45),
-                    blurRadius: 10,
-                    offset: const Offset(2, 4),
-                  ),
-                  BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.03),
-                    blurRadius: 4,
-                    offset: const Offset(-1, -1),
-                  ),
-                ],
-              ),
-        child: Wrap(
-          alignment: WrapAlignment.end,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 12,
-          runSpacing: 4,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(
-              content,
-              style: const TextStyle(
-                fontSize: 15,
-                height: 1.35,
-                fontWeight: FontWeight.w400,
-                color: Colors.white,
+            if (!isUser) ...[
+              GestureDetector(
+                onTap: () async {
+                  if (isSpeaking) {
+                    await _flutterTts.stop();
+                    if (mounted) setState(() => _currentlySpeakingMsg = null);
+                  } else {
+                    if (mounted) setState(() => _currentlySpeakingMsg = content);
+                    _flutterTts.setCompletionHandler(() {
+                      if (mounted) setState(() => _currentlySpeakingMsg = null);
+                    });
+                    await _speakKurdish(content);
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  margin: const EdgeInsets.only(right: 6, bottom: 4),
+                  decoration: BoxDecoration(
+                    color: isSpeaking ? ZankoColors.primary : const Color(0xFF252934),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: (isSpeaking ? ZankoColors.primary : Colors.black).withValues(alpha: 0.3),
+                        blurRadius: 6,
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    isSpeaking ? CupertinoIcons.speaker_3_fill : CupertinoIcons.speaker_2_fill,
+                    color: isSpeaking ? Colors.white : ZankoColors.primary,
+                    size: 16,
+                  ),
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                time,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w400,
-                  color: isUser ? Colors.white.withValues(alpha: 0.8) : Colors.white38,
+            ],
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: isUser
+                    ? BoxDecoration(
+                        color: ZankoColors.primary,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(16),
+                          topRight: Radius.circular(16),
+                          bottomLeft: Radius.circular(16),
+                          bottomRight: Radius.circular(4),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: ZankoColors.primary.withValues(alpha: 0.35),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      )
+                    : BoxDecoration(
+                        color: const Color(0xFF1E222A),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(16),
+                          topRight: Radius.circular(16),
+                          bottomLeft: Radius.circular(4),
+                          bottomRight: Radius.circular(16),
+                        ),
+                        border: Border.all(
+                          color: isSpeaking ? ZankoColors.primary.withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.06),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.45),
+                            blurRadius: 10,
+                            offset: const Offset(2, 4),
+                          ),
+                        ],
+                      ),
+                child: Wrap(
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 12,
+                  runSpacing: 4,
+                  children: [
+                    Text(
+                      content,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        height: 1.35,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        time,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w400,
+                          color: isUser ? Colors.white.withValues(alpha: 0.8) : Colors.white38,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -574,7 +678,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                               color: ZankoColors.primary,
                               size: 20,
                             ),
-                            onPressed: () {},
+                            onPressed: _pickAndSolveImage,
                           ),
                           // Camera Icon
                           IconButton(
@@ -583,7 +687,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                               color: ZankoColors.primary,
                               size: 20,
                             ),
-                            onPressed: () {},
+                            onPressed: _pickAndSolveImage,
                           ),
                         ],
                       ),

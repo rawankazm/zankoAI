@@ -64,7 +64,10 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
       if (doc.exists && doc.data() != null) {
         final data = doc.data()!;
         final roleStr = data['role'] as String? ?? 'student';
-        final role = roleStr == 'teacher' ? UserRole.teacher : UserRole.student;
+        final role = roleStr == 'admin'
+            ? UserRole.admin
+            : (roleStr == 'teacher' ? UserRole.teacher : UserRole.student);
+        final isVip = data['isVip'] == true || role == UserRole.admin;
 
         _currentUser = UserModel(
           id: firebaseUser.uid,
@@ -75,6 +78,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
           departmentName: data['departmentName'] ?? 'تەکنەلۆجیای زانیاری',
           cityName: data['cityName'] ?? 'سلێمانی',
           gpa: role == UserRole.student ? (data['gpa'] as num?)?.toDouble() ?? 3.65 : null,
+          isVip: isVip,
         );
       } else {
         _currentUser = UserModel(
@@ -86,7 +90,21 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
           departmentName: 'تەکنەلۆجیای زانیاری',
           cityName: 'سلێمانی',
           gpa: 3.65,
+          isVip: false,
         );
+        try {
+          await _firestore.collection('users').doc(firebaseUser.uid).set({
+            'name': _currentUser!.name,
+            'email': _currentUser!.email,
+            'role': 'student',
+            'universityName': 'زانکۆی سلێمانی',
+            'departmentName': 'تەکنەلۆجیای زانیاری',
+            'cityName': 'سلێمانی',
+            'gpa': 3.65,
+            'isVip': false,
+            'createdAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+        } catch (_) {}
       }
     } catch (e) {
       _currentUser = UserModel(
@@ -98,6 +116,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
         departmentName: 'تەکنەلۆجیای زانیاری',
         cityName: 'سلێمانی',
         gpa: 3.65,
+        isVip: false,
       );
     }
     notifyListeners();
