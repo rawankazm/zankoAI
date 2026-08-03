@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/language_provider.dart';
-import '../../theme.dart';
 import '../../services/ai_service.dart';
+import '../../theme.dart';
 
 class AiTeacherChatScreen extends StatefulWidget {
   final String? initialPrompt;
@@ -21,6 +21,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   final ScrollController _scrollController = ScrollController();
   final List<Map<String, String>> _messages = [];
   bool _isTyping = false;
+  bool _isRecording = false;
 
   final List<String> _suggestions = [
     'Explain this topic',
@@ -43,6 +44,14 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     });
   }
 
+  String _formatTime([DateTime? dt]) {
+    final now = dt ?? DateTime.now();
+    final hour = now.hour == 0 ? 12 : (now.hour > 12 ? now.hour - 12 : now.hour);
+    final minute = now.minute.toString().padLeft(2, '0');
+    final period = now.hour >= 12 ? 'pm' : 'am';
+    return '$hour:$minute $period';
+  }
+
   Future<void> _loadChatHistory() async {
     final prefs = await SharedPreferences.getInstance();
     final rawTimestamp = prefs.getInt('ai_chat_saved_time');
@@ -59,7 +68,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
             setState(() {
               _messages.clear();
               for (var item in decoded) {
-                _messages.add(Map<String, String>.from(item));
+                final map = Map<String, String>.from(item);
+                map['time'] ??= '4:09 pm';
+                _messages.add(map);
               }
             });
             _scrollToBottom();
@@ -69,13 +80,36 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       }
     }
 
-    // Default welcome message if expired or empty
+    // Default demo conversation matching user reference image
     setState(() {
       _messages.clear();
-      _messages.add({
-        'role': 'assistant',
-        'content': 'Hello! I am your AI Tutor powered by Apple Intelligence & ZankoAI. How can I help you excel today?',
-      });
+      _messages.addAll([
+        {
+          'role': 'user',
+          'content': 'Hello, How are you?',
+          'time': '4:09 pm',
+        },
+        {
+          'role': 'assistant',
+          'content': 'Hey, Bruce! Its been awhile',
+          'time': '4:09 pm',
+        },
+        {
+          'role': 'assistant',
+          'content': "What's up?",
+          'time': '4:09 pm',
+        },
+        {
+          'role': 'user',
+          'content': 'I wonder if you would like to watch movie tonight?',
+          'time': '4:09 pm',
+        },
+        {
+          'role': 'assistant',
+          'content': 'Sounds like a good idea!',
+          'time': '4:09 pm',
+        },
+      ]);
     });
   }
 
@@ -85,7 +119,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     await prefs.setInt('ai_chat_saved_time', DateTime.now().millisecondsSinceEpoch);
   }
 
-  Future<void> _clearChatHistory() async {
+  void clearChatHistory() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('ai_chat_history');
     await prefs.remove('ai_chat_saved_time');
@@ -93,7 +127,8 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       _messages.clear();
       _messages.add({
         'role': 'assistant',
-        'content': 'Hello! I am your AI Tutor powered by Apple Intelligence & ZankoAI. How can I help you excel today?',
+        'content': 'Hello! I am Kathy, your AI Assistant. How can I help you today?',
+        'time': _formatTime(),
       });
     });
   }
@@ -121,9 +156,10 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     if (text.trim().isEmpty) return;
 
     final aiService = Provider.of<AiService>(context, listen: false);
+    final timestamp = _formatTime();
 
     setState(() {
-      _messages.add({'role': 'user', 'content': text});
+      _messages.add({'role': 'user', 'content': text, 'time': timestamp});
       _isTyping = true;
     });
 
@@ -138,7 +174,11 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       );
       if (mounted) {
         setState(() {
-          _messages.add({'role': 'assistant', 'content': response});
+          _messages.add({
+            'role': 'assistant',
+            'content': response,
+            'time': _formatTime(),
+          });
           _isTyping = false;
         });
         await _saveChatHistory();
@@ -149,6 +189,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
           _messages.add({
             'role': 'assistant',
             'content': 'I encountered an issue connecting to AI servers. Please try again.',
+            'time': _formatTime(),
           });
           _isTyping = false;
         });
@@ -158,178 +199,280 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     _scrollToBottom();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final lang = Provider.of<LanguageProvider>(context);
-    String t(String key) => lang.translate(key);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final langProvider = Provider.of<LanguageProvider>(context);
+  Widget _buildNeumorphicButton({
+    required IconData icon,
+    required VoidCallback onTap,
+    Color? iconColor,
+    double size = 44.0,
+  }) {
+    final effectiveColor = iconColor ?? ZankoColors.primary;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E222B),
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.06),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.6),
+              blurRadius: 10,
+              offset: const Offset(3, 4),
+            ),
+            BoxShadow(
+              color: Colors.white.withValues(alpha: 0.04),
+              blurRadius: 4,
+              offset: const Offset(-2, -2),
+            ),
+          ],
+        ),
+        child: Icon(
+          icon,
+          color: effectiveColor,
+          size: 20,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
     final canPop = Navigator.canPop(context);
 
-    return Scaffold(
-      backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
-      appBar: AppBar(
-        backgroundColor: (isDark ? ZankoColors.darkBackground : ZankoColors.background).withOpacity(0.9),
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        leading: canPop
-            ? IconButton(
-                icon: const Icon(CupertinoIcons.back),
-                onPressed: () => Navigator.pop(context),
-              )
-            : null,
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: ZankoColors.primary.withOpacity(0.12),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                CupertinoIcons.sparkles,
-                color: ZankoColors.primary,
-                size: 18,
+    return Container(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 8,
+        bottom: 12,
+        left: 16,
+        right: 16,
+      ),
+      color: const Color(0xFF15181E),
+      child: Row(
+        children: [
+          if (canPop) ...[
+            _buildNeumorphicButton(
+              icon: CupertinoIcons.arrow_left,
+              onTap: () => Navigator.pop(context),
+              iconColor: ZankoColors.primary,
+            ),
+            const SizedBox(width: 12),
+          ],
+
+          // User Avatar & Name on top left without typing or call button
+          Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.4),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: const CircleAvatar(
+              radius: 20,
+              backgroundColor: Color(0xFF2A2E37),
+              backgroundImage: NetworkImage(
+                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop',
               ),
             ),
-            const SizedBox(width: 8),
+          ),
+          const SizedBox(width: 12),
+          const Text(
+            'Kathy Gomez',
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              letterSpacing: -0.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateHeader() {
+    return Container(
+      margin: const EdgeInsets.only(top: 8, bottom: 16),
+      child: Center(
+        child: Text(
+          'Today',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: Colors.white.withValues(alpha: 0.4),
+            letterSpacing: 0.2,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMessageBubble(Map<String, String> msg, bool isUser) {
+    final content = msg['content'] ?? '';
+    final time = msg['time'] ?? '4:09 pm';
+
+    return Align(
+      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.78,
+        ),
+        decoration: isUser
+            ? BoxDecoration(
+                color: ZankoColors.primary,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                  bottomLeft: Radius.circular(16),
+                  bottomRight: Radius.circular(4),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: ZankoColors.primary.withValues(alpha: 0.35),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              )
+            : BoxDecoration(
+                color: const Color(0xFF1E222A),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                  bottomLeft: Radius.circular(4),
+                  bottomRight: Radius.circular(16),
+                ),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.06),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.45),
+                    blurRadius: 10,
+                    offset: const Offset(2, 4),
+                  ),
+                  BoxShadow(
+                    color: Colors.white.withValues(alpha: 0.03),
+                    blurRadius: 4,
+                    offset: const Offset(-1, -1),
+                  ),
+                ],
+              ),
+        child: Wrap(
+          alignment: WrapAlignment.end,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 12,
+          runSpacing: 4,
+          children: [
             Text(
-              langProvider.translate('ai_tutor'),
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : ZankoColors.textPrimary,
+              content,
+              style: const TextStyle(
+                fontSize: 15,
+                height: 1.35,
+                fontWeight: FontWeight.w400,
+                color: Colors.white,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                time,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w400,
+                  color: isUser ? Colors.white.withValues(alpha: 0.8) : Colors.white38,
+                ),
               ),
             ),
           ],
         ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(CupertinoIcons.trash, size: 18, color: ZankoColors.textSecondary),
-            tooltip: t('clear_chat_tooltip'),
-            onPressed: () {
-              showCupertinoDialog(
-                context: context,
-                builder: (context) => CupertinoAlertDialog(
-                  title: Text(t('clear_chat_history')),
-                  content: Text(t('clear_chat_desc')),
-                  actions: [
-                    CupertinoDialogAction(
-                      child: Text(Provider.of<LanguageProvider>(context, listen: false).translate('cancel')),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    CupertinoDialogAction(
-                      isDestructiveAction: true,
-                      child: Text(t('clear')),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _clearChatHistory();
-                      },
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = Provider.of<LanguageProvider>(context);
+    final hasText = _controller.text.trim().isNotEmpty;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF15181E),
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
+            // Custom Header
+            _buildHeader(context),
+
             // Messages List
             Expanded(
-              child: ListView.builder(
+              child: ListView(
                 controller: _scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                itemCount: _messages.length,
-                itemBuilder: (context, index) {
-                  final msg = _messages[index];
-                  final isUser = msg['role'] == 'user';
-
-                  return Align(
-                    alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 14),
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                      constraints: BoxConstraints(
-                        maxWidth: MediaQuery.of(context).size.width * 0.78,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isUser
-                            ? ZankoColors.primary
-                            : (isDark ? ZankoColors.darkCard : Colors.white),
-                        borderRadius: BorderRadius.only(
-                          topLeft: const Radius.circular(22),
-                          topRight: const Radius.circular(22),
-                          bottomLeft: Radius.circular(isUser ? 22 : 6),
-                          bottomRight: Radius.circular(isUser ? 6 : 22),
-                        ),
-                        boxShadow: isUser
-                            ? [
-                                BoxShadow(
-                                  color: ZankoColors.primary.withOpacity(0.25),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                children: [
+                  _buildDateHeader(),
+                  ..._messages.map((msg) {
+                    final isUser = msg['role'] == 'user';
+                    return _buildMessageBubble(msg, isUser);
+                  }),
+                  if (_isTyping)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1E222A),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.06),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(ZankoColors.primary),
                                 ),
-                              ]
-                            : (isDark ? [] : ZankoShadows.card),
-                        border: isUser
-                            ? null
-                            : Border.all(
-                                color: isDark
-                                    ? Colors.white.withOpacity(0.08)
-                                    : const Color(0xFFF0F0F6),
                               ),
-                      ),
-                      child: Text(
-                        msg['content']!,
-                        style: TextStyle(
-                          fontSize: 15,
-                          height: 1.45,
-                          fontWeight: isUser ? FontWeight.w500 : FontWeight.w400,
-                          color: isUser
-                              ? Colors.white
-                              : (isDark ? Colors.white : ZankoColors.textPrimary),
+                              SizedBox(width: 10),
+                              Text(
+                                'Kathy is typing...',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  );
-                },
+                ],
               ),
             ),
 
-            if (_isTyping)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Row(
-                    children: [
-                      const Icon(
-                        CupertinoIcons.sparkles,
-                        color: ZankoColors.primary,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'AI Tutor is thinking...',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontStyle: FontStyle.italic,
-                          color: ZankoColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-            // Suggestions horizontal list if early conversation
-            if (_messages.length <= 2)
+            // Early Suggestions Pills
+            if (_messages.length <= 5)
               SizedBox(
-                height: 40,
+                height: 36,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -339,17 +482,18 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                       padding: const EdgeInsets.only(right: 8),
                       child: ActionChip(
                         elevation: 0,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        backgroundColor: isDark ? ZankoColors.darkCard : Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        backgroundColor: const Color(0xFF1E222A),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          side: BorderSide(
-                            color: ZankoColors.primary.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(18),
+                          side: const BorderSide(
+                            color: ZankoColors.primary,
+                            width: 1,
                           ),
                         ),
                         label: Text(
                           _suggestions[index],
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: ZankoColors.primary,
@@ -362,82 +506,135 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 ),
               ),
 
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
 
             // Bottom Input Bar
             Padding(
-              padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: isDark ? ZankoColors.darkCard : Colors.white,
-                  borderRadius: BorderRadius.circular(ZankoRadius.input),
-                  boxShadow: isDark ? [] : ZankoShadows.card,
-                  border: Border.all(
-                    color: isDark ? Colors.white.withOpacity(0.1) : const Color(0xFFEFEFF7),
+              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16, top: 4),
+              child: Row(
+                children: [
+                  // Main Input Container
+                  Expanded(
+                    child: Container(
+                      height: 52,
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1B1E26),
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.08),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          // Emoji Button
+                          IconButton(
+                            icon: const Icon(
+                              CupertinoIcons.smiley,
+                              color: ZankoColors.primary,
+                              size: 22,
+                            ),
+                            onPressed: () {},
+                          ),
+                          // TextField
+                          Expanded(
+                            child: TextField(
+                              controller: _controller,
+                              onChanged: (_) => setState(() {}),
+                              onSubmitted: _sendMessage,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                color: Colors.white,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: lang.translate('type_message'),
+                                hintStyle: const TextStyle(
+                                  fontSize: 15,
+                                  color: Color(0xFF6C717B),
+                                ),
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                            ),
+                          ),
+                          // Attachment Icon
+                          IconButton(
+                            icon: const Icon(
+                              CupertinoIcons.paperclip,
+                              color: ZankoColors.primary,
+                              size: 20,
+                            ),
+                            onPressed: () {},
+                          ),
+                          // Camera Icon
+                          IconButton(
+                            icon: const Icon(
+                              CupertinoIcons.camera_fill,
+                              color: ZankoColors.primary,
+                              size: 20,
+                            ),
+                            onPressed: () {},
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        CupertinoIcons.paperclip,
-                        color: ZankoColors.textSecondary,
+
+                  const SizedBox(width: 10),
+
+                  // Floating Glowing App Stamp Color Button (Mic / Send)
+                  GestureDetector(
+                    onTap: () {
+                      if (hasText) {
+                        _sendMessage(_controller.text);
+                      } else {
+                        setState(() {
+                          _isRecording = !_isRecording;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(_isRecording ? 'Listening...' : 'Voice recording stopped'),
+                            duration: const Duration(seconds: 1),
+                            backgroundColor: ZankoColors.primary,
+                          ),
+                        );
+                      }
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: _isRecording ? ZankoColors.accent : ZankoColors.primary,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: ZankoColors.primary.withValues(alpha: 0.6),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        hasText
+                            ? CupertinoIcons.arrow_up
+                            : (_isRecording ? CupertinoIcons.square_fill : CupertinoIcons.mic_fill),
+                        color: Colors.white,
                         size: 22,
                       ),
-                      onPressed: () {},
                     ),
-                    Expanded(
-                      child: TextField(
-                        controller: _controller,
-                        onSubmitted: _sendMessage,
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: isDark ? Colors.white : ZankoColors.textPrimary,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: t('ask_ai_anything'),
-                          hintStyle: TextStyle(
-                            fontSize: 15,
-                            color: ZankoColors.textSecondary,
-                          ),
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(
-                        CupertinoIcons.mic,
-                        color: ZankoColors.textSecondary,
-                        size: 22,
-                      ),
-                      onPressed: () {},
-                    ),
-                    const SizedBox(width: 4),
-                    GestureDetector(
-                      onTap: () => _sendMessage(_controller.text),
-                      child: Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [ZankoColors.primary, ZankoColors.accent],
-                          ),
-                          shape: BoxShape.circle,
-                          boxShadow: ZankoShadows.glow,
-                        ),
-                        child: const Icon(
-                          CupertinoIcons.arrow_up,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ],
