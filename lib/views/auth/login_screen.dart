@@ -4,6 +4,7 @@ import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
 import '../navigation_shell.dart';
 import '../../models/user_model.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,9 +22,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   bool _isLoginMode = true;
   bool _isLoading = false;
-  UserRole _selectedRole = UserRole.student;
   String? _errorMessage;
-  bool _roleSelected = true;
 
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
@@ -66,19 +65,35 @@ class _LoginScreenState extends State<LoginScreen>
     final authService = Provider.of<AuthService>(context, listen: false);
     bool success = false;
 
-    if (_isLoginMode) {
-      success = await authService.loginWithRole(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-        _selectedRole,
-      );
-    } else {
-      success = await authService.register(
-        _nameController.text.trim(),
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-        _selectedRole,
-      );
+    try {
+      if (_isLoginMode) {
+        success = await authService.loginWithRole(
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
+          UserRole.student,
+        );
+      } else {
+        success = await authService.register(
+          _nameController.text.trim(),
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
+          UserRole.student,
+        );
+      }
+    } catch (e) {
+      success = false;
+      final errStr = e.toString().toLowerCase();
+      if (errStr.contains('email-already-in-use')) {
+        _errorMessage = 'ئەم ئیمەیڵە پێشتر تۆمار کراوە.';
+      } else if (errStr.contains('wrong-password') || errStr.contains('invalid-credential')) {
+        _errorMessage = 'وشەی نهێنی یان ئیمەیڵ هەڵەیە.';
+      } else if (errStr.contains('user-not-found')) {
+        _errorMessage = 'هیچ هەژمارێک بەم ئیمەیڵە نەدۆزرایەوە.';
+      } else if (errStr.contains('weak-password')) {
+        _errorMessage = 'وشەی نهێنی زۆر لاوازە (لانی کەم ٦ پیت).';
+      } else if (errStr.contains('invalid-email')) {
+        _errorMessage = 'ئیمەیڵەکە شێوازێکی دروستی نییە.';
+      }
     }
 
     if (!mounted) return;
@@ -91,7 +106,7 @@ class _LoginScreenState extends State<LoginScreen>
     } else {
       setState(() {
         _isLoading = false;
-        _errorMessage = 'پڕۆسەکە سەرکەوتوو نەبوو. تکایە زانیارییەکان بپشکنە.';
+        _errorMessage ??= 'پڕۆسەکە سەرکەوتوو نەبوو. تکایە زانیارییەکان بپشکنە.';
       });
     }
   }
@@ -103,7 +118,7 @@ class _LoginScreenState extends State<LoginScreen>
     });
 
     final authService = Provider.of<AuthService>(context, listen: false);
-    final success = await authService.loginWithGoogle(_selectedRole);
+    final success = await authService.loginWithGoogle(UserRole.student);
 
     if (!mounted) return;
 
@@ -120,6 +135,17 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
+  Future<void> _loginAsGuest() async {
+    setState(() => _isLoading = true);
+    final authService = Provider.of<AuthService>(context, listen: false);
+    await authService.loginAsGuest();
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const NavigationShell()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -128,15 +154,33 @@ class _LoginScreenState extends State<LoginScreen>
 
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Directionality(
-              textDirection: langProvider.textDirection,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+        child: Column(
+          children: [
+            // Top Bar with Skip (Guest) Button
+            Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8.0, right: 16.0, left: 16.0),
+                child: TextButton.icon(
+                  onPressed: _loginAsGuest,
+                  icon: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                  label: Text(
+                    t('skip_guest'),
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Directionality(
+                    textDirection: langProvider.textDirection,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
                   // App Logo
                   Center(
                     child: Container(
@@ -181,114 +225,7 @@ class _LoginScreenState extends State<LoginScreen>
                   ),
                   const SizedBox(height: 32),
 
-                  // ─── Role Selection Segment (Student vs Teacher) ───
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 24),
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: theme.colorScheme.outline.withOpacity(0.15)),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => setState(() => _selectedRole = UserRole.student),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              decoration: BoxDecoration(
-                                color: _selectedRole == UserRole.student
-                                    ? theme.colorScheme.primary
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: _selectedRole == UserRole.student
-                                    ? [
-                                        BoxShadow(
-                                          color: theme.colorScheme.primary.withOpacity(0.3),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 3),
-                                        )
-                                      ]
-                                    : [],
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.school_rounded,
-                                    size: 20,
-                                    color: _selectedRole == UserRole.student
-                                        ? Colors.white
-                                        : theme.colorScheme.onSurface.withOpacity(0.6),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'قوتابی (Student)',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                      color: _selectedRole == UserRole.student
-                                          ? Colors.white
-                                          : theme.colorScheme.onSurface.withOpacity(0.7),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => setState(() => _selectedRole = UserRole.teacher),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              decoration: BoxDecoration(
-                                color: _selectedRole == UserRole.teacher
-                                    ? const Color(0xFF7C3AED)
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: _selectedRole == UserRole.teacher
-                                    ? [
-                                        BoxShadow(
-                                          color: const Color(0xFF7C3AED).withOpacity(0.3),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 3),
-                                        )
-                                      ]
-                                    : [],
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.cast_for_education_rounded,
-                                    size: 20,
-                                    color: _selectedRole == UserRole.teacher
-                                        ? Colors.white
-                                        : theme.colorScheme.onSurface.withOpacity(0.6),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'مامۆستا (Teacher)',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                      color: _selectedRole == UserRole.teacher
-                                          ? Colors.white
-                                          : theme.colorScheme.onSurface.withOpacity(0.7),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+
 
                   // ─── Error Message ───
                   if (_errorMessage != null) ...[
@@ -310,8 +247,7 @@ class _LoginScreenState extends State<LoginScreen>
                   ],
 
                   // ─── Form ───
-                  if (_roleSelected) ...[
-                    FadeTransition(
+                  FadeTransition(
                       opacity: _fadeAnim,
                       child: SlideTransition(
                         position: _slideAnim,
@@ -344,10 +280,16 @@ class _LoginScreenState extends State<LoginScreen>
                                       const Icon(Icons.email_outlined),
                                   hintText: t('email_hint'),
                                 ),
-                                validator: (value) =>
-                                    value == null || !value.contains('@')
-                                        ? t('please_enter_email')
-                                        : null,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'تکایە ئیمەیڵ بنووسە';
+                                  }
+                                  final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+                                  if (!emailRegex.hasMatch(value.trim())) {
+                                    return 'تکایە ئیمەیڵێکی دروست بنووسە (نموونە: student@zanko.edu)';
+                                  }
+                                  return null;
+                                },
                               ),
                               const SizedBox(height: 16),
                               TextFormField(
@@ -358,10 +300,15 @@ class _LoginScreenState extends State<LoginScreen>
                                   prefixIcon:
                                       const Icon(Icons.lock_outline),
                                 ),
-                                validator: (value) =>
-                                    value == null || value.length < 6
-                                        ? t('please_enter_password')
-                                        : null,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'تکایە وشەی نهێنی بنووسە';
+                                  }
+                                  if (value.length < 6) {
+                                    return 'وشەی نهێنی لانی کەم ٦ پیت بێت';
+                                  }
+                                  return null;
+                                },
                               ),
                               const SizedBox(height: 24),
 
@@ -407,21 +354,48 @@ class _LoginScreenState extends State<LoginScreen>
                                 const SizedBox(height: 16),
                               ],
 
-                              // Mode Toggle
-                              TextButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _isLoginMode = !_isLoginMode;
-                                    _errorMessage = null;
-                                  });
-                                },
-                                child: Text(
-                                  _isLoginMode
-                                      ? t('no_account')
-                                      : t('has_account'),
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.w600),
+                              // Guest Access Button (Optional Login)
+                              SizedBox(
+                                width: double.maxFinite,
+                                child: TextButton.icon(
+                                  onPressed: _isLoading ? null : _loginAsGuest,
+                                  icon: const Icon(Icons.person_outline_rounded, size: 20),
+                                  label: Text(
+                                    t('guest_login'),
+                                    style: const TextStyle(fontWeight: FontWeight.w600),
+                                  ),
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    foregroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                                  ),
                                 ),
+                              ),
+                              const SizedBox(height: 8),
+
+                              // Mode Toggle
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'هەژمارت نییە؟ ',
+                                    style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                                      );
+                                    },
+                                    child: Text(
+                                      'دروستکردنی هەژمار',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -429,13 +403,15 @@ class _LoginScreenState extends State<LoginScreen>
                       ),
                     ),
                   ],
-                ],
+                ),
               ),
             ),
           ),
         ),
-      ),
-    );
+      ],
+    ),
+  ),
+);
   }
 }
 

@@ -11,8 +11,11 @@ class UserModel {
   final UserRole role;
   final String? universityName;
   final String? departmentName;
+  final String? cityName;
   final double? gpa;
   final List<double> gpaHistory;
+
+  bool get isGuest => id.startsWith('guest_user') || email == 'guest@zanko.edu';
 
   UserModel({
     required this.id,
@@ -21,6 +24,7 @@ class UserModel {
     required this.role,
     this.universityName,
     this.departmentName,
+    this.cityName,
     this.gpa,
     this.gpaHistory = const [3.2, 3.4, 3.65, 3.8],
   });
@@ -32,6 +36,7 @@ class UserModel {
     UserRole? role,
     String? universityName,
     String? departmentName,
+    String? cityName,
     double? gpa,
     List<double>? gpaHistory,
   }) {
@@ -42,6 +47,7 @@ class UserModel {
       role: role ?? this.role,
       universityName: universityName ?? this.universityName,
       departmentName: departmentName ?? this.departmentName,
+      cityName: cityName ?? this.cityName,
       gpa: gpa ?? this.gpa,
       gpaHistory: gpaHistory ?? this.gpaHistory,
     );
@@ -55,6 +61,7 @@ class UserModel {
       'role': role.toString().split('.').last,
       'universityName': universityName,
       'departmentName': departmentName,
+      'cityName': cityName,
       'gpa': gpa,
       'gpaHistory': gpaHistory,
     };
@@ -71,6 +78,7 @@ class UserModel {
       ),
       universityName: map['universityName'],
       departmentName: map['departmentName'],
+      cityName: map['cityName'],
       gpa: map['gpa']?.toDouble(),
       gpaHistory: map['gpaHistory'] != null 
           ? List<double>.from(map['gpaHistory'].map((x) => x.toDouble())) 

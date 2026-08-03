@@ -35,17 +35,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     _loadChatHistory();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final prefs = await SharedPreferences.getInstance();
-      final hasPrompted = prefs.getBool('has_prompted_api_key') ?? false;
       if (!mounted) return;
-      final aiService = Provider.of<AiService>(context, listen: false);
-
-      if (!hasPrompted && !aiService.hasRealApiKey) {
-        await prefs.setBool('has_prompted_api_key', true);
-        if (mounted) {
-          _showApiKeyModal(context);
-        }
-      }
 
       if (widget.initialPrompt != null && widget.initialPrompt!.isNotEmpty) {
         _sendMessage(widget.initialPrompt!);
@@ -106,68 +96,6 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
         'content': 'Hello! I am your AI Tutor powered by Apple Intelligence & ZankoAI. How can I help you excel today?',
       });
     });
-  }
-
-  void _showApiKeyModal(BuildContext context) {
-    final aiService = Provider.of<AiService>(context, listen: false);
-    final controller = TextEditingController(text: aiService.apiKey ?? '');
-
-    showCupertinoDialog(
-      context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(CupertinoIcons.sparkles, color: ZankoColors.primary, size: 22),
-            SizedBox(width: 8),
-            Text(Provider.of<LanguageProvider>(context, listen: false).translate('gemini_api_key')),
-          ],
-        ),
-        content: Padding(
-          padding: const EdgeInsets.only(top: 12.0),
-          child: Column(
-            children: [
-              Text(
-                'Configure your Google Gemini API key for real-time online AI responses.',
-                style: TextStyle(fontSize: 12),
-              ),
-              const SizedBox(height: 12),
-              CupertinoTextField(
-                controller: controller,
-                placeholder: 'Paste API Key here (AIzaSy...)',
-                obscureText: true,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            child: Text(Provider.of<LanguageProvider>(context, listen: false).translate('cancel')),
-            onPressed: () => Navigator.pop(context),
-          ),
-          CupertinoDialogAction(
-            isDefaultAction: true,
-            child: Text(Provider.of<LanguageProvider>(context, listen: false).translate('save_key')),
-            onPressed: () {
-              final key = controller.text.trim();
-              aiService.apiKey = key.isNotEmpty ? key : null;
-              Navigator.pop(context);
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      key.isNotEmpty ? 'API Key saved successfully!' : 'Cleared API Key.',
-                    ),
-                    backgroundColor: ZankoColors.primary,
-                  ),
-                );
-              }
-            },
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -304,11 +232,6 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 ),
               );
             },
-          ),
-          IconButton(
-            icon: const Icon(Icons.key_rounded, size: 20, color: ZankoColors.primary),
-            tooltip: t('config_api_key_tooltip'),
-            onPressed: () => _showApiKeyModal(context),
           ),
         ],
       ),

@@ -2,10 +2,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'theme.dart';
 import 'services/auth_service.dart';
+import 'services/firebase_auth_service.dart';
+import 'services/firestore_database_service.dart';
 import 'services/database_service.dart';
-import 'services/sqlite_database_service.dart';
 import 'services/ai_service.dart';
 import 'services/language_provider.dart';
 import 'services/theme_provider.dart';
@@ -13,7 +15,28 @@ import 'views/splash_screen.dart';
 
 import 'package:device_preview/device_preview.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    if (Firebase.apps.isEmpty) {
+      try {
+        await Firebase.initializeApp();
+      } catch (_) {
+        await Firebase.initializeApp(
+          options: const FirebaseOptions(
+            apiKey: 'AIzaSyAebiUPE9OyxhrHjanHy98ZXeVBJm0FRvA',
+            appId: '1:658020179072:android:75f948816199e3eed2da65',
+            messagingSenderId: '658020179072',
+            projectId: 'tomartv-67cda',
+            storageBucket: 'tomartv-67cda.firebasestorage.app',
+          ),
+        );
+      }
+    }
+  } catch (e) {
+    debugPrint('Firebase core initialization notice: $e');
+  }
+
   runApp(
     DevicePreview(
       enabled: !const bool.fromEnvironment('dart.vm.product'),
@@ -30,10 +53,10 @@ class ZankoApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthService>(
-          create: (_) => MockAuthService(),
+          create: (_) => FirebaseAuthService(),
         ),
         ChangeNotifierProvider<DatabaseService>(
-          create: (_) => SqliteDatabaseService()..loadData(),
+          create: (_) => FirestoreDatabaseService(),
         ),
         ChangeNotifierProvider<AiService>(
           create: (_) => ZankoAiService(),

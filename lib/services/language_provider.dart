@@ -75,6 +75,39 @@ class LanguageProvider extends ChangeNotifier {
   }
 
   static const Map<String, Map<String, String>> _localizedValues = {
+    // Auth & Navigation
+    'login': {'ku': 'چوونەژوورەوە', 'ar': 'تسجيل الدخول', 'en': 'Log In'},
+    'register': {'ku': 'دروستکردنی هەژمار', 'ar': 'إنشاء حساب', 'en': 'Register'},
+    'email': {'ku': 'ئیمەیڵ', 'ar': 'البريد الإلكتروني', 'en': 'Email'},
+    'password': {'ku': 'وشەی نهێنی', 'ar': 'كلمة المرور', 'en': 'Password'},
+    'google_login': {'ku': 'چوونەژوورەوە بە گووگڵ', 'ar': 'الدخول بواسطة Google', 'en': 'Google Sign-In'},
+    'slogan': {'ku': 'یارمەتیدەری زیرەکی خوێندکاران و مامۆستایان', 'ar': 'المساعد الذكي للطلاب والمعلمين', 'en': 'Smart Academic Assistant'},
+    'has_account': {'ku': 'هەژمارت هەیە؟ چوونەژوورەوە', 'ar': 'لديك حساب؟ تسجيل الدخول', 'en': 'Have an account? Log In'},
+    'no_account': {'ku': 'هەژمارت نییە؟ دروستکردنی هەژمار', 'ar': 'ليس لديك حساب؟ إنشاء حساب', 'en': 'No account? Register'},
+    'guest_login': {'ku': 'بەردەوامبوون وەک مێوان', 'ar': 'المتابعة كزائر', 'en': 'Continue as Guest'},
+    'skip_guest': {'ku': 'تێپەڕاندن (مێوان)', 'ar': 'تخطي (زائر)', 'en': 'Skip (Guest)'},
+    'full_name': {'ku': 'ناوی تەواو', 'ar': 'الاسم الكامل', 'en': 'Full Name'},
+    'full_name_hint': {'ku': 'نموونە: ئاراس ئەحمەد', 'ar': 'مثال: أراس أحمد', 'en': 'e.g. Aras Ahmed'},
+    'confirm_password': {'ku': 'دووبارەکردنەوەی وشەی نهێنی', 'ar': 'تأكيد كلمة المرور', 'en': 'Confirm Password'},
+    'terms_agree': {'ku': 'ڕەزامەندم لەسەر مەرجەکانی بەکارهێنان', 'ar': 'أوافق على الشروط والأحكام', 'en': 'I agree to the Terms & Conditions'},
+    'select_profile_image': {'ku': 'وێنەی پرۆفایل دیاریبکە', 'ar': 'اختر صورة الملف الشخصي', 'en': 'Select Profile Image'},
+    'select_university': {'ku': 'زانکۆ یان کۆلێژ', 'ar': 'الجامعة أو الكلية', 'en': 'University or College'},
+    'select_department': {'ku': 'بەش یان پسپۆڕی', 'ar': 'القسم أو التخصص', 'en': 'Department or Major'},
+    'select_city': {'ku': 'شار / شوێن', 'ar': 'المدينة / الموقع', 'en': 'City / Location'},
+    'city_erbil': {'ku': 'هەولێر', 'ar': 'أربيل', 'en': 'Erbil'},
+    'city_slemani': {'ku': 'سلێمانی', 'ar': 'السليمانية', 'en': 'Slemani'},
+    'city_duhok': {'ku': 'دهۆک', 'ar': 'دهوك', 'en': 'Duhok'},
+    'city_karkuk': {'ku': 'کەرکووک', 'ar': 'كركوك', 'en': 'Karkuk'},
+    'city_halabja': {'ku': 'هەڵەبجە', 'ar': 'حلبجة', 'en': 'Halabja'},
+    'logout': {'ku': 'چوونەدەرەوە', 'ar': 'تسجيل الخروج', 'en': 'Log Out'},
+    'logout_desc': {'ku': 'چوونەدەرەوە لە هەژمار', 'ar': 'تسجيل الخروج من الحساب', 'en': 'Log out of account'},
+    'guest_banner_title': {'ku': 'تۆ وەک مێوان لە بەرنامەکەیدایت', 'ar': 'أنت تستخدم التطبيق كزائر', 'en': 'You are using the app as a Guest'},
+    'guest_banner_sub': {'ku': 'چوونەژوورەوە یان هەژمار دروستبکە بۆ پاشەکەوتکردنی پێشکەوتنەکانت', 'ar': 'سجّل الدخول أو أنشئ حساباً لحفظ تقدمك', 'en': 'Log in or create an account to save your study progress'},
+    'login_or_register': {'ku': 'چوونەژوورەوە / دروستکردنی هەژمار', 'ar': 'تسجيل الدخول / إنشاء حساب', 'en': 'Log In / Create Account'},
+    'login_register_desc': {'ku': 'بچۆرە ژوورەوە یان هەژماری نوێ دروستبکە', 'ar': 'قم بتسجيل الدخول أو إنشاء حساب جديد', 'en': 'Log in or register a new account'},
+    'version': {'ku': 'وەشانی v1.0.0', 'ar': 'الإصدار v1.0.0', 'en': 'Version v1.0.0'},
+    'daily_reminders': {'ku': 'ئاگاداری ڕۆژانە', 'ar': 'التذكيرات اليومية', 'en': 'Daily Reminders'},
+
     // Bottom Navigation
     'nav_home': {'ku': 'سەرەکی', 'ar': 'الرئيسية', 'en': 'Home'},
     'nav_courses': {'ku': 'وانەکان', 'ar': 'المواد', 'en': 'Courses'},
@@ -162,14 +195,11 @@ class LanguageProvider extends ChangeNotifier {
     'provide_title_content': {'ku': 'تکایە هەم ناونیشان و هەم ناوەڕۆک دابین بکە', 'ar': 'يرجى تقديم كل من العنوان والمحتوى', 'en': 'Please provide both title and content'},
     
     // Stats / Profile Extras
-    'english_us': {'ku': 'English (US)', 'ar': 'English (US)', 'en': 'English (US)'},
-    'english_desc': {'ku': 'زمانی نێودەوڵەتی', 'ar': 'اللغة الدولية', 'en': 'Default International Language'},
-    'kurdish_name': {'ku': 'کوردی (Kurdish)', 'ar': 'کوردی (Kurdish)', 'en': 'کوردی (Kurdish)'},
+    'english_us': {'ku': 'English', 'ar': 'English', 'en': 'English'},
+    'kurdish_name': {'ku': 'کوردی', 'ar': 'کوردی', 'en': 'کوردی'},
     'kurdish_desc': {'ku': 'زمانی کوردیی سۆرانی', 'ar': 'زمانی کوردیی سۆرانی', 'en': 'زمانی کوردیی سۆرانی'},
-    'arabic_name': {'ku': 'العربية (Arabic)', 'ar': 'العربية (Arabic)', 'en': 'العربية (Arabic)'},
+    'arabic_name': {'ku': 'العربية', 'ar': 'العربية', 'en': 'العربية'},
     'arabic_desc': {'ku': 'اللغة العربية الفصحى', 'ar': 'اللغة العربية الفصحى', 'en': 'اللغة العربية الفصحى'},
-    'daily_reminders': {'ku': 'بیرخستنەوەی ڕۆژانە', 'ar': 'تذكير يومي', 'en': 'Daily Study Reminders'},
-    'version': {'ku': 'v1.0.0', 'ar': 'v1.0.0', 'en': 'v1.0.0'},
     
     // Labels
     'questions_label': {'ku': 'پرسیارەکان', 'ar': 'الأسئلة', 'en': 'Questions'},
@@ -244,7 +274,6 @@ class LanguageProvider extends ChangeNotifier {
     'stat_extracted_pdf': {'ku': 'تێبینی PDF دەرکرد', 'ar': 'استخرج ملاحظات PDF', 'en': 'Extracted 1+ PDF notes'},
 
     // Profile Screen
-    'full_name': {'ku': 'ناوی تەواو', 'ar': 'الاسم الكامل', 'en': 'Full Name'},
     'university_email': {'ku': 'ئیمەیلی زانکۆ', 'ar': 'البريد الإلكتروني الجامعي', 'en': 'University Email'},
     'university': {'ku': 'زانکۆ', 'ar': 'الجامعة', 'en': 'University'},
     'faculty_major': {'ku': 'فاکەڵتی و پسپۆڕی', 'ar': 'الكلية والتخصص', 'en': 'Faculty & Major'},

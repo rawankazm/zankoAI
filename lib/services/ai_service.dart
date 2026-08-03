@@ -25,6 +25,7 @@ abstract class AiService extends ChangeNotifier {
 }
 
 class ZankoAiService extends ChangeNotifier implements AiService {
+  static const String _defaultApiKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
   String? _apiKey;
 
   ZankoAiService() {
@@ -33,7 +34,8 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   Future<void> _loadApiKey() async {
     final prefs = await SharedPreferences.getInstance();
-    _apiKey = prefs.getString('gemini_api_key');
+    final savedKey = prefs.getString('gemini_api_key');
+    _apiKey = (savedKey != null && savedKey.trim().isNotEmpty) ? savedKey : _defaultApiKey;
     notifyListeners();
   }
 
@@ -73,7 +75,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     if (!hasRealApiKey) throw Exception("No API key configured");
     
     final model = gemini.GenerativeModel(
-      model: 'gemini-2.0-flash',
+      model: 'gemini-3.6-flash',
       apiKey: _apiKey!,
       systemInstruction: systemInstruction.isNotEmpty
           ? gemini.Content.system(systemInstruction)

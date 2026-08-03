@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "658020179072",
+    "project_id": "tomartv-67cda",
+    "storage_bucket": "tomartv-67cda.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:658020179072:android:75f948816199e3eed2da65",
+        "android_client_info": {
+          "package_name": "com.birdev.tomar_tv"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAebiUPE9OyxhrHjanHy98ZXeVBJm0FRvA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

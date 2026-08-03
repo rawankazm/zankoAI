@@ -286,6 +286,7 @@ class ProfileScreen extends StatelessWidget {
     String t(String key) => langProvider.translate(key);
 
     final user = authService.currentUser;
+    final isGuest = user == null || user.isGuest;
     final userName = user?.name ?? t('student_role');
     final userEmail = user?.email ?? 'aras@zanko.edu';
     final uniName = user?.universityName ?? 'Zanko University';
@@ -312,163 +313,59 @@ class ProfileScreen extends StatelessWidget {
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           children: [
-            // ─── University Digital ID Card ──────────────────────────────────
-            GestureDetector(
-              onTap: () => _showUniversityIdModal(context, userName, userEmail, uniName, deptName),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
+            // ─── Aqarat-Style Guest Account Callout Banner ───
+            if (isGuest) ...[
+              Container(
+                margin: const EdgeInsets.only(bottom: 18),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
+                  gradient: LinearGradient(
                     colors: [
-                      Color(0xFF1E1B4B),
-                      Color(0xFF4338CA),
-                      Color(0xFF6D28D9),
+                      ZankoColors.primary.withValues(alpha: 0.15),
+                      const Color(0xFF818CF8).withValues(alpha: 0.08),
                     ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.35)),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF4338CA).withOpacity(0.35),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+                      color: ZankoColors.primary.withValues(alpha: 0.1),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
                   ],
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.2),
-                    width: 1.5,
-                  ),
                 ),
-                padding: const EdgeInsets.all(20),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Top Header Bar
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                CupertinoIcons.text_badge_checkmark,
-                                color: Colors.white,
-                                size: 16,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              uniName.toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.1,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.18),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.white.withOpacity(0.3)),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 6,
-                                height: 6,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF34C759),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                t('digital_id'),
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.8,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 18),
-
-                    // Main Student Info Row
                     Row(
                       children: [
-                        // Avatar Photo
                         Container(
-                          width: 68,
-                          height: 68,
+                          padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
+                            color: ZankoColors.primary.withValues(alpha: 0.2),
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2.5),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.3),
-                                blurRadius: 10,
-                              ),
-                            ],
                           ),
-                          child: ClipOval(
-                            child: Image.asset(
-                              'assets/images/student_avatar_3d.png',
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => const Icon(
-                                CupertinoIcons.person_fill,
-                                color: Colors.white,
-                                size: 36,
-                              ),
-                            ),
-                          ),
+                          child: Icon(Icons.person_add_alt_1_rounded, color: ZankoColors.primary, size: 24),
                         ),
-                        const SizedBox(width: 16),
-
-                        // Student Metadata
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                userName,
+                                t('guest_banner_title'),
                                 style: TextStyle(
-                                  fontSize: 19,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: isDark ? Colors.white : ZankoColors.textPrimary,
                                 ),
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                deptName,
+                                t('guest_banner_sub'),
                                 style: TextStyle(
                                   fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white70,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'ID: 2024-ZK-8842',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.8,
-                                  color: const Color(0xFFA5B4FC),
+                                  color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
                                 ),
                               ),
                             ],
@@ -476,41 +373,358 @@ class ProfileScreen extends StatelessWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 44,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const LoginScreen()),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: ZankoColors.primary,
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        icon: const Icon(Icons.login_rounded, size: 18, color: Colors.white),
+                        label: Text(
+                          t('login_or_register'),
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
 
-                    const SizedBox(height: 18),
-                    Divider(height: 1, color: Colors.white.withOpacity(0.2)),
-                    const SizedBox(height: 12),
+            // ─── University Digital ID Card ──────────────────────────────────
+            // ─── High-End Futuristic Digital Student ID Card ───
+            GestureDetector(
+              onTap: () => _showUniversityIdModal(context, userName, userEmail, uniName, deptName),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(26),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.35),
+                      blurRadius: 24,
+                      spreadRadius: -2,
+                      offset: const Offset(0, 12),
+                    ),
+                    BoxShadow(
+                      color: const Color(0xFF4F46E5).withValues(alpha: 0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(26),
+                  child: Stack(
+                    children: [
+                      // Dark Metallic Mesh Gradient Background
+                      Container(
+                        height: 215,
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Color(0xFF0F172A),
+                              Color(0xFF1E1B4B),
+                              Color(0xFF312E81),
+                              Color(0xFF4338CA),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                      ),
 
-                    // Footer Action Bar
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
+                      // Holographic Glow Wave Overlay
+                      Positioned(
+                        top: -50,
+                        right: -50,
+                        child: Container(
+                          width: 180,
+                          height: 180,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                const Color(0xFF818CF8).withValues(alpha: 0.4),
+                                const Color(0xFF818CF8).withValues(alpha: 0.0),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: -40,
+                        left: -40,
+                        child: Container(
+                          width: 160,
+                          height: 160,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                const Color(0xFFC084FC).withValues(alpha: 0.35),
+                                const Color(0xFFC084FC).withValues(alpha: 0.0),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Glass Border Overlay
+                      Container(
+                        height: 215,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(26),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.25),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Icon(CupertinoIcons.qrcode_viewfinder, color: Colors.white70, size: 16),
-                            const SizedBox(width: 6),
-                            Text(
-                              t('tap_for_campus_qr'),
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white.withOpacity(0.9),
+                            // ─── Header: University Name & Status Pill ───
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(7),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.15),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                                      ),
+                                      child: const Icon(
+                                        Icons.school_rounded,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      uniName.toUpperCase(),
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 1.1,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                // Smart Digital ID Badge
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.3),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: const Color(0xFF34D399).withValues(alpha: 0.5)),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 7,
+                                        height: 7,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFF34D399),
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Color(0xFF34D399),
+                                              blurRadius: 6,
+                                              spreadRadius: 1,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 7),
+                                      Text(
+                                        t('digital_id'),
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 0.6,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            // ─── Main Body: Avatar + Details + Metallic Smart Chip ───
+                            Row(
+                              children: [
+                                // Double Glowing Ring Avatar Container
+                                Container(
+                                  width: 66,
+                                  height: 66,
+                                  padding: const EdgeInsets.all(2.5),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFF818CF8), Color(0xFFF472B6)],
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.35),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Container(
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Color(0xFF0F172A),
+                                    ),
+                                    padding: const EdgeInsets.all(2),
+                                    child: ClipOval(
+                                      child: Image.asset(
+                                        'assets/images/student_avatar_3d.png',
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) => const Icon(
+                                          CupertinoIcons.person_fill,
+                                          color: Colors.white,
+                                          size: 36,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+
+                                // Student Details & ID Tag
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        userName,
+                                        style: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.white,
+                                          letterSpacing: -0.3,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        deptName,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.white.withValues(alpha: 0.8),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      // ID Pill Tag
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(alpha: 0.12),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          'ID: 2024-ZK-8842',
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w800,
+                                            letterSpacing: 0.8,
+                                            color: Color(0xFFA5B4FC),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                // Metallic NFC Smart Chip Icon
+                                Container(
+                                  width: 40,
+                                  height: 30,
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFFFCD34D), Color(0xFFF59E0B)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: Colors.amber.shade200, width: 1),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.amber.withValues(alpha: 0.3),
+                                        blurRadius: 6,
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.nfc_rounded,
+                                      size: 20,
+                                      color: Color(0xFF78350F),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            // ─── Footer: Frosted Glass Bar with QR & Validity ───
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 16),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        t('tap_for_campus_qr'),
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white.withValues(alpha: 0.95),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Text(
+                                    t('valid_until'),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.5,
+                                      color: Colors.white.withValues(alpha: 0.7),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                        Text(
-                          t('valid_until'),
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5,
-                            color: Colors.white54,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -573,24 +787,6 @@ class ProfileScreen extends StatelessWidget {
                 children: [
                   _buildSettingsTile(
                     context,
-                    icon: CupertinoIcons.arrow_right_square_fill,
-                    iconColor: const Color(0xFFE11D48),
-                    title: 'چوونەدەرەوە / گۆڕینی هەژمار (Switch Role / Logout)',
-                    subtitle: 'تۆماربوون یان چوونەژوورەوە وەک مامۆستا یان قوتابی',
-                    onTap: () async {
-                      await authService.logout();
-                      if (context.mounted) {
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(builder: (_) => const LoginScreen()),
-                          (route) => false,
-                        );
-                      }
-                    },
-                  ),
-                  const Divider(height: 1, indent: 56),
-                  _buildSettingsTile(
-                    context,
                     icon: CupertinoIcons.moon_fill,
                     iconColor: const Color(0xFFAF52DE),
                     title: langProvider.translate('dark_mode'),
@@ -607,10 +803,10 @@ class ProfileScreen extends StatelessWidget {
                     iconColor: const Color(0xFF007AFF),
                     title: langProvider.translate('app_language'),
                     subtitle: langProvider.currentLanguage == AppLanguage.english
-                        ? t('english_us')
+                        ? 'English'
                         : (langProvider.currentLanguage == AppLanguage.kurdish
-                            ? t('kurdish_name')
-                            : t('arabic_name')),
+                            ? 'کوردی'
+                            : 'العربية'),
                     onTap: () => _showLanguagePickerModal(context, langProvider),
                   ),
                   const Divider(height: 1, indent: 56),
@@ -636,8 +832,33 @@ class ProfileScreen extends StatelessWidget {
                     icon: CupertinoIcons.info_circle_fill,
                     iconColor: ZankoColors.primary,
                     title: langProvider.translate('about_zanko'),
-                    subtitle: '${langProvider.translate('version')} (Apple Intelligence Edition)',
+                    subtitle: langProvider.translate('version'),
                     onTap: () {},
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  _buildSettingsTile(
+                    context,
+                    icon: isGuest ? CupertinoIcons.person_crop_circle_badge_plus : CupertinoIcons.arrow_right_square_fill,
+                    iconColor: isGuest ? const Color(0xFF6C5CE7) : const Color(0xFFE11D48),
+                    title: isGuest ? t('login_or_register') : t('logout'),
+                    subtitle: isGuest ? t('login_register_desc') : t('logout_desc'),
+                    onTap: () async {
+                      if (isGuest) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        );
+                      } else {
+                        await authService.logout();
+                        if (context.mounted) {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (_) => const LoginScreen()),
+                            (route) => false,
+                          );
+                        }
+                      }
+                    },
                   ),
                 ],
               ),
