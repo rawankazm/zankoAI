@@ -878,11 +878,12 @@ class GlassBottomNavigation extends StatelessWidget {
                 _buildNavItem(context, 0, CupertinoIcons.house_fill, CupertinoIcons.house, langProvider.translate('nav_home')),
                 _buildNavItem(context, 1, CupertinoIcons.book_fill, CupertinoIcons.book, langProvider.translate('nav_courses')),
                 _buildCenterAiItem(2),
-                _buildNavItem(context, 3, CupertinoIcons.doc_text_fill, CupertinoIcons.doc_text, langProvider.translate('nav_pdf_chat')),
-                _buildNavItem(context, 4, Icons.school_rounded, Icons.school_outlined, langProvider.translate('zankoline')),
-                _buildNavItem(context, 5, CupertinoIcons.person_fill, CupertinoIcons.person, langProvider.translate('nav_profile')),
+                _buildNavItem(context, 3, Icons.school_rounded, Icons.school_outlined, langProvider.translate('zankoline')),
+                _buildNavItem(context, 4, CupertinoIcons.person_fill, CupertinoIcons.person, langProvider.translate('nav_profile')),
               ],
             ),
+
+
           ),
         ),
       ),

@@ -211,9 +211,17 @@ class LanguageProvider extends ChangeNotifier {
     // Bottom Navigation
     'nav_home': {'ku': 'سەرەکی', 'ar': 'الرئيسية', 'en': 'Home'},
     'nav_courses': {'ku': 'وانەکان', 'ar': 'المواد', 'en': 'Courses'},
+    'nav_gpa': {'ku': 'کۆنمرە (GPA)', 'ar': 'المعدل (GPA)', 'en': 'GPA'},
     'nav_ai_teacher': {'ku': 'مامۆستا AI', 'ar': 'معلم AI', 'en': 'AI Tutor'},
+
     'nav_quiz': {'ku': 'کویز', 'ar': 'اختبار', 'en': 'Quiz'},
+    'quiz_title': {'ku': 'ئەنجامی کویز', 'ar': 'نتيجة الاختبار', 'en': 'Quiz Results'},
+    'quiz_completed': {'ku': 'تاقیکردنەوەکە تەواو بوو!', 'ar': 'اكتمل الاختبار!', 'en': 'Quiz Completed!'},
+    'your_score': {'ku': 'نمرەکەت', 'ar': 'درجتك', 'en': 'Your Score'},
+    'score_good': {'ku': 'زۆر باشە! ئەنجامێکی بەرزە 👏', 'ar': 'ممتاز! نتيجة رائعة 👏', 'en': 'Great Job! Excellent result 👏'},
+    'back_to_quiz_home': {'ku': 'دووبارەکردنەوەی کویز', 'ar': 'إعادة الاختبار', 'en': 'Retake Quiz'},
     'nav_pdf_chat': {'ku': 'پەڕەی PDF', 'ar': 'ملف PDF', 'en': 'PDF Chat'},
+
     'nav_profile': {'ku': 'پڕۆفایل', 'ar': 'الملف', 'en': 'Profile'},
 
     // Home / Dashboard Header & Search
@@ -228,7 +236,9 @@ class LanguageProvider extends ChangeNotifier {
     'start_learning': {'ku': 'دەستپێکردنی فێربوون', 'ar': 'ابدأ التعلم', 'en': 'Start Learning'},
     'explain': {'ku': 'ڕوونکردنەوە', 'ar': 'شرح', 'en': 'Explain'},
     'summarize': {'ku': 'کورتکردنەوە', 'ar': 'تلخيص', 'en': 'Summarize'},
-    'voice_tutor': {'ku': 'مامۆستای دەنگی', 'ar': 'المعلم الصوتي', 'en': 'Voice Tutor'},
+    'voice_tutor': {'ku': 'تۆماری دەنگی', 'ar': 'تسجيل المحاضرات', 'en': 'Voice Record'},
+
+
     'pdf_chat': {'ku': 'چاتی PDF', 'ar': 'محادثة PDF', 'en': 'PDF Chat'},
 
     // Cards

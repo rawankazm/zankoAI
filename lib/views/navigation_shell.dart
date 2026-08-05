@@ -8,6 +8,7 @@ import '../services/auth_service.dart';
 import '../widgets/apple_ui_components.dart';
 import 'home/home_screen.dart';
 import 'home/courses_screen.dart';
+import 'gpa/gpa_tracker_screen.dart';
 import 'ai_teacher/ai_teacher_chat_screen.dart';
 import 'pdf/pdf_chat_screen.dart';
 import 'zankoline/zankoline_screen.dart';
@@ -30,10 +31,11 @@ class _NavigationShellState extends State<NavigationShell> {
         HomeScreen(),
         CoursesScreen(),
         AiTeacherChatScreen(),
-        PdfChatScreen(),
         ZankolineScreen(),
         ProfileScreen(),
       ];
+
+
 
   @override
   void initState() {

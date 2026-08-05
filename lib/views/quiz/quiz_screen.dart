@@ -8,6 +8,8 @@ import '../../services/database_service.dart';
 import '../../services/language_provider.dart';
 import '../../models/quiz_model.dart';
 import '../../widgets/ad_banner_widget.dart';
+import '../../theme.dart';
+
 
 
 class QuizScreen extends StatefulWidget {
@@ -641,20 +643,33 @@ class _QuizScreenState extends State<QuizScreen> {
                         ),
                         const SizedBox(height: 24),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            ElevatedButton(
-                              onPressed: _resetScreen,
-                              child: Text(Provider.of<LanguageProvider>(context, listen: false).translate('back_to_quiz_home')),
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: _exportQuizText,
+                                icon: const Icon(Icons.print_rounded, size: 18),
+                                label: const Text('چاپ / Export', style: TextStyle(fontSize: 12)),
+                              ),
                             ),
-                            const SizedBox(width: 12),
-                            OutlinedButton.icon(
-                              onPressed: _exportQuizText,
-                              icon: const Icon(Icons.print_rounded),
-                              label: const Text('چاپ / Export', style: TextStyle(fontFamily: 'Noto Sans Arabic')),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: _resetScreen,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: ZankoColors.primary,
+                                  foregroundColor: Colors.white,
+                                ),
+                                child: Text(
+                                  Provider.of<LanguageProvider>(context, listen: false).translate('back_to_quiz_home'),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                ),
+                              ),
                             ),
                           ],
                         ),
+
                       ],
                     ),
                   ),

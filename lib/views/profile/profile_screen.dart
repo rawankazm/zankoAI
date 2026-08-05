@@ -1217,33 +1217,41 @@ class ProfileScreen extends StatelessWidget {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(7),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.15),
-                                        shape: BoxShape.circle,
-                                        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(7),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(alpha: 0.15),
+                                          shape: BoxShape.circle,
+                                          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                                        ),
+                                        child: const Icon(
+                                          Icons.school_rounded,
+                                          color: Colors.white,
+                                          size: 16,
+                                        ),
                                       ),
-                                      child: const Icon(
-                                        Icons.school_rounded,
-                                        color: Colors.white,
-                                        size: 16,
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          uniName.toUpperCase(),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w900,
+                                            letterSpacing: 1.1,
+                                            color: Colors.white,
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Text(
-                                      uniName.toUpperCase(),
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 1.1,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
+                                const SizedBox(width: 8),
+
                                 // Smart Digital ID Badge
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),

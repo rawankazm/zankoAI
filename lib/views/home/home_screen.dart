@@ -13,7 +13,9 @@ import '../focus/focus_screen.dart';
 import '../gpa/gpa_tracker_screen.dart';
 import '../notifications/notifications_screen.dart';
 import '../pdf/pdf_chat_screen.dart';
+import '../pdf/audio_summarizer_view.dart';
 import '../profile/profile_screen.dart';
+
 import '../quiz/quiz_screen.dart';
 import '../schedule/schedule_screen.dart';
 import '../zankoline/zankoline_screen.dart';
@@ -282,8 +284,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             } else if (action == 'Voice Tutor') {
                               Navigator.push(
                                 context,
-                                CupertinoPageRoute(builder: (_) => const FocusScreen()),
+                                CupertinoPageRoute(builder: (_) => const AudioSummarizerView()),
                               );
+
                             } else if (action == 'PDF Chat') {
                               Navigator.push(
                                 context,
@@ -935,10 +938,12 @@ class _QuickAiToolsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final langProvider = Provider.of<LanguageProvider>(context);
+
     final tools = [
       _ToolData(
         icon: CupertinoIcons.doc_richtext,
-        title: 'PDF Chat',
+        title: langProvider.translate('pdf_chat'),
         color: const Color(0xFF4ADE80),
         onTap: () => Navigator.push(
           context,
@@ -946,17 +951,17 @@ class _QuickAiToolsGrid extends StatelessWidget {
         ),
       ),
       _ToolData(
-        icon: CupertinoIcons.mic,
-        title: 'Voice Tutor',
+        icon: CupertinoIcons.mic_fill,
+        title: langProvider.translate('voice_tutor'),
         color: const Color(0xFFC084FC),
         onTap: () => Navigator.push(
           context,
-          CupertinoPageRoute(builder: (_) => const FocusScreen()),
+          CupertinoPageRoute(builder: (_) => const AudioSummarizerView()),
         ),
       ),
       _ToolData(
         icon: CupertinoIcons.square_list_fill,
-        title: 'Quiz Generator',
+        title: langProvider.translate('quiz'),
         color: const Color(0xFFFF9F0A),
         onTap: () => Navigator.push(
           context,
@@ -974,6 +979,7 @@ class _QuickAiToolsGrid extends StatelessWidget {
       ),
     ];
 
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -981,7 +987,7 @@ class _QuickAiToolsGrid extends StatelessWidget {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 1.4,
+        childAspectRatio: 1.25,
       ),
       itemCount: tools.length,
       itemBuilder: (_, i) => _ToolCard(data: tools[i], isDark: isDark),
@@ -1014,7 +1020,7 @@ class _ToolCard extends StatelessWidget {
     return AnimatedScaleButton(
       onTap: data.onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: isDark ? ZankoColors.darkCard : Colors.white,
           borderRadius: BorderRadius.circular(ZankoRadius.card),
@@ -1039,23 +1045,32 @@ class _ToolCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 color: isDark
                     ? data.color.withValues(alpha: 0.2)
                     : data.color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(data.icon, color: data.color, size: 22),
+              child: Icon(data.icon, color: data.color, size: 20),
             ),
-            Text(
-              data.title,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : ZankoColors.textPrimary,
-                letterSpacing: -0.3,
+            const SizedBox(height: 6),
+            Expanded(
+              child: Align(
+                alignment: Alignment.bottomLeft,
+                child: Text(
+                  data.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : ZankoColors.textPrimary,
+                    letterSpacing: -0.3,
+                    height: 1.2,
+                  ),
+                ),
               ),
             ),
           ],
@@ -1064,6 +1079,7 @@ class _ToolCard extends StatelessWidget {
     );
   }
 }
+
 
 // ─── Today's Progress ──────────────────────────────────────────────────────
 class _TodayProgress extends StatefulWidget {
