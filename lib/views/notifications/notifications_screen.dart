@@ -41,6 +41,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   String _selectedCategory = 'all';
   final List<NotificationItem> _notifications = [];
   StreamSubscription? _directMsgSub;
+  StreamSubscription? _broadcastMsgSub;
+  final List<NotificationItem> _directItems = [];
+  final List<NotificationItem> _broadcastItems = [];
 
   static const _filterKeys = ['all', 'unread', 'Admin Direct', 'AI Tutor', 'Course', 'Quiz', 'Reminder'];
   static const _filterLabels = ['هەموو', 'نەخوێنراو', '✉️ پەیامی ئەدمین', '🤖 مامۆستا AI', '📚 وانە', '✏️ کویز', '⏰ بیرخستنەوە'];
@@ -48,10 +51,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   void initState() {
     super.initState();
-    _listenToDirectMessages();
+    _listenToNotifications();
   }
 
-  void _listenToDirectMessages() {
+  void _listenToNotifications() {
     final authService = Provider.of<AuthService>(context, listen: false);
     final user = authService.currentUser;
     if (user == null || user.isGuest) return;
@@ -61,10 +64,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         .where('userId', isEqualTo: user.id)
         .snapshots()
         .listen((snap) {
-      final items = snap.docs.map((doc) {
+      _directItems.clear();
+      for (var doc in snap.docs) {
         final data = doc.data();
         final ts = data['createdAt'] as Timestamp?;
-        return NotificationItem(
+        _directItems.add(NotificationItem(
           id: doc.id,
           title: data['title'] ?? 'پەیام لە ئەدمینەوە',
           body: data['message'] ?? '',
@@ -73,23 +77,55 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           icon: CupertinoIcons.mail_solid,
           color: const Color(0xFF7C3AED),
           isRead: data['isRead'] == true,
-        );
-      }).toList();
-
-      if (mounted) {
-        setState(() {
-          _notifications.clear();
-          _notifications.addAll(items);
-        });
+        ));
       }
+      _combineAndSetNotifications();
+    });
+
+    _broadcastMsgSub = FirebaseFirestore.instance
+        .collection('notifications')
+        .snapshots()
+        .listen((snap) {
+      _broadcastItems.clear();
+      for (var doc in snap.docs) {
+        final data = doc.data();
+        final target = data['target'] ?? 'all';
+        final userId = data['userId'];
+
+        if (target == 'all' || (target == 'vip' && user.isVip) || (target == 'user' && userId == user.id)) {
+          final ts = data['createdAt'] as Timestamp?;
+          _broadcastItems.add(NotificationItem(
+            id: doc.id,
+            title: data['title'] ?? 'ئاگادارکردنەوە',
+            body: data['body'] ?? '',
+            time: ts?.toDate() ?? DateTime.now(),
+            category: 'Admin Direct',
+            icon: CupertinoIcons.bell_fill,
+            color: const Color(0xFFFF9F0A),
+            isRead: false,
+          ));
+        }
+      }
+      _combineAndSetNotifications();
+    });
+  }
+
+  void _combineAndSetNotifications() {
+    if (!mounted) return;
+    setState(() {
+      _notifications.clear();
+      _notifications.addAll([..._directItems, ..._broadcastItems]);
+      _notifications.sort((a, b) => b.time.compareTo(a.time));
     });
   }
 
   @override
   void dispose() {
     _directMsgSub?.cancel();
+    _broadcastMsgSub?.cancel();
     super.dispose();
   }
+
 
   void _markAllAsRead() {
     final authService = Provider.of<AuthService>(context, listen: false);
