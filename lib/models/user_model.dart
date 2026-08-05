@@ -15,6 +15,7 @@ class UserModel {
   final double? gpa;
   final List<double> gpaHistory;
   final bool isVip;
+  final String? photoUrl;
 
   bool get isGuest => id.startsWith('guest_user') || email == 'guest@zanko.edu';
 
@@ -29,6 +30,7 @@ class UserModel {
     this.gpa,
     this.gpaHistory = const [3.2, 3.4, 3.65, 3.8],
     this.isVip = false,
+    this.photoUrl,
   });
 
   UserModel copyWith({
@@ -42,6 +44,7 @@ class UserModel {
     double? gpa,
     List<double>? gpaHistory,
     bool? isVip,
+    String? photoUrl,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -54,6 +57,7 @@ class UserModel {
       gpa: gpa ?? this.gpa,
       gpaHistory: gpaHistory ?? this.gpaHistory,
       isVip: isVip ?? this.isVip,
+      photoUrl: photoUrl ?? this.photoUrl,
     );
   }
 
@@ -69,6 +73,7 @@ class UserModel {
       'cityName': cityName,
       'gpa': gpa,
       'gpaHistory': gpaHistory,
+      'photoUrl': photoUrl,
     };
   }
 
@@ -88,6 +93,8 @@ class UserModel {
       gpaHistory: map['gpaHistory'] != null 
           ? List<double>.from(map['gpaHistory'].map((x) => x.toDouble())) 
           : const [3.2, 3.4, 3.65, 3.8],
+      photoUrl: map['photoUrl'],
     );
   }
 }
+

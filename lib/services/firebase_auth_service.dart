@@ -53,10 +53,37 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
         _currentUser = null;
         notifyListeners();
       } else {
-        await _fetchUserProfile(firebaseUser);
+        _firestore.collection('users').doc(firebaseUser.uid).snapshots().listen((doc) {
+          if (doc.exists && doc.data() != null) {
+            final data = doc.data()!;
+            final roleStr = data['role'] as String? ?? 'student';
+            final role = roleStr == 'admin'
+                ? UserRole.admin
+                : (roleStr == 'teacher' ? UserRole.teacher : UserRole.student);
+
+            bool isVip = data['isVip'] == true || role == UserRole.admin;
+            final vipStatus = data['vipStatus'] as String? ?? 'none';
+            if (vipStatus == 'pending') isVip = false;
+
+            _currentUser = UserModel(
+              id: firebaseUser.uid,
+              name: data['name'] ?? firebaseUser.displayName ?? 'خوێندکار',
+              email: firebaseUser.email ?? '',
+              role: role,
+              universityName: data['universityName'] ?? 'زانکۆی سلێمانی',
+              departmentName: data['departmentName'] ?? 'تەکنەلۆجیای زانیاری',
+              cityName: data['cityName'] ?? 'سلێمانی',
+              gpa: role == UserRole.student ? (data['gpa'] as num?)?.toDouble() ?? 3.65 : null,
+              isVip: isVip,
+              photoUrl: data['photoUrl'],
+            );
+            notifyListeners();
+          }
+        });
       }
     });
   }
+
 
   Future<void> _fetchUserProfile(User firebaseUser) async {
     try {

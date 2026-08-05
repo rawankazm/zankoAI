@@ -206,9 +206,9 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  void _showUniversityIdModal(BuildContext context, String name, String email, String uniName, String deptName) {
-
+  void _showUniversityIdModal(BuildContext context, dynamic user, String name, String email, String uniName, String deptName) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
 
     showModalBottomSheet(
       context: context,
@@ -223,86 +223,605 @@ class ProfileScreen extends StatelessWidget {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           ),
           padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[700] : Colors.grey[300],
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Title
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(CupertinoIcons.checkmark_seal_fill, color: ZankoColors.primary, size: 24),
-                  const SizedBox(width: 8),
-                  Text(
-                    t('official_student_verification'),
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: isDark ? Colors.white : ZankoColors.textPrimary,
-                    ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey[700] : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Large Scannable Barcode / QR Simulation
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: ZankoShadows.card,
                 ),
-                child: Column(
+                const SizedBox(height: 20),
+
+                // Title
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(CupertinoIcons.qrcode, size: 140, color: Colors.black),
-                    const SizedBox(height: 8),
+                    const Icon(CupertinoIcons.checkmark_seal_fill, color: ZankoColors.primary, size: 24),
+                    const SizedBox(width: 8),
                     Text(
-                      'STUDENT PASS ID: 2024-ZK-8842',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                      color: Colors.black87,
-                    ),
+                      t('official_student_verification'),
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : ZankoColors.textPrimary,
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
-              // Academic Record List
-              _buildDetailRow(context, t('full_name'), name.isEmpty ? t('student_role') : name),
-              _buildDetailRow(context, t('university_email'), email),
-              _buildDetailRow(context, t('university'), uniName.isEmpty ? 'Zanko University' : uniName),
-              _buildDetailRow(context, t('faculty_major'), deptName.isEmpty ? 'Computer Science & AI' : deptName),
-              _buildDetailRow(context, t('academic_stage'), 'Year 3 • Semester 6'),
-              _buildDetailRow(context, t('cumulative_gpa'), '3.65 / 4.00 (Honor Roll)'),
-              _buildDetailRow(context, t('credits_completed'), '96 / 120 ECTS'),
-              _buildDetailRow(context, t('academic_advisor'), 'Dr. Sarah Ahmed'),
-              _buildDetailRow(context, t('campus_status'), 'Active • Good Standing 🟢'),
+                // 📸 STUDENT PHOTO (Replaces QR Code)
+                GestureDetector(
+                  onTap: () => _showPhotoChooserModal(context, user),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: isDark ? ZankoColors.darkBackground : const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: ZankoColors.primary.withOpacity(0.3), width: 1.5),
+                      boxShadow: ZankoShadows.card,
+                    ),
+                    child: Column(
+                      children: [
+                        Stack(
+                          alignment: Alignment.bottomRight,
+                          children: [
+                            Container(
+                              width: 110,
+                              height: 110,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF7C3AED), Color(0xFFC084FC)],
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF7C3AED).withOpacity(0.3),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              padding: const EdgeInsets.all(3),
+                              child: ClipOval(
+                                child: Image.asset(
+                                  'assets/images/student_avatar_3d.png',
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => const Icon(
+                                    CupertinoIcons.person_fill,
+                                    color: Colors.white,
+                                    size: 60,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                color: ZankoColors.primary,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(CupertinoIcons.camera_fill, color: Colors.white, size: 16),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'STUDENT PASS ID: 2026-ZK-${user?.id != null ? user.id.toString().substring(0, 4).toUpperCase() : '8842'}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.2,
+                            color: isDark ? Colors.white70 : Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          '📷 کلیک بکە بۆ گۆڕینی وێنەی مۆبایل',
+                          style: TextStyle(fontSize: 11, color: ZankoColors.primary, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
 
-              const SizedBox(height: 20),
-              GradientButton(
-                text: t('done'),
-                onTap: () => Navigator.pop(context),
-              ),
-              const SizedBox(height: 10),
-            ],
+                // Academic Record List
+                _buildDetailRow(context, t('full_name'), name.isEmpty ? t('student_role') : name),
+                _buildDetailRow(context, t('university_email'), email),
+                _buildDetailRow(context, t('university'), uniName.isEmpty ? 'Zanko University' : uniName),
+                _buildDetailRow(context, t('faculty_major'), deptName.isEmpty ? 'Computer Science & AI' : deptName),
+                _buildDetailRow(context, t('academic_stage'), 'Year 3 • Semester 6'),
+                _buildDetailRow(context, t('cumulative_gpa'), '3.65 / 4.00 (Honor Roll)'),
+                _buildDetailRow(context, t('credits_completed'), '96 / 120 ECTS'),
+                _buildDetailRow(context, t('campus_status'), 'Active • Good Standing 🟢'),
+
+                const SizedBox(height: 24),
+
+                // Action Buttons: Edit Info & Done
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _showEditProfileModal(context, user, name, uniName, deptName);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF7C3AED),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        icon: const Icon(CupertinoIcons.pencil, color: Colors.white, size: 18),
+                        label: const Text(
+                          'دەستکاریکردنی زانیاری',
+                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          side: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
+                        ),
+                        child: Text(
+                          t('done'),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : ZankoColors.textPrimary,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
           ),
         );
       },
     );
   }
+
+  void _showEditProfileModal(BuildContext context, dynamic user, String name, String uniName, String deptName) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final nameCtrl = TextEditingController(text: name);
+    final uniCtrl  = TextEditingController(text: uniName);
+    final deptCtrl = TextEditingController(text: deptName);
+    final cityCtrl = TextEditingController(text: user?.cityName ?? 'سلێمانی');
+    bool isSaving  = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              padding: EdgeInsets.only(
+                top: 24, left: 20, right: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              decoration: BoxDecoration(
+                color: isDark ? ZankoColors.darkCard : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40, height: 5,
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.grey[700] : Colors.grey[300],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        const Icon(CupertinoIcons.pencil_circle_fill, color: ZankoColors.primary, size: 26),
+                        const SizedBox(width: 10),
+                        Text(
+                          'دەستکاریکردنی زانیارییەکان',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: isDark ? Colors.white : ZankoColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'ناوی تەواو، زانکۆ، بەش و شاری نیشتەجێبوون نوێ بکەرەوە',
+                      style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : ZankoColors.textSecondary),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Name
+                    TextField(
+                      controller: nameCtrl,
+                      style: TextStyle(color: isDark ? Colors.white : ZankoColors.textPrimary, fontSize: 14),
+                      decoration: InputDecoration(
+                        labelText: '👤 ناوی تەواو',
+                        labelStyle: const TextStyle(color: ZankoColors.primary),
+                        filled: true,
+                        fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[100],
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // University
+                    TextField(
+                      controller: uniCtrl,
+                      style: TextStyle(color: isDark ? Colors.white : ZankoColors.textPrimary, fontSize: 14),
+                      decoration: InputDecoration(
+                        labelText: '🏛 زانکۆ',
+                        labelStyle: const TextStyle(color: ZankoColors.primary),
+                        filled: true,
+                        fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[100],
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Faculty/Dept
+                    TextField(
+                      controller: deptCtrl,
+                      style: TextStyle(color: isDark ? Colors.white : ZankoColors.textPrimary, fontSize: 14),
+                      decoration: InputDecoration(
+                        labelText: '🎓 فاکەڵتی و پسپۆڕی / بەش',
+                        labelStyle: const TextStyle(color: ZankoColors.primary),
+                        filled: true,
+                        fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[100],
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // City
+                    TextField(
+                      controller: cityCtrl,
+                      style: TextStyle(color: isDark ? Colors.white : ZankoColors.textPrimary, fontSize: 14),
+                      decoration: InputDecoration(
+                        labelText: '📍 شاری نیشتەجێبوون',
+                        labelStyle: const TextStyle(color: ZankoColors.primary),
+                        filled: true,
+                        fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[100],
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // 🔒 Locked Read-Only Fields Section
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: isDark ? ZankoColors.darkBackground : Colors.grey[100],
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.amber.withOpacity(0.5)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(CupertinoIcons.lock_fill, color: Colors.amber, size: 16),
+                              SizedBox(width: 8),
+                              Text(
+                                'زانیارییە فەرمییە نەگۆڕەکان (تەنها ئەدمین):',
+                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amber),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          _buildLockedDetailRow('🔒 تێکڕای گشتی GPA:', '${user?.gpa ?? 3.65} / 4.00 (Honor Roll)', isDark),
+                          _buildLockedDetailRow('🔒 کرێدیتی تەواوبوو:', '96 / 120 ECTS', isDark),
+                          _buildLockedDetailRow('🔒 بارودۆخی کامپس:', 'Active • Good Standing 🟢', isDark),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Save Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: isSaving ? null : () async {
+                          final newName = nameCtrl.text.trim();
+                          final newUni  = uniCtrl.text.trim();
+                          final newDept = deptCtrl.text.trim();
+                          final newCity = cityCtrl.text.trim();
+
+                          if (newName.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('تکایە ناوی تەواو بنووسە')),
+                            );
+                            return;
+                          }
+
+                          setModalState(() => isSaving = true);
+
+                          try {
+                            if (user != null && user.id != null) {
+                              await FirebaseFirestore.instance.collection('users').doc(user.id).update({
+                                'name': newName,
+                                'universityName': newUni,
+                                'departmentName': newDept,
+                                'cityName': newCity,
+                              });
+                            }
+
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('✅ زانیارییەکان بە سەرکەوتوویی نوێکرانەوە!'),
+                                  backgroundColor: Color(0xFF10B981),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            setModalState(() => isSaving = false);
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: ZankoColors.primary,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: isSaving
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text(
+                                '💾 پاشەکەوتکردنی زانیاری',
+                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildLockedDetailRow(String label, String val, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : ZankoColors.textSecondary)),
+          Text(val, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black87)),
+        ],
+      ),
+    );
+  }
+
+
+  void _showPhotoChooserModal(BuildContext context, dynamic user) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final urlCtrl = TextEditingController(text: user?.photoUrl ?? '');
+    String selectedAvatar = user?.photoUrl ?? 'assets/images/student_avatar_3d.png';
+    bool isSaving = false;
+
+    final presetAvatars = [
+      'assets/images/student_avatar_3d.png',
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              padding: EdgeInsets.only(
+                top: 24, left: 20, right: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              decoration: BoxDecoration(
+                color: isDark ? ZankoColors.darkCard : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40, height: 5,
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.grey[700] : Colors.grey[300],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        const Icon(CupertinoIcons.camera_fill, color: ZankoColors.primary, size: 26),
+                        const SizedBox(width: 10),
+                        Text(
+                          'گۆڕینی وێنەی پڕۆفایل',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: isDark ? Colors.white : ZankoColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'وێنەیەک لە ئاڤاتارەکان هەڵبژێرە یان لینکی وێنەکەت بنووسە',
+                      style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : ZankoColors.textSecondary),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Selected Preview Avatar
+                    Center(
+                      child: Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: ZankoColors.primary, width: 3),
+                          boxShadow: [
+                            BoxShadow(
+                              color: ZankoColors.primary.withOpacity(0.3),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: selectedAvatar.startsWith('http')
+                              ? Image.network(selectedAvatar, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 50))
+                              : Image.asset(selectedAvatar, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 50)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Preset Avatars Grid
+                    Text(
+                      'ئاڤاتارە پێشنیازکراوەکان:',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? Colors.white : ZankoColors.textPrimary),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: presetAvatars.map((url) {
+                        final isSel = selectedAvatar == url;
+                        return GestureDetector(
+                          onTap: () {
+                            setModalState(() {
+                              selectedAvatar = url;
+                              urlCtrl.text = url;
+                            });
+                          },
+                          child: Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isSel ? ZankoColors.primary : Colors.transparent,
+                                width: 2.5,
+                              ),
+                            ),
+                            child: ClipOval(
+                              child: url.startsWith('http')
+                                  ? Image.network(url, fit: BoxFit.cover)
+                                  : Image.asset(url, fit: BoxFit.cover),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Custom URL Field
+                    TextField(
+                      controller: urlCtrl,
+                      onChanged: (val) {
+                        if (val.trim().isNotEmpty) {
+                          setModalState(() => selectedAvatar = val.trim());
+                        }
+                      },
+                      style: TextStyle(color: isDark ? Colors.white : ZankoColors.textPrimary, fontSize: 13),
+                      decoration: InputDecoration(
+                        labelText: 'لینکی وێنەی تایبەت (URL)',
+                        labelStyle: const TextStyle(color: ZankoColors.primary),
+                        hintText: 'https://...',
+                        filled: true,
+                        fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[100],
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                        prefixIcon: const Icon(CupertinoIcons.link, color: ZankoColors.primary),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Save Avatar Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: isSaving ? null : () async {
+                          setModalState(() => isSaving = true);
+
+                          try {
+                            if (user != null && user.id != null) {
+                              await FirebaseFirestore.instance.collection('users').doc(user.id).update({
+                                'photoUrl': selectedAvatar,
+                              });
+                            }
+
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('✅ وێنەی پڕۆفایل بە سەرکەوتوویی جێگیرکرا!'),
+                                  backgroundColor: Color(0xFF10B981),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            setModalState(() => isSaving = false);
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: ZankoColors.primary,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: isSaving
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text(
+                                '💾 جێگیرکردنی وێنەی پڕۆفایل',
+                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+
 
   Widget _buildDetailRow(BuildContext context, String label, String value) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -604,7 +1123,7 @@ class ProfileScreen extends StatelessWidget {
 
             // ─── High-End Futuristic Digital Student ID Card ───
             GestureDetector(
-              onTap: () => _showUniversityIdModal(context, userName, userEmail, uniName, deptName),
+              onTap: () => _showUniversityIdModal(context, user, userName, userEmail, uniName, deptName),
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(26),
@@ -766,10 +1285,9 @@ class ProfileScreen extends StatelessWidget {
                               ],
                             ),
 
-                            // ─── Main Body: Avatar + Details + Metallic Smart Chip ───
+                            // ─── Main Body: Avatar + Details ───
                             Row(
                               children: [
-                                // Double Glowing Ring Avatar Container
                                 Container(
                                   width: 66,
                                   height: 66,
@@ -787,23 +1305,16 @@ class ProfileScreen extends StatelessWidget {
                                       ),
                                     ],
                                   ),
-                                  child: Container(
-                                    decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Color(0xFF0F172A),
-                                    ),
-                                    padding: const EdgeInsets.all(2),
-                                    child: ClipOval(
-                                      child: Image.asset(
-                                        'assets/images/student_avatar_3d.png',
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) => const Icon(
-                                          CupertinoIcons.person_fill,
-                                          color: Colors.white,
-                                          size: 36,
-                                        ),
-                                      ),
-                                    ),
+                                  child: ClipOval(
+                                    child: (user?.photoUrl != null && user!.photoUrl!.isNotEmpty)
+                                        ? (user.photoUrl!.startsWith('http')
+                                            ? Image.network(user.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36))
+                                            : Image.asset(user.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36)))
+                                        : Image.asset(
+                                            'assets/images/student_avatar_3d.png',
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36),
+                                          ),
                                   ),
                                 ),
                                 const SizedBox(width: 14),
@@ -928,6 +1439,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
             ),
+
 
             const SizedBox(height: 18),
 
