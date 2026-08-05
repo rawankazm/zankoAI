@@ -9,13 +9,205 @@ import '../../services/language_provider.dart';
 import '../../services/theme_provider.dart';
 import '../auth/login_screen.dart';
 import '../payment/vip_upgrade_sheet.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../widgets/ad_banner_widget.dart';
+
 
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
+  void _showFeedbackModal(BuildContext context, dynamic user) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textController = TextEditingController();
+    int rating = 5;
+    String feedbackType = 'پێشنیار';
+    bool isSubmitting = false;
+
+    final types = ['پێشنیار', 'کێشەی تەکنیکی', 'داواکاری فێچەر', 'سوپاسگوزاری'];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              padding: EdgeInsets.only(
+                top: 24,
+                left: 20,
+                right: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              decoration: BoxDecoration(
+                color: isDark ? ZankoColors.darkCard : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[700] : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      const Icon(CupertinoIcons.chat_bubble_text_fill, color: ZankoColors.primary, size: 24),
+                      const SizedBox(width: 10),
+                      Text(
+                        'ڕا و پێشنیارەکان',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? Colors.white : ZankoColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'پێشنیار یان ڕای خۆت بنووسە بۆ بەرزکردنەوەی کوالێتی ZankoAI',
+                    style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : ZankoColors.textSecondary),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Rating Stars
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      final starIndex = index + 1;
+                      return GestureDetector(
+                        onTap: () => setModalState(() => rating = starIndex),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Icon(
+                            starIndex <= rating ? CupertinoIcons.star_fill : CupertinoIcons.star,
+                            color: const Color(0xFFFFD700),
+                            size: 32,
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Feedback Type Chips
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: types.map((type) {
+                        final isSelected = feedbackType == type;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            label: Text(type),
+                            selected: isSelected,
+                            selectedColor: ZankoColors.primary,
+                            labelStyle: TextStyle(
+                              color: isSelected ? Colors.white : (isDark ? Colors.grey[300] : ZankoColors.textPrimary),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                            ),
+                            onSelected: (val) {
+                              if (val) setModalState(() => feedbackType = type);
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Text area
+                  TextField(
+                    controller: textController,
+                    maxLines: 4,
+                    style: TextStyle(color: isDark ? Colors.white : ZankoColors.textPrimary, fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: 'ڕا و پێشنیارەکەت بنووسە...',
+                      hintStyle: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[400]),
+                      filled: true,
+                      fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[100],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Send button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: isSubmitting ? null : () async {
+                        final msg = textController.text.trim();
+                        if (msg.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('تکایە پێشنیارەکەت بنووسە')),
+                          );
+                          return;
+                        }
+
+                        setModalState(() => isSubmitting = true);
+
+                        try {
+                          await FirebaseFirestore.instance.collection('user_feedback').add({
+                            'userId': user?.id ?? '',
+                            'userName': user?.name ?? 'خوێندکار',
+                            'userEmail': user?.email ?? '',
+                            'type': feedbackType,
+                            'message': msg,
+                            'rating': rating,
+                            'createdAt': FieldValue.serverTimestamp(),
+                          });
+
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('✅ پێشنیارەکەت بە سەرکەوتووی گەیشتە تیمی ZankoAI!'),
+                                backgroundColor: Color(0xFF10B981),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          setModalState(() => isSubmitting = false);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: ZankoColors.primary,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: isSubmitting
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              '📤 ناردنی پێشنیار',
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _showUniversityIdModal(BuildContext context, String name, String email, String uniName, String deptName) {
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showModalBottomSheet(
@@ -899,11 +1091,21 @@ class ProfileScreen extends StatelessWidget {
                   const Divider(height: 1, indent: 56),
                   _buildSettingsTile(
                     context,
+                    icon: CupertinoIcons.chat_bubble_text_fill,
+                    iconColor: const Color(0xFF10B981),
+                    title: '💬 ڕا و پێشنیارەکان',
+                    subtitle: 'ناردنی داواکاری و پێشنیار بۆ تیمی ZankoAI',
+                    onTap: () => _showFeedbackModal(context, user),
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  _buildSettingsTile(
+                    context,
                     icon: CupertinoIcons.lock_fill,
                     iconColor: const Color(0xFF34C759),
                     title: langProvider.translate('privacy_security'),
                     onTap: () {},
                   ),
+
                   const Divider(height: 1, indent: 56),
                   _buildSettingsTile(
                     context,

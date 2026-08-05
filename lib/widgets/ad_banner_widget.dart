@@ -44,16 +44,17 @@ class _AdBannerWidgetState extends State<AdBannerWidget>
   void _listenToAds() {
     _sub = FirebaseFirestore.instance
         .collection('ads')
-        .where('isActive', isEqualTo: true)
         .snapshots()
         .listen((snap) {
       final filtered = snap.docs
           .map((d) => {...d.data(), 'id': d.id})
           .where((ad) {
+            final isActive = ad['isActive'] == true || ad['isActive'] == 'true';
             final screens = List<String>.from(ad['showOnScreens'] ?? []);
-            return screens.contains(widget.screenName);
+            return isActive && screens.contains(widget.screenName);
           })
           .toList();
+
 
       if (mounted) {
         setState(() {
