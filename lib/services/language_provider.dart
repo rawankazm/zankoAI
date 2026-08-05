@@ -101,6 +101,34 @@ class LanguageProvider extends ChangeNotifier {
     'city_halabja': {'ku': 'هەڵەبجە', 'ar': 'حلبجة', 'en': 'Halabja'},
     'logout': {'ku': 'چوونەدەرەوە', 'ar': 'تسجيل الخروج', 'en': 'Log Out'},
     'logout_desc': {'ku': 'چوونەدەرەوە لە هەژمار', 'ar': 'تسجيل الخروج من الحساب', 'en': 'Log out of account'},
+    'upload_pdf_title': {
+      'ku': 'ئاپڵۆدکردنی فایلی PDF / سڵاید',
+      'ar': 'تحميل ملف PDF / شرائح',
+      'en': 'Upload PDF / Slide File'
+    },
+    'upload_pdf_subtitle': {
+      'ku': 'داگرە بۆ هەڵبژاردنی فایلی PDFی فێرکاری لە مۆبایلەکەتەوە',
+      'ar': 'اضغط لاختيار ملف PDF التعليمي من جهازك',
+      'en': 'Tap to pick an educational PDF file from your device'
+    },
+    'active_document': {
+      'ku': 'فایلی دیاریکراو (PDF)',
+      'ar': 'الملف المحدد (PDF)',
+      'en': 'Active Document (PDF)'
+    },
+    'ai_pdf_actions': {
+      'ku': 'مۆدەکانی ژیری دەستکرد بۆ PDF',
+      'ar': 'أدوات الذكاء الاصطناعي لـ PDF',
+      'en': 'AI Tools for PDF'
+    },
+    'quiz': {
+      'ku': 'تاقیکردنەوە و پرسیار',
+      'ar': 'اختبار وأسئلة',
+      'en': 'Generate Quiz & Questions'
+    },
+
+
+
     'guest_banner_title': {'ku': 'تۆ وەک مێوان لە بەرنامەکەیدایت', 'ar': 'أنت تستخدم التطبيق كزائر', 'en': 'You are using the app as a Guest'},
     'guest_banner_sub': {'ku': 'چوونەژوورەوە یان هەژمار دروستبکە بۆ پاشەکەوتکردنی پێشکەوتنەکانت', 'ar': 'سجّل الدخول أو أنشئ حساباً لحفظ تقدمك', 'en': 'Log in or create an account to save your study progress'},
     'login_or_register': {'ku': 'چوونەژوورەوە / دروستکردنی هەژمار', 'ar': 'تسجيل الدخول / إنشاء حساب', 'en': 'Log In / Create Account'},

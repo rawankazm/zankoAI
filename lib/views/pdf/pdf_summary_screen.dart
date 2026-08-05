@@ -7,7 +7,10 @@ import '../../services/ai_service.dart';
 import '../../services/language_provider.dart';
 
 class PdfSummaryScreen extends StatefulWidget {
-  const PdfSummaryScreen({super.key});
+  final String? initialFileName;
+  final String? initialFileContent;
+
+  const PdfSummaryScreen({super.key, this.initialFileName, this.initialFileContent});
 
   @override
   State<PdfSummaryScreen> createState() => _PdfSummaryScreenState();
@@ -22,6 +25,23 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
   String? _pdfSummary;
   List<String> _keyPoints = [];
   String? _translation;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialFileName != null && widget.initialFileName!.isNotEmpty) {
+      _selectedFileName = widget.initialFileName!;
+      _selectedFileContent = widget.initialFileContent ?? 'Content of ${widget.initialFileName}';
+      _selectedFileSize = '2.5 مێگابایت';
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_selectedFileContent != null) {
+          _generateSummary(_selectedFileContent!);
+        }
+      });
+    }
+  }
+
+
 
   // Preloaded mock PDF options for quick testing in desktop/web
   final List<Map<String, String>> _mockPdfs = [

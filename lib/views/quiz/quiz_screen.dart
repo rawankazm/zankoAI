@@ -11,7 +11,10 @@ import '../../widgets/ad_banner_widget.dart';
 
 
 class QuizScreen extends StatefulWidget {
-  const QuizScreen({super.key});
+  final String? initialTopic;
+  final String? initialFileName;
+
+  const QuizScreen({super.key, this.initialTopic, this.initialFileName});
 
   @override
   State<QuizScreen> createState() => _QuizScreenState();
@@ -49,9 +52,23 @@ class _QuizScreenState extends State<QuizScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialTopic != null && widget.initialTopic!.isNotEmpty) {
+      _selectedTopic = widget.initialTopic!;
+    }
+    if (widget.initialFileName != null && widget.initialFileName!.isNotEmpty) {
+      _quizFileName = widget.initialFileName!;
+      _quizFileContent = 'Lecture Content of ${widget.initialFileName}';
+    }
     _courseController.text = _selectedCourse;
     _topicController.text = _selectedTopic;
+
+    if (widget.initialTopic != null || widget.initialFileName != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _generateQuiz();
+      });
+    }
   }
+
 
   String? _quizFileName;
   String? _quizFileContent;
