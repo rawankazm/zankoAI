@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../services/language_provider.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
+import '../../widgets/ad_banner_widget.dart';
+
 
 class PdfChatScreen extends StatefulWidget {
   const PdfChatScreen({super.key});
@@ -40,8 +42,11 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.all(20),
           children: [
+            const AdBannerWidget(screenName: 'notes'),
+            const SizedBox(height: 12),
             // PDF Upload Hero Container
             AppCard(
+
               padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
               color: ZankoColors.primary.withOpacity(0.06),
               border: Border.all(color: ZankoColors.primary.withOpacity(0.25), width: 1.5),

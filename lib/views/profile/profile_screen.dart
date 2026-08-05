@@ -9,6 +9,8 @@ import '../../services/language_provider.dart';
 import '../../services/theme_provider.dart';
 import '../auth/login_screen.dart';
 import '../payment/vip_upgrade_sheet.dart';
+import '../../widgets/ad_banner_widget.dart';
+
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -401,8 +403,13 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
             ],
+            const AdBannerWidget(screenName: 'profile'),
+            const SizedBox(height: 12),
+
+
 
             // ─── University Digital ID Card ──────────────────────────────────
+
             // ─── High-End Futuristic Digital Student ID Card ───
             GestureDetector(
               onTap: () => _showUniversityIdModal(context, userName, userEmail, uniName, deptName),

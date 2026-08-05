@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
+import '../../widgets/ad_banner_widget.dart';
+
 
 class GpaTrackerScreen extends StatefulWidget {
   const GpaTrackerScreen({super.key});
@@ -57,8 +59,11 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const AdBannerWidget(screenName: 'gpa'),
+              const SizedBox(height: 12),
               // GPA Total Display
               Card(
+
                 color: theme.colorScheme.primaryContainer,
                 child: Padding(
                   padding: const EdgeInsets.all(24.0),

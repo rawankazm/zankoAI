@@ -6,6 +6,8 @@ import '../../services/language_provider.dart';
 import '../../services/zankoline_service.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
+import '../../widgets/ad_banner_widget.dart';
+
 
 class ZankolineScreen extends StatefulWidget {
   const ZankolineScreen({super.key});
@@ -225,7 +227,10 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+            const AdBannerWidget(screenName: 'zankoline'),
+            const SizedBox(height: 16),
+
 
             // ─── Single Average Mark Form ───
             Text(

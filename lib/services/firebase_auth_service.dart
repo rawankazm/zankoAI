@@ -67,7 +67,28 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
         final role = roleStr == 'admin'
             ? UserRole.admin
             : (roleStr == 'teacher' ? UserRole.teacher : UserRole.student);
-        final isVip = data['isVip'] == true || role == UserRole.admin;
+
+        // ─── VIP expiry check ───────────────────────────────────────────
+        bool isVip = data['isVip'] == true || role == UserRole.admin;
+        final vipStatus = data['vipStatus'] as String? ?? 'none';
+        final vipExpiresAt = data['vipExpiresAt'] as Timestamp?;
+
+        if (isVip && role != UserRole.admin && vipExpiresAt != null) {
+          final expiryDate = vipExpiresAt.toDate();
+          if (DateTime.now().isAfter(expiryDate)) {
+            // VIP بەسەرچوو — ئۆتۆماتیک ڕەتی دەکاتەوە
+            isVip = false;
+            try {
+              await _firestore.collection('users').doc(firebaseUser.uid).set({
+                'isVip': false,
+                'vipStatus': 'expired',
+              }, SetOptions(merge: true));
+            } catch (_) {}
+          }
+        }
+
+        // pending = ئەدمین هێشتا قبووڵی نەکردووە
+        if (vipStatus == 'pending') isVip = false;
 
         _currentUser = UserModel(
           id: firebaseUser.uid,

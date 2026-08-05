@@ -4,6 +4,8 @@ import 'package:uuid/uuid.dart';
 import '../../services/database_service.dart';
 import '../../services/language_provider.dart';
 import '../../models/schedule_model.dart';
+import '../../widgets/ad_banner_widget.dart';
+
 
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
@@ -209,10 +211,15 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         appBar: AppBar(
           title: Text(t('schedule_title')),
         ),
-        body: ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: _kurdishDays.length,
-          itemBuilder: (context, index) {
+        body: Column(
+          children: [
+            const AdBannerWidget(screenName: 'schedule'),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: _kurdishDays.length,
+                itemBuilder: (context, index) {
+
             final day = _kurdishDays[index];
             final lectures = dbService.schedule.where((item) => item.dayName == day).toList();
 
@@ -260,6 +267,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             );
           },
         ),
+      ),
+    ],
+  ),
+
+
         floatingActionButton: FloatingActionButton(
           heroTag: 'fab_schedule_unique',
           onPressed: _openAddLectureSheet,

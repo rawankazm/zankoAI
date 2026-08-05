@@ -9,6 +9,8 @@ import '../../services/language_provider.dart';
 import '../../services/ai_service.dart';
 import '../../services/auth_service.dart';
 import '../../theme.dart';
+import '../../widgets/ad_banner_widget.dart';
+
 
 class AiTeacherChatScreen extends StatefulWidget {
   final String? initialPrompt;
@@ -573,8 +575,11 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
               ),
             ),
 
+            const AdBannerWidget(screenName: 'ai_teacher'),
+
             // Early Suggestions Pills
             if (_messages.length <= 5)
+
               SizedBox(
                 height: 36,
                 child: ListView.builder(

@@ -1,7 +1,10 @@
-import 'package:provider/provider.dart';
-import '../../services/language_provider.dart';
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/language_provider.dart';
+import '../../services/auth_service.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
 
@@ -9,8 +12,8 @@ class NotificationItem {
   final String id;
   final String title;
   final String body;
-  final String time;
-  final String category; // AI Tutor, Course, Quiz, Reminder
+  final DateTime time;
+  final String category; // AI Tutor, Course, Quiz, Reminder, Admin Direct
   final IconData icon;
   final Color color;
   bool isRead;
@@ -35,78 +38,77 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  // Use stable internal keys for filter selection
   String _selectedCategory = 'all';
+  final List<NotificationItem> _notifications = [];
+  StreamSubscription? _directMsgSub;
 
-  final List<NotificationItem> _notifications = [
-    NotificationItem(
-      id: '1',
-      title: 'notif_ai_summary',
-      body: 'ZankoAI generated a 3-page summary for Calculus Chapter 4: Derivatives.',
-      time: '10m ago',
-      category: 'AI Tutor',
-      icon: CupertinoIcons.sparkles,
-      color: const Color(0xFF6C5CE7),
-      isRead: false,
-    ),
-    NotificationItem(
-      id: '2',
-      title: 'notif_quiz_high',
-      body: 'You scored 95% in Operating Systems Quiz 3. Keep up the high streak!',
-      time: '1h ago',
-      category: 'Quiz',
-      icon: CupertinoIcons.checkmark_seal_fill,
-      color: const Color(0xFF34C759),
-      isRead: false,
-    ),
-    NotificationItem(
-      id: '3',
-      title: 'notif_assignment',
-      body: 'Database Systems Homework 2 is due tomorrow at 11:59 PM.',
-      time: '3h ago',
-      category: 'Reminder',
-      icon: CupertinoIcons.clock_fill,
-      color: const Color(0xFFFF9F0A),
-      isRead: false,
-    ),
-    NotificationItem(
-      id: '4',
-      title: 'notif_new_material',
-      body: 'Prof. Sarah uploaded Lecture 5 slides in Machine Learning Fundamentals.',
-      time: 'yesterday',
-      category: 'Course',
-      icon: CupertinoIcons.book_fill,
-      color: const Color(0xFF007AFF),
-      isRead: true,
-    ),
-    NotificationItem(
-      id: '5',
-      title: 'notif_gpa_update',
-      body: 'Your estimated Semester GPA updated to 3.65 / 4.00 (Excellent).',
-      time: '2d ago',
-      category: 'AI Tutor',
-      icon: CupertinoIcons.graph_square_fill,
-      color: const Color(0xFFAF52DE),
-      isRead: true,
-    ),
-  ];
+  static const _filterKeys = ['all', 'unread', 'Admin Direct', 'AI Tutor', 'Course', 'Quiz', 'Reminder'];
+  static const _filterLabels = ['هەموو', 'نەخوێنراو', '✉️ پەیامی ئەدمین', '🤖 مامۆستا AI', '📚 وانە', '✏️ کویز', '⏰ بیرخستنەوە'];
 
-  // Internal stable keys for filter categories
-  static const _filterKeys = ['all', 'unread', 'AI Tutor', 'Course', 'Quiz', 'Reminder'];
-  static const _filterTranslationKeys = ['filter_all', 'filter_unread', 'filter_ai_tutor', 'filter_course', 'filter_quiz', 'filter_reminder'];
+  @override
+  void initState() {
+    super.initState();
+    _listenToDirectMessages();
+  }
 
-    void _markAllAsRead() {
-    setState(() {
-      for (var item in _notifications) {
-        item.isRead = true;
+  void _listenToDirectMessages() {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final user = authService.currentUser;
+    if (user == null || user.isGuest) return;
+
+    _directMsgSub = FirebaseFirestore.instance
+        .collection('direct_messages')
+        .where('userId', isEqualTo: user.id)
+        .snapshots()
+        .listen((snap) {
+      final items = snap.docs.map((doc) {
+        final data = doc.data();
+        final ts = data['createdAt'] as Timestamp?;
+        return NotificationItem(
+          id: doc.id,
+          title: data['title'] ?? 'پەیام لە ئەدمینەوە',
+          body: data['message'] ?? '',
+          time: ts?.toDate() ?? DateTime.now(),
+          category: 'Admin Direct',
+          icon: CupertinoIcons.mail_solid,
+          color: const Color(0xFF7C3AED),
+          isRead: data['isRead'] == true,
+        );
+      }).toList();
+
+      if (mounted) {
+        setState(() {
+          _notifications.clear();
+          _notifications.addAll(items);
+        });
       }
     });
   }
 
-  void _clearAll() {
-    setState(() {
-      _notifications.clear();
-    });
+  @override
+  void dispose() {
+    _directMsgSub?.cancel();
+    super.dispose();
+  }
+
+  void _markAllAsRead() {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final user = authService.currentUser;
+    if (user == null || user.isGuest) return;
+
+    for (var item in _notifications) {
+      if (!item.isRead) {
+        FirebaseFirestore.instance.collection('direct_messages').doc(item.id).update({'isRead': true});
+      }
+    }
+  }
+
+  String _formatTime(DateTime time) {
+    final diff = DateTime.now().difference(time);
+    if (diff.inMinutes < 1) return 'ئێستا';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} خولەک پێشتر';
+    if (diff.inHours < 24) return '${diff.inHours} کاتژمێر پێشتر';
+    return '${diff.inDays} ڕۆژ پێشتر';
   }
 
   @override
@@ -154,25 +156,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     CupertinoButton(
                       padding: EdgeInsets.zero,
                       onPressed: _markAllAsRead,
-                      child: Text(
-                        t('mark_read'),
+                      child: const Text(
+                        'خوێنراوەکان',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: ZankoColors.primary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    CupertinoButton(
-                      padding: EdgeInsets.zero,
-                      onPressed: _clearAll,
-                      child: Text(
-                        'Clear',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: ZankoColors.error,
                         ),
                       ),
                     ),
@@ -189,7 +178,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               child: Row(
                 children: List.generate(_filterKeys.length, (index) {
                   final key = _filterKeys[index];
-                  final label = t(_filterTranslationKeys[index]);
+                  final label = _filterLabels[index];
                   final isSelected = _selectedCategory == key;
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
@@ -243,7 +232,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           ),
                           const SizedBox(height: 14),
                           Text(
-                            t('no_notifications'),
+                            'هیچ ئاگادارییەکی تازە نییە',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -252,7 +241,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            t('all_caught_up'),
+                            'پەیامەکانی ئەدمین لێرەدا ڕاستەوخۆ دەردەکەون',
                             style: TextStyle(
                               fontSize: 13,
                               color: isDark ? Colors.grey[600] : Colors.grey[500],
@@ -272,9 +261,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           child: AppCard(
                             padding: const EdgeInsets.all(16),
                             onTap: () {
-                              setState(() {
-                                item.isRead = true;
-                              });
+                              if (!item.isRead) {
+                                FirebaseFirestore.instance
+                                    .collection('direct_messages')
+                                    .doc(item.id)
+                                    .update({'isRead': true});
+                              }
                             },
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,7 +297,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                         children: [
                                           Expanded(
                                             child: Text(
-                                              Provider.of<LanguageProvider>(context).translate(item.title),
+                                              item.title,
                                               style: TextStyle(
                                                 fontSize: 14,
                                                 fontWeight: item.isRead
@@ -319,7 +311,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                           ),
                                           const SizedBox(width: 6),
                                           Text(
-                                            t(item.time),
+                                            _formatTime(item.time),
                                             style: TextStyle(
                                               fontSize: 11,
                                               fontWeight: FontWeight.w500,

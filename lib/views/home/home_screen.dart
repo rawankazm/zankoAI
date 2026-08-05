@@ -17,6 +17,7 @@ import '../profile/profile_screen.dart';
 import '../quiz/quiz_screen.dart';
 import '../schedule/schedule_screen.dart';
 import '../zankoline/zankoline_screen.dart';
+import '../../widgets/ad_banner_widget.dart';
 
 // ─── Home Screen ─────────────────────────────────────────────────────────────
 class HomeScreen extends StatefulWidget {
@@ -98,24 +99,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             physics: const BouncingScrollPhysics(),
             slivers: [
               // ── Floating Header ─────────────────────────────────────────────
-              SliverAppBar(
-                floating: true,
-                snap: true,
-                pinned: false,
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                scrolledUnderElevation: 0,
-                systemOverlayStyle: isDark
-                    ? SystemUiOverlayStyle.light
-                    : SystemUiOverlayStyle.dark,
-                primary: true,
-                flexibleSpace: SafeArea(
-                  top: true,
+              // ── Header ─────────────────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: SafeArea(
                   bottom: false,
                   child: Padding(
                     padding: EdgeInsets.symmetric(
                       horizontal: horizontalPadding,
-                      vertical: 6,
+                      vertical: 10,
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -250,6 +241,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
 
+
               // ── Main Scrollable Content ────────────────────────────────────
               SliverList(
                 delegate: SliverChildListDelegate([
@@ -300,7 +292,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             }
                           },
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 16),
+
+                        // ── Ad Banner ──────────────────────────────────────
+                        const Padding(
+                          padding: EdgeInsets.zero,
+                          child: AdBannerWidget(screenName: 'home'),
+                        ),
+
+
+                        const SizedBox(height: 16),
 
                         // ── Continue Learning ──────────────────────────────────
                         _SectionHeader(
