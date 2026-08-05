@@ -1,6 +1,10 @@
+import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/language_provider.dart';
+import '../services/auth_service.dart';
 import '../widgets/apple_ui_components.dart';
 import 'home/home_screen.dart';
 import 'home/courses_screen.dart';
@@ -8,6 +12,7 @@ import 'ai_teacher/ai_teacher_chat_screen.dart';
 import 'pdf/pdf_chat_screen.dart';
 import 'zankoline/zankoline_screen.dart';
 import 'profile/profile_screen.dart';
+import 'notifications/notifications_screen.dart';
 
 class NavigationShell extends StatefulWidget {
   const NavigationShell({super.key});
@@ -18,6 +23,8 @@ class NavigationShell extends StatefulWidget {
 
 class _NavigationShellState extends State<NavigationShell> {
   int _selectedIndex = 0;
+  StreamSubscription? _directMessageSubscription;
+  String? _lastNotifiedMessageId;
 
   List<Widget> get _studentScreens => const [
         HomeScreen(),
@@ -28,6 +35,124 @@ class _NavigationShellState extends State<NavigationShell> {
         ProfileScreen(),
       ];
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _listenForRealtimeDirectMessages();
+    });
+  }
+
+  void _listenForRealtimeDirectMessages() {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final user = authService.currentUser;
+    if (user == null || user.isGuest) return;
+
+    _directMessageSubscription = FirebaseFirestore.instance
+        .collection('direct_messages')
+        .where('userId', isEqualTo: user.id)
+        .where('isRead', isEqualTo: false)
+        .snapshots()
+        .listen((snap) {
+      if (snap.docs.isNotEmpty) {
+        final latestDoc = snap.docs.first;
+        final docId = latestDoc.id;
+
+        if (_lastNotifiedMessageId != docId) {
+          _lastNotifiedMessageId = docId;
+          final data = latestDoc.data();
+          final senderName = data['senderName'] ?? '👑 ئەدمینی ZankoAI';
+          final title = data['title'] ?? 'پەیام لە ئەدمینەوە';
+          final message = data['message'] ?? '';
+          final displayTitle = '$senderName • $title';
+
+          if (mounted) {
+            _showInAppNotificationBanner(displayTitle, message, docId);
+          }
+
+        }
+      }
+    });
+  }
+
+  void _showInAppNotificationBanner(String title, String body, String docId) {
+    ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 6),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.only(top: 10, left: 16, right: 16, bottom: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        backgroundColor: const Color(0xFF1E2235),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0xFF7C3AED), width: 1.5),
+        ),
+        content: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFF7C3AED).withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(CupertinoIcons.mail_solid, color: Color(0xFFC084FC), size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    body,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.white70,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        action: SnackBarAction(
+          label: 'بینین',
+          textColor: const Color(0xFFFFD700),
+          onPressed: () {
+            FirebaseFirestore.instance
+                .collection('direct_messages')
+                .doc(docId)
+                .update({'isRead': true});
+            Navigator.push(
+              context,
+              CupertinoPageRoute(builder: (_) => const NotificationsScreen()),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _directMessageSubscription?.cancel();
+    super.dispose();
+  }
+
   void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);
   }
@@ -36,7 +161,6 @@ class _NavigationShellState extends State<NavigationShell> {
   Widget build(BuildContext context) {
     final langProvider = Provider.of<LanguageProvider>(context);
 
-    // ─── MAIN STUDENT APP NAVIGATION ─────────────────────────────────────
     return Directionality(
       textDirection: langProvider.textDirection,
       child: Scaffold(
