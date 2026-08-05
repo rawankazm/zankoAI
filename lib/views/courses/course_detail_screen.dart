@@ -397,29 +397,36 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          CupertinoIcons.doc_fill,
-                          color: Color(0xFFFF3B30),
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'PDF Lectures (${_pdfLectures.length})',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.3,
-                            color: isDark ? Colors.white : ZankoColors.textPrimary,
+                    Expanded(
+                      child: Row(
+                        children: [
+                          const Icon(
+                            CupertinoIcons.doc_fill,
+                            color: Color(0xFFFF3B30),
+                            size: 18,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              'سڵاید و فایلی PDF (${_pdfLectures.length})',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.3,
+                                color: isDark ? Colors.white : ZankoColors.textPrimary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     GestureDetector(
                       onTap: _uploadPdfLecture,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
@@ -427,18 +434,19 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                               widget.themeColor.withOpacity(0.85),
                             ],
                           ),
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(14),
                         ),
-                        child: Row(
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
+                            Icon(
                               CupertinoIcons.cloud_upload_fill,
                               color: Colors.white,
-                              size: 14,
+                              size: 13,
                             ),
-                            const SizedBox(width: 6),
+                            SizedBox(width: 4),
                             Text(
-                              '+ Add PDF',
+                              '+ ئاپڵۆد',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
@@ -451,6 +459,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     ),
                   ],
                 ),
+
               ),
             ),
 

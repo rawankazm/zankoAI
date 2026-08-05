@@ -734,6 +734,8 @@ class CourseCard extends StatelessWidget {
   final Color gradientStart;
   final Color gradientEnd;
   final VoidCallback onTap;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   const CourseCard({
     super.key,
@@ -744,6 +746,8 @@ class CourseCard extends StatelessWidget {
     required this.gradientStart,
     required this.gradientEnd,
     required this.onTap,
+    this.onEdit,
+    this.onDelete,
   });
 
   @override
@@ -776,7 +780,7 @@ class CourseCard extends StatelessWidget {
                     Text(
                       title,
                       style: TextStyle(
-          fontSize: 16,
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: isDark ? Colors.white : ZankoColors.textPrimary,
                       ),
@@ -787,7 +791,7 @@ class CourseCard extends StatelessWidget {
                     Text(
                       subtitle,
                       style: TextStyle(
-          fontSize: 12,
+                        fontSize: 12,
                         color: isDark ? Colors.grey[400]! : ZankoColors.textSecondary,
                       ),
                       maxLines: 1,
@@ -796,8 +800,45 @@ class CourseCard extends StatelessWidget {
                   ],
                 ),
               ),
+              if (onEdit != null || onDelete != null)
+                PopupMenuButton<String>(
+                  icon: Icon(
+                    CupertinoIcons.ellipsis_vertical,
+                    color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                    size: 18,
+                  ),
+                  onSelected: (val) {
+                    if (val == 'edit') onEdit?.call();
+                    if (val == 'delete') onDelete?.call();
+                  },
+                  itemBuilder: (context) => [
+                    if (onEdit != null)
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(CupertinoIcons.pencil, size: 16, color: ZankoColors.primary),
+                            SizedBox(width: 8),
+                            Text('دەستکاریکردنی وانە', style: TextStyle(fontSize: 13)),
+                          ],
+                        ),
+                      ),
+                    if (onDelete != null)
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(CupertinoIcons.trash, size: 16, color: Colors.redAccent),
+                            SizedBox(width: 8),
+                            Text('سڕینەوەی وانە', style: TextStyle(fontSize: 13, color: Colors.redAccent)),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
             ],
           ),
+
           const SizedBox(height: 16),
           Row(
             children: [

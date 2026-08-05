@@ -211,6 +211,11 @@ class LanguageProvider extends ChangeNotifier {
     // Bottom Navigation
     'nav_home': {'ku': 'سەرەکی', 'ar': 'الرئيسية', 'en': 'Home'},
     'nav_courses': {'ku': 'وانەکان', 'ar': 'المواد', 'en': 'Courses'},
+
+    'add_course': {'ku': 'زیادکردنی وانەی نوێ', 'ar': 'إضافة مادة جديدة', 'en': 'Add New Course'},
+    'edit_course': {'ku': 'دەستکاریکردنی وانە', 'ar': 'تعديل المادة', 'en': 'Edit Course'},
+    'delete_course': {'ku': 'سڕینەوەی وانە', 'ar': 'حذف المادة', 'en': 'Delete Course'},
+
     'nav_gpa': {'ku': 'کۆنمرە (GPA)', 'ar': 'المعدل (GPA)', 'en': 'GPA'},
     'nav_ai_teacher': {'ku': 'مامۆستا AI', 'ar': 'معلم AI', 'en': 'AI Tutor'},
 
