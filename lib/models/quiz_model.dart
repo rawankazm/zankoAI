@@ -11,6 +11,7 @@ class QuestionModel {
   final QuestionType type;
   final List<String>? options; // Null for fillInBlank or essay
   final String correctAnswer; // For auto-grading (MCQ, True/False)
+  final String? explanation; // AI detailed explanation for feedback
 
   QuestionModel({
     required this.id,
@@ -18,6 +19,7 @@ class QuestionModel {
     required this.type,
     this.options,
     required this.correctAnswer,
+    this.explanation,
   });
 
   Map<String, dynamic> toMap() {
@@ -27,6 +29,7 @@ class QuestionModel {
       'type': type.toString().split('.').last,
       'options': options,
       'correctAnswer': correctAnswer,
+      'explanation': explanation,
     };
   }
 
@@ -40,6 +43,7 @@ class QuestionModel {
       ),
       options: map['options'] != null ? List<String>.from(map['options']) : null,
       correctAnswer: map['correctAnswer'] ?? '',
+      explanation: map['explanation'],
     );
   }
 }

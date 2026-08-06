@@ -17,6 +17,7 @@ import '../pdf/audio_summarizer_view.dart';
 import '../profile/profile_screen.dart';
 
 import '../quiz/quiz_screen.dart';
+import '../quiz/ai_exam_generator_screen.dart';
 import '../schedule/schedule_screen.dart';
 import '../zankoline/zankoline_screen.dart';
 import '../../widgets/ad_banner_widget.dart';
@@ -960,12 +961,12 @@ class _QuickAiToolsGrid extends StatelessWidget {
         ),
       ),
       _ToolData(
-        icon: CupertinoIcons.square_list_fill,
-        title: langProvider.translate('quiz'),
+        icon: CupertinoIcons.sparkles,
+        title: 'تاقیکردنەوەی AI',
         color: const Color(0xFFFF9F0A),
         onTap: () => Navigator.push(
           context,
-          CupertinoPageRoute(builder: (_) => const QuizScreen()),
+          CupertinoPageRoute(builder: (_) => const AiExamGeneratorScreen()),
         ),
       ),
       _ToolData(

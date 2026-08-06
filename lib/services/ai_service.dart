@@ -22,6 +22,15 @@ abstract class AiService extends ChangeNotifier {
   Future<Map<String, dynamic>> summarizePdf(String pdfName, String pdfContent);
   Future<QuizModel> generateQuiz(String topic, String courseName);
   Future<QuizModel> generateQuizFromText(String fileText, String courseName);
+  Future<QuizModel> generateCustomExam({
+    required String courseName,
+    required String topic,
+    required String difficulty,
+    required String questionType,
+    required int questionCount,
+    required int durationMinutes,
+    String? pdfContent,
+  });
   Future<String> organizeNote(String rawNoteContent);
   Future<List<FlashcardModel>> generateFlashcards(String topicOrText);
   Future<List<StudyPlanDayModel>> generateStudyPlan(String examTopic, int daysRemaining);
@@ -399,7 +408,56 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     return _generateMockQuiz("Ú©ÙˆÛŒØ²ÛŒ Ø¯Û•Ù‚ÛŒ Ø¨Ø§Ø±Ú©Ø±Ø§Ùˆ", courseName);
   }
 
-  QuizModel _parseQuizJson(String responseText, String defaultTitle, String courseName) {
+  @override
+  Future<QuizModel> generateCustomExam({
+    required String courseName,
+    required String topic,
+    required String difficulty,
+    required String questionType,
+    required int questionCount,
+    required int durationMinutes,
+    String? pdfContent,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 1000));
+
+    if (hasRealApiKey) {
+      try {
+        final pdfContext = (pdfContent != null && pdfContent.trim().isNotEmpty)
+            ? "\n\nÙØ§ÛŒÙ„ÛŒ Ø³Û•Ø±Ú†Ø§ÙˆÛ•ÛŒ ÙˆØ§Ù†Û•Ú©Û•:\n$pdfContent\n"
+            : "";
+
+        final prompt = """
+ØªØ§ÛŒØ¨Û•Øª Ø¨Û† ÙˆØ§Ù†Û•ÛŒ '$courseName' Ùˆ Ø¨Ø§Ø¨Û•ØªÛŒ '$topic'ØŒ ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒÛ•Ú©ÛŒ Ø¦Û•Ø²Ù…ÙˆÙˆÙ†ÛŒ Ùˆ ÙÛŽØ±Ú©Ø§Ø±ÛŒ Ø¨Û• Ø¦Ø§Ø³ØªÛŒ '$difficulty' Ùˆ Ø¬Û†Ø±ÛŒ Ù¾Ø±Ø³ÛŒØ§Ø±ÛŒ '$questionType' Ø¯Ø±ÙˆØ³Øª Ø¨Ú©Û• Ø¨Û• Ø²Ù…Ø§Ù†ÛŒ Ú©ÙˆØ±Ø¯ÛŒ (Ø³Û†Ø±Ø§Ù†ÛŒ).
+ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•Ú©Û• Ù¾ÛŽÙˆÛŒØ³ØªÛ• Ø¯Û•Ù‚Ø§Ùˆ Ø¯Û•Ù‚ $questionCount Ù¾Ø±Ø³ÛŒØ§Ø± Ù„Û•Ø®Û† Ø¨Ú¯Ø±ÛŽØª Ø¨Û• ÙÛ†Ø±Ù…Ø§ØªÛŒ JSON:
+{
+  "title": "ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ø¦Û•Ø²Ù…ÙˆÙˆÙ†ÛŒ - $topic ($difficulty)",
+  "questions": [
+     {
+       "question": "Ø¯Û•Ù‚ÛŒ Ù¾Ø±Ø³ÛŒØ§Ø±Û•Ú©Û• Ø¨Û• Ú©ÙˆØ±Ø¯ÛŒ Ø³Û†Ø±Ø§Ù†ÛŒ",
+       "type": "${questionType == 'TrueFalse' ? 'trueFalse' : 'multipleChoice'}",
+       "options": ["Ø¨Ú˜Ø§Ø±Ø¯Û•ÛŒ A", "Ø¨Ú˜Ø§Ø±Ø¯Û•ÛŒ B", "Ø¨Ú˜Ø§Ø±Ø¯Û•ÛŒ C", "Ø¨Ú˜Ø§Ø±Ø¯Û•ÛŒ D"],
+       "correct_answer": "Ø¨Ú˜Ø§Ø±Ø¯Û•ÛŒ A",
+       "explanation": "Ø´ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ ØªÛŽØ± Ùˆ ØªÛ•Ø³Û•Ù„ÛŒ AI Ø¨Û• Ú©ÙˆØ±Ø¯ÛŒ Ø¨Û† Ø¦Û•ÙˆÛ•ÛŒ Ø¨Û†Ú†ÛŒ Ø¦Û•Ù… ÙˆÛ•ÚµØ§Ù…Û• Ú•Ø§Ø³ØªÛ•"
+     }
+  ]
+}
+$pdfContext
+ØªÛ•Ù†Ù‡Ø§ ÙÛ†Ø±Ù…Ø§ØªÛŒ JSON Ø¨Ù†ÙˆÙˆØ³Û• Ø¨Û•Ø¨ÛŽ Ø¯Û•Ù‚ÛŒ Ø²ÛŒØ§Ø¯Û•.
+""";
+
+        final response = await _callGemini(prompt);
+        return _parseQuizJson(response, "ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ø¦Û•Ø²Ù…ÙˆÙˆÙ†ÛŒ - $topic", courseName, overrideDuration: durationMinutes);
+      } catch (e) {
+        if (_isNetworkError(e)) {
+          return _generateMockExam("ðŸ“¡ (ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ø¦Û†ÙÙ„Ø§ÛŒÙ†) - $topic", courseName, questionCount, durationMinutes, difficulty);
+        }
+      }
+    }
+
+    return _generateMockExam("ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ø¦Û•Ø²Ù…ÙˆÙˆÙ†ÛŒ - $topic", courseName, questionCount, durationMinutes, difficulty);
+  }
+
+  QuizModel _parseQuizJson(String responseText, String defaultTitle, String courseName, {int? overrideDuration}) {
     try {
       String jsonText = responseText.trim();
       if (jsonText.startsWith("```json")) {
@@ -422,6 +480,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
         final optionsRaw = qMap['options'] ?? qMap['choices'];
         final options = optionsRaw != null ? List<String>.from(optionsRaw) : <String>[];
         final correctAns = qMap['correct_answer'] ?? qMap['correctAnswer'] ?? (options.isNotEmpty ? options[0] : '');
+        final explanation = qMap['explanation'] ?? qMap['explanation_kurdi'] ?? qMap['reason'];
 
         QuestionType qType = QuestionType.multipleChoice;
         if (qMap['type'] == 'trueFalse' || options.length == 2) {
@@ -436,6 +495,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
           type: qType,
           options: options.isNotEmpty ? options : null,
           correctAnswer: correctAns.toString(),
+          explanation: explanation?.toString(),
         ));
       }
 
@@ -443,11 +503,13 @@ class ZankoAiService extends ChangeNotifier implements AiService {
         id: 'quiz_${Random().nextInt(10000)}',
         title: data['title'] ?? defaultTitle,
         courseName: courseName,
+        durationMinutes: overrideDuration ?? data['durationMinutes'] ?? 15,
         questions: questions.isNotEmpty ? questions : _generateMockQuiz(defaultTitle, courseName).questions,
       );
     } catch (_) {
       return _generateMockQuiz(defaultTitle, courseName);
     }
+  }
   }
 
   @override
@@ -642,6 +704,75 @@ class ZankoAiService extends ChangeNotifier implements AiService {
       courseName: courseName,
       questions: questions,
       durationMinutes: 10,
+    );
+  }
+
+  QuizModel _generateMockExam(String topic, String courseName, int count, int duration, String difficulty) {
+    final List<QuestionModel> examQuestions = [
+      QuestionModel(
+        id: 'ex_1',
+        questionText: 'Ø¦Û•Ø±Ú©ÛŒ Ø³Û•Ø±Û•Ú©ÛŒ $topic Ù„Û• ÙˆØ§Ù†Û•ÛŒ $courseName Ú†ÛŒÛŒÛ•ØŸ',
+        type: QuestionType.multipleChoice,
+        options: [
+          'Ú•ÛŽÚ©Ø®Ø³ØªÙ† Ùˆ Ú•ÛŽÚ•Û•ÙˆÚ©Ø±Ø¯Ù†ÛŒ Ø¯Ø§ØªØ§ Ø¨Û• Ø´ÛŽÙˆÛ•ÛŒÛ•Ú©ÛŒ Ø®Û†Ú©Ø§Ø±',
+          'Ø¨Û•Ø³ØªÙ†Û•ÙˆÛ•ÛŒ Ø³Û•Ø±Ú†Ø§ÙˆÛ•ÛŒ Ú©Ø§Ø±Û•Ø¨Ø§ÛŒÛŒ Ø¦Ø§Ù…ÛŽØ±Û•Ú©Ø§Ù†',
+          'Ù¾Ø§Ø´Û•Ú©Û•ÙˆØªÚ©Ø±Ø¯Ù†ÛŒ ÙˆÛŽÙ†Û• Ù„Û• Ø³Û•Ø± Ø¯ÛŒØ³Ú©',
+          'Ù‡ÛŒÚ† Ú©Ø§Ù… Ù„Û•Ù… ÙˆÛ•ÚµØ§Ù…Ø§Ù†Û•'
+        ],
+        correctAnswer: 'Ú•ÛŽÚ©Ø®Ø³ØªÙ† Ùˆ Ú•ÛŽÚ•Û•ÙˆÚ©Ø±Ø¯Ù†ÛŒ Ø¯Ø§ØªØ§ Ø¨Û• Ø´ÛŽÙˆÛ•ÛŒÛ•Ú©ÛŒ Ø®Û†Ú©Ø§Ø±',
+        explanation: 'Ù„Û•Ù… Ø¨Ø§Ø¨Û•ØªÛ•Ø¯Ø§ Ú•ÛŽÚ©Ø®Ø³ØªÙ†ÛŒ Ø¯Ø§ØªØ§ Ú¯Ø±Ù†Ú¯ØªØ±ÛŒÙ† Ø¨Ù†Û•Ù…Ø§ÛŒÛ• Ø¨Û† Ù¾Ø§Ø±Ø§Ø³ØªÙ† Ùˆ Ù¾ÛŽØ´Ø®Ø³ØªÙ†ÛŒ Ø¦Û•Ù†Ø¬Ø§Ù…ÛŒ Ú©Ø§Ø±Ù¾ÛŽÚ©Ø±Ø¯Ù†.',
+      ),
+      QuestionModel(
+        id: 'ex_2',
+        questionText: 'ØªÛŽÚ¯Û•ÛŒØ´ØªÙ† Ù„Û• Ú†Û•Ù…Ú©Û•Ú©Ø§Ù†ÛŒ $topic Ù„Û• Ø¦Ø§Ø³ØªÛŒ $difficulty ÛŒØ§Ø±Ù…Û•ØªÛŒØ¯Û•Ø±Û• Ø¨Û† Ù†Ù…Ø±Û•ÛŒ Ø¨Û•Ø±Ø² Ù„Û• ÙØ§ÛŒÙ†Ø§ÚµØ¯Ø§.',
+        type: QuestionType.trueFalse,
+        options: ['Ú•Ø§Ø³ØªÛ•', 'Ù‡Û•ÚµÛ•ÛŒÛ•'],
+        correctAnswer: 'Ú•Ø§Ø³ØªÛ•',
+        explanation: 'Ú†ÙˆÙ†Ú©Û• Ù¾Ø±Ø³ÛŒØ§Ø±Û• Ø³Û•Ø±Û•Ú©ÛŒÛŒÛ•Ú©Ø§Ù†ÛŒ ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ ÙØ§ÛŒÙ†Ø§Úµ Ø±Ø§Ø³ØªÛ•ÙˆØ®Û† Ù„Û•Ø³Û•Ø± Ø¦Û•Ù… Ø¨Ù†Û•Ù…Ø§ÛŒØ§Ù†Û• Ø¯Ø§Ø¯Û•Ù†Ø±ÛŽÙ†.',
+      ),
+      QuestionModel(
+        id: 'ex_3',
+        questionText: 'Ú©Ø§Ù…ÛŒØ§Ù† ØªØ§ÛŒØ¨Û•ØªÙ…Û•Ù†Ø¯ÛŒ Ø³Û•Ø±Û•Ú©ÛŒ $topic Û•ØŸ',
+        type: QuestionType.multipleChoice,
+        options: [
+          'Ø®ÛŽØ±Ø§Ú©Ø±Ø¯Ù†ÛŒ Ú†Ø§Ø±Û•Ø³Û•Ø±Ú©Ø±Ø¯Ù†ÛŒ Ø¯Ø§ØªØ§ Ùˆ Ú©Û•Ù…Ú©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ù‡Û•ÚµÛ•Ú©Ø§Ù†',
+          'Ø¯Ø§Ø®Ø³ØªÙ†ÛŒ Ù‡Û•Ù…ÙˆÙˆ Ù¾Ø±Û†Ø³Û•Ú©Ø§Ù†ÛŒ Ø¨Û•Ú©Ø§Ø±Ù‡ÛŽÙ†Û•Ø±',
+          'Ø³Ú•ÛŒÙ†Û•ÙˆÛ•ÛŒ Ø³ÛŽØ±Ú¤Û•Ø± Ø¨Û•ØªÛ•ÙˆØ§ÙˆÛŒ',
+          'Ú•Ø§Ú¯Ø±ØªÙ†ÛŒ Ú•Ø§Ù…'
+        ],
+        correctAnswer: 'Ø®ÛŽØ±Ø§Ú©Ø±Ø¯Ù†ÛŒ Ú†Ø§Ø±Û•Ø³Û•Ø±Ú©Ø±Ø¯Ù†ÛŒ Ø¯Ø§ØªØ§ Ùˆ Ú©Û•Ù…Ú©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ù‡Û•ÚµÛ•Ú©Ø§Ù†',
+        explanation: 'Ø³ÛŒØ³ØªÛ•Ù…ÛŒ Ú˜ÛŒØ± Ù„Û•Ø³Û•Ø± Ø¯Ø§Ø¨ÛŒÙ†Ú©Ø±Ø¯Ù†ÛŒ Ø®ÛŽØ±Ø§ÛŒÛŒ Ùˆ Ø¯ÚµÙ†ÛŒØ§Ø¨ÙˆÙˆÙ† Ù„Û• Ú•Ø§Ø³ØªÛŒ Ø¯Ø§ØªØ§Ú©Ø§Ù† Ú©Ø§Ø± Ø¯Û•Ú©Ø§Øª.',
+      ),
+      QuestionModel(
+        id: 'ex_4',
+        questionText: 'Ù„Û• Ø¦Ø§Ø³ØªÛŒ $difficulty Ø¯Ø§ØŒ Ù‡Û•ÚµÛ•ÛŒ Ú©Û†Ø¯ ÛŒØ§Ù† Ù‡Ø§ÙˆÚ©ÛŽØ´Û• Ø¯Û•Ø¨ÛŽØªÛ• Ù‡Û†ÛŒ ÙˆÛ•Ø³ØªØ§Ù†ÛŒ Ù¾Ø±Û†Ø³Û•Ú©Û•.',
+        type: QuestionType.trueFalse,
+        options: ['Ú•Ø§Ø³ØªÛ•', 'Ù‡Û•ÚµÛ•ÛŒÛ•'],
+        correctAnswer: 'Ú•Ø§Ø³ØªÛ•',
+        explanation: 'Ù„Û• Ø¦Ø§Ø³ØªÛŒ Ø¨Ø§Ù„Ø§ Ø¯Ø§ exception ÛŒØ§Ù† Ù‡Û•ÚµÛ•ÛŒ Ù„Û†Ú˜ÛŒÚ©ÛŒ Ø¯Û•Ø¨ÛŽØªÛ• Ù‡Û†ÛŒ Ø±Û•ØªØ¨ÙˆÙˆÙ†Û•ÙˆÛ•ÛŒ Ø¦Û•Ù†Ø¬Ø§Ù…Û•Ú©Û•.',
+      ),
+      QuestionModel(
+        id: 'ex_5',
+        questionText: 'Ø¨Ø§Ø´ØªØ±ÛŒÙ† Ú•ÛŽÚ¯Ø§ Ø¨Û† Ú†Ø§Ø±Û•Ø³Û•Ø±Ú©Ø±Ø¯Ù†ÛŒ Ú©ÛŽØ´Û•Ú©Ø§Ù†ÛŒ $topic Ú†ÛŒÛŒÛ•ØŸ',
+        type: QuestionType.multipleChoice,
+        options: [
+          'Ø¯Ø§Ø¨Û•Ø´Ú©Ø±Ø¯Ù†ÛŒ Ú©ÛŽØ´Û•Ú©Û• Ø¨Û† Ú©ÛŽØ´Û•ÛŒ Ø¨Ú†ÙˆÙˆÚ©ØªØ± (Divide and Conquer)',
+          'ÙˆØ§Ø²ÛŒ Ù„ÛŽØ¨Ù‡ÛŽÙ†ÛŒØª Ùˆ ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•Ú©Û• Ø¨Û•ØªØ§Úµ Ø¨Û•Ø¬ÛŽØ¨Ù‡ÛŽÚµÛŒØª',
+          'ØªÛ•Ù†Ù‡Ø§ Ø³Û•Ø¹ÛŒ Ù„Û• ÙˆÛ•ÚµØ§Ù…ÛŒ Ù¾Ø±Ø³ÛŒØ§Ø±ÛŒ ÛŒÛ•Ú©Û•Ù… Ø¨Ú©Û•ÛŒØª',
+          'Ø¯Ø§Ø¨Û•Ø²Ø§Ù†Ø¯Ù†ÛŒ ÙØ§ÛŒÙ„Û•Ú©Û• Ø¨Û•Ø¨ÛŽ Ø®ÙˆÛŽÙ†Ø¯Ù†Û•ÙˆÛ•'
+        ],
+        correctAnswer: 'Ø¯Ø§Ø¨Û•Ø´Ú©Ø±Ø¯Ù†ÛŒ Ú©ÛŽØ´Û•Ú©Û• Ø¨Û† Ú©ÛŽØ´Û•ÛŒ Ø¨Ú†ÙˆÙˆÚ©ØªØ± (Divide and Conquer)',
+        explanation: 'ØªÛ•Ú©Ù†ÛŒÚ©ÛŒ Divide & Conquer Ø¨Ù†Û•Ù…Ø§ÛŒ Ø³Û•Ø±Û•Ú©ÛŒ Ø³Û•Ø±Ú©Û•ÙˆØªÙ†Û• Ù„Û• Ø´ÛŒÚ©Ø§Ø±ÛŒ Ú©ÛŽØ´Û• Ø¦Ø§ÚµÛ†Ø²Û•Ú©Ø§Ù†Ø¯Ø§.',
+      ),
+    ];
+
+    return QuizModel(
+      id: 'exam_${Random().nextInt(10000)}',
+      title: 'ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ø¦Û•Ø²Ù…ÙˆÙˆÙ†ÛŒ - $topic',
+      courseName: courseName,
+      questions: examQuestions.take(count > 0 ? count : 5).toList(),
+      durationMinutes: duration,
+      isExam: true,
     );
   }
 
