@@ -736,6 +736,8 @@ class CourseCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+  final DateTime? midtermDate;
+  final DateTime? finalDate;
 
   const CourseCard({
     super.key,
@@ -748,11 +750,85 @@ class CourseCard extends StatelessWidget {
     required this.onTap,
     this.onEdit,
     this.onDelete,
+    this.midtermDate,
+    this.finalDate,
   });
+
+  Widget _buildExamBadge({
+    required BuildContext context,
+    required String label,
+    required DateTime? examDate,
+    required IconData icon,
+    required Color defaultColor,
+    required bool isDark,
+  }) {
+    if (examDate == null) return const SizedBox.shrink();
+
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final examDayStart = DateTime(examDate.year, examDate.month, examDate.day);
+    final diffDays = examDayStart.difference(todayStart).inDays;
+
+    String text;
+    Color badgeColor;
+    Color textColor;
+
+    if (diffDays < 0) {
+      text = 'تەواوبوو';
+      badgeColor = isDark ? Colors.grey.shade800 : Colors.grey.shade200;
+      textColor = Colors.grey;
+    } else if (diffDays == 0) {
+      text = 'ئەمڕۆیە! ⚠️';
+      badgeColor = const Color(0xFFFF3B30).withOpacity(0.15);
+      textColor = const Color(0xFFFF3B30);
+    } else if (diffDays <= 3) {
+      text = '$diffDays ڕۆژی ماوە 🔥';
+      badgeColor = const Color(0xFFFF9500).withOpacity(0.15);
+      textColor = const Color(0xFFFF9500);
+    } else {
+      text = '$diffDays ڕۆژی ماوە';
+      badgeColor = defaultColor.withOpacity(0.12);
+      textColor = defaultColor;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: badgeColor,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: textColor.withOpacity(0.25), width: 0.8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: textColor),
+          const SizedBox(width: 4),
+          Text(
+            '$label: ',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+            ),
+          ),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: textColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hasExams = midtermDate != null || finalDate != null;
+
     return AppCard(
       padding: const EdgeInsets.all(16),
       onTap: onTap,
@@ -839,7 +915,7 @@ class CourseCard extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Row(
             children: [
               Expanded(
@@ -864,6 +940,39 @@ class CourseCard extends StatelessWidget {
               ),
             ],
           ),
+
+          if (hasExams) ...[
+            const SizedBox(height: 12),
+            Container(
+              height: 1,
+              color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey.withValues(alpha: 0.15),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                if (midtermDate != null)
+                  _buildExamBadge(
+                    context: context,
+                    label: 'میدترم',
+                    examDate: midtermDate,
+                    icon: CupertinoIcons.timer,
+                    defaultColor: const Color(0xFF007AFF),
+                    isDark: isDark,
+                  ),
+                if (finalDate != null)
+                  _buildExamBadge(
+                    context: context,
+                    label: 'فایناڵ',
+                    examDate: finalDate,
+                    icon: CupertinoIcons.flag_fill,
+                    defaultColor: const Color(0xFFAF52DE),
+                    isDark: isDark,
+                  ),
+              ],
+            ),
+          ],
         ],
       ),
     );

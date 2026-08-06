@@ -30,6 +30,9 @@ class CourseDetailScreen extends StatefulWidget {
   final double progress;
   final IconData icon;
   final Color themeColor;
+  final DateTime? midtermDate;
+  final DateTime? finalDate;
+  final Function(DateTime? midterm, DateTime? finalDate)? onExamDatesChanged;
 
   const CourseDetailScreen({
     super.key,
@@ -38,6 +41,9 @@ class CourseDetailScreen extends StatefulWidget {
     required this.progress,
     required this.icon,
     required this.themeColor,
+    this.midtermDate,
+    this.finalDate,
+    this.onExamDatesChanged,
   });
 
   @override
@@ -46,10 +52,14 @@ class CourseDetailScreen extends StatefulWidget {
 
 class _CourseDetailScreenState extends State<CourseDetailScreen> {
   final List<PdfLectureItem> _pdfLectures = [];
+  DateTime? _midtermDate;
+  DateTime? _finalDate;
 
   @override
   void initState() {
     super.initState();
+    _midtermDate = widget.midtermDate;
+    _finalDate = widget.finalDate;
     _pdfLectures.addAll(_generateLecturesForCourse(widget.courseTitle));
   }
 
@@ -254,6 +264,356 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     });
   }
 
+  void _showExamDateEditModal({
+    required BuildContext context,
+    required String examTitle,
+    required DateTime? currentDate,
+    required Color accentColor,
+    required ValueChanged<DateTime?> onSaved,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+
+    DateTime selectedDate = currentDate ?? now.add(const Duration(days: 7));
+    int daysOffset = selectedDate.difference(todayStart).inDays;
+    if (daysOffset < 0) daysOffset = 0;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final targetDate = todayStart.add(Duration(days: daysOffset));
+            final formattedTarget = '${targetDate.year}/${targetDate.month.toString().padLeft(2, '0')}/${targetDate.day.toString().padLeft(2, '0')}';
+
+            return Container(
+              padding: EdgeInsets.only(
+                top: 20, left: 20, right: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              decoration: BoxDecoration(
+                color: isDark ? ZankoColors.darkCard : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40, height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Icon(CupertinoIcons.timer, color: accentColor, size: 22),
+                      const SizedBox(width: 8),
+                      Text(
+                        'دیاریکردنی ماوەی $examTitle',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : ZankoColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Days Counter & Live Preview
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isDark ? ZankoColors.darkBackground : Colors.grey[100],
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'ماوەی ماوە بە ڕۆژ (Countdown in Days):',
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              onPressed: daysOffset > 0
+                                  ? () => setModalState(() => daysOffset--)
+                                  : null,
+                              icon: const Icon(CupertinoIcons.minus_circle, size: 32),
+                              color: accentColor,
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: accentColor.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Text(
+                                '$daysOffset ڕۆژ',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: accentColor,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () => setModalState(() => daysOffset++),
+                              icon: const Icon(CupertinoIcons.add_circled_solid, size: 32),
+                              color: accentColor,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'ڕێکەوتی تاقیکردنەوە: $formattedTarget',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : ZankoColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Quick Presets
+                  const Text(
+                    'دیاریکردنی خێرا (Quick Presets):',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [3, 7, 10, 14, 21, 30, 45].map((presetDays) {
+                      final isSelected = daysOffset == presetDays;
+                      return ChoiceChip(
+                        label: Text('+$presetDays ڕۆژ'),
+                        selected: isSelected,
+                        selectedColor: accentColor.withValues(alpha: 0.25),
+                        labelStyle: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isSelected ? accentColor : (isDark ? Colors.white : Colors.black87),
+                        ),
+                        onSelected: (selected) {
+                          if (selected) {
+                            setModalState(() {
+                              daysOffset = presetDays;
+                            });
+                          }
+                        },
+                      );
+                    }).toList(),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Custom Calendar DatePicker Button
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: targetDate,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2030),
+                      );
+                      if (picked != null) {
+                        setModalState(() {
+                          final diff = picked.difference(todayStart).inDays;
+                          daysOffset = diff < 0 ? 0 : diff;
+                        });
+                      }
+                    },
+                    icon: const Icon(CupertinoIcons.calendar, size: 18),
+                    label: const Text('هەڵبژاردنی لە ڕۆژژمێرەوە (Calendar)'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 44),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Save / Clear Buttons
+                  Row(
+                    children: [
+                      if (currentDate != null)
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              onSaved(null);
+                              Navigator.pop(context);
+                            },
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Colors.redAccent),
+                              minimumSize: const Size(0, 48),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                            child: const Text('سڕینەوە', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      if (currentDate != null) const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            final resultDate = todayStart.add(Duration(days: daysOffset));
+                            onSaved(resultDate);
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: accentColor,
+                            minimumSize: const Size(0, 48),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          child: const Text(
+                            'پاشەکەوتکردن',
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildExamDetailTile({
+    required BuildContext context,
+    required String title,
+    required DateTime? date,
+    required IconData icon,
+    required Color accentColor,
+    required bool isDark,
+    required VoidCallback onPickDate,
+  }) {
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+
+    String statusText = 'دیاری نەکراوە';
+    String dateFormatted = 'دیاری نەکراوە';
+    Color badgeBg = isDark ? Colors.grey.shade800 : Colors.grey.shade200;
+    Color badgeFg = Colors.grey;
+
+    if (date != null) {
+      dateFormatted = '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}';
+      final targetStart = DateTime(date.year, date.month, date.day);
+      final diff = targetStart.difference(todayStart).inDays;
+
+      if (diff < 0) {
+        statusText = 'تەواوبوو';
+        badgeBg = isDark ? Colors.grey.shade800 : Colors.grey.shade200;
+        badgeFg = Colors.grey;
+      } else if (diff == 0) {
+        statusText = 'ئەمڕۆیە! ⚠️';
+        badgeBg = const Color(0xFFFF3B30).withValues(alpha: 0.18);
+        badgeFg = const Color(0xFFFF3B30);
+      } else if (diff <= 3) {
+        statusText = '$diff ڕۆژی ماوە 🔥';
+        badgeBg = const Color(0xFFFF9500).withValues(alpha: 0.18);
+        badgeFg = const Color(0xFFFF9500);
+      } else {
+        statusText = '$diff ڕۆژی ماوە';
+        badgeBg = accentColor.withValues(alpha: 0.15);
+        badgeFg = accentColor;
+      }
+    }
+
+    return GestureDetector(
+      onTap: onPickDate,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isDark ? ZankoColors.darkCard : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF0F0F6),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, size: 16, color: accentColor),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : ZankoColors.textPrimary,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  child: Icon(
+                    CupertinoIcons.pencil_circle_fill,
+                    size: 20,
+                    color: accentColor,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              dateFormatted,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: badgeBg,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                statusText,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: badgeFg,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -384,6 +744,86 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       ),
                     ],
                   ),
+                ),
+              ),
+            ),
+
+            // Exam Countdown Section
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(CupertinoIcons.timer, size: 18, color: ZankoColors.primary),
+                        const SizedBox(width: 6),
+                        Text(
+                          'ژێرمێژووی تاقیکردنەوەکان (Exam Countdown)',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : ZankoColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildExamDetailTile(
+                            context: context,
+                            title: 'تاقیکردنەوەی میدترم',
+                            date: _midtermDate,
+                            icon: CupertinoIcons.timer,
+                            accentColor: const Color(0xFF007AFF),
+                            isDark: isDark,
+                            onPickDate: () {
+                              _showExamDateEditModal(
+                                context: context,
+                                examTitle: 'تاقیکردنەوەی میدترم',
+                                currentDate: _midtermDate,
+                                accentColor: const Color(0xFF007AFF),
+                                onSaved: (newDate) {
+                                  setState(() {
+                                    _midtermDate = newDate;
+                                  });
+                                  widget.onExamDatesChanged?.call(_midtermDate, _finalDate);
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildExamDetailTile(
+                            context: context,
+                            title: 'تاقیکردنەوەی فایناڵ',
+                            date: _finalDate,
+                            icon: CupertinoIcons.flag_fill,
+                            accentColor: const Color(0xFFAF52DE),
+                            isDark: isDark,
+                            onPickDate: () {
+                              _showExamDateEditModal(
+                                context: context,
+                                examTitle: 'تاقیکردنەوەی فایناڵ',
+                                currentDate: _finalDate,
+                                accentColor: const Color(0xFFAF52DE),
+                                onSaved: (newDate) {
+                                  setState(() {
+                                    _finalDate = newDate;
+                                  });
+                                  widget.onExamDatesChanged?.call(_midtermDate, _finalDate);
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),

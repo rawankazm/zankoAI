@@ -216,6 +216,24 @@ class LanguageProvider extends ChangeNotifier {
     'edit_course': {'ku': 'دەستکاریکردنی وانە', 'ar': 'تعديل المادة', 'en': 'Edit Course'},
     'delete_course': {'ku': 'سڕینەوەی وانە', 'ar': 'حذف المادة', 'en': 'Delete Course'},
 
+    // Exam Countdown
+    'midterm_exam': {'ku': 'تاقیکردنەوەی میدترم', 'ar': 'امتحان الميدتيرم', 'en': 'Midterm Exam'},
+    'final_exam': {'ku': 'تاقیکردنەوەی فایناڵ', 'ar': 'الامتحان النهائي', 'en': 'Final Exam'},
+    'exam_countdown': {'ku': 'ژێرمێژووی تاقیکردنەوەکان', 'ar': 'العد التنازلي للامتحانات', 'en': 'Exam Countdown'},
+    'select_midterm_date': {'ku': 'ڕێکەوتی تاقیکردنەوەی میدترم', 'ar': 'تاريخ امتحان الميدتيرم', 'en': 'Midterm Exam Date'},
+    'select_final_date': {'ku': 'ڕێکەوتی تاقیکردنەوەی فایناڵ', 'ar': 'تاريخ الامتحان النهائي', 'en': 'Final Exam Date'},
+    'days_left': {'ku': 'ڕۆژی ماوە', 'ar': 'أيام متبقية', 'en': 'days left'},
+    'hours_left': {'ku': 'کاتژمێری ماوە', 'ar': 'ساعات متبقية', 'en': 'hours left'},
+    'today_exam': {'ku': 'ئەمڕۆ تاقیکردنەوەیە!', 'ar': 'الامتحان اليوم!', 'en': 'Exam Today!'},
+    'exam_completed': {'ku': 'تەواوبوو', 'ar': 'مكتمل', 'en': 'Completed'},
+    'no_exam_date': {'ku': 'دیاری نەکراوە', 'ar': 'غير محدد', 'en': 'Not set'},
+    'edit_midterm_duration': {'ku': 'دیاریکردن و دەستکاریکردنی ماوەی میدترم', 'ar': 'تحديد وتعديل مدة الميدتيرم', 'en': 'Edit Midterm Period & Date'},
+    'set_by_days': {'ku': 'دیاریکردنی ماوە بە ڕۆژ', 'ar': 'تحديد المدة بالأيام', 'en': 'Set period in days'},
+    'days_from_now': {'ku': 'ڕۆژ لەمڕۆوە', 'ar': 'أيام من اليوم', 'en': 'days from today'},
+    'custom_date_picker': {'ku': 'هەڵبژاردنی ڕێکەوتی دیاریکراو', 'ar': 'اختيار تاريخ محدد', 'en': 'Pick Exact Date'},
+
+
+
     'nav_gpa': {'ku': 'کۆنمرە (GPA)', 'ar': 'المعدل (GPA)', 'en': 'GPA'},
     'nav_ai_teacher': {'ku': 'مامۆستا AI', 'ar': 'معلم AI', 'en': 'AI Tutor'},
 
