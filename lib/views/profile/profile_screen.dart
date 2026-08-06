@@ -620,6 +620,315 @@ class ProfileScreen extends StatelessWidget {
   }
 
 
+  void _showNotificationsModal(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    bool dailyExamAlert = true;
+    bool studyReminder = true;
+    bool campusNews = true;
+    bool vipAlerts = true;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: isDark ? ZankoColors.darkCard : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40, height: 5,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[700] : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      const Icon(CupertinoIcons.bell_fill, color: Color(0xFFFF9F0A), size: 24),
+                      const SizedBox(width: 10),
+                      Text(
+                        'ڕێکخستنی ئاگادارییەکان',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? Colors.white : ZankoColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  SwitchListTile(
+                    activeColor: ZankoColors.primary,
+                    title: const Text('ئاگادارکردنەوەی تاقیکردنەوەکان', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    subtitle: const Text('ناردنی بیرخەرەوەی ژێرمێژووی تاقیکردنەوەی میدترم و فایناڵ', style: TextStyle(fontSize: 12)),
+                    value: dailyExamAlert,
+                    onChanged: (val) => setModalState(() => dailyExamAlert = val),
+                  ),
+                  const Divider(),
+                  SwitchListTile(
+                    activeColor: ZankoColors.primary,
+                    title: const Text('بیرخەرەوەی بەردەوامیی خوێندن', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    subtitle: const Text('ناردنی بیرخەرەوە بۆ پاراستنی زنجیرەی ڕۆژانەی دراسەکردن', style: TextStyle(fontSize: 12)),
+                    value: studyReminder,
+                    onChanged: (val) => setModalState(() => studyReminder = val),
+                  ),
+                  const Divider(),
+                  SwitchListTile(
+                    activeColor: ZankoColors.primary,
+                    title: const Text('هەواڵ و نوێکارییەکانی زانکۆ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    subtitle: const Text('ئاگادارکردنەوە لە زانکۆلاین و هەواڵە گرنگەکان', style: TextStyle(fontSize: 12)),
+                    value: campusNews,
+                    onChanged: (val) => setModalState(() => campusNews = val),
+                  ),
+                  const Divider(),
+                  SwitchListTile(
+                    activeColor: ZankoColors.primary,
+                    title: const Text('ئاگادارکردنەوەی بەشداربوونی VIP', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    subtitle: const Text('بیرخەرەوەی ماوەی بەسەرچوونی هەژماری VIP', style: TextStyle(fontSize: 12)),
+                    value: vipAlerts,
+                    onChanged: (val) => setModalState(() => vipAlerts = val),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('ڕێکخستنەکانی ئاگاداری بە سەرکەوتوویی پاشەکەوت کران 🔔'),
+                            backgroundColor: ZankoColors.success,
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: ZankoColors.primary,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: const Text('پاشەکەوتکردن', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showPrivacySecurityModal(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: isDark ? ZankoColors.darkCard : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40, height: 5,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey[700] : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  const Icon(CupertinoIcons.lock_fill, color: Color(0xFF34C759), size: 24),
+                  const SizedBox(width: 10),
+                  Text(
+                    'تایبەتمەندی و ئاسایش',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: isDark ? Colors.white : ZankoColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              const ListTile(
+                leading: Icon(CupertinoIcons.shield_fill, color: Color(0xFF34C759)),
+                title: Text('پاراستن و تشفیرکردنی داتاکان', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                subtitle: Text('سەرجەم زانیارییەکانت بە پرۆتۆکۆلی TLS 1.3 بە پارێزراوی ڕامگیراون.', style: TextStyle(fontSize: 12)),
+              ),
+              const Divider(),
+              const ListTile(
+                leading: Icon(CupertinoIcons.person_badge_minus_fill, color: Color(0xFF007AFF)),
+                title: Text('پایەندبوون بە تایبەتمەندی بەکارهێنەر', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                subtitle: Text('زانیارییە کەسییەکانت بە هیچ جۆرێک لەگەڵ لایەنی سێیەم هاوبەش ناکرێن.', style: TextStyle(fontSize: 12)),
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(CupertinoIcons.trash_fill, color: ZankoColors.error),
+                title: const Text('سڕینەوەی کاشی ئۆفلاین (Clear Cache)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                subtitle: const Text('سڕینەوەی فایلی کاتی و پاککردنەوەی فەزای مۆبایلەکەت', style: TextStyle(fontSize: 12)),
+                onTap: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('کاشی ئۆفلاینی ئەپەکە بە سەرکەوتوویی پاککرایەوە 🧹'),
+                      backgroundColor: ZankoColors.success,
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: const Text('داخستن', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showAboutZankoModal(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: isDark ? ZankoColors.darkCard : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40, height: 5,
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.grey[700] : Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(height: 20),
+              // App Logo
+              Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: ZankoColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const Icon(CupertinoIcons.sparkles, color: ZankoColors.primary, size: 50),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'ZankoAI',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  color: isDark ? Colors.white : ZankoColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'وەشانی v1.0.0 • Official Kurdistan Student AI Companion',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ZankoColors.primary),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'یەکەمین و پێشکەوتووترین ئەپی ژیری دەستکرد بۆ قوتابیانی زانکۆ و پەیمانگاکانی هەرێمی کوردستان. یارمەتیدەری سەرەکییت بۆ شیکردنەوەی وانەکان، دروستکردنی تاقیکردنەوە، و ئەنجامدانی کویزی زیرەک.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: isDark ? Colors.grey[300] : ZankoColors.textSecondary,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.black.withValues(alpha: 0.2) : Colors.grey[100],
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(CupertinoIcons.heart_fill, color: ZankoColors.error, size: 16),
+                    SizedBox(width: 8),
+                    Text(
+                      'گەشەپێدراوە لەلایەن تیمەکانی birdev ★',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ZankoColors.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: const Text('داخستن', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _showPhotoChooserModal(BuildContext context, dynamic user) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final urlCtrl = TextEditingController(text: user?.photoUrl ?? '');
@@ -1606,7 +1915,7 @@ class ProfileScreen extends StatelessWidget {
                     iconColor: const Color(0xFFFF9F0A),
                     title: langProvider.translate('notifications'),
                     subtitle: langProvider.translate('daily_reminders'),
-                    onTap: () {},
+                    onTap: () => _showNotificationsModal(context),
                   ),
                   const Divider(height: 1, indent: 56),
                   _buildSettingsTile(
@@ -1623,7 +1932,7 @@ class ProfileScreen extends StatelessWidget {
                     icon: CupertinoIcons.lock_fill,
                     iconColor: const Color(0xFF34C759),
                     title: langProvider.translate('privacy_security'),
-                    onTap: () {},
+                    onTap: () => _showPrivacySecurityModal(context),
                   ),
 
                   const Divider(height: 1, indent: 56),
@@ -1633,7 +1942,7 @@ class ProfileScreen extends StatelessWidget {
                     iconColor: ZankoColors.primary,
                     title: langProvider.translate('about_zanko'),
                     subtitle: langProvider.translate('version'),
-                    onTap: () {},
+                    onTap: () => _showAboutZankoModal(context),
                   ),
                   const Divider(height: 1, indent: 56),
                   _buildSettingsTile(
