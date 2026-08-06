@@ -9,14 +9,12 @@ import '../../widgets/apple_ui_components.dart';
 import '../ai_teacher/ai_teacher_chat_screen.dart';
 import '../courses/course_detail_screen.dart';
 import '../flashcards/flashcards_screen.dart';
-import '../focus/focus_screen.dart';
 import '../gpa/gpa_tracker_screen.dart';
 import '../notifications/notifications_screen.dart';
 import '../pdf/pdf_chat_screen.dart';
 import '../pdf/audio_summarizer_view.dart';
 import '../profile/profile_screen.dart';
 
-import '../quiz/quiz_screen.dart';
 import '../quiz/ai_exam_generator_screen.dart';
 import '../schedule/schedule_screen.dart';
 import '../zankoline/zankoline_screen.dart';

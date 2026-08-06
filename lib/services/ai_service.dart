@@ -510,7 +510,6 @@ $pdfContext
       return _generateMockQuiz(defaultTitle, courseName);
     }
   }
-  }
 
   @override
   Future<String> organizeNote(String rawNoteContent) async {

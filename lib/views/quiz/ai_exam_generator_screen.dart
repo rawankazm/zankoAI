@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +8,6 @@ import '../../models/quiz_model.dart';
 import '../../services/ai_service.dart';
 import '../../services/language_provider.dart';
 import '../../theme.dart';
-import '../../widgets/apple_ui_components.dart';
 import '../ai_teacher/ai_teacher_chat_screen.dart';
 
 class AiExamGeneratorScreen extends StatefulWidget {
@@ -110,7 +108,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('فایلی ${_pdfFileName} بارکرا بە سەرکەوتوویی 📄'),
+              content: Text('فایلی $_pdfFileName بارکرا بە سەرکەوتوویی 📄'),
               backgroundColor: ZankoColors.success,
             ),
           );
