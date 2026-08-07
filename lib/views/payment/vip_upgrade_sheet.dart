@@ -165,15 +165,53 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
       key: const ValueKey('form'),
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Drag handle
-        Container(
-          width: 40, height: 5,
-          decoration: BoxDecoration(
-            color: isDark ? Colors.grey[700] : Colors.grey[300],
-            borderRadius: BorderRadius.circular(10),
-          ),
+        // Top Bar with Back, Drag handle & Close buttons
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.06),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  CupertinoIcons.chevron_back,
+                  size: 20,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+            ),
+            Container(
+              width: 40,
+              height: 5,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey[700] : Colors.grey[300],
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.06),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  CupertinoIcons.xmark,
+                  size: 18,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 16),
 
         // ── Header Banner ─────────────────────────────────────────────────
         Container(
