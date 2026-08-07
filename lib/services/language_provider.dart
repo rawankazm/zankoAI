@@ -81,7 +81,7 @@ class LanguageProvider extends ChangeNotifier {
     'email': {'ku': 'ئیمەیڵ', 'ar': 'البريد الإلكتروني', 'en': 'Email'},
     'password': {'ku': 'وشەی نهێنی', 'ar': 'كلمة المرور', 'en': 'Password'},
     'google_login': {'ku': 'چوونەژوورەوە بە گووگڵ', 'ar': 'الدخول بواسطة Google', 'en': 'Google Sign-In'},
-    'slogan': {'ku': 'یارمەتیدەری زیرەکی خوێندکاران و مامۆستایان', 'ar': 'المساعد الذكي للطلاب والمعلمين', 'en': 'Smart Academic Assistant'},
+    'slogan': {'ku': 'یارمەتیدەری زیرەکی خوێندکاران', 'ar': 'المساعد الذكي للطلاب', 'en': 'Smart Student Assistant'},
     'has_account': {'ku': 'هەژمارت هەیە؟ چوونەژوورەوە', 'ar': 'لديك حساب؟ تسجيل الدخول', 'en': 'Have an account? Log In'},
     'no_account': {'ku': 'هەژمارت نییە؟ دروستکردنی هەژمار', 'ar': 'ليس لديك حساب؟ إنشاء حساب', 'en': 'No account? Register'},
     'guest_login': {'ku': 'بەردەوامبوون وەک مێوان', 'ar': 'المتابعة كزائر', 'en': 'Continue as Guest'},
@@ -288,9 +288,21 @@ class LanguageProvider extends ChangeNotifier {
     'nav_profile': {'ku': 'پڕۆفایل', 'ar': 'الملف', 'en': 'Profile'},
 
     // Home / Dashboard Header & Search
-    'greeting': {'ku': 'بەیانیت باش،', 'ar': 'صباح الخير،', 'en': 'Good morning,'},
+    'greeting': {'ku': 'بەیانیت باش', 'ar': 'صباح الخير', 'en': 'Good morning'},
+    'greeting_morning': {'ku': 'بەیانیت باش', 'ar': 'صباح الخير', 'en': 'Good morning'},
+    'greeting_afternoon': {'ku': 'ڕۆژ باش', 'ar': 'مساء الخير', 'en': 'Good afternoon'},
+    'greeting_evening': {'ku': 'ئێوارەت باش', 'ar': 'مساء الخير', 'en': 'Good evening'},
+    'greeting_night': {'ku': 'شەو باش', 'ar': 'مساء الخير', 'en': 'Good evening'},
     'ask_ai_anything': {'ku': 'پرسیار لە AI بکه...', 'ar': 'اسأل الذكاء الاصطناعي...', 'en': 'Ask AI anything...'},
     'ai_tutor': {'ku': 'مامۆستای زیرەک', 'ar': 'المعلم الذكي', 'en': 'AI Tutor'},
+    'type_message': {'ku': 'پەیامەکەت بنووسە...', 'ar': 'اكتب رسالتك...', 'en': 'Type a message...'},
+    'ai_typing': {'ku': 'مامۆستا خەریکی وەڵامدانەوەیە...', 'ar': 'المعلم يكتب الآن...', 'en': 'AI Tutor is typing...'},
+    'ai_welcome': {
+      'ku': 'سڵاو! من مامۆستای زیرەکی ZankoAIـم. چۆن دەتوانم یارمەتیدەرت بم لە خوێندنەکەتدا؟',
+      'ar': 'مرحباً! أنا معلمك الذكي في ZankoAI. كيف يمكنني مساعدتك اليوم؟',
+      'en': 'Hello! I am your ZankoAI Tutor. How can I help you learn today?'
+    },
+    'enter_api_key': {'ku': 'تۆمارکردنی کلیلی Gemini API', 'ar': 'إدخال مفتاح Gemini API', 'en': 'Enter Gemini API Key'},
     'ai_tutor_subtitle': {
       'ku': 'هاوکاری تایبەتی فێربوونت.\nپرسیار بکە، فێربە و گەشە بکە.',
       'ar': 'مساعدك الشخصي للتعلم.\nاسأل، تعلم وتطور.',

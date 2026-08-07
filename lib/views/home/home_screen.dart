@@ -61,11 +61,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  String _greeting() {
+  String _greeting(LanguageProvider langProvider) {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
+    if (hour >= 5 && hour < 12) {
+      return langProvider.translate('greeting_morning');
+    } else if (hour >= 12 && hour < 17) {
+      return langProvider.translate('greeting_afternoon');
+    } else if (hour >= 17 && hour < 22) {
+      return langProvider.translate('greeting_evening');
+    } else {
+      return langProvider.translate('greeting_night');
+    }
   }
 
   @override
@@ -158,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                '${_greeting()} 👋',
+                                '${_greeting(langProvider)} 👋',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(

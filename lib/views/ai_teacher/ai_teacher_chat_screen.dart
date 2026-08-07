@@ -113,12 +113,107 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       }
     }
 
+  void _showApiKeyDialog(BuildContext context) {
+    final aiService = Provider.of<AiService>(context, listen: false);
+    final lang = Provider.of<LanguageProvider>(context, listen: false);
+    final controller = TextEditingController(text: aiService.apiKey ?? '');
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E222A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          lang.translate('enter_api_key'),
+          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Gemini API Key (Google AI Studio):',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: controller,
+              style: const TextStyle(color: Colors.white, fontSize: 14),
+              decoration: InputDecoration(
+                hintText: 'AIzaSy...',
+                hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                filled: true,
+                fillColor: const Color(0xFF15181E),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(lang.translate('cancel'), style: const TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ZankoColors.primary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () {
+              aiService.apiKey = controller.text.trim();
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('✅ API Key updated successfully!'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            child: Text(lang.translate('save'), style: const TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _loadChatHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final rawTimestamp = prefs.getInt('ai_chat_saved_time');
+    final rawJson = prefs.getString('ai_chat_history');
+
+    if (rawTimestamp != null && rawJson != null) {
+      final savedDate = DateTime.fromMillisecondsSinceEpoch(rawTimestamp);
+      final daysDiff = DateTime.now().difference(savedDate).inDays;
+
+      if (daysDiff < 7) {
+        try {
+          final List<dynamic> decoded = jsonDecode(rawJson);
+          if (decoded.isNotEmpty) {
+            setState(() {
+              _messages.clear();
+              for (var item in decoded) {
+                final map = Map<String, String>.from(item);
+                map['time'] ??= '4:09 pm';
+                _messages.add(map);
+              }
+            });
+            _scrollToBottom();
+            return;
+          }
+        } catch (_) {}
+      }
+    }
+
     // Default clean welcome message
+    final lang = Provider.of<LanguageProvider>(context, listen: false);
     setState(() {
       _messages.clear();
       _messages.add({
         'role': 'assistant',
-        'content': 'Hello! I am your AI Tutor powered by Apple Intelligence & ZankoAI. How can I help you excel today?',
+        'content': lang.translate('ai_welcome'),
         'time': _formatTime(),
       });
     });
@@ -134,11 +229,12 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('ai_chat_history');
     await prefs.remove('ai_chat_saved_time');
+    final lang = Provider.of<LanguageProvider>(context, listen: false);
     setState(() {
       _messages.clear();
       _messages.add({
         'role': 'assistant',
-        'content': 'Hello! I am your AI Tutor powered by Apple Intelligence & ZankoAI. How can I help you excel today?',
+        'content': lang.translate('ai_welcome'),
         'time': _formatTime(),
       });
     });
@@ -305,6 +401,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
 
   Widget _buildHeader(BuildContext context) {
     final canPop = Navigator.canPop(context);
+    final lang = Provider.of<LanguageProvider>(context);
 
     return Container(
       padding: EdgeInsets.only(
@@ -325,7 +422,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
             const SizedBox(width: 12),
           ],
 
-          // User Avatar & Name on top left without typing or call button
+          // User Avatar & Name
           Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
@@ -341,20 +438,24 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
             child: const CircleAvatar(
               radius: 20,
               backgroundColor: Color(0xFF2A2E37),
-              backgroundImage: NetworkImage(
-                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop',
-              ),
+              child: Icon(Icons.psychology_rounded, color: ZankoColors.primary, size: 22),
             ),
           ),
           const SizedBox(width: 12),
-          const Text(
-            'Kathy Gomez',
-            style: TextStyle(
+          Text(
+            lang.translate('ai_tutor'),
+            style: const TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w700,
               color: Colors.white,
               letterSpacing: -0.2,
             ),
+          ),
+          const Spacer(),
+          _buildNeumorphicButton(
+            icon: CupertinoIcons.key,
+            onTap: () => _showApiKeyDialog(context),
+            iconColor: ZankoColors.primary,
           ),
         ],
       ),
@@ -559,8 +660,8 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                               ),
                               SizedBox(width: 10),
                               Text(
-                                'Kathy is typing...',
-                                style: TextStyle(
+                                lang.translate('ai_typing'),
+                                style: const TextStyle(
                                   fontSize: 13,
                                   color: Colors.white70,
                                 ),

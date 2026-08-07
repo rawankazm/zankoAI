@@ -119,9 +119,9 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   Future<String> _callGeminiHttp(String key, String prompt, String systemInstruction) async {
     final client = HttpClient();
-    client.connectionTimeout = const Duration(seconds: 5);
+    client.connectionTimeout = const Duration(seconds: 8);
 
-    final modelsToTry = ['gemini-1.5-flash', 'gemini-2.0-flash'];
+    final modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
 
     for (final m in modelsToTry) {
       try {
@@ -142,7 +142,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
         };
 
         request.add(utf8.encode(jsonEncode(bodyMap)));
-        final response = await request.close().timeout(const Duration(seconds: 8));
+        final response = await request.close().timeout(const Duration(seconds: 10));
         final respStr = await response.transform(utf8.decoder).join();
 
         if (response.statusCode == 200) {
@@ -169,16 +169,18 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   // Helper to call Gemini Model
   Future<String> _callGemini(String prompt, {String systemInstruction = ""}) async {
-    final keysToTry = [
-      _fallbackWorkingKey,
-      if (_apiKey != null && _apiKey!.trim().isNotEmpty && _apiKey!.startsWith('AIzaSy')) _apiKey!.trim(),
+    final keysToTry = <String>[
+      if (_apiKey != null && _apiKey!.trim().isNotEmpty) _apiKey!.trim(),
       if (_defaultApiKey.trim().isNotEmpty) _defaultApiKey.trim(),
+      if (_fallbackWorkingKey.trim().isNotEmpty && _fallbackWorkingKey != _apiKey) _fallbackWorkingKey.trim(),
     ];
+
+    String lastError = "";
 
     for (final keyToUse in keysToTry) {
       if (keyToUse.isEmpty) continue;
 
-      final models = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
+      final models = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
 
       for (final m in models) {
         try {
@@ -191,21 +193,33 @@ class ZankoAiService extends ChangeNotifier implements AiService {
           );
 
           final content = [gemini.Content.text(prompt)];
-          final response = await model.generateContent(content).timeout(const Duration(seconds: 10));
+          final response = await model.generateContent(content).timeout(const Duration(seconds: 12));
           if (response.text != null && response.text!.isNotEmpty) {
             return response.text!;
           }
-        } catch (_) {}
+        } catch (e) {
+          lastError = e.toString();
+        }
+      }
+
+      // Direct HTTP API fallback
+      final httpFallback = await _callGeminiHttp(keyToUse, prompt, systemInstruction);
+      if (httpFallback.isNotEmpty) {
+        return httpFallback;
       }
     }
 
-    // Direct HTTP API fallback
-    final httpFallback = await _callGeminiHttp(_fallbackWorkingKey, prompt, systemInstruction);
-    if (httpFallback.isNotEmpty) {
-      return httpFallback;
+    if (lastError.isNotEmpty) {
+      final errLower = lastError.toLowerCase();
+      if (errLower.contains('api_key') || errLower.contains('invalid') || errLower.contains('disabled') || errLower.contains('unauthorized')) {
+        return "âš ï¸ **Ú©Ù„ÛŒÙ„ÛŽ APIÛŒ Gemini Ú©Ø§Ø±Ù†Ø§Ú©Ø§Øª ÛŒØ§Ù† Ú†Ø§Ù„Ø§Ú© Ù†Û•Ú©Ø±Ø§ÙˆÛ• (API Key Error)**\n\n"
+               "ØªÚ©Ø§ÛŒÛ• Ú©Ù„ÛŒÙ„ÛŽÚ©ÛŒ Ú©Ø§Ø±Ø§ÛŒ Gemini API Ù„Û• Ú•ÛŽÚ©Ø®Ø³ØªÙ†Û•Ú©Ø§Ù†Ø¯Ø§ ÛŒØ§Ù† Ù„Û•Ø±ÛŽÚ¯Û•ÛŒ Ø¯ÙˆÚ¯Ù…Û•ÛŒ ðŸ”‘ Ù„Û• Ø³Û•Ø±Û•ÙˆÛ•ÛŒ Ú†Ø§ØªÛ•Ú©Û• Ø¨Ù†ÙˆÙˆØ³Û•.\n"
+               "ØªÛŽØ¨ÛŒÙ†ÛŒ: Ø¨Û† ÙˆÛ•Ø±Ú¯Ø±ØªÙ†ÛŒ Ú©Ù„ÛŒÙ„ÛŒ Ø¨Û•Ø®Û†Ú•Ø§ÛŒÛŒ Ø³Û•Ø±Ø¯Ø§Ù†ÛŒ https://aistudio.google.com/app/apikey Ø¨Ú©Û•.";
+      }
+      return "âš ï¸ **Ù‡Û•ÚµÛ• Ù„Û• Ø¨Û•Ø³ØªÙ†Û•ÙˆÛ• Ø¨Û• Gemini API**: $lastError";
     }
 
-    return "Ø³ÚµØ§Ùˆ! ØªÛŽÚ¯Û•ÛŒØ´ØªÙ… Ù„Û• Ù¾Ø±Ø³ÛŒØ§Ø±Û•Ú©Û•Øª. Ù„Û•Ù… Ø¨Ø§Ø¨Û•ØªÛ•Ø¯Ø§ ØªÛŒØ´Ú© Ø¯Û•Ø®Û•ÛŒÙ†Û• Ø³Û•Ø± Ú†Û•Ù…Ú©Û• Ø³Û•Ø±Û•Ú©ÛŒÛŒÛŒÛ•Ú©Ø§Ù†ÛŒ ÙˆØ§Ù†Û•Ú©Û•ØŒ Ø´ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ ÙÛ†Ø±Ù…ÙˆÙ„Û• Ø²Ø§Ù†Ø³ØªÛŒÛŒÛ•Ú©Ø§Ù†ØŒ Ùˆ Ø¨Ø§Ø´ØªØ±Ú©Ø±Ø¯Ù†ÛŒ Ø¦Ø§Ø³ØªÛŒ ÙÛŽØ±Ø¨ÙˆÙˆÙ†Øª Ø¨Û• Ø´ÛŽÙˆØ§Ø²ÛŽÚ©ÛŒ Ø¨ÛŽÙˆÛŽÙ†Û•.";
+    return "âš ï¸ Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ ÙˆÛ•ÚµØ§Ù… Ù„Û• Gemini API ÙˆÛ•Ø±Ø¨Ú¯ÛŒØ±ÛŽØª. ØªÚ©Ø§ÛŒÛ• Ú©Ù„ÛŒÙ„ÛŒ APIÛŒ ØªØ§ÛŒØ¨Û•Øª Ø¨Û• Ø®Û†Øª Ø¨Ù†ÙˆÙˆØ³Û• ÛŒØ§Ù† Ù¾Û•ÛŒÙˆÛ•Ù†Ø¯ÛŒ Ø¦ÛŒÙ†ØªÛ•Ø±Ù†ÛŽØª Ù¾Ø´Ú©Ù†ÛŒÙ† Ø¨Ú©Û•.";
   }
 
   @override
