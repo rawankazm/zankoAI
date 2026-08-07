@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import '../../services/ai_service.dart';
 import '../../services/database_service.dart';
 import '../../services/language_provider.dart';
+import '../../services/score_service.dart';
 import '../../models/quiz_model.dart';
 import '../../theme.dart';
 
@@ -243,6 +244,11 @@ class _QuizScreenState extends State<QuizScreen> {
       _score = score;
       _quizCompleted = true;
     });
+
+    ScoreService.instance.addQuizResult(
+      correct: score,
+      total: _activeQuiz!.questions.length,
+    );
   }
 
   void _exportQuizText() {
@@ -621,14 +627,32 @@ class _QuizScreenState extends State<QuizScreen> {
                           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Noto Sans Arabic'),
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          '${Provider.of<LanguageProvider>(context, listen: false).translate('your_score')}: $_score / ${_activeQuiz!.questions.length}',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: _score == _activeQuiz!.questions.length ? Colors.green : Colors.blue,
-                            fontFamily: 'Noto Sans Arabic',
-                          ),
+                        Builder(
+                          builder: (context) {
+                            final total = _activeQuiz!.questions.length;
+                            final percent = total > 0 ? ((_score / total) * 100).round() : 0;
+                            return Column(
+                              children: [
+                                Text(
+                                  '$percent / 100',
+                                  style: TextStyle(
+                                    fontSize: 34,
+                                    fontWeight: FontWeight.w900,
+                                    color: percent >= 80 ? const Color(0xFF10B981) : (percent >= 50 ? Colors.orange : Colors.red),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '($_score لە $total وەڵامی دروست)',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                         const SizedBox(height: 8),
                         Text(

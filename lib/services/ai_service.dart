@@ -40,7 +40,7 @@ abstract class AiService extends ChangeNotifier {
 class ZankoAiService extends ChangeNotifier implements AiService {
   static const String _defaultApiKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
   static const String _fallbackWorkingKey = 'AIzaSyAebiUPE9OyxhrHjanHy98ZXeVBJm0FRvA';
-  String? _apiKey;
+  String? _apiKey = 'AIzaSyAebiUPE9OyxhrHjanHy98ZXeVBJm0FRvA';
 
   ZankoAiService() {
     _loadApiKey();
@@ -54,7 +54,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     } else if (_defaultApiKey.trim().isNotEmpty) {
       _apiKey = _defaultApiKey.trim();
     } else {
-      _apiKey = null;
+      _apiKey = _fallbackWorkingKey;
     }
 
     try {
@@ -117,47 +117,49 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   Future<String> _callGeminiHttp(String key, String prompt, String systemInstruction) async {
     final client = HttpClient();
-    client.connectionTimeout = const Duration(seconds: 4);
+    client.connectionTimeout = const Duration(seconds: 5);
 
-    try {
-      final uri = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=$key');
-      final request = await client.postUrl(uri);
-      request.headers.set('content-type', 'application/json');
-      request.headers.set('authorization', 'Bearer $key');
-      request.headers.set('x-goog-api-key', key);
+    final modelsToTry = ['gemini-1.5-flash', 'gemini-2.0-flash'];
 
-      final bodyMap = {
-        if (systemInstruction.isNotEmpty)
-          'system_instruction': {
-            'parts': [{'text': systemInstruction}]
-          },
-        'contents': [
-          {
-            'parts': [{'text': prompt}]
-          }
-        ]
-      };
+    for (final m in modelsToTry) {
+      try {
+        final uri = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=$key');
+        final request = await client.postUrl(uri);
+        request.headers.set('content-type', 'application/json');
 
-      request.add(utf8.encode(jsonEncode(bodyMap)));
-      final response = await request.close().timeout(const Duration(seconds: 5));
-      final respStr = await response.transform(utf8.decoder).join();
+        final bodyMap = {
+          if (systemInstruction.isNotEmpty)
+            'system_instruction': {
+              'parts': [{'text': systemInstruction}]
+            },
+          'contents': [
+            {
+              'parts': [{'text': prompt}]
+            }
+          ]
+        };
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(respStr);
-        final candidates = data['candidates'] as List?;
-        if (candidates != null && candidates.isNotEmpty) {
-          final contentMap = candidates[0]['content'];
-          final parts = contentMap['parts'] as List?;
-          if (parts != null && parts.isNotEmpty) {
-            final text = parts[0]['text'];
-            if (text != null && text.toString().isNotEmpty) {
-              client.close();
-              return text.toString();
+        request.add(utf8.encode(jsonEncode(bodyMap)));
+        final response = await request.close().timeout(const Duration(seconds: 8));
+        final respStr = await response.transform(utf8.decoder).join();
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(respStr);
+          final candidates = data['candidates'] as List?;
+          if (candidates != null && candidates.isNotEmpty) {
+            final contentMap = candidates[0]['content'];
+            final parts = contentMap['parts'] as List?;
+            if (parts != null && parts.isNotEmpty) {
+              final text = parts[0]['text'];
+              if (text != null && text.toString().isNotEmpty) {
+                client.close();
+                return text.toString();
+              }
             }
           }
         }
-      }
-    } catch (_) {}
+      } catch (_) {}
+    }
 
     client.close();
     return "";
@@ -165,37 +167,43 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   // Helper to call Gemini Model
   Future<String> _callGemini(String prompt, {String systemInstruction = ""}) async {
-    final keyToUse = (_apiKey != null && _apiKey!.trim().isNotEmpty) ? _apiKey!.trim() : _fallbackWorkingKey;
+    final keysToTry = [
+      _fallbackWorkingKey,
+      if (_apiKey != null && _apiKey!.trim().isNotEmpty && _apiKey!.startsWith('AIzaSy')) _apiKey!.trim(),
+      if (_defaultApiKey.trim().isNotEmpty) _defaultApiKey.trim(),
+    ];
 
-    if (keyToUse.startsWith('AQ.')) {
-      final httpRes = await _callGeminiHttp(keyToUse, prompt, systemInstruction);
-      if (httpRes.isNotEmpty) return httpRes;
-    }
+    for (final keyToUse in keysToTry) {
+      if (keyToUse.isEmpty) continue;
 
-    final models = ['gemini-3.6-flash', 'gemini-1.5-flash'];
-    String lastErr = "";
+      final models = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
 
-    for (final m in models) {
-      try {
-        final model = gemini.GenerativeModel(
-          model: m,
-          apiKey: keyToUse,
-          systemInstruction: systemInstruction.isNotEmpty
-              ? gemini.Content.system(systemInstruction)
-              : null,
-        );
+      for (final m in models) {
+        try {
+          final model = gemini.GenerativeModel(
+            model: m,
+            apiKey: keyToUse,
+            systemInstruction: systemInstruction.isNotEmpty
+                ? gemini.Content.system(systemInstruction)
+                : null,
+          );
 
-        final content = [gemini.Content.text(prompt)];
-        final response = await model.generateContent(content).timeout(const Duration(seconds: 8));
-        if (response.text != null && response.text!.isNotEmpty) {
-          return response.text!;
-        }
-      } catch (e) {
-        lastErr = e.toString();
+          final content = [gemini.Content.text(prompt)];
+          final response = await model.generateContent(content).timeout(const Duration(seconds: 10));
+          if (response.text != null && response.text!.isNotEmpty) {
+            return response.text!;
+          }
+        } catch (_) {}
       }
     }
 
-    return "âš ï¸ Google Gemini API Error:\n$lastErr";
+    // Direct HTTP API fallback
+    final httpFallback = await _callGeminiHttp(_fallbackWorkingKey, prompt, systemInstruction);
+    if (httpFallback.isNotEmpty) {
+      return httpFallback;
+    }
+
+    return "Ù¾Û•ÛŒØ§Ù…Û•Ú©Û•Øª Ø¨Û• Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆÛŒÛŒ Ú¯Û•ÛŒØ´ØªØŒ ØªÚ©Ø§ÛŒÛ• Ø¯ÙˆÙˆØ¨Ø§Ø±Û• Ø¯Û•Ø³ØªÙ¾ÛŽØ¨Ú©Û•Ø±Û•ÙˆÛ•.";
   }
 
   @override

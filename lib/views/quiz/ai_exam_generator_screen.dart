@@ -8,6 +8,7 @@ import '../../models/quiz_model.dart';
 import '../../services/ai_service.dart';
 import '../../services/language_provider.dart';
 import '../../theme.dart';
+import '../../services/score_service.dart';
 import '../ai_teacher/ai_teacher_chat_screen.dart';
 
 class AiExamGeneratorScreen extends StatefulWidget {
@@ -212,6 +213,11 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
 
   void _finishExam() {
     _examTimer?.cancel();
+    final score = _calculateScore();
+    final total = _activeExam?.questions.length ?? 0;
+    if (total > 0) {
+      ScoreService.instance.addExamResult(correct: score, total: total);
+    }
     setState(() {
       _examCompleted = true;
     });
@@ -620,17 +626,22 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 elevation: 4,
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(CupertinoIcons.play_circle_fill, color: Colors.white, size: 22),
-                  SizedBox(width: 10),
-                  Text(
-                    '🚀 دروستکردنی تاقیکردنەوە و دەستپێکردن',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                  const Icon(CupertinoIcons.play_circle_fill, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: const Text(
+                        '🚀 دروستکردنی تاقیکردنەوە و دەستپێکردن',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
                 ],

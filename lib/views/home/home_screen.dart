@@ -4,18 +4,21 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
+import '../../services/score_service.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
 import '../ai_teacher/ai_teacher_chat_screen.dart';
 import '../courses/course_detail_screen.dart';
+import '../academic/seminar_thesis_assistant_screen.dart';
 import '../flashcards/flashcards_screen.dart';
-import '../gpa/gpa_tracker_screen.dart';
+import '../focus/pomodoro_timer_screen.dart';
 import '../notifications/notifications_screen.dart';
 import '../pdf/pdf_chat_screen.dart';
 import '../pdf/audio_summarizer_view.dart';
 import '../profile/profile_screen.dart';
 
 import '../quiz/ai_exam_generator_screen.dart';
+import '../quiz/quiz_screen.dart';
 import '../schedule/schedule_screen.dart';
 import '../zankoline/zankoline_screen.dart';
 
@@ -363,7 +366,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 gpaAnimation: _gpaAnimation,
                                 onTap: () => Navigator.push(
                                   context,
-                                  CupertinoPageRoute(builder: (_) => const GpaTrackerScreen()),
+                                  CupertinoPageRoute(builder: (_) => const QuizScreen()),
                                 ),
                               ),
                             ),
@@ -790,153 +793,166 @@ class _GpaSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final langProvider = Provider.of<LanguageProvider>(context);
-    final isArabic = langProvider.currentLanguage == AppLanguage.arabic;
-    final isEnglish = langProvider.currentLanguage == AppLanguage.english;
+    final scoreService = ScoreService.instance;
 
-    String statusText;
-    if (gpa >= 3.5) {
-      statusText = isArabic ? 'ممتاز' : (isEnglish ? 'Excellent' : 'زۆر باشە');
-    } else if (gpa >= 3.0) {
-      statusText = isArabic ? 'جيد جداً' : (isEnglish ? 'Very Good' : 'باشە');
-    } else {
-      statusText = isArabic ? 'جيد' : (isEnglish ? 'Good' : 'بەردەوامبە');
-    }
+    return ListenableBuilder(
+      listenable: scoreService,
+      builder: (context, _) {
+        final totalScore = scoreService.totalScore100;
+        final quizScore = scoreService.quizScore40.toStringAsFixed(1);
+        final examScore = scoreService.examScore60.toStringAsFixed(1);
 
-    String topPercentText = isArabic
-        ? 'أفضل ٥٪ في الدفعة'
-        : (isEnglish ? 'Top 5% of class' : 'لە ٪٥ی باشترینی پۆلەکەت');
+        String statusText;
+        if (totalScore == 0) {
+          statusText = 'دەستپێنەکراوە 🎯';
+        } else if (totalScore >= 85) {
+          statusText = 'زۆر باشە ✨';
+        } else if (totalScore >= 70) {
+          statusText = 'باشە ⭐';
+        } else {
+          statusText = 'پێویستی بە ڕاهێنانە 📈';
+        }
 
-    String titleText = langProvider.translate('current_gpa');
-
-    return AnimatedScaleButton(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: isDark
-                ? [const Color(0xFF1E1C30), const Color(0xFF161524)]
-                : [Colors.white, const Color(0xFFF8F8FF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: ZankoColors.primary.withValues(alpha: isDark ? 0.3 : 0.15),
-            width: 1.5,
-          ),
-          boxShadow: isDark
-              ? [
-                  BoxShadow(
-                    color: ZankoColors.primary.withValues(alpha: 0.12),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
-                  ),
-                ]
-              : ZankoShadows.card,
-        ),
-        child: Row(
-          children: [
-            // Progress Ring
-            AnimatedBuilder(
-              animation: gpaAnimation,
-              builder: (context, child) {
-                return ProgressRing(
-                  value: gpaAnimation.value,
-                  title: gpa.toStringAsFixed(2),
-                  subtitle: 'GPA',
-                  size: 96,
-                );
-              },
+        return AnimatedScaleButton(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isDark
+                    ? [const Color(0xFF1E1B4B), const Color(0xFF171033), const Color(0xFF0F172A)]
+                    : [Colors.white, const Color(0xFFF3F4F6)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(26),
+              border: Border.all(
+                color: ZankoColors.primary.withValues(alpha: isDark ? 0.35 : 0.2),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: ZankoColors.primary.withValues(alpha: isDark ? 0.2 : 0.08),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-            const SizedBox(width: 18),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    titleText,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.grey[300]! : ZankoColors.textSecondary,
-                      letterSpacing: -0.2,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
-                        CupertinoIcons.star_fill,
-                        color: Color(0xFFFF9F0A),
-                        size: 18,
-                      ),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          statusText,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: isDark ? Colors.white : ZankoColors.textPrimary,
-                            letterSpacing: -0.3,
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: ZankoColors.primary.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text(
+                              'ئاستی تاقیکردنەوەکان',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: ZankoColors.primary,
+                              ),
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: totalScore > 0 ? const Color(0xFF10B981).withValues(alpha: 0.15) : Colors.amber.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              statusText,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: totalScore > 0 ? const Color(0xFF10B981) : Colors.amber[700],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            '$totalScore',
+                            style: TextStyle(
+                              fontSize: 34,
+                              fontWeight: FontWeight.w900,
+                              color: isDark ? Colors.white : ZankoColors.textPrimary,
+                              letterSpacing: -1.0,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '/ 100 نمرە',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Icon(
+                            CupertinoIcons.checkmark_seal_fill,
+                            color: totalScore > 0 ? const Color(0xFFFFB800) : Colors.grey,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 5),
+                          Expanded(
+                            child: Text(
+                              totalScore == 0
+                                  ? 'کویز: (٤٠ نمرە) • تاقیکردنەوە: (٦٠ نمرە)'
+                                  : 'کویز: $quizScore/40 • تاقیکردنەوە: $examScore/60',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? Colors.grey[300] : Colors.grey[700],
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '${gpa.toStringAsFixed(2)} / ${maxGpa.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.grey[400]! : ZankoColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: ZankoColors.primary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: ZankoColors.primary.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(CupertinoIcons.arrow_up_right,
-                            color: ZankoColors.primary, size: 14),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            topPercentText,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: ZankoColors.primary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 14),
+                ProgressRing(
+                  value: totalScore / 100.0,
+                  title: '$totalScore%',
+                  subtitle: 'نمرە',
+                  size: 92,
+                ),
+                const SizedBox(width: 6),
+                Icon(
+                  CupertinoIcons.chevron_forward,
+                  size: 18,
+                  color: isDark ? Colors.white38 : Colors.black26,
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -986,6 +1002,24 @@ class _QuickAiToolsGrid extends StatelessWidget {
         onTap: () => Navigator.push(
           context,
           CupertinoPageRoute(builder: (_) => const FlashcardsScreen()),
+        ),
+      ),
+      _ToolData(
+        icon: CupertinoIcons.timer,
+        title: 'کاتژمێری تەرکیز',
+        color: const Color(0xFFF43F5E),
+        onTap: () => Navigator.push(
+          context,
+          CupertinoPageRoute(builder: (_) => const PomodoroTimerScreen()),
+        ),
+      ),
+      _ToolData(
+        icon: CupertinoIcons.book_fill,
+        title: 'سیمینار و پڕۆژە',
+        color: const Color(0xFF8B5CF6),
+        onTap: () => Navigator.push(
+          context,
+          CupertinoPageRoute(builder: (_) => const SeminarThesisAssistantScreen()),
         ),
       ),
     ];
