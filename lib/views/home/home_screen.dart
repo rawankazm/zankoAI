@@ -812,7 +812,7 @@ class _GpaSection extends StatelessWidget {
     return AnimatedScaleButton(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(22),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isDark
@@ -846,7 +846,7 @@ class _GpaSection extends StatelessWidget {
                   value: gpaAnimation.value,
                   title: gpa.toStringAsFixed(2),
                   subtitle: 'GPA',
-                  size: 105,
+                  size: 96,
                 );
               },
             ),
