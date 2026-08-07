@@ -102,9 +102,49 @@ class LanguageProvider extends ChangeNotifier {
     'logout': {'ku': 'چوونەدەرەوە', 'ar': 'تسجيل الخروج', 'en': 'Log Out'},
     'logout_desc': {'ku': 'چوونەدەرەوە لە هەژمار', 'ar': 'تسجيل الخروج من الحساب', 'en': 'Log out of account'},
     'upload_pdf_title': {
-      'ku': 'ئاپڵۆدکردنی فایلی PDF / سڵاید',
-      'ar': 'تحميل ملف PDF / شرائح',
-      'en': 'Upload PDF / Slide File'
+      'ku': 'بارکردنی فایلی PDF',
+      'ar': 'رفع ملف PDF',
+      'en': 'Upload PDF File'
+    },
+    'pdf_title': {
+      'ku': 'شیکەرەوەی فایلی PDF',
+      'ar': 'محلل ملفات PDF',
+      'en': 'PDF Document Analyzer'
+    },
+    'upload_area_title': {
+      'ku': 'فایلی PDF یان دەق باربکە',
+      'ar': 'ارفع ملف PDF أو نص',
+      'en': 'Upload PDF or Text File'
+    },
+    'upload_area_desc': {
+      'ku': 'فایلەکەت ڕابکێشە یان کلیک بکە بۆ هەڵبژاردن',
+      'ar': 'اسحب الملف أو انقر للاختيار',
+      'en': 'Drag or click to browse file'
+    },
+    'pick_file': {
+      'ku': 'هەڵبژاردنی فایل',
+      'ar': 'اختيار ملف',
+      'en': 'Pick File'
+    },
+    'analysis_result': {
+      'ku': 'ئەنجامی شیکاریی AI',
+      'ar': 'نتائج تحليل AI',
+      'en': 'AI Analysis Results'
+    },
+    'pdf_summary_card': {
+      'ku': 'پۆختەی سەرەکی فایلی PDF',
+      'ar': 'الملخص الرئيسي للملف',
+      'en': 'Main Document Summary'
+    },
+    'key_points_card': {
+      'ku': 'خاڵە سەرەکییەکانی فایلی PDF',
+      'ar': 'النقاط الرئيسية للملف',
+      'en': 'Key Points & Takeaways'
+    },
+    'translation_card': {
+      'ku': 'وەرگێڕان و مانا بە ئینگلیزی',
+      'ar': 'الترجمة والمعنى بالإنجليزية',
+      'en': 'English Translation & Summary'
     },
     'upload_pdf_subtitle': {
       'ku': 'داگرە بۆ هەڵبژاردنی فایلی PDFی فێرکاری لە مۆبایلەکەتەوە',

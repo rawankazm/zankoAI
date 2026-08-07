@@ -397,14 +397,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
             color: isDark ? Colors.white : ZankoColors.textPrimary,
           ),
         ),
-        actions: [
-          IconButton(
-            onPressed: () => _showAddOrEditCourseModal(),
-            icon: const Icon(CupertinoIcons.add_circled_solid, color: ZankoColors.primary, size: 28),
-            tooltip: 'زیادکردنی وانەی نوێ',
-          ),
-          const SizedBox(width: 8),
-        ],
         centerTitle: false,
       ),
       body: SafeArea(

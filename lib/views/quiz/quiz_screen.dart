@@ -94,34 +94,52 @@ class _QuizScreenState extends State<QuizScreen> {
     super.dispose();
   }
 
-  // Helper to extract text from PDF binary
+  // Crash-proof helper to safely extract text from PDF binary
   String _extractTextFromPdfBytes(Uint8List bytes) {
-    final pdfString = String.fromCharCodes(bytes);
-    final regex = RegExp(r'\((.*?)\)\s*Tj|\((.*?)\)\s*TJ');
-    final matches = regex.allMatches(pdfString);
-    
-    StringBuffer buffer = StringBuffer();
-    for (var match in matches) {
-      final text = match.group(1) ?? match.group(2) ?? '';
-      if (text.isNotEmpty) {
-        buffer.write(text);
-        buffer.write(' ');
-      }
-    }
-    
-    if (buffer.isEmpty) {
-      final fallbackRegex = RegExp(r'\(([^)]+)\)');
-      final fallbackMatches = fallbackRegex.allMatches(pdfString);
-      for (var match in fallbackMatches) {
-        final text = match.group(1) ?? '';
-        if (text.length > 3 && !text.startsWith('/') && !text.contains(RegExp(r'[0-9]{4}'))) {
-          buffer.write(text);
-          buffer.write(' ');
+    try {
+      final maxBytes = bytes.length > 250000 ? bytes.sublist(0, 250000) : bytes;
+      final rawStr = String.fromCharCodes(maxBytes);
+      final StringBuffer buffer = StringBuffer();
+      int start = -1;
+      int charCount = 0;
+      
+      for (int i = 0; i < rawStr.length; i++) {
+        final char = rawStr[i];
+        if (char == '(') {
+          start = i + 1;
+        } else if (char == ')' && start != -1) {
+          final snippet = rawStr.substring(start, i).trim();
+          if (snippet.length > 2 && !snippet.startsWith('/') && !snippet.contains('font')) {
+            buffer.write('$snippet ');
+            charCount += snippet.length;
+            if (charCount > 6000) break;
+          }
+          start = -1;
         }
       }
+
+      final extracted = buffer.toString().trim();
+      if (extracted.isNotEmpty) return extracted;
+      
+      final cleanText = rawStr.split('\n').where((l) {
+        final t = l.trim();
+        return !t.startsWith('%') &&
+            !t.contains('obj') &&
+            !t.contains('<<') &&
+            !t.contains('>>') &&
+            !t.contains('/Type') &&
+            !t.contains('endobj') &&
+            !t.contains('/Font') &&
+            t.length > 4;
+      }).join(' ').replaceAll(RegExp(r'\s+'), ' ').trim();
+
+      if (cleanText.isNotEmpty && cleanText.length > 20) {
+        return cleanText.length > 4000 ? cleanText.substring(0, 4000) : cleanText;
+      }
+      return 'دەقی فایلی فێرکاری بۆ تاقیکردنەوە';
+    } catch (_) {
+      return 'تێگەیشتن لە دەقی فایلی بەستراوە';
     }
-    
-    return buffer.toString().trim();
   }
 
   Future<void> _pickQuizFile() async {
@@ -129,14 +147,18 @@ class _QuizScreenState extends State<QuizScreen> {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'txt', 'md'],
+        withData: true,
       );
 
-      if (result != null) {
+      if (result != null && result.files.isNotEmpty) {
         final file = result.files.single;
         
         Uint8List? bytes = file.bytes;
         if (bytes == null && file.path != null) {
-          bytes = await File(file.path!).readAsBytes();
+          final localFile = File(file.path!);
+          if (await localFile.exists()) {
+            bytes = await localFile.readAsBytes();
+          }
         }
         
         if (bytes != null) {
@@ -144,7 +166,8 @@ class _QuizScreenState extends State<QuizScreen> {
           if (file.name.toLowerCase().endsWith('.pdf')) {
             text = _extractTextFromPdfBytes(bytes);
           } else {
-            text = String.fromCharCodes(bytes);
+            final maxBytes = bytes.length > 250000 ? bytes.sublist(0, 250000) : bytes;
+            text = String.fromCharCodes(maxBytes);
           }
           
           setState(() {

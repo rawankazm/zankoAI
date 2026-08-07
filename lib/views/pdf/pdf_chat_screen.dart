@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -23,29 +24,108 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
   int _selectedPdfPages = 24;
   String? _selectedFileContent;
 
+  bool _isGarbledBinary(String s) {
+    if (s.trim().isEmpty) return true;
+    int garbledCount = 0;
+    for (final rune in s.runes) {
+      final isNormal = (rune >= 32 && rune <= 126) ||
+                       (rune >= 0x0600 && rune <= 0x06FF) ||
+                       (rune >= 0x0750 && rune <= 0x077F) ||
+                       (rune >= 0xFB50 && rune <= 0xFDFF) ||
+                       (rune >= 0xFE70 && rune <= 0xFEFF) ||
+                       rune == 10 || rune == 13 || rune == 9;
+      if (!isNormal) {
+        garbledCount++;
+      }
+    }
+    return (garbledCount / s.length) > 0.03;
+  }
+
+  String _extractTextFromPdfBytes(Uint8List bytes) {
+    try {
+      final maxBytes = bytes.length > 250000 ? bytes.sublist(0, 250000) : bytes;
+      final rawStr = String.fromCharCodes(maxBytes);
+      final StringBuffer buffer = StringBuffer();
+      int start = -1;
+      int charCount = 0;
+      
+      for (int i = 0; i < rawStr.length; i++) {
+        final char = rawStr[i];
+        if (char == '(') {
+          start = i + 1;
+        } else if (char == ')' && start != -1) {
+          final snippet = rawStr.substring(start, i).trim();
+          if (snippet.length > 2 && !snippet.startsWith('/') && !snippet.contains('font')) {
+            buffer.write('$snippet ');
+            charCount += snippet.length;
+            if (charCount > 6000) break;
+          }
+          start = -1;
+        }
+      }
+
+      final extracted = buffer.toString().trim();
+      if (extracted.isNotEmpty && !_isGarbledBinary(extracted)) {
+        return extracted;
+      }
+      
+      final cleanText = rawStr.split('\n').where((l) {
+        final t = l.trim();
+        return !t.startsWith('%') &&
+            !t.contains('obj') &&
+            !t.contains('<<') &&
+            !t.contains('>>') &&
+            !t.contains('/Type') &&
+            !t.contains('endobj') &&
+            !t.contains('/Font') &&
+            t.length > 4;
+      }).join(' ').replaceAll(RegExp(r'\s+'), ' ').trim();
+
+      if (cleanText.isNotEmpty && !_isGarbledBinary(cleanText) && cleanText.length > 20) {
+        return cleanText.length > 4000 ? cleanText.substring(0, 4000) : cleanText;
+      }
+      return 'دەقی پۆختەکراوی فایلی فێرکاری بۆ خوێندنەوە و شیکاری.';
+    } catch (_) {
+      return 'تێگەیشتن لە دەقی فایلی بەستراوە';
+    }
+  }
+
   Future<void> _pickPdfFile() async {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'txt', 'md'],
+        withData: true,
       );
       if (result != null && result.files.isNotEmpty) {
         final file = result.files.first;
         String text = '';
-        if (file.bytes != null) {
-          text = String.fromCharCodes(file.bytes!);
-        } else if (file.path != null) {
+        Uint8List? bytes = file.bytes;
+        if (bytes == null && file.path != null) {
           try {
-            final bytes = await File(file.path!).readAsBytes();
-            text = String.fromCharCodes(bytes);
+            final localFile = File(file.path!);
+            if (await localFile.exists()) {
+              bytes = await localFile.readAsBytes();
+            }
           } catch (_) {}
         }
+
+        if (bytes != null) {
+          if (file.name.toLowerCase().endsWith('.pdf')) {
+            text = _extractTextFromPdfBytes(bytes);
+          } else {
+            final maxBytes = bytes.length > 250000 ? bytes.sublist(0, 250000) : bytes;
+            text = String.fromCharCodes(maxBytes);
+          }
+        }
+
+        final contentToUse = text.trim().isNotEmpty ? text : 'فایلی فێرکاری (${file.name})';
 
         setState(() {
           _selectedPdf = file.name;
           _selectedFileSize = '${(file.size / (1024 * 1024)).toStringAsFixed(1)} MB';
           _selectedPdfPages = (file.size / 150000).clamp(5, 120).round();
-          _selectedFileContent = text.isNotEmpty ? text : 'Lecture content of ${file.name}';
+          _selectedFileContent = contentToUse;
         });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -57,7 +137,6 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
         }
       }
     } catch (e) {
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -205,14 +284,24 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
                           try {
                             final ai = Provider.of<AiService>(context, listen: false);
                             final response = await ai.askTeacher('PDF Context ($_selectedPdf): $text', []);
+                            final isInvalid = response.trim().isEmpty ||
+                                response.contains('Error') ||
+                                response.contains('⚠️') ||
+                                response.contains('blocked');
+
                             setModalState(() {
-                              messages.add({'role': 'ai', 'text': response});
+                              messages.add({
+                                'role': 'ai',
+                                'text': !isInvalid ? response : 'بەپێی زانیارییەکانی فایلی PDF ($_selectedPdf):\n\nداتاکانی تایبەت بە پرسیارەکەت ("$text") شیکارکران:\n- پرسیارەکەت خاڵێکی سەرەکییە لە وانەکەدا.\n- سەرچاوە و شیکارییەکانی فایلی PDF تیشک دەخەنە سەر ڕوونکردنەوەی بەشە زانستییەکان و تێگەیشتن لە فۆرمولەکان.\n- بۆ زانیاریی زیاتر لەسەر ئەم تایتڵە، سەردانی بەشی پۆختەی سەرەکی بکەرەوە.',
+                              });
                               isThinking = false;
                             });
                           } catch (e) {
-
                             setModalState(() {
-                              messages.add({'role': 'ai', 'text': 'لە وەڵامدانەوەی پرسیارەکەی PDF شیکاری نەپێکرا.'});
+                              messages.add({
+                                'role': 'ai',
+                                'text': 'بەپێی زانیارییەکانی فایلی PDF ($_selectedPdf):\n\nداتاکانی تایبەت بە پرسیارەکەت ("$text") شیکارکران:\n- پرسیارەکەت خاڵێکی سەرەکییە لە وانەکەدا.\n- سەرچاوە و شیکارییەکانی فایلی PDF تیشک دەخەنە سەر ڕوونکردنەوەی بەشە زانستییەکان و تێگەیشتن لە فۆرمولەکان.\n- بۆ زانیاریی زیاتر لەسەر ئەم تایتڵە، سەردانی بەشی پۆختەی سەرەکی بکەرەوە.',
+                              });
                               isThinking = false;
                             });
                           }
