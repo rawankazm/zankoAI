@@ -7,7 +7,6 @@ import '../../services/language_provider.dart';
 import '../../services/ai_service.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
-import '../../widgets/ad_banner_widget.dart';
 import 'pdf_summary_screen.dart';
 import '../quiz/quiz_screen.dart';
 
@@ -256,8 +255,6 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.all(20),
           children: [
-            const AdBannerWidget(screenName: 'notes'),
-            const SizedBox(height: 12),
 
             // PDF Upload Hero Container
             AppCard(

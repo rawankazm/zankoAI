@@ -4,7 +4,6 @@ import 'package:uuid/uuid.dart';
 import '../../services/database_service.dart';
 import '../../services/language_provider.dart';
 import '../../models/schedule_model.dart';
-import '../../widgets/ad_banner_widget.dart';
 
 
 class ScheduleScreen extends StatefulWidget {
@@ -213,7 +212,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         ),
         body: Column(
           children: [
-            const AdBannerWidget(screenName: 'schedule'),
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.all(16),

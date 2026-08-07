@@ -151,6 +151,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 ),
               ),
 
+              // Page content
+              PageView.builder(
+                controller: _pageController,
+                onPageChanged: (i) => setState(() => _currentPage = i),
+                itemCount: pages.length,
+                itemBuilder: (_, i) => _PageContent(page: pages[i]),
+              ),
+
               // Skip button
               SafeArea(
                 child: Align(
@@ -170,14 +178,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     ),
                   ),
                 ),
-              ),
-
-              // Page content
-              PageView.builder(
-                controller: _pageController,
-                onPageChanged: (i) => setState(() => _currentPage = i),
-                itemCount: pages.length,
-                itemBuilder: (_, i) => _PageContent(page: pages[i]),
               ),
 
               // Bottom controls

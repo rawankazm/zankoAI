@@ -18,7 +18,6 @@ import '../profile/profile_screen.dart';
 import '../quiz/ai_exam_generator_screen.dart';
 import '../schedule/schedule_screen.dart';
 import '../zankoline/zankoline_screen.dart';
-import '../../widgets/ad_banner_widget.dart';
 
 // ─── Home Screen ─────────────────────────────────────────────────────────────
 class HomeScreen extends StatefulWidget {
@@ -296,14 +295,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                         const SizedBox(height: 16),
 
-                        // ── Ad Banner ──────────────────────────────────────
-                        const Padding(
-                          padding: EdgeInsets.zero,
-                          child: AdBannerWidget(screenName: 'home'),
-                        ),
-
-
-                        const SizedBox(height: 16),
 
                         // ── Continue Learning ──────────────────────────────────
                         _SectionHeader(
@@ -338,6 +329,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                         const SizedBox(height: 32),
 
+                        // ── Today's Progress ───────────────────────────────────
+                        _SectionHeader(
+                          title: t('todays_progress'),
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: 14),
+                        _TodayProgress(
+                          isDark: isDark,
+                          studyMinutes: 47,
+                          questionsAnswered: 12,
+                          accuracy: 0.83,
+                        ),
+                        const SizedBox(height: 32),
+
+                        // ── Quick AI Tools ─────────────────────────────────────
+                        _SectionHeader(
+                          title: t('quick_ai_tools'),
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: 14),
+                        _QuickAiToolsGrid(isDark: isDark),
+                        const SizedBox(height: 32),
+
                         // ── Current GPA ────────────────────────────────────────
                         Row(
                           children: [
@@ -359,47 +373,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         _ZankolineBannerCard(isDark: isDark, t: t),
                         const SizedBox(height: 32),
 
-                        // ── Quick AI Tools ─────────────────────────────────────
-                        _SectionHeader(
-                          title: t('quick_ai_tools'),
-                          isDark: isDark,
-                        ),
-                        const SizedBox(height: 14),
-                        _QuickAiToolsGrid(isDark: isDark),
-                        const SizedBox(height: 32),
-
-                        // ── Today's Progress ───────────────────────────────────
-                        _SectionHeader(
-                          title: t('todays_progress'),
-                          isDark: isDark,
-                        ),
-                        const SizedBox(height: 14),
-                        _TodayProgress(
-                          isDark: isDark,
-                          studyMinutes: 47,
-                          questionsAnswered: 12,
-                          accuracy: 0.83,
-                        ),
-                        const SizedBox(height: 32),
-
-                        // ── Recommended Courses ────────────────────────────────
-                        _SectionHeader(
-                          title: t('recommended_courses'),
-                          actionText: t('see_all'),
-                          isDark: isDark,
-                          onAction: () => Navigator.push(
-                            context,
-                            CupertinoPageRoute(
-                              builder: (_) => const NotificationsScreen(),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        const SizedBox(
-                          height: 230,
-                          child: _RecommendedCoursesScroll(),
-                        ),
-                        const SizedBox(height: 40),
                       ],
                     ),
                   ),
@@ -984,9 +957,9 @@ class _QuickAiToolsGrid extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 1.25,
+        crossAxisSpacing: 14,
+        mainAxisSpacing: 14,
+        childAspectRatio: 1.05,
       ),
       itemCount: tools.length,
       itemBuilder: (_, i) => _ToolCard(data: tools[i], isDark: isDark),
@@ -1019,57 +992,60 @@ class _ToolCard extends StatelessWidget {
     return AnimatedScaleButton(
       onTap: data.onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
         decoration: BoxDecoration(
-          color: isDark ? ZankoColors.darkCard : Colors.white,
-          borderRadius: BorderRadius.circular(ZankoRadius.card),
+          color: isDark ? const Color(0xFF1B192C) : Colors.white,
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.08)
-                : const Color(0xFFF0F0F6),
-            width: 1,
+            color: data.color.withValues(alpha: isDark ? 0.35 : 0.2),
+            width: 1.5,
           ),
-          boxShadow: isDark
-              ? []
-              : [
+          boxShadow: [
+            BoxShadow(
+              color: data.color.withValues(alpha: isDark ? 0.15 : 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: data.color.withValues(alpha: isDark ? 0.22 : 0.12),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: data.color.withValues(alpha: 0.35),
+                  width: 1,
+                ),
+                boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
+                    color: data.color.withValues(alpha: 0.2),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: isDark
-                    ? data.color.withValues(alpha: 0.2)
-                    : data.color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(data.icon, color: data.color, size: 20),
+              child: Center(
+                child: Icon(data.icon, color: data.color, size: 26),
+              ),
             ),
-            const SizedBox(height: 6),
-            Expanded(
-              child: Align(
-                alignment: Alignment.bottomLeft,
-                child: Text(
-                  data.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white : ZankoColors.textPrimary,
-                    letterSpacing: -0.3,
-                    height: 1.2,
-                  ),
-                ),
+            const SizedBox(height: 12),
+            Text(
+              data.title,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: isDark ? Colors.white : ZankoColors.textPrimary,
+                letterSpacing: -0.3,
+                height: 1.2,
               ),
             ),
           ],
@@ -1230,196 +1206,6 @@ class _StatItem {
   });
 }
 
-// ─── Recommended Courses Horizontal Scroll ────────────────────────────────
-class _RecommendedCoursesScroll extends StatelessWidget {
-  const _RecommendedCoursesScroll();
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final courses = [
-      _CourseData(
-        title: 'Machine Learning',
-        subtitle: '12 Lessons',
-        progress: 0.80,
-        icon: CupertinoIcons.sparkles,
-        color: const Color(0xFFAF52DE),
-      ),
-      _CourseData(
-        title: 'Data Structures',
-        subtitle: '24 Lessons',
-        progress: 0.45,
-        icon: CupertinoIcons.square_grid_2x2,
-        color: const Color(0xFF007AFF),
-      ),
-      _CourseData(
-        title: 'Python & Data Science',
-        subtitle: '20 Lessons',
-        progress: 0.60,
-        icon: CupertinoIcons.chevron_left_slash_chevron_right,
-        color: const Color(0xFFFF9F0A),
-      ),
-      _CourseData(
-        title: 'Operating Systems',
-        subtitle: '15 Lessons',
-        progress: 0.90,
-        icon: CupertinoIcons.device_desktop,
-        color: const Color(0xFF34C759),
-      ),
-    ];
-
-    return ListView.separated(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.zero,
-      itemCount: courses.length,
-      separatorBuilder: (context2, index) => const SizedBox(width: 14),
-      itemBuilder: (_, i) {
-        final c = courses[i];
-        return _RecommendedCourseCard(
-          data: c,
-          isDark: isDark,
-          onTap: () => Navigator.push(
-            context,
-            CupertinoPageRoute(
-              builder: (_) => CourseDetailScreen(
-                courseTitle: c.title,
-                courseSubtitle: c.subtitle,
-                progress: c.progress,
-                icon: c.icon,
-                themeColor: c.color,
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _CourseData {
-  final String title;
-  final String subtitle;
-  final double progress;
-  final IconData icon;
-  final Color color;
-
-  const _CourseData({
-    required this.title,
-    required this.subtitle,
-    required this.progress,
-    required this.icon,
-    required this.color,
-  });
-}
-
-class _RecommendedCourseCard extends StatelessWidget {
-  final _CourseData data;
-  final bool isDark;
-  final VoidCallback onTap;
-
-  const _RecommendedCourseCard({
-    required this.data,
-    required this.isDark,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedScaleButton(
-      onTap: onTap,
-      child: Container(
-        width: 200,
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: isDark ? ZankoColors.darkCard : Colors.white,
-          borderRadius: BorderRadius.circular(ZankoRadius.card),
-          border: Border.all(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.08)
-                : const Color(0xFFF0F0F6),
-            width: 1,
-          ),
-          boxShadow: isDark
-              ? []
-              : [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [data.color, data.color.withValues(alpha: 0.7)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(data.icon, color: Colors.white, size: 24),
-            ),
-            const Spacer(),
-            Text(
-              data.title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : ZankoColors.textPrimary,
-                letterSpacing: -0.3,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              data.subtitle,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: isDark ? Colors.grey[400]! : ZankoColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: data.progress,
-                      minHeight: 5,
-                      backgroundColor: isDark
-                          ? Colors.white.withValues(alpha: 0.1)
-                          : const Color(0xFFEFEFF7),
-                      valueColor: AlwaysStoppedAnimation<Color>(data.color),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '${(data.progress * 100).toInt()}%',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.grey[300]! : ZankoColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _ZankolineBannerCard extends StatelessWidget {
   final bool isDark;
@@ -1471,12 +1257,16 @@ class _ZankolineBannerCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Text(
-                        t('zankoline'),
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
+                      Flexible(
+                        child: Text(
+                          t('zankoline'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),

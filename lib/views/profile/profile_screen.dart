@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
 import '../../services/auth_service.dart';
@@ -10,7 +12,6 @@ import '../../services/theme_provider.dart';
 import '../auth/login_screen.dart';
 import '../payment/vip_upgrade_sheet.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../widgets/ad_banner_widget.dart';
 
 
 
@@ -998,26 +999,108 @@ class ProfileScreen extends StatelessWidget {
 
                     // Selected Preview Avatar
                     Center(
-                      child: Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: ZankoColors.primary, width: 3),
-                          boxShadow: [
-                            BoxShadow(
-                              color: ZankoColors.primary.withOpacity(0.3),
-                              blurRadius: 16,
-                              offset: const Offset(0, 4),
+                      child: GestureDetector(
+                        onTap: () async {
+                          final picker = ImagePicker();
+                          final XFile? picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+                          if (picked != null) {
+                            setModalState(() {
+                              selectedAvatar = picked.path;
+                              urlCtrl.text = picked.path;
+                            });
+                          }
+                        },
+                        child: Stack(
+                          children: [
+                            Container(
+                              width: 106,
+                              height: 106,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: ZankoColors.primary, width: 3),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: ZankoColors.primary.withOpacity(0.35),
+                                    blurRadius: 18,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: ClipOval(
+                                child: selectedAvatar.startsWith('http')
+                                    ? Image.network(selectedAvatar, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 55))
+                                    : (selectedAvatar.startsWith('assets/')
+                                        ? Image.asset(selectedAvatar, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 55))
+                                        : Image.file(File(selectedAvatar), fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 55))),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: const BoxDecoration(
+                                  color: ZankoColors.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(CupertinoIcons.camera_fill, color: Colors.white, size: 16),
+                              ),
                             ),
                           ],
                         ),
-                        child: ClipOval(
-                          child: selectedAvatar.startsWith('http')
-                              ? Image.network(selectedAvatar, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 50))
-                              : Image.asset(selectedAvatar, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 50)),
-                        ),
                       ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // 📱 Device Photo Picker Buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () async {
+                              final picker = ImagePicker();
+                              final XFile? picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+                              if (picked != null) {
+                                setModalState(() {
+                                  selectedAvatar = picked.path;
+                                  urlCtrl.text = picked.path;
+                                });
+                              }
+                            },
+                            icon: const Icon(CupertinoIcons.photo, size: 18),
+                            label: const Text('گالێری مۆبایل', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: ZankoColors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () async {
+                              final picker = ImagePicker();
+                              final XFile? picked = await picker.pickImage(source: ImageSource.camera, imageQuality: 85);
+                              if (picked != null) {
+                                setModalState(() {
+                                  selectedAvatar = picked.path;
+                                  urlCtrl.text = picked.path;
+                                });
+                              }
+                            },
+                            icon: const Icon(CupertinoIcons.camera, size: 18),
+                            label: const Text('وێنەی کامێرا', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: isDark ? Colors.white : ZankoColors.textPrimary,
+                              side: BorderSide(color: isDark ? Colors.white30 : Colors.grey[300]!, width: 1.5),
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 20),
 
@@ -1423,8 +1506,6 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
             ],
-            const AdBannerWidget(screenName: 'profile'),
-            const SizedBox(height: 12),
 
 
 
@@ -1626,7 +1707,9 @@ class ProfileScreen extends StatelessWidget {
                                     child: (user?.photoUrl != null && user!.photoUrl!.isNotEmpty)
                                         ? (user.photoUrl!.startsWith('http')
                                             ? Image.network(user.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36))
-                                            : Image.asset(user.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36)))
+                                            : (user.photoUrl!.startsWith('assets/')
+                                                ? Image.asset(user.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36))
+                                                : Image.file(File(user.photoUrl!), fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36))))
                                         : Image.asset(
                                             'assets/images/student_avatar_3d.png',
                                             fit: BoxFit.cover,
