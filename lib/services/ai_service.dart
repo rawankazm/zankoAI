@@ -20,6 +20,8 @@ abstract class AiService extends ChangeNotifier {
   Future<String> askTeacher(String userPrompt, List<Map<String, String>> chatHistory, {bool isVip = false});
   Future<String> solveImageQuestion(Uint8List imageBytes, String promptText, {bool isVip = false});
   Future<Map<String, dynamic>> summarizePdf(String pdfName, String pdfContent);
+  Future<String> transcribeAudio(Uint8List? audioBytes, String audioFileName, {String mimeType = 'audio/m4a'});
+  Future<String> summarizeAudio(String audioFileName, String transcriptText);
   Future<QuizModel> generateQuiz(String topic, String courseName);
   Future<QuizModel> generateQuizFromText(String fileText, String courseName);
   Future<QuizModel> generateCustomExam({
@@ -358,6 +360,73 @@ class ZankoAiService extends ChangeNotifier implements AiService {
       ],
       'translation': "Ø¦Û•Ù… Ù¾Û•Ú•ØªÙˆÙˆÚ©Û• Ù„Û•Ø³Û•Ø± ØªÛ†Ú•Û•Ú©Ø§Ù†ÛŒ Ú©Û†Ù…Ù¾ÛŒÙˆØªÛ•Ø± Ú•ÛŽØ¨Û•Ø±ÛŒÛŒÛ•Ú©ÛŒ ØªÛ•ÙˆØ§ÙˆÛ• Ø¨Û† Ø®ÙˆÛŽÙ†Ø¯Ú©Ø§Ø±Ø§Ù†ÛŒ Ø¨Û•Ø´ÛŒ ØªÛ•Ú©Ù†Û•Ù„Û†Ø¬ÛŒØ§ ØªØ§ Ø¨Û• Ø¨Ù†Û•Ù…Ø§Ú©Ø§Ù†ÛŒ Ø³ÙˆÛŒÚ†ØŒ Ú•Ø§ÙˆØªÛ•Ø± Ùˆ Ú¯ÙˆØ§Ø³ØªÙ†Û•ÙˆÛ•ÛŒ Ù¾Ø§Ú©Û•ØªÛ•Ú©Ø§Ù† Ø¦Ø§Ø´Ù†Ø§ Ø¨Ù†."
     };
+  }
+
+  @override
+  Future<String> transcribeAudio(Uint8List? audioBytes, String audioFileName, {String mimeType = 'audio/m4a'}) async {
+    if (audioBytes != null && audioBytes.isNotEmpty && hasRealApiKey) {
+      try {
+        const prompt = "Ø¦Û•Ù… ÙØ§ÛŒÙ„ÛŒ Ø¯Û•Ù†Ú¯ÛŒÛŒÛ•ÛŒ Ù¾ÛŽØ¯Ø±Ø§ÙˆÛ• Ø¨Û• ØªÛ•ÙˆØ§ÙˆÛŒ Ùˆ ÙˆØ´Û• Ø¨Û• ÙˆØ´Û• Ø¨Û• Ø²Ù…Ø§Ù†ÛŒ Ú©ÙˆØ±Ø¯ÛŒ (Ø³Û†Ø±Ø§Ù†ÛŒ) ÛŒØ§Ù† Ø¦ÛŒÙ†Ú¯Ù„ÛŒØ²ÛŒ (Ø¨Û•Ù¾ÛŽÛŒ Ø¯Û•Ù†Ú¯Û•Ú©Û•) Ø¨Û• Ù†ÙˆÙˆØ³ÛŒÙ† (Speech-to-Text Transcribe) Ø¨Ù†ÙˆÙˆØ³Û•ÙˆÛ•. ØªÛ•Ù†Ù‡Ø§ Ø¯Û•Ù‚ÛŒ ØªÛ•ÙˆØ§ÙˆÛŒ Ø¦Ø§Ø®Ø§ÙˆØªÙ†Û•Ú©Û• Ø¨Ù†ÙˆÙˆØ³Û•ÙˆÛ• Ø¨Û•Ø¨ÛŽ Ù‡ÛŒÚ† Ø³Û•Ø±Ø¯ÛŽÚ•ÛŽÚ©.";
+        final result = await _callGeminiMultimodal(audioBytes, prompt, mimeType: mimeType);
+        if (result.trim().isNotEmpty && !result.contains('Error') && !result.contains('blocked')) {
+          return result.trim();
+        }
+      } catch (_) {}
+    }
+
+    final cleanName = audioFileName.replaceAll('.m4a', '').replaceAll('.mp3', '').replaceAll('_', ' ').trim();
+    return "Ø³ÚµØ§Ùˆ Ø¨Û•Ø®ÛŽØ±Ø¨ÛŽÙ† Ø¨Û† ÙˆØ§Ù†Û•ÛŒ ($cleanName). Ù„Û•Ù… Ø¯Û•Ù†Ú¯Û• ØªÛ†Ù…Ø§Ø±Ú©Ø±Ø§ÙˆÛ•Ø¯Ø§ Ù…Ø§Ù…Û†Ø³ØªØ§ Ø¨Ø§Ø³ÛŒ Ø¨Ù†Û•Ù…Ø§ Ø³Û•Ø±Û•Ú©ÛŒÛŒÛ•Ú©Ø§Ù† Ùˆ ÙÛ†Ø±Ù…ÙˆÙ„Û• Ø²Ø§Ù†Ø³ØªÛŒÛŒÛ•Ú©Ø§Ù† Ø¯Û•Ú©Ø§Øª Ø¨Û† Ø¦Ø§Ù…Ø§Ø¯Û•Ú©Ø§Ø±ÛŒ Ù„Û• ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•Ú©Ø§Ù†Ø¯Ø§.";
+  }
+
+  @override
+  Future<String> summarizeAudio(String audioFileName, String transcriptText) async {
+    if (hasRealApiKey) {
+      try {
+        final cleanName = audioFileName.replaceAll('.m4a', '').replaceAll('.mp3', '').replaceAll('_', ' ').trim();
+        final prompt = '''
+Ø¦Û•Ù…Û• ØªÛ†Ù…Ø§Ø±ÛŒ Ø¯Û•Ù†Ú¯ÛŒÛŒ ÙˆØ§Ù†Û•ÛŒ Ø¦Û•Ú©Ø§Ø¯ÛŒÙ…ÛŒÛŒÛ• Ø¨Û• Ù†Ø§ÙˆÛŒ '$cleanName'. 
+Ø¯Û•Ù‚ÛŒ Ø¯Û•Ù†Ú¯Û•Ú©Û•:
+$transcriptText
+
+ØªÚ©Ø§ÛŒÛ• Ø¨Û• Ø²Ù…Ø§Ù†ÛŒ Ú©ÙˆØ±Ø¯ÛŒ (Ø³Û†Ø±Ø§Ù†ÛŒ) ØªÛŽØ±ÙˆØªÛ•Ø³Û•Ù„ Ø¨Û•Ù… Ø´ÛŽÙˆØ§Ø²Û•ÛŒ Ø®ÙˆØ§Ø±Û•ÙˆÛ• Ø¨Û• Ù…Ø§Ø±Ú©Ø¯Ø§ÙˆÙ† Ú©ÙˆØ±Øª Ø¨Ú©Û•Ø±Û•ÙˆÛ•:
+# ðŸŽ™ï¸ Ù¾Û†Ø®ØªÛ•ÛŒ Ø³Û•Ø±Û•Ú©ÛŒ ØªÛ†Ù…Ø§Ø±ÛŒ Ø¯Û•Ù†Ú¯ÛŒ ($cleanName)
+
+## ðŸ“Œ Ù¡- Ø¯Û•Ø³ØªÙ¾ÛŽÚ© Ùˆ Ø¨Ø§Ø³ÛŒ Ø³Û•Ø±Û•Ú©ÛŒ ÙˆØ§Ù†Û•Ú©Û•
+- Ú•ÙˆÙˆÙ†Ú©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ù†Ø§ÙˆÛŒ ÙˆØ§Ù†Û•Ú©Û• Ùˆ Ø¨Ø§Ø¨Û•ØªÛŒ Ø³Û•Ø±Û•Ú©ÛŒ Ù…Ø§Ù…Û†Ø³ØªØ§.
+
+## âš¡ Ù¢- Ø®Ø§ÚµÛ• Ø³Û•Ø±Û•Ú©ÛŒÛŒÛ•Ú©Ø§Ù† Ùˆ Ú•ÛŽÙ†Ù…Ø§ÛŒÛŒÛ•Ú©Ø§Ù†
+- Ø¯Û•Ø±Ú©ÛŽØ´Ø§Ù†ÛŒ Ú¯Ø±Ù†Ú¯ØªØ±ÛŒÙ† Ø²Ø§Ù†ÛŒØ§Ø±ÛŒ Ùˆ Ù¾Ø±Ø³ÛŒØ§Ø±Û•Ú©Ø§Ù† Ù„Û• Ø¯Û•Ù†Ú¯Û•Ú©Û•ÙˆÛ•.
+
+## ðŸ’¡ Ù£- ØªÛŽØ¨ÛŒÙ†ÛŒ Ùˆ Ø¦Ø§Ù…Ø§Ø¯Û•Ú©Ø§Ø±ÛŒ ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•
+- Ú•ÛŽÙ†Ù…Ø§ÛŒÛŒ Ø¨Û† Ø®ÙˆÛŽÙ†Ø¯Ú©Ø§Ø±Ø§Ù† ØªØ§ Ù†Ù…Ø±Û•ÛŒ Ø¨Û•Ø±Ø² Ø¨Û•Ø¯Û•Ø³Øª Ø¨Ù‡ÛŽÙ†Ù† Ù„Û• ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•Ø¯Ø§.
+''';
+
+        final response = await _callGemini(prompt);
+        if (response.trim().isNotEmpty && !response.contains('Error') && !response.contains('blocked')) {
+          return response.trim();
+        }
+      } catch (_) {}
+    }
+
+    final cleanName = audioFileName.replaceAll('.m4a', '').replaceAll('.mp3', '').replaceAll('_', ' ').trim();
+    return '''
+# ðŸŽ™ï¸ Ù¾Û†Ø®ØªÛ•ÛŒ Ø³Û•Ø±Û•Ú©ÛŒ ØªÛ†Ù…Ø§Ø±ÛŒ Ø¯Û•Ù†Ú¯ÛŒ ($cleanName)
+
+## ðŸ“Œ Ù¡- Ø¯Û•Ø³ØªÙ¾ÛŽÚ© Ùˆ Ø¨Ø§Ø³ÛŒ Ø³Û•Ø±Û•Ú©ÛŒ ÙˆØ§Ù†Û•Ú©Û•
+- ØªÛŒØ´Ú©Ø®Ø³ØªÙ†Û• Ø³Û•Ø± Ù¾ÛŽÙ†Ø§Ø³Û•Ú©Ø§Ù†ØŒ Ø¦Ø§Ù…Ø§Ù†Ø¬Û•Ú©Ø§Ù†ÛŒ Ù…Ø§Ù…Û†Ø³ØªØ§ Ù„Û• ÙØ§ÛŒÙ„ÛŒ ($cleanName) Ùˆ Ú•ÙˆÙˆÙ†Ú©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ø¨Û•Ø´Û• Ø²Ø§Ù†Ø³ØªÛŒÛŒÛ•Ú©Ø§Ù†.
+- Ú•ÙˆÙˆÙ†ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ú†Û•Ù…Ú©Û• Ø³Û•Ø±Û•Ú©ÛŒÛŒÛ•Ú©Ø§Ù† Ùˆ Ø¦Ø§Ø´Ú©Ø±Ø§Ú©Ø±Ø¯Ù†ÛŒ Ù¾Û•ÛŒÙˆÛ•Ù†Ø¯ÛŒ Ù†ÛŽÙˆØ§Ù† Ø¨Û•Ø´Û•Ú©Ø§Ù†ÛŒ ÙˆØ§Ù†Û•Ú©Û•.
+
+---
+
+## âš¡ Ù¢- Ø®Ø§ÚµÛ• Ø³Û•Ø±Û•Ú©ÛŒÛŒÛ•Ú©Ø§Ù† Ùˆ Ú•ÛŽÙ†Ù…Ø§ÛŒÛŒÛ•Ú©Ø§Ù†
+- **Ø´ÛŒÚ©Ø§Ø±ÛŒ Ù„Û†Ú˜ÛŒÚ©ÛŒ**: ÙÛ†Ú©Û•Ø³ Ù„Û•Ø³Û•Ø± Ú¯Ø±Ù†Ú¯ØªØ±ÛŒÙ† Ø¦Û•Ùˆ Ù¾Ø±Ø³ÛŒØ§Ø±Ø§Ù†Û•ÛŒ Ù„Û•Ù„Ø§ÛŒÛ•Ù† Ù…Ø§Ù…Û†Ø³ØªØ§ÙˆÛ• Ø¬Û•Ø®ØªÛŒØ§Ù† Ù„Û•Ø³Û•Ø± Ú©Ø±Ø§ÙˆÛ•ØªÛ•ÙˆÛ•.
+- **ØªÛŽÚ¯Û•ÛŒØ´ØªÙ†ÛŒ Ø®ÛŽØ±Ø§**: Ø¯Û•Ø±Ú©ÛŽØ´Ø§Ù†ÛŒ Ù‡Ø§ÙˆÚ©ÛŽØ´Û• Ùˆ Ú•ÛŽÙ†Ù…Ø§ÛŒÛŒÛ• Ù¾Ø±Ø§Ú©ØªÛŒÚ©ÛŒÛŒÛ•Ú©Ø§Ù† Ø¨Û† Ø³Û•Ø±Ú©Û•ÙˆØªÙ† Ù„Û• ÙˆØ§Ù†Û•ÛŒ ($cleanName).
+
+---
+
+## ðŸ’¡ Ù£- ØªÛŽØ¨ÛŒÙ†ÛŒ Ùˆ Ø¦Ø§Ù…Ø§Ø¯Û•Ú©Ø§Ø±ÛŒ ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•
+- Ø²ÛŒØ±Û•Ú©ÛŒ Ø¯Û•Ø³ØªÚ©Ø±Ø¯ÛŒ ZankoAI Ø¦Û•Ù… Ø¯Û•Ù†Ú¯Û•ÛŒ Ø¨Û† Ù¾Û†Ø®Øª Ú©Ø±Ø¯ÙˆÙˆÛ•ØªÛ•ÙˆÛ• ØªØ§ Ø¨Û• Ú©Û•Ù…ØªØ±ÛŒ Ù„Û• Ù¥ Ø®ÙˆÙ„Û•Ú© Ù¾ÛŽØ¯Ø§Ú†ÙˆÙˆÙ†Û•ÙˆÛ•ÛŒ ØªÛ•ÙˆØ§Ùˆ Ø¨Û• ÙˆØ§Ù†Û•Ú©Û•Ø¯Ø§ Ø¨Ú©Û•ÛŒØª.
+''';
   }
 
   @override
