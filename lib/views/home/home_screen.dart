@@ -371,7 +371,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                         // ── Zankoline KRG Admission Card ─────────────────────
                         _ZankolineBannerCard(isDark: isDark, t: t),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 120),
 
                       ],
                     ),
@@ -790,10 +790,29 @@ class _GpaSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final langProvider = Provider.of<LanguageProvider>(context);
+    final isArabic = langProvider.currentLanguage == AppLanguage.arabic;
+    final isEnglish = langProvider.currentLanguage == AppLanguage.english;
+
+    String statusText;
+    if (gpa >= 3.5) {
+      statusText = isArabic ? 'ممتاز' : (isEnglish ? 'Excellent' : 'زۆر باشە');
+    } else if (gpa >= 3.0) {
+      statusText = isArabic ? 'جيد جداً' : (isEnglish ? 'Very Good' : 'باشە');
+    } else {
+      statusText = isArabic ? 'جيد' : (isEnglish ? 'Good' : 'بەردەوامبە');
+    }
+
+    String topPercentText = isArabic
+        ? 'أفضل ٥٪ في الدفعة'
+        : (isEnglish ? 'Top 5% of class' : 'لە ٪٥ی باشترینی پۆلەکەت');
+
+    String titleText = langProvider.translate('current_gpa');
+
     return AnimatedScaleButton(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(22),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isDark
@@ -802,14 +821,20 @@ class _GpaSection extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(ZankoRadius.card),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.08)
-                : const Color(0xFFF0F0F6),
-            width: 1,
+            color: ZankoColors.primary.withValues(alpha: isDark ? 0.3 : 0.15),
+            width: 1.5,
           ),
-          boxShadow: isDark ? [] : ZankoShadows.card,
+          boxShadow: isDark
+              ? [
+                  BoxShadow(
+                    color: ZankoColors.primary.withValues(alpha: 0.12),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : ZankoShadows.card,
         ),
         child: Row(
           children: [
@@ -821,25 +846,27 @@ class _GpaSection extends StatelessWidget {
                   value: gpaAnimation.value,
                   title: gpa.toStringAsFixed(2),
                   subtitle: 'GPA',
-                  size: 110,
+                  size: 105,
                 );
               },
             ),
-            const SizedBox(width: 24),
+            const SizedBox(width: 18),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Current GPA',
+                    titleText,
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.grey[400]! : ZankoColors.textSecondary,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.grey[300]! : ZankoColors.textSecondary,
                       letterSpacing: -0.2,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Row(
                     children: [
                       const Icon(
@@ -848,45 +875,57 @@ class _GpaSection extends StatelessWidget {
                         size: 18,
                       ),
                       const SizedBox(width: 6),
-                      Text(
-                        'Excellent',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: isDark ? Colors.white : ZankoColors.textPrimary,
-                          letterSpacing: -0.3,
+                      Flexible(
+                        child: Text(
+                          statusText,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: isDark ? Colors.white : ZankoColors.textPrimary,
+                            letterSpacing: -0.3,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Text(
                     '${gpa.toStringAsFixed(2)} / ${maxGpa.toStringAsFixed(2)}',
                     style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: isDark ? Colors.grey[500]! : ZankoColors.textSecondary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.grey[400]! : ZankoColors.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: ZankoColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
+                      color: ZankoColors.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: ZankoColors.primary.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(CupertinoIcons.arrow_up_right,
+                        const Icon(CupertinoIcons.arrow_up_right,
                             color: ZankoColors.primary, size: 14),
-                        SizedBox(width: 4),
-                        Text(
-                          'Top 5% of class',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: ZankoColors.primary,
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            topPercentText,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: ZankoColors.primary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],

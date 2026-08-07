@@ -315,44 +315,48 @@ class _LoginScreenState extends State<LoginScreen>
                               _isLoading
                                   ? const Center(
                                       child: CircularProgressIndicator())
-                                  : SizedBox(
-                                      width: double.maxFinite,
-                                      child: ElevatedButton(
-                                        onPressed: _submitForm,
-                                        child: Text(_isLoginMode
-                                            ? t('login')
-                                            : t('register')),
-                                      ),
+                                  : Column(
+                                      children: [
+                                        SizedBox(
+                                          width: double.maxFinite,
+                                          child: ElevatedButton(
+                                            onPressed: _submitForm,
+                                            child: Text(_isLoginMode
+                                                ? t('login')
+                                                : t('register')),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        SizedBox(
+                                          width: double.maxFinite,
+                                          child: OutlinedButton.icon(
+                                            onPressed: _isLoading ? null : _loginWithGoogle,
+                                            icon: Image.network(
+                                              'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1024px-Google_%22G%22_logo.svg.png',
+                                              height: 22,
+                                              errorBuilder: (_, __, ___) =>
+                                                  const Icon(Icons.g_mobiledata, size: 24),
+                                            ),
+                                            label: Text(t('google_login')),
+                                            style: OutlinedButton.styleFrom(
+                                              minimumSize: const Size(0, 52),
+                                              shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(16)),
+                                              side: BorderSide(
+                                                color: theme.brightness == Brightness.dark
+                                                    ? Colors.white24
+                                                    : Colors.grey[300]!,
+                                                width: 1.5,
+                                              ),
+                                              textStyle: const TextStyle(
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                      ],
                                     ),
-                              const SizedBox(height: 16),
-
-                              // Google Sign In Button (login mode only)
-                              if (_isLoginMode) ...[
-                                SizedBox(
-                                  width: double.maxFinite,
-                                  child: OutlinedButton.icon(
-                                    onPressed:
-                                        _isLoading ? null : _loginWithGoogle,
-                                    icon: Image.network(
-                                      'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1024px-Google_%22G%22_logo.svg.png',
-                                      height: 20,
-                                      errorBuilder: (_, __, ___) =>
-                                          const Icon(Icons.g_mobiledata,
-                                              size: 24),
-                                    ),
-                                    label: Text(t('google_login')),
-                                    style: OutlinedButton.styleFrom(
-                                      minimumSize: const Size(0, 52),
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(14)),
-                                      textStyle: const TextStyle(
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                              ],
 
                               // Guest Access Button (Optional Login)
                               SizedBox(

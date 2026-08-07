@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../models/user_model.dart';
 import 'auth_service.dart';
 
@@ -314,13 +315,31 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
   @override
   Future<bool> loginWithGoogle([UserRole role = UserRole.student]) async {
     try {
-      final GoogleAuthProvider googleProvider = GoogleAuthProvider();
-      final UserCredential credential = await _auth.signInWithPopup(googleProvider);
+      if (kIsWeb) {
+        final GoogleAuthProvider googleProvider = GoogleAuthProvider();
+        final UserCredential credential = await _auth.signInWithPopup(googleProvider);
 
-      if (credential.user != null) {
-        await _fetchUserProfile(credential.user!);
-        notifyListeners();
-        return true;
+        if (credential.user != null) {
+          await _fetchUserProfile(credential.user!);
+          notifyListeners();
+          return true;
+        }
+      } else {
+        final GoogleSignIn googleSignIn = GoogleSignIn();
+        final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+        if (googleUser != null) {
+          final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+          final OAuthCredential credential = GoogleAuthProvider.credential(
+            accessToken: googleAuth.accessToken,
+            idToken: googleAuth.idToken,
+          );
+          final UserCredential userCredential = await _auth.signInWithCredential(credential);
+          if (userCredential.user != null) {
+            await _fetchUserProfile(userCredential.user!);
+            notifyListeners();
+            return true;
+          }
+        }
       }
     } catch (e) {
       if (kDebugMode) print('Google auth error: $e');
