@@ -85,6 +85,8 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
         _messageController.text = "What are the key concepts of memory management?";
       } else if (lang.currentLanguage == AppLanguage.arabic) {
         _messageController.text = "ما هي المفاهيم الأساسية لإدارة الذاكرة؟";
+      } else if (lang.currentLanguage == AppLanguage.kurdishBadini) {
+        _messageController.text = "بەحسا گرنگترین هزرێن ڕێڤەبرنا بیردانکێ (Memory Management) بکە.";
       } else {
         _messageController.text = "باسی گرنگترین بیرۆکەکانی بەڕێوەبردنی یادگە (Memory Management) بکە.";
       }
@@ -96,6 +98,8 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
       return "Hello! I am ZankoAI, your smart tutor. How can I help you study today? Feel free to ask about theory, concepts, or coding.";
     } else if (lang.currentLanguage == AppLanguage.arabic) {
       return "مرحباً! أنا ZankoAI أستاذك الذكي. كيف يمكنني مساعدتك في الدراسة اليوم؟ يمكنك السؤال عن الجانب النظري أو البرمجة.";
+    } else if (lang.currentLanguage == AppLanguage.kurdishBadini) {
+      return "سڵاڤ! ئەز ZankoAI مە، مامۆستایێ تە یێ زیرەک. د چ بابەت دا دخوازی ئه‌ڤڕۆ هاریکاریا تە بکەم؟ دشیێن دەربارەی تیۆری یان کۆدکرنێ پرسیار بکەی.";
     } else {
       return "سڵاو! من ZankoAI مامۆستای زیرەکی تۆم. لە کام بابەتدا دەتەوێت ئەمڕۆ یارمەتیت بدەم؟ دەتوانیت لەسەر لایەنی تیۆری یان کۆدنووسین پرسیار بکەیت.";
     }
@@ -115,6 +119,13 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
         'اشرح هذا الكود البرمجي.',
         'كيف يعمل فلاتر (Flutter)؟',
         'لخص طبقات نموذج OSI.',
+      ];
+    } else if (lang.currentLanguage == AppLanguage.kurdishBadini) {
+      return [
+        'وانەیا Operating System بۆ من ڕوون بکە.',
+        'ئەڤی کۆدی دیار بکە.',
+        'بەرنامێ فلاتەر چەوا کار دکەت؟',
+        'مۆدێلا OSI کورت بکە.'
       ];
     } else {
       return [

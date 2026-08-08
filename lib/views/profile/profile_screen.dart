@@ -1306,6 +1306,18 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 10),
               _buildLangOption(
                 context,
+                title: langProvider.translate('badini_name'),
+                subtitle: langProvider.translate('badini_desc'),
+                flag: '☀️',
+                isSelected: langProvider.currentLanguage == AppLanguage.kurdishBadini,
+                onTap: () {
+                  langProvider.setLanguage(AppLanguage.kurdishBadini);
+                  Navigator.pop(context);
+                },
+              ),
+              const SizedBox(height: 10),
+              _buildLangOption(
+                context,
                 title: langProvider.translate('arabic_name'),
                 subtitle: langProvider.translate('arabic_desc'),
                 flag: '🇸🇦',
@@ -1987,8 +1999,10 @@ class ProfileScreen extends StatelessWidget {
                     subtitle: langProvider.currentLanguage == AppLanguage.english
                         ? 'English'
                         : (langProvider.currentLanguage == AppLanguage.kurdish
-                            ? 'کوردی'
-                            : 'العربية'),
+                            ? 'کوردی (سۆرانی)'
+                            : (langProvider.currentLanguage == AppLanguage.kurdishBadini
+                                ? 'کوردی (بادینی)'
+                                : 'العربية')),
                     onTap: () => _showLanguagePickerModal(context, langProvider),
                   ),
                   const Divider(height: 1, indent: 56),

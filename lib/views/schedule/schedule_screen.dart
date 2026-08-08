@@ -41,12 +41,12 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   String _translateDay(String kurdishDay, LanguageProvider lang) {
     final Map<String, Map<AppLanguage, String>> dayTranslations = {
-      'شەممە': {AppLanguage.kurdish: 'شەممە', AppLanguage.arabic: 'السبت', AppLanguage.english: 'Saturday'},
-      'یەکشەممە': {AppLanguage.kurdish: 'یەکشەممە', AppLanguage.arabic: 'الأحد', AppLanguage.english: 'Sunday'},
-      'دووشەممە': {AppLanguage.kurdish: 'دووشەممە', AppLanguage.arabic: 'الإثنين', AppLanguage.english: 'Monday'},
-      'سێشەممە': {AppLanguage.kurdish: 'سێشەممە', AppLanguage.arabic: 'الثلاثاء', AppLanguage.english: 'Tuesday'},
-      'چوارشەممە': {AppLanguage.kurdish: 'چوارشەممە', AppLanguage.arabic: 'الأربعاء', AppLanguage.english: 'Wednesday'},
-      'پێنجشەممە': {AppLanguage.kurdish: 'پێنجشەممە', AppLanguage.arabic: 'الخميس', AppLanguage.english: 'Thursday'},
+      'شەممە': {AppLanguage.kurdish: 'شەممە', AppLanguage.kurdishBadini: 'شەمبی', AppLanguage.arabic: 'السبت', AppLanguage.english: 'Saturday'},
+      'یەکشەممە': {AppLanguage.kurdish: 'یەکشەممە', AppLanguage.kurdishBadini: 'ئێکەشەمبی', AppLanguage.arabic: 'الأحد', AppLanguage.english: 'Sunday'},
+      'دووشەممە': {AppLanguage.kurdish: 'دووشەممە', AppLanguage.kurdishBadini: 'دووشەمبی', AppLanguage.arabic: 'الإثنين', AppLanguage.english: 'Monday'},
+      'سێشەممە': {AppLanguage.kurdish: 'سێشەممە', AppLanguage.kurdishBadini: 'سێشەمبی', AppLanguage.arabic: 'الثلاثاء', AppLanguage.english: 'Tuesday'},
+      'چوارشەممە': {AppLanguage.kurdish: 'چوارشەممە', AppLanguage.kurdishBadini: 'چارشەمبی', AppLanguage.arabic: 'الأربعاء', AppLanguage.english: 'Wednesday'},
+      'پێنجشەممە': {AppLanguage.kurdish: 'پێنجشەممە', AppLanguage.kurdishBadini: 'پێنجشەمبی', AppLanguage.arabic: 'الخميس', AppLanguage.english: 'Thursday'},
     };
     return dayTranslations[kurdishDay]?[lang.currentLanguage] ?? kurdishDay;
   }

@@ -617,16 +617,21 @@ class _SectionHeader extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            color: isDark ? Colors.white : ZankoColors.textPrimary,
-            letterSpacing: -0.4,
+        Expanded(
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: isDark ? Colors.white : ZankoColors.textPrimary,
+              letterSpacing: -0.4,
+            ),
           ),
         ),
-        if (actionText != null && onAction != null)
+        if (actionText != null && onAction != null) ...[
+          const SizedBox(width: 8),
           GestureDetector(
             onTap: onAction,
             child: Container(
@@ -645,6 +650,7 @@ class _SectionHeader extends StatelessWidget {
               ),
             ),
           ),
+        ],
       ],
     );
   }

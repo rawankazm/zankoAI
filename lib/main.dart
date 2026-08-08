@@ -92,6 +92,7 @@ class ZankoApp extends StatelessWidget {
             ],
             supportedLocales: const [
               Locale('ku', ''),
+              Locale('badini', ''),
               Locale('ar', ''),
               Locale('en', ''),
             ],
@@ -107,12 +108,12 @@ class ZankoApp extends StatelessWidget {
   }
 }
 
-// Fallback Material Localizations for Kurdish using Arabic locale behavior for RTL formatting
+// Fallback Material Localizations for Kurdish (Sorani & Badini) using Arabic locale behavior for RTL formatting
 class _KurdishMaterialLocalizationsDelegate extends LocalizationsDelegate<MaterialLocalizations> {
   const _KurdishMaterialLocalizationsDelegate();
 
   @override
-  bool isSupported(Locale locale) => locale.languageCode == 'ku';
+  bool isSupported(Locale locale) => locale.languageCode == 'ku' || locale.languageCode == 'badini';
 
   @override
   Future<MaterialLocalizations> load(Locale locale) =>
@@ -122,12 +123,12 @@ class _KurdishMaterialLocalizationsDelegate extends LocalizationsDelegate<Materi
   bool shouldReload(LocalizationsDelegate<MaterialLocalizations> old) => false;
 }
 
-// Fallback Cupertino Localizations for Kurdish using Arabic locale behavior for RTL formatting
+// Fallback Cupertino Localizations for Kurdish (Sorani & Badini) using Arabic locale behavior for RTL formatting
 class _KurdishCupertinoLocalizationsDelegate extends LocalizationsDelegate<CupertinoLocalizations> {
   const _KurdishCupertinoLocalizationsDelegate();
 
   @override
-  bool isSupported(Locale locale) => locale.languageCode == 'ku';
+  bool isSupported(Locale locale) => locale.languageCode == 'ku' || locale.languageCode == 'badini';
 
   @override
   Future<CupertinoLocalizations> load(Locale locale) =>
