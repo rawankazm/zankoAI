@@ -85,34 +85,6 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     return '$hour:$minute $period';
   }
 
-  Future<void> _loadChatHistory() async {
-    final prefs = await SharedPreferences.getInstance();
-    final rawTimestamp = prefs.getInt('ai_chat_saved_time');
-    final rawJson = prefs.getString('ai_chat_history');
-
-    if (rawTimestamp != null && rawJson != null) {
-      final savedDate = DateTime.fromMillisecondsSinceEpoch(rawTimestamp);
-      final daysDiff = DateTime.now().difference(savedDate).inDays;
-
-      if (daysDiff < 7) {
-        try {
-          final List<dynamic> decoded = jsonDecode(rawJson);
-          if (decoded.isNotEmpty) {
-            setState(() {
-              _messages.clear();
-              for (var item in decoded) {
-                final map = Map<String, String>.from(item);
-                map['time'] ??= '4:09 pm';
-                _messages.add(map);
-              }
-            });
-            _scrollToBottom();
-            return;
-          }
-        } catch (_) {}
-      }
-    }
-
   void _showApiKeyDialog(BuildContext context) {
     final aiService = Provider.of<AiService>(context, listen: false);
     final lang = Provider.of<LanguageProvider>(context, listen: false);
@@ -453,7 +425,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
           ),
           const Spacer(),
           _buildNeumorphicButton(
-            icon: CupertinoIcons.key,
+            icon: Icons.key_rounded,
             onTap: () => _showApiKeyDialog(context),
             iconColor: ZankoColors.primary,
           ),
@@ -649,7 +621,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
-                            children: const [
+                            children: [
                               SizedBox(
                                 width: 14,
                                 height: 14,

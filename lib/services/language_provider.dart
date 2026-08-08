@@ -303,6 +303,7 @@ class LanguageProvider extends ChangeNotifier {
       'en': 'Hello! I am your ZankoAI Tutor. How can I help you learn today?'
     },
     'enter_api_key': {'ku': 'تۆمارکردنی کلیلی Gemini API', 'ar': 'إدخال مفتاح Gemini API', 'en': 'Enter Gemini API Key'},
+    'schedule_title': {'ku': 'خشتەی وانەکان', 'ar': 'جدول المحاضرات', 'en': 'Lesson Schedule'},
     'ai_tutor_subtitle': {
       'ku': 'هاوکاری تایبەتی فێربوونت.\nپرسیار بکە، فێربە و گەشە بکە.',
       'ar': 'مساعدك الشخصي للتعلم.\nاسأل، تعلم وتطور.',
@@ -349,6 +350,16 @@ class LanguageProvider extends ChangeNotifier {
     'select_course': {'ku': 'وانەکە هەڵبژێرە', 'ar': 'اختر المادة', 'en': 'Select Course'},
     'select_topic': {'ku': 'بابەتەکە هەڵبژێرە', 'ar': 'اختر الموضوع', 'en': 'Select Topic'},
     'generate_quiz': {'ku': 'دروستکردنی کویز', 'ar': 'إنشاء الاختبار', 'en': 'Generate Quiz'},
+    'generate_quiz_title': {'ku': 'دروستکردنی کویزی خێرا بە AI', 'ar': 'إنشاء اختبار سريع بالذكاء الاصطناعي', 'en': 'AI Quick Quiz Generator'},
+    'generate_quiz_desc': {
+      'ku': 'وانەیەک یان فایلێکی PDF باربکە تا AI ڕاستەوخۆ کویزی زانستیت لەسەر ناوەڕۆکەکەی بۆ دروست بکات.',
+      'ar': 'قم بجهوز ملف PDF أو اختر مادة ليقوم الذكاء الاصطناعي بإنشاء اختبار من المحتوى.',
+      'en': 'Upload a PDF file or pick a course topic to generate an instant AI quiz from content.'
+    },
+    'course_name_field': {'ku': 'ناوی وانە / بەش', 'ar': 'اسم المادة / القسم', 'en': 'Course / Subject Name'},
+    'topic_field': {'ku': 'بابەت / تەوەر', 'ar': 'الموضوع / المحور', 'en': 'Topic / Section'},
+    'generate_quiz_btn': {'ku': 'دروستکردنی کویز بە AI 🚀', 'ar': 'إنشاء الاختبار 🚀', 'en': 'Generate AI Quiz 🚀'},
+    'previous_quizzes': {'ku': 'کویزەکانی پێشوو', 'ar': 'الاختبارات السابقة', 'en': 'Previous Quizzes'},
 
     'notes_title': {'ku': 'تێبینییەکانم', 'ar': 'ملاحظاتي', 'en': 'My Notes'},
     'search_notes': {'ku': 'گەڕان لە تێبینییەکاندا...', 'ar': 'البحث في الملاحظات...', 'en': 'Search notes...'},

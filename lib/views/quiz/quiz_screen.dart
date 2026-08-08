@@ -421,14 +421,34 @@ class _QuizScreenState extends State<QuizScreen> {
                           width: double.maxFinite,
                           child: OutlinedButton.icon(
                             onPressed: _pickQuizFile,
-                            icon: const Icon(Icons.picture_as_pdf),
-                            label: Text(_quizFileName != null ? _quizFileName! : 'بارکردنی پەڕگە / فایل (PDF, TXT)'),
+                            icon: Icon(_quizFileName != null ? Icons.check_circle_rounded : Icons.picture_as_pdf, color: _quizFileName != null ? Colors.green : Colors.purpleAccent),
+                            label: Text(
+                              _quizFileName != null ? '📄 $_quizFileName (تایبەتمەند بۆ کویز)' : 'بارکردنی پەڕگە / فایل (PDF, TXT)',
+                              overflow: TextOverflow.ellipsis,
+                            ),
                             style: OutlinedButton.styleFrom(
                               minimumSize: const Size(0, 50),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              side: BorderSide(color: _quizFileName != null ? Colors.green : theme.colorScheme.outline),
                             ),
                           ),
                         ),
+                        if (_quizFileName != null) ...[
+                          const SizedBox(height: 6),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton.icon(
+                              onPressed: () {
+                                setState(() {
+                                  _quizFileName = null;
+                                  _quizFileContent = null;
+                                });
+                              },
+                              icon: const Icon(Icons.close, size: 16, color: Colors.redAccent),
+                              label: const Text('لادانی فایلی بارکراو', style: TextStyle(color: Colors.redAccent, fontSize: 12)),
+                            ),
+                          ),
+                        ],
                         
                         const SizedBox(height: 12),
                         const Center(child: Text('یان / Or', style: TextStyle(fontSize: 12, color: Colors.grey))),

@@ -1,8 +1,41 @@
+import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../services/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/language_provider.dart';
+import '../../services/score_service.dart';
+import '../../theme.dart';
 
+class CourseScoreItem {
+  final String id;
+  final String title;
+  final double quizScore; // Out of 40
+  final double examScore; // Out of 60
+
+  CourseScoreItem({
+    required this.id,
+    required this.title,
+    required this.quizScore,
+    required this.examScore,
+  });
+
+  double get totalScore => (quizScore + examScore).clamp(0.0, 100.0);
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'quizScore': quizScore,
+        'examScore': examScore,
+      };
+
+  factory CourseScoreItem.fromJson(Map<String, dynamic> json) => CourseScoreItem(
+        id: json['id'] ?? '',
+        title: json['title'] ?? '',
+        quizScore: (json['quizScore'] as num?)?.toDouble() ?? 0.0,
+        examScore: (json['examScore'] as num?)?.toDouble() ?? 0.0,
+      );
+}
 
 class GpaTrackerScreen extends StatefulWidget {
   const GpaTrackerScreen({super.key});
@@ -12,403 +45,595 @@ class GpaTrackerScreen extends StatefulWidget {
 }
 
 class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
-  final TextEditingController _gpaInputController = TextEditingController();
-  final TextEditingController _targetGpaController = TextEditingController();
-  final TextEditingController _semestersRemainingController = TextEditingController();
-  String _gpaPlannerResult = '';
+  List<CourseScoreItem> _courses = [];
+  bool _isLoading = true;
 
   @override
-  void dispose() {
-    _gpaInputController.dispose();
-    _targetGpaController.dispose();
-    _semestersRemainingController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _loadCourseScores();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final authService = Provider.of<AuthService>(context);
-    final langProvider = Provider.of<LanguageProvider>(context);
+  Future<void> _loadCourseScores() async {
+    final prefs = await SharedPreferences.getInstance();
+    final rawJson = prefs.getString('saved_course_scores_v2');
 
-    final user = authService.currentUser;
-    final gpaHistory = user?.gpaHistory ?? [3.2, 3.4, 3.65, 3.8];
-    final currentGpa = user?.gpa ?? 3.65;
+    if (rawJson != null && rawJson.isNotEmpty) {
+      try {
+        final List<dynamic> decoded = jsonDecode(rawJson);
+        setState(() {
+          _courses = decoded.map((item) => CourseScoreItem.fromJson(item)).toList();
+          _isLoading = false;
+        });
+        return;
+      } catch (_) {}
+    }
 
-    final lang = Provider.of<LanguageProvider>(context);
-    String t(String key) => lang.translate(key);
+    // Default sample courses if empty
+    setState(() {
+      _courses = [
+        CourseScoreItem(id: 'c1', title: 'Operating Systems', quizScore: 36.0, examScore: 52.0),
+        CourseScoreItem(id: 'c2', title: 'Machine Learning Fundamentals', quizScore: 38.0, examScore: 55.0),
+        CourseScoreItem(id: 'c3', title: 'Calculus & Linear Algebra', quizScore: 32.0, examScore: 45.0),
+        CourseScoreItem(id: 'c4', title: 'Python & Data Science', quizScore: 35.0, examScore: 48.0),
+        CourseScoreItem(id: 'c5', title: 'Data Structures & Algorithms', quizScore: 30.0, examScore: 42.0),
+      ];
+      _isLoading = false;
+    });
+    _saveCourseScores();
+  }
 
-    // Translations
-    final title = t('gpa_title');
-    final totalGpaText = t('gpa_total');
-    final chartHeader = t('gpa_chart_header');
-    final addGpaLabel = t('gpa_add_label');
-    final addBtn = t('gpa_add_btn');
-    final listHeader = t('gpa_list_header');
-    final semesterLabel = t('gpa_semester_label');
+  Future<void> _saveCourseScores() async {
+    final prefs = await SharedPreferences.getInstance();
+    final rawJson = jsonEncode(_courses.map((c) => c.toJson()).toList());
+    await prefs.setString('saved_course_scores_v2', rawJson);
+  }
 
-    return Directionality(
-      textDirection: langProvider.textDirection,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(title),
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // GPA Total Display
-              Card(
+  double get _overallAverageScore {
+    if (_courses.isEmpty) return 0.0;
+    final totalSum = _courses.fold<double>(0.0, (sum, c) => sum + c.totalScore);
+    return totalSum / _courses.length;
+  }
 
-                color: theme.colorScheme.primaryContainer,
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    children: [
-                      Text(
-                        totalGpaText,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onPrimaryContainer.withOpacity(0.8),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        currentGpa.toStringAsFixed(2),
-                        style: TextStyle(
-                          fontSize: 48,
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onPrimaryContainer,
-                        ),
-                      ),
-                    ],
+  void _showAddOrEditCourseModal([CourseScoreItem? existingCourse]) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isEditing = existingCourse != null;
+
+    final titleController = TextEditingController(text: existingCourse?.title ?? '');
+    final quizController = TextEditingController(text: existingCourse != null ? existingCourse.quizScore.toStringAsFixed(1) : '35.0');
+    final examController = TextEditingController(text: existingCourse != null ? existingCourse.examScore.toStringAsFixed(1) : '50.0');
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            final quizVal = double.tryParse(quizController.text.trim()) ?? 0.0;
+            final examVal = double.tryParse(examController.text.trim()) ?? 0.0;
+            final currentTotal = (quizVal + examVal).clamp(0.0, 100.0);
+
+            return Padding(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E222A) : Colors.white,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                  border: Border.all(
+                    color: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFEFEFF7),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
-
-              // Chart Card
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        chartHeader,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, ),
-                      ),
-                      const SizedBox(height: 24),
-                      // Line chart container
-                      SizedBox(
-                        height: 180,
-                        width: double.infinity,
-                        child: CustomPaint(
-                          painter: GpaChartPainter(gpaHistory, theme.brightness == Brightness.dark, theme.colorScheme.primary),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white24 : Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      isEditing ? 'دەستکاری نمرەی وانە 📝' : 'زیادکردنی وانە و نمرەی نوێ 🎓',
+                      style: TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : ZankoColors.textPrimary,
+                        fontFamily: 'Noto Sans Arabic',
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'نمرەی کویز (لە سەر ٤٠) و تاقیکردنەوە (لە سەر ٦٠) بنووسە تا کۆی گشتی لەسەر ١٠٠ دیاری بێت:',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                        fontFamily: 'Noto Sans Arabic',
+                      ),
+                    ),
+                    const SizedBox(height: 20),
 
-              // Add GPA Input
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _gpaInputController,
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          decoration: InputDecoration(
-                            labelText: addGpaLabel,
-                            hintText: 'e.g. 3.75',
-                          ),
-                        ),
+                    // Course Name
+                    TextField(
+                      controller: titleController,
+                      style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                      decoration: InputDecoration(
+                        labelText: 'ناوی وانە (Course Name)',
+                        prefixIcon: const Icon(Icons.book_rounded, color: ZankoColors.primary),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       ),
-                      const SizedBox(width: 12),
-                      ElevatedButton(
-                        onPressed: () {
-                          // Simple state update for mock tracking
-                          final val = double.tryParse(_gpaInputController.text.trim());
-                          if (val != null && val >= 0.0 && val <= 4.0) {
-                            setState(() {
-                              gpaHistory.add(val);
-                              _gpaInputController.clear();
-                            });
-                          }
-                        },
-                        child: Text(addBtn),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
+                    ),
+                    const SizedBox(height: 14),
 
-              // Target GPA Planner Card
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        t('target_planner_title'),
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, ),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _targetGpaController,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              decoration: InputDecoration(
-                                labelText: Provider.of<LanguageProvider>(context, listen: false).translate('target_gpa'),
-                                hintText: 'e.g. 3.8',
-                              ),
+                    // Scores Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: quizController,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                            decoration: InputDecoration(
+                              labelText: 'نمرەی کویز (/40)',
+                              prefixIcon: const Icon(CupertinoIcons.checkmark_circle, color: Color(0xFF38BDF8)),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                             ),
+                            onChanged: (_) => setModalState(() {}),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextField(
-                              controller: _semestersRemainingController,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                labelText: Provider.of<LanguageProvider>(context, listen: false).translate('remaining_semesters'),
-                                hintText: 'e.g. 3',
-                              ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            controller: examController,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                            decoration: InputDecoration(
+                              labelText: 'نمرەی تاقیکردنەوە (/60)',
+                              prefixIcon: const Icon(CupertinoIcons.doc_text_fill, color: Color(0xFFFF9F0A)),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                            ),
+                            onChanged: (_) => setModalState(() {}),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+
+                    // Live Total Calculation Preview
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: ZankoColors.primary.withValues(alpha: isDark ? 0.15 : 0.08),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'کۆی گشتی وانەکە (لەسەر ١٠٠):',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'Noto Sans Arabic'),
+                          ),
+                          Text(
+                            '${currentTotal.toStringAsFixed(1)} / 100',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: ZankoColors.primary,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Save Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: ZankoColors.primary,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
                         onPressed: () {
-                          final target = double.tryParse(_targetGpaController.text.trim());
-                          final remaining = int.tryParse(_semestersRemainingController.text.trim());
-                          if (target == null || target < 0.0 || target > 4.0 || remaining == null || remaining <= 0) {
-                            setState(() {
-                              _gpaPlannerResult = t('planner_input_error');
-                            });
-                            return;
-                          }
-
-                          final totalCompletedSemesters = gpaHistory.length;
-                          final currentCumGpa = currentGpa;
-
-                          // Calculation formula
-                          final totalSemesters = totalCompletedSemesters + remaining;
-                          final requiredSum = (target * totalSemesters) - (currentCumGpa * totalCompletedSemesters);
-                          final requiredGpa = requiredSum / remaining;
+                          final title = titleController.text.trim();
+                          if (title.isEmpty) return;
 
                           setState(() {
-                            final gpaStr = requiredGpa.toStringAsFixed(2);
-                            if (requiredGpa > 4.0) {
-                              _gpaPlannerResult = t('planner_cannot_reach').replaceAll('{required}', gpaStr);
-                            } else if (requiredGpa < 0.0) {
-                              _gpaPlannerResult = t('planner_already_met');
+                            if (isEditing) {
+                              final index = _courses.indexWhere((c) => c.id == existingCourse.id);
+                              if (index != -1) {
+                                _courses[index] = CourseScoreItem(
+                                  id: existingCourse.id,
+                                  title: title,
+                                  quizScore: quizVal.clamp(0.0, 40.0),
+                                  examScore: examVal.clamp(0.0, 60.0),
+                                );
+                              }
                             } else {
-                              _gpaPlannerResult = t('planner_required').replaceAll('{required}', gpaStr);
+                              _courses.add(
+                                CourseScoreItem(
+                                  id: 'c_${DateTime.now().millisecondsSinceEpoch}',
+                                  title: title,
+                                  quizScore: quizVal.clamp(0.0, 40.0),
+                                  examScore: examVal.clamp(0.0, 60.0),
+                                ),
+                              );
                             }
                           });
-                        },
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.teal.shade700),
-                        child: Text(t('calculate'), style: const TextStyle()),
-                      ),
-                      if (_gpaPlannerResult.isNotEmpty) ...[
-                        const SizedBox(height: 12),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.teal.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            _gpaPlannerResult,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                              color: Colors.teal,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
 
-              // List of Semesters
-              Text(
-                listHeader,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+                          _saveCourseScores();
+                          Navigator.pop(ctx);
+                        },
+                        child: Text(
+                          isEditing ? 'نوێکردنەوەی نمرە' : 'خەزنکردنی وانە',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'Noto Sans Arabic'),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-              if (gpaHistory.isEmpty)
-                Center(child: Padding(padding: EdgeInsets.all(16), child: Text(Provider.of<LanguageProvider>(context, listen: false).translate('empty_record'))))
-              else
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: gpaHistory.length,
-                  itemBuilder: (context, index) {
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          child: Text((index + 1).toString()),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final langProvider = Provider.of<LanguageProvider>(context);
+
+    final avg = _overallAverageScore;
+    String statusBadge = 'ئاستی بەرز و شایستە 🌟';
+    Color badgeColor = const Color(0xFF10B981);
+
+    if (avg < 70) {
+      statusBadge = 'پێویستی بە ڕاهێنانە 📈';
+      badgeColor = const Color(0xFFFF9F0A);
+    } else if (avg < 85) {
+      statusBadge = 'ئاستی باش و گونجاو 👍';
+      badgeColor = const Color(0xFF6C5CE7);
+    }
+
+    return Directionality(
+      textDirection: langProvider.textDirection,
+      child: Scaffold(
+        backgroundColor: isDark ? const Color(0xFF11141A) : const Color(0xFFF8F9FE),
+        appBar: AppBar(
+          title: const Text('نمرە و ئەنجامی وانەکان', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Noto Sans Arabic')),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              icon: const Icon(CupertinoIcons.add_circled),
+              tooltip: 'زیادکردنی وانە',
+              onPressed: () => _showAddOrEditCourseModal(),
+            ),
+          ],
+        ),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── Hero Total Score Card (out of 100) ─────────────────
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF4338CA)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                        title: Text(
-                          '$semesterLabel ${index + 1}',
-                          style: const TextStyle(fontWeight: FontWeight.bold, ),
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF4338CA).withValues(alpha: 0.35),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1.5),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'تێکڕای نمرەکان (Overall Score)',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white70,
+                                  fontFamily: 'Noto Sans Arabic',
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: badgeColor,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  statusBadge,
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'Noto Sans Arabic'),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Giant Score Display
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(
+                                avg.toStringAsFixed(1),
+                                style: const TextStyle(
+                                  fontSize: 54,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  letterSpacing: -1,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                '/ 100',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Linear Progress Bar
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: LinearProgressIndicator(
+                              value: (avg / 100.0).clamp(0.0, 1.0),
+                              minHeight: 10,
+                              backgroundColor: Colors.white.withValues(alpha: 0.2),
+                              valueColor: AlwaysStoppedAnimation<Color>(badgeColor),
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+
+                          // Quick Summary Badges
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              _buildHeaderStat('کۆی وانەکان', '${_courses.length} وانە'),
+                              Container(width: 1, height: 24, color: Colors.white24),
+                              _buildHeaderStat('تێکڕای کویز', '${(_courses.isEmpty ? 0 : _courses.fold<double>(0, (s, c) => s + c.quizScore) / _courses.length).toStringAsFixed(1)} / 40'),
+                              Container(width: 1, height: 24, color: Colors.white24),
+                              _buildHeaderStat('تێکڕای تاقیکردنەوە', '${(_courses.isEmpty ? 0 : _courses.fold<double>(0, (s, c) => s + c.examScore) / _courses.length).toStringAsFixed(1)} / 60'),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    // ── Add Course Button Card ────────────────────────────────
+                    InkWell(
+                      onTap: () => _showAddOrEditCourseModal(),
+                      borderRadius: BorderRadius.circular(18),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E222A) : Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: ZankoColors.primary.withValues(alpha: 0.4),
+                            width: 1.5,
+                          ),
+                          boxShadow: isDark ? [] : ZankoShadows.card,
                         ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
+                        child: Row(
                           children: [
-                            Text(
-                              gpaHistory[index].toStringAsFixed(2),
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: ZankoColors.primary.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(CupertinoIcons.add, color: ZankoColors.primary, size: 22),
                             ),
-                            const SizedBox(width: 8),
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline, color: Colors.red),
-                              onPressed: () {
-                                setState(() {
-                                  gpaHistory.removeAt(index);
-                                });
-                              },
+                            const SizedBox(width: 14),
+                            const Expanded(
+                              child: Text(
+                                'زیادکردنی وانە و نمرەی نوێ',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Noto Sans Arabic',
+                                ),
+                              ),
                             ),
+                            const Icon(CupertinoIcons.chevron_forward, color: ZankoColors.primary, size: 18),
                           ],
                         ),
                       ),
-                    );
-                  },
-                ),
-            ],
-          ),
-        ),
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    // ── Courses Breakdown Header ──────────────────────────────
+                    Text(
+                      'وانەکان و نمرەکانیان (لە سەر ١٠٠)',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : ZankoColors.textPrimary,
+                        fontFamily: 'Noto Sans Arabic',
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    if (_courses.isEmpty)
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(30),
+                          child: Text(
+                            'هیچ وانەیەک زیادت نەکردووە، بەتنەکە لەسەرەوە دابگرە',
+                            style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontFamily: 'Noto Sans Arabic'),
+                          ),
+                        ),
+                      )
+                    else
+                      ..._courses.map((course) {
+                        final total = course.totalScore;
+                        Color scoreColor = const Color(0xFF10B981);
+                        if (total < 70) scoreColor = const Color(0xFFFF9F0A);
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E222A) : Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF0F0F6),
+                            ),
+                            boxShadow: isDark ? [] : ZankoShadows.card,
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: scoreColor.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Icon(Icons.school_rounded, color: scoreColor, size: 22),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      course.title,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark ? Colors.white : ZankoColors.textPrimary,
+                                        fontFamily: 'Noto Sans Arabic',
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'کویز: ${course.quizScore.toStringAsFixed(1)}/40  •  تاقیکردنەوە: ${course.examScore.toStringAsFixed(1)}/60',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                                        fontFamily: 'Noto Sans Arabic',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    '${total.toInt()}',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w900,
+                                      color: scoreColor,
+                                    ),
+                                  ),
+                                  const Text(
+                                    '/ 100 نمرە',
+                                    style: TextStyle(fontSize: 10, color: Colors.grey, fontFamily: 'Noto Sans Arabic'),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: 8),
+                              PopupMenuButton<String>(
+                                icon: const Icon(Icons.more_vert_rounded, color: Colors.grey, size: 20),
+                                onSelected: (val) {
+                                  if (val == 'edit') {
+                                    _showAddOrEditCourseModal(course);
+                                  } else if (val == 'delete') {
+                                    setState(() {
+                                      _courses.removeWhere((c) => c.id == course.id);
+                                    });
+                                    _saveCourseScores();
+                                  }
+                                },
+                                itemBuilder: (ctx) => [
+                                  const PopupMenuItem(
+                                    value: 'edit',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.edit, size: 18),
+                                        SizedBox(width: 8),
+                                        Text('دەستکاری', style: TextStyle(fontSize: 13, fontFamily: 'Noto Sans Arabic')),
+                                      ],
+                                    ),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: 'delete',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.delete, size: 18, color: Colors.redAccent),
+                                        SizedBox(width: 8),
+                                        Text('سڕینەوە', style: TextStyle(fontSize: 13, color: Colors.redAccent, fontFamily: 'Noto Sans Arabic')),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
       ),
     );
   }
-}
 
-// Custom painter to draw a premium line graph of GPA history
-class GpaChartPainter extends CustomPainter {
-  final List<double> gpaHistory;
-  final bool isDarkMode;
-  final Color primaryColor;
-
-  GpaChartPainter(this.gpaHistory, this.isDarkMode, this.primaryColor);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (gpaHistory.isEmpty) return;
-
-    final paintLine = Paint()
-      ..color = primaryColor
-      ..strokeWidth = 3.5
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final paintGlow = Paint()
-      ..color = primaryColor.withOpacity(0.15)
-      ..strokeWidth = 10
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final paintDot = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-
-    final paintDotBorder = Paint()
-      ..color = primaryColor
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke;
-
-    final gridPaint = Paint()
-      ..color = isDarkMode ? Colors.white12 : Colors.black12
-      ..strokeWidth = 1;
-
-    final textPainter = TextPainter(
-      textDirection: TextDirection.ltr,
-    );
-
-    // Draw horizontal grid lines (for GPA scales 1.0, 2.0, 3.0, 4.0)
-    for (int i = 1; i <= 4; i++) {
-      final y = size.height - (i * size.height / 4);
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
-      
-      // Draw labels
-      textPainter.text = TextSpan(
-        text: '$i.0',
-        style: TextStyle(
-          color: isDarkMode ? Colors.white38 : Colors.black38,
-          fontSize: 10,
+  Widget _buildHeaderStat(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontSize: 10, color: Colors.white60, fontFamily: 'Noto Sans Arabic'),
         ),
-      );
-      textPainter.layout();
-      textPainter.paint(canvas, Offset(size.width - 24, y - 12));
-    }
-
-    if (gpaHistory.length < 2) {
-      // Draw single point
-      final y = size.height - (gpaHistory[0] * size.height / 4);
-      final offset = Offset(size.width / 2, y);
-      canvas.drawCircle(offset, 6, paintDot);
-      canvas.drawCircle(offset, 6, paintDotBorder);
-      return;
-    }
-
-    final double stepX = size.width / (gpaHistory.length - 1);
-    final List<Offset> points = [];
-
-    for (int i = 0; i < gpaHistory.length; i++) {
-      final double x = i * stepX;
-      // GPA max scale is 4.0
-      final double y = size.height - (gpaHistory[i] * size.height / 4);
-      points.add(Offset(x, y));
-    }
-
-    final path = Path()..moveTo(points[0].dx, points[0].dy);
-    for (int i = 1; i < points.length; i++) {
-      // Draw quadratic bezier curves for smooth premium curvature
-      final prevPoint = points[i - 1];
-      final currentPoint = points[i];
-      final controlPointX = prevPoint.dx + (currentPoint.dx - prevPoint.dx) / 2;
-      path.cubicTo(
-        controlPointX,
-        prevPoint.dy,
-        controlPointX,
-        currentPoint.dy,
-        currentPoint.dx,
-        currentPoint.dy,
-      );
-    }
-
-    // Draw glow shadow behind the line
-    canvas.drawPath(path, paintGlow);
-    // Draw the main line
-    canvas.drawPath(path, paintLine);
-
-    // Draw the glowing circular nodes
-    for (var point in points) {
-      canvas.drawCircle(point, 6, paintDot);
-      canvas.drawCircle(point, 6, paintDotBorder);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant GpaChartPainter oldDelegate) {
-    return oldDelegate.gpaHistory != gpaHistory || oldDelegate.isDarkMode != isDarkMode;
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+      ],
+    );
   }
 }

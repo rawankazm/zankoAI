@@ -13,10 +13,21 @@ class ScoreService extends ChangeNotifier {
   int _examTotalQuestions = 0;
   int _examCorrectAnswers = 0;
 
+  int _todayStudyMinutes = 0;
+
   int get quizTotalQuestions => _quizTotalQuestions;
   int get quizCorrectAnswers => _quizCorrectAnswers;
   int get examTotalQuestions => _examTotalQuestions;
   int get examCorrectAnswers => _examCorrectAnswers;
+  int get todayStudyMinutes => _todayStudyMinutes;
+
+  int get totalQuestionsAnswered => _quizTotalQuestions + _examTotalQuestions;
+
+  double get overallAccuracy {
+    if (totalQuestionsAnswered == 0) return 0.0;
+    final totalCorrect = _quizCorrectAnswers + _examCorrectAnswers;
+    return (totalCorrect / totalQuestionsAnswered).clamp(0.0, 1.0);
+  }
 
   /// Quiz score out of 40 marks
   double get quizScore40 {
@@ -42,6 +53,7 @@ class ScoreService extends ChangeNotifier {
     _quizCorrectAnswers = prefs.getInt('score_quiz_correct') ?? 0;
     _examTotalQuestions = prefs.getInt('score_exam_total') ?? 0;
     _examCorrectAnswers = prefs.getInt('score_exam_correct') ?? 0;
+    _todayStudyMinutes = prefs.getInt('today_study_minutes') ?? 0;
     notifyListeners();
   }
 
@@ -63,16 +75,25 @@ class ScoreService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> addStudyMinutes(int minutes) async {
+    _todayStudyMinutes += minutes;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('today_study_minutes', _todayStudyMinutes);
+    notifyListeners();
+  }
+
   Future<void> resetScores() async {
     _quizTotalQuestions = 0;
     _quizCorrectAnswers = 0;
     _examTotalQuestions = 0;
     _examCorrectAnswers = 0;
+    _todayStudyMinutes = 0;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('score_quiz_total');
     await prefs.remove('score_quiz_correct');
     await prefs.remove('score_exam_total');
     await prefs.remove('score_exam_correct');
+    await prefs.remove('today_study_minutes');
     notifyListeners();
   }
 }

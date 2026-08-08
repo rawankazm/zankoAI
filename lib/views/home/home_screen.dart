@@ -17,10 +17,12 @@ import '../pdf/pdf_chat_screen.dart';
 import '../pdf/audio_summarizer_view.dart';
 import '../profile/profile_screen.dart';
 
+import '../gpa/gpa_tracker_screen.dart';
 import '../quiz/ai_exam_generator_screen.dart';
 import '../quiz/quiz_screen.dart';
 import '../schedule/schedule_screen.dart';
 import '../zankoline/zankoline_screen.dart';
+import 'courses_screen.dart';
 
 // ─── Home Screen ─────────────────────────────────────────────────────────────
 class HomeScreen extends StatefulWidget {
@@ -313,26 +315,69 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           onAction: () => Navigator.push(
                             context,
                             CupertinoPageRoute(
-                              builder: (_) => const ScheduleScreen(),
+                              builder: (_) => const CoursesScreen(),
                             ),
                           ),
                         ),
+                        _ZankoBenefitsCard(isDark: isDark),
                         const SizedBox(height: 14),
-                        _ContinueLearningCard(
-                          isDark: isDark,
-                          progress: 0.76,
-                          courseTitle: 'Calculus & Linear Algebra',
-                          lessonInfo: '18 Lessons • Chapter 4',
+
+                        // ── Schedule Button ──────────────────────────────────────────
+                        AnimatedScaleButton(
                           onTap: () => Navigator.push(
                             context,
-                            CupertinoPageRoute(
-                              builder: (_) => CourseDetailScreen(
-                                courseTitle: 'Calculus & Linear Algebra',
-                                courseSubtitle: '18 Lessons • Chapter 4',
-                                progress: 0.76,
-                                icon: CupertinoIcons.function,
-                                themeColor: ZankoColors.primary,
+                            CupertinoPageRoute(builder: (_) => const ScheduleScreen()),
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: isDark
+                                    ? [const Color(0xFF2E1065), const Color(0xFF1E1B4B)]
+                                    : [const Color(0xFF7C3AED), const Color(0xFF6D28D9)],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
                               ),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF7C3AED).withValues(alpha: 0.3),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  child: const Icon(
+                                    CupertinoIcons.calendar_today,
+                                    color: Colors.white,
+                                    size: 22,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Text(
+                                    t('schedule_title'),
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                const Icon(
+                                  CupertinoIcons.arrow_right,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -344,12 +389,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           isDark: isDark,
                         ),
                         const SizedBox(height: 14),
-                        _TodayProgress(
-                          isDark: isDark,
-                          studyMinutes: 47,
-                          questionsAnswered: 12,
-                          accuracy: 0.83,
-                        ),
+                        _TodayProgress(isDark: isDark),
                         const SizedBox(height: 32),
 
                         // ── Quick AI Tools ─────────────────────────────────────
@@ -372,7 +412,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 gpaAnimation: _gpaAnimation,
                                 onTap: () => Navigator.push(
                                   context,
-                                  CupertinoPageRoute(builder: (_) => const QuizScreen()),
+                                  CupertinoPageRoute(builder: (_) => const GpaTrackerScreen()),
                                 ),
                               ),
                             ),
@@ -605,6 +645,165 @@ class _SectionHeader extends StatelessWidget {
               ),
             ),
           ),
+      ],
+    );
+  }
+}
+
+// ─── ZankoAI Benefits Card ──────────────────────────────────────────────────
+class _ZankoBenefitsCard extends StatelessWidget {
+  final bool isDark;
+
+  const _ZankoBenefitsCard({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [const Color(0xFF1E1B4B), const Color(0xFF2E1065)]
+              : [const Color(0xFFFAF5FF), const Color(0xFFF3E8FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: const Color(0xFFAF52DE).withValues(alpha: isDark ? 0.4 : 0.25),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFAF52DE).withValues(alpha: isDark ? 0.15 : 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFAF52DE).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(
+                  CupertinoIcons.sparkles,
+                  color: Color(0xFFAF52DE),
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'چۆن ZankoAI هاوکاری خوێندکاران دەکات؟ 🎓',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : ZankoColors.textPrimary,
+                        fontFamily: 'Noto Sans Arabic',
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'سوودە سەرەکییەکان لە زانکۆ و پەیمانگاکان',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                        fontFamily: 'Noto Sans Arabic',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Divider(height: 1, color: isDark ? Colors.white12 : Colors.black12),
+          const SizedBox(height: 14),
+
+          _buildBenefitRow(
+            icon: CupertinoIcons.person_crop_circle_badge_checkmark,
+            color: const Color(0xFF10B981),
+            title: 'مامۆستای تایبەتی 24/7',
+            desc: 'وەڵامدانەوەی خێرای پرسیاری وانە قورسەکان و ڕوون کردنەوەی بیرۆکەکان بە کوردی.',
+            isDark: isDark,
+          ),
+          const SizedBox(height: 12),
+          _buildBenefitRow(
+            icon: CupertinoIcons.doc_text_search,
+            color: const Color(0xFF38BDF8),
+            title: 'شیکردنەوەی PDF و مەلزەمە',
+            desc: 'کورتبڕکردنی سەرچاوە، فایلی وانەکان و دەرهێنانی خاڵە سەرەکییەکانی تاقیکردنەوە.',
+            isDark: isDark,
+          ),
+          const SizedBox(height: 12),
+          _buildBenefitRow(
+            icon: CupertinoIcons.question_square_fill,
+            color: const Color(0xFFFF9F0A),
+            title: 'دروستکردنی کویز و تاقیکردنەوە',
+            desc: 'ئامادەکاری ئەزموونی بۆ تاقیکردنەوەی وەرزی و کۆتایی بە خۆڕایی.',
+            isDark: isDark,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBenefitRow({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String desc,
+    required bool isDark,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          margin: const EdgeInsets.only(top: 2),
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: color, size: 16),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : ZankoColors.textPrimary,
+                  fontFamily: 'Noto Sans Arabic',
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                desc,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                  height: 1.3,
+                  fontFamily: 'Noto Sans Arabic',
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -969,6 +1168,197 @@ class _QuickAiToolsGrid extends StatelessWidget {
 
   const _QuickAiToolsGrid({required this.isDark});
 
+  void _showExamOrQuizSelection(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final langProvider = Provider.of<LanguageProvider>(context, listen: false);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return Directionality(
+          textDirection: langProvider.textDirection,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E222A) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              border: Border.all(
+                color: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFEFEFF7),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white24 : Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'تاقیکردنەوە و کویزی AI 🎯',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : ZankoColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'جۆری ئەو تاقیکردنەوەیە دیاری بکە کە دەتەوێت دروستی بکەیت:',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Option 1: Exams (تاقیکردنەوەکان)
+                InkWell(
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      CupertinoPageRoute(builder: (_) => const AiExamGeneratorScreen()),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF9F0A).withValues(alpha: isDark ? 0.15 : 0.08),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color(0xFFFF9F0A).withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFF9F0A).withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            CupertinoIcons.doc_text_fill,
+                            color: Color(0xFFFF9F0A),
+                            size: 26,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'تاقیکردنەوەکان (Exams)',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : ZankoColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                'دروستکردنی تاقیکردنەوەی ئەزموونی و فۆرماتدار بە کات و ئاستی جیاواز',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(CupertinoIcons.chevron_forward, color: Color(0xFFFF9F0A)),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 14),
+
+                // Option 2: Quizzes (کویزەکان)
+                InkWell(
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      CupertinoPageRoute(builder: (_) => const QuizScreen()),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF7C3AED).withValues(alpha: isDark ? 0.15 : 0.08),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color(0xFF7C3AED).withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF7C3AED).withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            CupertinoIcons.question_square_fill,
+                            color: Color(0xFF7C3AED),
+                            size: 26,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'کویزەکان (Quizzes)',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : ZankoColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                'دروستکردنی کویزی خێرا بەپێی بابەت یان بە فایلی PDF',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(CupertinoIcons.chevron_forward, color: Color(0xFF7C3AED)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final langProvider = Provider.of<LanguageProvider>(context);
@@ -996,10 +1386,7 @@ class _QuickAiToolsGrid extends StatelessWidget {
         icon: CupertinoIcons.sparkles,
         title: 'تاقیکردنەوەی AI',
         color: const Color(0xFFFF9F0A),
-        onTap: () => Navigator.push(
-          context,
-          CupertinoPageRoute(builder: (_) => const AiExamGeneratorScreen()),
-        ),
+        onTap: () => _showExamOrQuizSelection(context),
       ),
       _ToolData(
         icon: CupertinoIcons.tray_full,
@@ -1017,6 +1404,15 @@ class _QuickAiToolsGrid extends StatelessWidget {
         onTap: () => Navigator.push(
           context,
           CupertinoPageRoute(builder: (_) => const PomodoroTimerScreen()),
+        ),
+      ),
+      _ToolData(
+        icon: CupertinoIcons.calendar_today,
+        title: langProvider.translate('schedule_title'),
+        color: const Color(0xFF7C3AED),
+        onTap: () => Navigator.push(
+          context,
+          CupertinoPageRoute(builder: (_) => const ScheduleScreen()),
         ),
       ),
       _ToolData(
@@ -1138,16 +1534,8 @@ class _ToolCard extends StatelessWidget {
 // ─── Today's Progress ──────────────────────────────────────────────────────
 class _TodayProgress extends StatefulWidget {
   final bool isDark;
-  final int studyMinutes;
-  final int questionsAnswered;
-  final double accuracy;
 
-  const _TodayProgress({
-    required this.isDark,
-    required this.studyMinutes,
-    required this.questionsAnswered,
-    required this.accuracy,
-  });
+  const _TodayProgress({required this.isDark});
 
   @override
   State<_TodayProgress> createState() => _TodayProgressState();
@@ -1180,93 +1568,104 @@ class _TodayProgressState extends State<_TodayProgress>
 
   @override
   Widget build(BuildContext context) {
-    final stats = [
-      _StatItem(
-        icon: CupertinoIcons.clock,
-        value: '${widget.studyMinutes}m',
-        label: 'Study Time',
-        color: const Color(0xFF6C5CE7),
-      ),
-      _StatItem(
-        icon: CupertinoIcons.question_diamond,
-        value: '${widget.questionsAnswered}',
-        label: 'Questions',
-        color: const Color(0xFF38BDF8),
-      ),
-      _StatItem(
-        icon: CupertinoIcons.check_mark_circled,
-        value: '${(widget.accuracy * 100).toInt()}%',
-        label: 'Accuracy',
-        color: const Color(0xFF4ADE80),
-      ),
-    ];
+    final scoreService = ScoreService.instance;
 
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: widget.isDark ? ZankoColors.darkCard : Colors.white,
-          borderRadius: BorderRadius.circular(ZankoRadius.card),
-          border: Border.all(
-            color: widget.isDark
-                ? Colors.white.withValues(alpha: 0.08)
-                : const Color(0xFFF0F0F6),
-            width: 1,
+    return ListenableBuilder(
+      listenable: scoreService,
+      builder: (context, _) {
+        final studyMins = scoreService.todayStudyMinutes;
+        final questionsCount = scoreService.totalQuestionsAnswered;
+        final accuracyPercent = (scoreService.overallAccuracy * 100).toInt();
+
+        final stats = [
+          _StatItem(
+            icon: CupertinoIcons.clock,
+            value: '${studyMins}m',
+            label: 'Study Time',
+            color: const Color(0xFF6C5CE7),
           ),
-          boxShadow: widget.isDark ? [] : ZankoShadows.card,
-        ),
-        child: Row(
-          children: stats
-              .map(
-                (s) => Expanded(
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: widget.isDark
-                              ? s.color.withValues(alpha: 0.2)
-                              : s.color.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(s.icon, color: s.color, size: 18),
-                      ),
-                      const SizedBox(height: 6),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          s.value,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            color: widget.isDark ? Colors.white : ZankoColors.textPrimary,
-                            letterSpacing: -0.3,
+          _StatItem(
+            icon: CupertinoIcons.question_diamond,
+            value: '$questionsCount',
+            label: 'Questions',
+            color: const Color(0xFF38BDF8),
+          ),
+          _StatItem(
+            icon: CupertinoIcons.check_mark_circled,
+            value: '$accuracyPercent%',
+            label: 'Accuracy',
+            color: const Color(0xFF4ADE80),
+          ),
+        ];
+
+        return FadeTransition(
+          opacity: _fadeAnimation,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: widget.isDark ? ZankoColors.darkCard : Colors.white,
+              borderRadius: BorderRadius.circular(ZankoRadius.card),
+              border: Border.all(
+                color: widget.isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : const Color(0xFFF0F0F6),
+                width: 1,
+              ),
+              boxShadow: widget.isDark ? [] : ZankoShadows.card,
+            ),
+            child: Row(
+              children: stats
+                  .map(
+                    (s) => Expanded(
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: widget.isDark
+                                  ? s.color.withValues(alpha: 0.2)
+                                  : s.color.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(s.icon, color: s.color, size: 18),
                           ),
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          s.label,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
-                            color: widget.isDark
-                                ? Colors.grey[400]
-                                : ZankoColors.textSecondary,
+                          const SizedBox(height: 6),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              s.value,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: widget.isDark ? Colors.white : ZankoColors.textPrimary,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 2),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              s.label,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                                color: widget.isDark
+                                    ? Colors.grey[400]
+                                    : ZankoColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-              )
-              .toList(),
-        ),
-      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+        );
+      },
     );
   }
 }
