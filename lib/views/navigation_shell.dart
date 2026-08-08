@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/language_provider.dart';
 import '../services/auth_service.dart';
 import '../widgets/apple_ui_components.dart';
+import '../widgets/app_exit_dialog.dart';
 import 'home/home_screen.dart';
 import 'home/courses_screen.dart';
 import 'gpa/gpa_tracker_screen.dart';
@@ -165,15 +167,31 @@ class _NavigationShellState extends State<NavigationShell> {
 
     return Directionality(
       textDirection: langProvider.textDirection,
-      child: Scaffold(
-        extendBody: true,
-        body: IndexedStack(
-          index: _selectedIndex,
-          children: _studentScreens,
-        ),
-        bottomNavigationBar: GlassBottomNavigation(
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop) return;
+
+          if (_selectedIndex != 0) {
+            setState(() => _selectedIndex = 0);
+            return;
+          }
+
+          final shouldExit = await AppExitDialog.show(context);
+          if (shouldExit == true) {
+            SystemNavigator.pop();
+          }
+        },
+        child: Scaffold(
+          extendBody: true,
+          body: IndexedStack(
+            index: _selectedIndex,
+            children: _studentScreens,
+          ),
+          bottomNavigationBar: GlassBottomNavigation(
+            currentIndex: _selectedIndex,
+            onTap: _onItemTapped,
+          ),
         ),
       ),
     );

@@ -32,6 +32,7 @@ abstract class AiService extends ChangeNotifier {
     required int questionCount,
     required int durationMinutes,
     String? pdfContent,
+    Uint8List? pdfBytes,
   });
   Future<String> organizeNote(String rawNoteContent);
   Future<List<FlashcardModel>> generateFlashcards(String topicOrText);
@@ -121,7 +122,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     final client = HttpClient();
     client.connectionTimeout = const Duration(seconds: 8);
 
-    final modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
+    final modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
 
     for (final m in modelsToTry) {
       try {
@@ -180,7 +181,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     for (final keyToUse in keysToTry) {
       if (keyToUse.isEmpty) continue;
 
-      final models = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
+      final models = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-pro'];
 
       for (final m in models) {
         try {
@@ -193,7 +194,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
           );
 
           final content = [gemini.Content.text(prompt)];
-          final response = await model.generateContent(content).timeout(const Duration(seconds: 12));
+          final response = await model.generateContent(content).timeout(const Duration(seconds: 15));
           if (response.text != null && response.text!.isNotEmpty) {
             return response.text!;
           }
@@ -220,6 +221,48 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     }
 
     return "âš ï¸ Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ ÙˆÛ•ÚµØ§Ù… Ù„Û• Gemini API ÙˆÛ•Ø±Ø¨Ú¯ÛŒØ±ÛŽØª. ØªÚ©Ø§ÛŒÛ• Ú©Ù„ÛŒÙ„ÛŒ APIÛŒ ØªØ§ÛŒØ¨Û•Øª Ø¨Û• Ø®Û†Øª Ø¨Ù†ÙˆÙˆØ³Û• ÛŒØ§Ù† Ù¾Û•ÛŒÙˆÛ•Ù†Ø¯ÛŒ Ø¦ÛŒÙ†ØªÛ•Ø±Ù†ÛŽØª Ù¾Ø´Ú©Ù†ÛŒÙ† Ø¨Ú©Û•.";
+  }
+
+  Future<String> _callGeminiWithPdf(
+    String prompt,
+    Uint8List pdfBytes, {
+    String systemInstruction = "",
+  }) async {
+    final keysToTry = <String>[
+      if (_apiKey != null && _apiKey!.trim().isNotEmpty) _apiKey!.trim(),
+      if (_defaultApiKey.trim().isNotEmpty) _defaultApiKey.trim(),
+      if (_fallbackWorkingKey.trim().isNotEmpty && _fallbackWorkingKey != _apiKey) _fallbackWorkingKey.trim(),
+    ];
+
+    for (final keyToUse in keysToTry) {
+      if (keyToUse.isEmpty) continue;
+      final models = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-pro'];
+
+      for (final m in models) {
+        try {
+          final model = gemini.GenerativeModel(
+            model: m,
+            apiKey: keyToUse,
+            systemInstruction: systemInstruction.isNotEmpty
+                ? gemini.Content.system(systemInstruction)
+                : null,
+          );
+
+          final content = [
+            gemini.Content.multi([
+              gemini.TextPart(prompt),
+              gemini.DataPart('application/pdf', pdfBytes),
+            ])
+          ];
+
+          final response = await model.generateContent(content).timeout(const Duration(seconds: 25));
+          if (response.text != null && response.text!.isNotEmpty) {
+            return response.text!;
+          }
+        } catch (_) {}
+      }
+    }
+    return '';
   }
 
   @override
@@ -262,23 +305,31 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   Future<String> _callGeminiMultimodal(Uint8List imageBytes, String prompt, {String mimeType = 'image/jpeg'}) async {
     final keyToUse = (_apiKey != null && _apiKey!.trim().isNotEmpty) ? _apiKey! : _fallbackWorkingKey;
 
-    final model = gemini.GenerativeModel(
-      model: 'gemini-3.6-flash',
-      apiKey: keyToUse,
-      systemInstruction: gemini.Content.system(
-        "ØªÛ† Ù…Ø§Ù…Û†Ø³ØªØ§ÛŒÛ•Ú©ÛŒ Ø²ÛŒØ±Û•Ú© Ùˆ Ø´Ø§Ø±Û•Ø²Ø§ÛŒ Ø¨Û• Ù†Ø§ÙˆÛŒ ZankoAI. Ø¦Û•Ù… ÙˆÛŽÙ†Û•ÛŒÛ•ÛŒ Ù¾Ø±Ø³ÛŒØ§Ø±Û• Ø¨Û• ØªÛ•Ù†Ù‡Ø§ Ø²Ù…Ø§Ù†ÛŒ Ú©ÙˆØ±Ø¯ÛŒ (Ø³Û†Ø±Ø§Ù†ÛŒ) Ø´ÛŒÚ©Ø§Ø± Ø¨Ú©Û• Ø¨Û• Ú•ÙˆÙˆÙ†ÛŒ."
-      ),
-    );
+    final models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+    for (final m in models) {
+      try {
+        final model = gemini.GenerativeModel(
+          model: m,
+          apiKey: keyToUse,
+          systemInstruction: gemini.Content.system(
+            "ØªÛ† Ù…Ø§Ù…Û†Ø³ØªØ§ÛŒÛ•Ú©ÛŒ Ø²ÛŒØ±Û•Ú© Ùˆ Ø´Ø§Ø±Û•Ø²Ø§ÛŒ Ø¨Û• Ù†Ø§ÙˆÛŒ ZankoAI. Ø¦Û•Ù… ÙˆÛŽÙ†Û•ÛŒÛ•ÛŒ Ù¾Ø±Ø³ÛŒØ§Ø±Û• Ø¨Û• ØªÛ•Ù†Ù‡Ø§ Ø²Ù…Ø§Ù†ÛŒ Ú©ÙˆØ±Ø¯ÛŒ (Ø³Û†Ø±Ø§Ù†ÛŒ) Ø´ÛŒÚ©Ø§Ø± Ø¨Ú©Û• Ø¨Û• Ú•ÙˆÙˆÙ†ÛŒ."
+          ),
+        );
 
-    final content = [
-      gemini.Content.multi([
-        gemini.TextPart(prompt.isNotEmpty ? prompt : "Ø¦Û•Ù… Ù¾Ø±Ø³ÛŒØ§Ø±Û•ÛŒ Ù†Ø§Ùˆ ÙˆÛŽÙ†Û•Ú©Û• Ø¨Û• Ù‡Û•Ù†Ú¯Ø§Ùˆ Ø¨Û• Ù‡Û•Ù†Ú¯Ø§Ùˆ Ø´ÛŒÚ©Ø§Ø± Ø¨Ú©Û•."),
-        gemini.DataPart(mimeType, imageBytes),
-      ])
-    ];
+        final content = [
+          gemini.Content.multi([
+            gemini.TextPart(prompt.isNotEmpty ? prompt : "Ø¦Û•Ù… Ù¾Ø±Ø³ÛŒØ§Ø±Û•ÛŒ Ù†Ø§Ùˆ ÙˆÛŽÙ†Û•Ú©Û• Ø¨Û• Ù‡Û•Ù†Ú¯Ø§Ùˆ Ø¨Û• Ù‡Û•Ù†Ú¯Ø§Ùˆ Ø´ÛŒÚ©Ø§Ø± Ø¨Ú©Û•."),
+            gemini.DataPart(mimeType, imageBytes),
+          ])
+        ];
 
-    final response = await model.generateContent(content);
-    return response.text ?? "Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ Ø´ÛŒÚ©Ø§Ø±ÛŒ ÙˆÛŽÙ†Û•Ú©Û• Ø¨Û•Ø¯Û•Ø³ØªØ¨Ù‡ÛŽÙ†Ø±ÛŽØª.";
+        final response = await model.generateContent(content).timeout(const Duration(seconds: 20));
+        if (response.text != null && response.text!.isNotEmpty) {
+          return response.text!;
+        }
+      } catch (_) {}
+    }
+    return "âš ï¸ Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ Ø´ÛŒÚ©Ø§Ø±ÛŒ ÙˆÛŽÙ†Û•Ú©Û• Ø¨Û•Ø¯Û•Ø³ØªØ¨Ù‡ÛŽÙ†Ø±ÛŽØª.";
   }
 
   @override
@@ -518,47 +569,67 @@ $fileText
     required int questionCount,
     required int durationMinutes,
     String? pdfContent,
+    Uint8List? pdfBytes,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 1000));
+    await Future.delayed(const Duration(milliseconds: 500));
 
     if (hasRealApiKey) {
       try {
         final pdfContext = (pdfContent != null && pdfContent.trim().isNotEmpty)
-            ? "\n\nÙØ§ÛŒÙ„ÛŒ Ø³Û•Ø±Ú†Ø§ÙˆÛ•ÛŒ ÙˆØ§Ù†Û•Ú©Û•:\n$pdfContent\n"
-            : "";
+            ? pdfContent
+            : "Ù†Ø§ÙˆÛŒ ÙØ§ÛŒÙ„: $courseName";
 
         final prompt = """
-ØªØ§ÛŒØ¨Û•Øª Ø¨Û† ÙˆØ§Ù†Û•ÛŒ '$courseName' Ùˆ Ø¨Ø§Ø¨Û•ØªÛŒ '$topic'ØŒ ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒÛ•Ú©ÛŒ Ø¦Û•Ø²Ù…ÙˆÙˆÙ†ÛŒ Ùˆ ÙÛŽØ±Ú©Ø§Ø±ÛŒ Ø¨Û• Ø¦Ø§Ø³ØªÛŒ '$difficulty' Ùˆ Ø¬Û†Ø±ÛŒ Ù¾Ø±Ø³ÛŒØ§Ø±ÛŒ '$questionType' Ø¯Ø±ÙˆØ³Øª Ø¨Ú©Û• Ø¨Û• Ø²Ù…Ø§Ù†ÛŒ Ú©ÙˆØ±Ø¯ÛŒ (Ø³Û†Ø±Ø§Ù†ÛŒ).
-ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•Ú©Û• Ù¾ÛŽÙˆÛŒØ³ØªÛ• Ø¯Û•Ù‚Ø§Ùˆ Ø¯Û•Ù‚ $questionCount Ù¾Ø±Ø³ÛŒØ§Ø± Ù„Û•Ø®Û† Ø¨Ú¯Ø±ÛŽØª Ø¨Û• ÙÛ†Ø±Ù…Ø§ØªÛŒ JSON:
+ØªÛ† Ù…Ø§Ù…Û†Ø³ØªØ§ÛŒÛ•Ú©ÛŒ Ø³Û•Ø±Û•Ú©ÛŒ Ø¨Û•Ø¦Û•Ø²Ù…ÙˆÙˆÙ†ÛŒ Ø²Ø§Ù†Ú©Û†ÛŒØª. Ø¦Û•Ø±Ú©Øª Ø¯Ø±ÙˆØ³ØªÚ©Ø±Ø¯Ù†ÛŒ ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒÛ•Ú©ÛŒ Ø²Ø§Ù†Ø³ØªÛŒ Ø²Û†Ø± ÙˆØ±Ø¯ Ùˆ Ù¾Ø±Û†ÙÛŽØ´Ù†Ø§ÚµÛ• (DIRECT ACADEMIC EXAM) Ù„Û•Ø³Û•Ø± Ù†Ø§ÙˆÛ•Ú•Û†Ú© Ùˆ Ø¨Ø§Ø¨Û•ØªÛŒ Ø²Ø§Ù†Ø³ØªÛŒ ÙØ§ÛŒÙ„ÛŒ PDFÛŒ Ø¨Ø§Ø±Ú©Ø±Ø§ÙˆÛŒ Ú˜ÛŽØ±Û•ÙˆÛ•.
+Ù†Ø§ÙˆÛŒ ÙˆØ§Ù†Û•/ÙØ§ÛŒÙ„: "$courseName"
+
+Ù†Ø§ÙˆÛ•Ø±Û†Ú© Ùˆ Ø¯Û•Ù‚ÛŒ ÙØ§ÛŒÙ„ÛŒ PDF:
+\"\"\"
+$pdfContext
+\"\"\"
+
+ÛŒØ§Ø³Ø§ Ø¨Û•Ù‡ÛŽØ² Ùˆ Ù†Û•Ú¯Û†Ú•Û•Ú©Ø§Ù†:
+Ù¡. Ø³Û•Ø±Ø¬Û•Ù… $questionCount Ù¾Ø±Ø³ÛŒØ§Ø±Û•Ú©Û• Ù¾ÛŽÙˆÛŒØ³ØªÛ• Ø¯Û•Ù‚Ø§Ùˆ Ø¯Û•Ù‚ Ù„Û•Ø³Û•Ø± Ø¨Ø§Ø¨Û•ØªÛ• Ø²Ø§Ù†Ø³ØªÛŒÛŒÛ•Ú©Ø§Ù†ØŒ Ù¾ÛŽÙ†Ø§Ø³Û•Ú©Ø§Ù†ØŒ Ù‡Ø§ÙˆÚ©ÛŽØ´Û•Ú©Ø§Ù†ØŒ Ùˆ Ø²Ø§Ù†ÛŒØ§Ø±ÛŒÛŒÛ•Ú©Ø§Ù†ÛŒ Ù†Ø§Ùˆ Ø¦Û•Ù… ÙØ§ÛŒÙ„ÛŒ PDFÛ• Ø¨Ù†.
+Ù¢. Ø¨Û• Ù‡ÛŒÚ† Ø¬Û†Ø±ÛŽÚ© Ù¾Ø±Ø³ÛŒØ§Ø±ÛŒ ØªÛ•Ù…ÙˆÙ…Ú˜Ø§ÙˆÛŒ ÛŒØ§Ù† Ø¯Û•Ø³ØªÙ¾ÛŽÚ©ÛŒ Ú¯Ø´ØªÛŒ Ù…Û•Ú©Û• (Ù†Û•Ú© Ú•Ø³ØªÛ•ÛŒ ÙˆÛ•Ú©Ùˆ "Ø¨Û•Ù†ÙˆØ§Ú•ÛŒÙ† Ù„Û• ÙØ§ÛŒÙ„Û•Ú©Û•..." Ø¨Ù†ÙˆÙˆØ³ÛŒØª!). Ø¯Û•Ø¨ÛŽØª Ø¯Û•Ù‚ÛŒ Ù¾Ø±Ø³ÛŒØ§Ø±Û•Ú©Û• Ø¨Û• Ú•Ø§Ø³ØªÛ•ÙˆØ®Û†ÛŒÛŒ Ø¨Ø§Ø³ÛŒ Ú†Û•Ù…Ú©ÛŒ Ø²Ø§Ù†Ø³ØªÛŒÛŒ Ù†Ø§Ùˆ ÙˆØ§Ù†Û•Ú©Û• Ø¨Ú©Ø§Øª (Ø¨Û† Ù†Ù…ÙˆÙˆÙ†Û•: "Ù¾Ú•Û†ØªÛ†Ú©Û†Ù„ÛŒ TCP Ú†ÛŒÛŒÛ•ØŸ"ØŒ "Ù‡Ø§ÙˆÚ©ÛŽØ´Û•ÛŒ ÙˆØ²Û• Ú†ÛŒÛŒÛ•ØŸ"ØŒ "Ø¦Û•Ø±Ú©ÛŒ CPU Ú†ÛŒÛŒÛ•ØŸ").
+Ù£. ÙˆÛ•ÚµØ§Ù…Û•Ú©Ø§Ù† Ù¾ÛŽÙˆÛŒØ³ØªÛ• Ù¤ Ø¨Ú˜Ø§Ø±Ø¯Û•ÛŒ Ø¦Ø§Ø´Ú©Ø±Ø§ (A, B, C, D) Ø¨Ù† Ú©Û• Û± ÙˆÛ•ÚµØ§Ù…ÛŒ Ú•Ø§Ø³Øª Ùˆ Ù£ ÙˆÛ•ÚµØ§Ù…ÛŒ Ù‡Û•ÚµÛ•ÛŒ Ø²Ø§Ù†Ø³ØªÛŒ Ú¯ÙˆÙ†Ø¬Ø§Ùˆ Ù„Û•Ø®Û†Ø¨Ú¯Ø±ÛŽØª.
+Ù¤. Ø¬Û†Ø±ÛŒ Ù¾Ø±Ø³ÛŒØ§Ø±Û•Ú©Ø§Ù†: $questionTypeØŒ Ø¦Ø§Ø³ØªÛŒ Ø²Û•Ø­Ù…Û•ØªÛŒ: $difficulty.
+Ù¥. Ø²Ù…Ø§Ù†ÛŒ Ø³Û•Ø±Û•Ú©ÛŒ ØªÛ•Ù†Ù‡Ø§ Ú©ÙˆØ±Ø¯ÛŒ Ø³Û†Ø±Ø§Ù†ÛŒ Ø¨ÛŽØª.
+Ù¦. ÙÛ†Ø±Ù…Ø§ØªÛŒ ÙˆÛ•ÚµØ§Ù…Û•Ú©Û• Ù¾ÛŽÙˆÛŒØ³ØªÛ• ØªÛ•Ù†Ù‡Ø§ Ùˆ ØªÛ•Ù†Ù‡Ø§ Ø¨Û• JSON Ø¨Ù†ÙˆÙˆØ³ÛŒØª:
 {
-  "title": "ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ø¦Û•Ø²Ù…ÙˆÙˆÙ†ÛŒ - $topic ($difficulty)",
+  "title": "ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ• Ù„Û•Ø³Û•Ø± $courseName",
   "questions": [
      {
-       "question": "Ø¯Û•Ù‚ÛŒ Ù¾Ø±Ø³ÛŒØ§Ø±Û•Ú©Û• Ø¨Û• Ú©ÙˆØ±Ø¯ÛŒ Ø³Û†Ø±Ø§Ù†ÛŒ",
+       "question": "Ù¾Ø±Ø³ÛŒØ§Ø±ÛŒ Ø²Ø§Ù†Ø³ØªÛŒ ÙˆØ±Ø¯ Ùˆ Ú•Ø§Ø³ØªÛ•ÙˆØ®Û† Ù„Û•Ø³Û•Ø± Ù†Ø§ÙˆÛ•Ú•Û†Ú©ÛŒ ÙØ§ÛŒÙ„ÛŒ PDF Ø¨Û• Ú©ÙˆØ±Ø¯ÛŒ Ø³Û†Ø±Ø§Ù†ÛŒ",
        "type": "${questionType == 'TrueFalse' ? 'trueFalse' : 'multipleChoice'}",
-       "options": ["Ø¨Ú˜Ø§Ø±Ø¯Û•ÛŒ A", "Ø¨Ú˜Ø§Ø±Ø¯Û•ÛŒ B", "Ø¨Ú˜Ø§Ø±Ø¯Û•ÛŒ C", "Ø¨Ú˜Ø§Ø±Ø¯Û•ÛŒ D"],
-       "correct_answer": "Ø¨Ú˜Ø§Ø±Ø¯Û•ÛŒ A",
-       "explanation": "Ø´ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ ØªÛŽØ± Ùˆ ØªÛ•Ø³Û•Ù„ÛŒ AI Ø¨Û• Ú©ÙˆØ±Ø¯ÛŒ Ø¨Û† Ø¦Û•ÙˆÛ•ÛŒ Ø¨Û†Ú†ÛŒ Ø¦Û•Ù… ÙˆÛ•ÚµØ§Ù…Û• Ú•Ø§Ø³ØªÛ•"
+       "options": ["ÙˆÛ•ÚµØ§Ù…ÛŒ Ú•Ø§Ø³Øª Ù„Û• PDF", "ÙˆÛ•ÚµØ§Ù…ÛŒ Ù‡Û•ÚµÛ•ÛŒ Ù¡", "ÙˆÛ•ÚµØ§Ù…ÛŒ Ù‡Û•ÚµÛ•ÛŒ Ù¢", "ÙˆÛ•ÚµØ§Ù…ÛŒ Ù‡Û•ÚµÛ•ÛŒ Ù£"],
+       "correct_answer": "ÙˆÛ•ÚµØ§Ù…ÛŒ Ú•Ø§Ø³Øª Ù„Û• PDF",
+       "explanation": "Ø´ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ• Ø¨Û• Ø²Ù…Ø§Ù†ÛŒ Ú©ÙˆØ±Ø¯ÛŒ Ø³Û†Ø±Ø§Ù†ÛŒ Ø¨Û†Ú†ÛŒ Ø¦Û•Ù… ÙˆÛ•ÚµØ§Ù…Û• Ù„Û• ÙØ§ÛŒÙ„ÛŒ PDF Ú•Ø§Ø³ØªÛ•"
      }
   ]
 }
-$pdfContext
 ØªÛ•Ù†Ù‡Ø§ ÙÛ†Ø±Ù…Ø§ØªÛŒ JSON Ø¨Ù†ÙˆÙˆØ³Û• Ø¨Û•Ø¨ÛŽ Ø¯Û•Ù‚ÛŒ Ø²ÛŒØ§Ø¯Û•.
 """;
 
-        final response = await _callGemini(prompt);
-        return _parseQuizJson(response, "ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ø¦Û•Ø²Ù…ÙˆÙˆÙ†ÛŒ - $topic", courseName, overrideDuration: durationMinutes);
-      } catch (e) {
-        if (_isNetworkError(e)) {
-          return _generateMockExam("ðŸ“¡ (ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ø¦Û†ÙÙ„Ø§ÛŒÙ†) - $topic", courseName, questionCount, durationMinutes, difficulty);
+        String response = '';
+        if (pdfBytes != null && pdfBytes.isNotEmpty) {
+          response = await _callGeminiWithPdf(prompt, pdfBytes);
         }
+        if (response.isEmpty) {
+          response = await _callGemini(prompt);
+        }
+
+        if (response.isNotEmpty) {
+          return _parseQuizJson(response, "ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ• Ù„Û•Ø³Û•Ø± $courseName", courseName, overrideDuration: durationMinutes, pdfContent: pdfContent);
+        }
+      } catch (e) {
+        return _generateMockExam("ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ• Ù„Û•Ø³Û•Ø± PDF - $courseName", courseName, questionCount, durationMinutes, difficulty, pdfContent: pdfContent);
       }
     }
 
-    return _generateMockExam("ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ø¦Û•Ø²Ù…ÙˆÙˆÙ†ÛŒ - $topic", courseName, questionCount, durationMinutes, difficulty);
+    return _generateMockExam("ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ• Ù„Û•Ø³Û•Ø± PDF - $courseName", courseName, questionCount, durationMinutes, difficulty, pdfContent: pdfContent);
   }
 
-  QuizModel _parseQuizJson(String responseText, String defaultTitle, String courseName, {int? overrideDuration}) {
+  QuizModel _parseQuizJson(String responseText, String defaultTitle, String courseName, {int? overrideDuration, String? pdfContent}) {
     try {
       String jsonText = responseText.trim();
       if (jsonText.startsWith("```json")) {
@@ -600,15 +671,19 @@ $pdfContext
         ));
       }
 
+      if (questions.isEmpty) {
+        return _generateMockExam(defaultTitle, courseName, 10, overrideDuration ?? 15, "Medium", pdfContent: pdfContent);
+      }
+
       return QuizModel(
         id: 'quiz_${Random().nextInt(10000)}',
         title: data['title'] ?? defaultTitle,
         courseName: courseName,
         durationMinutes: overrideDuration ?? data['durationMinutes'] ?? 15,
-        questions: questions.isNotEmpty ? questions : _generateMockQuiz(defaultTitle, courseName).questions,
+        questions: questions,
       );
     } catch (_) {
-      return _generateMockQuiz(defaultTitle, courseName);
+      return _generateMockExam(defaultTitle, courseName, 10, overrideDuration ?? 15, "Medium", pdfContent: pdfContent);
     }
   }
 
@@ -769,107 +844,110 @@ $pdfContext
     ];
   }
 
-  // Mock quiz fallback generator
-  QuizModel _generateMockQuiz(String topic, String courseName) {
-    final List<QuestionModel> questions = [
-      QuestionModel(
-        id: 'q_n1',
-        questionText: 'Ø¦Û•Ø±Ú©ÛŒ Ø³Û•Ø±Û•Ú©ÛŒ Ú•Ø§ÙˆØªÛ•Ø± (Router) Ú†ÛŒÛŒÛ• Ù„Û• ØªÛ†Ú•Ø¯Ø§ØŸ',
-        type: QuestionType.multipleChoice,
-        options: [
-          'Ø¨Û•Ø³ØªÙ†Û•ÙˆÛ•ÛŒ Ø¬Û†ÛŒÙ†ØªÛ•Ú©Ø§Ù† Ù„Û• Ù‡Û•Ù…Ø§Ù† ØªÛ†Ú•ÛŒ Ù†Ø§ÙˆØ®Û†ÛŒÛŒØ¯Ø§',
-          'Ú•ÛŽÚ•Û•ÙˆÚ©Ø±Ø¯Ù† Ùˆ Ø¦Ø§Ú•Ø§Ø³ØªÛ•Ú©Ø±Ø¯Ù†ÛŒ Ø¯Ø§ØªØ§ Ù„Û• Ù†ÛŽÙˆØ§Ù† ØªÛ†Ú•Û• Ø¬ÛŒØ§ÙˆØ§Ø²Û•Ú©Ø§Ù†Ø¯Ø§',
-          'Ù¾Ø§Ø±Ø§Ø³ØªÙ†ÛŒ Ú©Û†Ù…Ù¾ÛŒÙˆØªÛ•Ø± Ù„Û• Ú¤Ø§ÛŒØ±Û†Ø³',
-          'Ø¯Ø§Ø¨ÛŒÙ†Ú©Ø±Ø¯Ù†ÛŒ ÙˆØ²Û•ÛŒ Ú©Ø§Ø±Û•Ø¨Ø§ Ø¨Û† Ø¦Ø§Ù…ÛŽØ±Û•Ú©Ø§Ù†'
-        ],
-        correctAnswer: 'Ú•ÛŽÚ•Û•ÙˆÚ©Ø±Ø¯Ù† Ùˆ Ø¦Ø§Ú•Ø§Ø³ØªÛ•Ú©Ø±Ø¯Ù†ÛŒ Ø¯Ø§ØªØ§ Ù„Û• Ù†ÛŽÙˆØ§Ù† ØªÛ†Ú•Û• Ø¬ÛŒØ§ÙˆØ§Ø²Û•Ú©Ø§Ù†Ø¯Ø§',
-      ),
-      QuestionModel(
-        id: 'q_n2',
-        questionText: 'Ù…Û†Ø¯ÛŽÙ„ÛŒ OSI Ù„Û• Ù§ Ú†ÛŒÙ† Ù¾ÛŽÚ©Ù‡Ø§ØªÙˆÙˆÛ•.',
-        type: QuestionType.trueFalse,
-        correctAnswer: 'Ú•Ø§Ø³ØªÛ•',
-      ),
-      QuestionModel(
-        id: 'q_n3',
-        questionText: 'Ù¾Ú•Û†ØªÛ†Ú©Û†Ù„ÛŒ... Ú©Û• Ø¨Û† Ú©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ù…Ø§ÚµÙ¾Û•Ú•Û•Ú©Ø§Ù† Ø¨Û•Ú©Ø§Ø±Ø¯ÛŽØª Ù†Ø§ÙˆÛŒ Ú†ÛŒÛŒÛ•ØŸ',
-        type: QuestionType.fillInBlank,
-        correctAnswer: 'HTTPS',
-      )
-    ];
-
-    return QuizModel(
-      id: 'quiz_${Random().nextInt(10000)}',
-      title: 'ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ø®ÛŽØ±Ø§: $topic',
-      courseName: courseName,
-      questions: questions,
-      durationMinutes: 10,
-    );
+  // Dynamic fallback exam generator from PDF content
+  QuizModel _generateMockQuiz(String topic, String courseName, {String? pdfContent}) {
+    return _generateMockExam(topic, courseName, 5, 10, 'Medium', pdfContent: pdfContent);
   }
 
-  QuizModel _generateMockExam(String topic, String courseName, int count, int duration, String difficulty) {
-    final List<QuestionModel> examQuestions = [
-      QuestionModel(
-        id: 'ex_1',
-        questionText: 'Ø¦Û•Ø±Ú©ÛŒ Ø³Û•Ø±Û•Ú©ÛŒ $topic Ù„Û• ÙˆØ§Ù†Û•ÛŒ $courseName Ú†ÛŒÛŒÛ•ØŸ',
-        type: QuestionType.multipleChoice,
-        options: [
-          'Ú•ÛŽÚ©Ø®Ø³ØªÙ† Ùˆ Ú•ÛŽÚ•Û•ÙˆÚ©Ø±Ø¯Ù†ÛŒ Ø¯Ø§ØªØ§ Ø¨Û• Ø´ÛŽÙˆÛ•ÛŒÛ•Ú©ÛŒ Ø®Û†Ú©Ø§Ø±',
-          'Ø¨Û•Ø³ØªÙ†Û•ÙˆÛ•ÛŒ Ø³Û•Ø±Ú†Ø§ÙˆÛ•ÛŒ Ú©Ø§Ø±Û•Ø¨Ø§ÛŒÛŒ Ø¦Ø§Ù…ÛŽØ±Û•Ú©Ø§Ù†',
-          'Ù¾Ø§Ø´Û•Ú©Û•ÙˆØªÚ©Ø±Ø¯Ù†ÛŒ ÙˆÛŽÙ†Û• Ù„Û• Ø³Û•Ø± Ø¯ÛŒØ³Ú©',
-          'Ù‡ÛŒÚ† Ú©Ø§Ù… Ù„Û•Ù… ÙˆÛ•ÚµØ§Ù…Ø§Ù†Û•'
-        ],
-        correctAnswer: 'Ú•ÛŽÚ©Ø®Ø³ØªÙ† Ùˆ Ú•ÛŽÚ•Û•ÙˆÚ©Ø±Ø¯Ù†ÛŒ Ø¯Ø§ØªØ§ Ø¨Û• Ø´ÛŽÙˆÛ•ÛŒÛ•Ú©ÛŒ Ø®Û†Ú©Ø§Ø±',
-        explanation: 'Ù„Û•Ù… Ø¨Ø§Ø¨Û•ØªÛ•Ø¯Ø§ Ú•ÛŽÚ©Ø®Ø³ØªÙ†ÛŒ Ø¯Ø§ØªØ§ Ú¯Ø±Ù†Ú¯ØªØ±ÛŒÙ† Ø¨Ù†Û•Ù…Ø§ÛŒÛ• Ø¨Û† Ù¾Ø§Ø±Ø§Ø³ØªÙ† Ùˆ Ù¾ÛŽØ´Ø®Ø³ØªÙ†ÛŒ Ø¦Û•Ù†Ø¬Ø§Ù…ÛŒ Ú©Ø§Ø±Ù¾ÛŽÚ©Ø±Ø¯Ù†.',
-      ),
-      QuestionModel(
-        id: 'ex_2',
-        questionText: 'ØªÛŽÚ¯Û•ÛŒØ´ØªÙ† Ù„Û• Ú†Û•Ù…Ú©Û•Ú©Ø§Ù†ÛŒ $topic Ù„Û• Ø¦Ø§Ø³ØªÛŒ $difficulty ÛŒØ§Ø±Ù…Û•ØªÛŒØ¯Û•Ø±Û• Ø¨Û† Ù†Ù…Ø±Û•ÛŒ Ø¨Û•Ø±Ø² Ù„Û• ÙØ§ÛŒÙ†Ø§ÚµØ¯Ø§.',
-        type: QuestionType.trueFalse,
-        options: ['Ú•Ø§Ø³ØªÛ•', 'Ù‡Û•ÚµÛ•ÛŒÛ•'],
-        correctAnswer: 'Ú•Ø§Ø³ØªÛ•',
-        explanation: 'Ú†ÙˆÙ†Ú©Û• Ù¾Ø±Ø³ÛŒØ§Ø±Û• Ø³Û•Ø±Û•Ú©ÛŒÛŒÛ•Ú©Ø§Ù†ÛŒ ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ ÙØ§ÛŒÙ†Ø§Úµ Ø±Ø§Ø³ØªÛ•ÙˆØ®Û† Ù„Û•Ø³Û•Ø± Ø¦Û•Ù… Ø¨Ù†Û•Ù…Ø§ÛŒØ§Ù†Û• Ø¯Ø§Ø¯Û•Ù†Ø±ÛŽÙ†.',
-      ),
-      QuestionModel(
-        id: 'ex_3',
-        questionText: 'Ú©Ø§Ù…ÛŒØ§Ù† ØªØ§ÛŒØ¨Û•ØªÙ…Û•Ù†Ø¯ÛŒ Ø³Û•Ø±Û•Ú©ÛŒ $topic Û•ØŸ',
-        type: QuestionType.multipleChoice,
-        options: [
-          'Ø®ÛŽØ±Ø§Ú©Ø±Ø¯Ù†ÛŒ Ú†Ø§Ø±Û•Ø³Û•Ø±Ú©Ø±Ø¯Ù†ÛŒ Ø¯Ø§ØªØ§ Ùˆ Ú©Û•Ù…Ú©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ù‡Û•ÚµÛ•Ú©Ø§Ù†',
-          'Ø¯Ø§Ø®Ø³ØªÙ†ÛŒ Ù‡Û•Ù…ÙˆÙˆ Ù¾Ø±Û†Ø³Û•Ú©Ø§Ù†ÛŒ Ø¨Û•Ú©Ø§Ø±Ù‡ÛŽÙ†Û•Ø±',
-          'Ø³Ú•ÛŒÙ†Û•ÙˆÛ•ÛŒ Ø³ÛŽØ±Ú¤Û•Ø± Ø¨Û•ØªÛ•ÙˆØ§ÙˆÛŒ',
-          'Ú•Ø§Ú¯Ø±ØªÙ†ÛŒ Ú•Ø§Ù…'
-        ],
-        correctAnswer: 'Ø®ÛŽØ±Ø§Ú©Ø±Ø¯Ù†ÛŒ Ú†Ø§Ø±Û•Ø³Û•Ø±Ú©Ø±Ø¯Ù†ÛŒ Ø¯Ø§ØªØ§ Ùˆ Ú©Û•Ù…Ú©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ù‡Û•ÚµÛ•Ú©Ø§Ù†',
-        explanation: 'Ø³ÛŒØ³ØªÛ•Ù…ÛŒ Ú˜ÛŒØ± Ù„Û•Ø³Û•Ø± Ø¯Ø§Ø¨ÛŒÙ†Ú©Ø±Ø¯Ù†ÛŒ Ø®ÛŽØ±Ø§ÛŒÛŒ Ùˆ Ø¯ÚµÙ†ÛŒØ§Ø¨ÙˆÙˆÙ† Ù„Û• Ú•Ø§Ø³ØªÛŒ Ø¯Ø§ØªØ§Ú©Ø§Ù† Ú©Ø§Ø± Ø¯Û•Ú©Ø§Øª.',
-      ),
-      QuestionModel(
-        id: 'ex_4',
-        questionText: 'Ù„Û• Ø¦Ø§Ø³ØªÛŒ $difficulty Ø¯Ø§ØŒ Ù‡Û•ÚµÛ•ÛŒ Ú©Û†Ø¯ ÛŒØ§Ù† Ù‡Ø§ÙˆÚ©ÛŽØ´Û• Ø¯Û•Ø¨ÛŽØªÛ• Ù‡Û†ÛŒ ÙˆÛ•Ø³ØªØ§Ù†ÛŒ Ù¾Ø±Û†Ø³Û•Ú©Û•.',
-        type: QuestionType.trueFalse,
-        options: ['Ú•Ø§Ø³ØªÛ•', 'Ù‡Û•ÚµÛ•ÛŒÛ•'],
-        correctAnswer: 'Ú•Ø§Ø³ØªÛ•',
-        explanation: 'Ù„Û• Ø¦Ø§Ø³ØªÛŒ Ø¨Ø§Ù„Ø§ Ø¯Ø§ exception ÛŒØ§Ù† Ù‡Û•ÚµÛ•ÛŒ Ù„Û†Ú˜ÛŒÚ©ÛŒ Ø¯Û•Ø¨ÛŽØªÛ• Ù‡Û†ÛŒ Ø±Û•ØªØ¨ÙˆÙˆÙ†Û•ÙˆÛ•ÛŒ Ø¦Û•Ù†Ø¬Ø§Ù…Û•Ú©Û•.',
-      ),
-      QuestionModel(
-        id: 'ex_5',
-        questionText: 'Ø¨Ø§Ø´ØªØ±ÛŒÙ† Ú•ÛŽÚ¯Ø§ Ø¨Û† Ú†Ø§Ø±Û•Ø³Û•Ø±Ú©Ø±Ø¯Ù†ÛŒ Ú©ÛŽØ´Û•Ú©Ø§Ù†ÛŒ $topic Ú†ÛŒÛŒÛ•ØŸ',
-        type: QuestionType.multipleChoice,
-        options: [
-          'Ø¯Ø§Ø¨Û•Ø´Ú©Ø±Ø¯Ù†ÛŒ Ú©ÛŽØ´Û•Ú©Û• Ø¨Û† Ú©ÛŽØ´Û•ÛŒ Ø¨Ú†ÙˆÙˆÚ©ØªØ± (Divide and Conquer)',
-          'ÙˆØ§Ø²ÛŒ Ù„ÛŽØ¨Ù‡ÛŽÙ†ÛŒØª Ùˆ ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•Ú©Û• Ø¨Û•ØªØ§Úµ Ø¨Û•Ø¬ÛŽØ¨Ù‡ÛŽÚµÛŒØª',
-          'ØªÛ•Ù†Ù‡Ø§ Ø³Û•Ø¹ÛŒ Ù„Û• ÙˆÛ•ÚµØ§Ù…ÛŒ Ù¾Ø±Ø³ÛŒØ§Ø±ÛŒ ÛŒÛ•Ú©Û•Ù… Ø¨Ú©Û•ÛŒØª',
-          'Ø¯Ø§Ø¨Û•Ø²Ø§Ù†Ø¯Ù†ÛŒ ÙØ§ÛŒÙ„Û•Ú©Û• Ø¨Û•Ø¨ÛŽ Ø®ÙˆÛŽÙ†Ø¯Ù†Û•ÙˆÛ•'
-        ],
-        correctAnswer: 'Ø¯Ø§Ø¨Û•Ø´Ú©Ø±Ø¯Ù†ÛŒ Ú©ÛŽØ´Û•Ú©Û• Ø¨Û† Ú©ÛŽØ´Û•ÛŒ Ø¨Ú†ÙˆÙˆÚ©ØªØ± (Divide and Conquer)',
-        explanation: 'ØªÛ•Ú©Ù†ÛŒÚ©ÛŒ Divide & Conquer Ø¨Ù†Û•Ù…Ø§ÛŒ Ø³Û•Ø±Û•Ú©ÛŒ Ø³Û•Ø±Ú©Û•ÙˆØªÙ†Û• Ù„Û• Ø´ÛŒÚ©Ø§Ø±ÛŒ Ú©ÛŽØ´Û• Ø¦Ø§ÚµÛ†Ø²Û•Ú©Ø§Ù†Ø¯Ø§.',
-      ),
-    ];
+  String _sanitizeExtractedText(String input) {
+    if (input.isEmpty) return '';
+
+    final RegExp cleanPattern = RegExp(
+      r'[^a-zA-Z0-9\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\s\.,\?\!\:\-\(\)]',
+    );
+    String cleaned = input.replaceAll(cleanPattern, ' ');
+
+    cleaned = cleaned.replaceAll(
+      RegExp(r'\b(obj|endobj|stream|endstream|xref|trailer|FlateDecode|Font|CIDFont|FontDescriptor|ProcSet|MediaBox|Type1|WinAnsiEncoding|Identity-H)\b', caseSensitive: false),
+      ' ',
+    );
+
+    cleaned = cleaned.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+    final words = cleaned.split(' ').where((w) {
+      if (w.length < 2) return false;
+      return RegExp(r'[a-zA-Z\u0600-\u06FF]').hasMatch(w);
+    }).toList();
+
+    return words.join(' ');
+  }
+
+  QuizModel _generateMockExam(
+    String topic,
+    String courseName,
+    int count,
+    int duration,
+    String difficulty, {
+    String? pdfContent,
+  }) {
+    final List<QuestionModel> examQuestions = [];
+    final rawTitle = courseName.replaceAll(RegExp(r'\.[a-zA-Z0-9]+$', caseSensitive: false), '');
+    final cleanTitle = _sanitizeExtractedText(rawTitle);
+    final displayTitle = cleanTitle.isNotEmpty ? cleanTitle : 'ÙØ§ÛŒÙ„ÛŒ PDFÛŒ Ø¨Ø§Ø±Ú©Ø±Ø§Ùˆ';
+
+    List<String> pdfSnippets = [];
+    if (pdfContent != null && pdfContent.trim().isNotEmpty) {
+      pdfSnippets = pdfContent
+          .split(RegExp(r'[\.\?\!\n;]'))
+          .map((s) => _sanitizeExtractedText(s))
+          .where((s) => s.length > 15 && RegExp(r'[a-zA-Z\u0600-\u06FF]').hasMatch(s))
+          .toList();
+    }
+
+    if (pdfSnippets.length >= 2) {
+      for (int i = 0; i < count; i++) {
+        final snippet = pdfSnippets[i % pdfSnippets.length];
+        final words = snippet.split(' ').where((w) => w.length > 3).toList();
+        final keyWord = words.isNotEmpty ? words[i % words.length] : displayTitle;
+
+        if (i % 2 == 0) {
+          examQuestions.add(
+            QuestionModel(
+              id: 'pdf_ex_$i',
+              questionText: 'Ù„Û• ÙˆØ§Ù†Û•ÛŒ Â«$displayTitleÂ»Ø¯Ø§ØŒ Â«$snippetÂ» Ø¦Ø§Ù…Ø§Ú˜Û• Ø¨Û• Ú†ÛŒ Ø¯Û•Ú©Ø§ØªØŸ',
+              type: QuestionType.multipleChoice,
+              options: [
+                'Ú†Û•Ù…Ú©ÛŽÚ©ÛŒ Ø¯Ø±ÙˆØ³ØªÛ• Ùˆ Ø¨Û•Ø´ÛŽÚ©Û• Ù„Û• Ø¨Û•Ø´Û•Ú©Ø§Ù†ÛŒ ÙˆØ§Ù†Û•Ú©Û• ($keyWord)',
+                'Ø²Ø§Ù†ÛŒØ§Ø±ÛŒÛŒÛ•Ú©ÛŒ Ù†Ø§Ú•Ø§Ø³ØªÛ• Ù„Û•Ø³Û•Ø± ÙˆØ§Ù†Û•Ú©Û•',
+                'Ø³Ú•ÛŒÙ†Û•ÙˆÛ•ÛŒ Ø¯Ø§ØªØ§ÛŒ ÙØ§ÛŒÙ„ÛŒ Ø¨Ø§Ø±Ú©Ø±Ø§Ùˆ',
+                'Ù‡ÛŒÚ† Ú©Ø§Ù… Ù„Û•Ù… ÙˆÛ•ÚµØ§Ù…Ø§Ù†Û•'
+              ],
+              correctAnswer: 'Ú†Û•Ù…Ú©ÛŽÚ©ÛŒ Ø¯Ø±ÙˆØ³ØªÛ• Ùˆ Ø¨Û•Ø´ÛŽÚ©Û• Ù„Û• Ø¨Û•Ø´Û•Ú©Ø§Ù†ÛŒ ÙˆØ§Ù†Û•Ú©Û• ($keyWord)',
+              explanation: 'Ø¦Û•Ù… Ø¨Ø§Ø¨Û•ØªÛ• Ú•Ø§Ø³ØªÛ•ÙˆØ®Û† Ù„Û• Ù†Ø§ÙˆÛ•Ú•Û†Ú©ÛŒ Ø²Ø§Ù†Ø³ØªÛŒ ÙˆØ§Ù†Û•Ú©Û•ÙˆÛ• Ø¯Û•Ø±Ù‡ÛŽÙ†Ø±Ø§ÙˆÛ•.',
+            ),
+          );
+        } else {
+          examQuestions.add(
+            QuestionModel(
+              id: 'pdf_ex_$i',
+              questionText: 'Ø¦Ø§ÛŒØ§ Ú†Û•Ù…Ú©ÛŒ Â«$keyWordÂ» Ø¨Û•Ø´ÛŽÚ©ÛŒ Ø³Û•Ø±Û•Ú©ÛŒÛŒÛ• Ù„Û• ØªÛŽÚ¯Û•ÛŒØ´ØªÙ†ÛŒ Ø¨Ø§Ø¨Û•ØªÛ•Ú©Ø§Ù†ÛŒ Â«$displayTitleÂ»ØŸ',
+              type: QuestionType.trueFalse,
+              options: ['Ú•Ø§Ø³ØªÛ•', 'Ù‡Û•ÚµÛ•ÛŒÛ•'],
+              correctAnswer: 'Ú•Ø§Ø³ØªÛ•',
+              explanation: 'Ø¦Û•Ù… Ø²Ø§Ù†ÛŒØ§Ø±ÛŒÛŒÛ• ÛŒÛ•Ú©ÛŽÚ©Û• Ù„Û• Ø¨Ù†Û•Ù…Ø§ Ú¯Ø±Ù†Ú¯Û•Ú©Ø§Ù†ÛŒ ÙØ§ÛŒÙ„ÛŒ Ø¨Ø§Ø±Ú©Ø±Ø§Ùˆ.',
+            ),
+          );
+        }
+      }
+    } else {
+      for (int i = 0; i < count; i++) {
+        examQuestions.add(
+          QuestionModel(
+            id: 'pdf_ex_$i',
+            questionText: 'Ù„Û• ÙˆØ§Ù†Û•ÛŒ ($displayTitle)ØŒ Ù¾ÛŽØ¯Ø§Ú†ÙˆÙˆÙ†Û•ÙˆÛ• Ø¨Û• Ø¨Û•Ø´ÛŒ ${i + 1} Ø¨Û•Ø´ÛŽÚ©ÛŒ Ú¯Ø±Ù†Ú¯Û• Ø¨Û† Ø¦Ø§Ù…Ø§Ø¯Û•Ú©Ø§Ø±ÛŒ ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ ÙØ§ÛŒÙ†Ø§ÚµØŸ',
+            type: QuestionType.trueFalse,
+            options: ['Ú•Ø§Ø³ØªÛ•', 'Ù‡Û•ÚµÛ•ÛŒÛ•'],
+            correctAnswer: 'Ú•Ø§Ø³ØªÛ•',
+            explanation: 'Ù¾ÛŽØ¯Ø§Ú†ÙˆÙˆÙ†Û•ÙˆÛ• Ø¨Û• Ø¨Û•Ø´Û•Ú©Ø§Ù†ÛŒ ÙˆØ§Ù†Û•ÛŒ $displayTitle ÛŒØ§Ø±Ù…Û•ØªÛŒØ¯Û•Ø±Û• Ø¨Û† Ù†Ù…Ø±Û•ÛŒ Ø¨Û•Ø±Ø².',
+          ),
+        );
+      }
+    }
 
     return QuizModel(
       id: 'exam_${Random().nextInt(10000)}',
-      title: 'ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ø¦Û•Ø²Ù…ÙˆÙˆÙ†ÛŒ - $topic',
-      courseName: courseName,
+      title: 'ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ• Ù„Û•Ø³Û•Ø± PDF - $displayTitle',
+      courseName: displayTitle,
       questions: examQuestions.take(count > 0 ? count : 5).toList(),
       durationMinutes: duration,
       isExam: true,

@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 import '../../models/quiz_model.dart';
 import '../../services/ai_service.dart';
 import '../../services/language_provider.dart';
@@ -27,17 +29,14 @@ class AiExamGeneratorScreen extends StatefulWidget {
 
 class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
   // Config state
-  late String _selectedCourse;
-  late String _selectedTopic;
-  final TextEditingController _customTopicController = TextEditingController();
-
   String _selectedDifficulty = 'Medium'; // Easy, Medium, Hard
-  String _selectedQuestionType = 'Mixed'; // MCQ, True/False, Mixed
+  String _selectedQuestionType = 'Mixed'; // MCQ, TrueFalse, Mixed
   int _questionCount = 10; // 5, 10, 15, 20
   int _durationMinutes = 15; // 5, 10, 15, 30
 
   String? _pdfFileName;
   String? _pdfFileContent;
+  Uint8List? _pdfFileBytes;
 
   // Active exam state
   bool _isGenerating = false;
@@ -49,40 +48,8 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
   Timer? _examTimer;
   int _secondsSpent = 0;
 
-  final List<String> _courses = [
-    'Calculus & Linear Algebra',
-    'Machine Learning Fundamentals',
-    'Data Structures & Algorithms',
-    'Operating Systems',
-    'Python & Data Science',
-    'Computer Networks & Security',
-    'Database Systems & SQL',
-    'Software Engineering',
-  ];
-
-  final Map<String, List<String>> _courseTopics = {
-    'Calculus & Linear Algebra': ['Derivatives & Integrals', 'Matrix Multiplication', 'Vector Spaces', 'Eigenvalues'],
-    'Machine Learning Fundamentals': ['Neural Networks', 'Supervised Learning', 'Regression & Classification', 'Deep Learning'],
-    'Data Structures & Algorithms': ['Trees & Binary Search', 'Graph Algorithms', 'Sorting & Searching', 'Dynamic Programming'],
-    'Operating Systems': ['Memory Management', 'Process Scheduling', 'Deadlocks & Threads', 'File Systems'],
-    'Python & Data Science': ['Pandas & DataFrames', 'NumPy Arrays', 'Data Visualization', 'Scikit-Learn ML'],
-    'Computer Networks & Security': ['TCP/IP Protocol Stack', 'IP Addressing & Subnetting', 'Network Security & Firewalls', 'HTTP/HTTPS Protocols'],
-    'Database Systems & SQL': ['Relational Database Design', 'SQL Queries & Joins', 'Indexing & Transactions', 'Normalization'],
-    'Software Engineering': ['Agile & Scrum', 'Design Patterns', 'Git Version Control', 'Software Testing & QA'],
-  };
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedCourse = widget.initialCourse ?? _courses[0];
-    final topics = _courseTopics[_selectedCourse] ?? ['General Review'];
-    _selectedTopic = widget.initialTopic ?? topics[0];
-    _customTopicController.text = _selectedTopic;
-  }
-
   @override
   void dispose() {
-    _customTopicController.dispose();
     _examTimer?.cancel();
     super.dispose();
   }
@@ -103,14 +70,23 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
 
         setState(() {
           _pdfFileName = file.name;
+          _pdfFileBytes = bytes;
           _pdfFileContent = text.isNotEmpty ? text : 'Lecture Content of ${file.name}';
         });
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('فایلی $_pdfFileName بارکرا بە سەرکەوتوویی 📄'),
+              content: Row(
+                children: [
+                  const Icon(CupertinoIcons.checkmark_circle_fill, color: Colors.white, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text('فایلی $_pdfFileName بە سەرکەوتوویی بارکرا 📄')),
+                ],
+              ),
               backgroundColor: ZankoColors.success,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
           );
         }
@@ -127,55 +103,143 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
     }
   }
 
+  String _sanitizeExtractedText(String input) {
+    if (input.isEmpty) return '';
+
+    final RegExp cleanPattern = RegExp(
+      r'[^a-zA-Z0-9\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\s\.,\?\!\:\-\(\)]',
+    );
+    String cleaned = input.replaceAll(cleanPattern, ' ');
+
+    cleaned = cleaned.replaceAll(
+      RegExp(r'\b(obj|endobj|stream|endstream|xref|trailer|FlateDecode|Font|CIDFont|FontDescriptor|ProcSet|MediaBox|Type1|WinAnsiEncoding|Identity-H)\b', caseSensitive: false),
+      ' ',
+    );
+
+    cleaned = cleaned.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+    final words = cleaned.split(' ').where((w) {
+      if (w.length < 2) return false;
+      return RegExp(r'[a-zA-Z\u0600-\u06FF]').hasMatch(w);
+    }).toList();
+
+    return words.join(' ');
+  }
+
   String _extractTextFromBytes(Uint8List bytes) {
     try {
-      final maxBytes = bytes.length > 250000 ? bytes.sublist(0, 250000) : bytes;
-      final rawStr = String.fromCharCodes(maxBytes);
-      final StringBuffer buffer = StringBuffer();
-      int start = -1;
-      int charCount = 0;
-      
-      for (int i = 0; i < rawStr.length; i++) {
-        final char = rawStr[i];
-        if (char == '(') {
-          start = i + 1;
-        } else if (char == ')' && start != -1) {
-          final snippet = rawStr.substring(start, i).trim();
-          if (snippet.length > 2 && !snippet.startsWith('/') && !snippet.contains('font')) {
-            buffer.write('$snippet ');
-            charCount += snippet.length;
-            if (charCount > 6000) break;
+      final PdfDocument document = PdfDocument(inputBytes: bytes);
+      final String extractedText = PdfTextExtractor(document).extractText();
+      document.dispose();
+
+      String cleanText = _sanitizeExtractedText(extractedText);
+      if (cleanText.length > 20) {
+        return cleanText.length > 10000 ? cleanText.substring(0, 10000) : cleanText;
+      }
+    } catch (_) {}
+
+    try {
+      final StringBuffer extractedBuffer = StringBuffer();
+
+      // Scan PDF stream objects and decompress FlateDecode streams using zlib
+      final List<int> streamSeq = [115, 116, 114, 101, 97, 109]; // 'stream'
+      final List<int> endStreamSeq = [101, 110, 100, 115, 116, 114, 101, 97, 109]; // 'endstream'
+
+      int p = 0;
+      while (p < bytes.length - 10) {
+        int streamStart = -1;
+        for (int i = p; i < bytes.length - 6; i++) {
+          if (bytes[i] == streamSeq[0] &&
+              bytes[i + 1] == streamSeq[1] &&
+              bytes[i + 2] == streamSeq[2] &&
+              bytes[i + 3] == streamSeq[3] &&
+              bytes[i + 4] == streamSeq[4] &&
+              bytes[i + 5] == streamSeq[5]) {
+            streamStart = i + 6;
+            break;
           }
-          start = -1;
+        }
+        if (streamStart == -1) break;
+
+        if (streamStart < bytes.length && bytes[streamStart] == 13) streamStart++;
+        if (streamStart < bytes.length && bytes[streamStart] == 10) streamStart++;
+
+        int streamEnd = -1;
+        for (int i = streamStart; i < bytes.length - 9; i++) {
+          if (bytes[i] == endStreamSeq[0] &&
+              bytes[i + 1] == endStreamSeq[1] &&
+              bytes[i + 2] == endStreamSeq[2] &&
+              bytes[i + 3] == endStreamSeq[3] &&
+              bytes[i + 4] == endStreamSeq[4] &&
+              bytes[i + 5] == endStreamSeq[5]) {
+            streamEnd = i;
+            break;
+          }
+        }
+        if (streamEnd == -1) break;
+
+        final rawStreamBytes = bytes.sublist(streamStart, streamEnd);
+        p = streamEnd + 9;
+
+        if (rawStreamBytes.length > 5) {
+          String streamStr = "";
+          try {
+            final decompressed = zlib.decode(rawStreamBytes);
+            streamStr = String.fromCharCodes(decompressed);
+          } catch (_) {
+            streamStr = String.fromCharCodes(rawStreamBytes);
+          }
+
+          int startParen = -1;
+          for (int k = 0; k < streamStr.length; k++) {
+            final c = streamStr[k];
+            if (c == '(') {
+              startParen = k + 1;
+            } else if (c == ')' && startParen != -1) {
+              final snippet = streamStr.substring(startParen, k).trim();
+              if (snippet.length > 3 && !snippet.startsWith('/') && !snippet.contains('font')) {
+                extractedBuffer.write('$snippet ');
+              }
+              startParen = -1;
+            }
+          }
         }
       }
 
-      final extracted = buffer.toString().trim();
-      if (extracted.isNotEmpty) return extracted;
-      
-      final cleanText = rawStr.split('\n').where((l) {
-        final t = l.trim();
-        return !t.startsWith('%') &&
-            !t.contains('obj') &&
-            !t.contains('<<') &&
-            !t.contains('>>') &&
-            !t.contains('/Type') &&
-            !t.contains('endobj') &&
-            !t.contains('/Font') &&
-            t.length > 4;
-      }).join(' ').replaceAll(RegExp(r'\s+'), ' ').trim();
-
-      if (cleanText.isNotEmpty && cleanText.length > 20) {
-        return cleanText.length > 4000 ? cleanText.substring(0, 4000) : cleanText;
+      String extracted = _sanitizeExtractedText(extractedBuffer.toString());
+      if (extracted.length > 20) {
+        return extracted.length > 8000 ? extracted.substring(0, 8000) : extracted;
       }
-      return 'دەقی فایلی فێرکاری بەستراو';
+
+      final maxBytes = bytes.length > 250000 ? bytes.sublist(0, 250000) : bytes;
+      final rawStr = String.fromCharCodes(maxBytes);
+      return _sanitizeExtractedText(rawStr);
     } catch (_) {
-      return 'تێگەیشتن لە دەقی فایلی بەستراوە';
+      return '';
     }
   }
 
   // ─── Start Exam ────────────────────────────────────────────────────────────
   Future<void> _generateAndStartExam() async {
+    if (_pdfFileContent == null || _pdfFileName == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(CupertinoIcons.exclamationmark_triangle_fill, color: Colors.white, size: 20),
+              SizedBox(width: 10),
+              Expanded(child: Text('تکایە سەرەتا فایلی PDFی وانەکە باربکە بۆ ئەوەی پرسیارەکان دروست بکرێن! 📄')),
+            ],
+          ),
+          backgroundColor: ZankoColors.warning,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+      _pickPdfFile();
+      return;
+    }
+
     final aiService = Provider.of<AiService>(context, listen: false);
 
     setState(() {
@@ -187,24 +251,26 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
       _secondsSpent = 0;
     });
 
-    final topicToUse = _customTopicController.text.trim().isNotEmpty
-        ? _customTopicController.text.trim()
-        : _selectedTopic;
+    final String rawName = _pdfFileName!.replaceAll(RegExp(r'\.(pdf|txt)$', caseSensitive: false), '');
+    final String cleanFileName = _sanitizeExtractedText(rawName);
+    final courseToUse = cleanFileName.isNotEmpty ? cleanFileName : 'فایلی PDFی بارکراو';
+    final topicToUse = 'ناوەرۆکی $courseToUse';
 
     try {
       QuizModel exam;
       if (aiService is ZankoAiService) {
         exam = await aiService.generateCustomExam(
-          courseName: _selectedCourse,
+          courseName: courseToUse,
           topic: topicToUse,
           difficulty: _selectedDifficulty,
           questionType: _selectedQuestionType,
           questionCount: _questionCount,
           durationMinutes: _durationMinutes,
           pdfContent: _pdfFileContent,
+          pdfBytes: _pdfFileBytes,
         );
       } else {
-        exam = await aiService.generateQuiz(topicToUse, _selectedCourse);
+        exam = await aiService.generateQuiz(topicToUse, courseToUse);
       }
 
       if (mounted) {
@@ -217,7 +283,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
         _startTimer();
       }
     } catch (e) {
-      final fallbackExam = _generateFallbackExam(topicToUse, _selectedCourse, _questionCount, _durationMinutes);
+      final fallbackExam = _generateFallbackExam(topicToUse, courseToUse, _questionCount, _durationMinutes);
       if (mounted) {
         setState(() {
           _activeExam = fallbackExam;
@@ -230,54 +296,99 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
   }
 
   QuizModel _generateFallbackExam(String topic, String course, int count, int duration) {
-    final List<QuestionModel> questions = [
-      QuestionModel(
-        id: '1',
-        questionText: 'چەمکی بنەڕەتی بابەتەکە ($topic) لە بواری ($course) چییە؟',
-        type: QuestionType.multipleChoice,
-        options: [
-          'باشترکردنی خێرایی و کارایی پرۆسەکان',
-          'کەمکردنەوەی جێبەجێکردنی سیستەمەکان',
-          'لابردنی سەرچاوە زانستییەکان',
-          'هیچکامیان'
-        ],
-        correctAnswer: 'باشترکردنی خێرایی و کارایی پرۆسەکان',
-        explanation: 'ئامانجی سەرەکی لە دروستکردنی ئەم پڕۆژەیە بەرەوپێشبردنی کارایی و گەیشتنە بە ئەنجامی وردتر.',
-      ),
-      QuestionModel(
-        id: '2',
-        questionText: 'سودەکانی بەکارهێنانی مۆدێلە پێشکەوتووەکان لە ($topic) چیین؟',
-        type: QuestionType.multipleChoice,
-        options: [
-          'کەمکردنەوەی هەڵە مرۆییەکان بۆ کەمتر لە ٢٪',
-          'خاوبوونەوەی شیکردنەوەی داتاکان',
-          'زیادبوونی تێچووی کۆکردنەوەی داتا',
-          'نەمانی ئاسایشی زانیارییەکان'
-        ],
-        correctAnswer: 'کەمکردنەوەی هەڵە مرۆییەکان بۆ کەمتر لە ٢٪',
-        explanation: 'بەکارهێنانی سیستەمە زیرەکەکان بەرچاوترین گۆڕانکاری لە پێوانی هەڵەکان دروست دەکات.',
-      ),
-      QuestionModel(
-        id: '3',
-        questionText: 'چۆن داتاکان لە ($course) ڕێکدەخرێن بۆ شیکردنەوە؟',
-        type: QuestionType.multipleChoice,
-        options: [
-          'بە بەکارهێنانی فۆرمولە و ستانداردە نێودەوڵەتییەکان',
-          'بە بەکارهێنانی ڕێگەی نەریتی بەبێ داتابەیس',
-          'بە سڕینەوەی بەشە ناڕوونەکان',
-          'بە دروستکردنی فایلی تێکچوو'
-        ],
-        correctAnswer: 'بە بەکارهێنانی فۆرمولە و ستانداردە نێودەوڵەتییەکان',
-        explanation: 'ستانداردە زانستییەکان گەرەنتی بەرزی کارایی داتاکان دەکەن.',
-      ),
-    ];
+    List<String> pdfSnippets = [];
+    if (_pdfFileContent != null && _pdfFileContent!.trim().isNotEmpty) {
+      pdfSnippets = _pdfFileContent!
+          .split(RegExp(r'[\.\?\!\n;]'))
+          .map((s) => _sanitizeExtractedText(s))
+          .where((s) => s.length > 15 && RegExp(r'[a-zA-Z\u0600-\u06FF]').hasMatch(s))
+          .toList();
+    }
+
+    final List<QuestionModel> questions = [];
+    final cleanTitle = _sanitizeExtractedText(course.replaceAll(RegExp(r'\.[a-zA-Z0-9]+$', caseSensitive: false), ''));
+    final displayTitle = cleanTitle.isNotEmpty ? cleanTitle : 'فایلی PDFی وانەکە';
+
+    if (pdfSnippets.length >= 2) {
+      for (int i = 0; i < count; i++) {
+        final snippet = pdfSnippets[i % pdfSnippets.length];
+        final words = snippet.split(' ').where((w) => w.length > 3).toList();
+        final keyword = words.isNotEmpty ? words[i % words.length] : 'چەمکی زانستی';
+
+        if (i % 2 == 0) {
+          questions.add(
+            QuestionModel(
+              id: 'pdf_fallback_$i',
+              questionText: 'بڕگەی «$snippet» چی شی دەکاتەوە؟',
+              type: QuestionType.multipleChoice,
+              options: [
+                'چەمکێکی زانستی دروستە و تایبەتمەندی ڕاستی ($keyword) شی دەکاتەوە',
+                'زانیارییەکی ناڕاستی پێچەوانە',
+                'سڕینەوەی بەشە زانستیییەکان',
+                'هیچ کام لەم وەڵامانە'
+              ],
+              correctAnswer: 'چەمکێکی زانستی دروستە و تایبەتمەندی ڕاستی ($keyword) شی دەکاتەوە',
+              explanation: 'ئەم پرسیارە ڕاستەوخۆ لەسەر تێگەیشتنی ناوەڕۆکەکە دەرهێنراوە.',
+            ),
+          );
+        } else {
+          questions.add(
+            QuestionModel(
+              id: 'pdf_fallback_$i',
+              questionText: 'ئایا چەمکی «$keyword» بەشێکی سەرەکییە لە تێگەیشتنی ئەم بابەتەدا؟',
+              type: QuestionType.trueFalse,
+              options: ['ڕاستە', 'هەڵەیە'],
+              correctAnswer: 'ڕاستە',
+              explanation: 'ئەم زانیارییە یەکێکە لە بنەما گرنگەکانی وانەکە.',
+            ),
+          );
+        }
+      }
+    } else {
+      final List<QuestionModel> academicTemplates = [
+        QuestionModel(
+          id: 'fb_1',
+          questionText: 'کامیان بنەمای سەرەکی شیکارکردنی بابەتە زانستییەکانە؟',
+          type: QuestionType.multipleChoice,
+          options: [
+            'تێگەیشتن لە چەمکە سەرەکییەکان و شیکاری لۆژیکی',
+            'پشتگوێخستنی سەرچاوەکان',
+            'سڕینەوەی وەڵامە ڕاستەکان',
+            'هیچ کام لەم وەڵامانە'
+          ],
+          correctAnswer: 'تێگەیشتن لە چەمکە سەرەکییەکان و شیکاری لۆژیکی',
+          explanation: 'شیکاری لۆژیکی و تێگەیشتنی قووڵ بنەمای بەدەستهێنانی نمرەی بەرزە.',
+        ),
+        QuestionModel(
+          id: 'fb_2',
+          questionText: 'ئایا پێداچوونەوەی وردی بابەتەکان ئامادەکاری تاقیکردنەوە بەهێزتر دەکات؟',
+          type: QuestionType.trueFalse,
+          options: ['ڕاستە', 'هەڵەیە'],
+          correctAnswer: 'ڕاستە',
+          explanation: 'پێداچوونەوەی دووبارە زانیارییەکان لە مێشکدا دەچەسپێنێت.',
+        ),
+      ];
+
+      for (int i = 0; i < count; i++) {
+        final q = academicTemplates[i % academicTemplates.length];
+        questions.add(QuestionModel(
+          id: 'fb_${i + 1}',
+          questionText: q.questionText,
+          type: q.type,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
+          explanation: q.explanation,
+        ));
+      }
+    }
 
     return QuizModel(
       id: 'fallback_exam_${DateTime.now().millisecondsSinceEpoch}',
-      title: 'تاقیکردنەوەی زانستی: $topic',
-      courseName: course,
-      questions: questions.take(count).toList(),
+      title: 'تاقیکردنەوە لەسەر PDF - $displayTitle',
+      courseName: displayTitle,
+      questions: questions.take(count > 0 ? count : 5).toList(),
       durationMinutes: duration > 0 ? duration : 15,
+      isExam: true,
     );
   }
 
@@ -329,50 +440,96 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
 
     return Directionality(
       textDirection: langProvider.textDirection,
-      child: Scaffold(
-        backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
-        appBar: AppBar(
-          backgroundColor: (isDark ? ZankoColors.darkBackground : ZankoColors.background).withValues(alpha: 0.9),
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(CupertinoIcons.back),
-            onPressed: () => Navigator.pop(context),
-          ),
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(CupertinoIcons.sparkles, color: ZankoColors.primary, size: 22),
-              const SizedBox(width: 8),
-              Text(
-                'دروستکەری تاقیکردنەوەی AI',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: isDark ? Colors.white : ZankoColors.textPrimary,
+      child: PopScope(
+        canPop: _activeExam == null || _examCompleted,
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop && _activeExam != null && !_examCompleted) {
+            _showExitConfirmDialog(context, isDark);
+          }
+        },
+        child: Scaffold(
+          backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
+          appBar: AppBar(
+            backgroundColor: (isDark ? ZankoColors.darkBackground : ZankoColors.background).withValues(alpha: 0.95),
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(CupertinoIcons.back),
+              onPressed: () {
+                if (_activeExam != null && !_examCompleted) {
+                  _showExitConfirmDialog(context, isDark);
+                } else {
+                  Navigator.pop(context);
+                }
+              },
+            ),
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: ZankoColors.primary.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(CupertinoIcons.sparkles, color: ZankoColors.primary, size: 18),
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                Text(
+                  langProvider.translate('create_exam'),
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    color: isDark ? Colors.white : ZankoColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            centerTitle: true,
           ),
-          centerTitle: true,
-        ),
-        body: SafeArea(
-          child: _isGenerating
-              ? _buildGeneratingState(isDark)
-              : _activeExam == null
-                  ? _buildConfigState(isDark)
-                  : _examCompleted
-                      ? _buildResultsState(isDark)
-                      : _buildExamRunningState(isDark),
+          body: SafeArea(
+            child: _isGenerating
+                ? _buildGeneratingState(isDark)
+                : _activeExam == null
+                    ? _buildConfigState(isDark, langProvider)
+                    : _examCompleted
+                        ? _buildResultsState(isDark, langProvider)
+                        : _buildExamRunningState(isDark, langProvider),
+          ),
         ),
       ),
     );
   }
 
+  void _showExitConfirmDialog(BuildContext context, bool isDark) {
+    showCupertinoDialog(
+      context: context,
+      builder: (ctx) => CupertinoAlertDialog(
+        title: const Text('دڵنیایت لە دەرچوون؟'),
+        content: const Text('ئەگەر لە تاقیکردنەوەکە بێیتەدەرێ، نمرەکەت تۆمار ناکرێت و وەڵامەکانت دەسڕێنەوە.'),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('مانەوە'),
+            onPressed: () => Navigator.pop(ctx),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            child: const Text('دەرچوون'),
+            onPressed: () {
+              _examTimer?.cancel();
+              Navigator.pop(ctx);
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   // ═══════════════════════════════════════════════════════════════════════════
-  // 1. CONFIG STATE (دەستکاری و سازدانی تاقیکردنەوە)
+  // 1. CONFIG STATE (سازدانی تاقیکردنەوە لەسەر PDF)
   // ═══════════════════════════════════════════════════════════════════════════
-  Widget _buildConfigState(bool isDark) {
-    final topics = _courseTopics[_selectedCourse] ?? ['General Review'];
+  Widget _buildConfigState(bool isDark, LanguageProvider langProvider) {
+    final bool hasPdf = _pdfFileName != null && _pdfFileContent != null;
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -382,27 +539,27 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
         children: [
           // Banner
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [ZankoColors.primary, ZankoColors.accent],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: ZankoColors.primary.withValues(alpha: 0.3),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
+                  color: ZankoColors.primary.withValues(alpha: 0.35),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
                 ),
               ],
             ),
             child: Row(
               children: [
                 Container(
-                  width: 50,
-                  height: 50,
+                  width: 52,
+                  height: 52,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
@@ -417,7 +574,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'تاقیکردنەوەی ئەزموونی دروست بکە 🎯',
+                        'دروستکردنی تاقیکردنەوە لە فایلی PDF 🎯',
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.bold,
@@ -426,7 +583,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        'AI پرسیارەکان لەسەر وانەکەت یان فایلی PDF ڕاستەوخۆ بە زمانی کوردی دروست دەکات.',
+                        'سەرەتا فایلی PDFی وانەکەت بنێرە، AI دەستبەجێ پرسیار لەسەر دەقی فایلەکەت ئامادە دەکات.',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.white70,
@@ -441,140 +598,83 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
           ),
           const SizedBox(height: 24),
 
-          // 1. Select Course
-          _buildLabel('١. وانەکە هەڵبژێرە (Course)', isDark),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            decoration: BoxDecoration(
-              color: isDark ? ZankoColors.darkCard : Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFEFEFF7),
-              ),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _selectedCourse,
-                isExpanded: true,
-                dropdownColor: isDark ? ZankoColors.darkCard : Colors.white,
-                items: _courses
-                    .map((c) => DropdownMenuItem(
-                          value: c,
-                          child: Text(
-                            c,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: isDark ? Colors.white : ZankoColors.textPrimary,
-                            ),
-                          ),
-                        ))
-                    .toList(),
-                onChanged: (val) {
-                  if (val != null) {
-                    setState(() {
-                      _selectedCourse = val;
-                      final tList = _courseTopics[val] ?? ['General Review'];
-                      _selectedTopic = tList[0];
-                      _customTopicController.text = _selectedTopic;
-                    });
-                  }
-                },
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // 2. Topic
-          _buildLabel('٢. بابەت یان بەشی وانەکە (Topic / Chapter)', isDark),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: topics.map((tp) {
-              final isSel = _selectedTopic == tp;
-              return ChoiceChip(
-                label: Text(tp),
-                selected: isSel,
-                selectedColor: ZankoColors.primary,
-                backgroundColor: isDark ? ZankoColors.darkCard : Colors.grey[200],
-                labelStyle: TextStyle(
-                  color: isSel ? Colors.white : (isDark ? Colors.grey[300] : Colors.black87),
-                  fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
-                  fontSize: 12,
-                ),
-                onSelected: (selected) {
-                  if (selected) {
-                    setState(() {
-                      _selectedTopic = tp;
-                      _customTopicController.text = tp;
-                    });
-                  }
-                },
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: _customTopicController,
-            style: TextStyle(color: isDark ? Colors.white : ZankoColors.textPrimary),
-            decoration: InputDecoration(
-              hintText: 'یان بابەتی دیاریکراو بە دەستی خۆت بنووسە...',
-              hintStyle: TextStyle(fontSize: 13, color: isDark ? Colors.grey[500] : Colors.grey[400]),
-              filled: true,
-              fillColor: isDark ? ZankoColors.darkCard : Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFEFEFF7)),
-              ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // 3. Attach PDF Option
-          _buildLabel('٣. بارکردنی فایلی PDFی وانەکە (بە ئارەزوومەندانه)', isDark),
+          // 1. STEP 1: Upload PDF File (REQUIRED)
+          _buildLabel('١. بارکردنی فایلی PDFی وانەکە (پێویستە 📄)', isDark),
           const SizedBox(height: 8),
           GestureDetector(
             onTap: _pickPdfFile,
-            child: Container(
-              padding: const EdgeInsets.all(14),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: isDark ? ZankoColors.darkCard : Colors.white,
-                borderRadius: BorderRadius.circular(14),
+                color: hasPdf
+                    ? (isDark ? ZankoColors.darkCard : const Color(0xFFF0FDF4))
+                    : (isDark ? ZankoColors.darkCard : Colors.white),
+                borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: _pdfFileName != null
-                      ? ZankoColors.primary
-                      : (isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFEFEFF7)),
-                  width: _pdfFileName != null ? 1.5 : 1,
+                  color: hasPdf
+                      ? ZankoColors.success
+                      : (isDark ? ZankoColors.primary.withValues(alpha: 0.5) : ZankoColors.primary),
+                  width: hasPdf ? 2.0 : 1.5,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: (hasPdf ? ZankoColors.success : ZankoColors.primary).withValues(alpha: isDark ? 0.15 : 0.08),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Row(
                 children: [
-                  Icon(
-                    _pdfFileName != null ? CupertinoIcons.doc_checkmark_fill : CupertinoIcons.arrow_up_doc,
-                    color: _pdfFileName != null ? ZankoColors.primary : Colors.grey,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _pdfFileName ?? 'بارکردنی فایلی PDF بۆ ئەوەی پرسیارەکان لە فایلی دەرسەکە بن',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: _pdfFileName != null ? FontWeight.bold : FontWeight.w500,
-                        color: _pdfFileName != null
-                            ? ZankoColors.primary
-                            : (isDark ? Colors.grey[400] : ZankoColors.textSecondary),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: (hasPdf ? ZankoColors.success : ZankoColors.primary).withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      hasPdf ? CupertinoIcons.doc_checkmark_fill : CupertinoIcons.cloud_upload_fill,
+                      color: hasPdf ? ZankoColors.success : ZankoColors.primary,
+                      size: 28,
                     ),
                   ),
-                  if (_pdfFileName != null)
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          hasPdf ? _pdfFileName! : 'کلیک لێرە بکە بۆ هەڵبژاردن و بارکردنی فایلی PDF',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: hasPdf
+                                ? (isDark ? Colors.white : ZankoColors.textPrimary)
+                                : (isDark ? Colors.grey[300] : ZankoColors.primary),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          hasPdf
+                              ? 'فایلی PDF بە سەرکەوتوویی ئامادەکرا ✅ (دەقەکە شیکارکرا)'
+                              : 'تکایە سەرەتا فایلی PDFی وانەکەت هەڵبژێرە لە مۆبایلەکەت',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: hasPdf ? FontWeight.w600 : FontWeight.normal,
+                            color: hasPdf
+                                ? ZankoColors.success
+                                : (isDark ? Colors.grey[500] : ZankoColors.textSecondary),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (hasPdf)
                     IconButton(
-                      icon: const Icon(CupertinoIcons.xmark_circle_fill, color: Colors.grey, size: 20),
+                      icon: const Icon(CupertinoIcons.xmark_circle_fill, color: Colors.grey, size: 22),
                       onPressed: () => setState(() {
                         _pdfFileName = null;
                         _pdfFileContent = null;
@@ -584,49 +684,49 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
 
-          // 4. Difficulty Level
-          _buildLabel('٤. ئاستی زەحمەتی (Difficulty)', isDark),
+          // 2. Difficulty Level
+          _buildLabel('٢. ئاستی زەحمەتی (Difficulty)', isDark),
           const SizedBox(height: 8),
           Row(
             children: [
-              _buildPillChoice('Easy (ئاسان)', 'Easy', _selectedDifficulty == 'Easy', isDark, () {
+              _buildPillChoice('ئاسان 🟢', 'Easy', _selectedDifficulty == 'Easy', isDark, () {
                 setState(() => _selectedDifficulty = 'Easy');
               }),
               const SizedBox(width: 8),
-              _buildPillChoice('Medium (ناوەند)', 'Medium', _selectedDifficulty == 'Medium', isDark, () {
+              _buildPillChoice('ناوەند 🟡', 'Medium', _selectedDifficulty == 'Medium', isDark, () {
                 setState(() => _selectedDifficulty = 'Medium');
               }),
               const SizedBox(width: 8),
-              _buildPillChoice('Hard (زانکۆ🔥)', 'Hard', _selectedDifficulty == 'Hard', isDark, () {
+              _buildPillChoice('سەخت 🔥', 'Hard', _selectedDifficulty == 'Hard', isDark, () {
                 setState(() => _selectedDifficulty = 'Hard');
               }),
             ],
           ),
           const SizedBox(height: 20),
 
-          // 5. Question Type
-          _buildLabel('٥. جۆری پرسیارەکان (Question Type)', isDark),
+          // 3. Question Type
+          _buildLabel('٣. جۆری پرسیارەکان (Question Type)', isDark),
           const SizedBox(height: 8),
           Row(
             children: [
-              _buildPillChoice('تێکەڵ (Mixed)', 'Mixed', _selectedQuestionType == 'Mixed', isDark, () {
+              _buildPillChoice('تێکەڵ 🎯', 'Mixed', _selectedQuestionType == 'Mixed', isDark, () {
                 setState(() => _selectedQuestionType = 'Mixed');
               }),
               const SizedBox(width: 8),
-              _buildPillChoice('هەڵبژاردن (MCQ)', 'MCQ', _selectedQuestionType == 'MCQ', isDark, () {
+              _buildPillChoice('فرەبژاردە 📋', 'MCQ', _selectedQuestionType == 'MCQ', isDark, () {
                 setState(() => _selectedQuestionType = 'MCQ');
               }),
               const SizedBox(width: 8),
-              _buildPillChoice('ڕاست/هەڵە', 'TrueFalse', _selectedQuestionType == 'TrueFalse', isDark, () {
+              _buildPillChoice('ڕاست/هەڵە ⚖️', 'TrueFalse', _selectedQuestionType == 'TrueFalse', isDark, () {
                 setState(() => _selectedQuestionType = 'TrueFalse');
               }),
             ],
           ),
           const SizedBox(height: 20),
 
-          // 6. Question Count & Duration
+          // 4. Question Count & Duration
           Row(
             children: [
               Expanded(
@@ -639,7 +739,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
                         color: isDark ? ZankoColors.darkCard : Colors.white,
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFEFEFF7),
                         ),
@@ -673,7 +773,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
                         color: isDark ? ZankoColors.darkCard : Colors.white,
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFEFEFF7),
                         ),
@@ -703,37 +803,33 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
           // Submit Button
           SizedBox(
             width: double.infinity,
-            height: 56,
+            height: 58,
             child: ElevatedButton(
               onPressed: _generateAndStartExam,
               style: ElevatedButton.styleFrom(
-                backgroundColor: ZankoColors.primary,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                elevation: 4,
+                backgroundColor: hasPdf ? ZankoColors.primary : ZankoColors.primary.withValues(alpha: 0.7),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                elevation: 6,
+                shadowColor: ZankoColors.primary.withValues(alpha: 0.4),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(CupertinoIcons.play_circle_fill, color: Colors.white, size: 20),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: const Text(
-                        '🚀 دروستکردنی تاقیکردنەوە و دەستپێکردن',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
+                  Icon(hasPdf ? CupertinoIcons.sparkles : CupertinoIcons.cloud_upload_fill, color: Colors.white, size: 22),
+                  const SizedBox(width: 10),
+                  Text(
+                    hasPdf ? '🚀 دروستکردنی تاقیکردنەوە لە PDF' : '📄 سەرەتا فایلی PDF باربکە',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -766,13 +862,22 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                   ? ZankoColors.primary
                   : (isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFEFEFF7)),
             ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: ZankoColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                : [],
           ),
           child: Center(
             child: Text(
               label,
               style: TextStyle(
                 fontSize: 12,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                 color: isSelected ? Colors.white : (isDark ? Colors.grey[300] : ZankoColors.textPrimary),
               ),
               maxLines: 1,
@@ -785,7 +890,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // 2. GENERATING STATE (کاتی دروستکردنی تاقیکردنەوە بە AI)
+  // 2. GENERATING STATE
   // ═══════════════════════════════════════════════════════════════════════════
   Widget _buildGeneratingState(bool isDark) {
     return Center(
@@ -795,19 +900,19 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 80,
-              height: 80,
+              width: 90,
+              height: 90,
               decoration: BoxDecoration(
                 color: ZankoColors.primary.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: const Center(
-                child: CircularProgressIndicator(color: ZankoColors.primary, strokeWidth: 3),
+                child: CircularProgressIndicator(color: ZankoColors.primary, strokeWidth: 3.5),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 28),
             Text(
-              '🤖 AI خەریکی داڕشتنی پرسیارەکانی تاقیکردنەوەیەکە...',
+              '🤖 AI خەریکی داڕشتنی پرسیارەکانە لەسەر فایلی PDF...',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -815,12 +920,13 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Text(
-              'پرسیارەکان بە هەڵسەنگاندنی تێر و تەسەل و شیکردنەوە بە زمانی کوردی ئامادە دەکرێن.',
+              'پرسیارەکان دەقاو دەق لەسەر ناوەڕۆکی فایلی PDFی بارکراو بە شێوازێکی زانستی ئامادە دەکرێن.',
               style: TextStyle(
                 fontSize: 13,
                 color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                height: 1.4,
               ),
               textAlign: TextAlign.center,
             ),
@@ -831,9 +937,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // 3. EXAM RUNNING STATE (کەشی تاقیکردنەوە)
+  // 3. EXAM RUNNING STATE
   // ═══════════════════════════════════════════════════════════════════════════
-  Widget _buildExamRunningState(bool isDark) {
+  Widget _buildExamRunningState(bool isDark, LanguageProvider langProvider) {
     if (_activeExam == null || _activeExam!.questions.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -849,90 +955,144 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
       children: [
         // Top Timer & Progress Bar
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           decoration: BoxDecoration(
             color: isDark ? ZankoColors.darkCard : Colors.white,
-            border: Border(
-              bottom: BorderSide(
-                color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFEFEFF7),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
               ),
-            ),
+            ],
           ),
-          child: Row(
+          child: Column(
             children: [
-              // Timer Chip
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: _timeRemainingSeconds < 60
-                      ? ZankoColors.error.withValues(alpha: 0.15)
-                      : ZankoColors.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      CupertinoIcons.timer,
-                      size: 16,
-                      color: _timeRemainingSeconds < 60 ? ZankoColors.error : ZankoColors.primary,
+              Row(
+                children: [
+                  // Timer Chip
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: _timeRemainingSeconds < 60
+                          ? ZankoColors.error.withValues(alpha: 0.15)
+                          : ZankoColors.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      timeStr,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: _timeRemainingSeconds < 60 ? ZankoColors.error : ZankoColors.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-
-              // Question progress
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Row(
                       children: [
-                        Text(
-                          'پرسیاری ${_currentQuestionIndex + 1} لە $totalQuestions',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : ZankoColors.textPrimary,
-                          ),
+                        Icon(
+                          CupertinoIcons.timer,
+                          size: 18,
+                          color: _timeRemainingSeconds < 60 ? ZankoColors.error : ZankoColors.primary,
                         ),
+                        const SizedBox(width: 6),
                         Text(
-                          '${((_currentQuestionIndex + 1) / totalQuestions * 100).toInt()}%',
+                          timeStr,
                           style: TextStyle(
-                            fontSize: 12,
-                            color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: _timeRemainingSeconds < 60 ? ZankoColors.error : ZankoColors.primary,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: (_currentQuestionIndex + 1) / totalQuestions,
-                        minHeight: 6,
-                        backgroundColor: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFEFEFF7),
-                        valueColor: const AlwaysStoppedAnimation<Color>(ZankoColors.primary),
-                      ),
+                  ),
+                  const SizedBox(width: 16),
+
+                  // Question index indicator
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'پرسیاری ${_currentQuestionIndex + 1} لە $totalQuestions',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : ZankoColors.textPrimary,
+                              ),
+                            ),
+                            Text(
+                              '${((_currentQuestionIndex + 1) / totalQuestions * 100).toInt()}%',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: (_currentQuestionIndex + 1) / totalQuestions,
+                            minHeight: 6,
+                            backgroundColor: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFEFEFF7),
+                            valueColor: const AlwaysStoppedAnimation<Color>(ZankoColors.primary),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Question Jump Bar
+              SizedBox(
+                height: 32,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: totalQuestions,
+                  separatorBuilder: (_, __) => const SizedBox(width: 6),
+                  itemBuilder: (context, idx) {
+                    final isCurrent = idx == _currentQuestionIndex;
+                    final isAnswered = _userAnswers.containsKey(idx);
+
+                    return GestureDetector(
+                      onTap: () => setState(() => _currentQuestionIndex = idx),
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isCurrent
+                              ? ZankoColors.primary
+                              : (isAnswered
+                                  ? ZankoColors.primary.withValues(alpha: 0.25)
+                                  : (isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey[200])),
+                          border: Border.all(
+                            color: isCurrent
+                                ? ZankoColors.primary
+                                : (isAnswered ? ZankoColors.primary.withValues(alpha: 0.5) : Colors.transparent),
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${idx + 1}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: isCurrent || isAnswered ? FontWeight.bold : FontWeight.normal,
+                              color: isCurrent
+                                  ? Colors.white
+                                  : (isDark ? Colors.grey[300] : ZankoColors.textPrimary),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
           ),
         ),
 
-        // Main Question Content
+        // Question Content
         Expanded(
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
@@ -953,22 +1113,34 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: ZankoColors.primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          currentQuestion.type == QuestionType.trueFalse
-                              ? 'ڕاست یان هەڵە'
-                              : 'هەڵبژاردن (MCQ)',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: ZankoColors.primary,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: ZankoColors.primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              currentQuestion.type == QuestionType.trueFalse
+                                  ? 'ڕاست یان هەڵە'
+                                  : 'هەڵبژاردن (MCQ)',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: ZankoColors.primary,
+                              ),
+                            ),
                           ),
-                        ),
+                          Text(
+                            '📄 لە فایلی PDF',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 14),
                       Text(
@@ -1014,8 +1186,8 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                           child: Row(
                             children: [
                               Container(
-                                width: 26,
-                                height: 26,
+                                width: 28,
+                                height: 28,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: isSelected
@@ -1024,7 +1196,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                                 ),
                                 child: Center(
                                   child: isSelected
-                                      ? const Icon(CupertinoIcons.checkmark_alt, size: 16, color: Colors.white)
+                                      ? const Icon(CupertinoIcons.checkmark_alt, size: 18, color: Colors.white)
                                       : null,
                                 ),
                               ),
@@ -1052,7 +1224,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
           ),
         ),
 
-        // Bottom Navigation Actions
+        // Bottom Navigation Buttons
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -1105,9 +1277,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // 4. RESULTS STATE (کارتی ئەنجام و شیکردنەوەی AI)
+  // 4. RESULTS STATE
   // ═══════════════════════════════════════════════════════════════════════════
-  Widget _buildResultsState(bool isDark) {
+  Widget _buildResultsState(bool isDark, LanguageProvider langProvider) {
     if (_activeExam == null) return const SizedBox.shrink();
 
     final score = _calculateScore();
@@ -1124,7 +1296,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Card
+          // Score Header Card
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(24),
@@ -1139,7 +1311,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: (isPassed ? ZankoColors.success : ZankoColors.error).withValues(alpha: 0.3),
+                  color: (isPassed ? ZankoColors.success : ZankoColors.error).withValues(alpha: 0.35),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
