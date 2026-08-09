@@ -722,7 +722,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                               color: ZankoColors.primary,
                               size: 22,
                             ),
-                            onPressed: () {},
+                            onPressed: _showEmojiPicker,
                           ),
                           // TextField
                           Expanded(

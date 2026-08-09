@@ -10,6 +10,7 @@ import '../../widgets/apple_ui_components.dart';
 import '../ai_teacher/ai_teacher_chat_screen.dart';
 import '../courses/course_detail_screen.dart';
 import '../academic/seminar_thesis_assistant_screen.dart';
+import '../academic/academic_dictionary_screen.dart';
 import '../flashcards/flashcards_screen.dart';
 import '../focus/pomodoro_timer_screen.dart';
 import '../notifications/notifications_screen.dart';
@@ -1428,6 +1429,15 @@ class _QuickAiToolsGrid extends StatelessWidget {
         onTap: () => Navigator.push(
           context,
           CupertinoPageRoute(builder: (_) => const SeminarThesisAssistantScreen()),
+        ),
+      ),
+      _ToolData(
+        icon: CupertinoIcons.textbox,
+        title: 'فەرهەنگی زاراوەکان',
+        color: const Color(0xFF10B981),
+        onTap: () => Navigator.push(
+          context,
+          CupertinoPageRoute(builder: (_) => const AcademicDictionaryScreen()),
         ),
       ),
     ];

@@ -295,13 +295,33 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
     }
   }
 
+  bool _isJunkMetadataLine(String line) {
+    final lower = line.toLowerCase();
+    return lower.contains('copyright') ||
+        lower.contains('permission') ||
+        lower.contains('reproduction') ||
+        lower.contains('all rights reserved') ||
+        lower.contains('disclaimer') ||
+        lower.contains('chapter') ||
+        lower.contains('page ') ||
+        lower.contains('dr.') ||
+        lower.contains('professor') ||
+        lower.contains('instructor') ||
+        lower.contains('university') ||
+        lower.contains('department') ||
+        lower.contains('edition') ||
+        lower.contains('isbn') ||
+        lower.contains('lecture note') ||
+        line.trim().length < 10;
+  }
+
   QuizModel _generateFallbackExam(String topic, String course, int count, int duration) {
     List<String> pdfSnippets = [];
     if (_pdfFileContent != null && _pdfFileContent!.trim().isNotEmpty) {
       pdfSnippets = _pdfFileContent!
           .split(RegExp(r'[\.\?\!\n;]'))
           .map((s) => _sanitizeExtractedText(s))
-          .where((s) => s.length > 15 && RegExp(r'[a-zA-Z\u0600-\u06FF]').hasMatch(s))
+          .where((s) => s.length > 15 && !_isJunkMetadataLine(s) && RegExp(r'[a-zA-Z\u0600-\u06FF]').hasMatch(s))
           .toList();
     }
 
@@ -312,30 +332,30 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
     if (pdfSnippets.length >= 2) {
       for (int i = 0; i < count; i++) {
         final snippet = pdfSnippets[i % pdfSnippets.length];
-        final words = snippet.split(' ').where((w) => w.length > 3).toList();
+        final words = snippet.split(' ').where((w) => w.length > 3 && !_isJunkMetadataLine(w)).toList();
         final keyword = words.isNotEmpty ? words[i % words.length] : 'چەمکی زانستی';
 
         if (i % 2 == 0) {
           questions.add(
             QuestionModel(
               id: 'pdf_fallback_$i',
-              questionText: 'بڕگەی «$snippet» چی شی دەکاتەوە؟',
+              questionText: 'لە وانەی «$displayTitle»دا، مەبەستی سەرەکی لە تێگەیشتنی «$keyword» چییە؟',
               type: QuestionType.multipleChoice,
               options: [
-                'چەمکێکی زانستی دروستە و تایبەتمەندی ڕاستی ($keyword) شی دەکاتەوە',
-                'زانیارییەکی ناڕاستی پێچەوانە',
-                'سڕینەوەی بەشە زانستیییەکان',
-                'هیچ کام لەم وەڵامانە'
+                'شیکارکردن و جێبەجێکردنی بنەما زانستییەکانی «$keyword»',
+                'ڕەتکردنەوەی تیۆرییە سەرەتاییەکان بەبێ بەڵگەی زانستی',
+                'گۆڕینی پێناسە بنەڕەتییەکان بە داتای نەناسراو',
+                'پشتگوێخستنی بەشە کردارییەکان لە تاقیکردنەوەدا'
               ],
-              correctAnswer: 'چەمکێکی زانستی دروستە و تایبەتمەندی ڕاستی ($keyword) شی دەکاتەوە',
-              explanation: 'ئەم پرسیارە ڕاستەوخۆ لەسەر تێگەیشتنی ناوەڕۆکەکە دەرهێنراوە.',
+              correctAnswer: 'شیکارکردن و جێبەجێکردنی بنەما زانستییەکانی «$keyword»',
+              explanation: 'ئەم پرسیارە ڕاستەوخۆ لەسەر تێگەیشتنی ناوەڕۆکی زانستی وانەکەوە دەرهێنراوە.',
             ),
           );
         } else {
           questions.add(
             QuestionModel(
               id: 'pdf_fallback_$i',
-              questionText: 'ئایا چەمکی «$keyword» بەشێکی سەرەکییە لە تێگەیشتنی ئەم بابەتەدا؟',
+              questionText: 'ئایا چەمکی «$keyword» بەشێکی سەرەکییە لە تێگەیشتنی بابەتەکانی «$displayTitle»؟',
               type: QuestionType.trueFalse,
               options: ['ڕاستە', 'هەڵەیە'],
               correctAnswer: 'ڕاستە',
@@ -353,8 +373,8 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
           options: [
             'تێگەیشتن لە چەمکە سەرەکییەکان و شیکاری لۆژیکی',
             'پشتگوێخستنی سەرچاوەکان',
-            'سڕینەوەی وەڵامە ڕاستەکان',
-            'هیچ کام لەم وەڵامانە'
+            'ڕەتکردنەوەی بەشە سەرەکییەکان بەبێ تاقیکردنەوە',
+            'پشتڕاستکردنەوەی زانیاری ناراست بەبێ بەڵگە'
           ],
           correctAnswer: 'تێگەیشتن لە چەمکە سەرەکییەکان و شیکاری لۆژیکی',
           explanation: 'شیکاری لۆژیکی و تێگەیشتنی قووڵ بنەمای بەدەستهێنانی نمرەی بەرزە.',

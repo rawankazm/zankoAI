@@ -168,7 +168,21 @@ class _TeacherCoursesScreenState extends State<TeacherCoursesScreen> {
                               ),
                               const Spacer(),
                               TextButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  showCupertinoDialog(
+                                    context: context,
+                                    builder: (ctx) => CupertinoAlertDialog(
+                                      title: Text(c['title'] ?? ''),
+                                      content: Text('ژمارەی خوێندکاران: ${c['students']}\nژمارەی کویزەکان: ${c['quizzes']}'),
+                                      actions: [
+                                        CupertinoDialogAction(
+                                          child: const Text('داخستن'),
+                                          onPressed: () => Navigator.pop(ctx),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
                                 child: Text(t('view_all'),
                                     style: TextStyle(
                                         color: color)),
