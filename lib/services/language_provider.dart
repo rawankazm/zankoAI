@@ -384,6 +384,15 @@ class LanguageProvider extends ChangeNotifier {
     'offline_summaries': {'ku': 'کورتکراوەی PDF', 'badini': 'کورتیا PDF', 'ar': 'ملخصات PDF', 'en': 'PDF Summaries'},
     'offline_quizzes': {'ku': 'کویز و تاقیکردنەوەکان', 'badini': 'کویز و تاقیکردنەڤە', 'ar': 'الاختبارات والتطبيقات', 'en': 'Quizzes & Exams'},
     'no_offline_items': {'ku': 'هیچ بابەتێکی داگیراو نەدۆزرایەوە', 'badini': 'هیچ تشتەکێ داگری نەهاتە لێگەڕیان', 'ar': 'لا توجد عناصر محفوظة أوفلاين', 'en': 'No offline items downloaded yet'},
+
+    // Smart AI Study Roadmap
+    'study_roadmap': {'ku': '📅 نەخشەڕێگای زیرەکی تاقیکردنەوە', 'badini': '📅 نەخشەڕێگا ژیرییا تاقیکرنەڤێ', 'ar': '📅 خريطة طريق الدراسة الذكية', 'en': 'Smart Study Roadmap'},
+    'create_roadmap': {'ku': 'دروستکردنی نەخشەڕێگا', 'badini': 'چێکرنا نەخشەڕێگایێ', 'ar': 'إنشاء خريطة طريق', 'en': 'Create Roadmap'},
+    'subject_name': {'ku': 'ناوی وانە / بابەت', 'badini': 'ناوێ وانێ', 'ar': 'اسم المادة', 'en': 'Subject Name'},
+    'total_chapters': {'ku': 'ژمارەی بەشەکان (Chapters)', 'badini': 'ژمارا پشکان', 'ar': 'عدد الفصول', 'en': 'Total Chapters'},
+    'roadmap_days_left': {'ku': 'ڕۆژانی ماوە بۆ تاقیکردنەوە', 'badini': 'ڕۆژێن مای بۆ تاقیکرنەڤێ', 'ar': 'الأيام المتبقية للاختبار', 'en': 'Days Until Exam'},
+    'hours_per_day': {'ku': 'کاتژمێری خوێندن لە ڕۆژێکدا', 'badini': 'دەژمێرێن خوێندنێ ل ڕۆژەکێدا', 'ar': 'ساعات الدراسة يومياً', 'en': 'Study Hours per Day'},
+    'generate_roadmap': {'ku': 'داڕشتنی پلانی خوێندن 🪄', 'badini': 'چێکرنا پلانا خوێندنێ 🪄', 'ar': 'توليد خريطة الدراسة 🪄', 'en': 'Generate AI Roadmap 🪄'},
     'preferences': {'ku': 'هەڵبژاردنەکان', 'badini': 'هەلبژارتن', 'ar': 'التفضيلات', 'en': 'Preferences'},
     'dark_mode': {'ku': 'باری تاریک', 'badini': 'مۆدێ تاریک', 'ar': 'الوضع الداكن', 'en': 'Dark Mode'},
     'app_language': {'ku': 'زمانی ئەپڵیکەیشن', 'badini': 'زمانێ ئەپلیکەیشنێ', 'ar': 'لغة التطبيق', 'en': 'App Language'},

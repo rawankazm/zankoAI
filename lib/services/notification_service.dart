@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -10,6 +13,9 @@ class NotificationService {
 
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
+  StreamSubscription? _adminDirectSub;
+  StreamSubscription? _adminBroadcastSub;
+  static const String _lastNotifiedKey = 'zanko_last_notified_timestamp';
 
   Future<void> init() async {
     if (_initialized) return;
@@ -27,12 +33,85 @@ class NotificationService {
       const InitializationSettings(android: android, iOS: ios),
     );
 
-    // Request Android 13+ permissions
-    await _plugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.requestNotificationsPermission();
+    // Request Android 13+ & Exact Alarm permissions & create channel
+    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin != null) {
+      const channel = AndroidNotificationChannel(
+        'zanko_admin_channel',
+        'Admin Notifications',
+        description: 'ZankoAI Admin Announcements & Messages',
+        importance: Importance.max,
+        playSound: true,
+        enableVibration: true,
+      );
+      await androidPlugin.createNotificationChannel(channel);
+      await androidPlugin.requestNotificationsPermission();
+      await androidPlugin.requestExactAlarmsPermission();
+    }
 
     _initialized = true;
+  }
+
+  /// Start listening to admin notifications from Firestore (direct_messages & notifications)
+  void listenToAdminNotifications(String userId, bool isVip) {
+    _adminDirectSub?.cancel();
+    _adminBroadcastSub?.cancel();
+
+    // 1. Direct Messages Listener
+    _adminDirectSub = FirebaseFirestore.instance
+        .collection('direct_messages')
+        .where('userId', isEqualTo: userId)
+        .snapshots()
+        .listen((snap) async {
+      final prefs = await SharedPreferences.getInstance();
+      final lastTime = prefs.getInt(_lastNotifiedKey) ?? DateTime.now().millisecondsSinceEpoch;
+
+      for (var doc in snap.docs) {
+        final data = doc.data();
+        final ts = data['createdAt'] as Timestamp?;
+        if (ts != null) {
+          final msgTime = ts.millisecondsSinceEpoch;
+          if (msgTime > lastTime) {
+            await showInstantNotification(
+              id: doc.id.hashCode,
+              title: data['title'] ?? '✉️ پەیام لە ئەدمینەوە',
+              body: data['message'] ?? '',
+            );
+            await prefs.setInt(_lastNotifiedKey, msgTime);
+          }
+        }
+      }
+    });
+
+    // 2. Broadcast Notifications Listener
+    _adminBroadcastSub = FirebaseFirestore.instance
+        .collection('notifications')
+        .snapshots()
+        .listen((snap) async {
+      final prefs = await SharedPreferences.getInstance();
+      final lastTime = prefs.getInt(_lastNotifiedKey) ?? DateTime.now().millisecondsSinceEpoch;
+
+      for (var doc in snap.docs) {
+        final data = doc.data();
+        final target = data['target'] ?? 'all';
+        final docUserId = data['userId'];
+
+        if (target == 'all' || (target == 'vip' && isVip) || (target == 'user' && docUserId == userId)) {
+          final ts = data['createdAt'] as Timestamp?;
+          if (ts != null) {
+            final msgTime = ts.millisecondsSinceEpoch;
+            if (msgTime > lastTime) {
+              await showInstantNotification(
+                id: doc.id.hashCode,
+                title: data['title'] ?? '📢 ئاگاداریی ئەدمین',
+                body: data['body'] ?? '',
+              );
+              await prefs.setInt(_lastNotifiedKey, msgTime);
+            }
+          }
+        }
+      }
+    });
   }
 
   /// Show an instant notification immediately.
@@ -44,11 +123,13 @@ class NotificationService {
     await init();
 
     const androidDetails = AndroidNotificationDetails(
-      'zanko_instant',
-      'Instant Notifications',
-      channelDescription: 'ZankoAI instant alerts',
-      importance: Importance.high,
+      'zanko_admin_channel',
+      'Admin Notifications',
+      channelDescription: 'ZankoAI Admin Announcements & Messages',
+      importance: Importance.max,
       priority: Priority.high,
+      playSound: true,
+      enableVibration: true,
       icon: '@mipmap/ic_launcher',
       color: Color(0xFF007AFF),
     );

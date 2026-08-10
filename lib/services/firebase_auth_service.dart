@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../models/user_model.dart';
 import 'auth_service.dart';
+import 'notification_service.dart';
 
 class FirebaseAuthService extends ChangeNotifier implements AuthService {
   FirebaseAuth get _auth => FirebaseAuth.instance;
@@ -78,6 +79,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
               isVip: isVip,
               photoUrl: data['photoUrl'],
             );
+            NotificationService().listenToAdminNotifications(firebaseUser.uid, isVip);
             notifyListeners();
           }
         });

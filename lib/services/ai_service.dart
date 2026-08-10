@@ -38,6 +38,12 @@ abstract class AiService extends ChangeNotifier {
   Future<List<FlashcardModel>> generateFlashcards(String topicOrText);
   Future<List<StudyPlanDayModel>> generateStudyPlan(String examTopic, int daysRemaining);
   Future<Map<String, dynamic>> predictExam(String notesName, String notesContent);
+  Future<Map<String, dynamic>> generateStudyRoadmap({
+    required String subjectName,
+    required int totalChapters,
+    required int daysRemaining,
+    required int hoursPerDay,
+  });
 }
 
 class ZankoAiService extends ChangeNotifier implements AiService {
@@ -1050,5 +1056,73 @@ $pdfContext
         "ðŸ’¡ **Ø¦Ø§Ù…Û†Ú˜Ú¯Ø§Ø±ÛŒ Ø¨Û† Ø®ÙˆÛŽÙ†Ø¯Ù†:**\n"
         "- ØªÛ•Ø±Ú©ÛŒØ² Ù„Û•Ø³Û•Ø± Ø¬ÛŒØ§ÙˆØ§Ø²ÛŒÛŒÛ•Ú©Ø§Ù† Ø¨Ú©Û• Ù„Û• Ù†ÛŽÙˆØ§Ù† Ú†Û•Ù…Ú©Û•Ú©Ø§Ù†.\n"
         "- Ù¾Û†ÛŒÙ†ØªÛ•Ø± Ùˆ Ø´ÛŽÙˆØ§Ø²ÛŒ Ù…ÛŽÙ…Û†Ø±ÛŒ Ù„Û•Ù… ÙˆØ§Ù†Û•ÛŒÛ•Ø¯Ø§ Ø²Û†Ø± Ú¯Ø±Ù†Ú¯Û•.";
+  }
+
+  Future<Map<String, dynamic>> generateStudyRoadmap({
+    required String subjectName,
+    required int totalChapters,
+    required int daysRemaining,
+    required int hoursPerDay,
+  }) async {
+    if (hasRealApiKey) {
+      try {
+        final prompt = """
+ØªÛ† Ø´Ø§Ø±Ù‡â€ŒØ²Ø§ÛŒÙ‡â€ŒÙƒÛŒ Ø²Ø§Ù†Ø³ØªÛŒ Ùˆ Ú•ÛŽÙ†Ù…Ø§ÛŒÛŒÚ©Ø§Ø±ÛŒ Ø²Ø§Ù†Ú©Û†ÛŒÛŒ. ØªÚ©Ø§ÛŒÛ• Ø¨Û† Ø¨Ø§Ø¨Û•ØªÛŒ ($subjectName) Ú©Û• ($totalChapters) Ø¨Û•Ø´ÛŒ Ù‡Û•ÛŒÛ• Ùˆ ØªÛ•Ù†Ù‡Ø§ ($daysRemaining) Ú•Û†Ú˜ÛŒ Ù…Ø§ÙˆÛ• Ø¨Û† ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ØŒ Ùˆ Ø®ÙˆÛŽÙ†Ø¯Ú©Ø§Ø± Ø¯Û•ØªÙˆØ§Ù†ÛŽØª Ú•Û†Ú˜Ø§Ù†Û• ($hoursPerDay) Ú©Ø§ØªÚ˜Ù…ÛŽØ± Ø¨Ø®ÙˆÛŽÙ†ÛŽØªØŒ Ù†Û•Ø®Ø´Û•Ú•ÛŽÚ¯Ø§ÛŒÛ•Ú©ÛŒ Ú•Û†Ú˜Ø§Ù†Û•ÛŒ Ú¯ÙˆÙ†Ø¬Ø§Ùˆ Ø¨Û• Ø²Ù…Ø§Ù†ÛŒ Ú©ÙˆØ±Ø¯ÛŒ (Ø³Û†Ø±Ø§Ù†ÛŒ) Ø¨Û• Ø´ÛŽÙˆØ§Ø²ÛŒ JSON Ø¨Ù†ÙˆÙˆØ³Û•ÙˆÛ•.
+
+Ø´ÛŽÙˆØ§Ø²ÛŒ Ù¾ÛŽÙˆÛŒØ³ØªÛŒ JSON:
+{
+  "advice": "Ø¦Ø§Ù…Û†Ú˜Ú¯Ø§Ø±ÛŒ Ùˆ Ú•ÛŽÙ†Ù…Ø§ÛŒÛŒ Ú©ÙˆØ±ØªÛŒ Ø²Ø§Ù†Ø³ØªÛŒ Ø¨Û† ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ•Ú©Û•",
+  "tasks": [
+    {
+      "dayIndex": 1,
+      "title": "Ø³Û•Ø±Ø¯ÛŽÚ•ÛŒ Ø¯Û•Ø³ØªÚ©Û•ÙˆØªÛŒ Ú•Û†Ú˜ÛŒ ÛŒÛ•Ú©Û•Ù…",
+      "description": "Ú•ÙˆÙˆÙ†Ú©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ ÙˆØ±Ø¯ÛŒ Ø¦Û•ÙˆÛ•ÛŒ Ú† Ø¨Û•Ø´ÛŽÚ© Ø¨Ø®ÙˆÛŽÙ†Ø±ÛŽØª",
+      "suggestedPomodoros": 3
+    }
+  ]
+}
+""";
+        final responseText = await askTeacher(prompt, []);
+        if (responseText.isNotEmpty && responseText.contains('{')) {
+          final start = responseText.indexOf('{');
+          final end = responseText.lastIndexOf('}') + 1;
+          final jsonSub = responseText.substring(start, end);
+          return jsonDecode(jsonSub);
+        }
+      } catch (_) {}
+    }
+
+    // Fallback AI Study Plan Generator
+    List<Map<String, dynamic>> fallbackTasks = [];
+    int days = daysRemaining.clamp(1, 30);
+    int chaptersPerDay = (totalChapters / days).ceil().clamp(1, 10);
+
+    for (int i = 1; i <= days; i++) {
+      int startChap = ((i - 1) * chaptersPerDay) + 1;
+      int endChap = (i * chaptersPerDay).clamp(1, totalChapters);
+
+      if (i == days && days > 1) {
+        fallbackTasks.add({
+          'dayIndex': i,
+          'title': 'Ù¾ÛŽØ¯Ø§Ú†ÙˆÙˆÙ†Û•ÙˆÛ•ÛŒ Ú¯Ø´ØªÛŒ Ùˆ Ø¨Û•Ú©Ø§Ø±Ù‡ÛŽÙ†Ø§Ù†ÛŒ ÙÙ„Ø§Ø´ Ú©Ø§Ø±ØªÛ•Ú©Ø§Ù† ðŸ“',
+          'description': 'Ø­Ù„Ú©Ø±Ø¯Ù†ÛŒ Ú©ÙˆÛŒØ²Û•Ú©Ø§Ù†ÛŒ Ú•Ø§Ø¨Ø±Ø¯ÙˆÙˆ Ùˆ ØªØ§Ù‚ÛŒÚ©Ø±Ø¯Ù†Û•ÙˆÛ• Ù„Û•Ø³Û•Ø± Ø³Û•Ø±Ø¬Û•Ù… Ø¨Û•Ø´Û•Ú©Ø§Ù†ÛŒ (Ù¡ Ø¨Û† $totalChapters)',
+          'suggestedPomodoros': (hoursPerDay * 2).clamp(2, 8),
+        });
+      } else {
+        fallbackTasks.add({
+          'dayIndex': i,
+          'title': startChap == endChap
+              ? 'Ø®ÙˆÛŽÙ†Ø¯Ù†ÛŒ Ø¨Û•Ø´ÛŒ $startChap Ù„Û• Ø¨Ø§Ø¨Û•ØªÛŒ $subjectName ðŸ“–'
+              : 'Ø®ÙˆÛŽÙ†Ø¯Ù†ÛŒ Ø¨Û•Ø´Û•Ú©Ø§Ù†ÛŒ ($startChap Ø¨Û† $endChap) ðŸ“š',
+          'description': 'ØªÛŽÚ¯Û•ÛŒØ´ØªÙ† Ù„Û• Ú†Û•Ù…Ú©Û• Ø³Û•Ø±Û•Ú©ÛŒÛŒÛ•Ú©Ø§Ù†ØŒ Ø¯ÛŒØ§Ø±ÛŒÚ©Ø±Ø¯Ù†ÛŒ ÙˆØ´Û• Ú©Ù„ÛŒÙ„ÛŒÛŒÛ•Ú©Ø§Ù† Ùˆ Ù¾Ø§Ø´Û•Ú©Û•ÙˆØªÚ©Ø±Ø¯Ù†ÛŒ Ù„Û• ÙÙ„Ø§Ø´ Ú©Ø§Ø±Øª.',
+          'suggestedPomodoros': (hoursPerDay * 2).clamp(2, 6),
+        });
+      }
+    }
+
+    return {
+      'advice': 'Ø¨Û•Ø±Ø¯Û•ÙˆØ§Ù… Ø¨Û• Ù„Û•Ø³Û•Ø± Ø¬ÛŽØ¨Û•Ø¬ÛŽÚ©Ø±Ø¯Ù†ÛŒ Ù†Û•Ø®Ø´Û•Ú•ÛŽÚ¯Ø§Ú©Û•Øª Ø¨Û• Ø¨Û•Ú©Ø§Ø±Ù‡ÛŽÙ†Ø§Ù†ÛŒ Ú©Ø§ØªÚ˜Ù…ÛŽØ±ÛŒ ÙÛ†Ú©Û•Ø³ (Pomodoro) ØªØ§ Ø¨Û• Ø¨Û•Ø±Ø²ØªØ±ÛŒÙ† Ù†Ù…Ø±Û• Ø³Û•Ø±Ø¨Ú©Û•ÙˆÛŒØª!',
+      'tasks': fallbackTasks,
+    };
   }
 }

@@ -26,6 +26,7 @@ import '../schedule/schedule_screen.dart';
 import '../zankoline/zankoline_screen.dart';
 import '../leaderboard/leaderboard_screen.dart';
 import '../offline/offline_downloads_screen.dart';
+import '../study_plan/ai_study_roadmap_screen.dart';
 import 'courses_screen.dart';
 
 // ─── Home Screen ─────────────────────────────────────────────────────────────
@@ -315,6 +316,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                         const SizedBox(height: 16),
 
+                        // ── Current GPA / Score Card ───────────────────────────
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _GpaSection(
+                                gpa: gpa,
+                                maxGpa: _maxGpa,
+                                isDark: isDark,
+                                gpaAnimation: _gpaAnimation,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  CupertinoPageRoute(builder: (_) => const GpaTrackerScreen()),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // ── Zankoline KRG Admission Card ─────────────────────
+                        _ZankolineBannerCard(isDark: isDark, t: t),
+
+                        const SizedBox(height: 14),
+
                         // ── Leaderboard Quick Card ──────────────────────────────
                         GestureDetector(
                           onTap: () => Navigator.push(
@@ -455,21 +479,78 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           ),
                         ),
 
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
 
-                        // ── Continue Learning ──────────────────────────────────
-                        _SectionHeader(
-                          title: t('continue_learning'),
-                          actionText: t('see_all'),
-                          isDark: isDark,
-                          onAction: () => Navigator.push(
+                        // ── Smart AI Study Roadmap Quick Card ────────────────────
+                        GestureDetector(
+                          onTap: () => Navigator.push(
                             context,
-                            CupertinoPageRoute(
-                              builder: (_) => const CoursesScreen(),
+                            CupertinoPageRoute(builder: (_) => const AiStudyRoadmapScreen()),
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF1E1B4B), Color(0xFF312E81)],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: const Color(0xFF6366F1).withValues(alpha: 0.35),
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Text('📅', style: TextStyle(fontSize: 20)),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        t('study_roadmap'),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'داڕشتنی پلانی ڕۆژانە و ژماردنی پێچەوانەی تاقیکردنەوەکان',
+                                        style: TextStyle(
+                                          color: Colors.white.withValues(alpha: 0.8),
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Icon(
+                                  CupertinoIcons.chevron_left,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                        _ZankoBenefitsCard(isDark: isDark),
                         const SizedBox(height: 14),
 
                         // ── Schedule Button ──────────────────────────────────────────
@@ -551,25 +632,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         _QuickAiToolsGrid(isDark: isDark),
                         const SizedBox(height: 32),
 
-                        // ── Current GPA ────────────────────────────────────────
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _GpaSection(
-                                gpa: gpa,
-                                maxGpa: _maxGpa,
-                                isDark: isDark,
-                                gpaAnimation: _gpaAnimation,
-                                onTap: () => Navigator.push(
-                                  context,
-                                  CupertinoPageRoute(builder: (_) => const GpaTrackerScreen()),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        // ── Zankoline KRG Admission Card ─────────────────────
-                        _ZankolineBannerCard(isDark: isDark, t: t),
                         const SizedBox(height: 120),
 
                       ],

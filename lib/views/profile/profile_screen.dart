@@ -15,6 +15,7 @@ import '../auth/login_screen.dart';
 import '../payment/vip_upgrade_sheet.dart';
 import '../leaderboard/leaderboard_screen.dart';
 import '../offline/offline_downloads_screen.dart';
+import '../study_plan/ai_study_roadmap_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 
@@ -2049,6 +2050,18 @@ class ProfileScreen extends StatelessWidget {
                     onTap: () => Navigator.push(
                       context,
                       CupertinoPageRoute(builder: (_) => const OfflineDownloadsScreen()),
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  _buildSettingsTile(
+                    context,
+                    icon: CupertinoIcons.calendar_today,
+                    iconColor: const Color(0xFF6366F1),
+                    title: langProvider.translate('study_roadmap'),
+                    subtitle: 'داڕشتنی پلانی ڕۆژانە و ژماردنی پێچەوانەی تاقیکردنەوە',
+                    onTap: () => Navigator.push(
+                      context,
+                      CupertinoPageRoute(builder: (_) => const AiStudyRoadmapScreen()),
                     ),
                   ),
                   const Divider(height: 1, indent: 56),
