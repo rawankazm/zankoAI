@@ -28,15 +28,18 @@ class _OfflineDownloadsScreenState extends State<OfflineDownloadsScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final langProvider = Provider.of<LanguageProvider>(context);
-    final offlineService = Provider.of<OfflineArchiveService>(context);
+    final offlineService = OfflineArchiveService.instance;
 
-    final allItems = offlineService.cachedItems;
-    final filteredItems = _selectedCategory == 'all'
-        ? allItems
-        : allItems.where((e) => e.category == _selectedCategory).toList();
+    return ListenableBuilder(
+      listenable: offlineService,
+      builder: (context, _) {
+        final allItems = offlineService.cachedItems;
+        final filteredItems = _selectedCategory == 'all'
+            ? allItems
+            : allItems.where((e) => e.category == _selectedCategory).toList();
 
-    return Scaffold(
-      backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
+        return Scaffold(
+          backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
       appBar: AppBar(
         backgroundColor: (isDark ? ZankoColors.darkBackground : ZankoColors.background).withValues(alpha: 0.9),
         elevation: 0,
@@ -224,6 +227,8 @@ class _OfflineDownloadsScreenState extends State<OfflineDownloadsScreen> {
           ],
         ),
       ),
+    );
+      },
     );
   }
 
