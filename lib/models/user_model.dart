@@ -28,7 +28,7 @@ class UserModel {
     this.departmentName,
     this.cityName,
     this.gpa,
-    this.gpaHistory = const [3.2, 3.4, 3.65, 3.8],
+    this.gpaHistory = const [],
     this.isVip = false,
     this.photoUrl,
   });
@@ -92,7 +92,7 @@ class UserModel {
       gpa: map['gpa']?.toDouble(),
       gpaHistory: map['gpaHistory'] != null 
           ? List<double>.from(map['gpaHistory'].map((x) => x.toDouble())) 
-          : const [3.2, 3.4, 3.65, 3.8],
+          : const [],
       photoUrl: map['photoUrl'],
     );
   }

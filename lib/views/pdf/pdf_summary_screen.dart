@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../services/ai_service.dart';
 import '../../services/language_provider.dart';
+import '../../services/offline_archive_service.dart';
 
 class PdfSummaryScreen extends StatefulWidget {
   final String? initialFileName;
@@ -403,20 +404,51 @@ This document ($fileName) provides a comprehensive summary of key academic conce
                   fontWeight: FontWeight.bold,
                 ),
                     ),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => DocumentReaderScreen(
-                              fileName: _selectedFileName ?? t('document'),
-                              fileContent: _selectedFileContent ?? 'دەقی بەڵگەنامەکە بەردەست نییە یان دەرهێنانی دەقەکە کێشەی تێدایە.',
-                            ),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: () async {
+                            await OfflineArchiveService.instance.saveOfflineItem(
+                              category: 'summary',
+                              title: _selectedFileName ?? 'کورتکراوەی PDF',
+                              courseName: 'بەڵگەنامەی PDF',
+                              payload: {
+                                'summaryText': _pdfSummary ?? '',
+                              },
+                            );
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(t('saved_offline')),
+                                  backgroundColor: const Color(0xFF10B981),
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF10B981),
+                            foregroundColor: Colors.white,
                           ),
-                        );
-                      },
-                      icon: const Icon(Icons.chrome_reader_mode_rounded),
-                      label: const Text('خوێندنەوە / Read', style: TextStyle(fontSize: 12)),
+                          icon: const Icon(Icons.download_rounded, size: 16),
+                          label: const Text('ئۆفلاین 📥', style: TextStyle(fontSize: 12)),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => DocumentReaderScreen(
+                                  fileName: _selectedFileName ?? t('document'),
+                                  fileContent: _selectedFileContent ?? 'دەقی بەڵگەنامەکە بەردەست نییە یان دەرهێنانی دەقەکە کێشەی تێدایە.',
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.chrome_reader_mode_rounded),
+                          label: const Text('خوێندنەوە / Read', style: TextStyle(fontSize: 12)),
+                        ),
+                      ],
                     ),
                   ],
                 ),

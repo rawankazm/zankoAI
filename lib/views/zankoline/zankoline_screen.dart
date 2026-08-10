@@ -6,6 +6,7 @@ import '../../services/language_provider.dart';
 import '../../services/zankoline_service.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
+import '../../widgets/ad_banner_widget.dart';
 
 
 class ZankolineScreen extends StatefulWidget {
@@ -149,6 +150,10 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.all(20),
           children: [
+            // ─── Sponsor Ad Banner ───
+            const AdBannerWidget(screenName: 'zankoline'),
+            const SizedBox(height: 12),
+
             // ─── Hero Banner ───
             Container(
               padding: const EdgeInsets.all(22),

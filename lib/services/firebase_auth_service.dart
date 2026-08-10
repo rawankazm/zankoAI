@@ -74,7 +74,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
               universityName: data['universityName'] ?? 'زانکۆی سلێمانی',
               departmentName: data['departmentName'] ?? 'تەکنەلۆجیای زانیاری',
               cityName: data['cityName'] ?? 'سلێمانی',
-              gpa: role == UserRole.student ? (data['gpa'] as num?)?.toDouble() ?? 3.65 : null,
+              gpa: role == UserRole.student ? (data['gpa'] as num?)?.toDouble() ?? 0.0 : null,
               isVip: isVip,
               photoUrl: data['photoUrl'],
             );
@@ -126,7 +126,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
           universityName: data['universityName'] ?? 'زانکۆی سلێمانی',
           departmentName: data['departmentName'] ?? 'تەکنەلۆجیای زانیاری',
           cityName: data['cityName'] ?? 'سلێمانی',
-          gpa: role == UserRole.student ? (data['gpa'] as num?)?.toDouble() ?? 3.65 : null,
+          gpa: role == UserRole.student ? (data['gpa'] as num?)?.toDouble() ?? 0.0 : null,
           isVip: isVip,
         );
       } else {
@@ -138,7 +138,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
           universityName: 'زانکۆی سلێمانی',
           departmentName: 'تەکنەلۆجیای زانیاری',
           cityName: 'سلێمانی',
-          gpa: 3.65,
+          gpa: 0.0,
           isVip: false,
         );
         try {
@@ -149,7 +149,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
             'universityName': 'زانکۆی سلێمانی',
             'departmentName': 'تەکنەلۆجیای زانیاری',
             'cityName': 'سلێمانی',
-            'gpa': 3.65,
+            'gpa': 0.0,
             'isVip': false,
             'createdAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
@@ -164,7 +164,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
         universityName: 'زانکۆی سلێمانی',
         departmentName: 'تەکنەلۆجیای زانیاری',
         cityName: 'سلێمانی',
-        gpa: 3.65,
+        gpa: 0.0,
         isVip: false,
       );
     }
@@ -219,7 +219,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
         universityName: 'زانکۆی سلێمانی',
         departmentName: 'تەکنەلۆجیای زانیاری',
         cityName: 'سلێمانی',
-        gpa: 3.65,
+        gpa: 0.0,
       );
       notifyListeners();
       return true;
@@ -266,7 +266,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
           universityName: uni,
           departmentName: dept,
           cityName: city,
-          gpa: role == UserRole.student ? 3.65 : null,
+          gpa: role == UserRole.student ? 0.0 : null,
         );
 
         try {
@@ -303,7 +303,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
         universityName: uni,
         departmentName: dept,
         cityName: city,
-        gpa: 3.65,
+        gpa: 0.0,
       );
       _currentUser = newUser;
       notifyListeners();
@@ -370,7 +370,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
       role: UserRole.student,
       universityName: 'زانکۆی سلێمانی',
       departmentName: 'تەکنەلۆجیای زانیاری',
-      gpa: 3.65,
+      gpa: 0.0,
     );
     notifyListeners();
   }

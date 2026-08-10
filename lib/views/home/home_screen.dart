@@ -7,6 +7,7 @@ import '../../services/language_provider.dart';
 import '../../services/score_service.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
+import '../../widgets/ad_banner_widget.dart';
 import '../ai_teacher/ai_teacher_chat_screen.dart';
 import '../courses/course_detail_screen.dart';
 import '../academic/seminar_thesis_assistant_screen.dart';
@@ -23,6 +24,8 @@ import '../quiz/ai_exam_generator_screen.dart';
 import '../quiz/quiz_screen.dart';
 import '../schedule/schedule_screen.dart';
 import '../zankoline/zankoline_screen.dart';
+import '../leaderboard/leaderboard_screen.dart';
+import '../offline/offline_downloads_screen.dart';
 import 'courses_screen.dart';
 
 // ─── Home Screen ─────────────────────────────────────────────────────────────
@@ -39,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
 
   // Demo data
-  final double _gpaValue = 3.65;
+  final double _gpaValue = 0.0;
   final double _maxGpa = 4.0;
 
   @override
@@ -89,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     String t(String key) => langProvider.translate(key);
     final user = authService.currentUser;
     final userName = user?.name ?? 'Student';
-    final gpa = user?.gpa ?? 3.65;
+    final gpa = user?.gpa ?? 0.0;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: isDark
@@ -277,7 +280,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             }
                           },
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
+
+                        // ── Sponsor Ad Banner ─────────────────────────────────
+                        const AdBannerWidget(screenName: 'home'),
+
+                        const SizedBox(height: 16),
 
                         // ── AI Hero Card ───────────────────────────────────────
                         AIHeroCard(
@@ -307,6 +315,147 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                         const SizedBox(height: 16),
 
+                        // ── Leaderboard Quick Card ──────────────────────────────
+                        GestureDetector(
+                          onTap: () => Navigator.push(
+                            context,
+                            CupertinoPageRoute(builder: (_) => const LeaderboardScreen()),
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF6C5CE7), Color(0xFF4834D4)],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF6C5CE7).withValues(alpha: 0.3),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Text('🏆', style: TextStyle(fontSize: 20)),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        t('leaderboard_title'),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'ڕیزبەندی گشتی و بەپێی بەشەکان + مەدالیاکان',
+                                        style: TextStyle(
+                                          color: Colors.white.withValues(alpha: 0.85),
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Icon(
+                                  CupertinoIcons.chevron_left,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // ── Offline Archive Quick Card ──────────────────────────
+                        GestureDetector(
+                          onTap: () => Navigator.push(
+                            context,
+                            CupertinoPageRoute(builder: (_) => const OfflineDownloadsScreen()),
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Text('💾', style: TextStyle(fontSize: 20)),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        t('offline_archive'),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'پێداچوونەوەی کویز، فلاش کارت و کورتکراوەکان بێ ئینتەرنێت',
+                                        style: TextStyle(
+                                          color: Colors.white.withValues(alpha: 0.8),
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Icon(
+                                  CupertinoIcons.chevron_left,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
 
                         // ── Continue Learning ──────────────────────────────────
                         _SectionHeader(

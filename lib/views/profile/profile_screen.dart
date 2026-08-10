@@ -6,11 +6,15 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
+import '../../widgets/ad_banner_widget.dart';
 import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
 import '../../services/theme_provider.dart';
+import '../../services/score_service.dart';
 import '../auth/login_screen.dart';
 import '../payment/vip_upgrade_sheet.dart';
+import '../leaderboard/leaderboard_screen.dart';
+import '../offline/offline_downloads_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 
@@ -339,7 +343,7 @@ class ProfileScreen extends StatelessWidget {
                 _buildDetailRow(context, t('university'), uniName.isEmpty ? 'Zanko University' : uniName),
                 _buildDetailRow(context, t('faculty_major'), deptName.isEmpty ? 'Computer Science & AI' : deptName),
                 _buildDetailRow(context, t('academic_stage'), 'Year 3 • Semester 6'),
-                _buildDetailRow(context, t('cumulative_gpa'), '3.65 / 4.00 (Honor Roll)'),
+                _buildDetailRow(context, t('cumulative_gpa'), '0 / 100'),
                 _buildDetailRow(context, t('credits_completed'), '96 / 120 ECTS'),
                 _buildDetailRow(context, t('campus_status'), 'Active • Good Standing 🟢'),
 
@@ -534,7 +538,7 @@ class ProfileScreen extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: 10),
-                          _buildLockedDetailRow('🔒 تێکڕای گشتی GPA:', '${user?.gpa ?? 3.65} / 4.00 (Honor Roll)', isDark),
+                          _buildLockedDetailRow('🔒 تێکڕای گشتی نمرە:', '${user?.gpa ?? 0} / 100', isDark),
                           _buildLockedDetailRow('🔒 کرێدیتی تەواوبوو:', '96 / 120 ECTS', isDark),
                           _buildLockedDetailRow('🔒 بارودۆخی کامپس:', 'Active • Good Standing 🟢', isDark),
                         ],
@@ -1401,6 +1405,7 @@ class ProfileScreen extends StatelessWidget {
     final authService = Provider.of<AuthService>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
     final langProvider = Provider.of<LanguageProvider>(context);
+    final scoreService = Provider.of<ScoreService>(context);
     String t(String key) => langProvider.translate(key);
 
     final user = authService.currentUser;
@@ -1923,16 +1928,58 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
 
+            const SizedBox(height: 16),
+            const AdBannerWidget(screenName: 'profile'),
             const SizedBox(height: 24),
 
             // Learning Achievements & Stats
-            Text(
-              langProvider.translate('learning_stats'),
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : ZankoColors.textPrimary,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  langProvider.translate('learning_stats'),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : ZankoColors.textPrimary,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () async {
+                    await scoreService.resetScores();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(langProvider.translate('reset_stats')),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          CupertinoIcons.arrow_counterclockwise,
+                          size: 14,
+                          color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          langProvider.translate('reset_stats'),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             AppCard(
@@ -1941,21 +1988,23 @@ class ProfileScreen extends StatelessWidget {
                 children: [
                   StatisticCard(
                     icon: CupertinoIcons.clock,
-                    value: '14h',
+                    value: scoreService.todayStudyMinutes >= 60
+                        ? '${scoreService.todayStudyMinutes ~/ 60}h'
+                        : '${scoreService.todayStudyMinutes}m',
                     label: langProvider.translate('study_time'),
                     color: const Color(0xFFFF9F0A),
                   ),
                   const SizedBox(width: 8),
                   StatisticCard(
                     icon: CupertinoIcons.checkmark_seal,
-                    value: '28',
+                    value: '${scoreService.totalQuestionsAnswered}',
                     label: langProvider.translate('quizzes'),
                     color: const Color(0xFF34C759),
                   ),
                   const SizedBox(width: 8),
                   StatisticCard(
                     icon: CupertinoIcons.star,
-                    value: '3.65',
+                    value: '${scoreService.totalScore100}',
                     label: langProvider.translate('gpa'),
                     color: const Color(0xFF6C5CE7),
                   ),
@@ -1979,6 +2028,30 @@ class ProfileScreen extends StatelessWidget {
               padding: EdgeInsets.zero,
               child: Column(
                 children: [
+                  _buildSettingsTile(
+                    context,
+                    icon: CupertinoIcons.star_circle_fill,
+                    iconColor: const Color(0xFFFF9F0A),
+                    title: langProvider.translate('leaderboard_title'),
+                    subtitle: 'پلەکانت ببینە و ببە بە بەرزترین نمرە',
+                    onTap: () => Navigator.push(
+                      context,
+                      CupertinoPageRoute(builder: (_) => const LeaderboardScreen()),
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  _buildSettingsTile(
+                    context,
+                    icon: CupertinoIcons.arrow_down_circle_fill,
+                    iconColor: const Color(0xFF10B981),
+                    title: langProvider.translate('offline_archive'),
+                    subtitle: 'پێداچوونەوەی داتاکان بەبێ ئینتەرنێت',
+                    onTap: () => Navigator.push(
+                      context,
+                      CupertinoPageRoute(builder: (_) => const OfflineDownloadsScreen()),
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 56),
                   _buildSettingsTile(
                     context,
                     icon: CupertinoIcons.moon_fill,

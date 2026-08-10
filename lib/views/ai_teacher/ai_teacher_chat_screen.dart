@@ -451,6 +451,69 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     );
   }
 
+  void _showEmojiPicker() {
+    final emojis = [
+      '📚', '🎓', '💡', '🤔', '📝', '✨', '❓', '📐',
+      '🧪', '💻', '🧠', '🎯', '👍', '👋', '⭐', '🔥',
+      '💬', '📊', '📖', '📌', '⚡', '🏆', '💯', '✅',
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E222A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          height: 220,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'ئیمۆجییەکان',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 8,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
+                  ),
+                  itemCount: emojis.length,
+                  itemBuilder: (context, index) {
+                    final emoji = emojis[index];
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _controller.text += emoji;
+                        });
+                        Navigator.pop(context);
+                      },
+                      child: Center(
+                        child: Text(
+                          emoji,
+                          style: const TextStyle(fontSize: 24),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   String? _currentlySpeakingMsg;
 
   Widget _buildMessageBubble(Map<String, String> msg, bool isUser) {

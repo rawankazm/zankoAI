@@ -11,6 +11,7 @@ import 'services/database_service.dart';
 import 'services/ai_service.dart';
 import 'services/language_provider.dart';
 import 'services/theme_provider.dart';
+import 'services/score_service.dart';
 import 'views/splash_screen.dart';
 
 import 'services/zankoline_service.dart';
@@ -68,6 +69,9 @@ class ZankoApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<ThemeProvider>(
           create: (_) => ThemeProvider(),
+        ),
+        ChangeNotifierProvider<ScoreService>.value(
+          value: ScoreService.instance,
         ),
         ChangeNotifierProxyProvider<AiService, ZankolineService>(
           create: (context) => ZankolineService(Provider.of<AiService>(context, listen: false)),
