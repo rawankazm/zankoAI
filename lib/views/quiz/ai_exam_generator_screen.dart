@@ -104,26 +104,15 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
   }
 
   String _sanitizeExtractedText(String input) {
-    if (input.isEmpty) return '';
+    if (input.trim().isEmpty) return '';
 
-    final RegExp cleanPattern = RegExp(
-      r'[^a-zA-Z0-9\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\s\.,\?\!\:\-\(\)]',
-    );
-    String cleaned = input.replaceAll(cleanPattern, ' ');
-
-    cleaned = cleaned.replaceAll(
+    String cleaned = input.replaceAll(
       RegExp(r'\b(obj|endobj|stream|endstream|xref|trailer|FlateDecode|Font|CIDFont|FontDescriptor|ProcSet|MediaBox|Type1|WinAnsiEncoding|Identity-H)\b', caseSensitive: false),
       ' ',
     );
 
     cleaned = cleaned.replaceAll(RegExp(r'\s+'), ' ').trim();
-
-    final words = cleaned.split(' ').where((w) {
-      if (w.length < 2) return false;
-      return RegExp(r'[a-zA-Z\u0600-\u06FF]').hasMatch(w);
-    }).toList();
-
-    return words.join(' ');
+    return cleaned;
   }
 
   String _extractTextFromBytes(Uint8List bytes) {
@@ -331,35 +320,60 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
 
     if (pdfSnippets.length >= 2) {
       for (int i = 0; i < count; i++) {
-        final snippet = pdfSnippets[i % pdfSnippets.length];
+        final snippet = pdfSnippets[i % pdfSnippets.length].trim();
         final words = snippet.split(' ').where((w) => w.length > 3 && !_isJunkMetadataLine(w)).toList();
-        final keyword = words.isNotEmpty ? words[i % words.length] : 'چەمکی زانستی';
+        final mainTerm = words.isNotEmpty ? words[i % words.length] : 'چەمکی زانستی';
 
-        if (i % 2 == 0) {
+        if (i % 3 == 0) {
+          // Factual Multiple Choice from exact PDF sentence
+          final truncatedSnippet = snippet.length > 100 ? '${snippet.substring(0, 100)}...' : snippet;
           questions.add(
             QuestionModel(
               id: 'pdf_fallback_$i',
-              questionText: 'لە وانەی «$displayTitle»دا، مەبەستی سەرەکی لە تێگەیشتنی «$keyword» چییە؟',
+              questionText: 'کامیان زانیارییەکی ڕاستە بەپێی ناواخنی فایلی وانەی «$displayTitle»؟',
               type: QuestionType.multipleChoice,
               options: [
-                'شیکارکردن و جێبەجێکردنی بنەما زانستییەکانی «$keyword»',
-                'ڕەتکردنەوەی تیۆرییە سەرەتاییەکان بەبێ بەڵگەی زانستی',
-                'گۆڕینی پێناسە بنەڕەتییەکان بە داتای نەناسراو',
-                'پشتگوێخستنی بەشە کردارییەکان لە تاقیکردنەوەدا'
+                truncatedSnippet,
+                'ناچالاککردنی سەرجەم پرۆتۆکۆڵەکان لە سیستەمەکەدا',
+                'سڕینەوەی هەموو تێکستەکان بەرامبەر داتای نادیار',
+                'ڕەتکردنەوەی جێبەجێکردنی هاوکێشەکان بۆ وانەکە'
               ],
-              correctAnswer: 'شیکارکردن و جێبەجێکردنی بنەما زانستییەکانی «$keyword»',
-              explanation: 'ئەم پرسیارە ڕاستەوخۆ لەسەر تێگەیشتنی ناوەڕۆکی زانستی وانەکەوە دەرهێنراوە.',
+              correctAnswer: truncatedSnippet,
+              explanation: 'ئەم ڕستەیە ڕاستەوخۆ لە دەقی زانستی فایلی PDFەکە دەرهێنراوە.',
+            ),
+          );
+        } else if (i % 3 == 1) {
+          // Fill-in-the-blank from PDF main term
+          final blankedSnippet = snippet.length > 90
+              ? snippet.substring(0, 90).replaceAll(mainTerm, '___')
+              : snippet.replaceAll(mainTerm, '___');
+
+          questions.add(
+            QuestionModel(
+              id: 'pdf_fallback_$i',
+              questionText: 'بۆشایی لە دەقی وانەکەدا پڕبکەرەوە: "$blankedSnippet"',
+              type: QuestionType.fillInBlank,
+              options: [
+                mainTerm,
+                'Ethernet Protocol',
+                'Operating System Core',
+                'Data Security Module'
+              ],
+              correctAnswer: mainTerm,
+              explanation: 'زاراوەی «$mainTerm» ڕاستەوخۆ دەقی بۆشایی فایلی PDFی بارکراوە.',
             ),
           );
         } else {
+          // True/False from exact PDF sentence
+          final truncatedSnippet = snippet.length > 120 ? snippet.substring(0, 120) : snippet;
           questions.add(
             QuestionModel(
               id: 'pdf_fallback_$i',
-              questionText: 'ئایا چەمکی «$keyword» بەشێکی سەرەکییە لە تێگەیشتنی بابەتەکانی «$displayTitle»؟',
+              questionText: 'بەپێی دەقی فایلی PDFی وانەکە: "$truncatedSnippet". ئایا ئەم زانیارییە ڕاستە؟',
               type: QuestionType.trueFalse,
               options: ['ڕاستە', 'هەڵەیە'],
               correctAnswer: 'ڕاستە',
-              explanation: 'ئەم زانیارییە یەکێکە لە بنەما گرنگەکانی وانەکە.',
+              explanation: 'ئەم ڕستەیە زانیارییەکی ڕاستە لە لاپەڕەکانی فایلی PDFی وانەکەتدا.',
             ),
           );
         }

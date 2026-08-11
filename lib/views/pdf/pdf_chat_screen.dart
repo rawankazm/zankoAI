@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 import '../../services/language_provider.dart';
 import '../../services/ai_service.dart';
 import '../../theme.dart';
@@ -12,7 +13,10 @@ import 'pdf_summary_screen.dart';
 import '../quiz/quiz_screen.dart';
 
 class PdfChatScreen extends StatefulWidget {
-  const PdfChatScreen({super.key});
+  final String? initialFileName;
+  final String? initialFileContent;
+
+  const PdfChatScreen({super.key, this.initialFileName, this.initialFileContent});
 
   @override
   State<PdfChatScreen> createState() => _PdfChatScreenState();
@@ -23,6 +27,15 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
   String _selectedFileSize = '4.2 MB';
   int _selectedPdfPages = 24;
   String? _selectedFileContent;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialFileName != null && widget.initialFileName!.isNotEmpty) {
+      _selectedPdf = widget.initialFileName!;
+      _selectedFileContent = widget.initialFileContent;
+    }
+  }
 
   bool _isGarbledBinary(String s) {
     if (s.trim().isEmpty) return true;
@@ -42,6 +55,17 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
   }
 
   String _extractTextFromPdfBytes(Uint8List bytes) {
+    try {
+      final PdfDocument document = PdfDocument(inputBytes: bytes);
+      final String extractedText = PdfTextExtractor(document).extractText();
+      document.dispose();
+
+      final cleanText = extractedText.trim();
+      if (cleanText.isNotEmpty && !_isGarbledBinary(cleanText)) {
+        return cleanText.length > 10000 ? cleanText.substring(0, 10000) : cleanText;
+      }
+    } catch (_) {}
+
     try {
       final maxBytes = bytes.length > 250000 ? bytes.sublist(0, 250000) : bytes;
       final rawStr = String.fromCharCodes(maxBytes);
@@ -84,7 +108,7 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
       if (cleanText.isNotEmpty && !_isGarbledBinary(cleanText) && cleanText.length > 20) {
         return cleanText.length > 4000 ? cleanText.substring(0, 4000) : cleanText;
       }
-      return 'دەقی پۆختەکراوی فایلی فێرکاری بۆ خوێندنەوە و شیکاری.';
+      return 'دەقی فایلی فێرکاری بۆ خوێندنەوە و شیکاری.';
     } catch (_) {
       return 'تێگەیشتن لە دەقی فایلی بەستراوە';
     }
@@ -283,7 +307,22 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
 
                           try {
                             final ai = Provider.of<AiService>(context, listen: false);
-                            final response = await ai.askTeacher('PDF Context ($_selectedPdf): $text', []);
+                            final pdfContext = (_selectedFileContent != null && _selectedFileContent!.trim().isNotEmpty)
+                                ? _selectedFileContent
+                                : 'فایلی $_selectedPdf';
+
+                            final fullPrompt = '''
+ئەمە ناوەرۆک و دەقی ڕاستەقینەی فایلی PDFی خوێندکارەکەیە:
+========================================
+$pdfContext
+========================================
+
+پرسیاری خوێندکار لەسەر ناوەرۆکی ئەم فایلی PDFە:
+$text
+
+تکایە بە ووردبیینییەوە تەنها لەسەر بنەمای ئەم دەقەی سه‌رەوە بە زمانی کوردی (سۆرانی) وەڵامی ڕاست و تێروتەسەل بنووسەوە.
+''';
+                            final response = await ai.askTeacher(fullPrompt, []);
                             final isInvalid = response.trim().isEmpty ||
                                 response.contains('Error') ||
                                 response.contains('⚠️') ||
@@ -477,70 +516,34 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
             ),
             const SizedBox(height: 12),
 
-            Row(
-              children: [
-                Expanded(
-                  child: AppCard(
-                    padding: const EdgeInsets.all(16),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => PdfSummaryScreen(
-                            initialFileName: _selectedPdf,
-                            initialFileContent: _selectedFileContent,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Column(
-                      children: [
-                        const Icon(CupertinoIcons.doc_plaintext, color: ZankoColors.primary, size: 28),
-                        const SizedBox(height: 8),
-                        Text(
-                          langProvider.translate('summarize'),
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: isDark ? Colors.white : ZankoColors.textPrimary,
-                          ),
-                        ),
-                      ],
+            AppCard(
+              padding: const EdgeInsets.all(16),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PdfSummaryScreen(
+                      initialFileName: _selectedPdf,
+                      initialFileContent: _selectedFileContent,
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: AppCard(
-                    padding: const EdgeInsets.all(16),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => QuizScreen(
-                            initialFileName: _selectedPdf,
-                            initialTopic: _selectedPdf.replaceAll('.pdf', ''),
-                          ),
-                        ),
-                      );
-                    },
-                    child: Column(
-                      children: [
-                        const Icon(CupertinoIcons.question_circle, color: Color(0xFFAF52DE), size: 28),
-                        const SizedBox(height: 8),
-                        Text(
-                          langProvider.translate('quiz'),
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: isDark ? Colors.white : ZankoColors.textPrimary,
-                          ),
-                        ),
-                      ],
+                );
+              },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(CupertinoIcons.doc_plaintext, color: ZankoColors.primary, size: 24),
+                  const SizedBox(width: 10),
+                  Text(
+                    langProvider.translate('summarize'),
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : ZankoColors.textPrimary,
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
 
 

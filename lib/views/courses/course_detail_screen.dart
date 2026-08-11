@@ -1037,7 +1037,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                             Navigator.push(
                                               context,
                                               CupertinoPageRoute(
-                                                builder: (context) => const PdfChatScreen(),
+                                                builder: (context) => PdfChatScreen(
+                                                  initialFileName: pdf.title,
+                                                  initialFileContent: 'فایلی فێرکاری: ${pdf.title}\nکورس: ${widget.courseTitle}\nقەبارە: ${pdf.size}',
+                                                ),
                                               ),
                                             );
                                           },

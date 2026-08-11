@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 import '../../services/ai_service.dart';
 import '../../services/database_service.dart';
 import '../../services/language_provider.dart';
@@ -96,6 +97,17 @@ class _QuizScreenState extends State<QuizScreen> {
 
   // Crash-proof helper to safely extract text from PDF binary
   String _extractTextFromPdfBytes(Uint8List bytes) {
+    try {
+      final PdfDocument document = PdfDocument(inputBytes: bytes);
+      final String extractedText = PdfTextExtractor(document).extractText();
+      document.dispose();
+
+      final cleanText = extractedText.trim();
+      if (cleanText.isNotEmpty) {
+        return cleanText.length > 10000 ? cleanText.substring(0, 10000) : cleanText;
+      }
+    } catch (_) {}
+
     try {
       final maxBytes = bytes.length > 250000 ? bytes.sublist(0, 250000) : bytes;
       final rawStr = String.fromCharCodes(maxBytes);

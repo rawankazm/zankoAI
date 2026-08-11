@@ -6,6 +6,8 @@ import 'package:file_picker/file_picker.dart';
 import '../../services/ai_service.dart';
 import '../../services/language_provider.dart';
 import '../../services/offline_archive_service.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 class PdfSummaryScreen extends StatefulWidget {
   final String? initialFileName;
@@ -21,6 +23,7 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
   String? _selectedFileName;
   String? _selectedFileSize;
   String? _selectedFileContent;
+  Uint8List? _selectedFileBytes;
   bool _isProcessing = false;
   
   String? _pdfSummary;
@@ -75,8 +78,19 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
     return (garbledCount / s.length) > 0.04;
   }
 
-  // Crash-proof helper to safely extract text from PDF binary
+  // Crash-proof helper to safely extract text from PDF binary using Syncfusion PDF
   String _extractTextFromPdfBytes(Uint8List bytes) {
+    try {
+      final PdfDocument document = PdfDocument(inputBytes: bytes);
+      final String extractedText = PdfTextExtractor(document).extractText();
+      document.dispose();
+      
+      final cleanText = extractedText.trim();
+      if (cleanText.isNotEmpty && !_isGarbledBinary(cleanText)) {
+        return cleanText.length > 8000 ? cleanText.substring(0, 8000) : cleanText;
+      }
+    } catch (_) {}
+
     try {
       final maxBytes = bytes.length > 250000 ? bytes.sublist(0, 250000) : bytes;
       final rawStr = String.fromCharCodes(maxBytes);
@@ -180,6 +194,7 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
             _selectedFileName = file.name;
             _selectedFileSize = '${(file.size / (1024 * 1024)).toStringAsFixed(2)} مێگابایت';
             _selectedFileContent = contentToUse;
+            _selectedFileBytes = bytes;
             _clearSummary();
           });
 
@@ -441,6 +456,7 @@ This document ($fileName) provides a comprehensive summary of key academic conce
                                 builder: (context) => DocumentReaderScreen(
                                   fileName: _selectedFileName ?? t('document'),
                                   fileContent: _selectedFileContent ?? 'دەقی بەڵگەنامەکە بەردەست نییە یان دەرهێنانی دەقەکە کێشەی تێدایە.',
+                                  pdfBytes: _selectedFileBytes,
                                 ),
                               ),
                             );
@@ -500,7 +516,6 @@ This document ($fileName) provides a comprehensive summary of key academic conce
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
                           ..._keyPoints.map((point) {
                             return Padding(
                               padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -538,14 +553,14 @@ This document ($fileName) provides a comprehensive summary of key academic conce
                               const SizedBox(width: 8),
                               Text(
                                 t('translation_card'),
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _translation!,
-                          style: const TextStyle(height: 1.4),
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _translation!,
+                            style: const TextStyle(height: 1.4),
                           ),
                         ],
                       ),
@@ -560,12 +575,18 @@ This document ($fileName) provides a comprehensive summary of key academic conce
   }
 }
 
-// Internal zoomable Document Reader view
+// Internal zoomable Document Reader view with real SfPdfViewer support
 class DocumentReaderScreen extends StatefulWidget {
   final String fileName;
   final String fileContent;
+  final Uint8List? pdfBytes;
 
-  const DocumentReaderScreen({super.key, required this.fileName, required this.fileContent});
+  const DocumentReaderScreen({
+    super.key,
+    required this.fileName,
+    required this.fileContent,
+    this.pdfBytes,
+  });
 
   @override
   State<DocumentReaderScreen> createState() => _DocumentReaderScreenState();
@@ -577,6 +598,17 @@ class _DocumentReaderScreenState extends State<DocumentReaderScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    if (widget.pdfBytes != null && widget.pdfBytes!.isNotEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(widget.fileName, style: const TextStyle(fontSize: 14)),
+          centerTitle: true,
+        ),
+        body: SfPdfViewer.memory(widget.pdfBytes!),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.fileName, style: const TextStyle(fontSize: 14)),
@@ -601,25 +633,152 @@ class _DocumentReaderScreenState extends State<DocumentReaderScreen> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16.0),
-          decoration: BoxDecoration(
-            color: theme.brightness == Brightness.dark 
-                ? Colors.white10 
-                : Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: theme.brightness == Brightness.dark ? Colors.white24 : Colors.black12),
-          ),
-          child: Text(
-            _getCleanDisplayContent(widget.fileContent),
-            style: TextStyle(
-              fontSize: _fontSize,
-              height: 1.6,
-            ),
-          ),
-        ),
+        child: _buildFormattedParagraphs(context, widget.fileContent),
       ),
+    );
+  }
+
+  Widget _buildFormattedParagraphs(BuildContext context, String rawText) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final cleanText = _getCleanDisplayContent(rawText);
+    
+    // Split into sentences and group into logical readable 3-sentence paragraphs
+    final rawSentences = cleanText.split(RegExp(r'(?<=[.!?])\s+'));
+    final List<String> paragraphs = [];
+    StringBuffer currentPara = StringBuffer();
+    int count = 0;
+
+    for (var sentence in rawSentences) {
+      final s = sentence.trim();
+      if (s.isEmpty) continue;
+
+      final isHeader = RegExp(r'^(Chapter|\d+\.\d+|\d+\.|\bTopics?\b)', caseSensitive: false).hasMatch(s);
+      
+      if (isHeader && currentPara.isNotEmpty) {
+        paragraphs.add(currentPara.toString().trim());
+        currentPara = StringBuffer();
+        count = 0;
+      }
+
+      currentPara.write('$s ');
+      count++;
+
+      if (count >= 3 || isHeader) {
+        paragraphs.add(currentPara.toString().trim());
+        currentPara = StringBuffer();
+        count = 0;
+      }
+    }
+    if (currentPara.isNotEmpty) {
+      paragraphs.add(currentPara.toString().trim());
+    }
+
+    if (paragraphs.isEmpty) {
+      return Text(cleanText, style: TextStyle(fontSize: _fontSize, height: 1.65));
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: paragraphs.asMap().entries.map((entry) {
+        final idx = entry.key + 1;
+        final para = entry.value;
+        final isTitle = RegExp(r'^(Chapter|\d+\.\d+|\d+\.|\bTopics?\b)', caseSensitive: false).hasMatch(para);
+
+        if (isTitle && para.length < 120) {
+          return Container(
+            margin: const EdgeInsets.only(top: 16, bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF6C5CE7).withOpacity(0.12),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFF6C5CE7).withOpacity(0.3)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.bookmark_rounded, size: 18, color: Color(0xFF6C5CE7)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    para,
+                    style: TextStyle(
+                      fontSize: _fontSize + 1,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : const Color(0xFF6C5CE7),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark ? Colors.white12 : Colors.grey.shade200,
+            ),
+            boxShadow: isDark
+                ? []
+                : [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 24,
+                    height: 24,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6C5CE7).withOpacity(0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '$idx',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF6C5CE7),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'بەشی $idx',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.grey[400] : const Color(0xFF6C5CE7),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                para,
+                style: TextStyle(
+                  fontSize: _fontSize,
+                  height: 1.65,
+                  color: isDark ? Colors.white.withOpacity(0.9) : const Color(0xFF2D3436),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -643,16 +802,22 @@ class _DocumentReaderScreenState extends State<DocumentReaderScreen> {
   String _getCleanDisplayContent(String raw) {
     if (raw.trim().isEmpty) return 'دەقی بەڵگەنامەکە بەردەست نییە.';
 
-    final isGarbled = _isGarbledBinary(raw) || 
-                      raw.length < 100 ||
-                      raw.contains('%PDF-') || 
-                      raw.contains('/Catalog') || 
-                      raw.contains('endobj') ||
-                      raw.contains('<<') ||
-                      raw.contains('/Font');
+    // Replace single line-breaks between words with spaces so text never breaks vertically per word!
+    String formatted = raw
+        .replaceAll(RegExp(r'(?<=\S)\r?\n(?=\S)'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+
+    final isGarbled = _isGarbledBinary(formatted) || 
+                      formatted.length < 50 ||
+                      formatted.contains('%PDF-') || 
+                      formatted.contains('/Catalog') || 
+                      formatted.contains('endobj') ||
+                      formatted.contains('<<') ||
+                      formatted.contains('/Font');
 
     if (isGarbled) {
-      final clean = raw.replaceAll(RegExp(r'[^\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF\w\s\.\,\-\:\(\)]'), ' ')
+      final clean = formatted.replaceAll(RegExp(r'[^\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF\w\s\.\,\-\:\(\)]'), ' ')
                        .replaceAll(RegExp(r'\s+'), ' ')
                        .trim();
 
@@ -663,7 +828,7 @@ class _DocumentReaderScreenState extends State<DocumentReaderScreen> {
       return _generateDynamicDocumentSummary(widget.fileName);
     }
 
-    return raw.length > 15000 ? raw.substring(0, 15000) : raw;
+    return formatted.length > 15000 ? formatted.substring(0, 15000) : formatted;
   }
 
   String _generateDynamicDocumentSummary(String fileName) {

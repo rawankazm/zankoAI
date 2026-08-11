@@ -117,20 +117,28 @@ class _LoginScreenState extends State<LoginScreen>
       _errorMessage = null;
     });
 
-    final authService = Provider.of<AuthService>(context, listen: false);
-    final success = await authService.loginWithGoogle(UserRole.student);
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final success = await authService.loginWithGoogle(UserRole.student);
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    if (success) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const NavigationShell()),
-      );
-    } else {
+      if (success) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const NavigationShell()),
+        );
+      } else {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'چوونەژوورەوە بە گووگڵ بەدی نەهات. تکایە دووبارە تاقیبکەرەوە.';
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = 'چوونەژوورەوە بە گووگڵ سەرکەوتوو نەبوو.';
+        _errorMessage = 'هەڵە لە چوونەژوورەوە بە گووگڵ: تکایە دڵنیابەرەوە لە پەیوەندی ئینتەرنێت یان خزمەتگوزاری گووگڵ.';
       });
     }
   }

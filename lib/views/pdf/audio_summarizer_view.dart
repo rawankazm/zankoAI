@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:record/record.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../services/ai_service.dart';
 import '../../services/language_provider.dart';
 
@@ -15,6 +17,9 @@ class AudioSummarizerView extends StatefulWidget {
 }
 
 class _AudioSummarizerViewState extends State<AudioSummarizerView> {
+  final AudioRecorder _audioRecorder = AudioRecorder();
+  String? _recordedFilePath;
+
   bool _isRecording = false;
   bool _isLoading = false;
   bool _isProcessingAi = false;
@@ -24,20 +29,55 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
   int _recordDurationSeconds = 0;
   Timer? _timer;
 
-  void _startRecording() {
-    setState(() {
-      _isRecording = true;
-      _audioFileName = 'VoiceRecording_01.m4a';
-      _recordDurationSeconds = 0;
-      _fullTranscript = '';
-      _summarizedResult = '';
-    });
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _audioRecorder.dispose();
+    super.dispose();
+  }
 
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        _recordDurationSeconds++;
-      });
-    });
+  void _startRecording() async {
+    try {
+      if (await _audioRecorder.hasPermission()) {
+        final tempDir = await getTemporaryDirectory();
+        final path = '${tempDir.path}/rec_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        
+        await _audioRecorder.start(
+          const RecordConfig(encoder: AudioEncoder.aacLc),
+          path: path,
+        );
+
+        setState(() {
+          _recordedFilePath = path;
+          _isRecording = true;
+          _audioFileName = 'دەنگی_تۆمارکراوی_مایکرۆفۆن.m4a';
+          _recordDurationSeconds = 0;
+          _fullTranscript = '';
+          _summarizedResult = '';
+        });
+
+        _timer?.cancel();
+        _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+          if (mounted) {
+            setState(() {
+              _recordDurationSeconds++;
+            });
+          }
+        });
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('ڕێگەپێدانی مایکرۆفۆن نەدراوە! 🎙️')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('هەڵە لە تۆمارکردنی دەنگ: $e')),
+        );
+      }
+    }
   }
 
   void _stopRecording() async {
@@ -50,8 +90,19 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
     });
 
     try {
+      final path = await _audioRecorder.stop();
+      final filePathToUse = path ?? _recordedFilePath;
+
+      Uint8List? recordedBytes;
+      if (filePathToUse != null) {
+        final file = File(filePathToUse);
+        if (await file.exists()) {
+          recordedBytes = await file.readAsBytes();
+        }
+      }
+
       final aiService = Provider.of<AiService>(context, listen: false);
-      final transcript = await aiService.transcribeAudio(null, _audioFileName);
+      final transcript = await aiService.transcribeAudio(recordedBytes, _audioFileName);
       setState(() {
         _fullTranscript = transcript;
       });
@@ -164,12 +215,6 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
     final int minutes = totalSeconds ~/ 60;
     final int seconds = totalSeconds % 60;
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
   }
 
   @override
