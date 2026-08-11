@@ -57,12 +57,14 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
 
   Future<void> _playSound(String soundId) async {
     final soundUrls = {
-      'lofi': 'https://ia801503.us.archive.org/15/items/chill-lofi-beats/Chill%20Lofi%20Beats.mp3',
-      'piano': 'https://ia800905.us.archive.org/19/items/RelaxingPianoMusic/Relaxing%20Piano%20Music.mp3',
-      'rain': 'https://ia800301.us.archive.org/6/items/RainSounds/RainSounds.mp3',
-      'waves': 'https://ia800204.us.archive.org/10/items/OceanWaves_201604/Ocean%20Waves.mp3',
-      'forest': 'https://ia800705.us.archive.org/24/items/ForestSounds/Forest.mp3',
-      'zen': 'https://ia800302.us.archive.org/20/items/MeditationMusic_201709/Meditation.mp3',
+      'lofi': 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
+      'piano': 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3',
+      'rain': 'https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg',
+      'waves': 'https://actions.google.com/sounds/v1/water/ocean_waves.ogg',
+      'forest': 'https://actions.google.com/sounds/v1/ambiences/outdoor_forest.ogg',
+      'zen': 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a8018e.mp3',
+      'alpha': 'https://cdn.pixabay.com/download/audio/2022/10/14/audio_9939f73f27.mp3',
+      'library': 'https://actions.google.com/sounds/v1/ambiences/coffee_shop.ogg',
     };
 
     try {
@@ -415,6 +417,8 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
                           _buildSoundChip('waves', '🌊 شەپۆلی دەریا'),
                           _buildSoundChip('forest', '🍃 بای دارستان'),
                           _buildSoundChip('zen', '🧘 مۆسیقای تەرکیزی قووڵ'),
+                          _buildSoundChip('alpha', '🧠 شەپۆلی ئەلفا'),
+                          _buildSoundChip('library', '📚 دەنگی کتێبخانە'),
                         ],
                       ),
                     ),
@@ -430,7 +434,7 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
                   Expanded(
                     child: _buildStatCard(
                       '🍅 خولەکانی ئەمرۆ',
-                      '$_completedSessionsToday خولەک',
+                      '$_completedSessionsToday دانیشتن',
                       CupertinoIcons.checkmark_seal_fill,
                       const Color(0xFFEF4444),
                       isDark,
@@ -506,38 +510,80 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
   }
 
   Widget _buildStatCard(String title, String value, IconData icon, Color color, bool isDark) {
+    final textColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    final subtitleColor = isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569);
+    final brightColor = (color == const Color(0xFFEF4444))
+        ? (isDark ? const Color(0xFFFF6B6B) : const Color(0xFFDC2626))
+        : (isDark ? const Color(0xFF34D399) : const Color(0xFF059669));
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       decoration: BoxDecoration(
-        color: isDark ? ZankoColors.darkCard : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.grey[200]!),
+        color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: brightColor.withValues(alpha: 0.4),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: brightColor.withValues(alpha: isDark ? 0.2 : 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(14),
+              gradient: LinearGradient(
+                colors: [
+                  brightColor,
+                  brightColor.withValues(alpha: 0.8),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: brightColor.withValues(alpha: 0.35),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: Icon(icon, color: color, size: 20),
+            child: Icon(icon, color: Colors.white, size: 22),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: subtitleColor,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
                   value,
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? Colors.white : ZankoColors.textPrimary),
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                    color: textColor,
+                    letterSpacing: 0.3,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
