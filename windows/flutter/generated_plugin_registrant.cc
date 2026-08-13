@@ -1,6 +1,6 @@
 //
 //  Generated file. Do not edit.
-// ه
+//
 
 // clang-format off
 
