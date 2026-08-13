@@ -48,8 +48,8 @@ abstract class AiService extends ChangeNotifier {
 
 class ZankoAiService extends ChangeNotifier implements AiService {
   static const String _defaultApiKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
-  static const String _fallbackWorkingKey = 'AIzaSyAebiUPE9OyxhrHjanHy98ZXeVBJm0FRvA';
-  String? _apiKey = 'AIzaSyAebiUPE9OyxhrHjanHy98ZXeVBJm0FRvA';
+  static const String _fallbackWorkingKey = '';
+  String? _apiKey = '';
 
   ZankoAiService() {
     _loadApiKey();
@@ -131,7 +131,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     final client = HttpClient();
     client.connectionTimeout = const Duration(seconds: 8);
 
-    final modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+    final modelsToTry = ['gemini-flash-latest', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-flash-lite-latest', 'gemini-pro-latest'];
 
     for (final m in modelsToTry) {
       try {
@@ -190,7 +190,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     for (final keyToUse in keysToTry) {
       if (keyToUse.isEmpty) continue;
 
-      final models = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-pro'];
+      final models = ['gemini-flash-latest', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-flash-lite-latest', 'gemini-pro-latest'];
 
       for (final m in models) {
         try {
@@ -221,9 +221,9 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
     if (lastError.isNotEmpty) {
       final errLower = lastError.toLowerCase();
-      if (errLower.contains('api_key') || errLower.contains('invalid') || errLower.contains('disabled') || errLower.contains('unauthorized')) {
-        return "âš ï¸ **Ú©Ù„ÛŒÙ„ÛŽ APIÛŒ Gemini Ú©Ø§Ø±Ù†Ø§Ú©Ø§Øª ÛŒØ§Ù† Ú†Ø§Ù„Ø§Ú© Ù†Û•Ú©Ø±Ø§ÙˆÛ• (API Key Error)**\n\n"
-               "ØªÚ©Ø§ÛŒÛ• Ú©Ù„ÛŒÙ„ÛŽÚ©ÛŒ Ú©Ø§Ø±Ø§ÛŒ Gemini API Ù„Û• Ú•ÛŽÚ©Ø®Ø³ØªÙ†Û•Ú©Ø§Ù†Ø¯Ø§ ÛŒØ§Ù† Ù„Û•Ø±ÛŽÚ¯Û•ÛŒ Ø¯ÙˆÚ¯Ù…Û•ÛŒ ðŸ”‘ Ù„Û• Ø³Û•Ø±Û•ÙˆÛ•ÛŒ Ú†Ø§ØªÛ•Ú©Û• Ø¨Ù†ÙˆÙˆØ³Û•.\n"
+      if (errLower.contains('api_key') || errLower.contains('invalid') || errLower.contains('disabled') || errLower.contains('unauthorized') || errLower.contains('blocked')) {
+        return "âš ï¸ **Ú©Ù„ÛŒÙ„ÛŽ APIÛŒ Gemini Ú©Ø§Ø±Ù†Ø§Ú©Ø§Øª ÛŒØ§Ù† Ø¨Ù„Û†Ú© Ú©Ø±Ø§ÙˆÛ• (API Key Blocked/Invalid)**\n\n"
+               "Ú©Ù„ÛŒÙ„ÛŒ Ø¦ÛŒØ³ØªØ§ÛŒ Gemini Ø¨Ù„Û†Ú© Ú©Ø±Ø§ÙˆÛ• ÛŒØ§Ù† Ú©Ø§Ø±Ù†Ø§Ú©Ø§Øª. ØªÚ©Ø§ÛŒÛ• Ú©Ù„ÛŒÙ„ÛŽÚ©ÛŒ Ú©Ø§Ø±Ø§ÛŒ ØªØ±ÛŒ Gemini API Ù„Û• Ú•ÛŽÚ©Ø®Ø³ØªÙ†Û•Ú©Ø§Ù†Ø¯Ø§ ÛŒØ§Ù† Ù„Û•Ú•ÛŽÚ¯Û•ÛŒ Ø¯ÙˆÚ¯Ù…Û•ÛŒ ðŸ”‘ Ù„Û• Ø³Û•Ø±Û•ÙˆÛ•ÛŒ Ú†Ø§ØªÛ•Ú©Û• Ø¨Ù†ÙˆÙˆØ³Û•.\n\n"
                "ØªÛŽØ¨ÛŒÙ†ÛŒ: Ø¨Û† ÙˆÛ•Ø±Ú¯Ø±ØªÙ†ÛŒ Ú©Ù„ÛŒÙ„ÛŒ Ø¨Û•Ø®Û†Ú•Ø§ÛŒÛŒ Ø³Û•Ø±Ø¯Ø§Ù†ÛŒ https://aistudio.google.com/app/apikey Ø¨Ú©Û•.";
       }
       return "âš ï¸ **Ù‡Û•ÚµÛ• Ù„Û• Ø¨Û•Ø³ØªÙ†Û•ÙˆÛ• Ø¨Û• Gemini API**: $lastError";
@@ -245,7 +245,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
     for (final keyToUse in keysToTry) {
       if (keyToUse.isEmpty) continue;
-      final models = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-pro'];
+      final models = ['gemini-flash-latest', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-flash-lite-latest', 'gemini-pro-latest'];
 
       for (final m in models) {
         try {
@@ -314,7 +314,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   Future<String> _callGeminiMultimodal(Uint8List imageBytes, String prompt, {String mimeType = 'image/jpeg'}) async {
     final keyToUse = (_apiKey != null && _apiKey!.trim().isNotEmpty) ? _apiKey! : _fallbackWorkingKey;
 
-    final models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+    final models = ['gemini-flash-latest', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-flash-lite-latest', 'gemini-pro-latest'];
     for (final m in models) {
       try {
         final model = gemini.GenerativeModel(
