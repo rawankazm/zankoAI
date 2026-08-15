@@ -121,9 +121,9 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                             Container(
                               padding: const EdgeInsets.all(14),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF7C3AED).withValues(alpha: 0.12),
+                                color: ZankoColors.primary.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: const Color(0xFF7C3AED).withValues(alpha: 0.3)),
+                                border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.3)),
                               ),
                               child: Row(
                                 children: [
@@ -239,7 +239,7 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF1E1B4B), Color(0xFF312E81)],
+          colors: [ZankoColors.darkCardSecondary, Color(0xFF312E81)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

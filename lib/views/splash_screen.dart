@@ -156,7 +156,7 @@ class _SplashScreenState extends State<SplashScreen>
                     radius: 1.4,
                     colors: const [
                       Color(0xFF3B82F6),
-                      Color(0xFF1E1B4B),
+                      ZankoColors.darkCardSecondary,
                       Color(0xFF0F172A),
                     ],
                   ),
@@ -209,10 +209,10 @@ class _SplashScreenState extends State<SplashScreen>
                     height: 260,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.2),
+                      color: ZankoColors.accent.withValues(alpha: 0.2),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF8B5CF6).withValues(alpha: 0.25),
+                          color: ZankoColors.accent.withValues(alpha: 0.25),
                           blurRadius: 110,
                           spreadRadius: 50,
                         ),
@@ -254,7 +254,7 @@ class _SplashScreenState extends State<SplashScreen>
                                 spreadRadius: 6 + (pulse * 0.5),
                               ),
                               BoxShadow(
-                                color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
+                                color: ZankoColors.accent.withValues(alpha: 0.3),
                                 blurRadius: 50 + pulse,
                                 spreadRadius: 10,
                               ),

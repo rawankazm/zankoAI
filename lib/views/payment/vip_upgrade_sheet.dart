@@ -275,7 +275,7 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
         const SizedBox(height: 8),
         _buildPaymentOption('fastpay',  'FastPay — فاست پەی',               'ژمارە: 0750 123 4567',           Icons.account_balance_wallet_rounded,const Color(0xFFE11D48)),
         const SizedBox(height: 8),
-        _buildPaymentOption('zaincash', 'ZainCash — زین کاش',               'ژمارە: 0780 123 4567',           Icons.phone_android_rounded,         const Color(0xFF7C3AED)),
+        _buildPaymentOption('zaincash', 'ZainCash — زین کاش',               'ژمارە: 0780 123 4567',           Icons.phone_android_rounded,         ZankoColors.primary),
 
         const SizedBox(height: 16),
 

@@ -16,6 +16,7 @@ import 'pdf/pdf_chat_screen.dart';
 import 'zankoline/zankoline_screen.dart';
 import 'profile/profile_screen.dart';
 import 'notifications/notifications_screen.dart';
+import '../theme.dart';
 
 class NavigationShell extends StatefulWidget {
   const NavigationShell({super.key});
@@ -87,20 +88,20 @@ class _NavigationShellState extends State<NavigationShell> {
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.only(top: 10, left: 16, right: 16, bottom: 20),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        backgroundColor: const Color(0xFF1E2235),
+        backgroundColor: ZankoColors.darkCard,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Color(0xFF7C3AED), width: 1.5),
+          side: const BorderSide(color: ZankoColors.primary, width: 1.5),
         ),
         content: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFF7C3AED).withOpacity(0.2),
+                color: ZankoColors.primary.withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(CupertinoIcons.mail_solid, color: Color(0xFFC084FC), size: 22),
+              child: const Icon(CupertinoIcons.mail_solid, color: ZankoColors.accent, size: 22),
             ),
             const SizedBox(width: 14),
             Expanded(

@@ -421,10 +421,10 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                         title: 'پێشەوە • پرسیار',
                         badgeIcon: CupertinoIcons.question_circle_fill,
                         gradientColors: isDark
-                            ? [const Color(0xFF1E1B4B), const Color(0xFF312E81)]
+                            ? [ZankoColors.darkCardSecondary, const Color(0xFF312E81)]
                             : [const Color(0xFFEEF2FF), const Color(0xFFE0E7FF)],
                         borderColor: const Color(0xFF6366F1),
-                        textColor: isDark ? Colors.white : const Color(0xFF1E1B4B),
+                        textColor: isDark ? Colors.white : ZankoColors.darkCardSecondary,
                         tip: 'کلیک بکە بۆ گۆڕینی لای کارتەکە 🔄',
                       ),
                       back: _buildCardFace(

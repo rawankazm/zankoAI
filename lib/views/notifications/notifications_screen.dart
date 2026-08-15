@@ -75,7 +75,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           time: ts?.toDate() ?? DateTime.now(),
           category: 'Admin Direct',
           icon: CupertinoIcons.mail_solid,
-          color: const Color(0xFF7C3AED),
+          color: ZankoColors.primary,
           isRead: data['isRead'] == true,
         ));
       }

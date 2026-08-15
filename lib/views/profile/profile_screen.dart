@@ -284,11 +284,11 @@ class ProfileScreen extends StatelessWidget {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 gradient: const LinearGradient(
-                                  colors: [Color(0xFF7C3AED), Color(0xFFC084FC)],
+                                  colors: [ZankoColors.primary, ZankoColors.accent],
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFF7C3AED).withOpacity(0.3),
+                                    color: ZankoColors.primary.withOpacity(0.3),
                                     blurRadius: 12,
                                     offset: const Offset(0, 4),
                                   ),
@@ -360,7 +360,7 @@ class ProfileScreen extends StatelessWidget {
                           _showEditProfileModal(context, user, name, uniName, deptName);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF7C3AED),
+                          backgroundColor: ZankoColors.primary,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
@@ -1560,7 +1560,7 @@ class ProfileScreen extends StatelessWidget {
                           gradient: LinearGradient(
                             colors: [
                               Color(0xFF0F172A),
-                              Color(0xFF1E1B4B),
+                              ZankoColors.darkCardSecondary,
                               Color(0xFF312E81),
                               Color(0xFF4338CA),
                             ],
@@ -1598,8 +1598,8 @@ class ProfileScreen extends StatelessWidget {
                             shape: BoxShape.circle,
                             gradient: RadialGradient(
                               colors: [
-                                const Color(0xFFC084FC).withValues(alpha: 0.35),
-                                const Color(0xFFC084FC).withValues(alpha: 0.0),
+                                ZankoColors.accent.withValues(alpha: 0.35),
+                                ZankoColors.accent.withValues(alpha: 0.0),
                               ],
                             ),
                           ),

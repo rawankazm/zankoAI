@@ -914,7 +914,7 @@ class GlassBottomNavigation extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               color: isDark
-                  ? const Color(0xFF161524).withOpacity(0.92)
+                  ? ZankoColors.darkCard.withOpacity(0.92)
                   : Colors.white.withOpacity(0.85),
               borderRadius: BorderRadius.circular(36),
               border: Border.all(

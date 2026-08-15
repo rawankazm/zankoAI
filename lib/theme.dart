@@ -2,24 +2,49 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'services/theme_provider.dart';
+import '../../../theme.dart';
 
 class ZankoColors {
-  static const Color primary = Color(0xFF7C3AED);
-  static const Color accent = Color(0xFFA855F7);
-  static const Color background = Color(0xFFF8F8FC);
+  static const Color primary = Color(0xFF0EA5E9);
+  static const Color accent = Color(0xFF38BDF8);
+  static const Color background = Color(0xFFF0F8FF);
   static const Color card = Color(0xFFFFFFFF);
-  static const Color textPrimary = Color(0xFF111111);
-  static const Color textSecondary = Color(0xFF777777);
+  static const Color textPrimary = Color(0xFF0F172A);
+  static const Color textSecondary = Color(0xFF64748B);
   static const Color success = Color(0xFF34C759);
   static const Color warning = Color(0xFFFF9F0A);
   static const Color error = Color(0xFFFF3B30);
 
-  // Premium iOS 18 Dark Mode Colors
-  static const Color darkBackground = Color(0xFF0C0B14);
-  static const Color darkCard = Color(0xFF161524);
-  static const Color darkCardSecondary = Color(0xFF1E1C30);
-  static const Color darkTextPrimary = Color(0xFFF8F8FC);
-  static const Color darkTextSecondary = Color(0xFFA0A0B2);
+  // Ocean Blue Dark Mode Colors
+  static const Color darkBackground = Color(0xFF0A0F1E);
+  static const Color darkCard = Color(0xFF0F1D35);
+  static const Color darkCardSecondary = Color(0xFF162236);
+  static const Color darkTextPrimary = Color(0xFFF0F8FF);
+  static const Color darkTextSecondary = Color(0xFF94A3B8);
+
+  // Gradient colors
+  static const Color gradientStart = Color(0xFF0EA5E9);
+  static const Color gradientEnd = Color(0xFF6366F1);
+}
+
+class ZankoGradients {
+  static const LinearGradient primary = LinearGradient(
+    colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+  );
+
+  static const LinearGradient primaryVertical = LinearGradient(
+    colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient darkCard = LinearGradient(
+    colors: [Color(0xFF0F1D35), Color(0xFF162236)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 }
 
 class ZankoRadius {
@@ -33,7 +58,7 @@ class ZankoRadius {
 class ZankoShadows {
   static final List<BoxShadow> card = [
     BoxShadow(
-      color: const Color(0xFF7C3AED).withOpacity(0.08),
+      color: const Color(0xFF0EA5E9).withOpacity(0.10),
       blurRadius: 24,
       offset: const Offset(0, 10),
       spreadRadius: 0,
@@ -48,7 +73,7 @@ class ZankoShadows {
 
   static final List<BoxShadow> floating = [
     BoxShadow(
-      color: const Color(0xFF7C3AED).withOpacity(0.3),
+      color: const Color(0xFF0EA5E9).withOpacity(0.35),
       blurRadius: 20,
       offset: const Offset(0, 8),
       spreadRadius: 0,
@@ -57,11 +82,49 @@ class ZankoShadows {
 
   static final List<BoxShadow> glow = [
     BoxShadow(
-      color: const Color(0xFFA855F7).withOpacity(0.35),
+      color: const Color(0xFF38BDF8).withOpacity(0.35),
       blurRadius: 16,
       offset: const Offset(0, 4),
     ),
   ];
+
+  static final List<BoxShadow> gradientButton = [
+    BoxShadow(
+      color: const Color(0xFF0EA5E9).withOpacity(0.4),
+      blurRadius: 16,
+      offset: const Offset(0, 6),
+      spreadRadius: -2,
+    ),
+  ];
+}
+
+/// Returns a TextStyle that uses [languageFontFamily] as primary font
+/// and Plus Jakarta Sans as the Latin fallback.
+TextStyle _ts({
+  required double size,
+  required FontWeight weight,
+  required Color color,
+  String? languageFontFamily,
+  double? letterSpacing,
+}) {
+  if (languageFontFamily != null) {
+    // Kurdish / Arabic: use native font, PJS as fallback for Latin chars
+    return TextStyle(
+      fontFamily: languageFontFamily,
+      fontFamilyFallback: ['Plus Jakarta Sans'],
+      fontSize: size,
+      fontWeight: weight,
+      color: color,
+      letterSpacing: letterSpacing,
+    );
+  }
+  // English: use Plus Jakarta Sans
+  return GoogleFonts.plusJakartaSans(
+    fontSize: size,
+    fontWeight: weight,
+    color: color,
+    letterSpacing: letterSpacing,
+  );
 }
 
 class ZankoTheme {
@@ -74,7 +137,7 @@ class ZankoTheme {
     final base = ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      fontFamily: languageFontFamily,
+      fontFamily: languageFontFamily ?? GoogleFonts.plusJakartaSans().fontFamily,
       colorScheme: const ColorScheme(
         brightness: Brightness.light,
         primary: ZankoColors.primary,
@@ -92,71 +155,29 @@ class ZankoTheme {
     );
 
     return base.copyWith(
-      textTheme: GoogleFonts.interTextTheme(base.textTheme).copyWith(
-        displayLarge: GoogleFonts.inter(
-          fontSize: 34,
-          fontWeight: FontWeight.w800,
-          letterSpacing: -0.6,
-          color: ZankoColors.textPrimary,
-        ),
-        displayMedium: GoogleFonts.inter(
-          fontSize: 28,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.4,
-          color: ZankoColors.textPrimary,
-        ),
-        titleLarge: GoogleFonts.inter(
-          fontSize: 22,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.3,
-          color: ZankoColors.textPrimary,
-        ),
-        titleMedium: GoogleFonts.inter(
-          fontSize: 17,
-          fontWeight: FontWeight.w600,
-          letterSpacing: -0.2,
-          color: ZankoColors.textPrimary,
-        ),
-        bodyLarge: GoogleFonts.inter(
-          fontSize: 17,
-          fontWeight: FontWeight.w400,
-          color: ZankoColors.textPrimary,
-        ),
-        bodyMedium: GoogleFonts.inter(
-          fontSize: 15,
-          fontWeight: FontWeight.w400,
-          color: ZankoColors.textPrimary,
-        ),
-        bodySmall: GoogleFonts.inter(
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-          color: ZankoColors.textSecondary,
-        ),
-        labelLarge: GoogleFonts.inter(
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-          color: ZankoColors.textPrimary,
-        ),
-      ).apply(fontFamily: languageFontFamily),
+      textTheme: base.textTheme.copyWith(
+        displayLarge: _ts(size: 34, weight: FontWeight.w800, color: ZankoColors.textPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.6),
+        displayMedium: _ts(size: 28, weight: FontWeight.w700, color: ZankoColors.textPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.4),
+        titleLarge: _ts(size: 22, weight: FontWeight.w700, color: ZankoColors.textPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.3),
+        titleMedium: _ts(size: 17, weight: FontWeight.w600, color: ZankoColors.textPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.2),
+        bodyLarge: _ts(size: 17, weight: FontWeight.w400, color: ZankoColors.textPrimary, languageFontFamily: languageFontFamily),
+        bodyMedium: _ts(size: 15, weight: FontWeight.w400, color: ZankoColors.textPrimary, languageFontFamily: languageFontFamily),
+        bodySmall: _ts(size: 13, weight: FontWeight.w500, color: ZankoColors.textSecondary, languageFontFamily: languageFontFamily),
+        labelLarge: _ts(size: 15, weight: FontWeight.w600, color: ZankoColors.textPrimary, languageFontFamily: languageFontFamily),
+      ),
       appBarTheme: AppBarTheme(
         backgroundColor: ZankoColors.background.withOpacity(0.85),
         foregroundColor: ZankoColors.textPrimary,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.inter(
-          fontSize: 17,
-          fontWeight: FontWeight.w600,
-          color: ZankoColors.textPrimary,
-        ).copyWith(fontFamily: languageFontFamily),
+        titleTextStyle: _ts(size: 17, weight: FontWeight.w600, color: ZankoColors.textPrimary, languageFontFamily: languageFontFamily),
         iconTheme: const IconThemeData(color: ZankoColors.textPrimary),
       ),
       cardTheme: CardThemeData(
         color: ZankoColors.card,
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(ZankoRadius.card),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ZankoRadius.card)),
         margin: EdgeInsets.zero,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -165,29 +186,19 @@ class ZankoTheme {
           foregroundColor: Colors.white,
           minimumSize: const Size(0, 52),
           elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(ZankoRadius.button),
-          ),
-          textStyle: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600).copyWith(fontFamily: languageFontFamily),
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ZankoRadius.button)),
+          textStyle: _ts(size: 16, weight: FontWeight.w700, color: Colors.white, languageFontFamily: languageFontFamily),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: ZankoColors.card,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(ZankoRadius.input),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(ZankoRadius.input),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(ZankoRadius.input),
-          borderSide: const BorderSide(color: ZankoColors.primary, width: 2),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(ZankoRadius.input), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(ZankoRadius.input), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(ZankoRadius.input), borderSide: const BorderSide(color: ZankoColors.primary, width: 2)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        hintStyle: GoogleFonts.inter(fontSize: 15, color: ZankoColors.textSecondary).copyWith(fontFamily: languageFontFamily),
+        hintStyle: _ts(size: 15, weight: FontWeight.w400, color: ZankoColors.textSecondary, languageFontFamily: languageFontFamily),
       ),
     );
   }
@@ -201,7 +212,7 @@ class ZankoTheme {
     final base = ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      fontFamily: languageFontFamily,
+      fontFamily: languageFontFamily ?? GoogleFonts.plusJakartaSans().fontFamily,
       colorScheme: const ColorScheme(
         brightness: Brightness.dark,
         primary: ZankoColors.primary,
@@ -224,71 +235,29 @@ class ZankoTheme {
         backgroundColor: ZankoColors.darkCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       ),
-      textTheme: GoogleFonts.interTextTheme(base.textTheme).copyWith(
-        displayLarge: GoogleFonts.inter(
-          fontSize: 34,
-          fontWeight: FontWeight.w800,
-          letterSpacing: -0.6,
-          color: ZankoColors.darkTextPrimary,
-        ),
-        displayMedium: GoogleFonts.inter(
-          fontSize: 28,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.4,
-          color: ZankoColors.darkTextPrimary,
-        ),
-        titleLarge: GoogleFonts.inter(
-          fontSize: 22,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.3,
-          color: ZankoColors.darkTextPrimary,
-        ),
-        titleMedium: GoogleFonts.inter(
-          fontSize: 17,
-          fontWeight: FontWeight.w600,
-          letterSpacing: -0.2,
-          color: ZankoColors.darkTextPrimary,
-        ),
-        bodyLarge: GoogleFonts.inter(
-          fontSize: 17,
-          fontWeight: FontWeight.w400,
-          color: ZankoColors.darkTextPrimary,
-        ),
-        bodyMedium: GoogleFonts.inter(
-          fontSize: 15,
-          fontWeight: FontWeight.w400,
-          color: ZankoColors.darkTextPrimary,
-        ),
-        bodySmall: GoogleFonts.inter(
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-          color: ZankoColors.darkTextSecondary,
-        ),
-        labelLarge: GoogleFonts.inter(
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-          color: ZankoColors.darkTextPrimary,
-        ),
-      ).apply(fontFamily: languageFontFamily),
+      textTheme: base.textTheme.copyWith(
+        displayLarge: _ts(size: 34, weight: FontWeight.w800, color: ZankoColors.darkTextPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.6),
+        displayMedium: _ts(size: 28, weight: FontWeight.w700, color: ZankoColors.darkTextPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.4),
+        titleLarge: _ts(size: 22, weight: FontWeight.w700, color: ZankoColors.darkTextPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.3),
+        titleMedium: _ts(size: 17, weight: FontWeight.w600, color: ZankoColors.darkTextPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.2),
+        bodyLarge: _ts(size: 17, weight: FontWeight.w400, color: ZankoColors.darkTextPrimary, languageFontFamily: languageFontFamily),
+        bodyMedium: _ts(size: 15, weight: FontWeight.w400, color: ZankoColors.darkTextPrimary, languageFontFamily: languageFontFamily),
+        bodySmall: _ts(size: 13, weight: FontWeight.w500, color: ZankoColors.darkTextSecondary, languageFontFamily: languageFontFamily),
+        labelLarge: _ts(size: 15, weight: FontWeight.w600, color: ZankoColors.darkTextPrimary, languageFontFamily: languageFontFamily),
+      ),
       appBarTheme: AppBarTheme(
         backgroundColor: ZankoColors.darkBackground.withOpacity(0.9),
         foregroundColor: ZankoColors.darkTextPrimary,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.inter(
-          fontSize: 17,
-          fontWeight: FontWeight.w600,
-          color: ZankoColors.darkTextPrimary,
-        ).copyWith(fontFamily: languageFontFamily),
+        titleTextStyle: _ts(size: 17, weight: FontWeight.w600, color: ZankoColors.darkTextPrimary, languageFontFamily: languageFontFamily),
         iconTheme: const IconThemeData(color: ZankoColors.darkTextPrimary),
       ),
       cardTheme: CardThemeData(
         color: ZankoColors.darkCard,
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(ZankoRadius.card),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ZankoRadius.card)),
         margin: EdgeInsets.zero,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -297,29 +266,68 @@ class ZankoTheme {
           foregroundColor: Colors.white,
           minimumSize: const Size(0, 52),
           elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(ZankoRadius.button),
-          ),
-          textStyle: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600).copyWith(fontFamily: languageFontFamily),
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ZankoRadius.button)),
+          textStyle: _ts(size: 16, weight: FontWeight.w700, color: Colors.white, languageFontFamily: languageFontFamily),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: ZankoColors.darkCardSecondary,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(ZankoRadius.input),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(ZankoRadius.input),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(ZankoRadius.input),
-          borderSide: const BorderSide(color: ZankoColors.primary, width: 2),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(ZankoRadius.input), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(ZankoRadius.input), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(ZankoRadius.input), borderSide: const BorderSide(color: ZankoColors.primary, width: 2)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        hintStyle: GoogleFonts.inter(fontSize: 15, color: ZankoColors.darkTextSecondary).copyWith(fontFamily: languageFontFamily),
+        hintStyle: _ts(size: 15, weight: FontWeight.w400, color: ZankoColors.darkTextSecondary, languageFontFamily: languageFontFamily),
+      ),
+    );
+  }
+}
+
+/// Reusable gradient button — Ocean Blue (#0EA5E9 → #6366F1)
+class ZankoGradientButton extends StatelessWidget {
+  final String label;
+  final VoidCallback? onPressed;
+  final IconData? icon;
+  final double height;
+  final double borderRadius;
+
+  const ZankoGradientButton({
+    super.key,
+    required this.label,
+    this.onPressed,
+    this.icon,
+    this.height = 52,
+    this.borderRadius = 22,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        gradient: onPressed != null ? ZankoGradients.primary : const LinearGradient(colors: [Color(0xFF64748B), Color(0xFF94A3B8)]),
+        borderRadius: BorderRadius.circular(borderRadius),
+        boxShadow: onPressed != null ? ZankoShadows.gradientButton : [],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(borderRadius),
+          child: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                ],
+                Text(label, style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

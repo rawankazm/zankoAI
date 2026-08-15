@@ -159,7 +159,7 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF0F172A), Color(0xFF1E1B4B), Color(0xFF4338CA)],
+                  colors: [Color(0xFF0F172A), ZankoColors.darkCardSecondary, Color(0xFF4338CA)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -217,7 +217,7 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                     onPressed: _openZankolinePortal,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF1E1B4B),
+                      foregroundColor: ZankoColors.darkCardSecondary,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       minimumSize: const Size(double.infinity, 44),
                     ),

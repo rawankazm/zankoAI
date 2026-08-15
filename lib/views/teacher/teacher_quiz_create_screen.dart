@@ -4,6 +4,7 @@ import '../../services/language_provider.dart';
 import '../../services/ai_service.dart';
 import '../../services/database_service.dart';
 import '../../models/quiz_model.dart';
+import '../../theme.dart';
 
 class TeacherQuizCreateScreen extends StatefulWidget {
   const TeacherQuizCreateScreen({super.key});
@@ -90,7 +91,7 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
     final theme = Theme.of(context);
     final lang = Provider.of<LanguageProvider>(context);
     String t(String key) => lang.translate(key);
-    const purple = Color(0xFF7C3AED);
+    const purple = ZankoColors.primary;
 
     return Directionality(
       textDirection: lang.textDirection,

@@ -500,7 +500,7 @@ class _OfflineDownloadsScreenState extends State<OfflineDownloadsScreen> {
                     duration: const Duration(milliseconds: 300),
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: isFlipped ? const Color(0xFF1E1B4B) : const Color(0xFF1E222A),
+                      color: isFlipped ? ZankoColors.darkCardSecondary : const Color(0xFF1E222A),
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
                         color: isFlipped ? const Color(0xFFFF9F0A) : ZankoColors.primary,

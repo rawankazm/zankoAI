@@ -336,7 +336,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF4338CA)],
+                          colors: [ZankoColors.darkCardSecondary, Color(0xFF312E81), Color(0xFF4338CA)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),

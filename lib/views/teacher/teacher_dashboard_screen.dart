@@ -12,6 +12,7 @@ import 'teacher_enrollments_screen.dart';
 import 'teacher_analytics_screen.dart';
 import 'teacher_lectures_screen.dart';
 import 'teacher_announcements_screen.dart';
+import '../../theme.dart';
 
 class TeacherDashboardScreen extends StatelessWidget {
   const TeacherDashboardScreen({super.key});
@@ -259,7 +260,7 @@ class _QuickActionsGrid extends StatelessWidget {
         'label': t('teacher_analytics_title'),
         'sublabel': 'ئاماری گشتی و دابەشبوونی نمرەکان',
         'icon': Icons.insights_rounded,
-        'color': const Color(0xFF7C3AED),
+        'color': ZankoColors.primary,
         'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherAnalyticsScreen())),
       },
       {
@@ -386,7 +387,7 @@ class _RecentActivityList extends StatelessWidget {
   Widget build(BuildContext context) {
     final activities = [
       {'icon': Icons.campaign_rounded, 'color': const Color(0xFFE11D48), 'text': 'ئاگاداری میدترم نێردرا بۆ قوتابیان', 'time': '١٠ خولەک پێش'},
-      {'icon': Icons.quiz_rounded, 'color': const Color(0xFF7C3AED), 'text': 'کویزی "تۆڕەکان" دروست کرا', 'time': '٢ کاتژمێر پێش'},
+      {'icon': Icons.quiz_rounded, 'color': ZankoColors.primary, 'text': 'کویزی "تۆڕەکان" دروست کرا', 'time': '٢ کاتژمێر پێش'},
       {'icon': Icons.picture_as_pdf_rounded, 'color': const Color(0xFF059669), 'text': 'PDF وانەی "سیستەمی کارپێکردن" بارکرا', 'time': 'دوێنێ'},
     ];
 

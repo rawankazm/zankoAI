@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../services/language_provider.dart';
 import '../../services/database_service.dart';
 import '../../services/auth_service.dart';
+import '../../theme.dart';
 
 class TeacherStudentsScreen extends StatefulWidget {
   const TeacherStudentsScreen({super.key});
@@ -87,7 +88,7 @@ class _TeacherStudentsScreenState extends State<TeacherStudentsScreen> {
         'quizzesTaken': 2,
         'gpa': 3.40,
         'avatar': sName.isNotEmpty ? sName[0] : 'ق',
-        'color': const Color(0xFF7C3AED),
+        'color': ZankoColors.primary,
       };
     }).toList();
 

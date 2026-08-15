@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../theme.dart';
 
 /// A gorgeous animated VIP badge widget with shimmer, glow, and particle effects.
 /// Place it anywhere on top of an avatar or next to a username.
@@ -398,7 +399,7 @@ class _VipMembershipCardState extends State<VipMembershipCard>
                     ]
                   : [
                       BoxShadow(
-                        color: const Color(0xFF7C3AED).withValues(alpha: 0.25),
+                        color: ZankoColors.primary.withValues(alpha: 0.25),
                         blurRadius: 20,
                         spreadRadius: -2,
                         offset: const Offset(0, 8),
@@ -478,7 +479,7 @@ class _VipMembershipCardState extends State<VipMembershipCard>
                                   Colors.transparent,
                                 ]
                               : [
-                                  const Color(0xFFC084FC)
+                                  ZankoColors.accent
                                       .withValues(alpha: 0.2),
                                   Colors.transparent,
                                 ],

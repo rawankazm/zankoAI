@@ -317,7 +317,7 @@ class _SeminarThesisAssistantScreenState
                   style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF8B5CF6),
+                  backgroundColor: ZankoColors.accent,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),
@@ -374,7 +374,7 @@ class _SeminarThesisAssistantScreenState
           title: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(CupertinoIcons.book_fill, color: Color(0xFF8B5CF6), size: 22),
+              Icon(CupertinoIcons.book_fill, color: ZankoColors.accent, size: 22),
               SizedBox(width: 8),
               Text(
                 'یاریدەدەری سیمینار و پڕۆژەی دەرچوون',
@@ -434,7 +434,7 @@ class _SeminarThesisAssistantScreenState
                         controller: _departmentController,
                         decoration: InputDecoration(
                           hintText: 'نموونە: تەکنەلۆجیای زانیاری، پزیشکی، یاسا، ئەندازیاری...',
-                          prefixIcon: const Icon(CupertinoIcons.building_2_fill, color: Color(0xFF8B5CF6)),
+                          prefixIcon: const Icon(CupertinoIcons.building_2_fill, color: ZankoColors.accent),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                           filled: true,
                           fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
@@ -454,7 +454,7 @@ class _SeminarThesisAssistantScreenState
                         controller: _topicController,
                         decoration: InputDecoration(
                           hintText: 'نموونە: کاریگەری ژیری دەستکرد لەسەر فێربوونی خوێندکاران',
-                          prefixIcon: const Icon(CupertinoIcons.square_stack_3d_up_fill, color: Color(0xFF8B5CF6)),
+                          prefixIcon: const Icon(CupertinoIcons.square_stack_3d_up_fill, color: ZankoColors.accent),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                           filled: true,
                           fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
@@ -475,7 +475,7 @@ class _SeminarThesisAssistantScreenState
                         maxLines: 3,
                         decoration: InputDecoration(
                           hintText: 'ناوی کتێب، توێژەر یان دەقەکە پەیست بکە بۆ پۆلێنکردنی APA/IEEE...',
-                          prefixIcon: const Icon(CupertinoIcons.text_quote, color: Color(0xFF8B5CF6)),
+                          prefixIcon: const Icon(CupertinoIcons.text_quote, color: ZankoColors.accent),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                           filled: true,
                           fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
@@ -499,7 +499,7 @@ class _SeminarThesisAssistantScreenState
                           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF8B5CF6),
+                          backgroundColor: ZankoColors.accent,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           elevation: 0,
                         ),
@@ -519,7 +519,7 @@ class _SeminarThesisAssistantScreenState
                   decoration: BoxDecoration(
                     color: isDark ? ZankoColors.darkCard : Colors.white,
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: const Color(0xFF8B5CF6).withValues(alpha: 0.3), width: 1.5),
+                    border: Border.all(color: ZankoColors.accent.withValues(alpha: 0.3), width: 1.5),
                     boxShadow: isDark ? [] : ZankoShadows.card,
                   ),
                   child: Column(
@@ -530,14 +530,14 @@ class _SeminarThesisAssistantScreenState
                         children: [
                           const Row(
                             children: [
-                              Icon(CupertinoIcons.checkmark_seal_fill, color: Color(0xFF8B5CF6), size: 20),
+                              Icon(CupertinoIcons.checkmark_seal_fill, color: ZankoColors.accent, size: 20),
                               SizedBox(width: 8),
                               Text('ئەنجامی ئامادەکراوی AI', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                             ],
                           ),
                           IconButton(
                             onPressed: _copyToClipboard,
-                            icon: const Icon(CupertinoIcons.doc_on_doc, color: Color(0xFF8B5CF6), size: 20),
+                            icon: const Icon(CupertinoIcons.doc_on_doc, color: ZankoColors.accent, size: 20),
                             tooltip: 'کۆپی بکه',
                           ),
                         ],
@@ -578,7 +578,7 @@ class _SeminarThesisAssistantScreenState
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: isSel ? const Color(0xFF8B5CF6) : Colors.transparent,
+            color: isSel ? ZankoColors.accent : Colors.transparent,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Text(

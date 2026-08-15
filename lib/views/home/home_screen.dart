@@ -491,7 +491,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
-                                colors: [Color(0xFF1E1B4B), Color(0xFF312E81)],
+                                colors: [ZankoColors.darkCardSecondary, Color(0xFF312E81)],
                                 begin: Alignment.centerLeft,
                                 end: Alignment.centerRight,
                               ),
@@ -564,15 +564,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: isDark
-                                    ? [const Color(0xFF2E1065), const Color(0xFF1E1B4B)]
-                                    : [const Color(0xFF7C3AED), const Color(0xFF6D28D9)],
+                                    ? [ZankoColors.darkBackground, ZankoColors.darkCardSecondary]
+                                    : [ZankoColors.primary, ZankoColors.primary],
                                 begin: Alignment.centerLeft,
                                 end: Alignment.centerRight,
                               ),
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF7C3AED).withValues(alpha: 0.3),
+                                  color: ZankoColors.primary.withValues(alpha: 0.3),
                                   blurRadius: 12,
                                   offset: const Offset(0, 4),
                                 ),
@@ -881,7 +881,7 @@ class _ZankoBenefitsCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isDark
-              ? [const Color(0xFF1E1B4B), const Color(0xFF2E1065)]
+              ? [ZankoColors.darkCardSecondary, ZankoColors.darkBackground]
               : [const Color(0xFFFAF5FF), const Color(0xFFF3E8FF)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -1243,7 +1243,7 @@ class _GpaSection extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isDark
-                    ? [const Color(0xFF1E1B4B), const Color(0xFF171033), const Color(0xFF0F172A)]
+                    ? [ZankoColors.darkCardSecondary, const Color(0xFF171033), const Color(0xFF0F172A)]
                     : [Colors.white, const Color(0xFFF3F4F6)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -1518,10 +1518,10 @@ class _QuickAiToolsGrid extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF7C3AED).withValues(alpha: isDark ? 0.15 : 0.08),
+                      color: ZankoColors.primary.withValues(alpha: isDark ? 0.15 : 0.08),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: const Color(0xFF7C3AED).withValues(alpha: 0.3),
+                        color: ZankoColors.primary.withValues(alpha: 0.3),
                         width: 1.5,
                       ),
                     ),
@@ -1530,12 +1530,12 @@ class _QuickAiToolsGrid extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF7C3AED).withValues(alpha: 0.2),
+                            color: ZankoColors.primary.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(
                             CupertinoIcons.question_square_fill,
-                            color: Color(0xFF7C3AED),
+                            color: ZankoColors.primary,
                             size: 26,
                           ),
                         ),
@@ -1563,7 +1563,7 @@ class _QuickAiToolsGrid extends StatelessWidget {
                             ],
                           ),
                         ),
-                        const Icon(CupertinoIcons.chevron_forward, color: Color(0xFF7C3AED)),
+                        const Icon(CupertinoIcons.chevron_forward, color: ZankoColors.primary),
                       ],
                     ),
                   ),
@@ -1594,7 +1594,7 @@ class _QuickAiToolsGrid extends StatelessWidget {
       _ToolData(
         icon: CupertinoIcons.mic_fill,
         title: langProvider.translate('voice_tutor'),
-        color: const Color(0xFFC084FC),
+        color: ZankoColors.accent,
         onTap: () => Navigator.push(
           context,
           CupertinoPageRoute(builder: (_) => const AudioSummarizerView()),
@@ -1627,7 +1627,7 @@ class _QuickAiToolsGrid extends StatelessWidget {
       _ToolData(
         icon: CupertinoIcons.calendar_today,
         title: langProvider.translate('schedule_title'),
-        color: const Color(0xFF7C3AED),
+        color: ZankoColors.primary,
         onTap: () => Navigator.push(
           context,
           CupertinoPageRoute(builder: (_) => const ScheduleScreen()),
@@ -1636,7 +1636,7 @@ class _QuickAiToolsGrid extends StatelessWidget {
       _ToolData(
         icon: CupertinoIcons.book_fill,
         title: 'سیمینار و پڕۆژە',
-        color: const Color(0xFF8B5CF6),
+        color: ZankoColors.accent,
         onTap: () => Navigator.push(
           context,
           CupertinoPageRoute(builder: (_) => const SeminarThesisAssistantScreen()),

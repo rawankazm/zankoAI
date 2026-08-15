@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import '../../services/language_provider.dart';
+import '../../theme.dart';
 
 class TeacherCoursesScreen extends StatefulWidget {
   const TeacherCoursesScreen({super.key});
@@ -254,7 +255,7 @@ class _TeacherCoursesScreenState extends State<TeacherCoursesScreen> {
                         'desc': descCtrl.text,
                         'students': 0,
                         'quizzes': 0,
-                        'color': const Color(0xFF7C3AED),
+                        'color': ZankoColors.primary,
                         'icon': Icons.book_rounded,
                       });
                     });

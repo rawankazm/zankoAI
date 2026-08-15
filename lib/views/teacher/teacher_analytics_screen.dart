@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/language_provider.dart';
 import '../../services/database_service.dart';
+import '../../theme.dart';
 
 class TeacherAnalyticsScreen extends StatelessWidget {
   const TeacherAnalyticsScreen({super.key});
@@ -12,7 +13,7 @@ class TeacherAnalyticsScreen extends StatelessWidget {
     final lang = Provider.of<LanguageProvider>(context);
     final db = Provider.of<DatabaseService>(context);
     String t(String key) => lang.translate(key);
-    const purple = Color(0xFF7C3AED);
+    const purple = ZankoColors.primary;
 
     // Dynamic analytics metrics from database
     final totalStudents = db.enrollmentRequests.where((e) => e['status'] == 'approved').length > 0
@@ -33,7 +34,7 @@ class TeacherAnalyticsScreen extends StatelessWidget {
 
     final topPerformers = [
       {'name': 'لانە محمد', 'score': '95%', 'course': 'تۆڕەکان', 'color': const Color(0xFF059669)},
-      {'name': 'سارا کەریم', 'score': '92%', 'course': 'داتابەیس', 'color': const Color(0xFF7C3AED)},
+      {'name': 'سارا کەریم', 'score': '92%', 'course': 'داتابەیس', 'color': ZankoColors.primary},
       {'name': 'ئاراس ئەحمەد', 'score': '89%', 'course': 'تۆڕەکان', 'color': const Color(0xFF0284C7)},
     ];
 
@@ -82,7 +83,7 @@ class TeacherAnalyticsScreen extends StatelessWidget {
                       title: 'تێکڕای دەرچوون',
                       value: '$passRate%',
                       icon: Icons.verified_user_outlined,
-                      color: const Color(0xFF7C3AED),
+                      color: ZankoColors.primary,
                     ),
                   ),
                 ],

@@ -4,6 +4,7 @@ import '../../../services/database_service.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/language_provider.dart';
 import '../../../services/notification_service.dart';
+import '../../theme.dart';
 
 class TeacherEnrollmentsScreen extends StatefulWidget {
   const TeacherEnrollmentsScreen({super.key});
@@ -70,7 +71,7 @@ class _TeacherEnrollmentsScreenState extends State<TeacherEnrollmentsScreen> {
         .where((r) => r['teacherName'] == teacherName && r['status'] == 'pending')
         .toList();
 
-    const purple = Color(0xFF7C3AED);
+    const purple = ZankoColors.primary;
 
     return Directionality(
       textDirection: lang.textDirection,
