@@ -32,19 +32,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
 
   Future<void> _ensureFirebase() async {
     if (Firebase.apps.isEmpty) {
-      try {
         await Firebase.initializeApp();
-      } catch (_) {
-        await Firebase.initializeApp(
-          options: const FirebaseOptions(
-            apiKey: 'AIzaSyAebiUPE9OyxhrHjanHy98ZXeVBJm0FRvA',
-            appId: '1:658020179072:android:75f948816199e3eed2da65',
-            messagingSenderId: '658020179072',
-            projectId: 'tomartv-67cda',
-            storageBucket: 'tomartv-67cda.firebasestorage.app',
-          ),
-        );
-      }
     }
   }
 

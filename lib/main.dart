@@ -24,19 +24,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     if (Firebase.apps.isEmpty) {
-      try {
-        await Firebase.initializeApp();
-      } catch (_) {
-        await Firebase.initializeApp(
-          options: const FirebaseOptions(
-            apiKey: 'AIzaSyAebiUPE9OyxhrHjanHy98ZXeVBJm0FRvA',
-            appId: '1:658020179072:android:75f948816199e3eed2da65',
-            messagingSenderId: '658020179072',
-            projectId: 'tomartv-67cda',
-            storageBucket: 'tomartv-67cda.firebasestorage.app',
-          ),
-        );
-      }
+      await Firebase.initializeApp();
     }
   } catch (e) {
     debugPrint('Firebase core initialization notice: $e');
