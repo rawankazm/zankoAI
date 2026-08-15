@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'services/theme_provider.dart';
-import '../../../theme.dart';
 
 class ZankoColors {
   static const Color primary = Color(0xFF0EA5E9);
   static const Color accent = Color(0xFF38BDF8);
-  static const Color background = Color(0xFFF0F8FF);
+  static const Color background = Color(0xFFEFF6FF);
   static const Color card = Color(0xFFFFFFFF);
   static const Color textPrimary = Color(0xFF0F172A);
   static const Color textSecondary = Color(0xFF64748B);
@@ -16,9 +15,9 @@ class ZankoColors {
   static const Color error = Color(0xFFFF3B30);
 
   // Ocean Blue Dark Mode Colors
-  static const Color darkBackground = Color(0xFF0A0F1E);
-  static const Color darkCard = Color(0xFF0F1D35);
-  static const Color darkCardSecondary = Color(0xFF162236);
+  static const Color darkBackground = Color(0xFF080C18);
+  static const Color darkCard = Color(0xFF0F172A);
+  static const Color darkCardSecondary = Color(0xFF1E293B);
   static const Color darkTextPrimary = Color(0xFFF0F8FF);
   static const Color darkTextSecondary = Color(0xFF94A3B8);
 
@@ -41,7 +40,7 @@ class ZankoGradients {
   );
 
   static const LinearGradient darkCard = LinearGradient(
-    colors: [Color(0xFF0F1D35), Color(0xFF162236)],
+    colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
