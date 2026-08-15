@@ -235,7 +235,7 @@ class _VipBadgeState extends State<VipBadge>
                   height: _badgeHeight,
                   child: AnimatedBuilder(
                     animation: _shimmerAnim,
-                    builder: (_, __) => CustomPaint(
+                    builder: (context, _) => CustomPaint(
                       painter: _ShimmerPainter(_shimmerAnim.value),
                     ),
                   ),
@@ -342,7 +342,6 @@ class _VipMembershipCardState extends State<VipMembershipCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _shimmer;
-  late Animation<double> _glow;
 
   @override
   void initState() {
@@ -354,15 +353,6 @@ class _VipMembershipCardState extends State<VipMembershipCard>
 
     _shimmer = Tween<double>(begin: -1.5, end: 2.5).animate(
       CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
-    _glow = Tween<double>(begin: 0.6, end: 1.0).animate(
-      CurvedAnimation(
-        parent: AnimationController(
-          vsync: this,
-          duration: const Duration(milliseconds: 1800),
-        )..repeat(reverse: true),
-        curve: Curves.easeInOut,
-      ),
     );
   }
 

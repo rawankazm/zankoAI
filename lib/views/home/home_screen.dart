@@ -9,7 +9,6 @@ import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
 import '../../widgets/ad_banner_widget.dart';
 import '../ai_teacher/ai_teacher_chat_screen.dart';
-import '../courses/course_detail_screen.dart';
 import '../academic/seminar_thesis_assistant_screen.dart';
 import '../academic/academic_dictionary_screen.dart';
 import '../flashcards/flashcards_screen.dart';
@@ -27,7 +26,6 @@ import '../zankoline/zankoline_screen.dart';
 import '../leaderboard/leaderboard_screen.dart';
 import '../offline/offline_downloads_screen.dart';
 import '../study_plan/ai_study_roadmap_screen.dart';
-import 'courses_screen.dart';
 
 // ─── Home Screen ─────────────────────────────────────────────────────────────
 class HomeScreen extends StatefulWidget {
@@ -813,15 +811,11 @@ class _AiSearchBarState extends State<_AiSearchBar> with SingleTickerProviderSta
 // ─── Section Header ────────────────────────────────────────────────────────
 class _SectionHeader extends StatelessWidget {
   final String title;
-  final String? actionText;
   final bool isDark;
-  final VoidCallback? onAction;
 
   const _SectionHeader({
     required this.title,
-    this.actionText,
     required this.isDark,
-    this.onAction,
   });
 
   @override
@@ -840,186 +834,6 @@ class _SectionHeader extends StatelessWidget {
               color: isDark ? Colors.white : ZankoColors.textPrimary,
               letterSpacing: -0.4,
             ),
-          ),
-        ),
-        if (actionText != null && onAction != null) ...[
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: onAction,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: ZankoColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Text(
-                actionText!,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: ZankoColors.primary,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-// ─── ZankoAI Benefits Card ──────────────────────────────────────────────────
-class _ZankoBenefitsCard extends StatelessWidget {
-  final bool isDark;
-
-  const _ZankoBenefitsCard({required this.isDark});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isDark
-              ? [ZankoColors.darkCardSecondary, ZankoColors.darkBackground]
-              : [const Color(0xFFFAF5FF), const Color(0xFFF3E8FF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: const Color(0xFFAF52DE).withValues(alpha: isDark ? 0.4 : 0.25),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFAF52DE).withValues(alpha: isDark ? 0.15 : 0.08),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFAF52DE).withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  CupertinoIcons.sparkles,
-                  color: Color(0xFFAF52DE),
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'چۆن ZankoAI هاوکاری خوێندکاران دەکات؟ 🎓',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : ZankoColors.textPrimary,
-                        fontFamily: 'Noto Sans Arabic',
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'سوودە سەرەکییەکان لە زانکۆ و پەیمانگاکان',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
-                        fontFamily: 'Noto Sans Arabic',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Divider(height: 1, color: isDark ? Colors.white12 : Colors.black12),
-          const SizedBox(height: 14),
-
-          _buildBenefitRow(
-            icon: CupertinoIcons.person_crop_circle_badge_checkmark,
-            color: const Color(0xFF10B981),
-            title: 'مامۆستای تایبەتی 24/7',
-            desc: 'وەڵامدانەوەی خێرای پرسیاری وانە قورسەکان و ڕوون کردنەوەی بیرۆکەکان بە کوردی.',
-            isDark: isDark,
-          ),
-          const SizedBox(height: 12),
-          _buildBenefitRow(
-            icon: CupertinoIcons.doc_text_search,
-            color: const Color(0xFF38BDF8),
-            title: 'شیکردنەوەی PDF و مەلزەمە',
-            desc: 'کورتبڕکردنی سەرچاوە، فایلی وانەکان و دەرهێنانی خاڵە سەرەکییەکانی تاقیکردنەوە.',
-            isDark: isDark,
-          ),
-          const SizedBox(height: 12),
-          _buildBenefitRow(
-            icon: CupertinoIcons.question_square_fill,
-            color: const Color(0xFFFF9F0A),
-            title: 'دروستکردنی کویز و تاقیکردنەوە',
-            desc: 'ئامادەکاری ئەزموونی بۆ تاقیکردنەوەی وەرزی و کۆتایی بە خۆڕایی.',
-            isDark: isDark,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBenefitRow({
-    required IconData icon,
-    required Color color,
-    required String title,
-    required String desc,
-    required bool isDark,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          margin: const EdgeInsets.only(top: 2),
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: color, size: 16),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : ZankoColors.textPrimary,
-                  fontFamily: 'Noto Sans Arabic',
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                desc,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
-                  height: 1.3,
-                  fontFamily: 'Noto Sans Arabic',
-                ),
-              ),
-            ],
           ),
         ),
       ],

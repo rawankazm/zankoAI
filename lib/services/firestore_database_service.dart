@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -27,6 +28,16 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
   int _quizzesTaken = 0;
   int _flashcardsFlipped = 0;
 
+  StreamSubscription? _notesSub;
+  StreamSubscription? _scheduleSub;
+  StreamSubscription? _quizzesSub;
+  StreamSubscription? _flashcardsSub;
+  StreamSubscription? _remindersSub;
+  StreamSubscription? _lecturesSub;
+  StreamSubscription? _announcementsSub;
+  StreamSubscription? _enrollmentsSub;
+  StreamSubscription? _authSub;
+
   @override
   List<NoteModel> get notes => _notes;
   @override
@@ -54,7 +65,28 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
   String? get _userId => _auth.currentUser?.uid;
 
   FirestoreDatabaseService() {
+    _authSub = _auth.authStateChanges().listen((_) {
+      loadData();
+    });
     loadData();
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    _cancelAllSubscriptions();
+    super.dispose();
+  }
+
+  void _cancelAllSubscriptions() {
+    _notesSub?.cancel();
+    _scheduleSub?.cancel();
+    _quizzesSub?.cancel();
+    _flashcardsSub?.cancel();
+    _remindersSub?.cancel();
+    _lecturesSub?.cancel();
+    _announcementsSub?.cancel();
+    _enrollmentsSub?.cancel();
   }
 
   @override
@@ -74,9 +106,17 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
   }
 
   void _listenToNotes() {
-    _firestore
+    _notesSub?.cancel();
+    final uid = _userId;
+    if (uid == null) {
+      _notes.clear();
+      notifyListeners();
+      return;
+    }
+
+    _notesSub = _firestore
         .collection('notes')
-        .orderBy('createdAt', descending: true)
+        .where('userId', isEqualTo: uid)
         .snapshots()
         .listen((snapshot) {
       _notes.clear();
@@ -91,12 +131,25 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
           courseName: data['courseName'],
         ));
       }
+      _notes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       notifyListeners();
-    });
+    }, onError: (_) {});
   }
 
   void _listenToSchedule() {
-    _firestore.collection('schedule').snapshots().listen((snapshot) {
+    _scheduleSub?.cancel();
+    final uid = _userId;
+    if (uid == null) {
+      _schedule.clear();
+      notifyListeners();
+      return;
+    }
+
+    _scheduleSub = _firestore
+        .collection('schedule')
+        .where('userId', isEqualTo: uid)
+        .snapshots()
+        .listen((snapshot) {
       _schedule.clear();
       for (var doc in snapshot.docs) {
         final data = doc.data();
@@ -110,28 +163,60 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
         ));
       }
       notifyListeners();
-    });
+    }, onError: (_) {});
   }
 
   void _listenToQuizzes() {
-    _firestore.collection('quizzes').snapshots().listen((snapshot) {
+    _quizzesSub?.cancel();
+    _quizzesSub = _firestore.collection('quizzes').snapshots().listen((snapshot) {
       _quizzes.clear();
       for (var doc in snapshot.docs) {
         final data = doc.data();
+        final List<QuestionModel> questions = [];
+        if (data['questions'] is List) {
+          for (var q in (data['questions'] as List)) {
+            if (q is Map) {
+              final qMap = Map<String, dynamic>.from(q);
+              questions.add(QuestionModel(
+                id: qMap['id'] ?? '',
+                questionText: qMap['questionText'] ?? qMap['question'] ?? '',
+                type: QuestionType.values.firstWhere(
+                  (e) => e.name == qMap['type'],
+                  orElse: () => QuestionType.multipleChoice,
+                ),
+                options: qMap['options'] != null ? List<String>.from(qMap['options']) : null,
+                correctAnswer: (qMap['correctAnswer'] ?? qMap['correct_answer'] ?? '').toString(),
+                explanation: qMap['explanation']?.toString(),
+              ));
+            }
+          }
+        }
         _quizzes.add(QuizModel(
           id: doc.id,
           title: data['title'] ?? '',
           courseName: data['courseName'] ?? '',
           durationMinutes: data['durationMinutes'] ?? 10,
-          questions: [],
+          questions: questions,
         ));
       }
       notifyListeners();
-    });
+    }, onError: (_) {});
   }
 
   void _listenToFlashcards() {
-    _firestore.collection('flashcards').snapshots().listen((snapshot) {
+    _flashcardsSub?.cancel();
+    final uid = _userId;
+    if (uid == null) {
+      _flashcards.clear();
+      notifyListeners();
+      return;
+    }
+
+    _flashcardsSub = _firestore
+        .collection('flashcards')
+        .where('userId', isEqualTo: uid)
+        .snapshots()
+        .listen((snapshot) {
       _flashcards.clear();
       for (var doc in snapshot.docs) {
         final data = doc.data();
@@ -142,11 +227,23 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
         ));
       }
       notifyListeners();
-    });
+    }, onError: (_) {});
   }
 
   void _listenToReminders() {
-    _firestore.collection('reminders').snapshots().listen((snapshot) {
+    _remindersSub?.cancel();
+    final uid = _userId;
+    if (uid == null) {
+      _reminders.clear();
+      notifyListeners();
+      return;
+    }
+
+    _remindersSub = _firestore
+        .collection('reminders')
+        .where('userId', isEqualTo: uid)
+        .snapshots()
+        .listen((snapshot) {
       _reminders.clear();
       for (var doc in snapshot.docs) {
         final data = doc.data();
@@ -159,11 +256,12 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
         ));
       }
       notifyListeners();
-    });
+    }, onError: (_) {});
   }
 
   void _listenToLectures() {
-    _firestore.collection('lectures').snapshots().listen((snapshot) {
+    _lecturesSub?.cancel();
+    _lecturesSub = _firestore.collection('lectures').snapshots().listen((snapshot) {
       _lectures.clear();
       for (var doc in snapshot.docs) {
         final data = doc.data();
@@ -182,11 +280,12 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
         ));
       }
       notifyListeners();
-    });
+    }, onError: (_) {});
   }
 
   void _listenToAnnouncements() {
-    _firestore
+    _announcementsSub?.cancel();
+    _announcementsSub = _firestore
         .collection('announcements')
         .orderBy('createdAt', descending: true)
         .snapshots()
@@ -208,11 +307,12 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
         ));
       }
       notifyListeners();
-    });
+    }, onError: (_) {});
   }
 
   void _listenToEnrollmentRequests() {
-    _firestore.collection('enrollments').snapshots().listen((snapshot) {
+    _enrollmentsSub?.cancel();
+    _enrollmentsSub = _firestore.collection('enrollments').snapshots().listen((snapshot) {
       _enrollmentRequests.clear();
       for (var doc in snapshot.docs) {
         final data = doc.data();
@@ -227,7 +327,7 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
         });
       }
       notifyListeners();
-    });
+    }, onError: (_) {});
   }
 
   // Write operations
@@ -277,12 +377,22 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
 
   @override
   Future<void> addQuiz(QuizModel quiz) async {
+    final questionsData = quiz.questions.map((q) => {
+      'id': q.id,
+      'questionText': q.questionText,
+      'type': q.type.name,
+      'options': q.options,
+      'correctAnswer': q.correctAnswer,
+      'explanation': q.explanation,
+    }).toList();
+
     await _firestore.collection('quizzes').doc(quiz.id).set({
       'title': quiz.title,
       'courseName': quiz.courseName,
       'durationMinutes': quiz.durationMinutes,
       'userId': _userId,
       'createdAt': FieldValue.serverTimestamp(),
+      'questions': questionsData,
     });
     _quizzesTaken++;
     notifyListeners();
@@ -301,8 +411,10 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
 
   @override
   Future<void> clearFlashcards() async {
+    final uid = _userId;
+    if (uid == null) return;
     final batch = _firestore.batch();
-    final snapshot = await _firestore.collection('flashcards').get();
+    final snapshot = await _firestore.collection('flashcards').where('userId', isEqualTo: uid).get();
     for (var doc in snapshot.docs) {
       batch.delete(doc.reference);
     }

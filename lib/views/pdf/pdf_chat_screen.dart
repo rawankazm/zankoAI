@@ -10,7 +10,6 @@ import '../../services/ai_service.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
 import 'pdf_summary_screen.dart';
-import '../quiz/quiz_screen.dart';
 
 class PdfChatScreen extends StatefulWidget {
   final String? initialFileName;

@@ -597,8 +597,6 @@ class _DocumentReaderScreenState extends State<DocumentReaderScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     if (widget.pdfBytes != null && widget.pdfBytes!.isNotEmpty) {
       return Scaffold(
         appBar: AppBar(
