@@ -138,7 +138,7 @@ class _SplashScreenState extends State<SplashScreen>
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: ZankoColors.darkBackground,
       body: Stack(
         children: [
           // ── 1. Animated Ambient Gradient Background ─────────────────────
@@ -155,9 +155,9 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                     radius: 1.4,
                     colors: const [
-                      Color(0xFF3B82F6),
+                      ZankoColors.primary,
                       ZankoColors.darkCardSecondary,
-                      Color(0xFF0F172A),
+                      ZankoColors.darkBackground,
                     ],
                   ),
                 ),

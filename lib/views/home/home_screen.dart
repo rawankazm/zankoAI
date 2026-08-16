@@ -1629,7 +1629,7 @@ class _TodayProgressState extends State<_TodayProgress>
             icon: CupertinoIcons.question_diamond,
             value: '$questionsCount',
             label: 'Questions',
-            color: const Color(0xFF38BDF8),
+            color: ZankoColors.accent,
           ),
           _StatItem(
             icon: CupertinoIcons.check_mark_circled,

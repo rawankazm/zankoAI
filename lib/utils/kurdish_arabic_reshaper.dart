@@ -19,7 +19,7 @@ class KurdishArabicReshaper {
     0x062F: [0xFEA9, 0xFEAA, 0xFEA9, 0xFEAA], // د
     0x0630: [0xFEAB, 0xFEAC, 0xFEAB, 0xFEAC], // ذ
     0x0631: [0xFEAD, 0xFEAE, 0xFEAD, 0xFEAE], // ر
-    0x0695: [0xFB8C, 0xFB8D, 0xFB8C, 0xFB8D], // ڕ
+    0x0695: [0x0695, 0x0695, 0x0695, 0x0695], // ڕ (Kurdish R - native Unicode 0x0695)
     0x0632: [0xFEAF, 0xFEB0, 0xFEAF, 0xFEB0], // ز
     0x0698: [0xFB8A, 0xFB8B, 0xFB8A, 0xFB8B], // ژ
     0x0633: [0xFEB1, 0xFEB2, 0xFEB3, 0xFEB4], // س
@@ -37,12 +37,12 @@ class KurdishArabicReshaper {
     0x06A9: [0xFB8E, 0xFB8F, 0xFB90, 0xFB91], // ک (Kurdish/Farsi Kaf)
     0x06AF: [0xFB92, 0xFB93, 0xFB94, 0xFB95], // گ
     0x0644: [0xFEDD, 0xFEDE, 0xFEDF, 0xFEE0], // ل
-    0x06B5: [0xFB9E, 0xFB9F, 0xFB9E, 0xFBA0], // ڵ (Kurdish Ll)
+    0x06B5: [0x06B5, 0x06B5, 0x06B5, 0x06B5], // ڵ (Kurdish Ll - native Unicode 0x06B5)
     0x0645: [0xFEE1, 0xFEE2, 0xFEE3, 0xFEE4], // م
     0x0646: [0xFEE5, 0xFEE6, 0xFEE7, 0xFEE8], // ن
     0x0647: [0xFEE9, 0xFEEA, 0xFEEB, 0xFEEC], // ه (Arabic Heh)
     0x06BE: [0xFBAA, 0xFBAB, 0xFBAC, 0xFBAD], // ھ (Kurdish Heh Do-Chashmee)
-    0x06D5: [0x06D5, 0xFEEA, 0x06D5, 0xFEEA], // ە (Kurdish Ae)
+    0x06D5: [0x06D5, 0x06D5, 0x06D5, 0x06D5], // ە (Kurdish Ae - native Unicode 0x06D5)
     0x0629: [0xFE93, 0xFE94, 0xFE93, 0xFE94], // ة (Ta Marbuta)
     0x0648: [0xFEED, 0xFEEE, 0xFEED, 0xFEEE], // و
     0x06C6: [0xFBD9, 0xFBDA, 0xFBD9, 0xFBDA], // ۆ (Kurdish Oe)
@@ -75,8 +75,26 @@ class KurdishArabicReshaper {
     0x0629, // ة
   };
 
+  static const Map<int, int> _bracketMirrors = {
+    0x0028: 0x0029, // ( -> )
+    0x0029: 0x0028, // ) -> (
+    0x005B: 0x005D, // [ -> ]
+    0x005D: 0x005B, // ] -> [
+    0x007B: 0x007D, // { -> }
+    0x007D: 0x007B, // } -> {
+    0x00AB: 0x00BB, // « -> »
+    0x00BB: 0x00AB, // » -> «
+    0x003C: 0x003E, // < -> >
+    0x003E: 0x003C, // > -> <
+    0x201C: 0x201D, // “ -> ”
+    0x201D: 0x201C, // ” -> “
+  };
+
   static bool _isArabicOrKurdish(int code) {
-    return _glyphForms.containsKey(code) || (code >= 0x0600 && code <= 0x06FF) || (code >= 0xFB50 && code <= 0xFDFF) || (code >= 0xFE70 && code <= 0xFEFF);
+    return _glyphForms.containsKey(code) ||
+        (code >= 0x0600 && code <= 0x06FF) ||
+        (code >= 0xFB50 && code <= 0xFDFF) ||
+        (code >= 0xFE70 && code <= 0xFEFF);
   }
 
   static bool _connectsToNext(int code) {
@@ -87,10 +105,24 @@ class KurdishArabicReshaper {
     return _glyphForms.containsKey(code) && code != 0x0621;
   }
 
-  /// Shapes Arabic & Kurdish connected letters into their presentation forms
-  static String shape(String text) {
+  /// Normalizes Kurdish text variants and decomposing combining marks
+  static String normalizeKurdish(String text) {
     if (text.isEmpty) return text;
+    return text
+        .replaceAll('\u0631\u065a', '\u0695') // ر + ˇ -> ڕ
+        .replaceAll('\u0644\u065a', '\u06b5') // ل + ˇ -> ڵ
+        .replaceAll('\u0648\u065a', '\u06c6') // و + ˇ -> ۆ
+        .replaceAll('\u064a\u065a', '\u06ce') // ي + ˇ -> ێ
+        .replaceAll('\u06cc\u065a', '\u06ce') // ی + ˇ -> ێ
+        .replaceAll('\u06d0', '\u06ce') // 0x06D0 -> 0x06CE (ێ)
+        .replaceAll('\u200c', ' '); // Replace ZWNJ with space for clean typography
+  }
 
+  /// Shapes Arabic & Kurdish connected letters into their presentation forms
+  static String shape(String rawText) {
+    if (rawText.isEmpty) return rawText;
+
+    final text = normalizeKurdish(rawText);
     final runes = text.runes.toList();
     final shaped = <int>[];
 
@@ -160,17 +192,13 @@ class KurdishArabicReshaper {
         continue;
       }
 
-      // Check if line contains RTL characters
       final hasRtl = line.runes.any(_isArabicOrKurdish);
       if (!hasRtl) {
         processedLines.add(line);
         continue;
       }
 
-      // Shape the full line
       final shapedLine = shape(line);
-
-      // BiDi Reorder: Split into words / directional tokens and reverse for RTL
       final reordered = _bidiReorderLine(shapedLine);
       processedLines.add(reordered);
     }
@@ -186,37 +214,40 @@ class KurdishArabicReshaper {
     while (i < runes.length) {
       final code = runes[i];
 
-      // Number or English / LTR sequence
-      if (_isLtrChar(code)) {
+      if (_isLtrSequenceStart(runes, i)) {
+        // Parse entire continuous LTR expression (e.g. "45.8%", "2024 - 2025", "O(log n)", "p < 0.001", "Stage : One")
         final start = i;
-        while (i < runes.length && _isLtrChar(runes[i])) {
+        while (i < runes.length && (_isLtrChar(runes[i]) || _isLtrJoiner(runes, i))) {
           i++;
         }
         tokens.add(_TextToken(String.fromCharCodes(runes.sublist(start, i)), false));
       } else if (code == 0x0020) {
-        // Space
         tokens.add(_TextToken(' ', false, isSpace: true));
         i++;
       } else {
-        // RTL Arabic / Kurdish / Punctuation
+        // RTL Arabic / Kurdish / Punctuation token
         final start = i;
-        while (i < runes.length && !_isLtrChar(runes[i]) && runes[i] != 0x0020) {
+        while (i < runes.length && !_isLtrSequenceStart(runes, i) && runes[i] != 0x0020) {
           i++;
         }
         tokens.add(_TextToken(String.fromCharCodes(runes.sublist(start, i)), true));
       }
     }
 
-    // Build the visual line by reversing RTL tokens and reversing the overall token order
+    // Build the visual line by reversing RTL tokens and reversing overall token order
     final buffer = StringBuffer();
     for (int t = tokens.length - 1; t >= 0; t--) {
       final token = tokens[t];
       if (token.isRtl) {
-        // Reverse characters in RTL token
-        final chars = token.text.runes.toList().reversed;
-        buffer.write(String.fromCharCodes(chars));
+        // Reverse characters in RTL token and mirror paired brackets/quotes
+        final tokenRunes = token.text.runes.toList();
+        final reversedRunes = <int>[];
+        for (int r = tokenRunes.length - 1; r >= 0; r--) {
+          final c = tokenRunes[r];
+          reversedRunes.add(_bracketMirrors[c] ?? c);
+        }
+        buffer.write(String.fromCharCodes(reversedRunes));
       } else {
-        // Keep LTR token as is (e.g. "12", "2025 - 2026", "AI", "PDF")
         buffer.write(token.text);
       }
     }
@@ -225,14 +256,35 @@ class KurdishArabicReshaper {
   }
 
   static bool _isLtrChar(int code) {
-    // Digits, Latin letters, brackets
     return (code >= 0x0030 && code <= 0x0039) || // 0-9
         (code >= 0x0041 && code <= 0x005A) || // A-Z
         (code >= 0x0061 && code <= 0x007A) || // a-z
         code == 0x002B || // +
         code == 0x0025 || // %
         code == 0x002F || // /
-        code == 0x002D; // -
+        code == 0x002D || // -
+        code == 0x003D || // =
+        code == 0x003C || // <
+        code == 0x003E; // >
+  }
+
+  static bool _isLtrSequenceStart(List<int> runes, int index) {
+    final code = runes[index];
+    return _isLtrChar(code);
+  }
+
+  static bool _isLtrJoiner(List<int> runes, int index) {
+    final code = runes[index];
+    // Decimals, hyphens, colons, or spaces between LTR numbers/words (e.g. "2024 - 2025" or "45.8%")
+    if (code == 0x002E || code == 0x002C || code == 0x003A || code == 0x002D || code == 0x0020) {
+      if (index + 1 < runes.length && _isLtrChar(runes[index + 1])) {
+        return true;
+      }
+      if (code == 0x0020 && index + 2 < runes.length && runes[index + 1] == 0x002D && _isLtrChar(runes[index + 2])) {
+        return true; // space before hyphen in "2024 - 2025"
+      }
+    }
+    return false;
   }
 }
 

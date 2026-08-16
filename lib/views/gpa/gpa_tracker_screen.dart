@@ -182,7 +182,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                             style: TextStyle(color: isDark ? Colors.white : Colors.black),
                             decoration: InputDecoration(
                               labelText: 'نمرەی کویز (/40)',
-                              prefixIcon: const Icon(CupertinoIcons.checkmark_circle, color: Color(0xFF38BDF8)),
+                              prefixIcon: const Icon(CupertinoIcons.checkmark_circle, color: ZankoColors.accent),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                             ),

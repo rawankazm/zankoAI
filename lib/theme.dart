@@ -4,26 +4,26 @@ import 'package:google_fonts/google_fonts.dart';
 import 'services/theme_provider.dart';
 
 class ZankoColors {
-  static const Color primary = Color(0xFF0EA5E9);
-  static const Color accent = Color(0xFF38BDF8);
-  static const Color background = Color(0xFFEFF6FF);
+  static const Color primary = Color(0xFFF97316); // Vibrant Coral Orange
+  static const Color accent = Color(0xFFF43F5E); // Sunset Rose
+  static const Color background = Color(0xFFFFF7ED); // Soft Warm Cream
   static const Color card = Color(0xFFFFFFFF);
-  static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF64748B);
-  static const Color success = Color(0xFF34C759);
-  static const Color warning = Color(0xFFFF9F0A);
-  static const Color error = Color(0xFFFF3B30);
+  static const Color textPrimary = Color(0xFF1C1917);
+  static const Color textSecondary = Color(0xFF78716C);
+  static const Color success = Color(0xFF10B981);
+  static const Color warning = Color(0xFFF59E0B);
+  static const Color error = Color(0xFFEF4444);
 
-  // Ocean Blue Dark Mode Colors
-  static const Color darkBackground = Color(0xFF080C18);
-  static const Color darkCard = Color(0xFF0F172A);
-  static const Color darkCardSecondary = Color(0xFF1E293B);
-  static const Color darkTextPrimary = Color(0xFFF0F8FF);
-  static const Color darkTextSecondary = Color(0xFF94A3B8);
+  // Sunset Coral & Rose Dark Mode Colors
+  static const Color darkBackground = Color(0xFF140C0C); // Dark Ember
+  static const Color darkCard = Color(0xFF221415); // Deep Warm Ruby
+  static const Color darkCardSecondary = Color(0xFF2D1B1D); // Elevated Warm Card
+  static const Color darkTextPrimary = Color(0xFFFFF1F2);
+  static const Color darkTextSecondary = Color(0xFFFDA4AF);
 
   // Gradient colors
-  static const Color gradientStart = Color(0xFF0EA5E9);
-  static const Color gradientEnd = Color(0xFF6366F1);
+  static const Color gradientStart = Color(0xFFF97316); // Vibrant Coral Orange
+  static const Color gradientEnd = Color(0xFFE11D48); // Sunset Rose Red
 }
 
 class ZankoGradients {
@@ -40,7 +40,7 @@ class ZankoGradients {
   );
 
   static const LinearGradient darkCard = LinearGradient(
-    colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+    colors: [Color(0xFF221415), Color(0xFF2D1B1D)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -57,7 +57,7 @@ class ZankoRadius {
 class ZankoShadows {
   static final List<BoxShadow> card = [
     BoxShadow(
-      color: const Color(0xFF0EA5E9).withOpacity(0.10),
+      color: const Color(0xFFF97316).withOpacity(0.08),
       blurRadius: 24,
       offset: const Offset(0, 10),
       spreadRadius: 0,
@@ -72,7 +72,7 @@ class ZankoShadows {
 
   static final List<BoxShadow> floating = [
     BoxShadow(
-      color: const Color(0xFF0EA5E9).withOpacity(0.35),
+      color: const Color(0xFFF97316).withOpacity(0.35),
       blurRadius: 20,
       offset: const Offset(0, 8),
       spreadRadius: 0,
@@ -81,7 +81,7 @@ class ZankoShadows {
 
   static final List<BoxShadow> glow = [
     BoxShadow(
-      color: const Color(0xFF38BDF8).withOpacity(0.35),
+      color: const Color(0xFFF43F5E).withOpacity(0.35),
       blurRadius: 16,
       offset: const Offset(0, 4),
     ),
@@ -89,7 +89,7 @@ class ZankoShadows {
 
   static final List<BoxShadow> gradientButton = [
     BoxShadow(
-      color: const Color(0xFF0EA5E9).withOpacity(0.4),
+      color: const Color(0xFFF97316).withOpacity(0.4),
       blurRadius: 16,
       offset: const Offset(0, 6),
       spreadRadius: -2,
@@ -283,7 +283,7 @@ class ZankoTheme {
   }
 }
 
-/// Reusable gradient button — Ocean Blue (#0EA5E9 → #6366F1)
+/// Reusable gradient button — Sunset Coral & Rose (#F97316 → #E11D48)
 class ZankoGradientButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;

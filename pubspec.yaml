@@ -88,15 +88,39 @@ flutter:
     - assets/images/ai_robot_3d.png
     - assets/images/student_avatar_3d.png
     - assets/data/krg_zankoline.json
-
-  # An image asset can refer to one or more resolution-specific "variants", see
-  # https://flutter.dev/to/resolution-aware-images
-
-  # For details regarding adding assets from package dependencies, see
-  # https://flutter.dev/to/asset-from-package
+    - assets/fonts/
+    - assets/fonts/calibri.ttf
+    - assets/fonts/calibrib.ttf
+    - assets/fonts/times.ttf
+    - assets/fonts/timesbd.ttf
+    - assets/fonts/DroidKufi-Regular.ttf
+    - assets/fonts/NotoSansArabic-Regular.ttf
+    - assets/fonts/NotoSansArabic-Bold.ttf
+    - assets/fonts/NotoNaskhArabic-Regular.ttf
+    - assets/fonts/NotoNaskhArabic-Bold.ttf
 
   # Custom fonts for Kurdish Sorani and Arabic
   fonts:
+    - family: NotoSansArabic
+      fonts:
+        - asset: assets/fonts/NotoSansArabic-Regular.ttf
+        - asset: assets/fonts/NotoSansArabic-Bold.ttf
+          weight: 700
+    - family: NotoNaskhArabic
+      fonts:
+        - asset: assets/fonts/NotoNaskhArabic-Regular.ttf
+        - asset: assets/fonts/NotoNaskhArabic-Bold.ttf
+          weight: 700
+    - family: Calibri
+      fonts:
+        - asset: assets/fonts/calibri.ttf
+        - asset: assets/fonts/calibrib.ttf
+          weight: 700
+    - family: Times
+      fonts:
+        - asset: assets/fonts/times.ttf
+        - asset: assets/fonts/timesbd.ttf
+          weight: 700
     - family: DroidKufi
       fonts:
         - asset: assets/fonts/DroidKufi-Regular.ttf
