@@ -58,17 +58,23 @@ export default {
 
       if (request.method === 'POST') {
         try {
-          const json = await request.json();
-          title = json.title || '';
-          body = json.body || '';
-          topic = json.topic || 'all_students';
-          token = json.token || '';
-          targetUrl = json.url || '';
+          const rawText = await request.text();
+          let json = {};
+          try {
+            json = JSON.parse(rawText);
+          } catch (_) {
+            json = {};
+          }
+          title = json.title || url.searchParams.get('title') || '';
+          body = json.body || url.searchParams.get('body') || '';
+          topic = json.topic || url.searchParams.get('topic') || 'all_students';
+          token = json.token || url.searchParams.get('token') || '';
+          targetUrl = json.url || url.searchParams.get('url') || '';
         } catch (e) {
-          return new Response(
-            JSON.stringify({ error: 'Invalid JSON body' }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
+          title = url.searchParams.get('title') || '';
+          body = url.searchParams.get('body') || '';
+          topic = url.searchParams.get('topic') || 'all_students';
+          token = url.searchParams.get('token') || '';
         }
       } else if (request.method === 'GET') {
         title = url.searchParams.get('title') || '';
@@ -147,14 +153,16 @@ export default {
 async function sendFcmNotification(env, { title, body, topic, token, data }) {
   try {
     const fcmServerKey = env.FCM_SERVER_KEY;
-    const projectId = env.FIREBASE_PROJECT_ID || 'tomartv-67cda';
+    const projectId = env.FIREBASE_PROJECT_ID || env.PROJECT_ID || 'tomartv-67cda';
+    const clientEmail = env.SERVICE_ACCOUNT_EMAIL || env.SERVICE_ACCOUNT_EMA || env.CLIENT_EMAIL;
+    const privateKey = env.SERVICE_ACCOUNT_PRIVATE_KEY || env.SERVICE_ACCOUNT_PRI || env.PRIVATE_KEY;
 
     // 1. If using Google Service Account (HTTP v1 API)
-    if (env.SERVICE_ACCOUNT_EMAIL && env.SERVICE_ACCOUNT_PRIVATE_KEY) {
+    if (clientEmail && privateKey) {
       try {
         const accessToken = await getGoogleAccessToken(
-          env.SERVICE_ACCOUNT_EMAIL,
-          env.SERVICE_ACCOUNT_PRIVATE_KEY
+          clientEmail,
+          privateKey
         );
 
         const messagePayload = {
