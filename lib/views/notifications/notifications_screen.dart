@@ -7,6 +7,7 @@ import '../../services/language_provider.dart';
 import '../../services/auth_service.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
+import 'admin_broadcast_sheet.dart';
 
 class NotificationItem {
   final String id;
@@ -149,8 +150,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final __lang = Provider.of<LanguageProvider>(context);
-    String t(String key) => __lang.translate(key);
+    final langProvider = Provider.of<LanguageProvider>(context);
+    String t(String key) => langProvider.translate(key);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final filtered = _notifications.where((item) {
@@ -188,6 +189,40 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     ),
                   ),
                   const Spacer(),
+                  // Admin Broadcast Push Button
+                  CupertinoButton(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => AdminBroadcastSheet(isDark: isDark),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: ZankoColors.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(CupertinoIcons.paperplane_fill, size: 14, color: ZankoColors.primary),
+                          SizedBox(width: 4),
+                          Text(
+                            'ناردن',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: ZankoColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                   if (_notifications.isNotEmpty) ...[
                     CupertinoButton(
                       padding: EdgeInsets.zero,
@@ -232,7 +267,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           border: Border.all(
                             color: isSelected
                                 ? ZankoColors.primary
-                                : (isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFEFEFF5)),
+                                : (isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFEFEFF5)),
                           ),
                         ),
                         child: Text(
@@ -277,7 +312,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'پەیامەکانی ئەدمین لێرەدا ڕاستەوخۆ دەردەکەون',
+                            'پەیامە گرنگەکان و FCM Push لێرەدا ڕاستەوخۆ دەردەکەون',
                             style: TextStyle(
                               fontSize: 13,
                               color: isDark ? Colors.grey[600] : Colors.grey[500],
@@ -292,99 +327,128 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       itemCount: filtered.length,
                       itemBuilder: (context, index) {
                         final item = filtered[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: AppCard(
-                            padding: const EdgeInsets.all(16),
-                            onTap: () {
-                              if (!item.isRead) {
-                                FirebaseFirestore.instance
-                                    .collection('direct_messages')
-                                    .doc(item.id)
-                                    .update({'isRead': true});
-                              }
-                            },
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                        return Dismissible(
+                          key: Key(item.id),
+                          direction: DismissDirection.endToStart,
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: ZankoColors.error.withValues(alpha: 0.85),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                // Category Icon Avatar
-                                Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: item.color.withOpacity(0.12),
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                  child: Icon(
-                                    item.icon,
-                                    color: item.color,
-                                    size: 22,
-                                  ),
+                                Icon(CupertinoIcons.delete, color: Colors.white, size: 22),
+                                SizedBox(width: 8),
+                                Text(
+                                  'سڕینەوە',
+                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                                 ),
-                                const SizedBox(width: 14),
-
-                                // Details
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              item.title,
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: item.isRead
-                                                    ? FontWeight.w600
-                                                    : FontWeight.w800,
-                                                color: isDark
-                                                    ? Colors.white
-                                                    : ZankoColors.textPrimary,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            _formatTime(item.time),
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w500,
-                                              color: ZankoColors.textSecondary,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        item.body,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          height: 1.35,
-                                          color: isDark
-                                              ? Colors.grey[400]
-                                              : ZankoColors.textSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                // Unread Dot Indicator
-                                if (!item.isRead) ...[
-                                  const SizedBox(width: 8),
+                              ],
+                            ),
+                          ),
+                          onDismissed: (_) {
+                            setState(() {
+                              _notifications.removeWhere((n) => n.id == item.id);
+                            });
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: AppCard(
+                              padding: const EdgeInsets.all(16),
+                              onTap: () {
+                                if (!item.isRead) {
+                                  FirebaseFirestore.instance
+                                      .collection('direct_messages')
+                                      .doc(item.id)
+                                      .update({'isRead': true});
+                                }
+                              },
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Category Icon Avatar
                                   Container(
-                                    width: 8,
-                                    height: 8,
-                                    margin: const EdgeInsets.only(top: 4),
-                                    decoration: const BoxDecoration(
-                                      color: ZankoColors.primary,
-                                      shape: BoxShape.circle,
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      color: item.color.withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    child: Icon(
+                                      item.icon,
+                                      color: item.color,
+                                      size: 22,
                                     ),
                                   ),
+                                  const SizedBox(width: 14),
+
+                                  // Details
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                item.title,
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: item.isRead
+                                                      ? FontWeight.w600
+                                                      : FontWeight.w800,
+                                                  color: isDark
+                                                      ? Colors.white
+                                                      : ZankoColors.textPrimary,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              _formatTime(item.time),
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w500,
+                                                color: ZankoColors.textSecondary,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          item.body,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            height: 1.35,
+                                            color: isDark
+                                                ? Colors.grey[400]
+                                                : ZankoColors.textSecondary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  // Unread Dot Indicator
+                                  if (!item.isRead) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      width: 8,
+                                      height: 8,
+                                      margin: const EdgeInsets.only(top: 4),
+                                      decoration: const BoxDecoration(
+                                        color: ZankoColors.primary,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ],
                                 ],
-                              ],
+                              ),
                             ),
                           ),
                         );

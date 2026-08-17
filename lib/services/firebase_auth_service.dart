@@ -68,6 +68,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
               photoUrl: data['photoUrl'],
             );
             NotificationService().listenToAdminNotifications(firebaseUser.uid, isVip);
+            NotificationService().syncUserToken(firebaseUser.uid, isVip: isVip);
             notifyListeners();
           }
         });

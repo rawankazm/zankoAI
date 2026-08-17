@@ -1,0 +1,6 @@
+name = "zanko-admin"
+main = "cloudflare_worker/worker.js"
+compatibility_date = "2024-09-23"
+
+[triggers]
+crons = ["0 17 * * *"]

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'theme.dart';
 import 'services/auth_service.dart';
 import 'services/firebase_auth_service.dart';
@@ -14,6 +15,7 @@ import 'services/theme_provider.dart';
 import 'services/score_service.dart';
 import 'services/offline_archive_service.dart';
 import 'services/study_roadmap_service.dart';
+import 'services/notification_service.dart';
 import 'views/splash_screen.dart';
 
 import 'services/zankoline_service.dart';
@@ -26,6 +28,8 @@ void main() async {
     if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp();
     }
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    await NotificationService().init();
   } catch (e) {
     debugPrint('Firebase core initialization notice: $e');
   }

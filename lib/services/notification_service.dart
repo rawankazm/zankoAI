@@ -1,10 +1,19 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+/// Top-level background handler for FCM messages when app is killed or in background.
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  debugPrint('Handling a background FCM message: ${message.messageId}');
+  // Firebase handles displaying notifications in notification tray when app is in background.
+}
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -12,7 +21,11 @@ class NotificationService {
   NotificationService._internal();
 
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
   bool _initialized = false;
+  String? _fcmToken;
+  String? get fcmToken => _fcmToken;
+
   StreamSubscription? _adminDirectSub;
   StreamSubscription? _adminBroadcastSub;
   static const String _lastNotifiedKey = 'zanko_last_notified_timestamp';
@@ -31,6 +44,9 @@ class NotificationService {
 
     await _plugin.initialize(
       const InitializationSettings(android: android, iOS: ios),
+      onDidReceiveNotificationResponse: (details) {
+        debugPrint('Notification clicked with payload: ${details.payload}');
+      },
     );
 
     // Request Android 13+ & Exact Alarm permissions & create channel
@@ -49,7 +65,101 @@ class NotificationService {
       await androidPlugin.requestExactAlarmsPermission();
     }
 
+    // ─── Setup Google Firebase Cloud Messaging (FCM) ────────────────────────
+    try {
+      // 1. Request notification permissions (iOS & Android 13+)
+      final settings = await _fcm.requestPermission(
+        alert: true,
+        announcement: false,
+        badge: true,
+        carPlay: false,
+        criticalAlert: false,
+        provisional: false,
+        sound: true,
+      );
+      debugPrint('FCM Authorization Status: ${settings.authorizationStatus}');
+
+      // 2. Set Foreground presentation options for iOS
+      await _fcm.setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+
+      // 3. Get Device FCM Token
+      _fcmToken = await _fcm.getToken();
+      debugPrint('Device FCM Token: $_fcmToken');
+
+      // 4. Listen for Token refreshes
+      _fcm.onTokenRefresh.listen((newToken) {
+        _fcmToken = newToken;
+        debugPrint('FCM Token Refreshed: $newToken');
+      });
+
+      // 5. Subscribe to default broadcast topics
+      await _fcm.subscribeToTopic('all_students');
+      await _fcm.subscribeToTopic('announcements');
+
+      // 6. Handle Foreground FCM Messages
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        debugPrint('Foreground FCM message: ${message.notification?.title}');
+        final notification = message.notification;
+        if (notification != null) {
+          showInstantNotification(
+            id: message.hashCode,
+            title: notification.title ?? 'ZankoAI',
+            body: notification.body ?? '',
+          );
+        }
+      });
+
+      // 7. Handle Background Notification Tap
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        debugPrint('App opened from background FCM message: ${message.data}');
+      });
+
+      // 8. Check if App was opened from a terminated state notification
+      final initialMessage = await _fcm.getInitialMessage();
+      if (initialMessage != null) {
+        debugPrint('App opened from terminated state FCM message: ${initialMessage.data}');
+      }
+    } catch (e) {
+      debugPrint('FCM initialization notice: $e');
+    }
+
     _initialized = true;
+  }
+
+  /// Sync device FCM token with user profile in Firestore
+  Future<void> syncUserToken(String userId, {bool isVip = false}) async {
+    await init();
+    if (_fcmToken == null) {
+      try {
+        _fcmToken = await _fcm.getToken();
+      } catch (e) {
+        debugPrint('Could not fetch FCM token: $e');
+      }
+    }
+
+    if (_fcmToken != null && userId.isNotEmpty) {
+      try {
+        await FirebaseFirestore.instance.collection('users').doc(userId).set({
+          'fcmToken': _fcmToken,
+          'fcmTokens': FieldValue.arrayUnion([_fcmToken]),
+          'lastTokenUpdate': FieldValue.serverTimestamp(),
+          'devicePlatform': defaultTargetPlatform.name,
+        }, SetOptions(merge: true));
+
+        // Manage VIP Topic Subscription
+        if (isVip) {
+          await _fcm.subscribeToTopic('vip_students');
+        } else {
+          await _fcm.unsubscribeFromTopic('vip_students');
+        }
+      } catch (e) {
+        debugPrint('Error syncing FCM token to Firestore: $e');
+      }
+    }
   }
 
   /// Start listening to admin notifications from Firestore (direct_messages & notifications)
