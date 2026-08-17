@@ -53,6 +53,7 @@ export default {
       let title = '';
       let body = '';
       let topic = 'all_students';
+      let token = '';
       let targetUrl = '';
 
       if (request.method === 'POST') {
@@ -61,6 +62,7 @@ export default {
           title = json.title || '';
           body = json.body || '';
           topic = json.topic || 'all_students';
+          token = json.token || '';
           targetUrl = json.url || '';
         } catch (e) {
           return new Response(
@@ -72,6 +74,7 @@ export default {
         title = url.searchParams.get('title') || '';
         body = url.searchParams.get('body') || '';
         topic = url.searchParams.get('topic') || 'all_students';
+        token = url.searchParams.get('token') || '';
         targetUrl = url.searchParams.get('url') || '';
       }
 
@@ -86,6 +89,7 @@ export default {
         title,
         body,
         topic,
+        token,
         data: {
           click_action: 'FLUTTER_NOTIFICATION_CLICK',
           route: targetUrl || '/notifications',
@@ -147,54 +151,58 @@ async function sendFcmNotification(env, { title, body, topic, token, data }) {
 
     // 1. If using Google Service Account (HTTP v1 API)
     if (env.SERVICE_ACCOUNT_EMAIL && env.SERVICE_ACCOUNT_PRIVATE_KEY) {
-      const accessToken = await getGoogleAccessToken(
-        env.SERVICE_ACCOUNT_EMAIL,
-        env.SERVICE_ACCOUNT_PRIVATE_KEY
-      );
+      try {
+        const accessToken = await getGoogleAccessToken(
+          env.SERVICE_ACCOUNT_EMAIL,
+          env.SERVICE_ACCOUNT_PRIVATE_KEY
+        );
 
-      const messagePayload = {
-        message: {
-          notification: {
-            title: title,
-            body: body,
-          },
-          android: {
-            priority: 'HIGH',
+        const messagePayload = {
+          message: {
             notification: {
-              channel_id: 'zanko_admin_channel',
-              sound: 'default',
-              default_sound: true,
-              default_vibrate_timings: true,
-              icon: 'ic_launcher',
+              title: title,
+              body: body,
             },
+            android: {
+              priority: 'HIGH',
+              notification: {
+                channel_id: 'zanko_admin_channel',
+                sound: 'default',
+                default_sound: true,
+                default_vibrate_timings: true,
+                icon: 'ic_launcher',
+              },
+            },
+            data: data || {},
           },
-          data: data || {},
-        },
-      };
+        };
 
-      if (token) {
-        messagePayload.message.token = token;
-      } else {
-        messagePayload.message.topic = topic || 'all_students';
-      }
-
-      const response = await fetch(
-        `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(messagePayload),
+        if (token) {
+          messagePayload.message.token = token;
+        } else {
+          messagePayload.message.topic = topic || 'all_students';
         }
-      );
 
-      const resData = await response.json();
-      if (!response.ok) {
-        return { success: false, error: resData };
+        const response = await fetch(
+          `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(messagePayload),
+          }
+        );
+
+        const resData = await response.json();
+        if (!response.ok) {
+          return { success: false, error: resData };
+        }
+        return { success: true, mode: 'v1_oauth', messageId: resData.name };
+      } catch (authError) {
+        return { success: false, error: `Auth Error: ${authError.message}` };
       }
-      return { success: true, mode: 'v1_oauth', messageId: resData.name };
     }
 
     // 2. Fallback: If using FCM Legacy Server Key (Simple & Direct)
@@ -239,8 +247,10 @@ async function sendFcmNotification(env, { title, body, topic, token, data }) {
 // ─── Google OAuth2 Access Token Generator using Web Crypto (SubtleCrypto) ───
 async function getGoogleAccessToken(clientEmail, privateKeyPem) {
   const cleanKey = privateKeyPem
+    .replace(/\\n/g, '')
     .replace(/-----BEGIN PRIVATE KEY-----/, '')
     .replace(/-----END PRIVATE KEY-----/, '')
+    .replace(/\\/g, '')
     .replace(/\s+/g, '');
 
   const binaryKey = Uint8Array.from(atob(cleanKey), (c) => c.charCodeAt(0));

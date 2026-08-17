@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -32,7 +34,7 @@ class _AdminBroadcastSheetState extends State<AdminBroadcastSheet> {
 
   Future<void> _loadSavedSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    final url = prefs.getString('cf_worker_url') ?? '';
+    final url = prefs.getString('cf_worker_url') ?? 'https://zankoai.rawankurdi181.workers.dev';
     final secret = prefs.getString('cf_worker_secret') ?? 'zanko_secret_2026';
     if (mounted) {
       setState(() {
@@ -85,6 +87,26 @@ class _AdminBroadcastSheetState extends State<AdminBroadcastSheet> {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
+      // 2. Trigger Cloudflare Worker Push Notification (wakes up closed/locked phones)
+      final workerUrl = _workerUrlController.text.trim();
+      if (workerUrl.isNotEmpty) {
+        final cleanUrl = workerUrl.endsWith('/') ? workerUrl.substring(0, workerUrl.length - 1) : workerUrl;
+        final targetUri = Uri.parse('$cleanUrl/send');
+        final topic = _selectedTarget == 'vip' ? 'vip_students' : 'all_students';
+
+        final client = HttpClient();
+        final req = await client.postUrl(targetUri);
+        req.headers.set('Content-Type', 'application/json; charset=UTF-8');
+        req.headers.set('X-Secret-Key', _secretController.text.trim());
+        req.write(jsonEncode({
+          'title': title,
+          'body': body,
+          'topic': topic,
+        }));
+        await req.close();
+        client.close();
+      }
+
       HapticFeedback.heavyImpact();
       if (mounted) {
         setState(() {
@@ -100,7 +122,7 @@ class _AdminBroadcastSheetState extends State<AdminBroadcastSheet> {
         setState(() {
           _isSending = false;
           _isSuccess = false;
-          _statusMessage = 'هەڵەیەک ڕوویدا: $e';
+          _statusMessage = 'پەیام لە داتابەیس تۆمارکرا، بەڵام سێرڤەر: $e';
         });
       }
     }
