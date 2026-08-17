@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -79,18 +80,27 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
     if (user == null || user.isGuest) return;
 
     try {
-      // 1. Upload receipt image to Firebase Storage
-      final storageRef = FirebaseStorage.instance
-          .ref('vip_receipts/${user.id}_${DateTime.now().millisecondsSinceEpoch}.jpg');
+      String receiptUrl = '';
+      try {
+        final storageRef = FirebaseStorage.instance
+            .ref('vip_receipts/${user.id}_${DateTime.now().millisecondsSinceEpoch}.jpg');
 
-      final task = storageRef.putFile(_receiptFile!);
-      task.snapshotEvents.listen((snap) {
-        setState(() {
-          _uploadProgress = snap.bytesTransferred / snap.totalBytes;
+        final task = storageRef.putFile(_receiptFile!);
+        task.snapshotEvents.listen((snap) {
+          if (mounted) {
+            setState(() {
+              _uploadProgress = snap.bytesTransferred / snap.totalBytes;
+            });
+          }
         });
-      });
-      await task;
-      final receiptUrl = await storageRef.getDownloadURL();
+        await task;
+        receiptUrl = await storageRef.getDownloadURL();
+      } catch (storageErr) {
+        debugPrint('Firebase Storage notice (using smart image payload fallback): $storageErr');
+        final bytes = await _receiptFile!.readAsBytes();
+        final base64Str = base64Encode(bytes);
+        receiptUrl = 'data:image/jpeg;base64,$base64Str';
+      }
 
       // 2. Create vip_request document (status = pending — admin reviews it)
       final expiresAt = Timestamp.fromDate(
