@@ -12,7 +12,31 @@ import 'package:shared_preferences/shared_preferences.dart';
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint('Handling a background FCM message: ${message.messageId}');
-  // Firebase handles displaying notifications in notification tray when app is in background.
+  final notification = message.notification;
+  final title = notification?.title ?? message.data['title'] ?? 'ZankoAI';
+  final body = notification?.body ?? message.data['body'] ?? message.data['message'] ?? '';
+
+  if (title.isNotEmpty || body.isNotEmpty) {
+    final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+    const androidDetails = AndroidNotificationDetails(
+      'zanko_admin_channel',
+      'Admin Notifications',
+      channelDescription: 'ZankoAI Admin Announcements & Messages',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
+      enableVibration: true,
+      icon: '@mipmap/ic_launcher',
+      color: Color(0xFF007AFF),
+    );
+    const notificationDetails = NotificationDetails(android: androidDetails);
+    await flutterLocalNotificationsPlugin.show(
+      message.hashCode,
+      title,
+      body,
+      notificationDetails,
+    );
+  }
 }
 
 class NotificationService {
