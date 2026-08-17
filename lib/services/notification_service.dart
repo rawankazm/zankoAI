@@ -12,30 +12,33 @@ import 'package:shared_preferences/shared_preferences.dart';
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint('Handling a background FCM message: ${message.messageId}');
-  final notification = message.notification;
-  final title = notification?.title ?? message.data['title'] ?? 'ZankoAI';
-  final body = notification?.body ?? message.data['body'] ?? message.data['message'] ?? '';
+  // If the message already contains a notification payload, Android system FCM handles displaying it automatically.
+  // Only display manually if it was a data-only payload.
+  if (message.notification == null) {
+    final title = message.data['title'] ?? 'ZankoAI';
+    final body = message.data['body'] ?? message.data['message'] ?? '';
 
-  if (title.isNotEmpty || body.isNotEmpty) {
-    final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-    const androidDetails = AndroidNotificationDetails(
-      'zanko_admin_channel',
-      'Admin Notifications',
-      channelDescription: 'ZankoAI Admin Announcements & Messages',
-      importance: Importance.max,
-      priority: Priority.high,
-      playSound: true,
-      enableVibration: true,
-      icon: '@mipmap/ic_launcher',
-      color: Color(0xFF007AFF),
-    );
-    const notificationDetails = NotificationDetails(android: androidDetails);
-    await flutterLocalNotificationsPlugin.show(
-      message.hashCode,
-      title,
-      body,
-      notificationDetails,
-    );
+    if (title.isNotEmpty || body.isNotEmpty) {
+      final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+      const androidDetails = AndroidNotificationDetails(
+        'zanko_admin_channel',
+        'Admin Notifications',
+        channelDescription: 'ZankoAI Admin Announcements & Messages',
+        importance: Importance.max,
+        priority: Priority.high,
+        playSound: true,
+        enableVibration: true,
+        icon: '@mipmap/ic_launcher',
+        color: Color(0xFF007AFF),
+      );
+      const notificationDetails = NotificationDetails(android: androidDetails);
+      await flutterLocalNotificationsPlugin.show(
+        message.hashCode,
+        title,
+        body,
+        notificationDetails,
+      );
+    }
   }
 }
 
@@ -260,12 +263,28 @@ class NotificationService {
     });
   }
 
-  /// Show an instant notification immediately on device screen.
+  String? _lastShownTitle;
+  String? _lastShownBody;
+  DateTime? _lastShownTime;
+
+  /// Show an instant notification immediately on device screen (with duplicate debounce).
   Future<void> showInstantNotification({
     required int id,
     required String title,
     required String body,
   }) async {
+    final now = DateTime.now();
+    if (_lastShownTitle == title &&
+        _lastShownBody == body &&
+        _lastShownTime != null &&
+        now.difference(_lastShownTime!).inSeconds < 4) {
+      debugPrint('Debounced duplicate notification: $title');
+      return;
+    }
+    _lastShownTitle = title;
+    _lastShownBody = body;
+    _lastShownTime = now;
+
     await init();
 
     const androidDetails = AndroidNotificationDetails(
