@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
+import '../services/app_version_service.dart';
 import '../theme.dart';
 import 'auth/login_screen.dart';
 import 'navigation_shell.dart';
 import 'onboarding/onboarding_screen.dart';
+import 'update/force_update_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -98,8 +100,25 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _navigateToNext() async {
-    await Future.delayed(const Duration(milliseconds: 3200));
+    // 1. Check for app updates from admin config
+    AppUpdateInfo? updateInfo;
+    try {
+      updateInfo = await AppVersionService().checkForUpdate();
+    } catch (_) {}
+
+    await Future.delayed(const Duration(milliseconds: 3000));
     if (!mounted) return;
+
+    // 2. If update is forced or required, show ForceUpdateScreen immediately
+    if (updateInfo != null && updateInfo.isUpdateAvailable && updateInfo.isForced) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ForceUpdateScreen(updateInfo: updateInfo!),
+        ),
+      );
+      return;
+    }
 
     final prefs = await SharedPreferences.getInstance();
     final onboardingDone = prefs.getBool('onboarding_done') ?? false;

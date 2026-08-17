@@ -14,6 +14,8 @@ import 'ai_teacher/ai_teacher_chat_screen.dart';
 import 'zankoline/zankoline_screen.dart';
 import 'profile/profile_screen.dart';
 import 'notifications/notifications_screen.dart';
+import '../services/app_version_service.dart';
+import 'update/force_update_screen.dart';
 import '../theme.dart';
 
 class NavigationShell extends StatefulWidget {
@@ -42,6 +44,15 @@ class _NavigationShellState extends State<NavigationShell> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _listenForRealtimeDirectMessages();
+      AppVersionService().startListening((updateInfo) {
+        if (mounted && updateInfo.isUpdateAvailable && updateInfo.isForced) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => ForceUpdateScreen(updateInfo: updateInfo)),
+            (route) => false,
+          );
+        }
+      });
     });
   }
 
