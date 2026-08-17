@@ -35,6 +35,21 @@ export default {
       );
     }
 
+    // Debug Keys endpoint
+    if (url.pathname === '/debug-keys') {
+      const keys = Object.keys(env);
+      return new Response(
+        JSON.stringify({
+          configuredKeys: keys,
+          hasApiSecret: !!env.API_SECRET,
+          hasProjectId: !!(env.FIREBASE_PROJECT_ID || env.PROJECT_ID),
+          hasEmail: !!(env.SERVICE_ACCOUNT_EMAIL || env.SERVICE_ACCOUNT_EMA || env.CLIENT_EMAIL),
+          hasPrivateKey: !!(env.SERVICE_ACCOUNT_PRIVATE_KEY || env.SERVICE_ACCOUNT_PRI || env.PRIVATE_KEY),
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Secret Key Authentication
     const secretKey = env.API_SECRET || 'zanko_secret_2026';
     const providedSecret =
@@ -154,8 +169,19 @@ async function sendFcmNotification(env, { title, body, topic, token, data }) {
   try {
     const fcmServerKey = env.FCM_SERVER_KEY;
     const projectId = env.FIREBASE_PROJECT_ID || env.PROJECT_ID || 'tomartv-67cda';
-    const clientEmail = env.SERVICE_ACCOUNT_EMAIL || env.SERVICE_ACCOUNT_EMA || env.CLIENT_EMAIL;
-    const privateKey = env.SERVICE_ACCOUNT_PRIVATE_KEY || env.SERVICE_ACCOUNT_PRI || env.PRIVATE_KEY;
+    const clientEmail = env.SERVICE_ACCOUNT_EMAIL || env.SERVICE_ACCOUNT_EMA || env.CLIENT_EMAIL || 'firebase-adminsdk-fbsvc@tomartv-67cda.iam.gserviceaccount.com';
+    
+    let privateKey = env.SERVICE_ACCOUNT_PRIVATE_KEY || env.SERVICE_ACCOUNT_PRI || env.PRIVATE_KEY || env.FIREBASE_PRIVATE_KEY || env.FCM_PRIVATE_KEY;
+    
+    // Auto-discover private key if variable name was slightly different
+    if (!privateKey) {
+      for (const k of Object.keys(env)) {
+        if (typeof env[k] === 'string' && (env[k].includes('PRIVATE KEY') || env[k].length > 300)) {
+          privateKey = env[k];
+          break;
+        }
+      }
+    }
 
     // 1. If using Google Service Account (HTTP v1 API)
     if (clientEmail && privateKey) {
@@ -242,8 +268,11 @@ async function sendFcmNotification(env, { title, body, topic, token, data }) {
 
     // 3. Mock Success if no credentials configured yet (for testing)
     return {
-      success: true,
-      mode: 'preview_mode',
+      success: false,
+      mode: 'missing_keys',
+      availableEnvKeys: Object.keys(env),
+      hasEmail: !!clientEmail,
+      hasPrivateKey: !!privateKey,
       note: 'Notification processed! To send to live devices, add SERVICE_ACCOUNT_PRIVATE_KEY or FCM_SERVER_KEY to Cloudflare Worker secrets.',
       payload: { title, body, topic },
     };
