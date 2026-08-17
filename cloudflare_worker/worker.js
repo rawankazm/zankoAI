@@ -199,12 +199,14 @@ async function sendFcmNotification(env, { title, body, topic, token, data }) {
             },
             android: {
               priority: 'HIGH',
+              collapse_key: 'zanko_admin_broadcast',
               notification: {
                 channel_id: 'zanko_admin_channel',
                 sound: 'default',
                 default_sound: true,
                 default_vibrate_timings: true,
                 icon: 'ic_launcher',
+                tag: 'zanko_admin_broadcast',
               },
             },
             data: data || {},

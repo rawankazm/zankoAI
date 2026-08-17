@@ -228,36 +228,16 @@ class NotificationService {
       }
     });
 
-    // 2. Broadcast / Targeted Notifications Listener
+    // 2. Broadcast / Targeted Notifications Listener (for in-app data sync)
     _adminBroadcastSub = FirebaseFirestore.instance
         .collection('notifications')
         .snapshots()
         .listen((snap) async {
       for (var doc in snap.docs) {
-        final data = doc.data();
         final docId = doc.id;
-        final target = (data['target'] ?? data['to'] ?? 'all').toString().toLowerCase();
-        final docUserId = data['userId'] ?? data['user_id'] ?? data['recipientId'];
-
-        final isTargeted = target == 'all' ||
-            target == 'all_students' ||
-            target == 'students' ||
-            (target == 'vip' && isVip) ||
-            (docUserId != null && docUserId == userId);
-
-        if (isTargeted && !_seenDocIds.contains(docId)) {
-          final title = data['title'] ?? data['header'] ?? data['subject'] ?? '📢 ئاگاداریی ئەدمین';
-          final body = data['body'] ?? data['message'] ?? data['content'] ?? data['text'] ?? '';
-
-          if (body.toString().trim().isNotEmpty || title.toString().trim().isNotEmpty) {
-            await showInstantNotification(
-              id: docId.hashCode,
-              title: title.toString(),
-              body: body.toString(),
-            );
-            _seenDocIds.add(docId);
-            await prefs.setStringList(_seenDocsKey, _seenDocIds.toList());
-          }
+        if (!_seenDocIds.contains(docId)) {
+          _seenDocIds.add(docId);
+          await prefs.setStringList(_seenDocsKey, _seenDocIds.toList());
         }
       }
     });
@@ -296,6 +276,7 @@ class NotificationService {
       playSound: true,
       enableVibration: true,
       enableLights: true,
+      tag: 'zanko_admin_broadcast',
       icon: '@mipmap/ic_launcher',
       color: Color(0xFF007AFF),
     );
