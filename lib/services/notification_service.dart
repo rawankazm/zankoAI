@@ -28,7 +28,6 @@ class NotificationService {
 
   StreamSubscription? _adminDirectSub;
   StreamSubscription? _adminBroadcastSub;
-  static const String _lastNotifiedKey = 'zanko_last_notified_timestamp';
 
   Future<void> init() async {
     if (_initialized) return;
@@ -162,69 +161,82 @@ class NotificationService {
     }
   }
 
+  static const String _seenDocsKey = 'zanko_seen_notified_docs_v2';
+  final Set<String> _seenDocIds = {};
+
   /// Start listening to admin notifications from Firestore (direct_messages & notifications)
-  void listenToAdminNotifications(String userId, bool isVip) {
+  Future<void> listenToAdminNotifications(String userId, bool isVip) async {
     _adminDirectSub?.cancel();
     _adminBroadcastSub?.cancel();
 
-    // 1. Direct Messages Listener
+    final prefs = await SharedPreferences.getInstance();
+    final savedList = prefs.getStringList(_seenDocsKey) ?? [];
+    _seenDocIds.addAll(savedList);
+
+    // 1. Direct Messages Listener (Messages sent specifically to this user)
     _adminDirectSub = FirebaseFirestore.instance
         .collection('direct_messages')
         .where('userId', isEqualTo: userId)
         .snapshots()
         .listen((snap) async {
-      final prefs = await SharedPreferences.getInstance();
-      final lastTime = prefs.getInt(_lastNotifiedKey) ?? DateTime.now().millisecondsSinceEpoch;
-
       for (var doc in snap.docs) {
         final data = doc.data();
-        final ts = data['createdAt'] as Timestamp?;
-        if (ts != null) {
-          final msgTime = ts.millisecondsSinceEpoch;
-          if (msgTime > lastTime) {
+        final docId = doc.id;
+        final isRead = data['isRead'] == true;
+
+        if (!isRead && !_seenDocIds.contains(docId)) {
+          final title = data['title'] ?? data['header'] ?? data['subject'] ?? '✉️ پەیام لە ئەدمینەوە';
+          final body = data['message'] ?? data['body'] ?? data['content'] ?? data['text'] ?? '';
+
+          if (body.toString().trim().isNotEmpty || title.toString().trim().isNotEmpty) {
             await showInstantNotification(
-              id: doc.id.hashCode,
-              title: data['title'] ?? '✉️ پەیام لە ئەدمینەوە',
-              body: data['message'] ?? '',
+              id: docId.hashCode,
+              title: title.toString(),
+              body: body.toString(),
             );
-            await prefs.setInt(_lastNotifiedKey, msgTime);
+            _seenDocIds.add(docId);
+            await prefs.setStringList(_seenDocsKey, _seenDocIds.toList());
           }
         }
       }
     });
 
-    // 2. Broadcast Notifications Listener
+    // 2. Broadcast / Targeted Notifications Listener
     _adminBroadcastSub = FirebaseFirestore.instance
         .collection('notifications')
         .snapshots()
         .listen((snap) async {
-      final prefs = await SharedPreferences.getInstance();
-      final lastTime = prefs.getInt(_lastNotifiedKey) ?? DateTime.now().millisecondsSinceEpoch;
-
       for (var doc in snap.docs) {
         final data = doc.data();
-        final target = data['target'] ?? 'all';
-        final docUserId = data['userId'];
+        final docId = doc.id;
+        final target = (data['target'] ?? data['to'] ?? 'all').toString().toLowerCase();
+        final docUserId = data['userId'] ?? data['user_id'] ?? data['recipientId'];
 
-        if (target == 'all' || (target == 'vip' && isVip) || (target == 'user' && docUserId == userId)) {
-          final ts = data['createdAt'] as Timestamp?;
-          if (ts != null) {
-            final msgTime = ts.millisecondsSinceEpoch;
-            if (msgTime > lastTime) {
-              await showInstantNotification(
-                id: doc.id.hashCode,
-                title: data['title'] ?? '📢 ئاگاداریی ئەدمین',
-                body: data['body'] ?? '',
-              );
-              await prefs.setInt(_lastNotifiedKey, msgTime);
-            }
+        final isTargeted = target == 'all' ||
+            target == 'all_students' ||
+            target == 'students' ||
+            (target == 'vip' && isVip) ||
+            (docUserId != null && docUserId == userId);
+
+        if (isTargeted && !_seenDocIds.contains(docId)) {
+          final title = data['title'] ?? data['header'] ?? data['subject'] ?? '📢 ئاگاداریی ئەدمین';
+          final body = data['body'] ?? data['message'] ?? data['content'] ?? data['text'] ?? '';
+
+          if (body.toString().trim().isNotEmpty || title.toString().trim().isNotEmpty) {
+            await showInstantNotification(
+              id: docId.hashCode,
+              title: title.toString(),
+              body: body.toString(),
+            );
+            _seenDocIds.add(docId);
+            await prefs.setStringList(_seenDocsKey, _seenDocIds.toList());
           }
         }
       }
     });
   }
 
-  /// Show an instant notification immediately.
+  /// Show an instant notification immediately on device screen.
   Future<void> showInstantNotification({
     required int id,
     required String title,
@@ -240,6 +252,7 @@ class NotificationService {
       priority: Priority.high,
       playSound: true,
       enableVibration: true,
+      enableLights: true,
       icon: '@mipmap/ic_launcher',
       color: Color(0xFF007AFF),
     );

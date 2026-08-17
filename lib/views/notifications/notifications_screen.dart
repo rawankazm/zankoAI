@@ -69,10 +69,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       for (var doc in snap.docs) {
         final data = doc.data();
         final ts = data['createdAt'] as Timestamp?;
+        final title = data['title'] ?? data['header'] ?? data['subject'] ?? 'پەیام لە ئەدمینەوە';
+        final body = data['message'] ?? data['body'] ?? data['content'] ?? data['text'] ?? '';
         _directItems.add(NotificationItem(
           id: doc.id,
-          title: data['title'] ?? 'پەیام لە ئەدمینەوە',
-          body: data['message'] ?? '',
+          title: title.toString(),
+          body: body.toString(),
           time: ts?.toDate() ?? DateTime.now(),
           category: 'Admin Direct',
           icon: CupertinoIcons.mail_solid,
@@ -90,20 +92,28 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       _broadcastItems.clear();
       for (var doc in snap.docs) {
         final data = doc.data();
-        final target = data['target'] ?? 'all';
-        final userId = data['userId'];
+        final target = (data['target'] ?? data['to'] ?? 'all').toString().toLowerCase();
+        final docUserId = data['userId'] ?? data['user_id'] ?? data['recipientId'];
 
-        if (target == 'all' || (target == 'vip' && user.isVip) || (target == 'user' && userId == user.id)) {
+        final isMatch = target == 'all' ||
+            target == 'all_students' ||
+            target == 'students' ||
+            (target == 'vip' && user.isVip) ||
+            (docUserId != null && docUserId == user.id);
+
+        if (isMatch) {
           final ts = data['createdAt'] as Timestamp?;
+          final title = data['title'] ?? data['header'] ?? data['subject'] ?? 'ئاگادارکردنەوە';
+          final body = data['body'] ?? data['message'] ?? data['content'] ?? data['text'] ?? '';
           _broadcastItems.add(NotificationItem(
             id: doc.id,
-            title: data['title'] ?? 'ئاگادارکردنەوە',
-            body: data['body'] ?? '',
+            title: title.toString(),
+            body: body.toString(),
             time: ts?.toDate() ?? DateTime.now(),
             category: 'Admin Direct',
             icon: CupertinoIcons.bell_fill,
             color: const Color(0xFFFF9F0A),
-            isRead: false,
+            isRead: data['isRead'] == true,
           ));
         }
       }
