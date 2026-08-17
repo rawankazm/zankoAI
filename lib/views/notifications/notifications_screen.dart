@@ -7,7 +7,6 @@ import '../../services/language_provider.dart';
 import '../../services/auth_service.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
-import 'admin_broadcast_sheet.dart';
 
 class NotificationItem {
   final String id;
@@ -199,40 +198,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     ),
                   ),
                   const Spacer(),
-                  // Admin Broadcast Push Button
-                  CupertinoButton(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    onPressed: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (_) => AdminBroadcastSheet(isDark: isDark),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: ZankoColors.primary.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(CupertinoIcons.paperplane_fill, size: 14, color: ZankoColors.primary),
-                          SizedBox(width: 4),
-                          Text(
-                            'ناردن',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: ZankoColors.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                   if (_notifications.isNotEmpty) ...[
                     CupertinoButton(
                       padding: EdgeInsets.zero,
