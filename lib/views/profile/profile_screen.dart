@@ -16,6 +16,8 @@ import '../payment/vip_upgrade_sheet.dart';
 import '../leaderboard/leaderboard_screen.dart';
 import '../offline/offline_downloads_screen.dart';
 import '../study_plan/ai_study_roadmap_screen.dart';
+import '../../services/app_version_service.dart';
+import '../update/force_update_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 
@@ -882,9 +884,9 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              const Text(
-                'وەشانی v1.0.0 • Official Kurdistan Student AI Companion',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ZankoColors.primary),
+              Text(
+                'وەشانی v${AppVersionService.currentAppVersion} • Official Kurdistan Student AI Companion',
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ZankoColors.primary),
               ),
               const SizedBox(height: 16),
               Text(
@@ -897,6 +899,55 @@ class ProfileScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
+              // Check for Updates Button
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    final updateInfo = await AppVersionService().checkForUpdate();
+                    if (context.mounted) {
+                      if (updateInfo.isUpdateAvailable) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ForceUpdateScreen(updateInfo: updateInfo),
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                const Icon(CupertinoIcons.checkmark_seal_fill, color: Colors.white, size: 20),
+                                const SizedBox(width: 10),
+                                Text(
+                                  '🎉 تۆ نوێترین وەشانی ZankoAI بەکاردەهێنیت (v${AppVersionService.currentAppVersion})',
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                            backgroundColor: const Color(0xFF34C759),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  icon: const Icon(CupertinoIcons.arrow_2_circlepath, size: 18, color: Colors.white),
+                  label: const Text(
+                    'پشکنین بۆ ئەپدەیت (Check Updates)',
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF007AFF),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
@@ -915,17 +966,23 @@ class ProfileScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
+                height: 48,
+                child: OutlinedButton(
                   onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: ZankoColors.primary,
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: const Text('داخستن', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                  child: Text(
+                    'داخستن',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : ZankoColors.textPrimary,
+                    ),
+                  ),
                 ),
               ),
             ],
