@@ -47,20 +47,6 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
 
 
 
-  // Preloaded mock PDF options for quick testing in desktop/web
-  final List<Map<String, String>> _mockPdfs = [
-    {
-      'name': 'سیستەمی کارپێکردن - بەشی سێیەم (پرۆسێسەکان).pdf',
-      'size': '٢.٤ مێگابایت',
-      'content': 'This chapter discusses processes in operating systems. A process is a program in execution. The operating system manages processes using process control blocks (PCBs). Threading allows multiple execution paths in a process. CPU scheduling determines which process runs next.'
-    },
-    {
-      'name': 'تۆڕە کۆمپیوتەرییەکان - بەشی یەکەم (مۆدێلی OSI).pdf',
-      'size': '١.٨ مێگابایت',
-      'content': 'Computer networks enable communication between systems. The Open Systems Interconnection (OSI) model defines seven layers for networking: Physical, Data Link, Network, Transport, Session, Presentation, Application. TCP/IP is the actual suite of protocols used on the internet.'
-    }
-  ];
-
   bool _isGarbledBinary(String s) {
     if (s.trim().isEmpty) return true;
     int garbledCount = 0;
@@ -203,51 +189,12 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
         }
       }
     } catch (e) {
-      _showMockPdfPicker();
-    }
-  }
-
-  void _showMockPdfPicker() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        final lang = Provider.of<LanguageProvider>(context, listen: false);
-        return Directionality(
-          textDirection: lang.textDirection,
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'فایلی تاقیکاری هەڵبژێرە:',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                ..._mockPdfs.map((pdf) {
-                  return ListTile(
-                    leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
-                    title: Text(pdf['name']!, style: const TextStyle(fontSize: 13)),
-                    subtitle: Text(pdf['size']!, style: const TextStyle()),
-                    onTap: () {
-                      setState(() {
-                        _selectedFileName = pdf['name'];
-                        _selectedFileSize = pdf['size'];
-                        _selectedFileContent = pdf['content'];
-                        _clearSummary();
-                      });
-                      Navigator.pop(context);
-                      _generateSummary(pdf['content']!);
-                    },
-                  );
-                }),
-              ],
-            ),
-          ),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('کێشەیەک لە هەڵبژاردنی فایلدا ڕوویدا: $e')),
         );
-      },
-    );
+      }
+    }
   }
 
   void _clearSummary() {
