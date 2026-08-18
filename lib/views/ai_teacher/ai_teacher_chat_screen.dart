@@ -13,6 +13,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../services/language_provider.dart';
 import '../../services/ai_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/kurdish_tts_service.dart';
 import '../../theme.dart';
 
 
@@ -39,56 +40,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   int _recordSeconds = 0;
   Timer? _recordTimer;
 
-  final FlutterTts _flutterTts = FlutterTts();
 
-  Future<void> _speakKurdish(String text) async {
-    String cleanText = text
-        .replaceAll(RegExp(r'[\*\#\_\🔹\🔸\🎯\⭐]'), '')
-        .replaceAll(RegExp(r'`{3}[\s\S]*?`{3}'), '')
-        .replaceAll(RegExp(r'`[\s\S]*?`'), '');
-
-    try {
-      final lang = Provider.of<LanguageProvider>(context, listen: false);
-      if (lang.currentLanguage == AppLanguage.arabic) {
-        final isArAvailable = await _flutterTts.isLanguageAvailable("ar") ?? false;
-        if (isArAvailable) {
-          await _flutterTts.setLanguage("ar");
-        } else {
-          await _flutterTts.setLanguage("ar-SA");
-        }
-      } else if (lang.currentLanguage == AppLanguage.kurdishBadini) {
-        final isKmrAvailable = await _flutterTts.isLanguageAvailable("kmr") ?? false;
-        if (isKmrAvailable) {
-          await _flutterTts.setLanguage("kmr");
-        } else {
-          final isKuAvailable = await _flutterTts.isLanguageAvailable("ku") ?? false;
-          if (isKuAvailable) {
-            await _flutterTts.setLanguage("ku");
-          } else {
-            await _flutterTts.setLanguage("en-US");
-          }
-        }
-      } else {
-        final isCkbAvailable = await _flutterTts.isLanguageAvailable("ckb") ?? false;
-        if (isCkbAvailable) {
-          await _flutterTts.setLanguage("ckb");
-        } else {
-          final isKuAvailable = await _flutterTts.isLanguageAvailable("ku") ?? false;
-          if (isKuAvailable) {
-            await _flutterTts.setLanguage("ku");
-          } else {
-            await _flutterTts.setLanguage("en-US");
-          }
-        }
-      }
-    } catch (_) {
-      await _flutterTts.setLanguage("en-US");
-    }
-
-    await _flutterTts.setSpeechRate(0.48);
-    await _flutterTts.setVolume(1.0);
-    await _flutterTts.speak(cleanText);
-  }
 
   final List<String> _suggestions = [
     'Explain this topic',
@@ -102,6 +54,8 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     super.initState();
     _loadChatHistory();
 
+    KurdishTtsService().isSpeakingNotifier.addListener(_onTtsStateChanged);
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
 
@@ -109,6 +63,12 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
         _sendMessage(widget.initialPrompt!);
       }
     });
+  }
+
+  void _onTtsStateChanged() {
+    if (!KurdishTtsService().isSpeaking && mounted && _currentlySpeakingMsg != null) {
+      setState(() => _currentlySpeakingMsg = null);
+    }
   }
 
   String _formatTime([DateTime? dt]) {
@@ -248,6 +208,8 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
 
   @override
   void dispose() {
+    KurdishTtsService().isSpeakingNotifier.removeListener(_onTtsStateChanged);
+    KurdishTtsService().stop();
     _recordTimer?.cancel();
     _audioRecorder.dispose();
     _controller.dispose();
@@ -705,14 +667,18 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
               GestureDetector(
                 onTap: () async {
                   if (isSpeaking) {
-                    await _flutterTts.stop();
+                    await KurdishTtsService().stop();
                     if (mounted) setState(() => _currentlySpeakingMsg = null);
                   } else {
                     if (mounted) setState(() => _currentlySpeakingMsg = content);
-                    _flutterTts.setCompletionHandler(() {
-                      if (mounted) setState(() => _currentlySpeakingMsg = null);
-                    });
-                    await _speakKurdish(content);
+                    final lang = Provider.of<LanguageProvider>(context, listen: false);
+                    String langCode = 'ku';
+                    if (lang.currentLanguage == AppLanguage.arabic) {
+                      langCode = 'ar';
+                    } else if (lang.currentLanguage == AppLanguage.english) {
+                      langCode = 'en';
+                    }
+                    await KurdishTtsService().speak(content, languageCode: langCode);
                   }
                 },
                 child: Container(
