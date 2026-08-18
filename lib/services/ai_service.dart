@@ -1171,8 +1171,6 @@ $pdfContext
 
   @override
   Future<Map<String, dynamic>> predictExam(String notesName, String notesContent) async {
-    await Future.delayed(const Duration(milliseconds: 1200));
-
     if (hasRealApiKey) {
       try {
         final prompt = "ئەم نووسین و تێبینییانەی خوارەوە بخوێنەوە کە هی خوێندکارە لە فایلی بە ناوی '$notesName'. "
@@ -1186,35 +1184,44 @@ $pdfContext
         final responseText = await _callGemini(prompt);
         return {
           'prediction': responseText,
+          'isOffline': false,
         };
       } catch (e) {
         if (_isNetworkError(e)) {
           return {
-            'prediction': "📡 **(شێوازی ئۆفلاین)**\n\n${_getMockPrediction(notesName)}",
+            'prediction': "📡 **(شێوازی ئۆفلاین — زانیاری پاشەکەوتکراو)**\n\n${_generateDynamicPrediction(notesName, notesContent)}",
+            'isOffline': true,
           };
         }
         return {
           'prediction': "هەڵەیەک لە ژیری دەستکرد ڕوویدا: $e",
+          'isOffline': false,
         };
       }
     }
 
     return {
-      'prediction': _getMockPrediction(notesName),
+      'prediction': _generateDynamicPrediction(notesName, notesContent),
+      'isOffline': true,
     };
   }
 
-  String _getMockPrediction(String notesName) {
-    return "پێشبینی پرسیارەکانی تاقیکردنەوە بۆ بابەتەکە:\n\n"
-        "١. **پرسیاری یەکەم:** جیاوازی نێوان RAM و ROM چییە؟\n"
-        "   * وەڵام: RAM یادگەیەکی کاتییە و بە کوژانەوەی ئامێرەکە زانیارییەکانی دەسڕێتەوە، بەڵام ROM نەگۆڕە و زانیاری ڕێکخستنی سەرەتایی کۆمپیوتەری تێدایە.\n\n"
-        "٢. **پرسیاری دووەم:** سیستەمی فایلی NTFS چییە و جیاوازی لەگەڵ FAT32 چییە؟\n"
-        "   * وەڵام: NTFS پشتگیری فایلی گەورەتر دەکات و پارێزگاری زیاترە بە بەراورد لەگەڵ FAT32 کە وەشانی کۆنترە.\n\n"
-        "٣. **پرسیاری سێیەم:** پڕۆسە (Process) لە سیستەمی کارپێکردندا چییە؟\n"
-        "   * وەڵام: پڕۆسە بریتییە لە بەرنامەیەک کە لە کاتی جێبەجێکردندایە و سەرچاوەکانی وەک CPU و RAM بەکاردێنێت.\n\n"
+  String _generateDynamicPrediction(String notesName, String notesContent) {
+    final cleanNotes = notesContent.trim();
+    final subject = notesName.replaceAll(RegExp(r'\.\w+$'), '');
+    final snippet = cleanNotes.length > 200 ? cleanNotes.substring(0, 200) : cleanNotes;
+
+    return "🎯 **پێشبینی پرسیارەکانی تاقیکردنەوە بۆ بابەتی: $subject**\n\n"
+        "--- SECTION 1: پێناسە و چەمکە سەرەکییەکان ---\n"
+        "• پۆلێنکردنی تێبینییەکانی وانەی ($subject) لەسەر بنەمای بەشە سەرەکییەکان.\n"
+        "• $snippet...\n\n"
+        "--- SECTION 2: پرسیارە پێشبینیکراوەکانی تاقیکردنەوە ---\n"
+        "١. **پرسیاری ۱:** پێناسەی چەمکی سەرەکی لە تێبینییەکانی ($subject) چییە؟\n"
+        "   * وەڵام: تەرکیز بکە لەسەر بیرۆکە سەرەکییەکانی دەقەکە و پاشەکەوتکردنی وەڵامەکان لەگەڵ فلاش کارت.\n\n"
+        "٢. **پرسیاری ۲:** چۆن ئەم شیکارییە لە تاقیکردنەوەی کۆتایی وەرزدا بەکاردێت؟\n"
+        "   * وەڵام: بەشێوەی پرسیاری ڕاست/هەڵە، هەڵبژاردن، یان داواکاری شیکاری کورت.\n\n"
         "💡 **ئامۆژگاری بۆ خوێندن:**\n"
-        "- تەرکیز لەسەر جیاوازییەکان بکە لە نێوان چەمکەکان.\n"
-        "- پۆینتەر و شێوازی مێمۆری لەم وانەیەدا زۆر گرنگە.";
+        "- تێبینییەکانت بپشکنە و دووبارە ڕاهێنان لەسەر هاوکێشە سەرەکییەکان بکەرەوە.";
   }
 
   @override

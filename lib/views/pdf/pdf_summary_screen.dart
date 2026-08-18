@@ -289,19 +289,28 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
 
   void _setMockAcademicSummary() {
     final fileName = _selectedFileName ?? 'ڕاپۆرت و فایلی وانە';
+    final content = _selectedFileContent ?? '';
+    final snippet = content.trim().length > 180 ? content.trim().substring(0, 180) : content.trim();
+
     setState(() {
       _pdfSummary = '''
-ئەم فایلە ($fileName) کورتکراوەی تێروتەسەلی بابەتە زانستییەکان، یاسا بنەڕەتیییەکان و چەمکە پڕۆفێشناڵەکان لەخۆدەگرێت.
-تیشک دەخاتە سەر بەرزکردنەوەی ئاستی زانیاریی خوێندکار، شیکردنەوەی داتاکان، و پێشکەشکردنی چارەسەری زیرەکانە بۆ تێگەیشتنی خێراتر لە تاقیکردنەوەکاندا.
+📄 **کورتکراوەی فایلی: $fileName**
+
+---
+
+• ئەم وانەیە تیشک دەخاتە سەر شیکردنەوەی بابەتە سەرەکییەکان بەم شێوەیەی خوارەوە:
+• "$snippet..."
+• بەستنەوەی هاوکێشە سەرەکییەکان بە شێوازی پرسیارەکان بۆ ئامادەکاری تاقیکردنەوە.
 ''';
       _keyPoints = [
-        "پێناسەی گشتی چەمکە بنەڕەتییەکان لە فایلی ($fileName)",
-        "شیکردنەوەی فۆرمولە و بنەما سەرەکییەکان بۆ خوێندکاران",
-        "چارەسەرکردنی گرفتەکان بە ستانداردە نێودەوڵەتییەکان",
-        "کورتی و پوختەی کۆتایی بۆ پێداچوونەوە لە تاقیکردنەوەدا"
+        "پێناسەی چەمکە سەرەکییەکان لە فایلی ($fileName)",
+        "شیکردنەوەی هاوکێشە و چەمکە دیاریکراوەکانی ناو دەقەکە",
+        "پۆلێنکردنی بڕگەکان بۆ پێداچوونەوەی خێرا پیش تاقیکردنەوە"
       ];
       _translation = '''
-This document ($fileName) provides a comprehensive summary of key academic concepts, core formulas, and scientific standards designed to accelerate student learning and exam preparation.
+This document ($fileName) covers core lecture material:
+"$snippet..."
+It structures key academic definitions for rapid study and exam preparation.
 ''';
       _isProcessing = false;
     });

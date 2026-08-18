@@ -85,22 +85,22 @@ class _MindMapViewState extends State<MindMapView> {
   void _loadFallbackMock(String topic) {
     final Map<String, dynamic> mockData = {
       "name": topic,
-      "description": "ڕێبەری سەرەکی بابەتەکە",
+      "description": "نەخشەی مێشکی سەرەکی بۆ بابەتەکە",
       "children": [
         {
-          "name": "گرنگترین چەمکەکان",
-          "description": "بناغە و بیرۆکە سەرەکییەکان",
+          "name": "چەمکە سەرەکییەکانی $topic",
+          "description": "بناغە و تێگەیشتنی سەرەتایی لە $topic",
           "children": [
-            {"name": "پێناسە", "description": "تێگەیشتنی سەرەتایی"},
-            {"name": "مێژوو", "description": "پاشخانی سەرهەڵدان"}
+            {"name": "پێناسەی $topic", "description": "تێگەیشتنی سەرەتایی"},
+            {"name": "بنەما زانستییەکان", "description": "پاشخانی ئەکادیمی"}
           ]
         },
         {
-          "name": "کارپێکردن و کردارەکان",
-          "description": "چۆنیەتی جێبەجێکردن لە پراکتیکدا",
+          "name": "جێبەجێکردن و بەکارهێنانی $topic",
+          "description": "شێوازی پراکتیکی و شیکارکردنی پرسیارەکان",
           "children": [
-            {"name": "ڕێکارەکان", "description": "هەنگاوەکانی کار"},
-            {"name": "بەکارهێنان", "description": "ئەو شوێنانەی سوودی لێ دەبینرێت"}
+            {"name": "ڕێکارەکانی $topic", "description": "هەنگاوەکانی چارەسەر"},
+            {"name": "نموونەی تاقیکردنەوە", "description": "شێوازی هێنانی پرسیار"}
           ]
         }
       ]
