@@ -182,9 +182,10 @@ class PptxGeneratorService {
       final trimmed = line.trim();
       if (trimmed.isEmpty) continue;
 
-      // Detect slide headers e.g. "### 🔹 سلایدی ١: ناساندن", "### Slide 1: Title", "1️⃣ بابەتی یەکەم:"
-      final isSlideHeader = RegExp(r'^(#+\s*)?(🔹|🔸|▪️|▫️|🔻|\d+️⃣|\d+\.|\d+\))\s*(سلایدی|سلايد|Slide|بابەت|بابەتی|الشريحة)\s*\d*[:\-–]', caseSensitive: false).hasMatch(trimmed) ||
-          RegExp(r'^###\s+.*(سلاید|Slide|بابەت|الشريحة)', caseSensitive: false).hasMatch(trimmed);
+      // Detect slide headers e.g. "### 🔹 سلایدی ١: ناساندن", "### Slide 1: Title", "1️⃣ بابەتی یەکەم:", "## Slide 1", "### 1."
+      final isSlideHeader = RegExp(r'^(#+\s*)?(🔹|🔸|▪️|▫️|🔻|\d+️⃣|\d+[\.\:\)\-])?\s*(سلایدی|سلايد|Slide|بابەت|بابەتی|الشريحة|\d+)\s*[:\-–]?\s*', caseSensitive: false).hasMatch(trimmed) ||
+          RegExp(r'^#{1,4}\s+', caseSensitive: false).hasMatch(trimmed) ||
+          RegExp(r'^(سلایدی|سلايد|Slide)\s*\d+', caseSensitive: false).hasMatch(trimmed);
 
       if (isSlideHeader) {
         if (inSlide) {
