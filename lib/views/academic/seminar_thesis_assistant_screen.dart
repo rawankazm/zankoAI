@@ -982,48 +982,56 @@ Please format and classify the following academic reference in standard APA 7th 
       child: Row(
         children: [
           const Icon(CupertinoIcons.globe, color: ZankoColors.accent, size: 18),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           Text(
             _selectedLanguage == SeminarLanguage.english ? 'Language:' : 'زمانی داڕشتن:',
             style: TextStyle(
               fontFamily: _currentFontFamily,
-              fontSize: 13,
+              fontSize: 12.5,
               fontWeight: FontWeight.bold,
               color: isDark ? Colors.grey[300] : ZankoColors.textPrimary,
             ),
           ),
-          const Spacer(),
-          ...SeminarLanguage.values.map((lang) {
-            final isSel = _selectedLanguage == lang;
-            return GestureDetector(
-              onTap: () => setState(() => _selectedLanguage = lang),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.only(left: 6),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isSel ? ZankoColors.accent : (isDark ? Colors.white10 : Colors.grey[100]),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(lang.flag, style: const TextStyle(fontSize: 12)),
-                    const SizedBox(width: 4),
-                    Text(
-                      lang.label,
-                      style: TextStyle(
-                        fontFamily: lang == SeminarLanguage.english ? null : 'DroidKufi',
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: isSel ? Colors.white : (isDark ? Colors.grey[300] : ZankoColors.textSecondary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                children: SeminarLanguage.values.map((lang) {
+                  final isSel = _selectedLanguage == lang;
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedLanguage = lang),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.only(left: 4, right: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: isSel ? ZankoColors.accent : (isDark ? Colors.white10 : Colors.grey[100]),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(lang.flag, style: const TextStyle(fontSize: 11)),
+                          const SizedBox(width: 4),
+                          Text(
+                            lang.label,
+                            style: TextStyle(
+                              fontFamily: lang == SeminarLanguage.english ? null : 'DroidKufi',
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: isSel ? Colors.white : (isDark ? Colors.grey[300] : ZankoColors.textSecondary),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  );
+                }).toList(),
               ),
-            );
-          }),
+            ),
+          ),
         ],
       ),
     );
@@ -3209,6 +3217,33 @@ Please format and classify the following academic reference in standard APA 7th 
           'en': 'Electronic Contracts and Digital Evidence Admissibility in Commercial Law',
           'sum': 'هەڵسەنگاندنی باوەڕپێکراوی ئیمزای ئەلیکترۆنی و بەڵگەنامە دیجیتاڵییەکان لە بەردەم دادگاکاندا.',
           'q': 'مەرجە بنەڕەتییەکانی سەلماندنی گرێبەستی ئەلیکترۆنی لە یاسای دادوەریدا چین؟',
+        },
+      ];
+    } else if (dLower.contains('هونەر') || dLower.contains('شێوەکار') || dLower.contains('مۆسیقا') || dLower.contains('شانۆ') || dLower.contains('ئەدەب') || dLower.contains('مێژوو') || dLower.contains('جوگراف') || dLower.contains('فەلسەف') || dLower.contains('دەروون') || dLower.contains('کۆمەڵناسی') || dLower.contains('میدیا') || dLower.contains('ڕاگەیاندن') || dLower.contains('پەروەردە') || dLower.contains('art') || dLower.contains('fine') || dLower.contains('design') || dLower.contains('history') || dLower.contains('media') || dLower.contains('psych') || dLower.contains('فنون') || dLower.contains('فن') || dLower.contains('تاريخ')) {
+      pool = [
+        {
+          'ku': 'کاریگەریی تەکنۆلۆژیای دیجیتاڵ لەسەر پەرەسەندنی هونەری شێوەکاری و دیزاین',
+          'en': 'Digital Technology Impact on Modern Fine Arts and Graphic Design',
+          'sum': 'لێکۆڵینەوە لە تێکەڵبوونی هۆشیاری دیجیتاڵی و مۆدێلە ڕەنگاواڵەکان لە دروستکردنی تابلۆ و پەیکەرسازی هاوچەرخدا.',
+          'q': 'چۆن میدیای دیجیتاڵی تێگەیشتنی بینەر بۆ تابلۆ ئەکادیمییەکان دەگۆڕێت؟',
+        },
+        {
+          'ku': 'شیکاریی سیمۆتیکی (Semiotics) و هەڵهێنجانی هێماکان لە شانۆ و سینەمای ڕۆژهەڵاتی ناوەڕاستدا',
+          'en': 'Semiotics and Visual Symbolism in Contemporary Middle Eastern Cinema and Theater',
+          'sum': 'شیکردنەوەی ئاماژە و هێما درامییەکان لە دەقی شانۆیی و بەرھەمھێنانی بەرهەمە سینەماییەکاندا.',
+          'q': 'هێما درامییەکان چۆن پەیامی فەلسەفی بە بینەران دەگەیەنن؟',
+        },
+        {
+          'ku': 'دیزاینی بینراو (Visual Design) و بنەماکانی میماریا لە پاراستنی کەلەپوور و فۆلکلۆردا',
+          'en': 'Visual Design & Architectural Aesthetics in Cultural Heritage Preservation',
+          'sum': 'هەڵسەنگاندنی ڕۆڵی دیزاین و فۆتۆگرافیی ئەکادیمی لە پاراستنی شوێنەوارە هونەری و کلتورییەکان.',
+          'q': 'دیزاینەرانی هاوچەرخ چۆن دەتوانن هەستی فۆلکلۆری لە کارە نوێیەکاندا بپارێزن؟',
+        },
+        {
+          'ku': 'کاریگەریی دەروونناسیی ڕەنگەکان (Color Psychology) لەسەر ڕەفتاری بینەر و بەرهەمی هونەری',
+          'en': 'Color Psychology & Aesthetic Perception in Visual Arts and Advertising',
+          'sum': 'لێکۆڵینەوە لە کاردانەوەی دەماری و دەروونی بینەر بەرامبەر هارمۆنیی ڕەنگەکان لە کارە هونەرییەکاندا.',
+          'q': 'شیکاری ڕەنگەکان چۆن یارمەتی هونەرمەند دەدات کاریگەری دەروونی دروست بکات؟',
         },
       ];
     } else if (dLower.contains('بازرگان') || dLower.contains('ئابوور') || dLower.contains('کارگێڕ') || dLower.contains('دارایی') || dLower.contains('ژمێریار') || dLower.contains('busin') || dLower.contains('econ') || dLower.contains('manage') || dLower.contains('finan') || dLower.contains('تجارة') || dLower.contains('اقتصاد')) {

@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -70,10 +69,17 @@ class ReportPdfGeneratorService {
     }
   }
 
-  /// Shapes and BiDi reorders text for canvas rendering
+  static PdfStringFormat _fmt(PdfTextAlignment alignment, bool isRtl) {
+    return PdfStringFormat(
+      alignment: alignment,
+      textDirection: isRtl ? PdfTextDirection.rightToLeft : PdfTextDirection.leftToRight,
+    );
+  }
+
+  /// Shapes Kurdish/Arabic characters cleanly for TrueType font rendering
   static String _fixText(String text, bool isRtl) {
     if (!isRtl || text.trim().isEmpty) return text;
-    return KurdishArabicReshaper.shapeAndReorder(text);
+    return KurdishArabicReshaper.shape(text);
   }
 
   /// Dynamically wraps RTL/LTR text based on font metrics with a safety buffer
@@ -82,8 +88,8 @@ class ReportPdfGeneratorService {
     final rawLines = text.split('\n');
     final List<String> result = [];
 
-    // Safe width with 12pt buffer to guarantee no clipping or unwanted wrapping
-    final double safeWidth = maxWidth - 12;
+    // Safe width with 16pt buffer to guarantee no clipping or unwanted wrapping
+    final double safeWidth = maxWidth - 16;
 
     for (var rawLine in rawLines) {
       final words = rawLine.trim().split(RegExp(r'\s+'));
@@ -92,7 +98,7 @@ class ReportPdfGeneratorService {
       final StringBuffer currentLine = StringBuffer();
       for (var word in words) {
         final testLine = currentLine.isEmpty ? word : '${currentLine.toString()} $word';
-        final measuredWidth = font.measureString(testLine).width;
+        final measuredWidth = font.measureString(_fixText(testLine, isRtl)).width;
 
         if (measuredWidth > safeWidth && currentLine.isNotEmpty) {
           result.add(_fixText(currentLine.toString().trim(), isRtl));
@@ -197,14 +203,14 @@ class ReportPdfGeneratorService {
             smallMutedFont,
             brush: mutedBrush,
             bounds: Rect.fromLTWH(0, 6, pageSize.width, 13),
-            format: PdfStringFormat(alignment: PdfTextAlignment.right),
+            format: _fmt(PdfTextAlignment.right, isRtl),
           );
           g.drawString(
             _fixText(report.universityName, true),
             smallMutedFont,
             brush: mutedBrush,
             bounds: Rect.fromLTWH(0, 6, pageSize.width, 13),
-            format: PdfStringFormat(alignment: PdfTextAlignment.left),
+            format: _fmt(PdfTextAlignment.left, isRtl),
           );
         } else {
           g.drawString(
@@ -212,14 +218,14 @@ class ReportPdfGeneratorService {
             smallMutedFont,
             brush: mutedBrush,
             bounds: Rect.fromLTWH(0, 6, pageSize.width, 13),
-            format: PdfStringFormat(alignment: PdfTextAlignment.left),
+            format: _fmt(PdfTextAlignment.left, isRtl),
           );
           g.drawString(
             headerTopic,
             smallMutedFont,
             brush: mutedBrush,
             bounds: Rect.fromLTWH(0, 6, pageSize.width, 13),
-            format: PdfStringFormat(alignment: PdfTextAlignment.right),
+            format: _fmt(PdfTextAlignment.right, isRtl),
           );
         }
 
@@ -239,7 +245,7 @@ class ReportPdfGeneratorService {
           smallMutedFont,
           brush: mutedBrush,
           bounds: Rect.fromLTWH(0, footerY, pageSize.width, 13),
-          format: PdfStringFormat(alignment: PdfTextAlignment.center),
+          format: _fmt(PdfTextAlignment.center, isRtl),
         );
 
         g.drawString(
@@ -247,7 +253,7 @@ class ReportPdfGeneratorService {
           smallMutedFont,
           brush: mutedBrush,
           bounds: Rect.fromLTWH(0, footerY, pageSize.width, 13),
-          format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.left : PdfTextAlignment.right),
+          format: _fmt(isRtl ? PdfTextAlignment.left : PdfTextAlignment.right, isRtl),
         );
       }
 
@@ -310,7 +316,7 @@ class ReportPdfGeneratorService {
             headerFont,
             brush: primaryNavy,
             bounds: Rect.fromLTWH(textHeaderX, hCurrY, textHeaderW, 16),
-            format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
+            format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
           );
           hCurrY += 17;
         }
@@ -351,7 +357,7 @@ class ReportPdfGeneratorService {
           boldBodyFont,
           brush: academicMaroon,
           bounds: Rect.fromLTWH(0, badgeY + 4, pageSize.width, 18),
-          format: PdfStringFormat(alignment: PdfTextAlignment.center),
+          format: _fmt(PdfTextAlignment.center, isRtl),
         );
 
         // Title Lines inside Card
@@ -363,7 +369,7 @@ class ReportPdfGeneratorService {
             bigTitleFont,
             brush: primaryNavy,
             bounds: Rect.fromLTWH(20, tY, pageSize.width - 40, 26),
-            format: PdfStringFormat(alignment: PdfTextAlignment.center),
+            format: _fmt(PdfTextAlignment.center, isRtl),
           );
           tY += 28;
         }
@@ -389,7 +395,7 @@ class ReportPdfGeneratorService {
           midTitleFont,
           brush: academicMaroon,
           bounds: Rect.fromLTWH(col1X, c1Y, colW, 20),
-          format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
+          format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
         );
         c1Y += 24;
 
@@ -405,7 +411,7 @@ class ReportPdfGeneratorService {
             boldBodyFont,
             brush: primaryNavy,
             bounds: Rect.fromLTWH(col1X, c1Y, colW, 18),
-            format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
+            format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
           );
           c1Y += 18;
         }
@@ -417,7 +423,7 @@ class ReportPdfGeneratorService {
           midTitleFont,
           brush: academicMaroon,
           bounds: Rect.fromLTWH(col2X, c2Y, colW, 20),
-          format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
+          format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
         );
         c2Y += 24;
         g.drawString(
@@ -425,7 +431,7 @@ class ReportPdfGeneratorService {
           boldBodyFont,
           brush: primaryNavy,
           bounds: Rect.fromLTWH(col2X, c2Y, colW, 18),
-          format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
+          format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
         );
 
         // Stage & Year in Info Card
@@ -435,7 +441,7 @@ class ReportPdfGeneratorService {
           smallMutedFont,
           brush: mutedBrush,
           bounds: Rect.fromLTWH(col2X, c2Y, colW, 18),
-          format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
+          format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
         );
 
         // 4. Bottom Academic Year
@@ -447,7 +453,7 @@ class ReportPdfGeneratorService {
           midTitleFont,
           brush: academicMaroon,
           bounds: Rect.fromLTWH(0, bottomY, pageSize.width, 22),
-          format: PdfStringFormat(alignment: PdfTextAlignment.center),
+          format: _fmt(PdfTextAlignment.center, isRtl),
         );
 
       } else if (pageModel.pageType == 'toc') {
@@ -460,7 +466,7 @@ class ReportPdfGeneratorService {
           midTitleFont,
           brush: academicMaroon,
           bounds: Rect.fromLTWH(0, currY, pageSize.width, 24),
-          format: PdfStringFormat(alignment: PdfTextAlignment.center),
+          format: _fmt(PdfTextAlignment.center, isRtl),
         );
         currY += 26;
 
@@ -506,7 +512,7 @@ class ReportPdfGeneratorService {
               boldBodyFont,
               brush: academicMaroon,
               bounds: Rect.fromLTWH(5, currY + 2, 28, 15),
-              format: PdfStringFormat(alignment: PdfTextAlignment.center),
+              format: _fmt(PdfTextAlignment.center, isRtl),
             );
 
             // Title on Right
@@ -516,7 +522,7 @@ class ReportPdfGeneratorService {
               boldBodyFont,
               brush: primaryNavy,
               bounds: Rect.fromLTWH(40, currY + 2, pageSize.width - 45, 18),
-              format: PdfStringFormat(alignment: PdfTextAlignment.right),
+              format: _fmt(PdfTextAlignment.right, isRtl),
             );
 
             // Dotted Leader line
@@ -529,7 +535,7 @@ class ReportPdfGeneratorService {
                 smallMutedFont,
                 brush: mutedBrush,
                 bounds: Rect.fromLTWH(dotStartX, currY + 2, dotEndX - dotStartX, 15),
-                format: PdfStringFormat(alignment: PdfTextAlignment.center),
+                format: _fmt(PdfTextAlignment.center, isRtl),
               );
             }
           } else {
@@ -539,7 +545,7 @@ class ReportPdfGeneratorService {
               boldBodyFont,
               brush: primaryNavy,
               bounds: Rect.fromLTWH(5, currY + 2, pageSize.width - 45, 18),
-              format: PdfStringFormat(alignment: PdfTextAlignment.left),
+              format: _fmt(PdfTextAlignment.left, isRtl),
             );
 
             // Page Number Badge on Right
@@ -553,7 +559,7 @@ class ReportPdfGeneratorService {
               boldBodyFont,
               brush: academicMaroon,
               bounds: Rect.fromLTWH(pageSize.width - 35, currY + 2, 28, 15),
-              format: PdfStringFormat(alignment: PdfTextAlignment.center),
+              format: _fmt(PdfTextAlignment.center, isRtl),
             );
 
             // Dotted Leader line
@@ -566,7 +572,7 @@ class ReportPdfGeneratorService {
                 smallMutedFont,
                 brush: mutedBrush,
                 bounds: Rect.fromLTWH(dotStartX, currY + 2, dotEndX - dotStartX, 15),
-                format: PdfStringFormat(alignment: PdfTextAlignment.center),
+                format: _fmt(PdfTextAlignment.center, isRtl),
               );
             }
           }
@@ -584,7 +590,7 @@ class ReportPdfGeneratorService {
           midTitleFont,
           brush: academicMaroon,
           bounds: Rect.fromLTWH(0, currY, pageSize.width, 24),
-          format: PdfStringFormat(alignment: PdfTextAlignment.center),
+          format: _fmt(PdfTextAlignment.center, isRtl),
         );
         currY += 26;
 
@@ -618,7 +624,7 @@ class ReportPdfGeneratorService {
             boldBodyFont,
             brush: academicMaroon,
             bounds: Rect.fromLTWH(badgeX, currY + 6, 24, 16),
-            format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
+            format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
           );
 
           // Citation Text
@@ -632,7 +638,7 @@ class ReportPdfGeneratorService {
               bodyFont,
               brush: bodyBrush,
               bounds: Rect.fromLTWH(textX, lineY, textW, 16),
-              format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
+              format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
             );
             lineY += 15.5;
           }
@@ -670,7 +676,7 @@ class ReportPdfGeneratorService {
             sectionTitleFont,
             brush: academicMaroon,
             bounds: Rect.fromLTWH(10, currentY + 3.5, pageSize.width - 20, 16),
-            format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
+            format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
           );
           currentY += headerBoxH + 8;
 
@@ -687,7 +693,7 @@ class ReportPdfGeneratorService {
                 bodyFont,
                 brush: bodyBrush,
                 bounds: Rect.fromLTWH(6, currentY, pageSize.width - 12, 16),
-                format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
+                format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
               );
               currentY += 15.5;
             }
@@ -705,7 +711,7 @@ class ReportPdfGeneratorService {
               boldBodyFont,
               brush: academicMaroon,
               bounds: Rect.fromLTWH(bulletX, currentY, 12, 16),
-              format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
+              format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
             );
 
             final double bTextX = isRtl ? 4 : 20;
@@ -715,7 +721,7 @@ class ReportPdfGeneratorService {
                 bodyFont,
                 brush: bodyBrush,
                 bounds: Rect.fromLTWH(bTextX, currentY, pageSize.width - 26, 16),
-                format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
+                format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
               );
               currentY += 15.5;
             }
