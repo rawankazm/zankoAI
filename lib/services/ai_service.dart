@@ -312,7 +312,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
       final prompt = "$historyStrخوێندکار: $userPrompt\nمامۆستا:";
       
       const systemInstruction = 
-          "تۆ مامۆستایەکی زیرەک و شارەزای بە ناوی ZankoAI. تەنها بە زمانی کوردی (سۆرانی) بە شێوازێکی پڕۆفێشناڵ و ڕوون وەڵامی هەموو پرسیارەکان بدەرەوە.";
+          "تۆ مامۆستایەکی زیرەک و پرۆفێشناڵی زانکۆی بە ناوی ZankoAI. وەڵامی هەموو پرسیارەکان بە هەمان زمانی پرسیارکەرەکە بدەرەوە بە شێوازێکی پڕۆفێشناڵ و زانستی و ڕوون: ئەگەر بە کوردی سۆرانی بوو بە سۆرانی، ئەگەر بە کوردی بادینی بوو بە بادینی، ئەگەر بە زمانی عەرەبی بوو بە زمانی عەرەبی پاراو و دروست، و ئەگەر بە ئینگلیزی بوو بە ئینگلیزی.";
           
       return await _callGemini(prompt, systemInstruction: systemInstruction);
     } catch (e) {
@@ -427,11 +427,11 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
     final isAudio = mimeType.startsWith('audio');
     final systemPrompt = isAudio
-        ? "تۆ سیستمێکی زۆر پێشکەوتووی نوسینەوەی دەنگی (Speech-to-Text). گوێ لەم تۆمارە دەنگییە بگرە و بە وردی و تەواوی وشە بە وشە بە زمانی کوردی (سۆرانی/بادینی) یان ئینگلیزی (بەپێی دەنگەکە) دەقەکە بنووسەوە. تکایە تەنها و تەنها دەقی ئاخاوتنەکە بنووسەوە بەبێ هیچ پێشەکی، سەردێڕ، یان کۆمێنتی زیادە."
-        : "تۆ مامۆستایەکی زیرەک و شارەزای بە ناوی ZankoAI. ئەم وێنەیەی پرسیارە بە تەنها زمانی کوردی (سۆرانی) شیکار بکە بە ڕوونی.";
+        ? "تۆ سیستمێکی زۆر پێشکەوتووی نوسینەوەی دەنگی (Speech-to-Text). گوێ لەم تۆمارە دەنگییە بگرە و بە وردی و تەواوی وشە بە وشە بە زمانی قسەکەرەکە (کوردی سۆرانی، کوردی بادینی، زمانی عەرەبی، یان ئینگلیزی) دەقەکە بنووسەوە. تکایە تەنها و تەنها دەقی ئاخاوتنەکە بنووسەوە بەبێ هیچ پێشەکی، سەردێڕ، یان کۆمێنتی زیادە."
+        : "تۆ مامۆستایەکی زیرەک و شارەزای بە ناوی ZankoAI. ئەم وێنەیەی پرسیارە بە زمانی پرسیارەکە (کوردی سۆرانی، کوردی بادینی، زمانی عەرەبی، یان ئینگلیزی) شیکار بکە بە ڕوونی.";
 
     final defaultPrompt = isAudio
-        ? "Transcribe the spoken words in this audio exactly in Kurdish or English."
+        ? "Transcribe the spoken words in this audio exactly in Kurdish (Sorani/Badini), Arabic, or English."
         : "ئەم پرسیارەی ناو وێنەکە بە هەنگاو بە هەنگاو شیکار بکە.";
 
     final effectivePrompt = prompt.isNotEmpty ? prompt : defaultPrompt;
@@ -577,7 +577,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   Future<String> transcribeAudio(Uint8List? audioBytes, String audioFileName, {String mimeType = 'audio/m4a'}) async {
     if (audioBytes != null && audioBytes.isNotEmpty) {
       try {
-        const prompt = "ئەم فایلی دەنگییەی پێدراوە بە تەواوی و وشە بە وشە بە زمانی کوردی (سۆرانی/بادینی) یان ئینگلیزی (بەپێی دەنگەکە) بە نووسین (Speech-to-Text Transcribe) بنووسەوە. تەنها و تەنها دەقی تەواوی ئاخاوتنەکە بنووسەوە بەبێ هیچ سەردێڕ، پێشەکی، یان لێدوانێک.";
+        const prompt = "ئەم فایلی دەنگییەی پێدراوە بە تەواوی و وشە بە وشە بە زمانی قسەکەرەکە (کوردی سۆرانی، کوردی بادینی/کرمانجی، زمانی عەرەبی، یان ئینگلیزی) بە نووسین (Speech-to-Text Transcribe) بنووسەوە. تەنها و تەنها دەقی تەواوی ئاخاوتنەکە بنووسەوە بەبێ هیچ سەردێڕ، پێشەکی، یان لێدوانێک.";
         final result = await _callGeminiMultimodal(audioBytes, prompt, mimeType: mimeType);
         if (result.trim().isNotEmpty && !result.contains('Error') && !result.contains('blocked')) {
           return result.trim();
@@ -598,7 +598,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 دەقی دەنگەکە:
 $transcriptText
 
-تکایە بە زمانی کوردی (سۆرانی) تێروتەسەل بەم شێوازەی خوارەوە بە مارکداون کورت بکەرەوە:
+تکایە بە زمانی دەنگەکە یان بە زمانی خوێندکار (کوردی سۆرانی، کوردی بادینی، یان عەرەبی) تێروتەسەل بەم شێوازەی خوارەوە بە مارکداون کورت بکەرەوە:
 # 🎙️ پوختەی سەرەکی تۆماری دەنگی ($cleanName)
 
 ## 📌 ١- دەستپێک و باسی سەرەکی وانەکە

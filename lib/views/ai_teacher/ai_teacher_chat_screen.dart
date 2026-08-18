@@ -48,15 +48,37 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
         .replaceAll(RegExp(r'`[\s\S]*?`'), '');
 
     try {
-      final isCkbAvailable = await _flutterTts.isLanguageAvailable("ckb") ?? false;
-      if (isCkbAvailable) {
-        await _flutterTts.setLanguage("ckb");
-      } else {
-        final isKuAvailable = await _flutterTts.isLanguageAvailable("ku") ?? false;
-        if (isKuAvailable) {
-          await _flutterTts.setLanguage("ku");
+      final lang = Provider.of<LanguageProvider>(context, listen: false);
+      if (lang.currentLanguage == AppLanguage.arabic) {
+        final isArAvailable = await _flutterTts.isLanguageAvailable("ar") ?? false;
+        if (isArAvailable) {
+          await _flutterTts.setLanguage("ar");
         } else {
-          await _flutterTts.setLanguage("en-US");
+          await _flutterTts.setLanguage("ar-SA");
+        }
+      } else if (lang.currentLanguage == AppLanguage.kurdishBadini) {
+        final isKmrAvailable = await _flutterTts.isLanguageAvailable("kmr") ?? false;
+        if (isKmrAvailable) {
+          await _flutterTts.setLanguage("kmr");
+        } else {
+          final isKuAvailable = await _flutterTts.isLanguageAvailable("ku") ?? false;
+          if (isKuAvailable) {
+            await _flutterTts.setLanguage("ku");
+          } else {
+            await _flutterTts.setLanguage("en-US");
+          }
+        }
+      } else {
+        final isCkbAvailable = await _flutterTts.isLanguageAvailable("ckb") ?? false;
+        if (isCkbAvailable) {
+          await _flutterTts.setLanguage("ckb");
+        } else {
+          final isKuAvailable = await _flutterTts.isLanguageAvailable("ku") ?? false;
+          if (isKuAvailable) {
+            await _flutterTts.setLanguage("ku");
+          } else {
+            await _flutterTts.setLanguage("en-US");
+          }
         }
       }
     } catch (_) {
