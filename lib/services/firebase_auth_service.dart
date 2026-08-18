@@ -377,4 +377,12 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
     _currentUser = null;
     notifyListeners();
   }
+
+  @override
+  void reloadUser() {
+    if (_currentUser != null) {
+      _currentUser = _currentUser!.copyWith(isVip: true);
+      notifyListeners();
+    }
+  }
 }

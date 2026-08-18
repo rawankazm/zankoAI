@@ -10,6 +10,7 @@ import 'teacher_enrollments_screen.dart';
 import 'teacher_analytics_screen.dart';
 import 'teacher_lectures_screen.dart';
 import 'teacher_announcements_screen.dart';
+import '../payment/admin_payment_config_sheet.dart';
 import '../../theme.dart';
 
 class TeacherDashboardScreen extends StatelessWidget {
@@ -295,6 +296,13 @@ class _QuickActionsGrid extends StatelessWidget {
         'icon': Icons.how_to_reg_rounded,
         'color': const Color(0xFF0891B2),
         'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherEnrollmentsScreen())),
+      },
+      {
+        'label': 'ژمارەکانی پارەدانی VIP 💳',
+        'sublabel': 'گۆڕینی ژمارەکانی FIB، FastPay و ZainCash',
+        'icon': Icons.payments_rounded,
+        'color': const Color(0xFFB8860B),
+        'onTap': () => AdminPaymentConfigSheet.show(context),
       },
     ];
 

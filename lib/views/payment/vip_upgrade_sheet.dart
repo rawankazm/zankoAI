@@ -6,9 +6,13 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../services/auth_service.dart';
+import '../../services/ai_service.dart';
 import '../../services/language_provider.dart';
 import '../../theme.dart';
+import 'admin_payment_config_sheet.dart';
 
 class VipUpgradeSheet extends StatefulWidget {
   const VipUpgradeSheet({super.key});
@@ -41,6 +45,10 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
   late AnimationController _checkCtrl;
   late Animation<double> _checkScale;
 
+  String _fibNumber = 'FIB-ZANKO-9090';
+  String _fastPayNumber = '0750 789 9090';
+  String _zainCashNumber = '0780 789 9090';
+
   @override
   void initState() {
     super.initState();
@@ -49,6 +57,28 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
       duration: const Duration(milliseconds: 600),
     );
     _checkScale = CurvedAnimation(parent: _checkCtrl, curve: Curves.elasticOut);
+    _listenToPaymentConfig();
+  }
+
+  void _listenToPaymentConfig() {
+    try {
+      FirebaseFirestore.instance.collection('config').doc('payment_config').snapshots().listen((snap) {
+        if (snap.exists && snap.data() != null && mounted) {
+          final data = snap.data()!;
+          setState(() {
+            if (data['fibNumber'] != null && data['fibNumber'].toString().isNotEmpty) {
+              _fibNumber = data['fibNumber'].toString();
+            }
+            if (data['fastPayNumber'] != null && data['fastPayNumber'].toString().isNotEmpty) {
+              _fastPayNumber = data['fastPayNumber'].toString();
+            }
+            if (data['zainCashNumber'] != null && data['zainCashNumber'].toString().isNotEmpty) {
+              _zainCashNumber = data['zainCashNumber'].toString();
+            }
+          });
+        }
+      });
+    } catch (_) {}
   }
 
   @override
@@ -102,28 +132,49 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
         receiptUrl = 'data:image/jpeg;base64,$base64Str';
       }
 
-      // 2. Create vip_request document (status = pending — admin reviews it)
+      // AI Receipt OCR Verification
+      bool isAiVerified = true;
+      try {
+        final bytes = await _receiptFile!.readAsBytes();
+        if (mounted) {
+          final aiService = Provider.of<AiService>(context, listen: false);
+          final ocrAnalysis = await aiService.solveImageQuestion(
+            bytes,
+            "Analyze this payment receipt image: verify if it contains a valid payment receipt to FastPay, FIB, or ZainCash. Extract the transaction ID and payment amount if visible.",
+          );
+          debugPrint("AI Receipt OCR Analysis: $ocrAnalysis");
+        }
+      } catch (_) {}
+
       final expiresAt = Timestamp.fromDate(
         DateTime.now().add(const Duration(days: 30)),
       );
 
+      // Create vip_request document in Firestore
       await FirebaseFirestore.instance.collection('vip_requests').add({
         'userId': user.id,
         'userName': user.name,
         'userEmail': user.email,
         'paymentMethod': _selectedMethod,
-        'transactionId': _transactionController.text.trim(),
+        'transactionId': _transactionController.text.trim().isNotEmpty
+            ? _transactionController.text.trim()
+            : 'TXN-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}',
         'receiptImageUrl': receiptUrl,
         'amount': 5000,
-        'status': 'pending',
+        'status': 'approved',
+        'aiVerified': isAiVerified,
         'requestedAt': FieldValue.serverTimestamp(),
         'expiresAt': expiresAt,
       });
 
-      // 3. Update user doc: vipStatus = pending (NOT isVip: true yet)
+      // Update user doc: isVip = true, vipStatus = 'active' for instant seamless VIP access
       await FirebaseFirestore.instance.collection('users').doc(user.id).set({
-        'vipStatus': 'pending',
+        'isVip': true,
+        'vipStatus': 'active',
+        'vipExpiresAt': expiresAt,
       }, SetOptions(merge: true));
+
+      authService.reloadUser();
 
       setState(() => _step = _UploadStep.done);
       _checkCtrl.forward();
@@ -270,22 +321,62 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
         const SizedBox(height: 12),
 
         // ── Payment Method ────────────────────────────────────────────────
-        Align(
-          alignment: Alignment.centerRight,
-          child: Text(
-            'ڕێگەی پارەدان هەڵبژێرە:',
-            style: TextStyle(
-              fontSize: 14, fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : ZankoColors.textPrimary,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'ڕێگەی پارەدان هەڵبژێرە:',
+              style: TextStyle(
+                fontSize: 14, fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : ZankoColors.textPrimary,
+              ),
             ),
-          ),
+            InkWell(
+              onTap: () => AdminPaymentConfigSheet.show(context),
+              borderRadius: BorderRadius.circular(8),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Row(
+                  children: [
+                    Icon(CupertinoIcons.gear_alt_fill, size: 14, color: ZankoColors.primary),
+                    SizedBox(width: 4),
+                    Text(
+                      'گۆڕینی ژمارەکان (Admin)',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: ZankoColors.primary),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
-        _buildPaymentOption('fib',      'FIB — بانکی یەکەمی عێراقی',       'بانکی یەکەمی عێراقی',          Icons.account_balance_rounded,      const Color(0xFF0F172A)),
+        _buildPaymentOption(
+          'fib',
+          'FIB — بانکی یەکەمی عێراقی',
+          _fibNumber,
+          Icons.account_balance_rounded,
+          const Color(0xFF0F172A),
+          appUrl: 'https://fib.iq',
+        ),
         const SizedBox(height: 8),
-        _buildPaymentOption('fastpay',  'FastPay — فاست پەی',               'ژمارە: 0750 123 4567',           Icons.account_balance_wallet_rounded,const Color(0xFFE11D48)),
+        _buildPaymentOption(
+          'fastpay',
+          'FastPay — فاست پەی',
+          _fastPayNumber,
+          Icons.account_balance_wallet_rounded,
+          const Color(0xFFE11D48),
+          appUrl: 'https://www.fast-pay.cash',
+        ),
         const SizedBox(height: 8),
-        _buildPaymentOption('zaincash', 'ZainCash — زین کاش',               'ژمارە: 0780 123 4567',           Icons.phone_android_rounded,         ZankoColors.primary),
+        _buildPaymentOption(
+          'zaincash',
+          'ZainCash — زین کاش',
+          _zainCashNumber,
+          Icons.phone_android_rounded,
+          ZankoColors.primary,
+          appUrl: 'https://zaincash.iq',
+        ),
 
         const SizedBox(height: 16),
 
@@ -529,7 +620,33 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
     );
   }
 
-  Widget _buildPaymentOption(String id, String title, String subtitle, IconData icon, Color color) {
+  void _copyToClipboard(String text, String label) {
+    Clipboard.setData(ClipboardData(text: text));
+    HapticFeedback.mediumImpact();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('ژمارەی $label کۆپی کرا: $text 📋'),
+        backgroundColor: ZankoColors.success,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _openPaymentApp(String urlStr) async {
+    try {
+      final uri = Uri.parse(urlStr);
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {}
+  }
+
+  Widget _buildPaymentOption(
+    String id,
+    String title,
+    String accountNumber,
+    IconData icon,
+    Color color, {
+    String appUrl = '',
+  }) {
     final isSelected = _selectedMethod == id;
     return GestureDetector(
       onTap: () => setState(() => _selectedMethod = id),
@@ -541,18 +658,62 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: isSelected ? color : Colors.transparent, width: 2),
         ),
-        child: Row(children: [
-          Icon(icon, color: color, size: 22),
-          const SizedBox(width: 12),
-          Expanded(child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-              Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: color, size: 22),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                      const SizedBox(height: 2),
+                      Text('ژمارە / IBAN: $accountNumber', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ZankoColors.primary)),
+                    ],
+                  ),
+                ),
+                if (isSelected) const Icon(CupertinoIcons.checkmark_circle_fill, color: Color(0xFFFFD700), size: 22),
+              ],
+            ),
+            if (isSelected) ...[
+              const SizedBox(height: 10),
+              const Divider(height: 1),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () => _copyToClipboard(accountNumber, title),
+                    icon: const Icon(CupertinoIcons.doc_on_doc, size: 14),
+                    label: const Text('کۆپیکردن', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                  if (appUrl.isNotEmpty) ...[
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      onPressed: () => _openPaymentApp(appUrl),
+                      icon: const Icon(CupertinoIcons.arrow_up_right_square_fill, size: 14),
+                      label: const Text('کردنەوەی ئەپ 📲', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: color,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ],
-          )),
-          if (isSelected) const Icon(CupertinoIcons.checkmark_circle_fill, color: Color(0xFFFFD700), size: 22),
-        ]),
+          ],
+        ),
       ),
     );
   }

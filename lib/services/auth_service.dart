@@ -20,4 +20,5 @@ abstract class AuthService extends ChangeNotifier {
   Future<bool> loginWithGoogle([UserRole role = UserRole.student]);
   Future<void> loginAsGuest();
   Future<void> logout();
+  void reloadUser();
 }
