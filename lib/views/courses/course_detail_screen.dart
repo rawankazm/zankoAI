@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
 import '../../services/language_provider.dart';
+import '../../services/sample_pdf_service.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
 import '../pdf/pdf_chat_screen.dart';
@@ -957,89 +958,102 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                               padding: const EdgeInsets.all(16),
                               child: Column(
                                 children: [
-                                  Row(
-                                    children: [
-                                      // PDF Red Icon
-                                      Container(
-                                        width: 44,
-                                        height: 44,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFFF3B30).withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(14),
+                                  GestureDetector(
+                                    onTap: () {
+                                      final realContent = SamplePdfService().getSampleLectureText(pdf.fileName, widget.courseTitle);
+                                      Navigator.push(
+                                        context,
+                                        CupertinoPageRoute(
+                                          builder: (context) => PdfChatScreen(
+                                            initialFileName: pdf.title,
+                                            initialFileContent: realContent,
+                                          ),
                                         ),
-                                        child: const Icon(
-                                          CupertinoIcons.doc_text_fill,
-                                          color: Color(0xFFFF3B30),
-                                          size: 22,
+                                      );
+                                    },
+                                    child: Row(
+                                      children: [
+                                        // PDF Red Icon
+                                        Container(
+                                          width: 44,
+                                          height: 44,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFFF3B30).withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(14),
+                                          ),
+                                          child: const Icon(
+                                            CupertinoIcons.doc_text_fill,
+                                            color: Color(0xFFFF3B30),
+                                            size: 22,
+                                          ),
                                         ),
-                                      ),
-                                      const SizedBox(width: 14),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              pdf.title,
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w700,
-                                                color: isDark
-                                                    ? Colors.white
-                                                    : ZankoColors.textPrimary,
+                                        const SizedBox(width: 14),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                pdf.title,
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: isDark
+                                                      ? Colors.white
+                                                      : ZankoColors.textPrimary,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
                                               ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Row(
-                                              children: [
-                                                Text(
-                                                  pdf.size,
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: ZankoColors.primary,
+                                              const SizedBox(height: 4),
+                                              Row(
+                                                children: [
+                                                  Text(
+                                                    pdf.size,
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: ZankoColors.primary,
+                                                    ),
                                                   ),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Text(
-                                                  '• ${t(pdf.dateAdded)}',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: ZankoColors.textSecondary,
+                                                  const SizedBox(width: 8),
+                                                  Text(
+                                                    '• ${t(pdf.dateAdded)}',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: ZankoColors.textSecondary,
+                                                    ),
                                                   ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
+                                                ],
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                      // Delete button
-                                      IconButton(
-                                        icon: const Icon(
-                                          CupertinoIcons.trash,
-                                          size: 18,
-                                          color: Colors.redAccent,
+                                        // Delete button
+                                        IconButton(
+                                          icon: const Icon(
+                                            CupertinoIcons.trash,
+                                            size: 18,
+                                            color: Colors.redAccent,
+                                          ),
+                                          onPressed: () => _deletePdf(pdf.id),
                                         ),
-                                        onPressed: () => _deletePdf(pdf.id),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                   const SizedBox(height: 12),
-                                  const Divider(height: 1),
-                                  const SizedBox(height: 10),
                                   // Action Buttons
                                   Row(
                                     children: [
                                       Expanded(
                                         child: GestureDetector(
                                           onTap: () {
+                                            final realContent = SamplePdfService().getSampleLectureText(pdf.fileName, widget.courseTitle);
                                             Navigator.push(
                                               context,
                                               CupertinoPageRoute(
                                                 builder: (context) => PdfChatScreen(
                                                   initialFileName: pdf.title,
-                                                  initialFileContent: 'فایلی فێرکاری: ${pdf.title}\nکورس: ${widget.courseTitle}\nقەبارە: ${pdf.size}',
+                                                  initialFileContent: realContent,
                                                 ),
                                               ),
                                             );
@@ -1076,12 +1090,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                       Expanded(
                                         child: GestureDetector(
                                           onTap: () {
+                                            final realContent = SamplePdfService().getSampleLectureText(pdf.fileName, widget.courseTitle);
                                             Navigator.push(
                                               context,
                                               CupertinoPageRoute(
                                                 builder: (context) => AiTeacherChatScreen(
                                                   initialPrompt:
-                                                      'Generate a summary and study quiz for ${pdf.title}.',
+                                                      'تکایە ئەم فایلی وانەیە (${pdf.title}) کورت بکەرەوە و خاڵە گرنگەکانی شیکار بکە:\n\n$realContent',
                                                 ),
                                               ),
                                             );

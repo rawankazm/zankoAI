@@ -7,6 +7,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import '../../services/language_provider.dart';
 import '../../services/ai_service.dart';
+import '../../services/sample_pdf_service.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
 import 'pdf_summary_screen.dart';
@@ -32,7 +33,10 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
     super.initState();
     if (widget.initialFileName != null && widget.initialFileName!.isNotEmpty) {
       _selectedPdf = widget.initialFileName!;
-      _selectedFileContent = widget.initialFileContent;
+      _selectedFileContent = widget.initialFileContent ??
+          SamplePdfService().getSampleLectureText(widget.initialFileName!, 'Academic Course');
+    } else {
+      _selectedFileContent = SamplePdfService().getSampleLectureText(_selectedPdf, 'Academic Course');
     }
   }
 
