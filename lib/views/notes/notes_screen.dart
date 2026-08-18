@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
+import 'package:record/record.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../services/ai_service.dart';
 import '../../services/database_service.dart';
 import '../../services/language_provider.dart';
@@ -296,22 +299,43 @@ class _NotesScreenState extends State<NotesScreen> {
     );
   }
 
-  void _startVoiceRecordingModal(BuildContext context, StateSetter setModalState) {
+  Future<void> _startVoiceRecordingModal(BuildContext context, StateSetter setModalState) async {
+    final audioRecorder = AudioRecorder();
+    if (!await audioRecorder.hasPermission()) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ڕێگەپێدانی مایکرۆفۆن پێویستە بۆ تۆمارکردن 🎙️')),
+        );
+      }
+      return;
+    }
+
+    final tempDir = await getTemporaryDirectory();
+    final filePath = '${tempDir.path}/note_voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
+    await audioRecorder.start(
+      const RecordConfig(encoder: AudioEncoder.aacLc),
+      path: filePath,
+    );
+
     int recordSeconds = 0;
     Timer? recordTimer;
-    bool isRecording = true;
+    bool isProcessing = false;
     List<double> barHeights = List.generate(12, (_) => 12.0 + Random().nextDouble() * 30.0);
+
+    if (!context.mounted) return;
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
+      builder: (dialogCtx) {
         return StatefulBuilder(
-          builder: (context, setDialogState) {
-            final lang = Provider.of<LanguageProvider>(context, listen: false);
+          builder: (dialogCtx, setDialogState) {
+            final lang = Provider.of<LanguageProvider>(dialogCtx, listen: false);
+            final aiService = Provider.of<AiService>(dialogCtx, listen: false);
             String t(String key) => lang.translate(key);
+
             recordTimer ??= Timer.periodic(const Duration(seconds: 1), (timer) {
-              if (isRecording) {
+              if (!isProcessing) {
                 setDialogState(() {
                   recordSeconds++;
                   barHeights = List.generate(12, (_) => 12.0 + Random().nextDouble() * 30.0);
@@ -330,60 +354,107 @@ class _NotesScreenState extends State<NotesScreen> {
                   const SizedBox(width: 8),
                   Text(
                     t('recording_voice_note'),
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    timeStr,
-                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.redAccent),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: barHeights.map((h) {
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        width: 5,
-                        height: h,
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.redAccent.withOpacity(0.85),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      recordTimer?.cancel();
-                      Navigator.pop(context);
-
-                      final mockTexts = [
-                        'پێداچوونەوە بە بەشەکانی یەکەم و دووەمی سیستەمی کارپێکردن بۆ تاقیکردنەوە.',
-                        'پڕۆسێسەر مێشکی مۆبایل و کۆمپیوتەرە و بەرپرسی یەکەمە لە جێبەجێکردنی کارەکان.',
-                        'خشتەی داتابەیس پێکدێت لە دێڕ و ستوونەکان بۆ پاراستنی زانیاری بەکارھێنەران.'
-                      ];
-
-                      final randomText = mockTexts[Random().nextInt(mockTexts.length)];
-                      setModalState(() {
-                        final currentText = _contentController.text.trim();
-                        _contentController.text = currentText.isEmpty ? randomText : '$currentText\n$randomText';
-                      });
-                    },
-                    icon: const Icon(CupertinoIcons.checkmark_circle_fill),
-                    label: Text('Done & Insert Text', style: TextStyle(fontWeight: FontWeight.w600)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.redAccent,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  if (isProcessing) ...[
+                    const CupertinoActivityIndicator(radius: 16),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Gemini Flash دەنگەکە دەکاتە دەق... ⚡',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                     ),
-                  ),
+                  ] else ...[
+                    Text(
+                      timeStr,
+                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.redAccent),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: barHeights.map((h) {
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: 5,
+                          height: h,
+                          margin: const EdgeInsets.symmetric(horizontal: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.redAccent.withOpacity(0.85),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () async {
+                              recordTimer?.cancel();
+                              await audioRecorder.stop();
+                              try {
+                                final f = File(filePath);
+                                if (await f.exists()) await f.delete();
+                              } catch (_) {}
+                              audioRecorder.dispose();
+                              if (dialogCtx.mounted) Navigator.pop(dialogCtx);
+                            },
+                            child: const Text('هەڵوەشاندنەوە'),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () async {
+                              recordTimer?.cancel();
+                              setDialogState(() => isProcessing = true);
+                              try {
+                                final path = await audioRecorder.stop();
+                                final fileToRead = File(path ?? filePath);
+                                if (await fileToRead.exists()) {
+                                  final bytes = await fileToRead.readAsBytes();
+                                  final transcribedText = await aiService.transcribeAudio(
+                                    bytes,
+                                    'note_voice.m4a',
+                                    mimeType: 'audio/m4a',
+                                  );
+
+                                  try {
+                                    await fileToRead.delete();
+                                  } catch (_) {}
+
+                                  if (transcribedText.trim().isNotEmpty) {
+                                    setModalState(() {
+                                      final currentText = _contentController.text.trim();
+                                      _contentController.text = currentText.isEmpty
+                                          ? transcribedText.trim()
+                                          : '$currentText\n${transcribedText.trim()}';
+                                    });
+                                  }
+                                }
+                              } catch (_) {}
+
+                              audioRecorder.dispose();
+                              if (dialogCtx.mounted) Navigator.pop(dialogCtx);
+                            },
+                            icon: const Icon(CupertinoIcons.checkmark_circle_fill, size: 18),
+                            label: const Text('تەواو', style: TextStyle(fontWeight: FontWeight.w600)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.redAccent,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             );

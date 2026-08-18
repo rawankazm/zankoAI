@@ -1,10 +1,15 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:record/record.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../services/language_provider.dart';
 import '../../services/ai_service.dart';
 import '../../services/auth_service.dart';
@@ -25,7 +30,14 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   final ScrollController _scrollController = ScrollController();
   final List<Map<String, String>> _messages = [];
   bool _isTyping = false;
+
+  // Real Audio Recording & Speech-to-Text State
+  final AudioRecorder _audioRecorder = AudioRecorder();
+  String? _recordedVoiceFilePath;
   bool _isRecording = false;
+  bool _isTranscribingVoice = false;
+  int _recordSeconds = 0;
+  Timer? _recordTimer;
 
   final FlutterTts _flutterTts = FlutterTts();
 
@@ -214,9 +226,144 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
 
   @override
   void dispose() {
+    _recordTimer?.cancel();
+    _audioRecorder.dispose();
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _startVoiceRecording() async {
+    try {
+      if (await _audioRecorder.hasPermission()) {
+        final tempDir = await getTemporaryDirectory();
+        final path = '${tempDir.path}/chat_voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
+
+        await _audioRecorder.start(
+          const RecordConfig(encoder: AudioEncoder.aacLc),
+          path: path,
+        );
+
+        HapticFeedback.mediumImpact();
+        setState(() {
+          _recordedVoiceFilePath = path;
+          _isRecording = true;
+          _recordSeconds = 0;
+        });
+
+        _recordTimer?.cancel();
+        _recordTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+          if (mounted) {
+            setState(() {
+              _recordSeconds++;
+            });
+          }
+        });
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('ڕێگەپێدانی مایکرۆفۆن پێویستە بۆ تۆمارکردنی دەنگ 🎙️'),
+              backgroundColor: ZankoColors.error,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('هەڵە لە دەستپێکردنی تۆمار: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _stopAndTranscribeVoice() async {
+    _recordTimer?.cancel();
+    final filePath = _recordedVoiceFilePath;
+    final aiService = Provider.of<AiService>(context, listen: false);
+
+    setState(() {
+      _isRecording = false;
+      _isTranscribingVoice = true;
+    });
+
+    HapticFeedback.mediumImpact();
+
+    try {
+      if (_recordSeconds < 1) {
+        await Future.delayed(const Duration(milliseconds: 600));
+      }
+      final path = await _audioRecorder.stop();
+      final targetPath = path ?? filePath;
+
+      if (targetPath != null) {
+        final file = File(targetPath);
+        if (await file.exists()) {
+          final bytes = await file.readAsBytes();
+
+          final transcript = await aiService.transcribeAudio(
+            bytes,
+            'voice_chat.m4a',
+            mimeType: 'audio/m4a',
+          );
+
+          if (mounted) {
+            setState(() {
+              _isTranscribingVoice = false;
+            });
+
+            if (transcript.trim().isNotEmpty) {
+              _sendMessage(transcript.trim());
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('نەتوانرا دەنگەکە ببیسترێت، تکایە دووبارە بڵێوە.')),
+              );
+            }
+          }
+
+          // Clean up temp file
+          try {
+            await file.delete();
+          } catch (_) {}
+          return;
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('هەڵە لە نوسینەوەی دەنگ: $e')),
+        );
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _isTranscribingVoice = false;
+      });
+    }
+  }
+
+  Future<void> _cancelVoiceRecording() async {
+    _recordTimer?.cancel();
+    final filePath = _recordedVoiceFilePath;
+
+    setState(() {
+      _isRecording = false;
+      _recordSeconds = 0;
+    });
+
+    HapticFeedback.lightImpact();
+
+    try {
+      await _audioRecorder.stop();
+      if (filePath != null) {
+        final file = File(filePath);
+        if (await file.exists()) {
+          await file.delete();
+        }
+      }
+    } catch (_) {}
   }
 
   void _scrollToBottom() {
@@ -749,7 +896,37 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 ),
               ),
 
-            const SizedBox(height: 8),
+            // Gemini Flash Transcribing HUD Indicator
+            if (_isTranscribingVoice)
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: ZankoColors.primary.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: ZankoColors.primary.withValues(alpha: 0.4),
+                    width: 1.2,
+                  ),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CupertinoActivityIndicator(color: Colors.white),
+                    SizedBox(width: 10),
+                    Text(
+                      'Gemini Flash دەنگەکەت دەکاتە دەق... ⚡',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            const SizedBox(height: 4),
 
             // Bottom Input Bar
             Padding(
@@ -760,97 +937,139 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                   Expanded(
                     child: Container(
                       height: 52,
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
                       decoration: BoxDecoration(
                         color: const Color(0xFF1B1E26),
                         borderRadius: BorderRadius.circular(30),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.08),
-                          width: 1,
+                          color: _isRecording
+                              ? Colors.redAccent.withValues(alpha: 0.6)
+                              : Colors.white.withValues(alpha: 0.08),
+                          width: _isRecording ? 1.5 : 1,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.5),
+                            color: _isRecording
+                                ? Colors.redAccent.withValues(alpha: 0.2)
+                                : Colors.black.withValues(alpha: 0.5),
                             blurRadius: 16,
                             offset: const Offset(0, 6),
                           ),
                         ],
                       ),
-                      child: Row(
-                        children: [
-                          // Emoji Button
-                          IconButton(
-                            icon: const Icon(
-                              CupertinoIcons.smiley,
-                              color: ZankoColors.primary,
-                              size: 22,
-                            ),
-                            onPressed: _showEmojiPicker,
-                          ),
-                          // TextField
-                          Expanded(
-                            child: TextField(
-                              controller: _controller,
-                              onChanged: (_) => setState(() {}),
-                              onSubmitted: _sendMessage,
-                              style: const TextStyle(
-                                fontSize: 15,
-                                color: Colors.white,
-                              ),
-                              decoration: InputDecoration(
-                                hintText: lang.translate('type_message'),
-                                hintStyle: const TextStyle(
-                                  fontSize: 15,
-                                  color: Color(0xFF6C717B),
+                      child: _isRecording
+                          ? Row(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(
+                                    CupertinoIcons.trash,
+                                    color: Colors.redAccent,
+                                    size: 22,
+                                  ),
+                                  tooltip: 'هەڵوەشاندنەوە / Cancel',
+                                  onPressed: _cancelVoiceRecording,
                                 ),
-                                border: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                              ),
+                                const SizedBox(width: 4),
+                                Container(
+                                  width: 10,
+                                  height: 10,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.redAccent,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${(_recordSeconds ~/ 60).toString().padLeft(2, '0')}:${(_recordSeconds % 60).toString().padLeft(2, '0')}',
+                                  style: const TextStyle(
+                                    color: Colors.redAccent,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                const Expanded(
+                                  child: Text(
+                                    'دەنگ تۆمار دەکرێت... قسە بکە 🎙️',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Row(
+                              children: [
+                                // Emoji Button
+                                IconButton(
+                                  icon: const Icon(
+                                    CupertinoIcons.smiley,
+                                    color: ZankoColors.primary,
+                                    size: 22,
+                                  ),
+                                  onPressed: _showEmojiPicker,
+                                ),
+                                // TextField
+                                Expanded(
+                                  child: TextField(
+                                    controller: _controller,
+                                    onChanged: (_) => setState(() {}),
+                                    onSubmitted: _sendMessage,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      color: Colors.white,
+                                    ),
+                                    decoration: InputDecoration(
+                                      hintText: lang.translate('type_message'),
+                                      hintStyle: const TextStyle(
+                                        fontSize: 15,
+                                        color: Color(0xFF6C717B),
+                                      ),
+                                      border: InputBorder.none,
+                                      enabledBorder: InputBorder.none,
+                                      focusedBorder: InputBorder.none,
+                                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                                    ),
+                                  ),
+                                ),
+                                // Attachment Icon
+                                IconButton(
+                                  icon: const Icon(
+                                    CupertinoIcons.paperclip,
+                                    color: ZankoColors.primary,
+                                    size: 20,
+                                  ),
+                                  onPressed: _pickAndSolveImage,
+                                ),
+                                // Camera Icon
+                                IconButton(
+                                  icon: const Icon(
+                                    CupertinoIcons.camera_fill,
+                                    color: ZankoColors.primary,
+                                    size: 20,
+                                  ),
+                                  onPressed: _pickAndSolveImage,
+                                ),
+                              ],
                             ),
-                          ),
-                          // Attachment Icon
-                          IconButton(
-                            icon: const Icon(
-                              CupertinoIcons.paperclip,
-                              color: ZankoColors.primary,
-                              size: 20,
-                            ),
-                            onPressed: _pickAndSolveImage,
-                          ),
-                          // Camera Icon
-                          IconButton(
-                            icon: const Icon(
-                              CupertinoIcons.camera_fill,
-                              color: ZankoColors.primary,
-                              size: 20,
-                            ),
-                            onPressed: _pickAndSolveImage,
-                          ),
-                        ],
-                      ),
                     ),
                   ),
 
                   const SizedBox(width: 10),
 
-                  // Floating Glowing App Stamp Color Button (Mic / Send)
+                  // Floating Glowing Action Button (Mic / Stop & Transcribe / Send)
                   GestureDetector(
                     onTap: () {
                       if (hasText) {
                         _sendMessage(_controller.text);
-                      } else {
-                        setState(() {
-                          _isRecording = !_isRecording;
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(_isRecording ? 'Listening...' : 'Voice recording stopped'),
-                            duration: const Duration(seconds: 1),
-                            backgroundColor: ZankoColors.primary,
-                          ),
-                        );
+                      } else if (_isRecording) {
+                        _stopAndTranscribeVoice();
+                      } else if (!_isTranscribingVoice) {
+                        _startVoiceRecording();
                       }
                     },
                     child: AnimatedContainer(
@@ -858,23 +1077,29 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                       width: 50,
                       height: 50,
                       decoration: BoxDecoration(
-                        color: _isRecording ? ZankoColors.accent : ZankoColors.primary,
+                        color: _isRecording
+                            ? const Color(0xFFE11D48)
+                            : (_isTranscribingVoice ? const Color(0xFF4A148C) : ZankoColors.primary),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: ZankoColors.primary.withValues(alpha: 0.6),
+                            color: (_isRecording ? const Color(0xFFE11D48) : ZankoColors.primary).withValues(alpha: 0.6),
                             blurRadius: 16,
                             offset: const Offset(0, 4),
                           ),
                         ],
                       ),
-                      child: Icon(
-                        hasText
-                            ? CupertinoIcons.arrow_up
-                            : (_isRecording ? CupertinoIcons.square_fill : CupertinoIcons.mic_fill),
-                        color: Colors.white,
-                        size: 22,
-                      ),
+                      child: _isTranscribingVoice
+                          ? const Center(
+                              child: CupertinoActivityIndicator(color: Colors.white),
+                            )
+                          : Icon(
+                              hasText
+                                  ? CupertinoIcons.arrow_up
+                                  : (_isRecording ? CupertinoIcons.checkmark_alt : CupertinoIcons.mic_fill),
+                              color: Colors.white,
+                              size: 22,
+                            ),
                     ),
                   ),
                 ],

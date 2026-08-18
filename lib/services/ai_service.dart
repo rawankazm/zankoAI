@@ -333,40 +333,149 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     }
   }
 
-  Future<String> _callGeminiMultimodal(Uint8List imageBytes, String prompt, {String mimeType = 'image/jpeg'}) async {
-    final keyToUse = (_apiKey != null && _apiKey!.trim().isNotEmpty) ? _apiKey! : _fallbackWorkingKey;
+  Future<String> _callGeminiMultimodalHttp(
+    String key,
+    Uint8List mediaBytes,
+    String prompt,
+    String systemPrompt, {
+    String mimeType = 'audio/m4a',
+  }) async {
+    final client = HttpClient();
+    client.connectionTimeout = const Duration(seconds: 15);
 
-    final models = [
-      'gemini-1.5-flash',
+    final modelsToTry = [
+      'gemini-3.6-flash',
+      'gemini-2.5-flash',
       'gemini-2.0-flash',
-      'gemini-1.5-pro',
+      'gemini-1.5-flash',
       'gemini-flash-latest',
-      'gemini-pro-latest'
     ];
-    for (final m in models) {
+
+    final base64Data = base64Encode(mediaBytes);
+
+    for (final m in modelsToTry) {
       try {
-        final model = gemini.GenerativeModel(
-          model: m,
-          apiKey: keyToUse,
-          systemInstruction: gemini.Content.system(
-            "تۆ مامۆستایەکی زیرەک و شارەزای بە ناوی ZankoAI. ئەم وێنەیەی پرسیارە بە تەنها زمانی کوردی (سۆرانی) شیکار بکە بە ڕوونی."
-          ),
-        );
+        final uri = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=$key');
+        final request = await client.postUrl(uri);
+        request.headers.set('content-type', 'application/json');
 
-        final content = [
-          gemini.Content.multi([
-            gemini.TextPart(prompt.isNotEmpty ? prompt : "ئەم پرسیارەی ناو وێنەکە بە هەنگاو بە هەنگاو شیکار بکە."),
-            gemini.DataPart(mimeType, imageBytes),
-          ])
-        ];
+        final bodyMap = {
+          if (systemPrompt.isNotEmpty)
+            'system_instruction': {
+              'parts': [
+                {'text': systemPrompt}
+              ]
+            },
+          'contents': [
+            {
+              'parts': [
+                {'text': prompt},
+                {
+                  'inline_data': {
+                    'mime_type': mimeType,
+                    'data': base64Data,
+                  }
+                }
+              ]
+            }
+          ]
+        };
 
-        final response = await model.generateContent(content).timeout(const Duration(seconds: 20));
-        if (response.text != null && response.text!.isNotEmpty) {
-          return response.text!;
+        request.add(utf8.encode(jsonEncode(bodyMap)));
+        final response = await request.close().timeout(const Duration(seconds: 25));
+        final respStr = await response.transform(utf8.decoder).join();
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(respStr);
+          final candidates = data['candidates'] as List?;
+          if (candidates != null && candidates.isNotEmpty) {
+            final contentMap = candidates[0]['content'];
+            final parts = contentMap['parts'] as List?;
+            if (parts != null && parts.isNotEmpty) {
+              final text = parts[0]['text'];
+              if (text != null && text.toString().isNotEmpty) {
+                client.close();
+                return text.toString();
+              }
+            }
+          }
         }
       } catch (_) {}
     }
-    return "⚠️ نەتوانرا شیکاری وێنەکە بەدەستبهێنرێت.";
+
+    client.close();
+    return "";
+  }
+
+  Future<String> _callGeminiMultimodal(Uint8List mediaBytes, String prompt, {String mimeType = 'image/jpeg'}) async {
+    final keysToTry = <String>[
+      if (_apiKey != null && _apiKey!.trim().isNotEmpty) _apiKey!.trim(),
+      if (_defaultApiKey.trim().isNotEmpty) _defaultApiKey.trim(),
+      if (_fallbackWorkingKey.trim().isNotEmpty && _fallbackWorkingKey != _apiKey) _fallbackWorkingKey.trim(),
+    ];
+
+    final models = [
+      'gemini-3.6-flash',
+      'gemini-2.5-flash',
+      'gemini-2.0-flash',
+      'gemini-2.0-flash-exp',
+      'gemini-1.5-flash',
+      'gemini-flash-latest',
+      'gemini-1.5-pro',
+      'gemini-pro-latest'
+    ];
+
+    final isAudio = mimeType.startsWith('audio');
+    final systemPrompt = isAudio
+        ? "تۆ سیستمێکی زۆر پێشکەوتووی نوسینەوەی دەنگی (Speech-to-Text). گوێ لەم تۆمارە دەنگییە بگرە و بە وردی و تەواوی وشە بە وشە بە زمانی کوردی (سۆرانی/بادینی) یان ئینگلیزی (بەپێی دەنگەکە) دەقەکە بنووسەوە. تکایە تەنها و تەنها دەقی ئاخاوتنەکە بنووسەوە بەبێ هیچ پێشەکی، سەردێڕ، یان کۆمێنتی زیادە."
+        : "تۆ مامۆستایەکی زیرەک و شارەزای بە ناوی ZankoAI. ئەم وێنەیەی پرسیارە بە تەنها زمانی کوردی (سۆرانی) شیکار بکە بە ڕوونی.";
+
+    final defaultPrompt = isAudio
+        ? "Transcribe the spoken words in this audio exactly in Kurdish or English."
+        : "ئەم پرسیارەی ناو وێنەکە بە هەنگاو بە هەنگاو شیکار بکە.";
+
+    final effectivePrompt = prompt.isNotEmpty ? prompt : defaultPrompt;
+
+    for (final keyToUse in keysToTry) {
+      if (keyToUse.isEmpty) continue;
+
+      // 1. Try Google Generative AI SDK
+      for (final m in models) {
+        try {
+          final model = gemini.GenerativeModel(
+            model: m,
+            apiKey: keyToUse,
+            systemInstruction: gemini.Content.system(systemPrompt),
+          );
+
+          final content = [
+            gemini.Content.multi([
+              gemini.TextPart(effectivePrompt),
+              gemini.DataPart(mimeType, mediaBytes),
+            ])
+          ];
+
+          final response = await model.generateContent(content).timeout(const Duration(seconds: 25));
+          if (response.text != null && response.text!.isNotEmpty) {
+            return response.text!;
+          }
+        } catch (_) {}
+      }
+
+      // 2. Direct HTTP Multimodal Fallback
+      final httpResult = await _callGeminiMultimodalHttp(
+        keyToUse,
+        mediaBytes,
+        effectivePrompt,
+        systemPrompt,
+        mimeType: mimeType,
+      );
+      if (httpResult.isNotEmpty) {
+        return httpResult;
+      }
+    }
+
+    return isAudio ? "" : "⚠️ نەتوانرا شیکاری وێنەکە بەدەستبهێنرێت.";
   }
 
   @override
@@ -466,9 +575,9 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   @override
   Future<String> transcribeAudio(Uint8List? audioBytes, String audioFileName, {String mimeType = 'audio/m4a'}) async {
-    if (audioBytes != null && audioBytes.isNotEmpty && hasRealApiKey) {
+    if (audioBytes != null && audioBytes.isNotEmpty) {
       try {
-        const prompt = "ئەم فایلی دەنگییەی پێدراوە بە تەواوی و وشە بە وشە بە زمانی کوردی (سۆرانی) یان ئینگلیزی (بەپێی دەنگەکە) بە نووسین (Speech-to-Text Transcribe) بنووسەوە. تەنها دەقی تەواوی ئاخاوتنەکە بنووسەوە بەبێ هیچ سەردێڕێک.";
+        const prompt = "ئەم فایلی دەنگییەی پێدراوە بە تەواوی و وشە بە وشە بە زمانی کوردی (سۆرانی/بادینی) یان ئینگلیزی (بەپێی دەنگەکە) بە نووسین (Speech-to-Text Transcribe) بنووسەوە. تەنها و تەنها دەقی تەواوی ئاخاوتنەکە بنووسەوە بەبێ هیچ سەردێڕ، پێشەکی، یان لێدوانێک.";
         final result = await _callGeminiMultimodal(audioBytes, prompt, mimeType: mimeType);
         if (result.trim().isNotEmpty && !result.contains('Error') && !result.contains('blocked')) {
           return result.trim();
@@ -476,8 +585,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
       } catch (_) {}
     }
 
-    final cleanName = audioFileName.replaceAll('.m4a', '').replaceAll('.mp3', '').replaceAll('_', ' ').trim();
-    return "سڵاو بەخێربێن بۆ وانەی ($cleanName). لەم دەنگە تۆمارکراوەدا مامۆستا باسی بنەما سەرەکییەکان و فۆرمولە زانستییەکان دەکات بۆ ئامادەکاری لە تاقیکردنەوەکاندا.";
+    return "";
   }
 
   @override
