@@ -104,11 +104,13 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
       final aiService = Provider.of<AiService>(context, listen: false);
       final transcript = await aiService.transcribeAudio(recordedBytes, _audioFileName);
       setState(() {
-        _fullTranscript = transcript;
+        _fullTranscript = transcript.isNotEmpty
+            ? transcript
+            : "نەتوانرا دەنگەکە بە ڕوونی ببیسترێت، تکایە کەمێک نزیکتر لە مایکرۆفۆنەکە قسە بکە و دووبارە تاقی بکەرەوە.";
       });
     } catch (_) {
       setState(() {
-        _fullTranscript = "سڵاو بەخێربێن بۆ وانەی ئەمڕۆ. لەم تۆمارە دەنگییەدا مامۆستا بڕگەکانی وانەکەی شرۆڤە دەکات و تیشک دەخاتە سەر پێناسە زانستییەکان، هاوکێشەکان و تێگەیشتن لە چەمکە سەرەکییەکان بۆ سەرکەوتن لە تاقیکردنەوەکاندا.";
+        _fullTranscript = "هەڵەیەک ڕوویدا لە کاتی پەیوەندی بە ژیری دەستکرد، تکایە ئینتەرنێتەکەت بپشکنە.";
       });
     } finally {
       setState(() {
