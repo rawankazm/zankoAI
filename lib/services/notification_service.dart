@@ -228,14 +228,34 @@ class NotificationService {
       }
     });
 
-    // 2. Broadcast / Targeted Notifications Listener (for in-app data sync)
+    // 2. Broadcast / Targeted Notifications Listener (for in-app data sync & popups)
     _adminBroadcastSub = FirebaseFirestore.instance
         .collection('notifications')
         .snapshots()
         .listen((snap) async {
       for (var doc in snap.docs) {
+        final data = doc.data();
         final docId = doc.id;
-        if (!_seenDocIds.contains(docId)) {
+        final target = (data['target'] ?? data['to'] ?? '').toString().toLowerCase();
+        final docUserId = (data['userId'] ?? data['user_id'] ?? data['recipientId'] ?? '').toString();
+
+        final isTargetUser = (docUserId.isNotEmpty && docUserId == userId) ||
+            (target == 'user' && docUserId == userId) ||
+            target == 'all' ||
+            target == 'all_students' ||
+            (target == 'vip' && isVip);
+
+        if (isTargetUser && !_seenDocIds.contains(docId)) {
+          final title = data['title'] ?? data['header'] ?? data['subject'] ?? '🔔 ئاگاداری لە ZankoAI';
+          final body = data['body'] ?? data['message'] ?? data['content'] ?? data['text'] ?? '';
+
+          if (body.toString().trim().isNotEmpty || title.toString().trim().isNotEmpty) {
+            await showInstantNotification(
+              id: docId.hashCode,
+              title: title.toString(),
+              body: body.toString(),
+            );
+          }
           _seenDocIds.add(docId);
           await prefs.setStringList(_seenDocsKey, _seenDocIds.toList());
         }
