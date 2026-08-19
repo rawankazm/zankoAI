@@ -57,7 +57,7 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
             actions: [
               if (roadmaps.isNotEmpty)
                 IconButton(
-                  icon: const Icon(CupertinoIcons.doc_arrow_down_fill, color: ZankoColors.primary, size: 24),
+                  icon: Icon(CupertinoIcons.arrow_down_doc_fill, color: ZankoColors.primary, size: 24),
                   tooltip: 'Word (.docx)',
                   onPressed: () {
                     final current = roadmaps[_selectedRoadmapIndex];

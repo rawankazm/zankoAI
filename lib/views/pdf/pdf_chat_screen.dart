@@ -11,6 +11,7 @@ import '../../services/sample_pdf_service.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
 import 'pdf_summary_screen.dart';
+import '../ai_teacher/kurdish_voice_tutor_screen.dart';
 
 class PdfChatScreen extends StatefulWidget {
   final String? initialFileName;
@@ -226,6 +227,22 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
                             color: isDark ? Colors.white : ZankoColors.textPrimary,
                           ),
                         ),
+                      ),
+                      IconButton(
+                        icon: Icon(CupertinoIcons.waveform_circle_fill, color: ZankoColors.primary, size: 28),
+                        tooltip: 'ڕوونکردنەوەی دەنگی مامۆستا 🎧',
+                        onPressed: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            CupertinoPageRoute(
+                              builder: (_) => KurdishVoiceTutorScreen(
+                                initialFileName: _selectedPdf,
+                                initialFileContent: _selectedFileContent,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -515,6 +532,59 @@ $text
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: isDark ? Colors.white : ZankoColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // 🎧 Kurdish Voice Tutor Action Card
+            AppCard(
+              padding: const EdgeInsets.all(18),
+              color: ZankoColors.primary.withValues(alpha: 0.12),
+              border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.3)),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  CupertinoPageRoute(
+                    builder: (_) => KurdishVoiceTutorScreen(
+                      initialFileName: _selectedPdf,
+                      initialFileContent: _selectedFileContent,
+                    ),
+                  ),
+                );
+              },
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: ZankoColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(CupertinoIcons.waveform, color: Colors.white, size: 22),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '🎧 ڕوونکردنەوەی دەنگی مامۆستا بە کوردی و ئینگلیزی',
+                          style: TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : ZankoColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'مەلزەمەکە دەکاتە فێرکاری دەنگی پڕۆفێشناڵ و لاپەڕە بە لاپەڕە بۆت دەخوێنێتەوە',
+                          style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[400] : ZankoColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(CupertinoIcons.play_circle_fill, color: ZankoColors.primary, size: 28),
+                ],
               ),
             ),
             const SizedBox(height: 12),

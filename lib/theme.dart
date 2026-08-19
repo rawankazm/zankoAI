@@ -10,14 +10,18 @@ class ZankoColors {
   static Color _darkBackground = const Color(0xFF140C0C);
   static Color _darkCard = const Color(0xFF221415);
   static Color _darkCardSecondary = const Color(0xFF2D1B1D);
-  static Color _darkTextPrimary = const Color(0xFFFFF1F2);
-  static Color _darkTextSecondary = const Color(0xFFFDA4AF);
   static Color _gradientStart = const Color(0xFFF97316);
   static Color _gradientEnd = const Color(0xFFE11D48);
 
   static Color get primary => _primary;
   static Color get accent => _accent;
   static Color get background => _background;
+  static Color get darkBackground => _darkBackground;
+  static Color get darkCard => _darkCard;
+  static Color get darkCardSecondary => _darkCardSecondary;
+  static Color get gradientStart => _gradientStart;
+  static Color get gradientEnd => _gradientEnd;
+
   static const Color card = Color(0xFFFFFFFF);
   static const Color textPrimary = Color(0xFF1C1917);
   static const Color textSecondary = Color(0xFF78716C);
@@ -25,14 +29,8 @@ class ZankoColors {
   static const Color warning = Color(0xFFF59E0B);
   static const Color error = Color(0xFFEF4444);
 
-  static Color get darkBackground => _darkBackground;
-  static Color get darkCard => _darkCard;
-  static Color get darkCardSecondary => _darkCardSecondary;
-  static Color get darkTextPrimary => _darkTextPrimary;
-  static Color get darkTextSecondary => _darkTextSecondary;
-
-  static Color get gradientStart => _gradientStart;
-  static Color get gradientEnd => _gradientEnd;
+  static const Color darkTextPrimary = Color(0xFFFFF1F2);
+  static const Color darkTextSecondary = Color(0xFFFDA4AF);
 
   static void updatePalette(ThemeColorsData colors) {
     _primary = colors.primary;
@@ -41,10 +39,8 @@ class ZankoColors {
     _darkBackground = colors.darkBackground;
     _darkCard = colors.darkCard;
     _darkCardSecondary = colors.darkCardSecondary;
-    _darkTextPrimary = colors.darkTextPrimary;
-    _darkTextSecondary = colors.darkTextSecondary;
-    _gradientStart = colors.gradientColors.first;
-    _gradientEnd = colors.gradientColors.last;
+    _gradientStart = colors.gradientColors.isNotEmpty ? colors.gradientColors.first : colors.primary;
+    _gradientEnd = colors.gradientColors.length > 1 ? colors.gradientColors.last : colors.accent;
   }
 }
 
@@ -81,40 +77,36 @@ class ZankoShadows {
     BoxShadow(
       color: ZankoColors.primary.withValues(alpha: 0.08),
       blurRadius: 24,
-      offset: const Offset(0, 10),
-      spreadRadius: 0,
+      offset: const Offset(0, 8),
     ),
     BoxShadow(
       color: Colors.black.withValues(alpha: 0.03),
-      blurRadius: 10,
+      blurRadius: 8,
       offset: const Offset(0, 2),
-      spreadRadius: 0,
     ),
   ];
 
   static List<BoxShadow> get floating => [
     BoxShadow(
-      color: ZankoColors.primary.withValues(alpha: 0.35),
-      blurRadius: 20,
-      offset: const Offset(0, 8),
-      spreadRadius: 0,
+      color: ZankoColors.primary.withValues(alpha: 0.15),
+      blurRadius: 32,
+      offset: const Offset(0, 12),
     ),
   ];
 
   static List<BoxShadow> get glow => [
     BoxShadow(
-      color: ZankoColors.accent.withValues(alpha: 0.35),
-      blurRadius: 16,
-      offset: const Offset(0, 4),
+      color: ZankoColors.primary.withValues(alpha: 0.4),
+      blurRadius: 20,
+      spreadRadius: 2,
     ),
   ];
 
   static List<BoxShadow> get gradientButton => [
     BoxShadow(
-      color: ZankoColors.primary.withValues(alpha: 0.4),
-      blurRadius: 16,
-      offset: const Offset(0, 6),
-      spreadRadius: -2,
+      color: ZankoColors.primary.withValues(alpha: 0.35),
+      blurRadius: 18,
+      offset: const Offset(0, 8),
     ),
   ];
 }
@@ -230,6 +222,7 @@ class ZankoTheme {
           gradientColors: [Color(0xFFFFD700), Color(0xFFD97706)],
         );
       case AppThemeType.sunsetAmber:
+      default:
         return const ThemeColorsData(
           primary: Color(0xFFF97316),
           accent: Color(0xFFF43F5E),
@@ -349,6 +342,7 @@ class ZankoTheme {
     );
 
     return base.copyWith(
+      dialogBackgroundColor: colors.darkCard,
       dialogTheme: DialogThemeData(
         backgroundColor: colors.darkCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),

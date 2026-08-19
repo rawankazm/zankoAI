@@ -11,6 +11,7 @@ import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
 import '../../widgets/ad_banner_widget.dart';
 import '../ai_teacher/ai_teacher_chat_screen.dart';
+import '../ai_teacher/kurdish_voice_tutor_screen.dart';
 import '../academic/seminar_thesis_assistant_screen.dart';
 import '../academic/academic_dictionary_screen.dart';
 import '../flashcards/flashcards_screen.dart';
@@ -345,7 +346,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               } else if (action == 'Voice Tutor') {
                                 Navigator.push(
                                   context,
-                                  CupertinoPageRoute(builder: (_) => const AudioSummarizerView()),
+                                  CupertinoPageRoute(builder: (_) => const KurdishVoiceTutorScreen()),
                                 );
                               } else if (action == 'PDF Chat') {
                                 Navigator.push(

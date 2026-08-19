@@ -35,7 +35,7 @@ class KurdishTtsService {
     _audioPlayer.dispose();
   }
 
-  /// Clean text from Markdown and code
+  /// Clean text from Markdown, code and prepare phonetics for Kurdish Sorani
   String _cleanText(String rawText) {
     String text = rawText
         .replaceAll(RegExp(r'```[\s\S]*?```'), '')
@@ -46,7 +46,37 @@ class KurdishTtsService {
         .replaceAll(RegExp(r'\\\([\s\S]*?\\\)'), '')
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
-    return text;
+
+    return _prepareKurdishPhonetics(text);
+  }
+
+  /// Phonetically normalize Kurdish Sorani text for smooth speech synthesis
+  String _prepareKurdishPhonetics(String text) {
+    String result = text;
+
+    // Normalize common Kurdish Sorani prepositions & words
+    result = result.replaceAll(RegExp(r'\bلە\b'), 'لَ');
+    result = result.replaceAll(RegExp(r'\bبە\b'), 'بَ');
+    result = result.replaceAll(RegExp(r'\bدە\b'), 'دَ');
+    result = result.replaceAll(RegExp(r'\bکە\b'), 'كـَ');
+    result = result.replaceAll(RegExp(r'\bئەمە\b'), 'أَمَا');
+    result = result.replaceAll(RegExp(r'\bئەوە\b'), 'أَوَا');
+
+    // Replace word-final Kurdish short vowel 'ە' (U+06D5) with Fatha 'َ' (U+064E) or 'ا'
+    // so TTS engine reads short vowel /a/ or /e/ instead of consonant 'H'
+    result = result.replaceAll(RegExp(r'([آأإابپتثجچحخدرڕزژسشصضطظعغفقڤککگلڵمنهویێۆ])ە\b'), r'$1َ');
+
+    // Replace internal Kurdish short vowel 'ە' with Fatha 'َ'
+    result = result.replaceAll(RegExp(r'([آأإابپتثجچحخدرڕزژسشصضطظعغفقڤککگلڵمنهویێۆ])ە([آأإابپتثجچحخدرڕزژسشصضطظعغفقڤککگلڵمنهویێۆ])'), r'$1َ$2');
+
+    // Clean remaining isolated 'ە'
+    result = result.replaceAll('ە', 'َ');
+
+    // Map Kurdish vowels/consonants for natural Arabic-script speech synthesizer
+    result = result.replaceAll('ێ', 'ي');
+    result = result.replaceAll('ۆ', 'و');
+
+    return result;
   }
 
   /// Split long text into natural chunks for speech synthesis (<= 140 chars)
@@ -157,7 +187,8 @@ class KurdishTtsService {
 
     try {
       final encodedText = Uri.encodeComponent(chunk);
-      final url = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=$_currentLangCode&q=$encodedText';
+      final ttsLang = (_currentLangCode == 'ku' || _currentLangCode == 'ckb') ? 'ar' : _currentLangCode;
+      final url = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=$ttsLang&q=$encodedText';
 
       await _audioPlayer.stop();
       await _audioPlayer.play(
@@ -165,19 +196,14 @@ class KurdishTtsService {
         mode: PlayerMode.mediaPlayer,
       );
     } catch (e) {
-      if (_currentChunkIndex < _chunks.length) {
-        await _playNextChunk();
-      } else {
-        await stop();
-      }
+      debugPrint('Error playing TTS chunk via Google online endpoint: $e');
+      await _fallbackToLocalTts(chunk, _currentLangCode);
     }
   }
 
   Future<void> _fallbackToLocalTts(String text, String langCode) async {
     try {
-      if (langCode == 'ar') {
-        await _flutterTts.setLanguage("ar");
-      } else if (langCode == 'ku') {
+      if (langCode == 'ar' || langCode == 'ku' || langCode == 'ckb') {
         final hasKu = await _flutterTts.isLanguageAvailable("ku") ?? false;
         if (hasKu) {
           await _flutterTts.setLanguage("ku");
@@ -186,9 +212,7 @@ class KurdishTtsService {
           if (hasCkb) {
             await _flutterTts.setLanguage("ckb");
           } else {
-            // Do not read Kurdish with English voice
-            await stop();
-            return;
+            await _flutterTts.setLanguage("ar");
           }
         }
       } else {
@@ -198,10 +222,15 @@ class KurdishTtsService {
       await _flutterTts.setSpeechRate(0.48);
       await _flutterTts.setVolume(1.0);
       _flutterTts.setCompletionHandler(() {
-        stop();
+        if (_currentChunkIndex < _chunks.length) {
+          _playNextChunk();
+        } else {
+          stop();
+        }
       });
       await _flutterTts.speak(text);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Error in fallback local TTS: $e');
       await stop();
     }
   }

@@ -44,6 +44,10 @@ abstract class AiService extends ChangeNotifier {
     required int daysRemaining,
     required int hoursPerDay,
   });
+  Future<Map<String, dynamic>> generateKurdishVoiceLectureExplanation({
+    required String pdfText,
+    String? pdfName,
+  });
 }
 
 class ZankoAiService extends ChangeNotifier implements AiService {
@@ -1310,6 +1314,70 @@ $pdfContext
     return {
       'advice': 'بەردەوام بە لەسەر جێبەجێکردنی نەخشەڕێگاکەت بە بەکارهێنانی کاتژمێری فۆکەس (Pomodoro) تا بە بەرزترین نمرە سەربکەویت!',
       'tasks': fallbackTasks,
+    };
+  }
+
+  @override
+  Future<Map<String, dynamic>> generateKurdishVoiceLectureExplanation({
+    required String pdfText,
+    String? pdfName,
+  }) async {
+    final cleanContent = pdfText.length > 15000 ? pdfText.substring(0, 15000) : pdfText;
+
+    final prompt = '''
+You are a senior university professor speaking fluent, natural Kurdish Sorani (کوردی).
+Read and analyze the following academic English PDF material (${pdfName ?? 'Lecture Notes'}):
+
+"$cleanContent"
+
+Your task: Provide a warm, clear, and comprehensive Kurdish Sorani (کوردی) audio-ready lecture explanation as if you are giving a private audio lecture to a university student page by page.
+
+CRITICAL FOR VOICE SYNTHESIS:
+Write the Kurdish text in natural, flowing spoken Sorani Kurdish. Use clear vowels and educational dialogue so text-to-speech engines pronounce every word smoothly and naturally without harsh consonant sounds.
+
+STRICT JSON OUTPUT FORMAT ONLY:
+{
+  "title": "ڕوونکردنەوەی دەنگی: ${pdfName ?? 'مەلزەمەی وانە'}",
+  "summary": "پوختەیەکی کورتی 2 ڕستەیی لەسەر گشتیاتی بابەتەکە بە کوردی.",
+  "sections": [
+    {
+      "sectionTitle": "بەشی ١: ناونیشانی بەشەکە بە کوردی و ئینگلیزی",
+      "kurdishExplanation": "ڕوونکردنەوەی تێر و تەسل و ڕەوانی ئەکادیمی بە زمانی کوردی سۆڕانی سادە لەسەر ئەم پەرەگرافە، بە جۆرێک کە خوێندنەوەی دەنگی زۆر ئاسان و ڕوون بێت.",
+      "englishKeyTerms": ["Term 1: Kurdish Translation", "Term 2: Kurdish Translation"]
+    }
+  ]
+}
+''';
+
+    try {
+      if (hasRealApiKey) {
+        final model = gemini.GenerativeModel(
+          model: 'gemini-1.5-flash',
+          apiKey: _apiKey!,
+          generationConfig: gemini.GenerationConfig(responseMimeType: 'application/json'),
+        );
+        final response = await model.generateContent([gemini.Content.text(prompt)]);
+        if (response.text != null && response.text!.isNotEmpty) {
+          final decoded = jsonDecode(response.text!);
+          if (decoded is Map<String, dynamic>) {
+            return decoded;
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error generating Kurdish voice explanation: $e');
+    }
+
+    return {
+      'title': 'ڕوونکردنەوەی دەنگی: ${pdfName ?? 'وانەی ئەکادیمی'}',
+      'summary': 'شیکردنەوەی فێرکاری بە زمانی کوردی سۆڕانی بۆ مەلزەمە و تێبینییەکان.',
+      'sections': [
+        {
+          'sectionTitle': 'بەشی ١: پەیامی سەرەکی و چەمکەکان',
+          'kurdishExplanation': 'ئەم وانەیە باسی چەمکە سەرەکییەکان و هەنگاوە ئەکادیمییەکان دەکات. وەک مامۆستایەک پێشنیارت بۆ دەکەم کە وشە کلیلییە ئینگلیزییەکان لەگەڵ مانای کوردی فێر ببیت تا بە ئاسانی لە تاقیکردنەوە نمرەی بەرز بەدەستبهێنیت.',
+          'englishKeyTerms': ['Key Concepts: چەمکە سەرەکییەکان', 'Academic Review: پێداچوونەوەی ئەکادیمی']
+        }
+      ]
     };
   }
 }
