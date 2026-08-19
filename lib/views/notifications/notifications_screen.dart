@@ -202,7 +202,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     CupertinoButton(
                       padding: EdgeInsets.zero,
                       onPressed: _markAllAsRead,
-                      child: const Text(
+                      child: Text(
                         'خوێنراوەکان',
                         style: TextStyle(
                           fontSize: 13,
@@ -416,7 +416,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                       width: 8,
                                       height: 8,
                                       margin: const EdgeInsets.only(top: 4),
-                                      decoration: const BoxDecoration(
+                                      decoration: BoxDecoration(
                                         color: ZankoColors.primary,
                                         shape: BoxShape.circle,
                                       ),

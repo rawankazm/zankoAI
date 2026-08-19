@@ -533,6 +533,104 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
     });
   }
 
+  // ─── VIP Export Limit Check ───────────────────────────────────────────────
+  Future<bool> _checkVipExportLimit(String fileType) async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final isVip = authService.currentUser?.isVip ?? false;
+    if (isVip) return true;
+
+    final prefs = await SharedPreferences.getInstance();
+    final exportCount = prefs.getInt('academic_export_count') ?? 0;
+
+    if (exportCount >= 1) {
+      if (!mounted) return false;
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('👑', style: TextStyle(fontSize: 24)),
+              SizedBox(width: 8),
+              Text(
+                'داگرتنی بێسنووری فایلی ئەکادیمی',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'بەکارهێنەرانی ئاسایی تەنها دەتوانن ١ فایلی $fileType بەخۆڕایی دابگرن.\nلە مەکتەبەکان بۆ هەر فایلێک ١٥,٠٠٠+ د.ع وەردەگرن، بەڵام لە Zanko AI بە تەنها ٥,٠٠٠ د.ع مانگێک هەموو سێمینار و ڕاپۆرتەکانت بە فایلی وۆرد و پاوەرپۆینت دابگرە!',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 13, height: 1.5),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.4)),
+                ),
+                child: const Row(
+                  children: [
+                    Text('💡', style: TextStyle(fontSize: 16)),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'داگرتنی ڕاستەوخۆ بە فۆرماتی Word و PowerPoint ئامادەکراو بۆ پێشکەشکردن!',
+                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFFB8860B)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('دواتر', style: TextStyle(color: Colors.grey)),
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => const VipUpgradeSheet(),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFB8860B),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: const Text('بەرزکردنەوە بۆ VIP 👑', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+      return false;
+    }
+
+    await prefs.setInt('academic_export_count', exportCount + 1);
+    return true;
+  }
+
   // ─── Export Word (.docx) ───────────────────────────────────────────────────
   Future<void> _exportDocx() async {
     if (_parsedReport == null) {
@@ -541,6 +639,9 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
           : 'تکایە سەرەتا ڕاپۆرتەکە دروست بکە');
       return;
     }
+
+    final allowed = await _checkVipExportLimit('Word (.docx)');
+    if (!allowed || !mounted) return;
 
     setState(() => _isExportingDocx = true);
     try {
@@ -585,6 +686,9 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
           : 'تکایە سەرەتا سیمینارەکە بە AI دروست بکە');
       return;
     }
+
+    final allowed = await _checkVipExportLimit('PowerPoint (.pptx)');
+    if (!allowed || !mounted) return;
 
     setState(() => _isExportingPptx = true);
 
@@ -852,7 +956,7 @@ Please format and classify the following academic reference in standard APA 7th 
           title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(CupertinoIcons.sparkles, color: ZankoColors.accent, size: 22),
+              Icon(CupertinoIcons.sparkles, color: ZankoColors.accent, size: 22),
               const SizedBox(width: 8),
               Text(
                 _selectedLanguage == SeminarLanguage.english
@@ -910,7 +1014,78 @@ Please format and classify the following academic reference in standard APA 7th 
               // ── Language Selector Bar ────────────────────────────────────
               _buildLanguageSelector(isDark),
 
-              const SizedBox(height: 18),
+              const SizedBox(height: 14),
+
+              if (!(Provider.of<AuthService>(context, listen: false).currentUser?.isVip ?? false)) ...[
+                GestureDetector(
+                  onTap: () => showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (_) => const VipUpgradeSheet(),
+                  ),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF1E1500), Color(0xFF2C2000)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.45)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Text('👑', style: TextStyle(fontSize: 20)),
+                        ),
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'داگرتنی بێسنووری Word و PowerPoint (VIP)',
+                                style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold, fontSize: 13),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'بە ٥,٠٠٠ د.ع هەموو سێمینار و ڕاپۆرتەکانت لەبری مەکتەبە لێرە دابگرە!',
+                                style: TextStyle(color: Colors.white70, fontSize: 10.5),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFD700),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Text(
+                            'VIP ⚡',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Color(0xFF2C2000)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
 
               // ── Tab 1: Topic Generator Form ──────────────────────────────
               if (_currentTab == _AssistantTab.topicGenerator) ...[
@@ -929,7 +1104,7 @@ Please format and classify the following academic reference in standard APA 7th 
               if (_currentTab == _AssistantTab.topicGenerator && _suggestedTopics.isNotEmpty) ...[
                 Row(
                   children: [
-                    const Icon(CupertinoIcons.square_grid_2x2_fill, color: ZankoColors.accent, size: 20),
+                    Icon(CupertinoIcons.square_grid_2x2_fill, color: ZankoColors.accent, size: 20),
                     const SizedBox(width: 8),
                     Text(
                       _selectedLanguage == SeminarLanguage.english
@@ -981,7 +1156,7 @@ Please format and classify the following academic reference in standard APA 7th 
       ),
       child: Row(
         children: [
-          const Icon(CupertinoIcons.globe, color: ZankoColors.accent, size: 18),
+          Icon(CupertinoIcons.globe, color: ZankoColors.accent, size: 18),
           const SizedBox(width: 6),
           Text(
             _selectedLanguage == SeminarLanguage.english ? 'Language:' : 'زمانی داڕشتن:',
@@ -1058,7 +1233,7 @@ Please format and classify the following academic reference in standard APA 7th 
                   color: ZankoColors.accent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(CupertinoIcons.lightbulb_fill, color: ZankoColors.accent, size: 20),
+                child: Icon(CupertinoIcons.lightbulb_fill, color: ZankoColors.accent, size: 20),
               ),
               const SizedBox(width: 10),
               Text(
@@ -1078,7 +1253,7 @@ Please format and classify the following academic reference in standard APA 7th 
                   ? 'e.g. Medicine, AI & Computer Science, Law, Finance, Civil Engineering...'
                   : 'نموونە: پزیشکی، تەکنەلۆجیای زانیاری، یاسا، ژمێریاری، ئەندازیاری...',
               hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 13),
-              prefixIcon: const Icon(CupertinoIcons.building_2_fill, color: ZankoColors.accent),
+              prefixIcon: Icon(CupertinoIcons.building_2_fill, color: ZankoColors.accent),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
               filled: true,
               fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
@@ -1780,7 +1955,7 @@ Please format and classify the following academic reference in standard APA 7th 
                   ? 'Paste author names, book title, or research papers...'
                   : 'ناوی کتێب، توێژەر یان دەقەکە پەیست بکە...',
               hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 13),
-              prefixIcon: const Icon(CupertinoIcons.text_quote, color: ZankoColors.accent),
+              prefixIcon: Icon(CupertinoIcons.text_quote, color: ZankoColors.accent),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
               filled: true,
               fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
@@ -2000,7 +2175,7 @@ Please format and classify the following academic reference in standard APA 7th 
                   ),
                   IconButton(
                     onPressed: _copyToClipboard,
-                    icon: const Icon(CupertinoIcons.doc_on_doc, color: ZankoColors.accent, size: 20),
+                    icon: Icon(CupertinoIcons.doc_on_doc, color: ZankoColors.accent, size: 20),
                     tooltip: 'Copy',
                   ),
                 ],
@@ -2026,7 +2201,7 @@ Please format and classify the following academic reference in standard APA 7th 
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
                       gradient: isSel
-                          ? const LinearGradient(colors: [ZankoColors.primary, ZankoColors.accent])
+                          ? LinearGradient(colors: [ZankoColors.primary, ZankoColors.accent])
                           : null,
                       color: isSel ? null : (isDark ? Colors.white10 : Colors.grey[200]),
                       borderRadius: BorderRadius.circular(14),
@@ -2700,7 +2875,7 @@ Please format and classify the following academic reference in standard APA 7th 
                   ),
                   IconButton(
                     onPressed: _copyToClipboard,
-                    icon: const Icon(CupertinoIcons.doc_on_doc, color: ZankoColors.accent, size: 20),
+                    icon: Icon(CupertinoIcons.doc_on_doc, color: ZankoColors.accent, size: 20),
                     tooltip: 'Copy',
                   ),
                 ],
@@ -3049,7 +3224,7 @@ Please format and classify the following academic reference in standard APA 7th 
             children: [
               Row(
                 children: [
-                  const Icon(CupertinoIcons.checkmark_seal_fill, color: ZankoColors.accent, size: 20),
+                  Icon(CupertinoIcons.checkmark_seal_fill, color: ZankoColors.accent, size: 20),
                   const SizedBox(width: 8),
                   Text(
                     _selectedLanguage == SeminarLanguage.english ? 'Results' : 'ئەنجامەکان',
@@ -3059,7 +3234,7 @@ Please format and classify the following academic reference in standard APA 7th 
               ),
               IconButton(
                 onPressed: _copyToClipboard,
-                icon: const Icon(CupertinoIcons.doc_on_doc, color: ZankoColors.accent, size: 20),
+                icon: Icon(CupertinoIcons.doc_on_doc, color: ZankoColors.accent, size: 20),
               ),
             ],
           ),

@@ -7,6 +7,7 @@ import '../../services/study_roadmap_service.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
 import '../../services/database_service.dart';
+import '../../services/docx_generator_service.dart';
 
 class AiStudyRoadmapScreen extends StatefulWidget {
   const AiStudyRoadmapScreen({super.key});
@@ -54,8 +55,23 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
               ),
             ),
             actions: [
+              if (roadmaps.isNotEmpty)
+                IconButton(
+                  icon: const Icon(CupertinoIcons.doc_arrow_down_fill, color: ZankoColors.primary, size: 24),
+                  tooltip: 'Word (.docx)',
+                  onPressed: () {
+                    final current = roadmaps[_selectedRoadmapIndex];
+                    DocxGeneratorService.exportRoadmapToDocx(
+                      subjectName: current.subjectName,
+                      daysLeft: current.daysLeft,
+                      tasks: current.tasks
+                          .map((t) => {'day': t.dayIndex, 'title': t.title, 'desc': t.description})
+                          .toList(),
+                    );
+                  },
+                ),
               IconButton(
-                icon: const Icon(CupertinoIcons.add_circled_solid, color: ZankoColors.primary, size: 26),
+                icon: Icon(CupertinoIcons.add_circled_solid, color: ZankoColors.primary, size: 26),
                 tooltip: langProvider.translate('create_roadmap'),
                 onPressed: () => _openCreateRoadmapModal(context),
               ),
@@ -155,7 +171,7 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                               ),
                               Text(
                                 '${(currentRoadmap.progressPercentage * 100).toInt()}% تەواوکراوە',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
                                   color: ZankoColors.primary,
@@ -194,7 +210,7 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(CupertinoIcons.calendar_badge_plus, size: 64, color: ZankoColors.primary),
+            Icon(CupertinoIcons.calendar_badge_plus, size: 64, color: ZankoColors.primary),
             const SizedBox(height: 16),
             Text(
               'هیچ نەخشەڕێگایەک دروست نەکراوە',
@@ -238,8 +254,8 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [ZankoColors.darkCardSecondary, Color(0xFF312E81)],
+        gradient: LinearGradient(
+          colors: [ZankoColors.darkCardSecondary, const Color(0xFF312E81)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -379,7 +395,7 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                       ),
                       child: Text(
                         'ڕۆژی ${task.dayIndex}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                           color: ZankoColors.primary,
@@ -512,7 +528,7 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text('ژمارەی بەشەکان (Chapters):', style: TextStyle(color: Colors.white70, fontSize: 13)),
-                        Text('$totalChapters بەش', style: const TextStyle(color: ZankoColors.primary, fontWeight: FontWeight.bold)),
+                        Text('$totalChapters بەش', style: TextStyle(color: ZankoColors.primary, fontWeight: FontWeight.bold)),
                       ],
                     ),
                     Slider(

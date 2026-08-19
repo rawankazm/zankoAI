@@ -6,12 +6,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/quiz_model.dart';
 import '../../services/ai_service.dart';
+import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
 import '../../theme.dart';
 import '../../services/score_service.dart';
 import '../ai_teacher/ai_teacher_chat_screen.dart';
+import '../payment/vip_upgrade_sheet.dart';
 
 class AiExamGeneratorScreen extends StatefulWidget {
   final String? initialCourse;
@@ -208,6 +211,115 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
     }
   }
 
+  // ─── VIP Limit Check ──────────────────────────────────────────────────────
+  Future<bool> _checkVipExamLimit() async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final isVip = authService.currentUser?.isVip ?? false;
+    if (isVip) return true;
+
+    // Check if free user selected more than 5 questions
+    if (_questionCount > 5) {
+      _showVipExamDialog('دروستکردنی تاقیکردنەوەی زیاتر لە ٥ پرسیار تایبەتە بە ئەندامانی VIP 👑');
+      return false;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    final lastDate = prefs.getString('exam_gen_date') ?? '';
+    int count = prefs.getInt('exam_gen_count') ?? 0;
+
+    if (lastDate != today) {
+      count = 0;
+    }
+
+    if (count >= 1) {
+      _showVipExamDialog('بەکارهێنەرانی ئاسایی تەنها دەتوانن ڕۆژانە ١ تاقیکردنەوە بە AI دروست بکەن.\nبۆ دروستکردنی تاقیکردنەوەی بێسنوور هەژمارەکەت بەرزبکەرەوە بۆ VIP 👑');
+      return false;
+    }
+
+    await prefs.setString('exam_gen_date', today);
+    await prefs.setInt('exam_gen_count', count + 1);
+    return true;
+  }
+
+  void _showVipExamDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('👑', style: TextStyle(fontSize: 24)),
+            SizedBox(width: 8),
+            Text(
+              'تایبەتمەندی بەشداربووانی VIP',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 13.5, height: 1.5),
+            ),
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.4)),
+              ),
+              child: const Row(
+                children: [
+                  Text('💡', style: TextStyle(fontSize: 16)),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'بە تەنها ٥,٠٠٠ د.ع بێسنوور تاقیکردنەوە، سێمینار و ڕاپۆرت دروست بکە!',
+                      style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFFB8860B)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('دواتر', style: TextStyle(color: Colors.grey)),
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    VipUpgradeSheet.show(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFB8860B),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: const Text('بوون بە VIP 👑', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   // ─── Start Exam ────────────────────────────────────────────────────────────
   Future<void> _generateAndStartExam() async {
     if (_pdfFileContent == null || _pdfFileName == null) {
@@ -228,6 +340,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
       _pickPdfFile();
       return;
     }
+
+    final allowed = await _checkVipExamLimit();
+    if (!allowed) return;
 
     final aiService = Provider.of<AiService>(context, listen: false);
 
@@ -505,7 +620,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                     color: ZankoColors.primary.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(CupertinoIcons.sparkles, color: ZankoColors.primary, size: 18),
+                  child: Icon(CupertinoIcons.sparkles, color: ZankoColors.primary, size: 18),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -575,7 +690,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
           Container(
             padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 colors: [ZankoColors.primary, ZankoColors.accent],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -630,7 +745,73 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+
+          if (!(Provider.of<AuthService>(context, listen: false).currentUser?.isVip ?? false)) ...[
+            GestureDetector(
+              onTap: () => VipUpgradeSheet.show(context),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF1E1500), Color(0xFF2C2000)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.45)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFFD700).withValues(alpha: 0.12),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Text('👑', style: TextStyle(fontSize: 20)),
+                    ),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'تاقیکردنەوەی بێسنووری فاینەڵ (VIP)',
+                            style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'تا ٢٠ پرسیاری ئاڵۆز لەسەر هەموو مەلزەمەکانت بەبێ سنوور دروستبکە',
+                            style: TextStyle(color: Colors.white70, fontSize: 10.5),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFD700),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Text(
+                        'VIP ⚡',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Color(0xFF2C2000)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
 
           // 1. STEP 1: Upload PDF File (REQUIRED)
           _buildLabel('١. بارکردنی فایلی PDFی وانەکە (پێویستە 📄)', isDark),
@@ -783,13 +964,22 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                           value: _questionCount,
                           isExpanded: true,
                           dropdownColor: isDark ? ZankoColors.darkCard : Colors.white,
-                          items: [5, 10, 15, 20]
-                              .map((cnt) => DropdownMenuItem(
-                                    value: cnt,
-                                    child: Text('$cnt پرسیار'),
-                                  ))
-                              .toList(),
-                          onChanged: (val) => setState(() => _questionCount = val ?? 10),
+                          items: const [
+                            DropdownMenuItem(value: 5, child: Text('٥ پرسیار (ئاسایی)')),
+                            DropdownMenuItem(value: 10, child: Text('١٠ پرسیار 👑 VIP')),
+                            DropdownMenuItem(value: 15, child: Text('١٥ پرسیار 👑 VIP')),
+                            DropdownMenuItem(value: 20, child: Text('٢٠ پرسیار 👑 VIP')),
+                          ],
+                          onChanged: (val) {
+                            if (val != null) {
+                              final isVip = Provider.of<AuthService>(context, listen: false).currentUser?.isVip ?? false;
+                              if (val > 5 && !isVip) {
+                                _showVipExamDialog('هەڵبژاردنی $val پرسیار تایبەتە بە ئەندامانی VIP 👑');
+                              } else {
+                                setState(() => _questionCount = val);
+                              }
+                            }
+                          },
                         ),
                       ),
                     ),
@@ -940,7 +1130,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                 color: ZankoColors.primary.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
-              child: const Center(
+              child: Center(
                 child: CircularProgressIndicator(color: ZankoColors.primary, strokeWidth: 3.5),
               ),
             ),
@@ -1066,7 +1256,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                             value: (_currentQuestionIndex + 1) / totalQuestions,
                             minHeight: 6,
                             backgroundColor: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFEFEFF7),
-                            valueColor: const AlwaysStoppedAnimation<Color>(ZankoColors.primary),
+                            valueColor: AlwaysStoppedAnimation<Color>(ZankoColors.primary),
                           ),
                         ),
                       ],
@@ -1160,7 +1350,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                               currentQuestion.type == QuestionType.trueFalse
                                   ? 'ڕاست یان هەڵە'
                                   : 'هەڵبژاردن (MCQ)',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                                 color: ZankoColors.primary,
@@ -1489,13 +1679,13 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(CupertinoIcons.lightbulb_fill, color: ZankoColors.primary, size: 18),
+                          Icon(CupertinoIcons.lightbulb_fill, color: ZankoColors.primary, size: 18),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   'شیکردنەوەی مامۆستا AI 🤖:',
                                   style: TextStyle(
                                     fontSize: 12,

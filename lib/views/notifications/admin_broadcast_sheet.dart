@@ -165,7 +165,7 @@ class _AdminBroadcastSheetState extends State<AdminBroadcastSheet> {
                     color: ZankoColors.primary.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     CupertinoIcons.paperplane_fill,
                     color: ZankoColors.primary,
                     size: 20,

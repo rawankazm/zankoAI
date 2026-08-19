@@ -175,13 +175,13 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
-                                        children: const [
+                                        children: [
                                           Icon(
                                             CupertinoIcons.speaker_2_fill,
                                             size: 11,
                                             color: ZankoColors.primary,
                                           ),
-                                          SizedBox(width: 4),
+                                          const SizedBox(width: 4),
                                           Text(
                                             'ڕیکلام',
                                             style: TextStyle(

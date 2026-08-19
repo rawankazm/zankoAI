@@ -71,7 +71,7 @@ class _TeacherEnrollmentsScreenState extends State<TeacherEnrollmentsScreen> {
         .where((r) => r['teacherName'] == teacherName && r['status'] == 'pending')
         .toList();
 
-    const purple = ZankoColors.primary;
+    final purple = ZankoColors.primary;
 
     return Directionality(
       textDirection: lang.textDirection,
@@ -141,7 +141,7 @@ class _TeacherEnrollmentsScreenState extends State<TeacherEnrollmentsScreen> {
                               backgroundColor: purple.withOpacity(0.1),
                               child: Text(
                                 sName.isNotEmpty ? sName[0] : 'ق',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: purple,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -191,7 +191,7 @@ class _TeacherEnrollmentsScreenState extends State<TeacherEnrollmentsScreen> {
                             ),
                             Text(
                               cName,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
                                 color: purple,

@@ -19,7 +19,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   int _selectedTabIndex = 0; // 0 = All Departments, 1 = By Department
   String? _selectedDepartment;
   List<String> _departmentList = [];
-  bool _isDeptLoaded = false;
 
   @override
   void initState() {
@@ -38,7 +37,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       setState(() {
         _departmentList = depts;
         _selectedDepartment = currentUser?.departmentName ?? (depts.isNotEmpty ? depts.first : 'ئەندازیاری سیستەمی زانیاری');
-        _isDeptLoaded = true;
       });
     }
   }
@@ -413,7 +411,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                           ),
                           child: Text(
                             '#${myRankModel.rank}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: ZankoColors.primary,
@@ -445,7 +443,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                         ),
                         Text(
                           '${myRankModel.points} XP',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
                             color: ZankoColors.primary,
@@ -500,7 +498,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                             backgroundColor: ZankoColors.primary.withValues(alpha: 0.2),
                             child: Text(
                               student.name.isNotEmpty ? student.name[0].toUpperCase() : 'S',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
                                 color: ZankoColors.primary,

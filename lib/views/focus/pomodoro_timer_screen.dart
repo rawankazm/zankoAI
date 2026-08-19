@@ -381,7 +381,7 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
                         Expanded(
                           child: Row(
                             children: [
-                              const Icon(CupertinoIcons.music_note_2, color: ZankoColors.primary, size: 20),
+                              Icon(CupertinoIcons.music_note_2, color: ZankoColors.primary, size: 20),
                               const SizedBox(width: 8),
                               Flexible(
                                 child: Text(

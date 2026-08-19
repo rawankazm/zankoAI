@@ -165,7 +165,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                       style: TextStyle(color: isDark ? Colors.white : Colors.black),
                       decoration: InputDecoration(
                         labelText: 'ناوی وانە (Course Name)',
-                        prefixIcon: const Icon(Icons.book_rounded, color: ZankoColors.primary),
+                        prefixIcon: Icon(Icons.book_rounded, color: ZankoColors.primary),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       ),
@@ -182,7 +182,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                             style: TextStyle(color: isDark ? Colors.white : Colors.black),
                             decoration: InputDecoration(
                               labelText: 'نمرەی کویز (/40)',
-                              prefixIcon: const Icon(CupertinoIcons.checkmark_circle, color: ZankoColors.accent),
+                              prefixIcon: Icon(CupertinoIcons.checkmark_circle, color: ZankoColors.accent),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                             ),
@@ -225,7 +225,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                           ),
                           Text(
                             '${currentTotal.toStringAsFixed(1)} / 100',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w900,
                               color: ZankoColors.primary,
@@ -334,8 +334,8 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [ZankoColors.darkCardSecondary, Color(0xFF312E81), Color(0xFF4338CA)],
+                        gradient: LinearGradient(
+                          colors: [ZankoColors.darkCardSecondary, const Color(0xFF312E81), const Color(0xFF4338CA)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -458,7 +458,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                                 color: ZankoColors.primary.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(CupertinoIcons.add, color: ZankoColors.primary, size: 22),
+                              child: Icon(CupertinoIcons.add, color: ZankoColors.primary, size: 22),
                             ),
                             const SizedBox(width: 14),
                             const Expanded(
@@ -471,7 +471,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                                 ),
                               ),
                             ),
-                            const Icon(CupertinoIcons.chevron_forward, color: ZankoColors.primary, size: 18),
+                            Icon(CupertinoIcons.chevron_forward, color: ZankoColors.primary, size: 18),
                           ],
                         ),
                       ),

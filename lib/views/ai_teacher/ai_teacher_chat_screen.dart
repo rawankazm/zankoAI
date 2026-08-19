@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../services/language_provider.dart';
@@ -15,6 +14,8 @@ import '../../services/ai_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/kurdish_tts_service.dart';
 import '../../theme.dart';
+import '../payment/vip_upgrade_sheet.dart';
+import '../../widgets/voice_dictation_sheet.dart';
 
 
 class AiTeacherChatScreen extends StatefulWidget {
@@ -342,12 +343,67 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     try {
       await _audioRecorder.stop();
       if (filePath != null) {
-        final file = File(filePath);
-        if (await file.exists()) {
+      final file = File(filePath);
+      if (await file.exists()) {
+        try {
           await file.delete();
-        }
+        } catch (_) {}
       }
-    } catch (_) {}
+    }
+  } catch (_) {}
+  }
+
+  Future<void> _sendVoiceMessageFromPath(String targetPath) async {
+    final aiService = Provider.of<AiService>(context, listen: false);
+    setState(() {
+      _isTranscribingVoice = true;
+    });
+
+    HapticFeedback.mediumImpact();
+
+    try {
+      final file = File(targetPath);
+      if (await file.exists()) {
+        final bytes = await file.readAsBytes();
+
+        final transcript = await aiService.transcribeAudio(
+          bytes,
+          'voice_chat.m4a',
+          mimeType: 'audio/m4a',
+        );
+
+        if (mounted) {
+          setState(() {
+            _isTranscribingVoice = false;
+          });
+
+          if (transcript.trim().isNotEmpty) {
+            _sendMessage(transcript.trim());
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('نەتوانرا دەنگەکە ببیسترێت، تکایە دووبارە بڵێوە.')),
+            );
+          }
+        }
+
+        try {
+          await file.delete();
+        } catch (_) {}
+        return;
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('هەڵە لە نوسینەوەی دەنگ: $e')),
+        );
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _isTranscribingVoice = false;
+      });
+    }
   }
 
   void _scrollToBottom() {
@@ -505,6 +561,8 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   Widget _buildHeader(BuildContext context) {
     final canPop = Navigator.canPop(context);
     final lang = Provider.of<LanguageProvider>(context);
+    final authService = Provider.of<AuthService>(context);
+    final isVip = authService.currentUser?.isVip ?? false;
 
     return Container(
       padding: EdgeInsets.only(
@@ -538,23 +596,85 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 ),
               ],
             ),
-            child: const CircleAvatar(
+            child: CircleAvatar(
               radius: 20,
-              backgroundColor: Color(0xFF2A2E37),
+              backgroundColor: const Color(0xFF2A2E37),
               child: Icon(Icons.psychology_rounded, color: ZankoColors.primary, size: 22),
             ),
           ),
           const SizedBox(width: 12),
-          Text(
-            lang.translate('ai_tutor'),
-            style: const TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              letterSpacing: -0.2,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                lang.translate('ai_tutor'),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              Row(
+                children: [
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: isVip ? const Color(0xFFFFD700) : const Color(0xFF10B981),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    isVip ? 'VIP 👑 (بێسنوور)' : 'ڕژێمی بەخۆڕایی',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isVip ? const Color(0xFFFFD700) : Colors.white60,
+                      fontWeight: isVip ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
           const Spacer(),
+          if (!isVip)
+            GestureDetector(
+              onTap: () => VipUpgradeSheet.show(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFB8860B), Color(0xFFFFD700)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFFD700).withValues(alpha: 0.3),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('👑', style: TextStyle(fontSize: 13)),
+                    SizedBox(width: 4),
+                    Text(
+                      'VIP',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF2C1F00),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           _buildNeumorphicButton(
             icon: Icons.key_rounded,
             onTap: () => _showApiKeyDialog(context),
@@ -651,6 +771,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     final content = msg['content'] ?? '';
     final time = msg['time'] ?? '4:09 pm';
     final isSpeaking = _currentlySpeakingMsg == content;
+    final isLimitMsg = !isUser && (content.contains('Free Daily Limit Reached') || content.contains('سنووری ٥'));
 
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
@@ -723,7 +844,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                         ],
                       )
                     : BoxDecoration(
-                        color: const Color(0xFF1E222A),
+                        color: isLimitMsg ? const Color(0xFF2C2003) : const Color(0xFF1E222A),
                         borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(16),
                           topRight: Radius.circular(16),
@@ -731,43 +852,70 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                           bottomRight: Radius.circular(16),
                         ),
                         border: Border.all(
-                          color: isSpeaking ? ZankoColors.primary.withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.06),
+                          color: isLimitMsg
+                              ? const Color(0xFFFFD700).withValues(alpha: 0.5)
+                              : (isSpeaking ? ZankoColors.primary.withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.06)),
                           width: 1,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.45),
+                            color: isLimitMsg ? const Color(0xFFFFD700).withValues(alpha: 0.15) : Colors.black.withValues(alpha: 0.45),
                             blurRadius: 10,
                             offset: const Offset(2, 4),
                           ),
                         ],
                       ),
-                child: Wrap(
-                  alignment: WrapAlignment.end,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 12,
-                  runSpacing: 4,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      content,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        height: 1.35,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.white,
-                      ),
+                    Wrap(
+                      alignment: WrapAlignment.end,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 12,
+                      runSpacing: 4,
+                      children: [
+                        Text(
+                          content,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            height: 1.35,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            time,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w400,
+                              color: isUser ? Colors.white.withValues(alpha: 0.8) : Colors.white38,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        time,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w400,
-                          color: isUser ? Colors.white.withValues(alpha: 0.8) : Colors.white38,
+                    if (isLimitMsg) ...[
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => VipUpgradeSheet.show(context),
+                          icon: const Text('👑', style: TextStyle(fontSize: 16)),
+                          label: const Text(
+                            'بەرزکردنەوە بۆ VIP — پەیامی بێسنوور',
+                            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFB8860B),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
@@ -864,14 +1012,14 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                         backgroundColor: const Color(0xFF1E222A),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18),
-                          side: const BorderSide(
+                          side: BorderSide(
                             color: ZankoColors.primary,
                             width: 1,
                           ),
                         ),
                         label: Text(
                           _suggestions[index],
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: ZankoColors.primary,
@@ -994,7 +1142,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                               children: [
                                 // Emoji Button
                                 IconButton(
-                                  icon: const Icon(
+                                  icon: Icon(
                                     CupertinoIcons.smiley,
                                     color: ZankoColors.primary,
                                     size: 22,
@@ -1024,9 +1172,25 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                     ),
                                   ),
                                 ),
+                                // Microphone Dictation Button
+                                IconButton(
+                                  icon: Icon(
+                                    CupertinoIcons.mic_fill,
+                                    color: ZankoColors.primary,
+                                    size: 20,
+                                  ),
+                                  onPressed: () {
+                                    VoiceDictationSheet.show(
+                                      context,
+                                      onAudioRecorded: (path) {
+                                        _sendVoiceMessageFromPath(path);
+                                      },
+                                    );
+                                  },
+                                ),
                                 // Attachment Icon
                                 IconButton(
-                                  icon: const Icon(
+                                  icon: Icon(
                                     CupertinoIcons.paperclip,
                                     color: ZankoColors.primary,
                                     size: 20,
@@ -1035,7 +1199,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                 ),
                                 // Camera Icon
                                 IconButton(
-                                  icon: const Icon(
+                                  icon: Icon(
                                     CupertinoIcons.camera_fill,
                                     color: ZankoColors.primary,
                                     size: 20,

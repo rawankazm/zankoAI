@@ -215,7 +215,7 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
                   const SizedBox(height: 14),
                   Row(
                     children: [
-                      const Icon(CupertinoIcons.chat_bubble_2_fill, color: ZankoColors.primary, size: 24),
+                      Icon(CupertinoIcons.chat_bubble_2_fill, color: ZankoColors.primary, size: 24),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -348,7 +348,7 @@ $text
                             });
                           }
                         },
-                        icon: const Icon(CupertinoIcons.arrow_up_circle_fill, color: ZankoColors.primary, size: 36),
+                        icon: Icon(CupertinoIcons.arrow_up_circle_fill, color: ZankoColors.primary, size: 36),
                       ),
                     ],
                   ),
@@ -447,8 +447,8 @@ $text
                 ),
                 TextButton.icon(
                   onPressed: _pickPdfFile,
-                  icon: const Icon(CupertinoIcons.folder_open, size: 16, color: ZankoColors.primary),
-                  label: const Text('گۆڕینی فۆڵدەر', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: ZankoColors.primary)),
+                  icon: Icon(CupertinoIcons.folder_open, size: 16, color: ZankoColors.primary),
+                  label: Text('گۆڕینی فۆڵدەر', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: ZankoColors.primary)),
                 ),
               ],
             ),
@@ -535,7 +535,7 @@ $text
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(CupertinoIcons.doc_plaintext, color: ZankoColors.primary, size: 24),
+                  Icon(CupertinoIcons.doc_plaintext, color: ZankoColors.primary, size: 24),
                   const SizedBox(width: 10),
                   Text(
                     langProvider.translate('summarize'),

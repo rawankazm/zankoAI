@@ -122,9 +122,9 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       _learnedCardIndices.clear();
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('🎲 کارتەکان تێکەڵکرانەوە!'),
-        duration: Duration(seconds: 1),
+      SnackBar(
+        content: const Text('🎲 کارتەکان تێکەڵکرانەوە!'),
+        duration: const Duration(seconds: 1),
         backgroundColor: ZankoColors.primary,
       ),
     );
@@ -157,7 +157,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
           centerTitle: true,
           actions: [
             IconButton(
-              icon: const Icon(CupertinoIcons.qrcode_viewfinder, color: ZankoColors.primary),
+              icon: Icon(CupertinoIcons.qrcode_viewfinder, color: ZankoColors.primary),
               tooltip: t('scan_qr_deck'),
               onPressed: () async {
                 final success = await Navigator.push(
@@ -174,7 +174,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
             ),
             if (cards.isNotEmpty)
               IconButton(
-                icon: const Icon(CupertinoIcons.qrcode, color: ZankoColors.primary),
+                icon: Icon(CupertinoIcons.qrcode, color: ZankoColors.primary),
                 tooltip: t('share_qr_deck'),
                 onPressed: () {
                   Navigator.push(
@@ -283,7 +283,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                           ? Container(
                               height: 48,
                               alignment: Alignment.center,
-                              child: const Row(
+                              child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   SizedBox(
@@ -291,8 +291,8 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                                     height: 20,
                                     child: CircularProgressIndicator(strokeWidth: 2.5, color: ZankoColors.primary),
                                   ),
-                                  SizedBox(width: 12),
-                                  Text(
+                                  const SizedBox(width: 12),
+                                  const Text(
                                     'زیرەکی دەستکرد لە حاڵەتی دروستکردنی فلاشکاردایە...',
                                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                                   ),
@@ -373,7 +373,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                             ),
                             child: Text(
                               'کارتی ${_currentIndex + 1} لە ${cards.length}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
                                 color: ZankoColors.primary,
@@ -402,7 +402,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                         ],
                       ),
                       IconButton(
-                        icon: const Icon(CupertinoIcons.shuffle, color: ZankoColors.primary, size: 20),
+                        icon: Icon(CupertinoIcons.shuffle, color: ZankoColors.primary, size: 20),
                         tooltip: 'تێکەڵکردن',
                         onPressed: () => _shuffleDeck(cards),
                       ),

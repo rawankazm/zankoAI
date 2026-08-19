@@ -173,7 +173,7 @@ class _SplashScreenState extends State<SplashScreen>
                       math.cos(angle) * 0.4,
                     ),
                     radius: 1.4,
-                    colors: const [
+                    colors: [
                       ZankoColors.primary,
                       ZankoColors.darkCardSecondary,
                       ZankoColors.darkBackground,

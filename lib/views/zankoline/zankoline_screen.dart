@@ -158,8 +158,8 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
             Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF0F172A), ZankoColors.darkCardSecondary, Color(0xFF4338CA)],
+                gradient: LinearGradient(
+                  colors: [const Color(0xFF0F172A), ZankoColors.darkCardSecondary, const Color(0xFF4338CA)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -448,7 +448,7 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                           children: [
                             Row(
                               children: [
-                                const Icon(CupertinoIcons.sparkles, color: ZankoColors.primary, size: 20),
+                                Icon(CupertinoIcons.sparkles, color: ZankoColors.primary, size: 20),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(

@@ -1063,4 +1063,31 @@ class DocxGeneratorService {
 
     return sb.toString();
   }
+
+  static Future<void> exportRoadmapToDocx({
+    required String subjectName,
+    required int daysLeft,
+    required List<Map<String, dynamic>> tasks,
+  }) async {
+    final report = AcademicReportModel(
+      title: 'خشتەی ژیرانەی خوێندن - $subjectName',
+      studentName: 'ZANKO AI Student',
+      supervisorName: 'ZANKO AI Engine',
+      universityName: 'کوردستان / زانکۆ',
+      departmentName: 'ئەکادیمی',
+      academicYear: '2025-2026',
+      languageCode: 'ku',
+      pages: [
+        ReportPageModel(
+          pageNumber: 1,
+          pageTitle: 'پوختەی خشتەی خوێندن',
+          pageType: 'cover',
+          content: 'پوختەی خشتەی ئامادەکاری بۆ تاقیکردنەوەی وانەی $subjectName.\nماوەی پێویست: $daysLeft ڕۆژ.',
+          bulletPoints: tasks.map((t) => 'ڕۆژی ${t['day']}: ${t['title']} - ${t['desc']}').toList(),
+        ),
+      ],
+    );
+
+    await exportAndShareDocx(report);
+  }
 }

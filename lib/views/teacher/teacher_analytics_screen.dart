@@ -13,14 +13,12 @@ class TeacherAnalyticsScreen extends StatelessWidget {
     final lang = Provider.of<LanguageProvider>(context);
     final db = Provider.of<DatabaseService>(context);
     String t(String key) => lang.translate(key);
-    const purple = ZankoColors.primary;
+    final purple = ZankoColors.primary;
 
     // Dynamic analytics metrics from database
-    final totalStudents = db.enrollmentRequests.where((e) => e['status'] == 'approved').length > 0
-        ? db.enrollmentRequests.where((e) => e['status'] == 'approved').length
-        : 124;
+    final approvedEnrollments = db.enrollmentRequests.where((e) => e['status'] == 'approved');
+    final totalStudents = approvedEnrollments.isNotEmpty ? approvedEnrollments.length : 124;
         
-    final quizzesCount = db.quizzes.length;
     final avgScore = db.quizzesTaken > 0 ? (db.quizzesTaken * 21.5).clamp(50.0, 98.0) : 86.4;
     final passRate = 92.5;
 
@@ -111,7 +109,7 @@ class TeacherAnalyticsScreen extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.bar_chart_rounded, color: purple),
+                        Icon(Icons.bar_chart_rounded, color: purple),
                         const SizedBox(width: 8),
                         Text(
                           t('grade_distribution'),

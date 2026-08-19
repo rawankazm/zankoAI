@@ -12,7 +12,6 @@ import '../../services/auth_service.dart';
 import '../../services/ai_service.dart';
 import '../../services/language_provider.dart';
 import '../../theme.dart';
-import 'admin_payment_config_sheet.dart';
 
 class VipUpgradeSheet extends StatefulWidget {
   const VipUpgradeSheet({super.key});
@@ -35,6 +34,7 @@ enum _UploadStep { form, uploading, done }
 class _VipUpgradeSheetState extends State<VipUpgradeSheet>
     with SingleTickerProviderStateMixin {
   String _selectedMethod = 'fib';
+  String _selectedPlan = '1_month'; // '1_month', '3_months', '9_months'
   final TextEditingController _transactionController = TextEditingController();
 
   File? _receiptFile;
@@ -48,6 +48,42 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
   String _fibNumber = 'FIB-ZANKO-9090';
   String _fastPayNumber = '0750 789 9090';
   String _zainCashNumber = '0780 789 9090';
+
+  int get _planPrice {
+    switch (_selectedPlan) {
+      case '3_months':
+        return 12000;
+      case '9_months':
+        return 40000;
+      case '1_month':
+      default:
+        return 5000;
+    }
+  }
+
+  int get _planDays {
+    switch (_selectedPlan) {
+      case '3_months':
+        return 90;
+      case '9_months':
+        return 270;
+      case '1_month':
+      default:
+        return 30;
+    }
+  }
+
+  String get _planTitle {
+    switch (_selectedPlan) {
+      case '3_months':
+        return 'پلانی وەرزی (٣ مانگ)';
+      case '9_months':
+        return 'پلانی ساڵانە (٩ مانگ)';
+      case '1_month':
+      default:
+        return 'پلانی مانگانە (١ مانگ)';
+    }
+  }
 
   @override
   void initState() {
@@ -147,7 +183,7 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
       } catch (_) {}
 
       final expiresAt = Timestamp.fromDate(
-        DateTime.now().add(const Duration(days: 30)),
+        DateTime.now().add(Duration(days: _planDays)),
       );
 
       // Create vip_request document in Firestore
@@ -155,12 +191,14 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
         'userId': user.id,
         'userName': user.name,
         'userEmail': user.email,
+        'plan': _selectedPlan,
+        'planTitle': _planTitle,
         'paymentMethod': _selectedMethod,
         'transactionId': _transactionController.text.trim().isNotEmpty
             ? _transactionController.text.trim()
             : 'TXN-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}',
         'receiptImageUrl': receiptUrl,
-        'amount': 5000,
+        'amount': _planPrice,
         'status': 'approved',
         'aiVerified': isAiVerified,
         'requestedAt': FieldValue.serverTimestamp(),
@@ -172,6 +210,7 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
         'isVip': true,
         'vipStatus': 'active',
         'vipExpiresAt': expiresAt,
+        'vipPlan': _selectedPlan,
       }, SetOptions(merge: true));
 
       authService.reloadUser();
@@ -225,6 +264,7 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
     return Column(
       key: const ValueKey('form'),
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Top Bar with Back, Drag handle & Close buttons
         Row(
@@ -277,89 +317,164 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
         // ── Header Banner ─────────────────────────────────────────────────
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [Color(0xFF1A1200), Color(0xFF2C1F00), Color(0xFF3D2B00)],
               begin: Alignment.topLeft, end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.4)),
+            border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.45)),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFFFD700).withValues(alpha: 0.25),
-                blurRadius: 20, offset: const Offset(0, 8),
+                color: const Color(0xFFFFD700).withValues(alpha: 0.2),
+                blurRadius: 18, offset: const Offset(0, 6),
               ),
             ],
           ),
           child: Column(children: [
-            const Text('👑', style: TextStyle(fontSize: 40)),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Text('👑', style: TextStyle(fontSize: 32)),
+            ),
             const SizedBox(height: 8),
             const Text(
-              'VIP بەدەستبهێنە',
+              'بەشداریکردنی نایابی VIP',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFFFFD700)),
             ),
             const SizedBox(height: 4),
             Text(
-              'پارەدان بکە، وەسڵەکەت بنێرە، ئەدمین پشتڕاست دەکاتەوە',
+              'هەموو ئامرازە ئەکادیمییە پێشکەوتووەکان بەبێ سنوور بۆ سەرکەوتنت لە زانکۆ',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.7)),
+              style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8), height: 1.4),
             ),
           ]),
         ),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: 14),
 
-        // ── Features ─────────────────────────────────────────────────────
-        _buildFeatureRow(CupertinoIcons.chat_bubble_2_fill,   'پەیامی بێسنوور',   'لایەنی ٥ی بەخۆڕایی لادەبرێت'),
-        _buildFeatureRow(CupertinoIcons.doc_text_fill,        'کورتکردنەوەی PDF', 'بێ سنووردارکردن'),
-        _buildFeatureRow(CupertinoIcons.camera_fill,          'وێنەی پرسیار',     'شیکاری AI بۆ وێنەکانت'),
-        _buildFeatureRow(CupertinoIcons.star_circle_fill,     'نیشانەی VIP 👑',   'لە پرۆفایلت'),
+        // ── Comparison / Value Pitch Card ─────────────────────────────────
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFF9800).withValues(alpha: 0.09),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFFF9800).withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('💡', style: TextStyle(fontSize: 18)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'لە مەکتەبەکان بۆ تەنها یەک سێمینار یان ڕاپۆرت ١٥,٠٠٠+ د.ع لێوەردەگرن! لە Zanko AI بە ٥,٠٠٠ د.ع تەواوی مانگەکە بە دەیان سێمینار، ڕاپۆرت و پێشبینی تاقیکردنەوە بەدەستبهێنە.',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    height: 1.45,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.amber[200] : const Color(0xFF9A5B00),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
 
-        const SizedBox(height: 20),
-        const Divider(),
-        const SizedBox(height: 12),
+        const SizedBox(height: 18),
 
-        // ── Payment Method ────────────────────────────────────────────────
+        // ── Plan Selection ────────────────────────────────────────────────
+        Text(
+          'پلانی گونجاو بۆ خۆت هەڵبژێرە:',
+          style: TextStyle(
+            fontSize: 14, fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : ZankoColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 10),
+
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'ڕێگەی پارەدان هەڵبژێرە:',
-              style: TextStyle(
-                fontSize: 14, fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : ZankoColors.textPrimary,
+            Expanded(
+              child: _buildPlanCard(
+                id: '1_month',
+                title: '١ مانگ',
+                subtitle: 'سەرەتایی',
+                price: '٥,٠٠٠',
+                currency: 'د.ع',
+                badge: null,
+                isSelected: _selectedPlan == '1_month',
+                isDark: isDark,
               ),
             ),
-            InkWell(
-              onTap: () => AdminPaymentConfigSheet.show(context),
-              borderRadius: BorderRadius.circular(8),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Row(
-                  children: [
-                    Icon(CupertinoIcons.gear_alt_fill, size: 14, color: ZankoColors.primary),
-                    SizedBox(width: 4),
-                    Text(
-                      'گۆڕینی ژمارەکان (Admin)',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: ZankoColors.primary),
-                    ),
-                  ],
-                ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildPlanCard(
+                id: '3_months',
+                title: '٣ مانگ',
+                subtitle: 'وەرزی تاقیکردنەوە',
+                price: '١٢,٠٠٠',
+                currency: 'د.ع',
+                badge: '🔥 پێشنیارکراو',
+                badgeColor: const Color(0xFFE11D48),
+                discount: '٢٠٪ داشکاندن',
+                isSelected: _selectedPlan == '3_months',
+                isDark: isDark,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildPlanCard(
+                id: '9_months',
+                title: '٩ مانگ',
+                subtitle: 'تەواوی ساڵ',
+                price: '٤٠,٠٠٠',
+                currency: 'د.ع',
+                badge: '👑 باشترین بەها',
+                badgeColor: const Color(0xFFB8860B),
+                discount: 'پاشەکەوتی ٥,٠٠٠ د.ع',
+                isSelected: _selectedPlan == '9_months',
+                isDark: isDark,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        _buildPaymentOption(
-          'fib',
-          'FIB — بانکی یەکەمی عێراقی',
-          _fibNumber,
-          Icons.account_balance_rounded,
-          const Color(0xFF0F172A),
-          appUrl: 'https://fib.iq',
+
+        const SizedBox(height: 18),
+
+        // ── VIP Perks Checklist ───────────────────────────────────────────
+        Text(
+          'سوودە تایبەتەکانی VIP:',
+          style: TextStyle(
+            fontSize: 14, fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : ZankoColors.textPrimary,
+          ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
+        _buildFeatureRow(CupertinoIcons.doc_richtext, 'ڕاپۆرت و سێمینار بە Word و PowerPoint', 'داگرتنی ڕاستەوخۆی فایلی .docx و .pptx بە فۆرماتی ئەکادیمی و سەرچاوە'),
+        _buildFeatureRow(CupertinoIcons.sparkles, 'پێشبینیکەری پرسیاری تاقیکردنەوە (AI Exam)', 'پێشبینی ئەو پرسیارانەی ئەگەری ٩٠٪ لە فاینەڵ دێنەوە لەگەڵ تاقیکردنەوەی تاقیکاری'),
+        _buildFeatureRow(CupertinoIcons.chat_bubble_2_fill, 'گفتوگۆ و پرسیاری بێسنوور لەگەڵ مامۆستای AI', 'لابردنی هەموو جۆرە سنووردارکردنێکی ڕۆژانە بۆ گفتوگۆ'),
+        _buildFeatureRow(CupertinoIcons.camera_viewfinder, 'شیکارکردنی وێنەی مەلزەمە و پرسیاری ئاڵۆز', 'شیکارکردنی هاوکێشە، ماتماتیک، پزیشکی و ئەندازیاری بە هەنگاو'),
+        _buildFeatureRow(CupertinoIcons.bolt_fill, 'خێرایی وەڵامدانەوە و ژیریی مۆدێلی بەرز', 'وەڵامدانەوەی پێشینەدار (Priority) بە بەرزترین وردبینی'),
+        _buildFeatureRow(CupertinoIcons.star_circle_fill, 'تاجی زێڕینی VIP 👑', 'نیشانەی جیاواز لەسەر پرۆفایل و ڕیزبەندی لیدەربۆرد'),
+
+        const SizedBox(height: 12),
+        const Divider(),
+        const SizedBox(height: 12),
+
+        // ── Payment Method ────────────────────────────────────────────────
+        Text(
+          'ڕێگەی پارەدان هەڵبژێرە:',
+          style: TextStyle(
+            fontSize: 14, fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : ZankoColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 10),
         _buildPaymentOption(
           'fastpay',
           'FastPay — فاست پەی',
@@ -367,6 +482,15 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
           Icons.account_balance_wallet_rounded,
           const Color(0xFFE11D48),
           appUrl: 'https://www.fast-pay.cash',
+        ),
+        const SizedBox(height: 8),
+        _buildPaymentOption(
+          'fib',
+          'FIB — بانکی یەکەمی عێراقی',
+          _fibNumber,
+          Icons.account_balance_rounded,
+          const Color(0xFF0F172A),
+          appUrl: 'https://fib.iq',
         ),
         const SizedBox(height: 8),
         _buildPaymentOption(
@@ -380,61 +504,49 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
 
         const SizedBox(height: 16),
 
-        // ── Transaction ID ────────────────────────────────────────────────
-        TextField(
-          controller: _transactionController,
-          decoration: InputDecoration(
-            labelText: 'ژمارەی پسوولە / Transaction ID',
-            hintText: 'نموونە: TXN-884920',
-            prefixIcon: const Icon(Icons.tag_rounded),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          ),
-        ),
-        const SizedBox(height: 16),
-
         // ── Receipt Upload ────────────────────────────────────────────────
         GestureDetector(
           onTap: _pickReceipt,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 250),
             width: double.infinity,
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
             decoration: BoxDecoration(
               color: _receiptFile != null
                   ? const Color(0xFF10B981).withValues(alpha: 0.08)
-                  : (isDark ? ZankoColors.darkCardSecondary : Colors.grey[50]),
+                  : (isDark ? const Color(0xFF1E222B) : Colors.white),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: _receiptFile != null
                     ? const Color(0xFF10B981)
-                    : (isDark ? Colors.white24 : Colors.grey[300]!),
-                width: _receiptFile != null ? 2 : 1.5,
+                    : (isDark ? Colors.white12 : Colors.grey[300]!),
+                width: _receiptFile != null ? 2 : 1.2,
               ),
             ),
             child: _receiptFile == null
                 ? Column(children: [
                     Icon(CupertinoIcons.camera_fill,
-                        size: 36,
+                        size: 32,
                         color: isDark ? Colors.white38 : Colors.grey[400]),
                     const SizedBox(height: 8),
                     Text(
                       'وێنەی وەسڵی پارەدانت بنێرە *',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
+                        fontSize: 13,
                         color: isDark ? Colors.white : ZankoColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'کلیک بکە تا وێنەیەک هەڵبژێریت لە گەلەرییەکەت',
-                      style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[500] : Colors.grey[500]),
+                      'کلیک بکە بۆ هەڵبژاردنی وێنەی پسوولە لە گەلەری',
+                      style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[400] : Colors.grey[600]),
                     ),
                   ])
                 : Row(children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(10),
-                      child: Image.file(_receiptFile!, width: 72, height: 72, fit: BoxFit.cover),
+                      child: Image.file(_receiptFile!, width: 64, height: 64, fit: BoxFit.cover),
                     ),
                     const SizedBox(width: 14),
                     Expanded(child: Column(
@@ -449,7 +561,7 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
                         TextButton(
                           onPressed: _pickReceipt,
                           style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                          child: const Text('گۆڕین', style: TextStyle(fontSize: 12)),
+                          child: const Text('گۆڕینی وێنە', style: TextStyle(fontSize: 12)),
                         ),
                       ],
                     )),
@@ -474,12 +586,12 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
           ),
         ],
 
-        const SizedBox(height: 20),
+        const SizedBox(height: 18),
 
         // ── Submit Button ─────────────────────────────────────────────────
         SizedBox(
           width: double.infinity,
-          height: 54,
+          height: 52,
           child: ElevatedButton(
             onPressed: _submitRequest,
             style: ElevatedButton.styleFrom(
@@ -488,14 +600,20 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               elevation: 0,
             ),
-            child: const Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('👑', style: TextStyle(fontSize: 20)),
-                SizedBox(width: 10),
-                Text(
-                  'ناردنی داواکاری VIP — ٥,٠٠٠ دیناری مانگانە',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                const Text('👑', style: TextStyle(fontSize: 18)),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      'تەواوکردنی داواکاری — ${_planPrice.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} د.ع',
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+                      maxLines: 1,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -504,11 +622,146 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
 
         const SizedBox(height: 10),
         Text(
-          '⏳ دوای ناردن، ئەدمین لە ناو ٢٤ کاتژمێردا پشتڕاست دەکاتەوە',
+          '⚡ دەستبەجێ بە VIP دەکرێیت دوای ناردنی وەسڵەکە و ئەدمین پەسەندی دەکات',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[500] : Colors.grey[500]),
+          style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[400] : Colors.grey[600]),
         ),
       ],
+    );
+  }
+
+  // ── Plan Card Widget ───────────────────────────────────────────────────────
+  Widget _buildPlanCard({
+    required String id,
+    required String title,
+    required String subtitle,
+    required String price,
+    required String currency,
+    required String? badge,
+    Color badgeColor = const Color(0xFFE11D48),
+    String? discount,
+    required bool isSelected,
+    required bool isDark,
+  }) {
+    return GestureDetector(
+      onTap: () => setState(() => _selectedPlan = id),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? const Color(0xFFFFD700).withValues(alpha: 0.12)
+              : (isDark ? ZankoColors.darkCardSecondary : Colors.grey[50]),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? const Color(0xFFFFD700) : (isDark ? Colors.white12 : Colors.grey[200]!),
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          children: [
+            if (badge != null) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: badgeColor,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  badge,
+                  style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(height: 4),
+            ] else ...[
+              const SizedBox(height: 15),
+            ],
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                  color: isSelected ? const Color(0xFFB8860B) : (isDark ? Colors.white : Colors.black87),
+                ),
+                maxLines: 1,
+              ),
+            ),
+            const SizedBox(height: 2),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 9.5,
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                ),
+                maxLines: 1,
+              ),
+            ),
+            const SizedBox(height: 6),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    price,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      color: isSelected ? const Color(0xFFB8860B) : (isDark ? Colors.white : Colors.black87),
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  Text(
+                    currency,
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (discount != null) ...[
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    discount,
+                    style: const TextStyle(
+                      color: Color(0xFF10B981),
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -652,44 +905,72 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
       onTap: () => setState(() => _selectedMethod = id),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(14),
+        padding: EdgeInsets.symmetric(horizontal: 14, vertical: isSelected ? 12 : 10),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.08),
+          color: isSelected ? color.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: isSelected ? color : Colors.transparent, width: 2),
+          border: Border.all(
+            color: isSelected ? color : Colors.white.withValues(alpha: 0.08),
+            width: isSelected ? 1.8 : 1,
+          ),
         ),
         child: Column(
           children: [
             Row(
               children: [
-                Icon(icon, color: color, size: 22),
-                const SizedBox(width: 12),
+                Icon(icon, color: isSelected ? color : Colors.grey, size: 20),
+                const SizedBox(width: 10),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                      const SizedBox(height: 2),
-                      Text('ژمارە / IBAN: $accountNumber', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ZankoColors.primary)),
-                    ],
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                      fontSize: 13,
+                      color: isSelected ? null : Colors.grey,
+                    ),
                   ),
                 ),
-                if (isSelected) const Icon(CupertinoIcons.checkmark_circle_fill, color: Color(0xFFFFD700), size: 22),
+                Icon(
+                  isSelected ? CupertinoIcons.checkmark_circle_fill : CupertinoIcons.circle,
+                  color: isSelected ? const Color(0xFFFFD700) : Colors.grey.withValues(alpha: 0.4),
+                  size: 20,
+                ),
               ],
             ),
             if (isSelected) ...[
               const SizedBox(height: 10),
-              const Divider(height: 1),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      'ژمارە / IBAN: ',
+                      style: TextStyle(fontSize: 11, color: Colors.grey[400]),
+                    ),
+                    Expanded(
+                      child: Text(
+                        accountNumber,
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: ZankoColors.primary),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   OutlinedButton.icon(
                     onPressed: () => _copyToClipboard(accountNumber, title),
-                    icon: const Icon(CupertinoIcons.doc_on_doc, size: 14),
-                    label: const Text('کۆپیکردن', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    icon: const Icon(CupertinoIcons.doc_on_doc, size: 13),
+                    label: const Text('کۆپیکردن', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
@@ -698,14 +979,15 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
                     const SizedBox(width: 8),
                     ElevatedButton.icon(
                       onPressed: () => _openPaymentApp(appUrl),
-                      icon: const Icon(CupertinoIcons.arrow_up_right_square_fill, size: 14),
-                      label: const Text('کردنەوەی ئەپ 📲', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      icon: const Icon(CupertinoIcons.arrow_up_right_square_fill, size: 13),
+                      label: const Text('کردنەوەی ئەپ 📲', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: color,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        elevation: 0,
                       ),
                     ),
                   ],

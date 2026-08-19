@@ -115,7 +115,27 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   @override
   Future<bool> checkAndIncrementDailyLimit({bool isVip = false}) async {
-    return true; // Limit bypassed for testing
+    if (isVip) return true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final today = DateTime.now().toIso8601String().substring(0, 10);
+      final lastDate = prefs.getString('daily_ai_date') ?? '';
+      int count = prefs.getInt('daily_ai_count') ?? 0;
+
+      if (lastDate != today) {
+        count = 0;
+      }
+
+      if (count >= 5) {
+        return false;
+      }
+
+      await prefs.setString('daily_ai_date', today);
+      await prefs.setInt('daily_ai_count', count + 1);
+      return true;
+    } catch (_) {
+      return true;
+    }
   }
 
   // Helper to determine if an error is connection-related

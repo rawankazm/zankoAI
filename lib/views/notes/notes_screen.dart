@@ -213,7 +213,7 @@ class _NotesScreenState extends State<NotesScreen> {
                           borderSide: BorderSide.none,
                         ),
                         suffixIcon: IconButton(
-                          icon: const Icon(CupertinoIcons.mic_fill, color: ZankoColors.primary),
+                          icon: Icon(CupertinoIcons.mic_fill, color: ZankoColors.primary),
                           tooltip: Provider.of<LanguageProvider>(context, listen: false).translate('dictate_voice_note'),
                           onPressed: () => _startVoiceRecordingModal(context, setModalState),
                         ),
@@ -767,7 +767,7 @@ class _NotesScreenState extends State<NotesScreen> {
                         ),
                       ),
                       if (note.isAiFormatted)
-                        const Icon(CupertinoIcons.sparkles, color: ZankoColors.accent, size: 14),
+                        Icon(CupertinoIcons.sparkles, color: ZankoColors.accent, size: 14),
                     ],
                   ),
                   const SizedBox(height: 10),

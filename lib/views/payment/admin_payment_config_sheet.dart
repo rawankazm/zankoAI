@@ -177,7 +177,7 @@ class _AdminPaymentConfigSheetState extends State<AdminPaymentConfigSheet> {
                   keyboardType: TextInputType.phone,
                   decoration: InputDecoration(
                     labelText: 'ژمارەی زین کاش (ZainCash Number)',
-                    prefixIcon: const Icon(Icons.phone_android_rounded, color: ZankoColors.primary),
+                    prefixIcon: Icon(Icons.phone_android_rounded, color: ZankoColors.primary),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                 ),

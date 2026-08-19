@@ -758,7 +758,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(CupertinoIcons.timer, size: 18, color: ZankoColors.primary),
+                        Icon(CupertinoIcons.timer, size: 18, color: ZankoColors.primary),
                         const SizedBox(width: 6),
                         Text(
                           'ژێرمێژووی تاقیکردنەوەکان (Exam Countdown)',
@@ -1067,7 +1067,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                             child: Row(
                                               mainAxisAlignment: MainAxisAlignment.center,
                                               children: [
-                                                const Icon(
+                                                Icon(
                                                   CupertinoIcons.chat_bubble_2_fill,
                                                   size: 14,
                                                   color: ZankoColors.primary,

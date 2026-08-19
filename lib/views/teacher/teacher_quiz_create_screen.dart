@@ -91,7 +91,7 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
     final theme = Theme.of(context);
     final lang = Provider.of<LanguageProvider>(context);
     String t(String key) => lang.translate(key);
-    const purple = ZankoColors.primary;
+    final purple = ZankoColors.primary;
 
     return Directionality(
       textDirection: lang.textDirection,
@@ -252,7 +252,7 @@ class _TeacherQuizCreateScreenState extends State<TeacherQuizCreateScreen> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text('$_numQuestions',
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: purple, fontSize: 16)),
+                        style: TextStyle(fontWeight: FontWeight.bold, color: purple, fontSize: 16)),
                   ),
                 ],
               ),

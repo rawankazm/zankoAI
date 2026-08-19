@@ -24,10 +24,7 @@ import '../gpa/gpa_tracker_screen.dart';
 import '../quiz/ai_exam_generator_screen.dart';
 import '../quiz/quiz_screen.dart';
 import '../schedule/schedule_screen.dart';
-import '../zankoline/zankoline_screen.dart';
-import '../leaderboard/leaderboard_screen.dart';
-import '../offline/offline_downloads_screen.dart';
-import '../study_plan/ai_study_roadmap_screen.dart';
+import '../payment/vip_upgrade_sheet.dart';
 
 // ─── Home Screen ─────────────────────────────────────────────────────────────
 class HomeScreen extends StatefulWidget {
@@ -170,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   width: 42,
                                   height: 42,
                                   decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
+                                    gradient: LinearGradient(
                                       colors: [ZankoColors.primary, ZankoColors.accent],
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
@@ -287,22 +284,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 12),
-                        // ── Feature 4: Dynamic Island / Live Activity Pill ──
-                        _staggered(
-                          1,
-                          _DynamicIslandPill(
-                            isDark: isDark,
-                            userName: userName,
-                            greeting: _greeting(langProvider),
-                          ),
-                        ),
                       ],
                     ),
                   ),
                 ),
               ),
-
 
               // ── Main Scrollable Content ────────────────────────────────────
               SliverList(
@@ -312,9 +298,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // ── AI Search Bar ──────────────────────────────────────
+                        // ── 1. AI Search Bar ──────────────────────────────────
                         _staggered(
-                          2,
+                          1,
                           _AiSearchBar(
                             controller: _searchController,
                             isDark: isDark,
@@ -330,18 +316,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             },
                           ),
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 12),
 
-                        // ── Feature 3: Daily Streak & Flame Animation ──────────
+                        // ── 2. VIP Upgrade Promo Card ──────────────────────────
+                        _staggered(
+                          2,
+                          _VipPromoCard(
+                            isDark: isDark,
+                            isVip: user?.isVip ?? false,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // ── 3. AI Hero Assistant Card ──────────────────────────
                         _staggered(
                           3,
-                          _DailyStreakFlameCard(isDark: isDark),
-                        ),
-                        const SizedBox(height: 14),
-
-                        // ── Feature 2: AI Hero Card (with 3D Floating Robot) ────
-                        _staggered(
-                          4,
                           AIHeroCard(
                             onStartLearning: () => Navigator.push(
                               context,
@@ -358,7 +347,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   context,
                                   CupertinoPageRoute(builder: (_) => const AudioSummarizerView()),
                                 );
-
                               } else if (action == 'PDF Chat') {
                                 Navigator.push(
                                   context,
@@ -368,349 +356,34 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             },
                           ),
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 12),
 
-                        // ── Sponsor Ad Banner ─────────────────────────────────
+                        // ── 4. Daily Streak Flame Card ─────────────────────────
+                        _staggered(
+                          4,
+                          _DailyStreakFlameCard(isDark: isDark),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // ── 5. GPA Tracker & Scores ────────────────────────────
                         _staggered(
                           5,
-                          const AdBannerWidget(screenName: 'home'),
-                        ),
-                        const SizedBox(height: 14),
-
-                        // ── Current GPA / Score Card ───────────────────────────
-                        _staggered(
-                          7,
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _GpaSection(
-                                  gpa: gpa,
-                                  maxGpa: _maxGpa,
-                                  isDark: isDark,
-                                  gpaAnimation: _gpaAnimation,
-                                  onTap: () => Navigator.push(
-                                    context,
-                                    CupertinoPageRoute(builder: (_) => const GpaTrackerScreen()),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-
-                        // ── Zankoline KRG Admission Card ─────────────────────
-                        _staggered(
-                          8,
-                          _ZankolineBannerCard(isDark: isDark, t: t),
-                        ),
-                        const SizedBox(height: 14),
-
-                        // ── Leaderboard Quick Card ──────────────────────────────
-                        _staggered(
-                          9,
-                          GestureDetector(
+                          _GpaSection(
+                            gpa: gpa,
+                            maxGpa: _maxGpa,
+                            isDark: isDark,
+                            gpaAnimation: _gpaAnimation,
                             onTap: () => Navigator.push(
                               context,
-                              CupertinoPageRoute(builder: (_) => const LeaderboardScreen()),
-                            ),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Color(0xFF6C5CE7), Color(0xFF4834D4)],
-                                  begin: Alignment.centerLeft,
-                                  end: Alignment.centerRight,
-                                ),
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF6C5CE7).withValues(alpha: 0.3),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.2),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Text('🏆', style: TextStyle(fontSize: 20)),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          t('leaderboard_title'),
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          'ڕیزبەندی گشتی و بەپێی بەشەکان + مەدالیاکان',
-                                          style: TextStyle(
-                                            color: Colors.white.withValues(alpha: 0.85),
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const Icon(
-                                    CupertinoIcons.chevron_left,
-                                    color: Colors.white,
-                                    size: 18,
-                                  ),
-                                ],
-                              ),
+                              CupertinoPageRoute(builder: (_) => const GpaTrackerScreen()),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 20),
 
-                        // ── Offline Archive Quick Card ──────────────────────────
+                        // ── 6. Academic AI Tools Grid ──────────────────────────
                         _staggered(
-                          10,
-                          GestureDetector(
-                            onTap: () => Navigator.push(
-                              context,
-                              CupertinoPageRoute(builder: (_) => const OfflineDownloadsScreen()),
-                            ),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-                                  begin: Alignment.centerLeft,
-                                  end: Alignment.centerRight,
-                                ),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: const Color(0xFF10B981).withValues(alpha: 0.3),
-                                  width: 1.5,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.2),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF10B981).withValues(alpha: 0.2),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Text('💾', style: TextStyle(fontSize: 20)),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          t('offline_archive'),
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          'پێداچوونەوەی کویز، فلاش کارت و کورتکراوەکان بێ ئینتەرنێت',
-                                          style: TextStyle(
-                                            color: Colors.white.withValues(alpha: 0.8),
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const Icon(
-                                    CupertinoIcons.chevron_left,
-                                    color: Colors.white,
-                                    size: 18,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        // ── Smart AI Study Roadmap Quick Card ────────────────────
-                        _staggered(
-                          11,
-                          GestureDetector(
-                            onTap: () => Navigator.push(
-                              context,
-                              CupertinoPageRoute(builder: (_) => const AiStudyRoadmapScreen()),
-                            ),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [ZankoColors.darkCardSecondary, Color(0xFF312E81)],
-                                  begin: Alignment.centerLeft,
-                                  end: Alignment.centerRight,
-                                ),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: const Color(0xFF6366F1).withValues(alpha: 0.35),
-                                  width: 1.5,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.2),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF6366F1).withValues(alpha: 0.2),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Text('📅', style: TextStyle(fontSize: 20)),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          t('study_roadmap'),
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          'داڕشتنی پلانی ڕۆژانە و ژماردنی پێچەوانەی تاقیکردنەوەکان',
-                                          style: TextStyle(
-                                            color: Colors.white.withValues(alpha: 0.8),
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const Icon(
-                                    CupertinoIcons.chevron_left,
-                                    color: Colors.white,
-                                    size: 18,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-
-                        // ── Schedule Button ──────────────────────────────────────────
-                        _staggered(
-                          12,
-                          AnimatedScaleButton(
-                            onTap: () => Navigator.push(
-                              context,
-                              CupertinoPageRoute(builder: (_) => const ScheduleScreen()),
-                            ),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: isDark
-                                      ? [ZankoColors.darkBackground, ZankoColors.darkCardSecondary]
-                                      : [ZankoColors.primary, ZankoColors.primary],
-                                  begin: Alignment.centerLeft,
-                                  end: Alignment.centerRight,
-                                ),
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: ZankoColors.primary.withValues(alpha: 0.3),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.2),
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
-                                    child: const Icon(
-                                      CupertinoIcons.calendar_today,
-                                      color: Colors.white,
-                                      size: 22,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Text(
-                                      t('schedule_title'),
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                  const Icon(
-                                    CupertinoIcons.arrow_right,
-                                    color: Colors.white,
-                                    size: 18,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-
-                        // ── Today's Progress ───────────────────────────────────
-                        _staggered(
-                          13,
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _SectionHeader(
-                                title: t('todays_progress'),
-                                isDark: isDark,
-                              ),
-                              const SizedBox(height: 14),
-                              _TodayProgress(isDark: isDark),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-
-                        // ── Quick AI Tools ─────────────────────────────────────
-                        _staggered(
-                          14,
+                          6,
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -723,7 +396,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 120),
+                        const SizedBox(height: 16),
+
+                        // ── 7. Sponsor Ad Banner ───────────────────────────────
+                        _staggered(
+                          7,
+                          const AdBannerWidget(screenName: 'home'),
+                        ),
+                        const SizedBox(height: 100),
                       ],
                     ),
                   ),
@@ -877,7 +557,7 @@ class _AiSearchBarState extends State<_AiSearchBar> with SingleTickerProviderSta
                   width: 40,
                   height: 40,
                   margin: const EdgeInsets.only(right: 6),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [ZankoColors.primary, ZankoColors.accent],
                       begin: Alignment.topLeft,
@@ -1009,7 +689,7 @@ class _ContinueLearningCardState extends State<_ContinueLearningCard>
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   colors: [ZankoColors.primary, ZankoColors.accent],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -1061,7 +741,7 @@ class _ContinueLearningCardState extends State<_ContinueLearningCard>
                                 backgroundColor: widget.isDark
                                     ? Colors.white.withValues(alpha: 0.1)
                                     : const Color(0xFFEFEFF7),
-                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                valueColor: AlwaysStoppedAnimation<Color>(
                                   ZankoColors.primary,
                                 ),
                               ),
@@ -1091,7 +771,7 @@ class _ContinueLearningCardState extends State<_ContinueLearningCard>
                 color: ZankoColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: const Icon(
+              child: Icon(
                 CupertinoIcons.chevron_forward,
                 color: ZankoColors.primary,
                 size: 18,
@@ -1185,7 +865,7 @@ class _GpaSection extends StatelessWidget {
                               color: ZankoColors.primary.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Text(
+                            child: Text(
                               'ئاستی تاقیکردنەوەکان',
                               style: TextStyle(
                                 fontSize: 11,
@@ -1439,7 +1119,7 @@ class _QuickAiToolsGrid extends StatelessWidget {
                             color: ZankoColors.primary.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             CupertinoIcons.question_square_fill,
                             color: ZankoColors.primary,
                             size: 26,
@@ -1469,7 +1149,7 @@ class _QuickAiToolsGrid extends StatelessWidget {
                             ],
                           ),
                         ),
-                        const Icon(CupertinoIcons.chevron_forward, color: ZankoColors.primary),
+                        Icon(CupertinoIcons.chevron_forward, color: ZankoColors.primary),
                       ],
                     ),
                   ),
@@ -1489,9 +1169,24 @@ class _QuickAiToolsGrid extends StatelessWidget {
 
     final tools = [
       _ToolData(
+        icon: CupertinoIcons.book_fill,
+        title: 'سیمینار و ڕاپۆرت',
+        color: const Color(0xFFF59E0B),
+        onTap: () => Navigator.push(
+          context,
+          CupertinoPageRoute(builder: (_) => const SeminarThesisAssistantScreen()),
+        ),
+      ),
+      _ToolData(
+        icon: CupertinoIcons.sparkles,
+        title: 'تاقیکردنەوە و کویز',
+        color: const Color(0xFFFF9F0A),
+        onTap: () => _showExamOrQuizSelection(context),
+      ),
+      _ToolData(
         icon: CupertinoIcons.doc_richtext,
         title: langProvider.translate('pdf_chat'),
-        color: const Color(0xFF4ADE80),
+        color: const Color(0xFF10B981),
         onTap: () => Navigator.push(
           context,
           CupertinoPageRoute(builder: (_) => const PdfChatScreen()),
@@ -1507,27 +1202,12 @@ class _QuickAiToolsGrid extends StatelessWidget {
         ),
       ),
       _ToolData(
-        icon: CupertinoIcons.sparkles,
-        title: 'تاقیکردنەوەی AI',
-        color: const Color(0xFFFF9F0A),
-        onTap: () => _showExamOrQuizSelection(context),
-      ),
-      _ToolData(
         icon: CupertinoIcons.tray_full,
         title: 'Flashcards',
         color: const Color(0xFF60A5FA),
         onTap: () => Navigator.push(
           context,
           CupertinoPageRoute(builder: (_) => const FlashcardsScreen()),
-        ),
-      ),
-      _ToolData(
-        icon: CupertinoIcons.timer,
-        title: 'کاتژمێری تەرکیز',
-        color: const Color(0xFFF43F5E),
-        onTap: () => Navigator.push(
-          context,
-          CupertinoPageRoute(builder: (_) => const PomodoroTimerScreen()),
         ),
       ),
       _ToolData(
@@ -1540,18 +1220,18 @@ class _QuickAiToolsGrid extends StatelessWidget {
         ),
       ),
       _ToolData(
-        icon: CupertinoIcons.book_fill,
-        title: 'سیمینار و پڕۆژە',
-        color: ZankoColors.accent,
+        icon: CupertinoIcons.timer,
+        title: 'کاتژمێری تەرکیز',
+        color: const Color(0xFFF43F5E),
         onTap: () => Navigator.push(
           context,
-          CupertinoPageRoute(builder: (_) => const SeminarThesisAssistantScreen()),
+          CupertinoPageRoute(builder: (_) => const PomodoroTimerScreen()),
         ),
       ),
       _ToolData(
         icon: CupertinoIcons.textbox,
         title: 'فەرهەنگی زاراوەکان',
-        color: const Color(0xFF10B981),
+        color: const Color(0xFF06B6D4),
         onTap: () => Navigator.push(
           context,
           CupertinoPageRoute(builder: (_) => const AcademicDictionaryScreen()),
@@ -1818,102 +1498,7 @@ class _StatItem {
 }
 
 
-class _ZankolineBannerCard extends StatelessWidget {
-  final bool isDark;
-  final String Function(String) t;
 
-  const _ZankolineBannerCard({required this.isDark, required this.t});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          CupertinoPageRoute(builder: (_) => const ZankolineScreen()),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF0F172A), Color(0xFF312E81), Color(0xFF4338CA)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF4338CA).withValues(alpha: 0.3),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
-            ),
-          ],
-          border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1.5),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Icon(Icons.school_rounded, color: Colors.white, size: 30),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          t('zankoline'),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF10B981),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Text(
-                          'KRG 2026',
-                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    t('zankoline_subtitle'),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.8),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            const Icon(CupertinoIcons.chevron_forward, color: Colors.white, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // ─── Dynamic Island / Live Activity Pill (Feature 4) ─────────────────────────
 class _DynamicIslandPill extends StatefulWidget {
@@ -2393,6 +1978,202 @@ class _StreakCelebrationSheet extends StatelessWidget {
             onTap: claimedToday ? () => Navigator.pop(context) : onClaim,
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── VIP Promotion Card Component ──────────────────────────────────────────────
+class _VipPromoCard extends StatelessWidget {
+  final bool isDark;
+  final bool isVip;
+
+  const _VipPromoCard({
+    required this.isDark,
+    required this.isVip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (isVip) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1E1602), Color(0xFF2C2003)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.35)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Text('👑', style: TextStyle(fontSize: 20)),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'ئەندامی نایابی VIP 🌟',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFFFFD700),
+                      fontSize: 13.5,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'هەموو تایبەتمەندییە ئەکادیمییەکان بە بێسنوور بۆت کراوەیە',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return GestureDetector(
+      onTap: () => VipUpgradeSheet.show(context),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1C1300), Color(0xFF2E2002), Color(0xFF422E04)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.5), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFFD700).withValues(alpha: 0.18),
+              blurRadius: 16,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFD700).withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Text('👑', style: TextStyle(fontSize: 22)),
+                ),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'ئەندامێتی VIP بەدەستبهێنە 🔥',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFFFFD700),
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'ڕاپۆرت و سێمینار، پێشبینی تاقیکردنەوە، چاتی بێسنوور',
+                        style: TextStyle(fontSize: 11, color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFD700),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Text(
+                    'نوێکردنەوە',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF2C1F00),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            const Divider(color: Colors.white12, height: 1),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Flexible(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(CupertinoIcons.checkmark_seal_fill, color: Color(0xFFFFD700), size: 13),
+                      SizedBox(width: 3),
+                      Flexible(
+                        child: Text(
+                          'Word و PPTX',
+                          style: TextStyle(fontSize: 10, color: Colors.white),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Flexible(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(CupertinoIcons.checkmark_seal_fill, color: Color(0xFFFFD700), size: 13),
+                      SizedBox(width: 3),
+                      Flexible(
+                        child: Text(
+                          'پێشبینی فاینەڵ',
+                          style: TextStyle(fontSize: 10, color: Colors.white),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text(
+                    '٥,٠٠٠ د.ع',
+                    style: TextStyle(color: Color(0xFF10B981), fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

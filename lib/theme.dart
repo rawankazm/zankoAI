@@ -4,9 +4,20 @@ import 'package:google_fonts/google_fonts.dart';
 import 'services/theme_provider.dart';
 
 class ZankoColors {
-  static const Color primary = Color(0xFFF97316); // Vibrant Coral Orange
-  static const Color accent = Color(0xFFF43F5E); // Sunset Rose
-  static const Color background = Color(0xFFFFF7ED); // Soft Warm Cream
+  static Color _primary = const Color(0xFFF97316);
+  static Color _accent = const Color(0xFFF43F5E);
+  static Color _background = const Color(0xFFFFF7ED);
+  static Color _darkBackground = const Color(0xFF140C0C);
+  static Color _darkCard = const Color(0xFF221415);
+  static Color _darkCardSecondary = const Color(0xFF2D1B1D);
+  static Color _darkTextPrimary = const Color(0xFFFFF1F2);
+  static Color _darkTextSecondary = const Color(0xFFFDA4AF);
+  static Color _gradientStart = const Color(0xFFF97316);
+  static Color _gradientEnd = const Color(0xFFE11D48);
+
+  static Color get primary => _primary;
+  static Color get accent => _accent;
+  static Color get background => _background;
   static const Color card = Color(0xFFFFFFFF);
   static const Color textPrimary = Color(0xFF1C1917);
   static const Color textSecondary = Color(0xFF78716C);
@@ -14,33 +25,44 @@ class ZankoColors {
   static const Color warning = Color(0xFFF59E0B);
   static const Color error = Color(0xFFEF4444);
 
-  // Sunset Coral & Rose Dark Mode Colors
-  static const Color darkBackground = Color(0xFF140C0C); // Dark Ember
-  static const Color darkCard = Color(0xFF221415); // Deep Warm Ruby
-  static const Color darkCardSecondary = Color(0xFF2D1B1D); // Elevated Warm Card
-  static const Color darkTextPrimary = Color(0xFFFFF1F2);
-  static const Color darkTextSecondary = Color(0xFFFDA4AF);
+  static Color get darkBackground => _darkBackground;
+  static Color get darkCard => _darkCard;
+  static Color get darkCardSecondary => _darkCardSecondary;
+  static Color get darkTextPrimary => _darkTextPrimary;
+  static Color get darkTextSecondary => _darkTextSecondary;
 
-  // Gradient colors
-  static const Color gradientStart = Color(0xFFF97316); // Vibrant Coral Orange
-  static const Color gradientEnd = Color(0xFFE11D48); // Sunset Rose Red
+  static Color get gradientStart => _gradientStart;
+  static Color get gradientEnd => _gradientEnd;
+
+  static void updatePalette(ThemeColorsData colors) {
+    _primary = colors.primary;
+    _accent = colors.accent;
+    _background = colors.background;
+    _darkBackground = colors.darkBackground;
+    _darkCard = colors.darkCard;
+    _darkCardSecondary = colors.darkCardSecondary;
+    _darkTextPrimary = colors.darkTextPrimary;
+    _darkTextSecondary = colors.darkTextSecondary;
+    _gradientStart = colors.gradientColors.first;
+    _gradientEnd = colors.gradientColors.last;
+  }
 }
 
 class ZankoGradients {
-  static const LinearGradient primary = LinearGradient(
+  static LinearGradient get primary => LinearGradient(
     colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
   );
 
-  static const LinearGradient primaryVertical = LinearGradient(
+  static LinearGradient get primaryVertical => LinearGradient(
     colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  static const LinearGradient darkCard = LinearGradient(
-    colors: [Color(0xFF221415), Color(0xFF2D1B1D)],
+  static LinearGradient get darkCard => LinearGradient(
+    colors: [ZankoColors.darkCard, ZankoColors.darkCardSecondary],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -55,41 +77,41 @@ class ZankoRadius {
 }
 
 class ZankoShadows {
-  static final List<BoxShadow> card = [
+  static List<BoxShadow> get card => [
     BoxShadow(
-      color: const Color(0xFFF97316).withOpacity(0.08),
+      color: ZankoColors.primary.withValues(alpha: 0.08),
       blurRadius: 24,
       offset: const Offset(0, 10),
       spreadRadius: 0,
     ),
     BoxShadow(
-      color: Colors.black.withOpacity(0.03),
+      color: Colors.black.withValues(alpha: 0.03),
       blurRadius: 10,
       offset: const Offset(0, 2),
       spreadRadius: 0,
     ),
   ];
 
-  static final List<BoxShadow> floating = [
+  static List<BoxShadow> get floating => [
     BoxShadow(
-      color: const Color(0xFFF97316).withOpacity(0.35),
+      color: ZankoColors.primary.withValues(alpha: 0.35),
       blurRadius: 20,
       offset: const Offset(0, 8),
       spreadRadius: 0,
     ),
   ];
 
-  static final List<BoxShadow> glow = [
+  static List<BoxShadow> get glow => [
     BoxShadow(
-      color: const Color(0xFFF43F5E).withOpacity(0.35),
+      color: ZankoColors.accent.withValues(alpha: 0.35),
       blurRadius: 16,
       offset: const Offset(0, 4),
     ),
   ];
 
-  static final List<BoxShadow> gradientButton = [
+  static List<BoxShadow> get gradientButton => [
     BoxShadow(
-      color: const Color(0xFFF97316).withOpacity(0.4),
+      color: ZankoColors.primary.withValues(alpha: 0.4),
       blurRadius: 16,
       offset: const Offset(0, 6),
       spreadRadius: -2,
@@ -126,8 +148,105 @@ TextStyle _ts({
   );
 }
 
+class ThemeColorsData {
+  final Color primary;
+  final Color accent;
+  final Color background;
+  final Color card;
+  final Color darkBackground;
+  final Color darkCard;
+  final Color darkCardSecondary;
+  final Color darkTextPrimary;
+  final Color darkTextSecondary;
+  final List<Color> gradientColors;
+
+  const ThemeColorsData({
+    required this.primary,
+    required this.accent,
+    required this.background,
+    required this.card,
+    required this.darkBackground,
+    required this.darkCard,
+    required this.darkCardSecondary,
+    required this.darkTextPrimary,
+    required this.darkTextSecondary,
+    required this.gradientColors,
+  });
+}
+
 class ZankoTheme {
+  static ThemeColorsData getColors(AppThemeType type) {
+    switch (type) {
+      case AppThemeType.royalBlue:
+        return const ThemeColorsData(
+          primary: Color(0xFF2563EB),
+          accent: Color(0xFF38BDF8),
+          background: Color(0xFFF0F7FF),
+          card: Color(0xFFFFFFFF),
+          darkBackground: Color(0xFF0B1120),
+          darkCard: Color(0xFF151E33),
+          darkCardSecondary: Color(0xFF1E293B),
+          darkTextPrimary: Color(0xFFF8FAFC),
+          darkTextSecondary: Color(0xFF94A3B8),
+          gradientColors: [Color(0xFF2563EB), Color(0xFF0284C7)],
+        );
+      case AppThemeType.emeraldForest:
+        return const ThemeColorsData(
+          primary: Color(0xFF10B981),
+          accent: Color(0xFF34D399),
+          background: Color(0xFFF0FDF4),
+          card: Color(0xFFFFFFFF),
+          darkBackground: Color(0xFF071B12),
+          darkCard: Color(0xFF10281D),
+          darkCardSecondary: Color(0xFF1A382A),
+          darkTextPrimary: Color(0xFFF0FDF4),
+          darkTextSecondary: Color(0xFFA7F3D0),
+          gradientColors: [Color(0xFF10B981), Color(0xFF059669)],
+        );
+      case AppThemeType.deepPurple:
+        return const ThemeColorsData(
+          primary: Color(0xFF8B5CF6),
+          accent: Color(0xFFEC4899),
+          background: Color(0xFFFAF5FF),
+          card: Color(0xFFFFFFFF),
+          darkBackground: Color(0xFF100B20),
+          darkCard: Color(0xFF1C1335),
+          darkCardSecondary: Color(0xFF271B48),
+          darkTextPrimary: Color(0xFFFAF5FF),
+          darkTextSecondary: Color(0xFFDDD6FE),
+          gradientColors: [Color(0xFF8B5CF6), Color(0xFFD946EF)],
+        );
+      case AppThemeType.midnightGold:
+        return const ThemeColorsData(
+          primary: Color(0xFFFFD700),
+          accent: Color(0xFFF59E0B),
+          background: Color(0xFFFFFBEB),
+          card: Color(0xFFFFFFFF),
+          darkBackground: Color(0xFF141006),
+          darkCard: Color(0xFF231C0B),
+          darkCardSecondary: Color(0xFF332912),
+          darkTextPrimary: Color(0xFFFEF3C7),
+          darkTextSecondary: Color(0xFFFDE68A),
+          gradientColors: [Color(0xFFFFD700), Color(0xFFD97706)],
+        );
+      case AppThemeType.sunsetAmber:
+        return const ThemeColorsData(
+          primary: Color(0xFFF97316),
+          accent: Color(0xFFF43F5E),
+          background: Color(0xFFFFF7ED),
+          card: Color(0xFFFFFFFF),
+          darkBackground: Color(0xFF140C0C),
+          darkCard: Color(0xFF221415),
+          darkCardSecondary: Color(0xFF2D1B1D),
+          darkTextPrimary: Color(0xFFFFF1F2),
+          darkTextSecondary: Color(0xFFFDA4AF),
+          gradientColors: [Color(0xFFF97316), Color(0xFFE11D48)],
+        );
+    }
+  }
+
   static ThemeData getLightTheme(AppThemeType type, {String? languageFontFamily}) {
+    final colors = getColors(type);
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarBrightness: Brightness.light,
       statusBarIconBrightness: Brightness.dark,
@@ -137,20 +256,20 @@ class ZankoTheme {
       useMaterial3: true,
       brightness: Brightness.light,
       fontFamily: languageFontFamily ?? GoogleFonts.plusJakartaSans().fontFamily,
-      colorScheme: const ColorScheme(
+      colorScheme: ColorScheme(
         brightness: Brightness.light,
-        primary: ZankoColors.primary,
+        primary: colors.primary,
         onPrimary: Colors.white,
-        secondary: ZankoColors.accent,
+        secondary: colors.accent,
         onSecondary: Colors.white,
         error: ZankoColors.error,
         onError: Colors.white,
-        surface: ZankoColors.card,
+        surface: colors.card,
         onSurface: ZankoColors.textPrimary,
-        surfaceContainerHighest: ZankoColors.background,
+        surfaceContainerHighest: colors.background,
         onSurfaceVariant: ZankoColors.textSecondary,
       ),
-      scaffoldBackgroundColor: ZankoColors.background,
+      scaffoldBackgroundColor: colors.background,
     );
 
     return base.copyWith(
@@ -165,7 +284,7 @@ class ZankoTheme {
         labelLarge: _ts(size: 15, weight: FontWeight.w600, color: ZankoColors.textPrimary, languageFontFamily: languageFontFamily),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: ZankoColors.background.withOpacity(0.85),
+        backgroundColor: colors.background.withOpacity(0.85),
         foregroundColor: ZankoColors.textPrimary,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -174,14 +293,14 @@ class ZankoTheme {
         iconTheme: const IconThemeData(color: ZankoColors.textPrimary),
       ),
       cardTheme: CardThemeData(
-        color: ZankoColors.card,
+        color: colors.card,
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ZankoRadius.card)),
         margin: EdgeInsets.zero,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: ZankoColors.primary,
+          backgroundColor: colors.primary,
           foregroundColor: Colors.white,
           minimumSize: const Size(0, 52),
           elevation: 0,
@@ -192,10 +311,10 @@ class ZankoTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: ZankoColors.card,
+        fillColor: colors.card,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(ZankoRadius.input), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(ZankoRadius.input), borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(ZankoRadius.input), borderSide: const BorderSide(color: ZankoColors.primary, width: 2)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(ZankoRadius.input), borderSide: BorderSide(color: colors.primary, width: 2)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         hintStyle: _ts(size: 15, weight: FontWeight.w400, color: ZankoColors.textSecondary, languageFontFamily: languageFontFamily),
       ),
@@ -203,6 +322,7 @@ class ZankoTheme {
   }
 
   static ThemeData getDarkTheme(AppThemeType type, {String? languageFontFamily}) {
+    final colors = getColors(type);
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarBrightness: Brightness.dark,
       statusBarIconBrightness: Brightness.light,
@@ -212,56 +332,55 @@ class ZankoTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       fontFamily: languageFontFamily ?? GoogleFonts.plusJakartaSans().fontFamily,
-      colorScheme: const ColorScheme(
+      colorScheme: ColorScheme(
         brightness: Brightness.dark,
-        primary: ZankoColors.primary,
+        primary: colors.primary,
         onPrimary: Colors.white,
-        secondary: ZankoColors.accent,
+        secondary: colors.accent,
         onSecondary: Colors.white,
         error: ZankoColors.error,
         onError: Colors.white,
-        surface: ZankoColors.darkCard,
-        onSurface: ZankoColors.darkTextPrimary,
-        surfaceContainerHighest: ZankoColors.darkBackground,
-        onSurfaceVariant: ZankoColors.darkTextSecondary,
+        surface: colors.darkCard,
+        onSurface: colors.darkTextPrimary,
+        surfaceContainerHighest: colors.darkBackground,
+        onSurfaceVariant: colors.darkTextSecondary,
       ),
-      scaffoldBackgroundColor: ZankoColors.darkBackground,
+      scaffoldBackgroundColor: colors.darkBackground,
     );
 
     return base.copyWith(
-      dialogBackgroundColor: ZankoColors.darkCard,
       dialogTheme: DialogThemeData(
-        backgroundColor: ZankoColors.darkCard,
+        backgroundColor: colors.darkCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       ),
       textTheme: base.textTheme.copyWith(
-        displayLarge: _ts(size: 34, weight: FontWeight.w800, color: ZankoColors.darkTextPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.6),
-        displayMedium: _ts(size: 28, weight: FontWeight.w700, color: ZankoColors.darkTextPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.4),
-        titleLarge: _ts(size: 22, weight: FontWeight.w700, color: ZankoColors.darkTextPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.3),
-        titleMedium: _ts(size: 17, weight: FontWeight.w600, color: ZankoColors.darkTextPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.2),
-        bodyLarge: _ts(size: 17, weight: FontWeight.w400, color: ZankoColors.darkTextPrimary, languageFontFamily: languageFontFamily),
-        bodyMedium: _ts(size: 15, weight: FontWeight.w400, color: ZankoColors.darkTextPrimary, languageFontFamily: languageFontFamily),
-        bodySmall: _ts(size: 13, weight: FontWeight.w500, color: ZankoColors.darkTextSecondary, languageFontFamily: languageFontFamily),
-        labelLarge: _ts(size: 15, weight: FontWeight.w600, color: ZankoColors.darkTextPrimary, languageFontFamily: languageFontFamily),
+        displayLarge: _ts(size: 34, weight: FontWeight.w800, color: colors.darkTextPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.6),
+        displayMedium: _ts(size: 28, weight: FontWeight.w700, color: colors.darkTextPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.4),
+        titleLarge: _ts(size: 22, weight: FontWeight.w700, color: colors.darkTextPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.3),
+        titleMedium: _ts(size: 17, weight: FontWeight.w600, color: colors.darkTextPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.2),
+        bodyLarge: _ts(size: 17, weight: FontWeight.w400, color: colors.darkTextPrimary, languageFontFamily: languageFontFamily),
+        bodyMedium: _ts(size: 15, weight: FontWeight.w400, color: colors.darkTextPrimary, languageFontFamily: languageFontFamily),
+        bodySmall: _ts(size: 13, weight: FontWeight.w500, color: colors.darkTextSecondary, languageFontFamily: languageFontFamily),
+        labelLarge: _ts(size: 15, weight: FontWeight.w600, color: colors.darkTextPrimary, languageFontFamily: languageFontFamily),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: ZankoColors.darkBackground.withOpacity(0.9),
-        foregroundColor: ZankoColors.darkTextPrimary,
+        backgroundColor: colors.darkBackground.withOpacity(0.9),
+        foregroundColor: colors.darkTextPrimary,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
-        titleTextStyle: _ts(size: 17, weight: FontWeight.w600, color: ZankoColors.darkTextPrimary, languageFontFamily: languageFontFamily),
-        iconTheme: const IconThemeData(color: ZankoColors.darkTextPrimary),
+        titleTextStyle: _ts(size: 17, weight: FontWeight.w600, color: colors.darkTextPrimary, languageFontFamily: languageFontFamily),
+        iconTheme: IconThemeData(color: colors.darkTextPrimary),
       ),
       cardTheme: CardThemeData(
-        color: ZankoColors.darkCard,
+        color: colors.darkCard,
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ZankoRadius.card)),
         margin: EdgeInsets.zero,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: ZankoColors.primary,
+          backgroundColor: colors.primary,
           foregroundColor: Colors.white,
           minimumSize: const Size(0, 52),
           elevation: 0,
@@ -272,12 +391,12 @@ class ZankoTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: ZankoColors.darkCardSecondary,
+        fillColor: colors.darkCardSecondary,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(ZankoRadius.input), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(ZankoRadius.input), borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(ZankoRadius.input), borderSide: const BorderSide(color: ZankoColors.primary, width: 2)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(ZankoRadius.input), borderSide: BorderSide(color: colors.primary, width: 2)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        hintStyle: _ts(size: 15, weight: FontWeight.w400, color: ZankoColors.darkTextSecondary, languageFontFamily: languageFontFamily),
+        hintStyle: _ts(size: 15, weight: FontWeight.w400, color: colors.darkTextSecondary, languageFontFamily: languageFontFamily),
       ),
     );
   }

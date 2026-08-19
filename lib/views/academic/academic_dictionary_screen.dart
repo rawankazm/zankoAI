@@ -166,7 +166,7 @@ class _AcademicDictionaryScreenState extends State<AcademicDictionaryScreen> {
                 color: ZankoColors.primary.withOpacity(0.15),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(CupertinoIcons.book_fill, color: ZankoColors.primary, size: 18),
+              child: Icon(CupertinoIcons.book_fill, color: ZankoColors.primary, size: 18),
             ),
             const SizedBox(width: 8),
             Text(
@@ -276,7 +276,7 @@ class _AcademicDictionaryScreenState extends State<AcademicDictionaryScreen> {
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
+                  gradient: LinearGradient(
                     colors: [ZankoColors.primary, ZankoColors.accent],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -442,7 +442,7 @@ class _AcademicDictionaryScreenState extends State<AcademicDictionaryScreen> {
                 ),
                 child: Text(
                   term.category,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                     color: ZankoColors.primary,
@@ -500,7 +500,7 @@ class _AcademicDictionaryScreenState extends State<AcademicDictionaryScreen> {
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(CupertinoIcons.quote_bubble, size: 14, color: ZankoColors.primary),
+                Icon(CupertinoIcons.quote_bubble, size: 14, color: ZankoColors.primary),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(

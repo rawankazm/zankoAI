@@ -1,4 +1,4 @@
-﻿import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -132,8 +132,8 @@ class _ForceUpdateScreenState extends State<ForceUpdateScreen>
                             color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
                           ),
                         ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 6),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
                           child: Icon(
                             CupertinoIcons.arrow_right,
                             size: 12,
@@ -142,7 +142,7 @@ class _ForceUpdateScreenState extends State<ForceUpdateScreen>
                         ),
                         Text(
                           'v',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w800,
                             color: ZankoColors.primary,

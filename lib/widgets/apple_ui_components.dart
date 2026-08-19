@@ -161,7 +161,7 @@ class GradientButton extends StatelessWidget {
       child: Container(
         height: height,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             colors: [ZankoColors.primary, ZankoColors.accent],
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
@@ -276,7 +276,7 @@ class AppleSearchBar extends StatelessWidget {
       child: Center(
         child: Row(
           children: [
-            const Icon(
+            Icon(
               CupertinoIcons.sparkles,
               color: ZankoColors.primary,
               size: 20,
@@ -318,7 +318,7 @@ class AppleSearchBar extends StatelessWidget {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
+                  gradient: LinearGradient(
                     colors: [ZankoColors.primary, ZankoColors.accent],
                   ),
                   shape: BoxShape.circle,
@@ -416,7 +416,7 @@ class _RingPainter extends CustomPainter {
 
     final sweepAngle = 2 * 3.141592653589793 * value;
     final activePaint = Paint()
-      ..shader = const LinearGradient(
+      ..shader = LinearGradient(
         colors: [ZankoColors.primary, ZankoColors.accent],
       ).createShader(Rect.fromCircle(center: center, radius: radius))
       ..style = PaintingStyle.stroke
@@ -550,7 +550,7 @@ class _AIHeroCardState extends State<AIHeroCard>
                 ),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       CupertinoIcons.chat_bubble_2_fill,
                       color: ZankoColors.accent,
                       size: 18,
@@ -610,7 +610,7 @@ class _AIHeroCardState extends State<AIHeroCard>
                                 'assets/images/ai_robot_3d.png',
                                 fit: BoxFit.contain,
                                 errorBuilder: (context, error, stackTrace) {
-                                  return const Icon(
+                                  return Icon(
                                     CupertinoIcons.sparkles,
                                     size: 48,
                                     color: ZankoColors.primary,
@@ -632,7 +632,7 @@ class _AIHeroCardState extends State<AIHeroCard>
                   children: [
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           CupertinoIcons.sparkles,
                           color: ZankoColors.accent,
                           size: 18,
@@ -949,13 +949,13 @@ class CourseCard extends StatelessWidget {
                   },
                   itemBuilder: (context) => [
                     if (onEdit != null)
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'edit',
                         child: Row(
                           children: [
                             Icon(CupertinoIcons.pencil, size: 16, color: ZankoColors.primary),
-                            SizedBox(width: 8),
-                            Text('دەستکاریکردنی وانە', style: TextStyle(fontSize: 13)),
+                            const SizedBox(width: 8),
+                            const Text('دەستکاریکردنی وانە', style: TextStyle(fontSize: 13)),
                           ],
                         ),
                       ),
@@ -1544,7 +1544,7 @@ class _AnimatedCenterAiButtonState extends State<_AnimatedCenterAiButton>
                   width: 50,
                   height: 50,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
+                    gradient: LinearGradient(
                       colors: [ZankoColors.primary, ZankoColors.accent],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
