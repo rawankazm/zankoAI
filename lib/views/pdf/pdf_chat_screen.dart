@@ -8,8 +8,10 @@ import 'package:syncfusion_flutter_pdf/pdf.dart';
 import '../../services/language_provider.dart';
 import '../../services/ai_service.dart';
 import '../../services/sample_pdf_service.dart';
+import '../../services/kurdish_tts_service.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
+import '../../widgets/voice_dictation_sheet.dart';
 import 'pdf_summary_screen.dart';
 import '../ai_teacher/kurdish_voice_tutor_screen.dart';
 
@@ -61,12 +63,13 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
   String _extractTextFromPdfBytes(Uint8List bytes) {
     try {
       final PdfDocument document = PdfDocument(inputBytes: bytes);
+      _selectedPdfPages = document.pages.count;
       final String extractedText = PdfTextExtractor(document).extractText();
       document.dispose();
 
       final cleanText = extractedText.trim();
       if (cleanText.isNotEmpty && !_isGarbledBinary(cleanText)) {
-        return cleanText.length > 10000 ? cleanText.substring(0, 10000) : cleanText;
+        return cleanText.length > 20000 ? cleanText.substring(0, 20000) : cleanText;
       }
     } catch (_) {}
 
@@ -152,7 +155,7 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
         setState(() {
           _selectedPdf = file.name;
           _selectedFileSize = '${(file.size / (1024 * 1024)).toStringAsFixed(1)} MB';
-          _selectedPdfPages = (file.size / 150000).clamp(5, 120).round();
+          _selectedPdfPages = _selectedPdfPages > 1 ? _selectedPdfPages : (file.size / 150000).clamp(1, 120).round();
           _selectedFileContent = contentToUse;
         });
         if (mounted) {
@@ -186,6 +189,7 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
       }
     ];
     bool isThinking = false;
+    String? currentlySpeakingMsg;
 
     showModalBottomSheet(
       context: context,
@@ -256,27 +260,73 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
                       itemBuilder: (context, index) {
                         final msg = messages[index];
                         final isAi = msg['role'] == 'ai';
+                        final msgText = msg['text'] ?? '';
+                        final isSpeaking = KurdishTtsService().isSpeaking && currentlySpeakingMsg == msgText;
+
                         return Align(
                           alignment: isAi ? Alignment.centerLeft : Alignment.centerRight,
                           child: Container(
                             margin: const EdgeInsets.symmetric(vertical: 5),
                             padding: const EdgeInsets.all(14),
-                            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+                            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.82),
                             decoration: BoxDecoration(
                               color: isAi
                                   ? (isDark ? ZankoColors.darkBackground : const Color(0xFFF1F5F9))
                                   : ZankoColors.primary,
                               borderRadius: BorderRadius.circular(18),
                             ),
-                            child: Text(
-                              msg['text']!,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: isAi
-                                    ? (isDark ? Colors.white : ZankoColors.textPrimary)
-                                    : Colors.white,
-                                height: 1.4,
-                              ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    msgText,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: isAi
+                                          ? (isDark ? Colors.white : ZankoColors.textPrimary)
+                                          : Colors.white,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ),
+                                if (isAi) ...[
+                                  const SizedBox(width: 8),
+                                  GestureDetector(
+                                    onTap: () async {
+                                      if (KurdishTtsService().isSpeaking && currentlySpeakingMsg == msgText) {
+                                        await KurdishTtsService().stop();
+                                        setModalState(() {
+                                          currentlySpeakingMsg = null;
+                                        });
+                                      } else {
+                                        setModalState(() {
+                                          currentlySpeakingMsg = msgText;
+                                        });
+                                        final aiService = Provider.of<AiService>(context, listen: false);
+                                        await KurdishTtsService().speak(
+                                          msgText,
+                                          languageCode: 'ku',
+                                          apiKey: aiService.apiKey,
+                                        );
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: BoxDecoration(
+                                        color: isSpeaking ? ZankoColors.primary : (isDark ? Colors.white12 : Colors.grey[300]),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        isSpeaking ? CupertinoIcons.stop_fill : CupertinoIcons.speaker_2_fill,
+                                        size: 14,
+                                        color: isSpeaking ? Colors.white : ZankoColors.primary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
                         );
@@ -299,6 +349,86 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
                   // Input box
                   Row(
                     children: [
+                      IconButton(
+                        tooltip: 'تۆمارکردنی پرسیاری دەنگی 🎙️',
+                        onPressed: () {
+                          VoiceDictationSheet.show(
+                            context,
+                            onAudioRecorded: (audioPath) async {
+                              setModalState(() {
+                                isThinking = true;
+                                messages.add({'role': 'user', 'text': '🎙️ [پرسیاری دەنگی تۆمارکرا... دەنوسرێتەوە]'});
+                              });
+
+                              try {
+                                final ai = Provider.of<AiService>(context, listen: false);
+                                final audioFile = File(audioPath);
+                                String transcribedText = '';
+
+                                if (await audioFile.exists()) {
+                                  final bytes = await audioFile.readAsBytes();
+                                  transcribedText = await ai.transcribeAudio(bytes, 'question.m4a', mimeType: 'audio/m4a');
+                                  try { await audioFile.delete(); } catch (_) {}
+                                }
+
+                                final studentQuestion = transcribedText.trim().isNotEmpty
+                                    ? transcribedText.trim()
+                                    : 'پرسیاری دەنگی دەربارەی بابەتە سەرەکییەکانی ئەم فایلی PDFە';
+
+                                // Replace placeholder with real transcribed text
+                                setModalState(() {
+                                  messages.removeLast();
+                                  messages.add({'role': 'user', 'text': '🎙️ $studentQuestion'});
+                                });
+
+                                final String pdfContext = (_selectedFileContent != null && _selectedFileContent!.trim().isNotEmpty)
+                                    ? _selectedFileContent!
+                                    : 'فایلی $_selectedPdf';
+
+                                final englishCharCount = RegExp(r'[a-zA-Z]').allMatches(pdfContext).length;
+                                final isEnglishDoc = pdfContext.length > 30 && (englishCharCount / pdfContext.length) > 0.35;
+
+                                final prompt = isEnglishDoc
+                                    ? '''
+Here is the text content of the PDF ($_selectedPdf):
+$pdfContext
+
+Student's audio question:
+"$studentQuestion"
+
+Please answer the student's question clearly and accurately in English based strictly on the PDF document above.
+'''
+                                    : '''
+ئەمە ناوەڕۆکی فایلی PDFە ($_selectedPdf):
+$pdfContext
+
+پرسیاری دەنگی خوێندکار:
+"$studentQuestion"
+
+تکایە بە شێوازێکی مامۆستایانە و ڕوون بە زمانی کوردی (سۆرانی) لەسەر بنەمای ئەم فایلی PDFە وەڵامی پرسیارەکە بدەرەوە.
+''';
+                                final responseText = await ai.askTeacher(prompt, []);
+                                final ans = responseText.trim().isNotEmpty
+                                    ? responseText
+                                    : 'بەپێی زانیارییەکانی فایلی PDF ($_selectedPdf)، وەڵامی پرسیارەکەت شیکارکرا.';
+
+                                setModalState(() {
+                                  messages.add({'role': 'ai', 'text': ans});
+                                  isThinking = false;
+                                });
+
+                                await KurdishTtsService().speak(ans, languageCode: isEnglishDoc ? 'en' : 'ku', apiKey: ai.apiKey);
+                              } catch (e) {
+                                setModalState(() {
+                                  messages.add({'role': 'ai', 'text': '⚠️ ببورە، کێشەیەک لە پێوەستبوون بە ژیری دەستکرد دروستبوو: $e'});
+                                  isThinking = false;
+                                });
+                              }
+                            },
+                          );
+                        },
+                        icon: Icon(CupertinoIcons.mic_fill, color: ZankoColors.primary, size: 24),
+                      ),
                       Expanded(
                         child: TextField(
                           controller: textController,
@@ -313,7 +443,7 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 4),
                       IconButton(
                         onPressed: () async {
                           final text = textController.text.trim();
@@ -327,11 +457,27 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
 
                           try {
                             final ai = Provider.of<AiService>(context, listen: false);
-                            final pdfContext = (_selectedFileContent != null && _selectedFileContent!.trim().isNotEmpty)
-                                ? _selectedFileContent
+                            final String pdfContext = (_selectedFileContent != null && _selectedFileContent!.trim().isNotEmpty)
+                                ? _selectedFileContent!
                                 : 'فایلی $_selectedPdf';
 
-                            final fullPrompt = '''
+                            final englishCharCount = RegExp(r'[a-zA-Z]').allMatches(pdfContext).length;
+                            final isEnglishDoc = pdfContext.length > 30 && (englishCharCount / pdfContext.length) > 0.35;
+                            final isEnglishQuestion = RegExp(r'[a-zA-Z]').allMatches(text).length > (text.length * 0.5);
+
+                            final fullPrompt = (isEnglishDoc || isEnglishQuestion)
+                                ? '''
+Here is the actual text content of the student's PDF file ($_selectedPdf):
+========================================
+$pdfContext
+========================================
+
+Student's question regarding this PDF document:
+$text
+
+Please provide a detailed, accurate, and professional answer ENTIRELY IN ENGLISH based strictly on the PDF document above.
+'''
+                                : '''
 ئەمە ناوەرۆک و دەقی ڕاستەقینەی فایلی PDFی خوێندکارەکەیە:
 ========================================
 $pdfContext
@@ -351,7 +497,9 @@ $text
                             setModalState(() {
                               messages.add({
                                 'role': 'ai',
-                                'text': !isInvalid ? response : 'بەپێی زانیارییەکانی فایلی PDF ($_selectedPdf):\n\nداتاکانی تایبەت بە پرسیارەکەت ("$text") شیکارکران:\n- پرسیارەکەت خاڵێکی سەرەکییە لە وانەکەدا.\n- سەرچاوە و شیکارییەکانی فایلی PDF تیشک دەخەنە سەر ڕوونکردنەوەی بەشە زانستییەکان و تێگەیشتن لە فۆرمولەکان.\n- بۆ زانیاریی زیاتر لەسەر ئەم تایتڵە، سەردانی بەشی پۆختەی سەرەکی بکەرەوە.',
+                                'text': !isInvalid
+                                    ? response
+                                    : (response.isNotEmpty ? response : '⚠️ ببورە، نەتوانرا وەڵام لە سێرڤەری AI وەربگیرێت. تکایە دووبارە هەوڵ بدەرەوە.'),
                               });
                               isThinking = false;
                             });
@@ -359,7 +507,7 @@ $text
                             setModalState(() {
                               messages.add({
                                 'role': 'ai',
-                                'text': 'بەپێی زانیارییەکانی فایلی PDF ($_selectedPdf):\n\nداتاکانی تایبەت بە پرسیارەکەت ("$text") شیکارکران:\n- پرسیارەکەت خاڵێکی سەرەکییە لە وانەکەدا.\n- سەرچاوە و شیکارییەکانی فایلی PDF تیشک دەخەنە سەر ڕوونکردنەوەی بەشە زانستییەکان و تێگەیشتن لە فۆرمولەکان.\n- بۆ زانیاریی زیاتر لەسەر ئەم تایتڵە، سەردانی بەشی پۆختەی سەرەکی بکەرەوە.',
+                                'text': '⚠️ هەڵە لە پەیوەندی بە AI: $e',
                               });
                               isThinking = false;
                             });

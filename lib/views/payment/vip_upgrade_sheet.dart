@@ -199,18 +199,17 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
             : 'TXN-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}',
         'receiptImageUrl': receiptUrl,
         'amount': _planPrice,
-        'status': 'approved',
+        'status': 'pending',
         'aiVerified': isAiVerified,
         'requestedAt': FieldValue.serverTimestamp(),
         'expiresAt': expiresAt,
       });
 
-      // Update user doc: isVip = true, vipStatus = 'active' for instant seamless VIP access
+      // Update user doc: vipStatus = 'pending' until admin approves
       await FirebaseFirestore.instance.collection('users').doc(user.id).set({
-        'isVip': true,
-        'vipStatus': 'active',
-        'vipExpiresAt': expiresAt,
+        'vipStatus': 'pending',
         'vipPlan': _selectedPlan,
+        'vipRequestedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
       authService.reloadUser();

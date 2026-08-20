@@ -107,7 +107,7 @@ class _VoiceDictationSheetState extends State<VoiceDictationSheet> with SingleTi
     });
 
     final finalPath = path ?? _recordedFilePath;
-    if (finalPath != null && File(finalPath).existsSync()) {
+    if (finalPath != null && await File(finalPath).exists()) {
       widget.onAudioRecorded(finalPath);
       if (mounted) {
         Navigator.pop(context);
@@ -120,7 +120,7 @@ class _VoiceDictationSheetState extends State<VoiceDictationSheet> with SingleTi
     await _audioRecorder.stop();
     if (_recordedFilePath != null) {
       final file = File(_recordedFilePath!);
-      if (file.existsSync()) {
+      if (await file.exists()) {
         await file.delete();
       }
     }

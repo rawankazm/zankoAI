@@ -46,7 +46,10 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('ads').snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('ads')
+          .where('isActive', isEqualTo: true)
+          .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
           return const SizedBox.shrink();

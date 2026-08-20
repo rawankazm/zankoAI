@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -8,7 +10,6 @@ import '../../services/ai_service.dart';
 import '../../services/kurdish_tts_service.dart';
 import '../../services/language_provider.dart';
 import '../../theme.dart';
-import '../../widgets/apple_ui_components.dart';
 
 class KurdishVoiceTutorScreen extends StatefulWidget {
   final String? initialFileName;
@@ -22,6 +23,7 @@ class KurdishVoiceTutorScreen extends StatefulWidget {
 
 class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
   final KurdishTtsService _ttsService = KurdishTtsService();
+  final ScrollController _chipsScrollController = ScrollController();
   bool _isLoading = false;
   bool _isPlaying = false;
   double _playbackSpeed = 1.0;
@@ -29,6 +31,8 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
   String? _pdfFileName;
   Map<String, dynamic>? _voiceExplanationData;
   int _activeSectionIndex = 0;
+  String _selectedVoiceLang = 'ku';
+  String? _lastContent;
 
   @override
   void initState() {
@@ -36,16 +40,149 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
     _ttsService.isSpeakingNotifier.addListener(_onTtsStateChanged);
 
     if (widget.initialFileName != null && widget.initialFileContent != null) {
+      _lastContent = widget.initialFileContent!;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _processInitialContent(widget.initialFileName!, widget.initialFileContent!);
+        _promptLanguageAndGenerate(widget.initialFileName!, widget.initialFileContent!);
       });
     }
   }
 
-  Future<void> _processInitialContent(String fileName, String content) async {
+  void _promptLanguageAndGenerate(String fileName, String content) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isDark ? ZankoColors.darkCard : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 50,
+              height: 5,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white24 : Colors.grey[300],
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: ZankoColors.primary.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(CupertinoIcons.globe, size: 36, color: ZankoColors.primary),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'هەڵبژاردنی زمانی ڕوونکردنەوەی دەنگی 🎙️',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : ZankoColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'دەتەوێت مامۆستا AI بە چ زمانێک فایلی ($fileName) بە دەنگ لێکبداتەوە؟',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : ZankoColors.textSecondary),
+            ),
+            const SizedBox(height: 20),
+            InkWell(
+              onTap: () {
+                Navigator.pop(ctx);
+                _generateAudioExplanation(fileName, content, lang: 'ku');
+              },
+              borderRadius: BorderRadius.circular(18),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: ZankoColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Text('☀️', style: TextStyle(fontSize: 26)),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'زمانی کوردی (سۆرانی)',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: isDark ? Colors.white : ZankoColors.textPrimary,
+                            ),
+                          ),
+                          const Text('ڕوونکردنەوەی ڕێکخراو و تێروتەسەلی مامۆستایانە بە کوردی', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                        ],
+                      ),
+                    ),
+                    Icon(CupertinoIcons.chevron_left, color: ZankoColors.primary),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            InkWell(
+              onTap: () {
+                Navigator.pop(ctx);
+                _generateAudioExplanation(fileName, content, lang: 'en');
+              },
+              borderRadius: BorderRadius.circular(18),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: ZankoColors.accent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: ZankoColors.accent.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Text('🇬🇧', style: TextStyle(fontSize: 26)),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'English (ئینگلیزی)',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: isDark ? Colors.white : ZankoColors.textPrimary,
+                            ),
+                          ),
+                          const Text('HD Neural Academic AI Voice Explanation in English', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                        ],
+                      ),
+                    ),
+                    Icon(CupertinoIcons.chevron_left, color: ZankoColors.accent),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _generateAudioExplanation(String fileName, String content, {required String lang}) async {
     setState(() {
       _isLoading = true;
       _pdfFileName = fileName;
+      _selectedVoiceLang = lang;
+      _lastContent = content;
       _voiceExplanationData = null;
       _activeSectionIndex = 0;
     });
@@ -55,6 +192,7 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
       final data = await aiService.generateKurdishVoiceLectureExplanation(
         pdfText: content,
         pdfName: fileName,
+        targetLanguage: lang,
       );
 
       if (mounted) {
@@ -65,17 +203,21 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
         _playCurrentSectionAudio();
       }
     } catch (e) {
-      debugPrint('Error processing initial content for voice tutor: $e');
+      debugPrint('Error generating audio explanation: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('نەتوانرا ڕوونکردنەوەی دەنگی دروستبکرێت: $e')),
+        );
       }
     }
   }
 
   @override
   void dispose() {
+    _chipsScrollController.dispose();
     _ttsService.isSpeakingNotifier.removeListener(_onTtsStateChanged);
     _ttsService.stop();
     super.dispose();
@@ -93,55 +235,41 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf', 'txt'],
+      withData: true,
     );
 
-    if (result == null || result.files.single.path == null) return;
+    if (result == null || result.files.isEmpty) return;
 
-    final file = File(result.files.single.path!);
-    final fileName = result.files.single.name;
-
-    setState(() {
-      _isLoading = true;
-      _pdfFileName = fileName;
-      _voiceExplanationData = null;
-      _activeSectionIndex = 0;
-    });
+    final picked = result.files.single;
+    final fileName = picked.name;
 
     try {
       String extractedText = '';
-      if (fileName.toLowerCase().endsWith('.pdf')) {
-        final bytes = await file.readAsBytes();
-        final document = sync_pdf.PdfDocument(inputBytes: bytes);
+      Uint8List? fileBytes = picked.bytes;
+      if (fileBytes == null && picked.path != null) {
+        fileBytes = await File(picked.path!).readAsBytes();
+      }
+
+      if (fileBytes != null && fileName.toLowerCase().endsWith('.pdf')) {
+        final document = sync_pdf.PdfDocument(inputBytes: fileBytes);
         final extractor = sync_pdf.PdfTextExtractor(document);
         extractedText = extractor.extractText();
         document.dispose();
-      } else {
-        extractedText = await file.readAsString();
+      } else if (fileBytes != null) {
+        extractedText = utf8.decode(fileBytes, allowMalformed: true);
       }
 
       if (extractedText.trim().isEmpty) {
         extractedText = 'Sample English lecture text regarding computer networks and artificial intelligence.';
       }
 
-      final aiService = Provider.of<AiService>(context, listen: false);
-      final data = await aiService.generateKurdishVoiceLectureExplanation(
-        pdfText: extractedText,
-        pdfName: fileName,
-      );
-
+      _lastContent = extractedText;
       if (mounted) {
-        setState(() {
-          _voiceExplanationData = data;
-          _isLoading = false;
-        });
-        _playCurrentSectionAudio();
+        _promptLanguageAndGenerate(fileName, extractedText);
       }
     } catch (e) {
       debugPrint('Error loading PDF for voice tutor: $e');
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('هەڵە لە خوێندنەوەی فایلی PDF: $e')),
         );
@@ -150,15 +278,42 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
   }
 
   void _playCurrentSectionAudio() {
+    _playSectionAt(_activeSectionIndex);
+  }
+
+  void _playSectionAt(int index) {
     if (_voiceExplanationData == null) return;
     final sections = _voiceExplanationData!['sections'] as List<dynamic>?;
-    if (sections == null || sections.isEmpty) return;
+    if (sections == null || sections.isEmpty || index >= sections.length) return;
 
-    final currentSection = sections[_activeSectionIndex] as Map<String, dynamic>;
-    final kurdishText = currentSection['kurdishExplanation'] as String? ?? '';
+    // Smoothly scroll active chip into view
+    if (_chipsScrollController.hasClients) {
+      final targetScroll = (index * 130.0).clamp(0.0, _chipsScrollController.position.maxScrollExtent);
+      _chipsScrollController.animateTo(
+        targetScroll,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
 
-    if (kurdishText.isNotEmpty) {
-      _ttsService.speak(kurdishText, languageCode: 'ku');
+    final section = sections[index] as Map<String, dynamic>;
+    final textToSpeak = section['kurdishExplanation'] as String? ?? '';
+    final aiService = Provider.of<AiService>(context, listen: false);
+
+    if (textToSpeak.isNotEmpty) {
+      _ttsService.speak(
+        textToSpeak,
+        languageCode: _selectedVoiceLang,
+        apiKey: aiService.apiKey,
+        speed: _playbackSpeed,
+        onDone: () {
+          // Auto-advance to next section when current finishes
+          if (mounted && index < sections.length - 1) {
+            setState(() => _activeSectionIndex = index + 1);
+            _playSectionAt(index + 1);
+          }
+        },
+      );
     }
   }
 
@@ -177,20 +332,16 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
 
     if (_activeSectionIndex < sections.length - 1) {
       _ttsService.stop();
-      setState(() {
-        _activeSectionIndex++;
-      });
-      _playCurrentSectionAudio();
+      setState(() => _activeSectionIndex++);
+      _playSectionAt(_activeSectionIndex);
     }
   }
 
   void _previousSection() {
     if (_activeSectionIndex > 0) {
       _ttsService.stop();
-      setState(() {
-        _activeSectionIndex--;
-      });
-      _playCurrentSectionAudio();
+      setState(() => _activeSectionIndex--);
+      _playSectionAt(_activeSectionIndex);
     }
   }
 
@@ -204,6 +355,10 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
         _playbackSpeed = 1.0;
       }
     });
+
+    if (_isPlaying) {
+      _playCurrentSectionAudio();
+    }
   }
 
   @override
@@ -241,6 +396,16 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
             ],
           ),
           centerTitle: true,
+          actions: [
+            if (_pdfFileName != null && _lastContent != null)
+              IconButton(
+                icon: Icon(CupertinoIcons.globe, color: ZankoColors.primary),
+                tooltip: 'گۆڕینی زمانی دەنگ 🎙️',
+                onPressed: () {
+                  _promptLanguageAndGenerate(_pdfFileName!, _lastContent!);
+                },
+              ),
+          ],
         ),
         body: SafeArea(
           child: Padding(
@@ -375,118 +540,200 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
     final sections = _voiceExplanationData!['sections'] as List<dynamic>? ?? [];
     if (sections.isEmpty) return const SizedBox();
 
+    final summary = _voiceExplanationData!['summary'] as String? ?? '';
+    final title = _voiceExplanationData!['title'] as String? ?? '';
     final currentSection = sections[_activeSectionIndex] as Map<String, dynamic>;
     final sectionTitle = currentSection['sectionTitle'] as String? ?? '';
     final kurdishExplanation = currentSection['kurdishExplanation'] as String? ?? '';
     final keyTerms = (currentSection['englishKeyTerms'] as List<dynamic>?)?.cast<String>() ?? [];
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Section Progress Indicator
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'بەشی ${_activeSectionIndex + 1} لە ${sections.length}',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: ZankoColors.primary,
-                ),
-              ),
-              Text(
-                'پێداچوونەوەی ڕاستەوخۆ 🔴',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // Main Kurdish Explanation Card
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── Summary card ──────────────────────────────────────────────
+        if (summary.isNotEmpty)
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(14),
+            margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: isDark ? ZankoColors.darkCard : Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: isDark ? Colors.white10 : Colors.grey[200]!),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              gradient: LinearGradient(
+                colors: [ZankoColors.primary.withValues(alpha: 0.12), ZankoColors.accent.withValues(alpha: 0.08)],
+              ),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.2)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  sectionTitle,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : ZankoColors.textPrimary,
-                  ),
+                  title,
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: ZankoColors.primary),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const Divider(height: 24),
+                const SizedBox(height: 6),
                 Text(
-                  kurdishExplanation,
-                  style: TextStyle(
-                    fontSize: 14.5,
-                    height: 1.6,
-                    color: isDark ? Colors.grey[300] : ZankoColors.textPrimary,
-                  ),
+                  summary,
+                  style: TextStyle(fontSize: 12.5, height: 1.5, color: isDark ? Colors.grey[300] : ZankoColors.textSecondary),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
 
-          // English Key Terms Card
-          if (keyTerms.isNotEmpty) ...[
-            Text(
-              'وشە کلیلییە ئینگلیزییەکان (Key Terms):',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.grey[300] : ZankoColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: keyTerms.map((term) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        // ── Section cards list (horizontal scroll) ────────────────────
+        SizedBox(
+          height: 52,
+          child: ListView.separated(
+            controller: _chipsScrollController,
+            scrollDirection: Axis.horizontal,
+            itemCount: sections.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder: (context, i) {
+              final sec = sections[i] as Map<String, dynamic>;
+              final secTitle = sec['sectionTitle'] as String? ?? 'بەشی ${i + 1}';
+              final isActive = i == _activeSectionIndex;
+              return GestureDetector(
+                onTap: () {
+                  if (_activeSectionIndex != i) {
+                    _ttsService.stop();
+                    setState(() => _activeSectionIndex = i);
+                  }
+                  _playSectionAt(i);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                    color: ZankoColors.primary.withValues(alpha: 0.12),
+                    gradient: isActive
+                        ? LinearGradient(colors: [ZankoColors.primary, ZankoColors.accent])
+                        : null,
+                    color: isActive ? null : (isDark ? ZankoColors.darkCard : Colors.white),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: isActive ? ZankoColors.primary : (isDark ? Colors.white12 : Colors.grey[200]!),
+                    ),
+                    boxShadow: isActive
+                        ? [BoxShadow(color: ZankoColors.primary.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 3))]
+                        : null,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isActive && _isPlaying)
+                        const Padding(
+                          padding: EdgeInsets.only(left: 4),
+                          child: Icon(CupertinoIcons.waveform, size: 14, color: Colors.white),
+                        ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${i + 1}. ${secTitle.length > 28 ? '${secTitle.substring(0, 28)}…' : secTitle}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isActive ? Colors.white : (isDark ? Colors.grey[300] : ZankoColors.textPrimary),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // ── Active section detail ─────────────────────────────────────
+        Expanded(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Section header + play indicator
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        sectionTitle,
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: isDark ? Colors.white : ZankoColors.textPrimary),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: _togglePlayPause,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: ZankoColors.primary.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          _isPlaying ? CupertinoIcons.pause_fill : CupertinoIcons.play_fill,
+                          size: 18,
+                          color: ZankoColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(height: 20),
+
+                // Explanation text
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: isDark ? ZankoColors.darkCard : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: _isPlaying
+                          ? ZankoColors.primary.withValues(alpha: 0.4)
+                          : (isDark ? Colors.white10 : Colors.grey[200]!),
+                      width: _isPlaying ? 1.5 : 1,
+                    ),
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4))],
                   ),
                   child: Text(
-                    term,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: ZankoColors.primary,
-                    ),
+                    kurdishExplanation,
+                    style: TextStyle(fontSize: 14.5, height: 1.7, color: isDark ? Colors.grey[300] : ZankoColors.textPrimary),
+                    textDirection: _selectedVoiceLang == 'en' ? TextDirection.ltr : TextDirection.rtl,
                   ),
-                );
-              }).toList(),
+                ),
+                const SizedBox(height: 16),
+
+                // Key Terms
+                if (keyTerms.isNotEmpty) ...[
+                  Text(
+                    'وشە کلیلییەکان (Key Terms):',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? Colors.grey[300] : ZankoColors.textPrimary),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: keyTerms.map((term) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: ZankoColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.25)),
+                        ),
+                        child: Text(term, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ZankoColors.primary)),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 80),
+                ],
+              ],
             ),
-          ],
-        ],
-      ),
+          ),
+        ),
+      ],
     );
   }
+
 
   Widget _buildAudioControlBar(bool isDark) {
     return Container(

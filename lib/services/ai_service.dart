@@ -47,6 +47,7 @@ abstract class AiService extends ChangeNotifier {
   Future<Map<String, dynamic>> generateKurdishVoiceLectureExplanation({
     required String pdfText,
     String? pdfName,
+    String targetLanguage = 'ku',
   });
 }
 
@@ -58,6 +59,9 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   ZankoAiService() {
     _apiKey = _fallbackWorkingKey;
+    if (_defaultApiKey.trim().isNotEmpty) {
+      _apiKey = _defaultApiKey.trim();
+    }
     _loadApiKey();
   }
 
@@ -96,6 +100,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
     notifyListeners();
   }
+
 
   @override
   String? get apiKey => _apiKey;
@@ -158,11 +163,10 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     client.connectionTimeout = const Duration(seconds: 8);
 
     final modelsToTry = [
-      'gemini-1.5-flash',
-      'gemini-2.0-flash',
-      'gemini-1.5-pro',
+      'gemini-3.6-flash',
+      'gemini-3.7-flash',
+      'gemini-3.1-flash-lite-preview',
       'gemini-flash-latest',
-      'gemini-pro-latest'
     ];
 
     for (final m in modelsToTry) {
@@ -223,13 +227,10 @@ class ZankoAiService extends ChangeNotifier implements AiService {
       if (keyToUse.isEmpty) continue;
 
       final models = [
-        'gemini-flash-latest',
         'gemini-3.6-flash',
-        'gemini-2.5-flash-lite',
-        'gemini-pro-latest',
-        'gemini-2.5-pro',
-        'gemini-1.5-flash',
-        'gemini-2.0-flash',
+        'gemini-3.7-flash',
+        'gemini-3.1-flash-lite-preview',
+        'gemini-flash-latest',
       ];
 
       for (final m in models) {
@@ -243,7 +244,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
           );
 
           final content = [gemini.Content.text(prompt)];
-          final response = await model.generateContent(content).timeout(const Duration(seconds: 15));
+          final response = await model.generateContent(content).timeout(const Duration(seconds: 30));
           if (response.text != null && response.text!.isNotEmpty) {
             return response.text!;
           }
@@ -286,11 +287,10 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     for (final keyToUse in keysToTry) {
       if (keyToUse.isEmpty) continue;
       final models = [
-        'gemini-1.5-flash',
-        'gemini-2.0-flash',
-        'gemini-1.5-pro',
+        'gemini-3.6-flash',
+        'gemini-3.7-flash',
+        'gemini-3.1-flash-lite-preview',
         'gemini-flash-latest',
-        'gemini-pro-latest'
       ];
 
       for (final m in models) {
@@ -317,7 +317,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
         } catch (_) {}
       }
     }
-    return '';
+    return _callGemini(prompt, systemInstruction: systemInstruction);
   }
 
   @override
@@ -440,13 +440,9 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
     final models = [
       'gemini-3.6-flash',
-      'gemini-2.5-flash',
-      'gemini-2.0-flash',
-      'gemini-2.0-flash-exp',
-      'gemini-1.5-flash',
+      'gemini-3.7-flash',
+      'gemini-3.1-flash-lite-preview',
       'gemini-flash-latest',
-      'gemini-1.5-pro',
-      'gemini-pro-latest'
     ];
 
     final isAudio = mimeType.startsWith('audio');
@@ -532,22 +528,34 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   Future<Map<String, dynamic>> summarizePdf(String pdfName, String pdfContent) async {
     await Future.delayed(const Duration(milliseconds: 1000));
 
+    final safeContent = pdfContent.length > 6000 ? pdfContent.substring(0, 6000) : pdfContent;
+    final englishCharCount = RegExp(r'[a-zA-Z]').allMatches(safeContent).length;
+    final isEnglishDoc = safeContent.length > 30 && (englishCharCount / safeContent.length) > 0.35;
+
     if (hasRealApiKey) {
       try {
-        final safeContent = pdfContent.length > 6000 ? pdfContent.substring(0, 6000) : pdfContent;
-        final prompt = "ئەم دەقەی خوارەوە کە لە فایلی بە ناوی '$pdfName' دەرهێنراوە بە وردی کورت بکەرەوە. "
-            "وەڵامەکەت پێویستە بە زمانی کوردی (سۆرانی) بێت و سێ بەش لەخۆ بگرێت: "
-            "١- کورتەیەکی گشتی (Summary)\n"
-            "٢- خاڵە سەرەکی و گرنگەکان (Key Points) وەک لیستی خاڵبەندی\n"
-            "٣- وەرگێڕانی گرنگترین پارچەی دەقەکە بۆ کوردی (Translation)\n\n"
-            "دەقەکە:\n$safeContent";
+        final prompt = isEnglishDoc
+            ? "Analyze and summarize the following English PDF document ('$pdfName') thoroughly.\n"
+              "Since the document is in English, provide your entire response IN HIGH QUALITY ACADEMIC ENGLISH in 3 clear sections:\n"
+              "1- Overview Summary (Summary)\n"
+              "2- Key Bullet Points (Key Points)\n"
+              "3- Core Academic Takeaway & Explanation (Explanation)\n\n"
+              "Document Content:\n$safeContent"
+            : "ئەم دەقەی خوارەوە کە لە فایلی بە ناوی '$pdfName' دەرهێنراوە بە وردی کورت بکەرەوە. "
+              "وەڵامەکەت پێویستە بە زمانی کوردی (سۆرانی) بێت و سێ بەش لەخۆ بگرێت: "
+              "١- کورتەیەکی گشتی (Summary)\n"
+              "٢- خاڵە سەرەکی و گرنگەکان (Key Points) وەک لیستی خاڵبەندی\n"
+              "٣- وەرگێڕانی گرنگترین پارچەی دەقەکە بۆ کوردی (Translation)\n\n"
+              "دەقەکە:\n$safeContent";
         
         final responseText = await _callGemini(prompt);
         
         final sections = responseText.split('\n\n');
         String summary = responseText;
         List<String> keyPoints = [];
-        String translation = "وەرگێڕان لە دەقی سەرەکییەوە ئەنجامدراوە.";
+        String translation = isEnglishDoc
+            ? "Academic summary generated directly in English from source text."
+            : "وەرگێڕان لە دەقی سەرەکییەوە ئەنجامدراوە.";
         
         if (sections.isNotEmpty) summary = sections[0];
         
@@ -1255,9 +1263,8 @@ $pdfContext
     required int daysRemaining,
     required int hoursPerDay,
   }) async {
-    if (hasRealApiKey) {
-      try {
-        final prompt = """
+    try {
+      final prompt = """
 تۆ شارەزایەکی زانستی و ڕێنماییکاری زانکۆیی. تکایە بۆ بابەتی ($subjectName) کە ($totalChapters) بەشی هەیە و تەنها ($daysRemaining) ڕۆژی ماوە بۆ تاقیکردنەوە، و خوێندکار دەتوانێت ڕۆژانە ($hoursPerDay) کاتژمێر بخوێنێت، نەخشەڕێگایەکی ڕۆژانەی گونجاو بە زمانی کوردی (سۆرانی) بە شێوازی JSON بنووسەوە.
 
 شێوازی پێویستی JSON:
@@ -1273,15 +1280,14 @@ $pdfContext
   ]
 }
 """;
-        final responseText = await askTeacher(prompt, []);
-        if (responseText.isNotEmpty && responseText.contains('{')) {
-          final start = responseText.indexOf('{');
-          final end = responseText.lastIndexOf('}') + 1;
-          final jsonSub = responseText.substring(start, end);
-          return jsonDecode(jsonSub);
-        }
-      } catch (_) {}
-    }
+      final responseText = await _callGemini(prompt);
+      if (responseText.isNotEmpty && responseText.contains('{')) {
+        final start = responseText.indexOf('{');
+        final end = responseText.lastIndexOf('}') + 1;
+        final jsonSub = responseText.substring(start, end);
+        return jsonDecode(jsonSub);
+      }
+    } catch (_) {}
 
     // Fallback AI Study Plan Generator
     List<Map<String, dynamic>> fallbackTasks = [];
@@ -1321,61 +1327,128 @@ $pdfContext
   Future<Map<String, dynamic>> generateKurdishVoiceLectureExplanation({
     required String pdfText,
     String? pdfName,
+    String targetLanguage = 'ku',
   }) async {
     final cleanContent = pdfText.length > 15000 ? pdfText.substring(0, 15000) : pdfText;
+    final isEn = targetLanguage == 'en';
 
-    final prompt = '''
-You are a senior university professor speaking fluent, natural Kurdish Sorani (کوردی).
-Read and analyze the following academic English PDF material (${pdfName ?? 'Lecture Notes'}):
-
-"$cleanContent"
-
-Your task: Provide a warm, clear, and comprehensive Kurdish Sorani (کوردی) audio-ready lecture explanation as if you are giving a private audio lecture to a university student page by page.
-
-CRITICAL FOR VOICE SYNTHESIS:
-Write the Kurdish text in natural, flowing spoken Sorani Kurdish. Use clear vowels and educational dialogue so text-to-speech engines pronounce every word smoothly and naturally without harsh consonant sounds.
-
-STRICT JSON OUTPUT FORMAT ONLY:
+    final jsonExample = isEn
+        ? r'''
 {
-  "title": "ڕوونکردنەوەی دەنگی: ${pdfName ?? 'مەلزەمەی وانە'}",
-  "summary": "پوختەیەکی کورتی 2 ڕستەیی لەسەر گشتیاتی بابەتەکە بە کوردی.",
+  "title": "Audio Lecture: Chapter Title",
+  "summary": "Concise 2-sentence summary of the subject in English.",
+  "targetLanguage": "en",
   "sections": [
     {
-      "sectionTitle": "بەشی ١: ناونیشانی بەشەکە بە کوردی و ئینگلیزی",
-      "kurdishExplanation": "ڕوونکردنەوەی تێر و تەسل و ڕەوانی ئەکادیمی بە زمانی کوردی سۆڕانی سادە لەسەر ئەم پەرەگرافە، بە جۆرێک کە خوێندنەوەی دەنگی زۆر ئاسان و ڕوون بێت.",
-      "englishKeyTerms": ["Term 1: Kurdish Translation", "Term 2: Kurdish Translation"]
+      "sectionTitle": "Section 1: Chapter Title in English",
+      "kurdishExplanation": "Full detailed voice-optimized academic lecture script in clear spoken English for this topic. No bullet points, no markdown, just natural sentences.",
+      "englishKeyTerms": ["Term 1: its definition", "Term 2: its definition"]
     }
   ]
-}
+}'''
+        : r'''
+{
+  "title": "ڕوونکردنەوەی دەنگی: ناوی وانە",
+  "summary": "پوختەیەکی کورتی ٢ ڕستەیی لەسەر گشتیاتی بابەتەکە بە کوردی.",
+  "targetLanguage": "ku",
+  "sections": [
+    {
+      "sectionTitle": "بەشی ١: ناونیشانی بەشەکە بە کوردی",
+      "kurdishExplanation": "ڕوونکردنەوەی تێروتەسەلی مامۆستایانە بە کوردی سۆڕانی ڕەوان بە جۆرێک کە گوێگرتنی دەنگی ئاسان بێت، بەبێ هێما یان موارکداون.",
+      "englishKeyTerms": ["Term 1: مانای کوردی", "Term 2: مانای کوردی"]
+    }
+  ]
+}''';
+
+    final prompt = isEn
+        ? '''
+You are a distinguished university professor giving a clear structured audio lecture based on this PDF material titled "${pdfName ?? 'Lecture Notes'}".
+
+Here is the full PDF content:
+---
+$cleanContent
+---
+
+Your task: Read the PDF content above carefully and restructure ALL of it into a detailed, high quality, step-by-step academic audio lecture script ENTIRELY IN ENGLISH. Cover every topic, concept, and detail in the PDF.
+
+CRITICAL RULES:
+1. Use only the content from the PDF above — do NOT generate generic text.
+2. Write in clear natural spoken academic English — no bullet points, no markdown symbols, no dashes, no code blocks.
+3. Each section must correspond to actual content from the PDF.
+4. The "kurdishExplanation" field contains the English lecture script for that section.
+5. Include ALL key terms from the PDF with their definitions.
+
+Return ONLY valid JSON matching this exact structure:
+$jsonExample
+'''
+        : '''
+تۆ مامۆستایەکی ئەکادیمی زانکۆیت و ئەرکت ئەوەیە ئەم فایلی PDFە بە شێوازێکی فێرکاریی باڵا، بە کوردییەکی سۆرانیی پاراو، ڕەوان و شیرین بە دەنگ بۆ خوێندکارانی زانکۆ شی بکەیتەوە.
+
+ناوی فایل: ${pdfName ?? 'مەلزەمەی وانە'}
+
+ناوەڕۆکی فایلی PDF:
+---
+$cleanContent
+---
+
+داواکاری:
+ناوەڕۆکی PDFی سەرەوە بە وردی بخوێنەوە و بکەرە چەند بەشێکی زنجیرەیی فێرکاری کە هەر بەشێکی ڕوونکردنەوەیەکی تێروتەسەلی دەنگی لەخۆبگرێت.
+
+ڕێساکانی دەقی دەنگی (kurdishExplanation):
+١. بە کوردی سۆرانی پاراو و ئەکادیمی و بە ڕستەی تەواو و خۆش بنووسە، وەک ئەوەی مامۆستا لە هۆڵی وانەوتنەوەدا قسە بۆ خوێندکاران بکات.
+٢. دەستەواژەی ژنێریک و پێشەکی ناپێویست مەنووسە، ڕاستەوخۆ ناوەڕۆک و چەمکە ڕاستەقینەکانی ناو فایلی PDFەکە شی بکەرەوە.
+٣. دەقەکە تەنها تێکستی پەتی بێت بۆ خوێندنەوەی دەنگی (بێ خاڵبەندی بێسەروبەر، بێ ئەستێرە، بێ باکلاش، بێ کۆد).
+٤. وشە زانستییە ئینگلیزییەکان لە خانەی englishKeyTerms دابنێ لەگەڵ مانای کوردییان.
+
+تەنها JSON ی دروست بگەڕێنەوە بەپێی ئەم فۆرماتە:
+$jsonExample
 ''';
 
     try {
-      if (hasRealApiKey) {
-        final model = gemini.GenerativeModel(
-          model: 'gemini-1.5-flash',
-          apiKey: _apiKey!,
-          generationConfig: gemini.GenerationConfig(responseMimeType: 'application/json'),
-        );
-        final response = await model.generateContent([gemini.Content.text(prompt)]);
-        if (response.text != null && response.text!.isNotEmpty) {
-          final decoded = jsonDecode(response.text!);
-          if (decoded is Map<String, dynamic>) {
-            return decoded;
+      final jsonString = await _callGemini(prompt);
+      if (jsonString.isNotEmpty && !jsonString.startsWith('⚠️')) {
+        try {
+          final startIndex = jsonString.indexOf('{');
+          final endIndex = jsonString.lastIndexOf('}');
+          if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
+            final jsonSub = jsonString.substring(startIndex, endIndex + 1);
+            final decoded = jsonDecode(jsonSub);
+            if (decoded is Map<String, dynamic> && decoded.containsKey('sections')) {
+              return decoded;
+            }
           }
+        } catch (jsonErr) {
+          debugPrint('JSON parse error in voice explanation: $jsonErr');
         }
       }
     } catch (e) {
-      debugPrint('Error generating Kurdish voice explanation: $e');
+      debugPrint('Error generating voice explanation: $e');
+    }
+
+    if (isEn) {
+      return {
+        'title': 'Audio Lecture: ${pdfName ?? 'Lecture Notes'}',
+        'summary': 'Could not connect to AI. Please check your internet and API key.',
+        'targetLanguage': 'en',
+        'sections': [
+          {
+            'sectionTitle': 'Connection Error',
+            'kurdishExplanation': 'Could not reach the AI service. Please check your internet connection or API key, then try again.',
+            'englishKeyTerms': []
+          }
+        ]
+      };
     }
 
     return {
       'title': 'ڕوونکردنەوەی دەنگی: ${pdfName ?? 'وانەی ئەکادیمی'}',
-      'summary': 'شیکردنەوەی فێرکاری بە زمانی کوردی سۆڕانی بۆ مەلزەمە و تێبینییەکان.',
+      'summary': 'نەتوانرا پەیوەندی بە سێرڤەری AI بکرێت. تکایە ئینتەرنێت و کلیلی API پشکنین بکە.',
+      'targetLanguage': 'ku',
       'sections': [
         {
-          'sectionTitle': 'بەشی ١: پەیامی سەرەکی و چەمکەکان',
-          'kurdishExplanation': 'ئەم وانەیە باسی چەمکە سەرەکییەکان و هەنگاوە ئەکادیمییەکان دەکات. وەک مامۆستایەک پێشنیارت بۆ دەکەم کە وشە کلیلییە ئینگلیزییەکان لەگەڵ مانای کوردی فێر ببیت تا بە ئاسانی لە تاقیکردنەوە نمرەی بەرز بەدەستبهێنیت.',
-          'englishKeyTerms': ['Key Concepts: چەمکە سەرەکییەکان', 'Academic Review: پێداچوونەوەی ئەکادیمی']
+          'sectionTitle': 'هەڵەی پەیوەندی',
+          'kurdishExplanation': 'نەتوانرا بە سێرڤەری AI پەیوەندی بکرێت. تکایە ئینتەرنێتت پشکنین بکە یان کلیلی API بنووسە، پاشان دووبارە هەوڵ بدە.',
+          'englishKeyTerms': []
         }
       ]
     };

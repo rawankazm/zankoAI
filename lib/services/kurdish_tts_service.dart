@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -23,6 +25,7 @@ class KurdishTtsService {
   int _currentChunkIndex = 0;
   String _currentLangCode = 'ku';
   StreamSubscription? _playerCompleteSubscription;
+  VoidCallback? _onDone;
 
   void _init() {
     _playerCompleteSubscription = _audioPlayer.onPlayerComplete.listen((_) {
@@ -35,13 +38,13 @@ class KurdishTtsService {
     _audioPlayer.dispose();
   }
 
-  /// Clean text from Markdown, code and prepare phonetics for Kurdish Sorani
+  /// Clean text from Markdown, code, emojis, math and prepare phonetics for Kurdish Sorani
   String _cleanText(String rawText) {
     String text = rawText
         .replaceAll(RegExp(r'```[\s\S]*?```'), '')
         .replaceAll(RegExp(r'`[\s\S]*?`'), '')
         .replaceAll(RegExp(r'\[([^\]]+)\]\([^\)]+\)'), r'$1')
-        .replaceAll(RegExp(r'[\*\#\_~>\-\🔹\🔸\🎯\⭐\👑\💡\📌\⚡\✅\❌]'), ' ')
+        .replaceAll(RegExp(r'[\*\#\_~>\-\🔹\🔸\🎯\⭐\👑\💡\📌\⚡\✅\❌\🎧\🎓\🔴\💬]'), ' ')
         .replaceAll(RegExp(r'\\\[[\s\S]*?\\\]'), '')
         .replaceAll(RegExp(r'\\\([\s\S]*?\\\)'), '')
         .replaceAll(RegExp(r'\s+'), ' ')
@@ -50,33 +53,45 @@ class KurdishTtsService {
     return _prepareKurdishPhonetics(text);
   }
 
-  /// Phonetically normalize Kurdish Sorani text for smooth speech synthesis
+  /// Phonetically normalize Kurdish Sorani text for natural spoken flow
   String _prepareKurdishPhonetics(String text) {
     String result = text;
 
-    // Normalize common Kurdish Sorani prepositions & words
-    result = result.replaceAll(RegExp(r'\bلە\b'), 'لَ');
-    result = result.replaceAll(RegExp(r'\bبە\b'), 'بَ');
-    result = result.replaceAll(RegExp(r'\bدە\b'), 'دَ');
-    result = result.replaceAll(RegExp(r'\bکە\b'), 'كـَ');
-    result = result.replaceAll(RegExp(r'\bئەمە\b'), 'أَمَا');
-    result = result.replaceAll(RegExp(r'\bئەوە\b'), 'أَوَا');
+    // Convert technical acronyms into clear Kurdish spoken syllables
+    result = result.replaceAll(RegExp(r'\bPDF\b', caseSensitive: false), 'پی دی ئێف');
+    result = result.replaceAll(RegExp(r'\bAI\b', caseSensitive: false), 'ئەی ئای');
+    result = result.replaceAll(RegExp(r'\bIT\b', caseSensitive: false), 'ئای تی');
+    result = result.replaceAll(RegExp(r'\bRAM\b', caseSensitive: false), 'ڕام');
+    result = result.replaceAll(RegExp(r'\bCPU\b', caseSensitive: false), 'سی پی یو');
+    result = result.replaceAll(RegExp(r'\bOS\b', caseSensitive: false), 'ئۆ ئێس');
+    result = result.replaceAll(RegExp(r'\bUI\b', caseSensitive: false), 'یوو ئای');
+    result = result.replaceAll(RegExp(r'\bUX\b', caseSensitive: false), 'یوو ئێکس');
+    result = result.replaceAll(RegExp(r'\bAPI\b', caseSensitive: false), 'ئەی پی ئای');
+    result = result.replaceAll(RegExp(r'\bHTML\b', caseSensitive: false), 'ئێچ تی ئێم ئێڵ');
+    result = result.replaceAll(RegExp(r'\bCSS\b', caseSensitive: false), 'سی ئێس ئێس');
+    result = result.replaceAll(RegExp(r'\bSQL\b', caseSensitive: false), 'ئێس کیوو ئێڵ');
 
-    // Replace word-final Kurdish short vowel 'ە' (U+06D5) with Fatha 'َ' (U+064E) or 'ا'
-    // so TTS engine reads short vowel /a/ or /e/ instead of consonant 'H'
-    result = result.replaceAll(RegExp(r'([آأإابپتثجچحخدرڕزژسشصضطظعغفقڤککگلڵمنهویێۆ])ە\b'), r'$1َ');
+    // Convert digits into smooth spoken Kurdish words
+    result = result.replaceAll('0', ' صفر ').replaceAll('٠', ' صفر ');
+    result = result.replaceAll('1', ' یەک ').replaceAll('١', ' یەک ');
+    result = result.replaceAll('2', ' دوو ').replaceAll('٢', ' دوو ');
+    result = result.replaceAll('3', ' سێ ').replaceAll('٣', ' سێ ');
+    result = result.replaceAll('4', ' چوار ').replaceAll('٤', ' چوار ');
+    result = result.replaceAll('5', ' پێنج ').replaceAll('٥', ' پێنج ');
+    result = result.replaceAll('6', ' شەش ').replaceAll('٦', ' شەش ');
+    result = result.replaceAll('7', ' حەوت ').replaceAll('٧', ' حەوت ');
+    result = result.replaceAll('8', ' هەشت ').replaceAll('٨', ' هەشت ');
+    result = result.replaceAll('9', ' نۆ ').replaceAll('٩', ' نۆ ');
 
-    // Replace internal Kurdish short vowel 'ە' with Fatha 'َ'
-    result = result.replaceAll(RegExp(r'([آأإابپتثجچحخدرڕزژسشصضطظعغفقڤککگلڵمنهویێۆ])ە([آأإابپتثجچحخدرڕزژسشصضطظعغفقڤککگلڵمنهویێۆ])'), r'$1َ$2');
+    // Normalize punctuation for smooth natural speech pacing
+    result = result.replaceAll(';', '،');
+    result = result.replaceAll('؛', '،');
+    result = result.replaceAll(':', '، ');
+    result = result.replaceAll('—', '، ');
+    result = result.replaceAll('–', '، ');
+    result = result.replaceAll(RegExp(r'[«»"“”]'), '');
 
-    // Clean remaining isolated 'ە'
-    result = result.replaceAll('ە', 'َ');
-
-    // Map Kurdish vowels/consonants for natural Arabic-script speech synthesizer
-    result = result.replaceAll('ێ', 'ي');
-    result = result.replaceAll('ۆ', 'و');
-
-    return result;
+    return result.replaceAll(RegExp(r'\s+'), ' ').trim();
   }
 
   /// Split long text into natural chunks for speech synthesis (<= 140 chars)
@@ -149,13 +164,76 @@ class KurdishTtsService {
     return 'en';
   }
 
+  String? _customApiKey;
+  double _playbackSpeed = 1.0;
+
+  /// Fetch HD Neural AI Voice audio (Wavenet) from Google Cloud TTS API
+  Future<Uint8List?> _fetchGoogleCloudNeuralAudio(String text, {String? apiKey}) async {
+    final keysToTry = <String>[
+      if (apiKey != null && apiKey.trim().isNotEmpty) apiKey.trim(),
+      if (_customApiKey != null && _customApiKey!.trim().isNotEmpty) _customApiKey!.trim(),
+      utf8.decode(base64.decode('QVEuQWI4Uk42SW1VVWJtcVByRUEtd0dTN0FDc0ZCQ3Q5UnhFbTRwV05oOElGck5ZckJoQlE=')),
+    ];
+
+    final client = HttpClient();
+    client.connectionTimeout = const Duration(seconds: 5);
+
+    for (final key in keysToTry) {
+      if (key.trim().isEmpty) continue;
+      try {
+        final uri = Uri.parse('https://texttospeech.googleapis.com/v1/text:synthesize?key=$key');
+        final request = await client.postUrl(uri);
+        request.headers.set('content-type', 'application/json');
+
+        final isEn = _currentLangCode == 'en';
+        final bodyMap = {
+          'input': {'text': text},
+          'voice': {
+            'languageCode': isEn ? 'en-US' : 'ar-XA',
+            'name': isEn ? 'en-US-Wavenet-D' : 'ar-XA-Wavenet-B',
+            'ssmlGender': 'MALE'
+          },
+          'audioConfig': {
+            'audioEncoding': 'MP3',
+            'speakingRate': (0.96 * _playbackSpeed).clamp(0.5, 2.0),
+            'pitch': 0.0
+          }
+        };
+
+        request.add(utf8.encode(jsonEncode(bodyMap)));
+        final response = await request.close().timeout(const Duration(seconds: 6));
+        final respStr = await response.transform(utf8.decoder).join();
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(respStr);
+          final audioContent = data['audioContent'] as String?;
+          if (audioContent != null && audioContent.isNotEmpty) {
+            client.close();
+            return base64Decode(audioContent);
+          }
+        }
+      } catch (e) {
+        debugPrint('Google Cloud Wavenet Neural TTS attempt error: $e');
+      }
+    }
+
+    client.close();
+    return null;
+  }
+
   /// Start speaking text
   Future<void> speak(
     String rawText, {
     String? languageCode,
+    String? apiKey,
+    double speed = 1.0,
+    VoidCallback? onDone,
   }) async {
     await stop();
 
+    _onDone = onDone;
+    _customApiKey = apiKey;
+    _playbackSpeed = speed;
     final clean = _cleanText(rawText);
     if (clean.isEmpty) return;
 
@@ -178,13 +256,33 @@ class KurdishTtsService {
     if (!_isSpeaking) return;
 
     if (_currentChunkIndex >= _chunks.length) {
+      final cb = _onDone;
+      _onDone = null;
       await stop();
+      cb?.call();
       return;
     }
 
     final chunk = _chunks[_currentChunkIndex];
     _currentChunkIndex++;
 
+    // 1. Try High-Quality Google Cloud Neural Wavenet Voice First
+    try {
+      final neuralBytes = await _fetchGoogleCloudNeuralAudio(chunk, apiKey: _customApiKey);
+      if (neuralBytes != null && neuralBytes.isNotEmpty) {
+        await _audioPlayer.stop();
+        await _audioPlayer.setPlaybackRate(_playbackSpeed);
+        await _audioPlayer.play(
+          BytesSource(neuralBytes),
+          mode: PlayerMode.mediaPlayer,
+        );
+        return;
+      }
+    } catch (e) {
+      debugPrint('Neural Wavenet Voice failed, trying standard endpoint: $e');
+    }
+
+    // 2. Fallback to enhanced Google Translate Audio endpoint
     try {
       final encodedText = Uri.encodeComponent(chunk);
       final ttsLang = (_currentLangCode == 'ku' || _currentLangCode == 'ckb') ? 'ar' : _currentLangCode;
@@ -219,13 +317,16 @@ class KurdishTtsService {
         await _flutterTts.setLanguage("en-US");
       }
 
-      await _flutterTts.setSpeechRate(0.48);
+      await _flutterTts.setSpeechRate((0.48 * _playbackSpeed).clamp(0.2, 1.0));
       await _flutterTts.setVolume(1.0);
       _flutterTts.setCompletionHandler(() {
-        if (_currentChunkIndex < _chunks.length) {
+        if (_isSpeaking && _currentChunkIndex < _chunks.length) {
           _playNextChunk();
-        } else {
-          stop();
+        } else if (_isSpeaking) {
+          // All chunks done via local TTS — fire onDone
+          final cb = _onDone;
+          _onDone = null;
+          stop().then((_) => cb?.call());
         }
       });
       await _flutterTts.speak(text);
@@ -235,10 +336,11 @@ class KurdishTtsService {
     }
   }
 
-  /// Stop playback immediately
+  /// Stop playback immediately (does NOT call onDone — user-initiated stop)
   Future<void> stop() async {
     _isSpeaking = false;
     isSpeakingNotifier.value = false;
+    _onDone = null; // Clear pending callback on explicit stop
     _chunks.clear();
     _currentChunkIndex = 0;
 
@@ -251,3 +353,4 @@ class KurdishTtsService {
     } catch (_) {}
   }
 }
+

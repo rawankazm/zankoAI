@@ -15,7 +15,6 @@ import '../../services/auth_service.dart';
 import '../../services/kurdish_tts_service.dart';
 import '../../theme.dart';
 import '../payment/vip_upgrade_sheet.dart';
-import '../../widgets/voice_dictation_sheet.dart';
 
 
 class AiTeacherChatScreen extends StatefulWidget {
@@ -158,7 +157,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       if (daysDiff < 7) {
         try {
           final List<dynamic> decoded = jsonDecode(rawJson);
-          if (decoded.isNotEmpty) {
+          if (decoded.isNotEmpty && mounted) {
             setState(() {
               _messages.clear();
               for (var item in decoded) {
@@ -174,6 +173,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       }
     }
 
+    if (!mounted) return;
     // Default clean welcome message
     final lang = Provider.of<LanguageProvider>(context, listen: false);
     setState(() {
@@ -353,58 +353,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   } catch (_) {}
   }
 
-  Future<void> _sendVoiceMessageFromPath(String targetPath) async {
-    final aiService = Provider.of<AiService>(context, listen: false);
-    setState(() {
-      _isTranscribingVoice = true;
-    });
 
-    HapticFeedback.mediumImpact();
-
-    try {
-      final file = File(targetPath);
-      if (await file.exists()) {
-        final bytes = await file.readAsBytes();
-
-        final transcript = await aiService.transcribeAudio(
-          bytes,
-          'voice_chat.m4a',
-          mimeType: 'audio/m4a',
-        );
-
-        if (mounted) {
-          setState(() {
-            _isTranscribingVoice = false;
-          });
-
-          if (transcript.trim().isNotEmpty) {
-            _sendMessage(transcript.trim());
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('نەتوانرا دەنگەکە ببیسترێت، تکایە دووبارە بڵێوە.')),
-            );
-          }
-        }
-
-        try {
-          await file.delete();
-        } catch (_) {}
-        return;
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('هەڵە لە نوسینەوەی دەنگ: $e')),
-        );
-      }
-    }
-
-    if (mounted) {
-      setState(() {
-        _isTranscribingVoice = false;
-      });
-    }
-  }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -436,9 +385,16 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     await _saveChatHistory();
 
     try {
+      final lang = Provider.of<LanguageProvider>(context, listen: false);
+      final welcomeText = lang.translate('ai_welcome');
+      final historyToSend = _messages
+          .sublist(0, _messages.length - 1)
+          .where((m) => m['content'] != welcomeText && (m['role'] == 'user' || m['role'] == 'assistant'))
+          .toList();
+
       final response = await aiService.askTeacher(
         text,
-        _messages.sublist(0, _messages.length - 1),
+        historyToSend,
         isVip: isVip,
       );
       if (mounted) {
@@ -457,7 +413,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
         setState(() {
           _messages.add({
             'role': 'assistant',
-            'content': 'I encountered an issue connecting to AI servers. Please try again.',
+            'content': '⚠️ ببورە، کێشەیەک لە پێوەستبوون بە سێرڤەرەکانی AI دروستبوو. تکایە دووبارە هەوڵ بدەرەوە.',
             'time': _formatTime(),
           });
           _isTyping = false;
@@ -1172,31 +1128,15 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                     ),
                                   ),
                                 ),
-                                // Microphone Dictation Button
-                                IconButton(
-                                  icon: Icon(
-                                    CupertinoIcons.mic_fill,
-                                    color: ZankoColors.primary,
-                                    size: 20,
-                                  ),
-                                  onPressed: () {
-                                    VoiceDictationSheet.show(
-                                      context,
-                                      onAudioRecorded: (path) {
-                                        _sendVoiceMessageFromPath(path);
-                                      },
-                                    );
-                                  },
-                                ),
-                                // Attachment Icon
-                                IconButton(
-                                  icon: Icon(
-                                    CupertinoIcons.paperclip,
-                                    color: ZankoColors.primary,
-                                    size: 20,
-                                  ),
-                                  onPressed: _pickAndSolveImage,
-                                ),
+                                 // Attachment Icon
+                                 IconButton(
+                                   icon: Icon(
+                                     CupertinoIcons.paperclip,
+                                     color: ZankoColors.primary,
+                                     size: 20,
+                                   ),
+                                   onPressed: _pickAndSolveImage,
+                                 ),
                                 // Camera Icon
                                 IconButton(
                                   icon: Icon(
