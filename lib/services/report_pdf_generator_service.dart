@@ -148,10 +148,6 @@ class ReportPdfGeneratorService {
         ? PdfTrueTypeFont(boldFontBytes, isRtl ? 19 : 21, style: PdfFontStyle.bold)
         : PdfStandardFont(PdfFontFamily.timesRoman, isRtl ? 19 : 21, style: PdfFontStyle.bold);
 
-    final PdfFont headerFont = (boldFontBytes != null && boldFontBytes.isNotEmpty)
-        ? PdfTrueTypeFont(boldFontBytes, 10, style: PdfFontStyle.bold)
-        : PdfStandardFont(PdfFontFamily.timesRoman, 10, style: PdfFontStyle.bold);
-
     final PdfFont midTitleFont = (boldFontBytes != null && boldFontBytes.isNotEmpty)
         ? PdfTrueTypeFont(boldFontBytes, 13.5, style: PdfFontStyle.bold)
         : PdfStandardFont(PdfFontFamily.timesRoman, 14.5, style: PdfFontStyle.bold);
@@ -256,7 +252,7 @@ class ReportPdfGeneratorService {
         );
       }
 
-      // ── PAGE 1: OFFICIAL COVER PAGE ──
+      // ── PAGE 1: OFFICIAL ACADEMIC COVER PAGE ──────────────────────────────
       if (pageModel.pageType == 'cover') {
         final ministryLine1 = report.languageCode == 'en'
             ? 'Kurdistan Regional Government - Iraq'
@@ -271,80 +267,138 @@ class ReportPdfGeneratorService {
 
         final preparedLabel = report.languageCode == 'en'
             ? 'Prepared by:'
-            : (report.languageCode == 'ar' ? 'إعداد:' : 'ئامادەکردنی:');
+            : (report.languageCode == 'ar' ? 'إعداد الطالب:' : 'ئامادەکردنی خوێندکار:');
 
         final supervisorLabel = report.languageCode == 'en'
             ? 'Supervised by:'
-            : (report.languageCode == 'ar' ? 'بإشراف:' : 'بەسەرپەرشتیی:');
+            : (report.languageCode == 'ar' ? 'بإشراف الأستاذ:' : 'بەسەرپەرشتیی مامۆستا:');
 
         final stageLabel = report.languageCode == 'en'
-            ? 'Academic Stage / Year:'
-            : (report.languageCode == 'ar' ? 'المرحلة الدراسية:' : 'قۆناغ و ساڵی خوێندن:');
+            ? 'Academic Year:'
+            : (report.languageCode == 'ar' ? 'العام الدراسي:' : 'ساڵی خوێندنی ئەکادیمی:');
 
-        // 1. Top University Header
-        double topY = 15;
-        final headerLines = [
-          ministryLine1,
-          ministryLine2,
-          report.universityName,
-          report.departmentName,
-        ];
+        // ── 1. Elegant Academic Outer Frame (چوارچێوەی فەرمی ئەکادیمی) ──
+        final double framePadding = 6;
+        final double frameW = pageSize.width - (framePadding * 2);
+        final double frameH = pageSize.height - (framePadding * 2);
 
-        // Draw Official Emblem/Logo
-        final double logoSize = 65;
-        final double logoX = isRtl ? 10 : pageSize.width - logoSize - 10;
-        final double textHeaderX = isRtl ? logoSize + 25 : 0;
-        final double textHeaderW = pageSize.width - logoSize - 25;
+        // Outer Primary Navy Border
+        g.drawRectangle(
+          pen: PdfPen(PdfColor(15, 23, 42), width: 1.5),
+          bounds: Rect.fromLTWH(framePadding, framePadding, frameW, frameH),
+        );
+        // Inner Maroon Accent Border
+        g.drawRectangle(
+          pen: PdfPen(PdfColor(136, 19, 55), width: 0.6),
+          bounds: Rect.fromLTWH(framePadding + 3, framePadding + 3, frameW - 6, frameH - 6),
+        );
+
+        // Corner Ornaments
+        final double cLen = 14;
+        final cornerPen = PdfPen(PdfColor(136, 19, 55), width: 2.0);
+        // Top-Left
+        g.drawLine(cornerPen, Offset(framePadding + 1, framePadding + 1), Offset(framePadding + 1 + cLen, framePadding + 1));
+        g.drawLine(cornerPen, Offset(framePadding + 1, framePadding + 1), Offset(framePadding + 1, framePadding + 1 + cLen));
+        // Top-Right
+        g.drawLine(cornerPen, Offset(framePadding + frameW - 1, framePadding + 1), Offset(framePadding + frameW - 1 - cLen, framePadding + 1));
+        g.drawLine(cornerPen, Offset(framePadding + frameW - 1, framePadding + 1), Offset(framePadding + frameW - 1, framePadding + 1 + cLen));
+        // Bottom-Left
+        g.drawLine(cornerPen, Offset(framePadding + 1, framePadding + frameH - 1), Offset(framePadding + 1 + cLen, framePadding + frameH - 1));
+        g.drawLine(cornerPen, Offset(framePadding + 1, framePadding + frameH - 1), Offset(framePadding + 1, framePadding + frameH - 1 - cLen));
+        // Bottom-Right
+        g.drawLine(cornerPen, Offset(framePadding + frameW - 1, framePadding + frameH - 1), Offset(framePadding + frameW - 1 - cLen, framePadding + frameH - 1));
+        g.drawLine(cornerPen, Offset(framePadding + frameW - 1, framePadding + frameH - 1), Offset(framePadding + frameW - 1, framePadding + frameH - 1 - cLen));
+
+        // ── 2. Official University Header (سەردێڕی فەرمی زانکۆ) ──
+        final double logoSize = 58;
+        final double logoX = (pageSize.width - logoSize) / 2;
+        double headerY = 22;
 
         if (report.logoBytes != null && report.logoBytes!.isNotEmpty) {
           try {
             final PdfBitmap logoBitmap = PdfBitmap(report.logoBytes!);
-            g.drawImage(logoBitmap, Rect.fromLTWH(logoX, topY + 5, logoSize, logoSize));
+            g.drawImage(logoBitmap, Rect.fromLTWH(logoX, headerY, logoSize, logoSize));
           } catch (_) {
-            _drawOfficialEmblem(g, logoX, topY + 5, logoSize, logoSize);
+            _drawOfficialEmblem(g, logoX, headerY, logoSize, logoSize);
           }
         } else {
-          _drawOfficialEmblem(g, logoX, topY + 5, logoSize, logoSize);
+          _drawOfficialEmblem(g, logoX, headerY, logoSize, logoSize);
         }
 
-        // Draw Header text
-        double hCurrY = topY;
-        for (var hLine in headerLines) {
+        headerY += logoSize + 10;
+
+        // Ministry Line 1
+        g.drawString(
+          _fixText(ministryLine1, isRtl),
+          smallMutedFont,
+          brush: mutedBrush,
+          bounds: Rect.fromLTWH(20, headerY, pageSize.width - 40, 14),
+          format: PdfStringFormat(alignment: PdfTextAlignment.center),
+        );
+        headerY += 13;
+
+        // Ministry Line 2
+        g.drawString(
+          _fixText(ministryLine2, isRtl),
+          smallMutedFont,
+          brush: mutedBrush,
+          bounds: Rect.fromLTWH(20, headerY, pageSize.width - 40, 14),
+          format: PdfStringFormat(alignment: PdfTextAlignment.center),
+        );
+        headerY += 15;
+
+        // University Name (Bold & Large)
+        g.drawString(
+          _fixText(report.universityName, isRtl),
+          midTitleFont,
+          brush: primaryNavy,
+          bounds: Rect.fromLTWH(20, headerY, pageSize.width - 40, 20),
+          format: PdfStringFormat(alignment: PdfTextAlignment.center),
+        );
+        headerY += 20;
+
+        // Department Name
+        if (report.departmentName.isNotEmpty) {
           g.drawString(
-            _fixText(hLine, isRtl),
-            headerFont,
-            brush: primaryNavy,
-            bounds: Rect.fromLTWH(textHeaderX, hCurrY, textHeaderW, 16),
-            format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
+            _fixText(report.departmentName, isRtl),
+            boldBodyFont,
+            brush: academicMaroon,
+            bounds: Rect.fromLTWH(20, headerY, pageSize.width - 40, 16),
+            format: PdfStringFormat(alignment: PdfTextAlignment.center),
           );
-          hCurrY += 17;
+          headerY += 18;
         }
 
-        // Subtle divider under header
-        g.drawLine(subtleBorder, Offset(0, topY + 80), Offset(pageSize.width, topY + 80));
+        // Header Divider
+        headerY += 4;
+        final double divW = pageSize.width - 80;
+        final double divX = 40;
+        g.drawLine(subtleBorder, Offset(divX, headerY), Offset(divX + divW, headerY));
+        g.drawLine(PdfPen(PdfColor(136, 19, 55), width: 1.5), Offset(divX + (divW * 0.35), headerY), Offset(divX + (divW * 0.65), headerY));
 
-        // 2. Main Title Card
-        final double cardY = pageSize.height * 0.28;
-        final double cardH = 150;
+        // ── 3. Main Report Title Card (ناونیشانی سەرەکی ڕاپۆرت) ──
+        double titleCardY = headerY + 22;
+        final titleLines = _wrapRtlTextDynamic(cleanMainTitle, bigTitleFont, pageSize.width - 60, isRtl);
+        final double titleBoxH = (titleLines.length * 28.0) + 52.0;
 
-        // Card background & border
+        // Title Background Card
         g.drawRectangle(
           brush: PdfSolidBrush(PdfColor(248, 250, 252)),
           pen: subtleBorder,
-          bounds: Rect.fromLTWH(0, cardY, pageSize.width, cardH),
+          bounds: Rect.fromLTWH(20, titleCardY, pageSize.width - 40, titleBoxH),
         );
 
-        // Accent top bar
+        // Top & Bottom Accent Bars
         g.drawRectangle(
           brush: academicMaroon,
-          bounds: Rect.fromLTWH(0, cardY, pageSize.width, 4),
+          bounds: Rect.fromLTWH(20, titleCardY, pageSize.width - 40, 3),
         );
 
-        // Report Type Badge
-        final double badgeW = 200;
-        final double badgeH = 22;
+        // Pill Badge: "ڕاپۆرتی ئەکادیمی زانستی"
+        final double badgeW = 180;
+        final double badgeH = 20;
         final double badgeX = (pageSize.width - badgeW) / 2;
-        final double badgeY = cardY + 18;
+        final double badgeY = titleCardY + 12;
 
         g.drawRectangle(
           brush: PdfSolidBrush(PdfColor(241, 245, 249)),
@@ -355,48 +409,56 @@ class ReportPdfGeneratorService {
           _fixText(reportAboutLabel, isRtl),
           boldBodyFont,
           brush: academicMaroon,
-          bounds: Rect.fromLTWH(0, badgeY + 4, pageSize.width, 18),
-          format: _fmt(PdfTextAlignment.center, isRtl),
+          bounds: Rect.fromLTWH(badgeX, badgeY + 2.5, badgeW, 16),
+          format: PdfStringFormat(alignment: PdfTextAlignment.center),
         );
 
-        // Title Lines inside Card
-        final titleLines = _wrapRtlTextDynamic(cleanMainTitle, bigTitleFont, pageSize.width - 40, isRtl);
-        double tY = badgeY + 34;
+        // Title Lines
+        double tY = badgeY + badgeH + 10;
         for (var tLine in titleLines) {
           g.drawString(
             tLine,
             bigTitleFont,
             brush: primaryNavy,
-            bounds: Rect.fromLTWH(20, tY, pageSize.width - 40, 26),
-            format: _fmt(PdfTextAlignment.center, isRtl),
+            bounds: Rect.fromLTWH(30, tY, pageSize.width - 60, 26),
+            format: PdfStringFormat(alignment: PdfTextAlignment.center),
           );
           tY += 28;
         }
 
-        // 3. Information Card (Prepared by & Supervisor)
-        final double infoCardY = pageSize.height * 0.58;
-        final double infoCardH = 140;
+        // ── 4. Prepared by & Supervisor Card (زانیاریی قوتابی و سەرپەرشتیار) ──
+        double infoY = titleCardY + titleBoxH + 24;
+        final double infoCardH = 115;
+        final double infoCardW = pageSize.width - 40;
 
+        // Info Card Frame
         g.drawRectangle(
           brush: PdfSolidBrush(PdfColor(255, 255, 255)),
           pen: subtleBorder,
-          bounds: Rect.fromLTWH(0, infoCardY, pageSize.width, infoCardH),
+          bounds: Rect.fromLTWH(20, infoY, infoCardW, infoCardH),
         );
 
-        final double colW = (pageSize.width - 40) / 2;
-        final double col1X = isRtl ? pageSize.width - colW - 20 : 20;
-        final double col2X = isRtl ? 20 : pageSize.width - colW - 20;
+        // Inner subtle column divider
+        g.drawLine(
+          subtleBorder,
+          Offset(pageSize.width / 2, infoY + 12),
+          Offset(pageSize.width / 2, infoY + infoCardH - 12),
+        );
 
-        // Column 1: Prepared by (ئامادەکردنی)
-        double c1Y = infoCardY + 16;
+        final double colWidth = (infoCardW - 30) / 2;
+        final double colRightX = isRtl ? (pageSize.width / 2) + 8 : 30;
+        final double colLeftX = isRtl ? 30 : (pageSize.width / 2) + 8;
+
+        // Right Box: Prepared by (ئامادەکردنی خوێندکار)
+        double cRightY = infoY + 14;
         g.drawString(
           _fixText(preparedLabel, isRtl),
           midTitleFont,
           brush: academicMaroon,
-          bounds: Rect.fromLTWH(col1X, c1Y, colW, 20),
-          format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
+          bounds: Rect.fromLTWH(colRightX, cRightY, colWidth, 18),
+          format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
         );
-        c1Y += 24;
+        cRightY += 22;
 
         final studentList = report.studentName
             .split(RegExp(r'[\n\r,?]+'))
@@ -409,50 +471,45 @@ class ReportPdfGeneratorService {
             _fixText(st, isRtl),
             boldBodyFont,
             brush: primaryNavy,
-            bounds: Rect.fromLTWH(col1X, c1Y, colW, 18),
-            format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
+            bounds: Rect.fromLTWH(colRightX, cRightY, colWidth, 16),
+            format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
           );
-          c1Y += 18;
+          cRightY += 17;
         }
 
-        // Column 2: Supervisor (بەسەرپەرشتیی)
-        double c2Y = infoCardY + 16;
+        // Left Box: Supervised by (بەسەرپەرشتیی مامۆستا)
+        double cLeftY = infoY + 14;
         g.drawString(
           _fixText(supervisorLabel, isRtl),
           midTitleFont,
           brush: academicMaroon,
-          bounds: Rect.fromLTWH(col2X, c2Y, colW, 20),
-          format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
+          bounds: Rect.fromLTWH(colLeftX, cLeftY, colWidth, 18),
+          format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
         );
-        c2Y += 24;
+        cLeftY += 22;
+
         g.drawString(
           _fixText(report.supervisorName, isRtl),
           boldBodyFont,
           brush: primaryNavy,
-          bounds: Rect.fromLTWH(col2X, c2Y, colW, 18),
-          format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
+          bounds: Rect.fromLTWH(colLeftX, cLeftY, colWidth, 16),
+          format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
         );
+        cLeftY += 18;
 
-        // Stage & Year in Info Card
-        c2Y += 26;
-        g.drawString(
-          _fixText('$stageLabel ${report.academicYear}', isRtl),
-          smallMutedFont,
-          brush: mutedBrush,
-          bounds: Rect.fromLTWH(col2X, c2Y, colW, 18),
-          format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
-        );
+        // ── 5. Academic Year at Bottom (ساڵی خوێندن) ──
+        final double bottomY = pageSize.height - 42;
+        g.drawLine(subtleBorder, Offset(60, bottomY - 10), Offset(pageSize.width - 60, bottomY - 10));
 
-        // 4. Bottom Academic Year
-        final double bottomY = pageSize.height - 45;
-        g.drawLine(subtleBorder, Offset(40, bottomY - 12), Offset(pageSize.width - 40, bottomY - 12));
+        final yearDisplay = report.academicYear.isNotEmpty ? report.academicYear : '2024 - 2025';
+        final yearText = isRtl ? '$stageLabel $yearDisplay' : 'Academic Session: $yearDisplay';
 
         g.drawString(
-          _fixText(report.academicYear, isRtl),
+          _fixText(yearText, isRtl),
           midTitleFont,
-          brush: academicMaroon,
-          bounds: Rect.fromLTWH(0, bottomY, pageSize.width, 22),
-          format: _fmt(PdfTextAlignment.center, isRtl),
+          brush: primaryNavy,
+          bounds: Rect.fromLTWH(20, bottomY, pageSize.width - 40, 20),
+          format: PdfStringFormat(alignment: PdfTextAlignment.center),
         );
 
       } else if (pageModel.pageType == 'toc') {
