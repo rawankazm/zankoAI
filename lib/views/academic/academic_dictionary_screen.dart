@@ -102,7 +102,7 @@ class _AcademicDictionaryScreenState extends State<AcademicDictionaryScreen> {
 تەنها فۆرماتی JSON بنووسە بەبێ نووسینی تر.
 ''';
 
-      final responseStr = await aiService.askTeacher(prompt, []);
+      final responseStr = await aiService.askTeacher(prompt, [], isVip: true);
 
       String cleanJson = responseStr.trim();
       if (cleanJson.startsWith("```json")) cleanJson = cleanJson.substring(7);

@@ -1,17 +1,18 @@
 import 'dart:io';
 import 'dart:convert';
+import 'dart:ui' as ui;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../services/auth_service.dart';
-import '../../services/ai_service.dart';
 import '../../services/language_provider.dart';
 import '../../theme.dart';
+
 
 class VipUpgradeSheet extends StatefulWidget {
   const VipUpgradeSheet({super.key});
@@ -127,7 +128,12 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
   // ── Pick receipt image ────────────────────────────────────────────────────
   Future<void> _pickReceipt() async {
     final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 75);
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 800,
+      maxHeight: 800,
+      imageQuality: 45,
+    );
     if (picked != null) {
       setState(() => _receiptFile = File(picked.path));
     }
@@ -139,89 +145,161 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
       setState(() => _errorMsg = 'تکایە وێنەی وەسڵی پارەدانەکەت بنێرە 📷');
       return;
     }
-    setState(() { _step = _UploadStep.uploading; _errorMsg = null; });
+    setState(() {
+      _step = _UploadStep.uploading;
+      _uploadProgress = 0.30;
+      _errorMsg = null;
+    });
 
     final authService = Provider.of<AuthService>(context, listen: false);
     final user = authService.currentUser;
-    if (user == null || user.isGuest) return;
+
+    // ── use Firebase Auth UID directly (most reliable)
+    final firebaseUid = FirebaseAuth.instance.currentUser?.uid;
+    final userId = firebaseUid?.isNotEmpty == true
+        ? firebaseUid!
+        : (user?.id.isNotEmpty == true ? user!.id : '');
+
+    // ── کەسی نەچووەتە ناو — ناتوانێت داواکاری بنێرێت
+    if (userId.isEmpty) {
+      setState(() {
+        _step = _UploadStep.form;
+        _errorMsg = 'تکایە یەکەم خۆت بخەرەوە ناو ئەپەکەوە 🔐';
+      });
+      return;
+    }
+
+    final userName = user?.name.isNotEmpty == true
+        ? user!.name
+        : (FirebaseAuth.instance.currentUser?.displayName ?? 'خوێندکار');
+    final userEmail = user?.email.isNotEmpty == true
+        ? user!.email
+        : (FirebaseAuth.instance.currentUser?.email ?? '');
 
     try {
-      String receiptUrl = '';
-      try {
-        final storageRef = FirebaseStorage.instance
-            .ref('vip_receipts/${user.id}_${DateTime.now().millisecondsSinceEpoch}.jpg');
-
-        final task = storageRef.putFile(_receiptFile!);
-        task.snapshotEvents.listen((snap) {
-          if (mounted) {
-            setState(() {
-              _uploadProgress = snap.bytesTransferred / snap.totalBytes;
-            });
-          }
-        });
-        await task;
-        receiptUrl = await storageRef.getDownloadURL();
-      } catch (storageErr) {
-        debugPrint('Firebase Storage notice (using smart image payload fallback): $storageErr');
-        final bytes = await _receiptFile!.readAsBytes();
-        final base64Str = base64Encode(bytes);
-        receiptUrl = 'data:image/jpeg;base64,$base64Str';
-      }
-
-      // AI Receipt OCR Verification
-      bool isAiVerified = true;
-      try {
-        final bytes = await _receiptFile!.readAsBytes();
-        if (mounted) {
-          final aiService = Provider.of<AiService>(context, listen: false);
-          final ocrAnalysis = await aiService.solveImageQuestion(
-            bytes,
-            "Analyze this payment receipt image: verify if it contains a valid payment receipt to FastPay, FIB, or ZainCash. Extract the transaction ID and payment amount if visible.",
-          );
-          debugPrint("AI Receipt OCR Analysis: $ocrAnalysis");
-        }
-      } catch (_) {}
-
+      final nowTimestamp = Timestamp.now();
       final expiresAt = Timestamp.fromDate(
         DateTime.now().add(Duration(days: _planDays)),
       );
+      final txnId = _transactionController.text.trim().isNotEmpty
+          ? _transactionController.text.trim()
+          : 'TXN-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
 
-      // Create vip_request document in Firestore
-      await FirebaseFirestore.instance.collection('vip_requests').add({
-        'userId': user.id,
-        'userName': user.name,
-        'userEmail': user.email,
+      if (mounted) setState(() => _uploadProgress = 0.65);
+
+      // ── ١. دروستکردنی doc ID دەستبەجێ بەبێ وەستان
+      final docRef = FirebaseFirestore.instance.collection('vip_requests').doc();
+      final requestData = {
+        'userId': userId,
+        'userName': userName,
+        'userEmail': userEmail,
         'plan': _selectedPlan,
         'planTitle': _planTitle,
         'paymentMethod': _selectedMethod,
-        'transactionId': _transactionController.text.trim().isNotEmpty
-            ? _transactionController.text.trim()
-            : 'TXN-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}',
-        'receiptImageUrl': receiptUrl,
+        'transactionId': txnId,
+        'receiptImageUrl': 'pending_upload',
         'amount': _planPrice,
         'status': 'pending',
-        'aiVerified': isAiVerified,
-        'requestedAt': FieldValue.serverTimestamp(),
+        'requestedAt': nowTimestamp,
+        'createdAt': nowTimestamp,
         'expiresAt': expiresAt,
-      });
+      };
 
-      // Update user doc: vipStatus = 'pending' until admin approves
-      await FirebaseFirestore.instance.collection('users').doc(user.id).set({
-        'vipStatus': 'pending',
-        'vipPlan': _selectedPlan,
-        'vipRequestedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      // ناردنی بۆ Firestore (بە Timeout بۆ ئەوەی ڕەق نەبێت)
+      try {
+        await docRef.set(requestData).timeout(const Duration(seconds: 2));
+      } catch (err) {
+        debugPrint('Firestore background queue write: $err');
+        docRef.set(requestData); // local cache will sync to cloud
+      }
 
-      authService.reloadUser();
+      if (mounted) setState(() => _uploadProgress = 0.90);
+      await Future.delayed(const Duration(milliseconds: 250));
 
-      setState(() => _step = _UploadStep.done);
-      _checkCtrl.forward();
+      // ── دەستبەجێ سەرکەوتوویی پیشان بدە
+      if (mounted) {
+        setState(() {
+          _uploadProgress = 1.0;
+          _step = _UploadStep.done;
+        });
+        _checkCtrl.forward();
+      }
+
+      // ── هەموو شتەکانی تر لە باکگراونددا ئەنجام دەدرێن
+      _runBackgroundTasks(
+        docRef: docRef,
+        userId: userId,
+        userName: userName,
+        nowTimestamp: nowTimestamp,
+        authService: authService,
+      );
     } catch (e) {
-      setState(() {
-        _step = _UploadStep.form;
-        _errorMsg = 'کێشەیەک هاتە: $e';
-      });
+      debugPrint('VIP submit ERROR: $e');
+      if (mounted) {
+        setState(() {
+          _step = _UploadStep.form;
+          _errorMsg = 'کێشەیەک ڕوویدا:\n${e.toString()}';
+        });
+      }
     }
+  }
+
+
+  // ── Background tasks after success screen is shown ────────────────────────
+  void _runBackgroundTasks({
+    required DocumentReference docRef,
+    required String userId,
+    required String userName,
+    required Timestamp nowTimestamp,
+    required AuthService authService,
+  }) {
+    // 1. Update user vipStatus
+    FirebaseFirestore.instance.collection('users').doc(userId).set({
+      'vipStatus': 'pending',
+      'vipPlan': _selectedPlan,
+      'vipRequestedAt': nowTimestamp,
+    }, SetOptions(merge: true)).catchError((e) => debugPrint('user doc: $e'));
+
+    // 2. Attach compact image (only if < 700KB raw JPEG)
+    Future(() async {
+      try {
+        final rawBytes = await _receiptFile!.readAsBytes();
+        if (rawBytes.length < 700000) {
+          await docRef.update({
+            'receiptImageUrl': 'data:image/jpeg;base64,${base64Encode(rawBytes)}',
+          });
+        } else {
+          // زۆر گەورەیە — compress بکە
+          final codec = await ui.instantiateImageCodec(rawBytes, targetWidth: 300);
+          final frame = await codec.getNextFrame();
+          final bd = await frame.image.toByteData(format: ui.ImageByteFormat.rawUnmodified);
+          if (bd != null && bd.lengthInBytes < 700000) {
+            await docRef.update({
+              'receiptImageUrl': 'data:image/jpeg;base64,${base64Encode(bd.buffer.asUint8List())}',
+            });
+          } else {
+            await docRef.update({'receiptImageUrl': 'too_large'});
+          }
+        }
+      } catch (imgErr) {
+        debugPrint('Image bg attach: $imgErr');
+        try { await docRef.update({'receiptImageUrl': 'no_image'}); } catch (_) {}
+      }
+    });
+
+
+    // 3. Notify admin
+    FirebaseFirestore.instance.collection('notifications').add({
+      'userId': 'admin',
+      'title': '👑 داواکاری نوێی VIP',
+      'body': '$userName داوای بەشداریکردنی $_planTitle کردووە.',
+      'type': 'vip_request',
+      'isRead': false,
+      'createdAt': nowTimestamp,
+    }).then((_) {}, onError: (e) => debugPrint('notify: $e'));
+
+    // 4. Reload user
+    try { authService.reloadUser(); } catch (_) {}
   }
 
   // ─────────────────────────────────────────────────────────────────────────

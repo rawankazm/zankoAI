@@ -15,7 +15,7 @@ import '../payment/vip_upgrade_sheet.dart';
 enum _AssistantTab { topicGenerator, pptOutline, academicReport, references }
 
 enum SeminarLanguage {
-  kurdish('کوردی (سۆرانی)', 'ku', '🇮🇶'),
+  kurdish('کوردی (سۆرانی)', 'ku', '☀️'),
   english('English', 'en', '🇬🇧'),
   arabic('العربية', 'ar', '🇸🇦');
 
@@ -72,6 +72,7 @@ class _SeminarThesisAssistantScreenState
   // Controllers
   final TextEditingController _departmentController = TextEditingController();
   final TextEditingController _topicController = TextEditingController();
+  final TextEditingController _seminarNotesController = TextEditingController();
   final TextEditingController _refController = TextEditingController();
 
   // Report Controllers
@@ -81,6 +82,7 @@ class _SeminarThesisAssistantScreenState
   final TextEditingController _universityController = TextEditingController(text: 'زانکۆی سەڵاحەدین - هەولێر');
   final TextEditingController _reportDeptController = TextEditingController(text: 'کۆلێژی زانست - بەشی تەکنەلۆجیای زانیاری');
   final TextEditingController _academicYearController = TextEditingController(text: '2025 - 2026');
+  final TextEditingController _reportNotesController = TextEditingController();
 
   // University Logo Bytes
   Uint8List? _universityLogoBytes;
@@ -104,6 +106,7 @@ class _SeminarThesisAssistantScreenState
   void dispose() {
     _departmentController.dispose();
     _topicController.dispose();
+    _seminarNotesController.dispose();
     _refController.dispose();
     _reportTitleController.dispose();
     _studentNameController.dispose();
@@ -111,6 +114,7 @@ class _SeminarThesisAssistantScreenState
     _universityController.dispose();
     _reportDeptController.dispose();
     _academicYearController.dispose();
+    _reportNotesController.dispose();
     super.dispose();
   }
 
@@ -193,7 +197,7 @@ Format each topic strictly as:
 
     try {
       final aiService = Provider.of<AiService>(context, listen: false);
-      final response = await aiService.askTeacher(prompt, []);
+      final response = await aiService.askTeacher(prompt, [], isVip: true);
       await _incrementUsage();
 
       final bool isInvalid = response.trim().isEmpty ||
@@ -284,10 +288,22 @@ Format each topic strictly as:
             ? 'مهم جداً: اكتب الشرائح الـ 8 والعناوين والشروحات والأرقام وملاحظات المتحدث بنسبة ١٠٠٪ باللغة العربية الفصحى الأكاديمية فقط.'
             : 'زۆر گرنگە: هەموو ٨ سلایدەکە، ناونیشانەکان، پاراگرافەکان، ئامار و وتاری پێشکەشکار ١٠٠٪ بە زمانی کوردی سۆرانی پاراو بنووسە.');
 
+    final customNotes = _seminarNotesController.text.trim();
+    final customRequirements = customNotes.isNotEmpty
+        ? '''
+CRITICAL STUDENT CUSTOM REQUIREMENTS & FOCUS INSTRUCTIONS (HIGHEST PRIORITY):
+The student specified the following specific focus areas, guidelines, or instructor notes:
+"$customNotes"
+You MUST strictly integrate, address, and highlight these exact points throughout the presentation.
+'''
+        : '';
+
     final prompt = '''
 You are a premier presentation designer and university professor specialized in creating Canva-style modern academic presentations.
 Write a full, ready-to-present, 8-slide seminar presentation strictly and exclusively about the selected topic: "$topicTitle".
 $langPrompt
+
+$customRequirements
 
 CRITICAL REQUIREMENTS:
 1. The presentation MUST contain exactly 8 Slides.
@@ -309,7 +325,7 @@ SLIDE STRUCTURE:
 
     try {
       final aiService = Provider.of<AiService>(context, listen: false);
-      final response = await aiService.askTeacher(prompt, []);
+      final response = await aiService.askTeacher(prompt, [], isVip: true);
       await _incrementUsage();
 
       final bool isInvalid = response.trim().isEmpty ||
@@ -428,10 +444,22 @@ STRICT ACADEMIC REGISTER & UNIVERSITY-GRADE FORMALITY MANDATE (100% STRICTLY ENF
 - References: Must be formatted in standard APA 7th Edition or IEEE format including credible authors/institutions, publication year, comprehensive publication title, journal/publisher, and DOI/URL.
 ''';
 
+    final customNotes = _reportNotesController.text.trim();
+    final customRequirements = customNotes.isNotEmpty
+        ? '''
+CRITICAL STUDENT CUSTOM REQUIREMENTS & FOCUS INSTRUCTIONS (HIGHEST PRIORITY):
+The student specified the following specific focus areas, sub-topics, guidelines, or instructor notes:
+"$customNotes"
+You MUST strictly integrate, address, and thoroughly analyze these exact requirements within the 10 report sections.
+'''
+        : '';
+
     final prompt = '''
 You are a distinguished university professor, research scientist, and academic author.
 Write a comprehensive, publication-grade, exceptionally thorough 8-page academic research report specifically and exclusively about the topic: "$reportTitle".
 $langPrompt
+
+$customRequirements
 
 $formalToneMandate
 
@@ -495,7 +523,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 
     try {
       final aiService = Provider.of<AiService>(context, listen: false);
-      final response = await aiService.askTeacher(prompt, []);
+      final response = await aiService.askTeacher(prompt, [], isVip: true);
       await _incrementUsage();
 
       final bool isInvalid = response.trim().isEmpty ||
@@ -743,7 +771,7 @@ Please format and classify the following academic reference in standard APA 7th 
 
     try {
       final aiService = Provider.of<AiService>(context, listen: false);
-      final response = await aiService.askTeacher(prompt, []);
+      final response = await aiService.askTeacher(prompt, [], isVip: true);
       await _incrementUsage();
       setState(() {
         _generatedResult = response;
@@ -1340,11 +1368,30 @@ Please format and classify the following academic reference in standard APA 7th 
               fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
             ),
           ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _seminarNotesController,
+            minLines: 1,
+            maxLines: 3,
+            style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: _selectedLanguage == SeminarLanguage.english
+                  ? 'Specific student focus / teacher requirements (optional)...'
+                  : (_selectedLanguage == SeminarLanguage.arabic
+                      ? 'ملاحظات أو متطلبات خاصة بالبحث (اختياري)...'
+                      : 'تێبینی یان داواکاری تایبەتی خۆت بۆ ناو سێمینارەکە (ئارەزوومەندانە)...'),
+              hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
+              prefixIcon: const Icon(CupertinoIcons.text_quote, color: Color(0xFF7D2AE8), size: 18),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+              filled: true,
+              fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
+            ),
+          ),
           const SizedBox(height: 8),
           Text(
             _selectedLanguage == SeminarLanguage.english
-                ? '✨ Creates full 8 slides with rich paragraphs, metrics, Google/Web images & speaker notes.'
-                : '✨ بە شێوازی Canva و PPTX لە ٨ سلایدی هەمەجۆر (شیکاری، ئامار، دەق، وێنە و وتار) دروست دەبێت.',
+                ? '✨ Gemini 3.7 Flash creates full 8 slides with rich paragraphs, metrics, diagrams & speaker notes.'
+                : '✨ مۆدێلی بەهێزی Gemini 3.7 Flash بە شێوازی Canva و پاوەرپۆینتی ٨ سلایدی بەپێی داواکارییەکەت دروستی دەکات.',
             style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, height: 1.4, color: isDark ? Colors.grey[400] : ZankoColors.textSecondary),
           ),
           const SizedBox(height: 16),
@@ -1446,6 +1493,34 @@ Please format and classify the following academic reference in standard APA 7th 
               hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 13),
               prefixIcon: const Icon(CupertinoIcons.doc_fill, color: Color(0xFFF97316)),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              filled: true,
+              fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            _selectedLanguage == SeminarLanguage.english
+                ? 'Specific Focus / Custom Requirements (Optional):'
+                : (_selectedLanguage == SeminarLanguage.arabic
+                    ? 'متطلبات أو محاور خاصة بالبحث (اختياري):'
+                    : 'داواکاری یان تەوەری تایبەتی خۆت بۆ ڕاپۆرتەکە (ئارەزوومەندانە):'),
+            style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _reportNotesController,
+            minLines: 1,
+            maxLines: 3,
+            style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: _selectedLanguage == SeminarLanguage.english
+                  ? 'e.g. Focus deeply on ethical risks, include real Kurdish case studies...'
+                  : (_selectedLanguage == SeminarLanguage.arabic
+                      ? 'مثال: التركيز على الجوانب الأخلاقية، تضمين دراسات حالة حديثة...'
+                      : 'بۆ نموونە: تیشک بخەرە سەر مەترسییەکان، چەند نموونەیەکی کوردستانی تێدابێت...'),
+              hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
+              prefixIcon: const Icon(CupertinoIcons.text_badge_star, color: Color(0xFFF97316), size: 18),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
               filled: true,
               fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
             ),

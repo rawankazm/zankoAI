@@ -163,11 +163,13 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
     final aiService = Provider.of<AiService>(context, listen: false);
     final authService = Provider.of<AuthService>(context, listen: false);
     final isVip = authService.currentUser?.isVip ?? false;
+    final isPendingVip = authService.currentUser?.isPendingVip ?? false;
     try {
       final response = await aiService.askTeacher(
         text,
         _messages.sublist(0, _messages.length - 1),
         isVip: isVip,
+        isPendingVip: isPendingVip,
       );
       
       setState(() {

@@ -11,6 +11,7 @@ import 'teacher_analytics_screen.dart';
 import 'teacher_lectures_screen.dart';
 import 'teacher_announcements_screen.dart';
 import '../payment/admin_payment_config_sheet.dart';
+import '../payment/admin_vip_requests_sheet.dart';
 import '../../theme.dart';
 
 class TeacherDashboardScreen extends StatelessWidget {
@@ -296,6 +297,13 @@ class _QuickActionsGrid extends StatelessWidget {
         'icon': Icons.how_to_reg_rounded,
         'color': const Color(0xFF0891B2),
         'onTap': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherEnrollmentsScreen())),
+      },
+      {
+        'label': 'داواکارییەکانی بەشداریکردنی VIP 👑',
+        'sublabel': 'پەسەندکردنی دەستبەجێی پارەدان و چالاککردنی VIP',
+        'icon': Icons.verified_user_rounded,
+        'color': const Color(0xFF059669),
+        'onTap': () => AdminVipRequestsSheet.show(context),
       },
       {
         'label': 'ژمارەکانی پارەدانی VIP 💳',

@@ -373,6 +373,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     final aiService = Provider.of<AiService>(context, listen: false);
     final authService = Provider.of<AuthService>(context, listen: false);
     final isVip = authService.currentUser?.isVip ?? false;
+    final isPendingVip = authService.currentUser?.isPendingVip ?? false;
     final timestamp = _formatTime();
 
     setState(() {
@@ -396,6 +397,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
         text,
         historyToSend,
         isVip: isVip,
+        isPendingVip: isPendingVip,
       );
       if (mounted) {
         setState(() {
@@ -450,8 +452,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       final aiService = Provider.of<AiService>(context, listen: false);
       final authService = Provider.of<AuthService>(context, listen: false);
       final isVip = authService.currentUser?.isVip ?? false;
+      final isPendingVip = authService.currentUser?.isPendingVip ?? false;
 
-      final response = await aiService.solveImageQuestion(bytes, promptText, isVip: isVip);
+      final response = await aiService.solveImageQuestion(bytes, promptText, isVip: isVip, isPendingVip: isPendingVip);
 
       if (mounted) {
         setState(() {

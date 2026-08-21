@@ -16,8 +16,10 @@ class UserModel {
   final List<double> gpaHistory;
   final bool isVip;
   final String? photoUrl;
+  final String vipStatus; // 'none' | 'pending' | 'active' | 'rejected' | 'expired'
 
   bool get isGuest => id.startsWith('guest_user') || email == 'guest@zanko.edu';
+  bool get isPendingVip => vipStatus == 'pending';
 
   UserModel({
     required this.id,
@@ -31,6 +33,7 @@ class UserModel {
     this.gpaHistory = const [],
     this.isVip = false,
     this.photoUrl,
+    this.vipStatus = 'none',
   });
 
   UserModel copyWith({
@@ -45,6 +48,7 @@ class UserModel {
     List<double>? gpaHistory,
     bool? isVip,
     String? photoUrl,
+    String? vipStatus,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -58,6 +62,7 @@ class UserModel {
       gpaHistory: gpaHistory ?? this.gpaHistory,
       isVip: isVip ?? this.isVip,
       photoUrl: photoUrl ?? this.photoUrl,
+      vipStatus: vipStatus ?? this.vipStatus,
     );
   }
 

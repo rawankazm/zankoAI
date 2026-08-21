@@ -407,7 +407,7 @@ $pdfContext
 
 تکایە بە شێوازێکی مامۆستایانە و ڕوون بە زمانی کوردی (سۆرانی) لەسەر بنەمای ئەم فایلی PDFە وەڵامی پرسیارەکە بدەرەوە.
 ''';
-                                final responseText = await ai.askTeacher(prompt, []);
+                                final responseText = await ai.askTeacher(prompt, [], isVip: true);
                                 final ans = responseText.trim().isNotEmpty
                                     ? responseText
                                     : 'بەپێی زانیارییەکانی فایلی PDF ($_selectedPdf)، وەڵامی پرسیارەکەت شیکارکرا.';
@@ -488,7 +488,7 @@ $text
 
 تکایە بە ووردبیینییەوە تەنها لەسەر بنەمای ئەم دەقەی سه‌رەوە بە زمانی کوردی (سۆرانی) وەڵامی ڕاست و تێروتەسەل بنووسەوە.
 ''';
-                            final response = await ai.askTeacher(fullPrompt, []);
+                            final response = await ai.askTeacher(fullPrompt, [], isVip: true);
                             final isInvalid = response.trim().isEmpty ||
                                 response.contains('Error') ||
                                 response.contains('⚠️') ||

@@ -53,7 +53,17 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
 
             bool isVip = data['isVip'] == true || role == UserRole.admin;
             final vipStatus = data['vipStatus'] as String? ?? 'none';
-            if (vipStatus == 'pending') isVip = false;
+            final vipExpiresAt = data['vipExpiresAt'] as Timestamp?;
+
+            if (isVip && role != UserRole.admin && vipExpiresAt != null) {
+              if (DateTime.now().isAfter(vipExpiresAt.toDate())) {
+                isVip = false;
+              }
+            }
+
+            if (vipStatus == 'pending' || vipStatus == 'rejected' || vipStatus == 'expired') {
+              if (role != UserRole.admin) isVip = false;
+            }
 
             _currentUser = UserModel(
               id: firebaseUser.uid,
@@ -66,6 +76,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
               gpa: role == UserRole.student ? (data['gpa'] as num?)?.toDouble() ?? 0.0 : null,
               isVip: isVip,
               photoUrl: data['photoUrl'],
+              vipStatus: vipStatus,
             );
             NotificationService().listenToAdminNotifications(firebaseUser.uid, isVip);
             NotificationService().syncUserToken(firebaseUser.uid, isVip: isVip);

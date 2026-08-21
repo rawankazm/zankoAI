@@ -20,6 +20,9 @@ import '../offline/offline_downloads_screen.dart';
 import '../study_plan/ai_study_roadmap_screen.dart';
 import '../../services/app_version_service.dart';
 import '../update/force_update_screen.dart';
+import '../payment/admin_payment_config_sheet.dart';
+import '../payment/admin_vip_requests_sheet.dart';
+import '../notifications/admin_broadcast_sheet.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 
@@ -2414,6 +2417,84 @@ class ProfileScreen extends StatelessWidget {
                 ],
               ),
             ),
+
+            // ─── Admin Management Hub (دەسەڵاتەکانی ئەدمین) ───
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFD700).withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text('👑', style: TextStyle(fontSize: 16)),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'دەسەڵاتەکانی بەڕێوەبەر (Admin Hub)',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : ZankoColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              AppCard(
+                padding: EdgeInsets.zero,
+                child: Column(
+                  children: [
+                    StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance.collection('vip_requests').snapshots(),
+                      builder: (context, snap) {
+                        final allDocs = snap.data?.docs ?? [];
+                        final pendingCount = allDocs.where((d) {
+                          final data = d.data() as Map<String, dynamic>? ?? {};
+                          return (data['status'] as String? ?? 'pending').toLowerCase() == 'pending';
+                        }).length;
+
+                        return _buildSettingsTile(
+                          context,
+                          icon: CupertinoIcons.shield_lefthalf_fill,
+                          iconColor: pendingCount > 0 ? const Color(0xFFFF9500) : const Color(0xFF10B981),
+                          title: pendingCount > 0
+                              ? 'داواکارییەکانی VIP 👑 ($pendingCount نوێ)'
+                              : 'داواکارییەکانی بەشداریکردنی VIP 👑',
+                          subtitle: pendingCount > 0
+                              ? '⚡ $pendingCount داواکاری نوێی پارەدان چاوەڕێی پەسەندکردنە'
+                              : 'پەسەندکردنی دەستبەجێی پارەدان و چالاککردنی VIP',
+                          onTap: () => AdminVipRequestsSheet.show(context),
+                        );
+                      },
+                    ),
+                    const Divider(height: 1, indent: 56),
+                    _buildSettingsTile(
+                      context,
+                      icon: CupertinoIcons.creditcard_fill,
+                      iconColor: const Color(0xFFB8860B),
+                      title: 'ژمارەکانی پارەدانی VIP 💳',
+                      subtitle: 'گۆڕینی ژمارەکانی FIB، FastPay و ZainCash',
+                      onTap: () => AdminPaymentConfigSheet.show(context),
+                    ),
+                    const Divider(height: 1, indent: 56),
+                    _buildSettingsTile(
+                      context,
+                      icon: CupertinoIcons.speaker_2_fill,
+                      iconColor: const Color(0xFFE11D48),
+                      title: 'ناردنی ئاگاداری گشتی 📢',
+                      subtitle: 'ناردنی ڕاستەوخۆی نۆتیفیکەیشن بۆ هەموو قوتابیان',
+                      onTap: () => showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => AdminBroadcastSheet(isDark: isDark),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
             const SizedBox(height: 24),
 

@@ -16,9 +16,9 @@ abstract class AiService extends ChangeNotifier {
   set apiKey(String? key);
   bool get hasRealApiKey;
 
-  Future<bool> checkAndIncrementDailyLimit({bool isVip = false});
-  Future<String> askTeacher(String userPrompt, List<Map<String, String>> chatHistory, {bool isVip = false});
-  Future<String> solveImageQuestion(Uint8List imageBytes, String promptText, {bool isVip = false});
+  Future<bool> checkAndIncrementDailyLimit({bool isVip = false, bool isPendingVip = false});
+  Future<String> askTeacher(String userPrompt, List<Map<String, String>> chatHistory, {bool isVip = false, bool isPendingVip = false});
+  Future<String> solveImageQuestion(Uint8List imageBytes, String promptText, {bool isVip = false, bool isPendingVip = false});
   Future<Map<String, dynamic>> summarizePdf(String pdfName, String pdfContent);
   Future<String> transcribeAudio(Uint8List? audioBytes, String audioFileName, {String mimeType = 'audio/m4a'});
   Future<String> summarizeAudio(String audioFileName, String transcriptText);
@@ -123,8 +123,9 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   bool get hasApiKey => true;
 
   @override
-  Future<bool> checkAndIncrementDailyLimit({bool isVip = false}) async {
+  Future<bool> checkAndIncrementDailyLimit({bool isVip = false, bool isPendingVip = false}) async {
     if (isVip) return true;
+    if (isPendingVip) return true; // داواکاری VIP ناردووە — چاوەڕوانی پەسەندکردن دەکات
     try {
       final prefs = await SharedPreferences.getInstance();
       final today = DateTime.now().toIso8601String().substring(0, 10);
@@ -135,7 +136,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
         count = 0;
       }
 
-      if (count >= 5) {
+      if (count >= 10) {
         return false;
       }
 
@@ -163,8 +164,8 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     client.connectionTimeout = const Duration(seconds: 8);
 
     final modelsToTry = [
-      'gemini-3.6-flash',
       'gemini-3.7-flash',
+      'gemini-3.6-flash',
       'gemini-3.1-flash-lite-preview',
       'gemini-flash-latest',
     ];
@@ -227,8 +228,8 @@ class ZankoAiService extends ChangeNotifier implements AiService {
       if (keyToUse.isEmpty) continue;
 
       final models = [
-        'gemini-3.6-flash',
         'gemini-3.7-flash',
+        'gemini-3.6-flash',
         'gemini-3.1-flash-lite-preview',
         'gemini-flash-latest',
       ];
@@ -244,7 +245,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
           );
 
           final content = [gemini.Content.text(prompt)];
-          final response = await model.generateContent(content).timeout(const Duration(seconds: 30));
+          final response = await model.generateContent(content).timeout(const Duration(seconds: 45));
           if (response.text != null && response.text!.isNotEmpty) {
             return response.text!;
           }
@@ -287,8 +288,8 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     for (final keyToUse in keysToTry) {
       if (keyToUse.isEmpty) continue;
       final models = [
-        'gemini-3.6-flash',
         'gemini-3.7-flash',
+        'gemini-3.6-flash',
         'gemini-3.1-flash-lite-preview',
         'gemini-flash-latest',
       ];
@@ -310,7 +311,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
             ])
           ];
 
-          final response = await model.generateContent(content).timeout(const Duration(seconds: 25));
+          final response = await model.generateContent(content).timeout(const Duration(seconds: 45));
           if (response.text != null && response.text!.isNotEmpty) {
             return response.text!;
           }
@@ -321,11 +322,15 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   }
 
   @override
-  Future<String> askTeacher(String userPrompt, List<Map<String, String>> chatHistory, {bool isVip = false}) async {
-    final allowed = await checkAndIncrementDailyLimit(isVip: isVip);
+  Future<String> askTeacher(String userPrompt, List<Map<String, String>> chatHistory, {bool isVip = false, bool isPendingVip = false}) async {
+    final allowed = await checkAndIncrementDailyLimit(isVip: isVip, isPendingVip: isPendingVip);
     if (!allowed) {
-      return "⭐ **گەیشتیتە سنووری ٥ پەیامی بەخۆڕایی بۆ ئەمڕۆ (Free Daily Limit Reached)**\n\n"
-             "تۆ سنووری ٥ نامەی بەخۆڕایی ڕۆژانەت بەکارهێناوە. بۆ نامەی بێسنوور ئەپەکەت بۆ VIP بەرز بکەرەوە!";
+      if (isPendingVip) {
+        return "⏳ **داواکاری VIPەکەت لە چاوەڕوانی پەسەندکردنەوەی ئەدمینە**\n\n"
+               "سنووری ١٠ پەیامی بەخۆڕاییت بۆ ئەمڕۆ تەواو بووە. گاران بزانە ئەدمین داواکارییەکەت پەسەند دەکات و دواتر نامەی بێسنوور دەبێتەوە! 👑";
+      }
+      return "⭐ **گەیشتیتە سنووری ١٠ پەیامی بەخۆڕایی بۆ ئەمڕۆ**\n\n"
+             "بۆ نامەی بێسنوور ئەپەکەت بۆ **VIP** بەرز بکەرەوە!";
     }
 
     try {
@@ -439,8 +444,8 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     ];
 
     final models = [
-      'gemini-3.6-flash',
       'gemini-3.7-flash',
+      'gemini-3.6-flash',
       'gemini-3.1-flash-lite-preview',
       'gemini-flash-latest',
     ];
@@ -499,11 +504,15 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   }
 
   @override
-  Future<String> solveImageQuestion(Uint8List imageBytes, String promptText, {bool isVip = false}) async {
-    final allowed = await checkAndIncrementDailyLimit(isVip: isVip);
+  Future<String> solveImageQuestion(Uint8List imageBytes, String promptText, {bool isVip = false, bool isPendingVip = false}) async {
+    final allowed = await checkAndIncrementDailyLimit(isVip: isVip, isPendingVip: isPendingVip);
     if (!allowed) {
-      return "⭐ **گەیشتیتە سنووری ٥ پەیامی بەخۆڕایی بۆ ئەمڕۆ (Free Daily Limit Reached)**\n\n"
-             "تۆ ٥ پەیامی بەخۆڕاییی ئەمڕۆت بەکارهێناوە. بۆ ناردنی پەیامی بێسنوور، بەشداری فەرمی VIP بەدەستبهێنە!";
+      if (isPendingVip) {
+        return "⏳ **داواکاری VIPەکەت لە چاوەڕوانی پەسەندکردنەوەی ئەدمینە**\n\n"
+               "سنووری ١٠ پەیامی بەخۆڕاییت بۆ ئەمڕۆ تەواو بووە. ئەدمین بەم زووانە داواکارییەکەت پەسەند دەکات! 👑";
+      }
+      return "⭐ **گەیشتیتە سنووری ١٠ پەیامی بەخۆڕایی بۆ ئەمڕۆ**\n\n"
+             "بۆ نامەی بێسنوور ئەپەکەت بۆ **VIP** بەرز بکەرەوە!";
     }
 
     if (hasRealApiKey) {

@@ -34,13 +34,13 @@ class ReportPdfGeneratorService {
   static Future<void> _initFonts() async {
     if (_cachedNotoRegular == null || _cachedNotoRegular!.isEmpty) {
       _cachedNotoRegular = await _loadFontFromPaths([
-        'assets/fonts/NotoNaskhArabic-Regular.ttf',
         'assets/fonts/NotoSansArabic-Regular.ttf',
+        'assets/fonts/NotoNaskhArabic-Regular.ttf',
         'assets/fonts/calibri.ttf',
-        'C:/Windows/Fonts/calibri.ttf',
-        'assets/fonts/arial.ttf',
-        'C:/Windows/Fonts/arial.ttf',
         'assets/fonts/DroidKufi-Regular.ttf',
+        'assets/fonts/arial.ttf',
+        'C:/Windows/Fonts/calibri.ttf',
+        'C:/Windows/Fonts/arial.ttf',
       ]);
     }
     if (_cachedNotoBold == null || _cachedNotoBold!.isEmpty) {
@@ -48,8 +48,8 @@ class ReportPdfGeneratorService {
         'assets/fonts/NotoSansArabic-Bold.ttf',
         'assets/fonts/NotoNaskhArabic-Bold.ttf',
         'assets/fonts/calibrib.ttf',
-        'C:/Windows/Fonts/calibrib.ttf',
         'assets/fonts/arialbd.ttf',
+        'C:/Windows/Fonts/calibrib.ttf',
         'C:/Windows/Fonts/arialbd.ttf',
       ]);
     }
@@ -76,10 +76,10 @@ class ReportPdfGeneratorService {
     );
   }
 
-  /// Shapes Kurdish/Arabic characters cleanly for TrueType font rendering
+  /// Normalizes Kurdish/Arabic characters cleanly for TrueType font rendering
   static String _fixText(String text, bool isRtl) {
     if (!isRtl || text.trim().isEmpty) return text;
-    return KurdishArabicReshaper.shape(text);
+    return KurdishArabicReshaper.normalizeKurdish(text);
   }
 
   /// Dynamically wraps RTL/LTR text based on font metrics with a safety buffer
