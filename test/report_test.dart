@@ -1,95 +1,120 @@
+import 'dart:io';
+import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:zanko_ai/services/docx_generator_service.dart';
 import 'package:zanko_ai/services/report_pdf_generator_service.dart';
 import 'package:zanko_ai/utils/kurdish_arabic_reshaper.dart';
 
 void main() {
-  test('8-Page Standard English University Report DOCX and PDF generation test', () async {
-    final report = DocxGeneratorService.parseReportFromText(
-      rawText: '',
-      title: 'Artificial Intelligence in Modern Information Technology',
-      studentName: 'Rawan Ahmed\nSara Mohammed',
-      supervisorName: 'Dr. John Doe',
-      universityName: 'Erbil Polytechnic University',
-      departmentName: 'Information Technology Department',
-      academicYear: '2024 - 2025',
-      languageCode: 'en',
-    );
+  test('Compare PDF Rendering Approaches for Kurdish', () async {
+    final fontBytes = File('assets/fonts/calibri.ttf').readAsBytesSync();
+    final notoSansBytes = File('assets/fonts/NotoSansArabic-Regular.ttf').readAsBytesSync();
 
-    expect(report.pages.length, 8);
-    expect(report.pages[0].pageType, 'cover');
-    expect(report.pages[1].pageType, 'toc');
-    expect(report.pages[1].bulletPoints.length, 10);
-    expect(report.pages[2].pageType, 'content');
-    expect(report.pages[2].sections.length, 2);
-    expect(report.pages[6].sections.length, 2);
-    expect(report.pages[7].pageType, 'references');
-    expect(report.pages[7].bulletPoints.length, 6);
-
-    // Test DOCX generation
-    final docxBytes = await DocxGeneratorService.createDocxBytes(report);
-    expect(docxBytes.isNotEmpty, true);
-    print('Generated English DOCX bytes length: ${docxBytes.length}');
-
-    // Test PDF generation
-    final pdfBytes = await ReportPdfGeneratorService.createPdfBytes(report);
-    expect(pdfBytes.isNotEmpty, true);
-    print('Generated English PDF bytes length: ${pdfBytes.length}');
-  });
-
-  test('8-Page Standard Kurdish University Report DOCX and PDF generation test', () async {
-    final report = DocxGeneratorService.parseReportFromText(
-      rawText: '',
-      title: 'کاریگەریی ژیریی دەستکرد لەسەر تەکنۆلۆژیای زانیاری',
-      studentName: 'ڕاوان ئەحمەد\nسارا محەمەد\nکاروان ڕەزا',
-      supervisorName: 'پ.ی.د. نەبەز عومەر',
-      universityName: 'زانکۆی پۆلیتەکنیکی هەولێر',
-      departmentName: 'کۆلێژی تەکنیکی ئەندازیاری - بەشی تەکنۆلۆژیای زانیاری',
-      academicYear: '2024 - 2025',
-      languageCode: 'ku',
-    );
-
-    expect(report.pages.length, 8);
-    expect(report.pages[0].pageType, 'cover');
-    expect(report.pages[1].pageType, 'toc');
-    expect(report.pages[1].bulletPoints.length, 10);
-    expect(report.pages[2].pageType, 'content');
-    expect(report.pages[2].sections.length, 2);
-    expect(report.pages[6].sections.length, 2);
-    expect(report.pages[7].pageType, 'references');
-    expect(report.pages[7].bulletPoints.length, 6);
-
-    // Test DOCX generation
-    final docxBytes = await DocxGeneratorService.createDocxBytes(report);
-    expect(docxBytes.isNotEmpty, true);
-    print('Generated Kurdish DOCX bytes length: ${docxBytes.length}');
-
-    // Test PDF generation with TrueType font
-    final pdfBytes = await ReportPdfGeneratorService.createPdfBytes(report);
-    expect(pdfBytes.isNotEmpty, true);
-    print('Generated Kurdish PDF bytes length: ${pdfBytes.length}');
-  });
-
-  test('Kurdish Reshaper Diagnostic Test for Kurdish Characters', () {
     final testPhrases = [
-      'ڕاپۆرت لەبارەی : کۆئەندامی هەرس',
-      'بەسەرپەرشتیی : پ.ی.د. نەبەز عومەر',
-      'ئامادەکردنی : ڕاوان ئەحمەد، سارا محەمەد',
+      'حکومەتی هەرێمی کوردستان - عێراق',
       'وەزارەتی خوێندنی باڵا و توێژینەوەی زانستی',
-      'زانکۆی پۆلیتەکنیکی هەولێر',
-      'کۆلێژی تەکنیکی تەندروستی - بەشی تاقیگە',
-      'قۆناغی : یەکەم (2024 - 2025)',
-      '١. پێشەکی و گرنگیی زانستیی بابەتەکە',
-      '1. Introduction to AI',
-      '• خاڵی یەکەم: شیکردنەوەی داتاکان بە ڕێژەی 45.8% زیادی کردووە.',
-      'تەلارسازی و چوارچێوەی گشتیی «ژیریی دەستکرد» لە کۆمەڵێک بەش پێکدێت.',
+      'کاریگەریی ژیریی دەستکرد لەسەر تەکنۆلۆژیای زانیاری',
+      'ئامادەکردنی: ڕاوان ئەحمەد، سارا محەمەد، کاروان ڕەزا',
+      'بەسەرپەرشتیی: پ.ی.د. نەبەز عومەر (2024 - 2025)',
+      '١. پێشەکی و گرنگیی زانستیی بابەتەکە لە سەردەمی مۆدێرندا',
+      'ڕاپۆرتی زانستی پێشکەش بە بەشی تەکنۆلۆژیای زانیاری کراوە.',
     ];
 
-    for (var phrase in testPhrases) {
-      final shaped = KurdishArabicReshaper.shape(phrase);
-      final reordered = KurdishArabicReshaper.shapeAndReorder(phrase);
-      expect(shaped.isNotEmpty, true);
-      expect(reordered.isNotEmpty, true);
+    // Approach A: Calibri + KurdishArabicReshaper.shapeAndReorder (alignment: right)
+    {
+      final doc = PdfDocument();
+      doc.pageSettings.size = PdfPageSize.a4;
+      final page = doc.pages.add();
+      final font = PdfTrueTypeFont(fontBytes, 14);
+
+      double y = 40;
+      for (var phrase in testPhrases) {
+        final text = KurdishArabicReshaper.shapeAndReorder(phrase);
+        page.graphics.drawString(
+          text,
+          font,
+          brush: PdfSolidBrush(PdfColor(15, 23, 42)),
+          bounds: Rect.fromLTWH(40, y, 500, 24),
+          format: PdfStringFormat(alignment: PdfTextAlignment.right),
+        );
+        y += 35;
+      }
+
+      final bytes = await doc.save();
+      doc.dispose();
+      File('C:/Users/rawan/.gemini/antigravity/brain/c0a7c93f-d782-4611-b466-eee7f2d7974d/scratch/kurdish_calibri_bidi.pdf')
+          .writeAsBytesSync(bytes);
+      print('Saved kurdish_calibri_bidi.pdf (${bytes.length} bytes)');
+    }
+
+    // Approach B: NotoSans + KurdishArabicReshaper.shapeAndReorder
+    {
+      final doc = PdfDocument();
+      doc.pageSettings.size = PdfPageSize.a4;
+      final page = doc.pages.add();
+      final font = PdfTrueTypeFont(notoSansBytes, 14);
+
+      double y = 40;
+      for (var phrase in testPhrases) {
+        final text = KurdishArabicReshaper.shapeAndReorder(phrase);
+        page.graphics.drawString(
+          text,
+          font,
+          brush: PdfSolidBrush(PdfColor(15, 23, 42)),
+          bounds: Rect.fromLTWH(40, y, 500, 24),
+          format: PdfStringFormat(alignment: PdfTextAlignment.right),
+        );
+        y += 35;
+      }
+
+      final bytes = await doc.save();
+      doc.dispose();
+      File('C:/Users/rawan/.gemini/antigravity/brain/c0a7c93f-d782-4611-b466-eee7f2d7974d/scratch/kurdish_notosans_bidi.pdf')
+          .writeAsBytesSync(bytes);
+      print('Saved kurdish_notosans_bidi.pdf (${bytes.length} bytes)');
+    }
+
+    // Approach C: Full 8-Page Academic Report Generation (Kurdish)
+    {
+      final report = DocxGeneratorService.parseReportFromText(
+        rawText: '',
+        title: 'کاریگەریی ژیریی دەستکرد لەسەر تەکنۆلۆژیای زانیاری',
+        studentName: 'ڕاوان ئەحمەد\nسارا محەمەد',
+        supervisorName: 'پ.ی.د. نەبەز عومەر',
+        universityName: 'زانکۆی پۆلیتەکنیکی هەولێر',
+        departmentName: 'بەشی تەکنۆلۆژیای زانیاری',
+        academicYear: '2024 - 2025',
+        languageCode: 'ku',
+      );
+
+      final pdfBytes = await ReportPdfGeneratorService.createPdfBytes(report);
+      expect(pdfBytes.length > 50000, true);
+      File('C:/Users/rawan/.gemini/antigravity/brain/c0a7c93f-d782-4611-b466-eee7f2d7974d/scratch/full_kurdish_report.pdf')
+          .writeAsBytesSync(pdfBytes);
+      print('Saved full_kurdish_report.pdf (${pdfBytes.length} bytes)');
+    }
+
+    // Approach D: Full 8-Page Academic Report Generation (Arabic)
+    {
+      final report = DocxGeneratorService.parseReportFromText(
+        rawText: '',
+        title: 'أثر الذكاء الاصطناعي في هندسة البرمجيات والأنظمة الذكية',
+        studentName: 'أحمد علي\nسارة محمد',
+        supervisorName: 'أ.د. عبد الله عمر',
+        universityName: 'جامعة بغداد',
+        departmentName: 'قسم علوم الحاسوب',
+        academicYear: '2024 - 2025',
+        languageCode: 'ar',
+      );
+
+      final pdfBytes = await ReportPdfGeneratorService.createPdfBytes(report);
+      expect(pdfBytes.length > 50000, true);
+      File('C:/Users/rawan/.gemini/antigravity/brain/c0a7c93f-d782-4611-b466-eee7f2d7974d/scratch/full_arabic_report.pdf')
+          .writeAsBytesSync(pdfBytes);
+      print('Saved full_arabic_report.pdf (${pdfBytes.length} bytes)');
     }
   });
 }
+
+

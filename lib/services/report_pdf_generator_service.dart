@@ -34,23 +34,23 @@ class ReportPdfGeneratorService {
   static Future<void> _initFonts() async {
     if (_cachedNotoRegular == null || _cachedNotoRegular!.isEmpty) {
       _cachedNotoRegular = await _loadFontFromPaths([
-        'assets/fonts/NotoSansArabic-Regular.ttf',
-        'assets/fonts/NotoNaskhArabic-Regular.ttf',
         'assets/fonts/calibri.ttf',
-        'assets/fonts/DroidKufi-Regular.ttf',
-        'assets/fonts/arial.ttf',
         'C:/Windows/Fonts/calibri.ttf',
+        'assets/fonts/arial.ttf',
         'C:/Windows/Fonts/arial.ttf',
+        'assets/fonts/DroidKufi-Regular.ttf',
+        'assets/fonts/NotoNaskhArabic-Regular.ttf',
+        'assets/fonts/NotoSansArabic-Regular.ttf',
       ]);
     }
     if (_cachedNotoBold == null || _cachedNotoBold!.isEmpty) {
       _cachedNotoBold = await _loadFontFromPaths([
-        'assets/fonts/NotoSansArabic-Bold.ttf',
-        'assets/fonts/NotoNaskhArabic-Bold.ttf',
         'assets/fonts/calibrib.ttf',
-        'assets/fonts/arialbd.ttf',
         'C:/Windows/Fonts/calibrib.ttf',
+        'assets/fonts/arialbd.ttf',
         'C:/Windows/Fonts/arialbd.ttf',
+        'assets/fonts/NotoNaskhArabic-Bold.ttf',
+        'assets/fonts/NotoSansArabic-Bold.ttf',
       ]);
     }
     if (_cachedTimesRegular == null || _cachedTimesRegular!.isEmpty) {
@@ -72,14 +72,13 @@ class ReportPdfGeneratorService {
   static PdfStringFormat _fmt(PdfTextAlignment alignment, bool isRtl) {
     return PdfStringFormat(
       alignment: alignment,
-      textDirection: isRtl ? PdfTextDirection.rightToLeft : PdfTextDirection.leftToRight,
     );
   }
 
-  /// Normalizes Kurdish/Arabic characters cleanly for TrueType font rendering
+  /// Shapes and reorders Kurdish/Arabic characters cleanly for TrueType font rendering
   static String _fixText(String text, bool isRtl) {
     if (!isRtl || text.trim().isEmpty) return text;
-    return KurdishArabicReshaper.normalizeKurdish(text);
+    return KurdishArabicReshaper.shapeAndReorder(text);
   }
 
   /// Dynamically wraps RTL/LTR text based on font metrics with a safety buffer
@@ -526,7 +525,7 @@ class ReportPdfGeneratorService {
             );
 
             // Dotted Leader line
-            final titleWidth = boldBodyFont.measureString(cleanItem).width;
+            final titleWidth = boldBodyFont.measureString(shapedTitle).width;
             final double dotStartX = 42;
             final double dotEndX = pageSize.width - titleWidth - 55;
             if (dotEndX > dotStartX + 30) {
