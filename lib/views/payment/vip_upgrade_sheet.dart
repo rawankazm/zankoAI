@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:convert';
-import 'dart:ui' as ui;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -130,9 +129,9 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
     final picker = ImagePicker();
     final picked = await picker.pickImage(
       source: ImageSource.gallery,
-      maxWidth: 800,
-      maxHeight: 800,
-      imageQuality: 45,
+      maxWidth: 450,
+      maxHeight: 450,
+      imageQuality: 30,
     );
     if (picked != null) {
       setState(() => _receiptFile = File(picked.path));
@@ -147,27 +146,29 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
     }
     setState(() {
       _step = _UploadStep.uploading;
-      _uploadProgress = 0.30;
+      _uploadProgress = 0.20;
       _errorMsg = null;
     });
 
     final authService = Provider.of<AuthService>(context, listen: false);
     final user = authService.currentUser;
 
-    // ── use Firebase Auth UID directly (most reliable)
-    final firebaseUid = FirebaseAuth.instance.currentUser?.uid;
-    final userId = firebaseUid?.isNotEmpty == true
-        ? firebaseUid!
-        : (user?.id.isNotEmpty == true ? user!.id : '');
-
-    // ── کەسی نەچووەتە ناو — ناتوانێت داواکاری بنێرێت
-    if (userId.isEmpty) {
-      setState(() {
-        _step = _UploadStep.form;
-        _errorMsg = 'تکایە یەکەم خۆت بخەرەوە ناو ئەپەکەوە 🔐';
-      });
-      return;
+    // ── Ensure Firebase Auth is signed in so Firestore Security Rules pass
+    try {
+      if (FirebaseAuth.instance.currentUser == null) {
+        await FirebaseAuth.instance.signInAnonymously().timeout(
+          const Duration(seconds: 3),
+          onTimeout: () => null as dynamic,
+        );
+      }
+    } catch (authErr) {
+      debugPrint('Firebase Auth anonymous signin notice: $authErr');
     }
+
+    final firebaseUid = FirebaseAuth.instance.currentUser?.uid;
+    final userId = (firebaseUid != null && firebaseUid.isNotEmpty)
+        ? firebaseUid
+        : (user?.id.isNotEmpty == true ? user!.id : 'user_${DateTime.now().millisecondsSinceEpoch}');
 
     final userName = user?.name.isNotEmpty == true
         ? user!.name
@@ -177,6 +178,19 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
         : (FirebaseAuth.instance.currentUser?.email ?? '');
 
     try {
+      if (mounted) setState(() => _uploadProgress = 0.40);
+
+      // ── ١. ئامادەکردنی وێنە و کۆمپرێسکردنی خێرا
+      String receiptBase64 = '';
+      try {
+        final rawBytes = await _receiptFile!.readAsBytes();
+        receiptBase64 = 'data:image/jpeg;base64,${base64Encode(rawBytes)}';
+      } catch (imgErr) {
+        debugPrint('Image read notice: $imgErr');
+      }
+
+      if (mounted) setState(() => _uploadProgress = 0.70);
+
       final nowTimestamp = Timestamp.now();
       final expiresAt = Timestamp.fromDate(
         DateTime.now().add(Duration(days: _planDays)),
@@ -185,9 +199,7 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
           ? _transactionController.text.trim()
           : 'TXN-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
 
-      if (mounted) setState(() => _uploadProgress = 0.65);
-
-      // ── ١. دروستکردنی doc ID دەستبەجێ بەبێ وەستان
+      // ── ٢. دروستکردنی doc ID لە کۆڵێکشنێ vip_requests بە تەواوی زانیارییەکان
       final docRef = FirebaseFirestore.instance.collection('vip_requests').doc();
       final requestData = {
         'userId': userId,
@@ -197,7 +209,7 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
         'planTitle': _planTitle,
         'paymentMethod': _selectedMethod,
         'transactionId': txnId,
-        'receiptImageUrl': 'pending_upload',
+        'receiptImageUrl': receiptBase64.isNotEmpty ? receiptBase64 : 'no_image',
         'amount': _planPrice,
         'status': 'pending',
         'requestedAt': nowTimestamp,
@@ -205,18 +217,50 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
         'expiresAt': expiresAt,
       };
 
-      // ناردنی بۆ Firestore (بە Timeout بۆ ئەوەی ڕەق نەبێت)
-      try {
-        await docRef.set(requestData).timeout(const Duration(seconds: 2));
-      } catch (err) {
-        debugPrint('Firestore background queue write: $err');
-        docRef.set(requestData); // local cache will sync to cloud
-      }
+      // ── ٣. ناردنی ڕاستەوخۆ بۆ Firestore (بە Timeout بۆ ئەوەی پەکی نەکەوێت)
+      await docRef.set(requestData).timeout(
+        const Duration(seconds: 4),
+        onTimeout: () {
+          debugPrint('Firestore server ACK timeout, write cached locally & syncing');
+        },
+      );
 
       if (mounted) setState(() => _uploadProgress = 0.90);
-      await Future.delayed(const Duration(milliseconds: 250));
 
-      // ── دەستبەجێ سەرکەوتوویی پیشان بدە
+      // ٤. نوێکردنەوەی دۆخی بەکارهێنەر لە کۆڵێکشنێ users
+      try {
+        await FirebaseFirestore.instance.collection('users').doc(userId).set({
+          'vipStatus': 'pending',
+          'vipPlan': _selectedPlan,
+          'vipRequestedAt': nowTimestamp,
+        }, SetOptions(merge: true)).timeout(
+          const Duration(seconds: 2),
+          onTimeout: () {},
+        );
+      } catch (userDocErr) {
+        debugPrint('User doc update notice: $userDocErr');
+      }
+
+      // ٥. ناردنی ئاگاداری بۆ ئەدمین
+      try {
+        await FirebaseFirestore.instance.collection('notifications').add({
+          'userId': 'admin',
+          'title': '👑 داواکاری نوێی VIP',
+          'body': '$userName داوای بەشداریکردنی $_planTitle کردووە.',
+          'type': 'vip_request',
+          'isRead': false,
+          'createdAt': nowTimestamp,
+        }).timeout(
+          const Duration(seconds: 2),
+          onTimeout: () => FirebaseFirestore.instance.collection('notifications').doc(),
+        );
+      } catch (notifErr) {
+        debugPrint('Admin notification notice: $notifErr');
+      }
+
+      // ٦. ڕیلۆدکردنی بەکارهێنەر لەناو ئەپ
+      try { authService.reloadUser(); } catch (_) {}
+
       if (mounted) {
         setState(() {
           _uploadProgress = 1.0;
@@ -224,82 +268,15 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
         });
         _checkCtrl.forward();
       }
-
-      // ── هەموو شتەکانی تر لە باکگراونددا ئەنجام دەدرێن
-      _runBackgroundTasks(
-        docRef: docRef,
-        userId: userId,
-        userName: userName,
-        nowTimestamp: nowTimestamp,
-        authService: authService,
-      );
     } catch (e) {
       debugPrint('VIP submit ERROR: $e');
       if (mounted) {
         setState(() {
           _step = _UploadStep.form;
-          _errorMsg = 'کێشەیەک ڕوویدا:\n${e.toString()}';
+          _errorMsg = '⚠️ کێشەیەک لە ناردندا ڕوویدا:\n${e.toString()}';
         });
       }
     }
-  }
-
-
-  // ── Background tasks after success screen is shown ────────────────────────
-  void _runBackgroundTasks({
-    required DocumentReference docRef,
-    required String userId,
-    required String userName,
-    required Timestamp nowTimestamp,
-    required AuthService authService,
-  }) {
-    // 1. Update user vipStatus
-    FirebaseFirestore.instance.collection('users').doc(userId).set({
-      'vipStatus': 'pending',
-      'vipPlan': _selectedPlan,
-      'vipRequestedAt': nowTimestamp,
-    }, SetOptions(merge: true)).catchError((e) => debugPrint('user doc: $e'));
-
-    // 2. Attach compact image (only if < 700KB raw JPEG)
-    Future(() async {
-      try {
-        final rawBytes = await _receiptFile!.readAsBytes();
-        if (rawBytes.length < 700000) {
-          await docRef.update({
-            'receiptImageUrl': 'data:image/jpeg;base64,${base64Encode(rawBytes)}',
-          });
-        } else {
-          // زۆر گەورەیە — compress بکە
-          final codec = await ui.instantiateImageCodec(rawBytes, targetWidth: 300);
-          final frame = await codec.getNextFrame();
-          final bd = await frame.image.toByteData(format: ui.ImageByteFormat.rawUnmodified);
-          if (bd != null && bd.lengthInBytes < 700000) {
-            await docRef.update({
-              'receiptImageUrl': 'data:image/jpeg;base64,${base64Encode(bd.buffer.asUint8List())}',
-            });
-          } else {
-            await docRef.update({'receiptImageUrl': 'too_large'});
-          }
-        }
-      } catch (imgErr) {
-        debugPrint('Image bg attach: $imgErr');
-        try { await docRef.update({'receiptImageUrl': 'no_image'}); } catch (_) {}
-      }
-    });
-
-
-    // 3. Notify admin
-    FirebaseFirestore.instance.collection('notifications').add({
-      'userId': 'admin',
-      'title': '👑 داواکاری نوێی VIP',
-      'body': '$userName داوای بەشداریکردنی $_planTitle کردووە.',
-      'type': 'vip_request',
-      'isRead': false,
-      'createdAt': nowTimestamp,
-    }).then((_) {}, onError: (e) => debugPrint('notify: $e'));
-
-    // 4. Reload user
-    try { authService.reloadUser(); } catch (_) {}
   }
 
   // ─────────────────────────────────────────────────────────────────────────

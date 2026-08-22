@@ -256,26 +256,50 @@ class ReportPdfGeneratorService {
       if (pageModel.pageType == 'cover') {
         final ministryLine1 = report.languageCode == 'en'
             ? 'Kurdistan Regional Government - Iraq'
-            : (report.languageCode == 'ar' ? 'حكومة إقليم كوردستان - العراق' : 'حکومەتی هەرێمی کوردستان - عێراق');
+            : (report.languageCode == 'ar'
+                ? 'حكومة إقليم كوردستان - العراق'
+                : (report.languageCode == 'badini'
+                    ? 'حکومەتا هەرێما کوردستانێ - عیراق'
+                    : 'حکومەتی هەرێمی کوردستان - عێراق'));
         final ministryLine2 = report.languageCode == 'en'
             ? 'Ministry of Higher Education & Scientific Research'
-            : (report.languageCode == 'ar' ? 'وزارة التعليم العالي والبحث العلمي' : 'وەزارەتی خوێندنی باڵا و توێژینەوەی زانستی');
+            : (report.languageCode == 'ar'
+                ? 'وزارة التعليم العالي والبحث العلمي'
+                : (report.languageCode == 'badini'
+                    ? 'وەزارەتا خوێندنا باڵا و ڤەکۆلینێن زانستی'
+                    : 'وەزارەتی خوێندنی باڵا و توێژینەوەی زانستی'));
 
         final reportAboutLabel = report.languageCode == 'en'
             ? 'ACADEMIC RESEARCH REPORT'
-            : (report.languageCode == 'ar' ? 'تقرير بحثي أكاديمي' : 'ڕاپۆرتی ئەکادیمی زانستی');
+            : (report.languageCode == 'ar'
+                ? 'تقرير بحثي أكاديمي'
+                : (report.languageCode == 'badini'
+                    ? 'ڕاپۆرتا ئەکادیمی یا زانستی'
+                    : 'ڕاپۆرتی ئەکادیمی زانستی'));
 
         final preparedLabel = report.languageCode == 'en'
             ? 'Prepared by:'
-            : (report.languageCode == 'ar' ? 'إعداد الطالب:' : 'ئامادەکردنی خوێندکار:');
+            : (report.languageCode == 'ar'
+                ? 'إعداد الطالب:'
+                : (report.languageCode == 'badini'
+                    ? 'ئامادەکرن ژ لایێ قوتابی:'
+                    : 'ئامادەکردنی خوێندکار:'));
 
         final supervisorLabel = report.languageCode == 'en'
             ? 'Supervised by:'
-            : (report.languageCode == 'ar' ? 'بإشراف الأستاذ:' : 'بەسەرپەرشتیی مامۆستا:');
+            : (report.languageCode == 'ar'
+                ? 'بإشراف الأستاذ:'
+                : (report.languageCode == 'badini'
+                    ? 'ب سەرپەرشتیا مامۆستای:'
+                    : 'بەسەرپەرشتیی مامۆستا:'));
 
         final stageLabel = report.languageCode == 'en'
             ? 'Academic Year:'
-            : (report.languageCode == 'ar' ? 'العام الدراسي:' : 'ساڵی خوێندنی ئەکادیمی:');
+            : (report.languageCode == 'ar'
+                ? 'العام الدراسي:'
+                : (report.languageCode == 'badini'
+                    ? 'ساڵا خوێندنا ئەکادیمی:'
+                    : 'ساڵی خوێندنی ئەکادیمی:'));
 
         // ── 1. Elegant Academic Outer Frame (چوارچێوەی فەرمی ئەکادیمی) ──
         final double framePadding = 6;

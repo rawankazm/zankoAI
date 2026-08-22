@@ -12,10 +12,14 @@ import '../../services/report_pdf_generator_service.dart';
 import '../../theme.dart';
 import '../payment/vip_upgrade_sheet.dart';
 
-enum _AssistantTab { topicGenerator, pptOutline, academicReport, references }
+enum AssistantMode {
+  seminar, // سیمینار (PowerPoint / Canva 8 Slides)
+  report,  // ڕاپۆرت (Academic Report 10 Sections / Word & PDF)
+}
 
 enum SeminarLanguage {
-  kurdish('کوردی (سۆرانی)', 'ku', '☀️'),
+  kurdishSorani('کوردی (سۆرانی)', 'ku', '☀️'),
+  kurdishBadini('کوردی (بادینی)', 'badini', '🏔️'),
   english('English', 'en', '🇬🇧'),
   arabic('العربية', 'ar', '🇸🇦');
 
@@ -48,8 +52,8 @@ enum ReportWritingStyle {
 }
 
 enum ReportLengthLevel {
-  words4000, // ئێجگار درێژ و زۆرترین وردەکاری (٤٠٠٠+ وشە - زۆرترین لاپەڕە)
-  words3000, // زۆر درێژ و تێروتەسەل (٣٠٠٠+ وشە - زانکۆیی باڵا)
+  words4000, // ئێجگار درێژ و زۆرترین وردەکاری (٤٠٠٠+ وشە)
+  words3000, // زۆر درێژ و تێروتەسەل (٣٠٠٠+ وشە)
   words2000, // فراوان و دەوڵەمەند (٢٠٠٠+ وشە)
   standard,  // مامناوەند و پوخت (١٠٠٠+ وشە)
 }
@@ -64,19 +68,16 @@ class SeminarThesisAssistantScreen extends StatefulWidget {
 
 class _SeminarThesisAssistantScreenState
     extends State<SeminarThesisAssistantScreen> {
-  _AssistantTab _currentTab = _AssistantTab.topicGenerator;
-  SeminarLanguage _selectedLanguage = SeminarLanguage.kurdish;
+  AssistantMode _selectedMode = AssistantMode.seminar;
+  SeminarLanguage _selectedLanguage = SeminarLanguage.kurdishSorani;
   ReportWritingStyle _selectedReportStyle = ReportWritingStyle.academicComprehensive;
   ReportLengthLevel _selectedReportLength = ReportLengthLevel.words4000;
 
   // Controllers
-  final TextEditingController _departmentController = TextEditingController();
-  final TextEditingController _topicController = TextEditingController();
+  final TextEditingController _topicSearchController = TextEditingController();
   final TextEditingController _seminarNotesController = TextEditingController();
-  final TextEditingController _refController = TextEditingController();
 
-  // Report Controllers
-  final TextEditingController _reportTitleController = TextEditingController();
+  // Report Specific Controllers
   final TextEditingController _studentNameController = TextEditingController();
   final TextEditingController _supervisorNameController = TextEditingController();
   final TextEditingController _universityController = TextEditingController(text: 'زانکۆی سەڵاحەدین - هەولێر');
@@ -92,23 +93,24 @@ class _SeminarThesisAssistantScreenState
   bool _isExportingPptx = false;
   bool _isExportingDocx = false;
   bool _isExportingPdf = false;
+  bool _showReportAdvancedOptions = false;
 
   String? _generatedResult;
+  String? _activeGeneratedTitle;
   List<SeminarTopicProposal> _suggestedTopics = [];
+
+  // Slides State
   List<SlideModel> _parsedSlides = [];
   int _selectedSlideIndex = 0;
 
-  // 12-Page Report State
+  // Report State
   AcademicReportModel? _parsedReport;
   int _selectedReportPageIndex = 0;
 
   @override
   void dispose() {
-    _departmentController.dispose();
-    _topicController.dispose();
+    _topicSearchController.dispose();
     _seminarNotesController.dispose();
-    _refController.dispose();
-    _reportTitleController.dispose();
     _studentNameController.dispose();
     _supervisorNameController.dispose();
     _universityController.dispose();
@@ -122,6 +124,10 @@ class _SeminarThesisAssistantScreenState
   String? get _currentFontFamily =>
       _selectedLanguage == SeminarLanguage.english ? 'Times New Roman' : 'Calibri';
 
+  bool get _isEnglish => _selectedLanguage == SeminarLanguage.english;
+  bool get _isArabic => _selectedLanguage == SeminarLanguage.arabic;
+  bool get _isBadini => _selectedLanguage == SeminarLanguage.kurdishBadini;
+
   // ─── University Logo Picker ────────────────────────────────────────────────
   Future<void> _pickUniversityLogo() async {
     try {
@@ -133,9 +139,9 @@ class _SeminarThesisAssistantScreenState
           _universityLogoBytes = bytes;
           _universityLogoName = picked.name;
         });
-        _showSnackBar(_selectedLanguage == SeminarLanguage.english
+        _showSnackBar(_isEnglish
             ? '✅ University logo loaded successfully'
-            : '✅ لۆگۆی زانکۆ بە سەرکەوتوویی دیاریکرا');
+            : (_isBadini ? '✅ لۆگۆیێ زانکۆیێ ب سەرکەفتیانە هاتە دیاریکرن' : '✅ لۆگۆی زانکۆ بە سەرکەوتوویی دیاریکرا'));
       }
     } catch (e) {
       _showSnackBar('⚠️ Error picking logo: $e');
@@ -149,15 +155,17 @@ class _SeminarThesisAssistantScreenState
     });
   }
 
-  // ─── Step 1: Suggest Topics ────────────────────────────────────────────────
-  Future<void> _generateTopics() async {
-    final dept = _departmentController.text.trim();
-    if (dept.isEmpty) {
-      _showSnackBar(_selectedLanguage == SeminarLanguage.english
-          ? 'Please enter your field or department'
-          : (_selectedLanguage == SeminarLanguage.arabic
-              ? 'يرجى إدخال التخصص أو المجال العلمي'
-              : 'تکایە بەش یان بواری زانستی یان بیرۆکەکەت بنووسە'));
+  // ─── Step 1: Suggest Related Topics ────────────────────────────────────────
+  Future<void> _suggestRelatedTopics() async {
+    final query = _topicSearchController.text.trim();
+    if (query.isEmpty) {
+      _showSnackBar(_isEnglish
+          ? 'Please enter your topic or academic field'
+          : (_isArabic
+              ? 'يرجى كتابة الموضوع أو التخصص العلمي'
+              : (_isBadini
+                  ? 'تکایە ناڤێ بابەتی یان پشکا زانستی بنڤێسە'
+                  : 'تکایە ناوی بابەت یان بەشی زانستی بنووسە')));
       return;
     }
 
@@ -172,21 +180,28 @@ class _SeminarThesisAssistantScreenState
       _parsedReport = null;
     });
 
-    final langInstruction = _selectedLanguage == SeminarLanguage.english
-        ? 'CRITICAL: Write all topic titles, summaries, and research questions 100% strictly in English.'
-        : (_selectedLanguage == SeminarLanguage.arabic
-            ? 'مهم جداً: اكتب جميع العناوين والمحاور والملخصات والأسئلة البحثية بنسبة ١٠٠٪ باللغة العربية الفصحى الأكاديمية الرصينة.'
-            : 'زۆر گرنگە: هەموو ناونیشان، کورتە، و پرسیارە زانستییەکان ١٠٠٪ بە زمانی کوردی سۆرانی پاراو و ئەکادیمی بنووسە.');
+    final String langInstruction;
+    if (_isEnglish) {
+      langInstruction = 'CRITICAL: Write all topic titles, summaries, and research questions 100% strictly in formal English.';
+    } else if (_isArabic) {
+      langInstruction = 'مهم جداً: اكتب جميع العناوين والمحاور والملخصات والأسئلة البحثية بنسبة ١٠٠٪ باللغة العربية الفصحى الأكاديمية الرصينة.';
+    } else if (_isBadini) {
+      langInstruction = 'زۆر گرنگە: هەموو ناونیشان، کورتەیا بیرۆکەیێ و پرسیارێن زانستی ١٠٠٪ ب زمانی کوردی بادینی (شێوەزارێ بەهدینی/بادینی یێ پاراو و ئەکادیمی وەک: ئەڤە، دێ، شێن، دڤێت، چێکرن، زانستی، و پەیڤێن بادینی) بنڤێسە.';
+    } else {
+      langInstruction = 'زۆر گرنگە: هەموو ناونیشان، کورتە، و پرسیارە زانستییەکان ١٠٠٪ بە زمانی کوردی سۆرانی پاراو و ئەکادیمی بنووسە.';
+    }
 
     final randomSeed = DateTime.now().millisecondsSinceEpoch % 10000;
+    final modeLabel = _selectedMode == AssistantMode.seminar ? 'presentation seminar' : 'academic research report';
+
     final prompt = '''
 You are a senior university professor, academic research director, and thesis committee chair.
-Suggest 6 to 8 highly creative, diverse, innovative, and attractive research report / seminar topic proposals strictly within the academic field/department: "$dept".
+Suggest 6 to 8 highly creative, diverse, innovative, and attractive $modeLabel topic proposals strictly related to: "$query".
 $langInstruction
 
 CRITICAL MANDATE FOR VARIETY & FRESHNESS (Seed: $randomSeed):
-- Provide diverse, distinct angles (e.g. Theoretical Foundations, Cutting-edge Applied Innovations, Emerging 2025/2026 Breakthroughs, Practical Case Studies, Policy & Ethical Dimensions, and System Optimization).
-- DO NOT provide generic, repetitive, or cliché topics. Make every single topic compelling, academic, and specific to "$dept".
+- Provide diverse, distinct angles (e.g. Theoretical Foundations, Cutting-edge Applied Innovations, Emerging Breakthroughs, Practical Case Studies, Policy & Ethical Dimensions, and System Optimization).
+- DO NOT provide generic, repetitive, or cliché topics. Make every single topic compelling, academic, and specific to "$query".
 
 Format each topic strictly as:
 ### 📌 Topic [Number]: [Specific Professional Topic Title]
@@ -206,10 +221,10 @@ Format each topic strictly as:
           response.contains('Error') ||
           response.contains('blocked');
 
-      final content = !isInvalid ? response : _generateFallbackTopicsText(dept);
+      final content = !isInvalid ? response : _generateFallbackTopicsText(query);
       _processTopicResponse(content);
     } catch (e) {
-      final fallback = _generateFallbackTopicsText(dept);
+      final fallback = _generateFallbackTopicsText(query);
       _processTopicResponse(fallback);
     }
   }
@@ -225,7 +240,7 @@ Format each topic strictly as:
 
   List<SeminarTopicProposal> _parseTopicProposals(String rawText) {
     final List<SeminarTopicProposal> list = [];
-    final blocks = rawText.split(RegExp(r'###\s+.*(Topic|بابەت|بابەتی|الموضوع)\s*'));
+    final blocks = rawText.split(RegExp(r'###\s+.*(Topic|بابەت|بابەتی|بابەتێ|الموضوع)\s*'));
 
     int count = 1;
     for (var b in blocks) {
@@ -242,7 +257,7 @@ Format each topic strictly as:
         final line = l.trim();
         if (line.contains('ئینگلیزی') || line.toLowerCase().contains('english') || line.contains('Secondary') || line.contains('العنوان الإنجليزي')) {
           titleSecondary = line.split(':').sublist(1).join(':').replaceAll('*', '').trim();
-        } else if (line.contains('کورتە') || line.contains('بیرۆکە') || line.contains('گرنگی') || line.contains('Summary') || line.contains('الملخص') || line.contains('الأهمية')) {
+        } else if (line.contains('کورتە') || line.contains('پوختە') || line.contains('بیرۆکە') || line.contains('گرنگی') || line.contains('Summary') || line.contains('الملخص') || line.contains('الأهمية')) {
           summary = line.split(':').sublist(1).join(':').replaceAll('*', '').trim();
         } else if (line.contains('پرسیار') || line.contains('Research Question') || line.contains('السؤال')) {
           researchQ = line.split(':').sublist(1).join(':').replaceAll('*', '').trim();
@@ -254,27 +269,26 @@ Format each topic strictly as:
           index: count++,
           titleKurdish: titleMain,
           titleEnglish: titleSecondary.isNotEmpty ? titleSecondary : 'Academic Presentation & Report',
-          summary: summary.isNotEmpty ? summary : (_selectedLanguage == SeminarLanguage.english ? 'Comprehensive academic investigation.' : 'توێژینەوە و لێکۆڵینەوەیەکی زانستیی سەردەمیانە.'),
-          researchQuestion: researchQ.isNotEmpty ? researchQ : (_selectedLanguage == SeminarLanguage.english ? 'How does this solve core research challenges?' : 'چۆن ئەم بابەتە دەتوانێت کێشە زانستییەکان چارەسەر بکات؟'),
+          summary: summary.isNotEmpty ? summary : (_isEnglish ? 'Comprehensive academic investigation.' : (_isBadini ? 'ڤەکۆلین و دووڤچوونەکا زانستی یا سەردەم.' : 'توێژینەوە و لێکۆڵینەوەیەکی زانستیی سەردەمیانە.')),
+          researchQuestion: researchQ.isNotEmpty ? researchQ : (_isEnglish ? 'How does this solve core research challenges?' : (_isBadini ? 'چەوا ئەڤ بابەتە دکاریت ئاریشەیێن زانستی چارەسەر بکەت؟' : 'چۆن ئەم بابەتە دەتوانێت کێشە زانستییەکان چارەسەر بکات؟')),
         ));
       }
     }
 
     if (list.isEmpty) {
-      list.addAll(_getFallbackTopicProposals(_departmentController.text.trim()));
+      list.addAll(_getFallbackTopicProposals(_topicSearchController.text.trim()));
     }
 
     return list;
   }
 
-  // ─── Step 2: Generate 8 Slides Presentation ────────────────────────────────
+  // ─── Step 2: Generate Full Seminar Presentation (8 Slides) ────────────────
   Future<void> _generateFullSeminar(String topicTitle) async {
     final canProceed = await _checkVipLimit();
     if (!canProceed || !mounted) return;
 
     setState(() {
-      _currentTab = _AssistantTab.pptOutline;
-      _topicController.text = topicTitle;
+      _activeGeneratedTitle = topicTitle;
       _isLoading = true;
       _generatedResult = null;
       _parsedSlides = [];
@@ -282,11 +296,16 @@ Format each topic strictly as:
       _selectedSlideIndex = 0;
     });
 
-    final langPrompt = _selectedLanguage == SeminarLanguage.english
-        ? 'CRITICAL MANDATE: Write all 8 slides, slide titles, paragraphs, metrics, and speaker notes 100% strictly in English.'
-        : (_selectedLanguage == SeminarLanguage.arabic
-            ? 'مهم جداً: اكتب الشرائح الـ 8 والعناوين والشروحات والأرقام وملاحظات المتحدث بنسبة ١٠٠٪ باللغة العربية الفصحى الأكاديمية فقط.'
-            : 'زۆر گرنگە: هەموو ٨ سلایدەکە، ناونیشانەکان، پاراگرافەکان، ئامار و وتاری پێشکەشکار ١٠٠٪ بە زمانی کوردی سۆرانی پاراو بنووسە.');
+    final String langPrompt;
+    if (_isEnglish) {
+      langPrompt = 'CRITICAL MANDATE: Write all 8 slides, slide titles, paragraphs, metrics, and speaker notes 100% strictly in English.';
+    } else if (_isArabic) {
+      langPrompt = 'مهم جداً: اكتب الشرائح الـ 8 والعناوين والشروحات والأرقام وملاحظات المتحدث بنسبة ١٠٠٪ باللغة العربية الفصحى الأكاديمية فقط.';
+    } else if (_isBadini) {
+      langPrompt = 'زۆر گرنگە: هەموو ٨ سلایدان، ناڤ و ناونیشان، پاراگراف، ئامار و پەیڤێن پێشکێشکەری ١٠٠٪ ب زمانی کوردی بادینی (بەهدینی پاراو) بنڤێسە.';
+    } else {
+      langPrompt = 'زۆر گرنگە: هەموو ٨ سلایدەکە، ناونیشانەکان، پاراگرافەکان، ئامار و وتاری پێشکەشکار ١٠٠٪ بە زمانی کوردی سۆرانی پاراو بنووسە.';
+    }
 
     final customNotes = _seminarNotesController.text.trim();
     final customRequirements = customNotes.isNotEmpty
@@ -352,21 +371,22 @@ SLIDE STRUCTURE:
     });
   }
 
-  // ─── Step 3: Generate 12-Page Academic Report ──────────────────────────────
-  Future<void> _generate12PageReport(String reportTitle) async {
+  // ─── Step 3: Generate Academic Report ──────────────────────────────────────
+  Future<void> _generateAcademicReport(String reportTitle) async {
     final canProceed = await _checkVipLimit();
     if (!canProceed || !mounted) return;
 
     if (reportTitle.isEmpty) {
-      _showSnackBar(_selectedLanguage == SeminarLanguage.english
+      _showSnackBar(_isEnglish
           ? 'Please enter the report title'
-          : 'تکایە ناونیشانی سەرەکی ڕاپۆرت بنووسە');
+          : (_isArabic
+              ? 'يرجى إدخال عنوان التقرير الأكاديمي'
+              : (_isBadini ? 'تکایە ناڤێ ڕاپۆرتێ بنڤێسە' : 'تکایە ناونیشانی سەرەکی ڕاپۆرت بنووسە')));
       return;
     }
 
     setState(() {
-      _currentTab = _AssistantTab.academicReport;
-      _reportTitleController.text = reportTitle;
+      _activeGeneratedTitle = reportTitle;
       _isLoading = true;
       _generatedResult = null;
       _parsedReport = null;
@@ -374,11 +394,16 @@ SLIDE STRUCTURE:
       _selectedReportPageIndex = 0;
     });
 
-    final langPrompt = _selectedLanguage == SeminarLanguage.english
-        ? 'CRITICAL MANDATE: Write all 10 numbered sections, Table of Contents, and 6 references 100% strictly in English.'
-        : (_selectedLanguage == SeminarLanguage.arabic
-            ? 'مهم جداً: اكتب كامل المحاور العشرة المرقمة وفهرس المحتويات والمراجع الستة بنسبة ١٠٠٪ باللغة العربية الفصحى الأكاديمية الرصينة الخالية تماماً من الأخطاء النحوية والإملائية.'
-            : 'زۆر گرنگە: هەموو ١٠ تەوەرە سەرەکییەکان، پێڕستی ناوەڕۆک و ٦ سەرچاوە زانستییەکان بە زمانی کوردیی سۆرانیی ئەکادیمیی پاراو و بە ڕێنووسێکی یەکگرتووی بێ خەوش و بێ هەڵەی ڕێزمانی بنووسە. پیتەکانی (ڕ، ڵ، ۆ، ێ، ە) بە دروستی بنووسە و ڕستەکان بە شێوازی دەوڵەمەندی زانستی دابڕێژە.');
+    final String langPrompt;
+    if (_isEnglish) {
+      langPrompt = 'CRITICAL MANDATE: Write all 10 numbered sections, Table of Contents, and 6 references 100% strictly in English.';
+    } else if (_isArabic) {
+      langPrompt = 'مهم جداً: اكتب كامل المحاور العشرة المرقمة وفهرس المحتويات والمراجع الستة بنسبة ١٠٠٪ باللغة العربية الفصحى الأكاديمية الرصينة الخالية تماماً من الأخطاء النحوية والإملائية.';
+    } else if (_isBadini) {
+      langPrompt = 'زۆر گرنگە: هەموو ١٠ تەوەرێن سەرەکی، پێڕستا ناڤەڕۆکێ و ٦ ژێدەرێن زانستی ب زمانی کوردیێ بادینی یێ ئەکادیمی و پاراو بنڤێسە. پیتێن (ڕ، ڵ، ۆ، ێ، ە، ڤ) ب دروستی بنڤێسە و ڕستەیان ب شێوازەکێ دەولەمەندێ زانستی دابڕێژە.';
+    } else {
+      langPrompt = 'زۆر گرنگە: هەموو ١٠ تەوەرە سەرەکییەکان، پێڕستی ناوەڕۆک و ٦ سەرچاوە زانستییەکان بە زمانی کوردیی سۆرانیی ئەکادیمیی پاراو و بە ڕێنووسێکی یەکگرتووی بێ خەوش و بێ هەڵەی ڕێزمانی بنووسە. پیتەکانی (ڕ، ڵ، ۆ، ێ، ە) بە دروستی بنووسە و ڕستەکان بە شێوازی دەوڵەمەندی زانستی دابڕێژە.';
+    }
 
     String stylePrompt = '';
     switch (_selectedReportStyle) {
@@ -436,11 +461,6 @@ CRITICAL LENGTH MANDATE: EXPAND ALL 10 SECTIONS TO COMPREHENSIVE ACADEMIC DEPTH 
 STRICT ACADEMIC REGISTER & UNIVERSITY-GRADE FORMALITY MANDATE (100% STRICTLY ENFORCED):
 - Write at the highest level of scholarly academic rigor, equivalent to an article published in a world-class academic journal (e.g. Nature, Lancet, IEEE Transactions, Oxford Academic Press) or a prestigious university textbook.
 - Tone: Formal, authoritative, objective, precise, scholarly, and analytically exhaustive.
-- Strictly forbidden: Colloquialisms, casual remarks, simplified informal speech, slang, conversational greetings, placeholders, or superficial summaries.
-- Vocabulary & Phrasing:
-  * For Kurdish (سۆرانی): Use high-level academic and scholarly terminology. Employ formal scholarly syntactic connectors such as «لە ڕوانگەی لێکۆڵینەوە و توێژینەوە زانستییە هاوچەرخەکاندا...»، «شیکارییە ئەزموونی و تیۆرییەکان ئەوە دووپات دەکەنەوە کە...»، «بەپێی بنەما سەرەکی و چەسپاوەکانی...»، «ئەم پرۆسەیە لە ڕێگەی هاوسەنگییەکی دەقیقی زانستی و فیزیۆلۆجییەوە بەڕێوە دەچێت...»، «لە ڕەهەندە پراکتیکی و تیۆرییەکاندا بایەخێکی یەکلاکەرەوە دەدرێت بە...». Ensure perfect grammatical structure and unified Kurdish typography (ڕ, ڵ, ۆ, ێ, ە).
-  * For Arabic: Use formal academic Arabic (الفصحى الأكاديمية الرصينة), incorporating advanced terminology, rigorous analytical phraseology («استناداً إلى الأبحاث والدراسات المرجعية المعاصرة»، «تُظهر التحليلات الفسيولوجية والتجريبية الدقيقة أن»، «في ضوء النماذج الهيكلية والقوانين العلمية الحاكمة»).
-  * For English: Use peer-reviewed academic prose («Empirical evidence and systematic academic inquiries substantiate that...», «From an epistemological and mechanistic perspective...», «The underlying architectural framework operates under stringent homeostatic parameters...»).
 - References: Must be formatted in standard APA 7th Edition or IEEE format including credible authors/institutions, publication year, comprehensive publication title, journal/publisher, and DOI/URL.
 ''';
 
@@ -467,20 +487,20 @@ $stylePrompt
 
 $depthPrompt
 
-CRITICAL REPORT STRUCTURE & DOMAIN-SPECIFIC SPECIFICATION:
+CRITICAL REPORT STRUCTURE:
 You MUST structure the report into exactly 10 comprehensive, logically progressive academic sections strictly customized to "$reportTitle":
 
 ### Table of Contents
-1. [Section 1 Title - Introduction & Scientific Scope of $reportTitle / پێشەکی و چوارچێوەی زانستی]
-2. [Section 2 Title - Foundational Theories, Concepts & Background of $reportTitle / بنەما تیۆرییەکان و مێژووی پەرەسەندن]
-3. [Section 3 Title - Core Architecture, Key Components & Structures of $reportTitle / پێکهاتە بنەڕەتییەکان و تەلارسازی]
-4. [Section 4 Title - Operational Mechanisms, Methodologies & Workflows of $reportTitle / میکانیزمی کارکردن و میتۆدۆلۆجیا]
-5. [Section 5 Title - In-Depth Scientific Analysis & Functional Dynamics of $reportTitle / شیکاریی زانستیی قووڵ و فەرمانە سەرەکییەکان]
-6. [Section 6 Title - Practical Implementations, Contemporary Innovations & Case Studies / جێبەجێکردنی پراکتیکی و بەکارهێنانە هاوچەرخەکان]
-7. [Section 7 Title - Comparative Matrix, Performance Metrics & System Integration / بەراوردکاری و پێوەرەکانی کارایی]
-8. [Section 8 Title - Challenges, Technical/Ethical Limitations & Risk Management / ئاستەنگە سەرەکییەکان و ڕەهەندە ئەخلاقییەکان]
-9. [Section 9 Title - Future Horizons, Emerging Trends & Next-Generation Paradigms / ئاسۆی داهاتوو و گۆڕانکارییە پێشکەوتووەکان]
-10. [Section 10 Title - Academic Findings, Strategic Recommendations & Comprehensive Conclusion / دەرئەنجامە زانستییەکان و پێشنیارەکان]
+1. [Section 1 Title - Introduction & Scientific Scope]
+2. [Section 2 Title - Foundational Theories, Concepts & Background]
+3. [Section 3 Title - Core Architecture, Key Components & Structures]
+4. [Section 4 Title - Operational Mechanisms, Methodologies & Workflows]
+5. [Section 5 Title - In-Depth Scientific Analysis & Functional Dynamics]
+6. [Section 6 Title - Practical Implementations, Contemporary Innovations & Case Studies]
+7. [Section 7 Title - Comparative Matrix, Performance Metrics & System Integration]
+8. [Section 8 Title - Challenges, Technical/Ethical Limitations & Risk Management]
+9. [Section 9 Title - Future Horizons, Emerging Trends & Next-Generation Paradigms]
+10. [Section 10 Title - Academic Findings, Strategic Recommendations & Comprehensive Conclusion]
 
 ### 1. [Section 1 Title]
 [Write extensive academic text introducing $reportTitle, defining core terminologies, historical background, and fundamental academic and industrial relevance across multiple rich paragraphs...]
@@ -662,9 +682,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
   // ─── Export Word (.docx) ───────────────────────────────────────────────────
   Future<void> _exportDocx() async {
     if (_parsedReport == null) {
-      _showSnackBar(_selectedLanguage == SeminarLanguage.english
-          ? 'Please generate the report first'
-          : 'تکایە سەرەتا ڕاپۆرتەکە دروست بکە');
+      _showSnackBar(_isEnglish ? 'Please generate the report first' : 'تکایە سەرەتا ڕاپۆرتەکە دروست بکە');
       return;
     }
 
@@ -674,7 +692,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
     setState(() => _isExportingDocx = true);
     try {
       await DocxGeneratorService.exportAndShareDocx(_parsedReport!);
-      _showSnackBar(_selectedLanguage == SeminarLanguage.english
+      _showSnackBar(_isEnglish
           ? '✅ Word (.docx) document created successfully'
           : '✅ فایلی وۆرد (.docx) بە سەرکەوتوویی دروستکرا');
     } catch (e) {
@@ -687,16 +705,14 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
   // ─── Export PDF (.pdf) ─────────────────────────────────────────────────────
   Future<void> _exportPdf() async {
     if (_parsedReport == null) {
-      _showSnackBar(_selectedLanguage == SeminarLanguage.english
-          ? 'Please generate the report first'
-          : 'تکایە سەرەتا ڕاپۆرتەکە دروست بکە');
+      _showSnackBar(_isEnglish ? 'Please generate the report first' : 'تکایە سەرەتا ڕاپۆرتەکە دروست بکە');
       return;
     }
 
     setState(() => _isExportingPdf = true);
     try {
       await ReportPdfGeneratorService.exportAndSharePdf(_parsedReport!);
-      _showSnackBar(_selectedLanguage == SeminarLanguage.english
+      _showSnackBar(_isEnglish
           ? '✅ PDF (.pdf) document created successfully'
           : '✅ فایلی PDF (.pdf) بە سەرکەوتوویی دروستکرا');
     } catch (e) {
@@ -709,9 +725,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
   // ─── Export PPTX (.pptx) ───────────────────────────────────────────────────
   Future<void> _exportPptx() async {
     if (_generatedResult == null || _generatedResult!.isEmpty) {
-      _showSnackBar(_selectedLanguage == SeminarLanguage.english
-          ? 'Please generate the seminar with AI first'
-          : 'تکایە سەرەتا سیمینارەکە بە AI دروست بکە');
+      _showSnackBar(_isEnglish ? 'Please generate the seminar with AI first' : 'تکایە سەرەتا سیمینارەکە بە AI دروست بکە');
       return;
     }
 
@@ -721,11 +735,9 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
     setState(() => _isExportingPptx = true);
 
     try {
-      String title = _topicController.text.trim().isNotEmpty
-          ? _topicController.text.trim()
-          : (_departmentController.text.trim().isNotEmpty
-              ? '${_departmentController.text.trim()} Presentation'
-              : 'Seminar Presentation');
+      String title = _activeGeneratedTitle ?? (_topicSearchController.text.trim().isNotEmpty
+          ? _topicSearchController.text.trim()
+          : 'Seminar Presentation');
 
       await PptxGeneratorService.exportAndSharePptx(
         rawContent: _generatedResult!,
@@ -733,55 +745,13 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
         languageCode: _selectedLanguage.code,
       );
 
-      _showSnackBar(_selectedLanguage == SeminarLanguage.english
+      _showSnackBar(_isEnglish
           ? '✅ PowerPoint (.pptx) file created successfully'
           : '✅ فایلی PowerPoint (.pptx) بە سەرکەوتوویی دروستکرا');
     } catch (e) {
       _showSnackBar('⚠️ Error creating PPT file: $e');
     } finally {
       if (mounted) setState(() => _isExportingPptx = false);
-    }
-  }
-
-  // ─── Step 4: Citations Formatter ───────────────────────────────────────────
-  Future<void> _formatReferences() async {
-    final refText = _refController.text.trim();
-    if (refText.isEmpty) {
-      _showSnackBar(_selectedLanguage == SeminarLanguage.english
-          ? 'Please enter the reference text or URL'
-          : 'تکایە سەرچاوە زانستییەکان بنووسە');
-      return;
-    }
-
-    final canProceed = await _checkVipLimit();
-    if (!canProceed || !mounted) return;
-
-    setState(() {
-      _isLoading = true;
-      _generatedResult = null;
-      _parsedSlides = [];
-      _parsedReport = null;
-    });
-
-    final prompt = '''
-You are an expert in academic references & citations.
-Please format and classify the following academic reference in standard APA 7th Edition and IEEE styles:
-"$refText"
-''';
-
-    try {
-      final aiService = Provider.of<AiService>(context, listen: false);
-      final response = await aiService.askTeacher(prompt, [], isVip: true);
-      await _incrementUsage();
-      setState(() {
-        _generatedResult = response;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _generatedResult = _generateFallbackReferences(refText);
-        _isLoading = false;
-      });
     }
   }
 
@@ -818,7 +788,7 @@ Please format and classify the following academic reference in standard APA 7th 
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _selectedLanguage == SeminarLanguage.english ? 'Import to Canva 🎨' : 'هاوردەکردن بۆ Canva 🎨',
+                          _isEnglish ? 'Import to Canva 🎨' : 'هاوردەکردن بۆ Canva 🎨',
                           style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 17),
                         ),
                         const Text('Canva Presentation Integration', style: TextStyle(fontSize: 12, color: Colors.grey)),
@@ -829,16 +799,16 @@ Please format and classify the following academic reference in standard APA 7th 
                 ],
               ),
               const Divider(height: 24),
-              _buildCanvaStep(_selectedLanguage == SeminarLanguage.english
+              _buildCanvaStep(_isEnglish
                   ? '1. Download the PowerPoint (.pptx) file with the button below.'
                   : '١. فایلی PowerPoint (.pptx) دابگرە بە دوگمەی خوارەوە.'),
-              _buildCanvaStep(_selectedLanguage == SeminarLanguage.english
+              _buildCanvaStep(_isEnglish
                   ? '2. Open Canva App or go to canva.com.'
                   : '٢. ئەپی Canva یان ماڵپەڕی canva.com بکەرەوە.'),
-              _buildCanvaStep(_selectedLanguage == SeminarLanguage.english
+              _buildCanvaStep(_isEnglish
                   ? '3. Click on "Upload / Drag & Drop" at the top.'
                   : '٣. لە بەشی سەرەوە کلیک لەسەر «Upload / Drag and Drop» بکە.'),
-              _buildCanvaStep(_selectedLanguage == SeminarLanguage.english
+              _buildCanvaStep(_isEnglish
                   ? '4. Select the .pptx file, and all 8 slides will instantly open with Canva animations and templates! ✨'
                   : '٤. فایلی .pptx هەڵبژێرە، دەستبەجێ هەموو ٨ سلایدەکە بە ئەنیمەیشن و دیزاینی Canva دەکرێنەوە! ✨'),
               const SizedBox(height: 20),
@@ -852,7 +822,7 @@ Please format and classify the following academic reference in standard APA 7th 
                   },
                   icon: const Icon(CupertinoIcons.arrow_down_doc_fill, color: Colors.white, size: 18),
                   label: Text(
-                    _selectedLanguage == SeminarLanguage.english ? 'Download PPTX for Canva 🚀' : 'داگرتنی فایلی PPTX بۆ Canva 🚀',
+                    _isEnglish ? 'Download PPTX for Canva 🚀' : 'داگرتنی فایلی PPTX بۆ Canva 🚀',
                     style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
@@ -886,9 +856,7 @@ Please format and classify the following academic reference in standard APA 7th 
   void _copyToClipboard() {
     if (_generatedResult != null) {
       Clipboard.setData(ClipboardData(text: _generatedResult!));
-      _showSnackBar(_selectedLanguage == SeminarLanguage.english
-          ? '✅ Text copied to clipboard'
-          : '✅ دەقەکە کۆپی کرا');
+      _showSnackBar(_isEnglish ? '✅ Text copied to clipboard' : '✅ دەقەکە کۆپی کرا');
     }
   }
 
@@ -964,11 +932,20 @@ Please format and classify the following academic reference in standard APA 7th 
     }
   }
 
+  // ─── Trigger generation directly from topic proposal or input ─────────────
+  void _handleTopicSelection(String topicTitle) {
+    if (_selectedMode == AssistantMode.seminar) {
+      _generateFullSeminar(topicTitle);
+    } else {
+      _generateAcademicReport(topicTitle);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final isLtr = _selectedLanguage == SeminarLanguage.english;
+    final isLtr = _isEnglish;
 
     return Directionality(
       textDirection: isLtr ? TextDirection.ltr : TextDirection.rtl,
@@ -984,14 +961,16 @@ Please format and classify the following academic reference in standard APA 7th 
           title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(CupertinoIcons.sparkles, color: ZankoColors.accent, size: 22),
+              Icon(
+                _selectedMode == AssistantMode.seminar ? CupertinoIcons.paintbrush_fill : CupertinoIcons.doc_text_fill,
+                color: _selectedMode == AssistantMode.seminar ? const Color(0xFF7D2AE8) : const Color(0xFFF97316),
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Text(
-                _selectedLanguage == SeminarLanguage.english
-                    ? 'Academic Seminar & 12-Page Report'
-                    : (_selectedLanguage == SeminarLanguage.arabic
-                        ? 'السيمينار والتقرير الأكاديمي (١٢ صفحة)'
-                        : 'سیمینار و ڕاپۆرتی ئەکادیمی (١٢ پەڕە)'),
+                _selectedMode == AssistantMode.seminar
+                    ? (_isEnglish ? 'Academic Seminar (8 Slides)' : (_isBadini ? 'سیمینارا ئەکادیمی (٨ سلاید)' : (_isArabic ? 'السيمينار الأكاديمي (٨ شرائح)' : 'سیمیناری ئەکادیمی (٨ سلاید)')))
+                    : (_isEnglish ? 'Academic Report (Word & PDF)' : (_isBadini ? 'ڕاپۆرتا ئەکادیمی (Word و PDF)' : (_isArabic ? 'التقرير الأكاديمي (Word و PDF)' : 'ڕاپۆرتی ئەکادیمی (Word و PDF)'))),
                 style: TextStyle(fontFamily: _currentFontFamily, fontSize: 15, fontWeight: FontWeight.bold),
               ),
             ],
@@ -1004,165 +983,45 @@ Please format and classify the following academic reference in standard APA 7th 
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Header 4 Tabs ───────────────────────────────────────────
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: isDark ? ZankoColors.darkCard : Colors.grey[200],
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  children: [
-                    _buildTabBtn(
-                      _AssistantTab.topicGenerator,
-                      _selectedLanguage == SeminarLanguage.english ? '💡 1. Topics' : '💡 ١. بابەت',
-                      isDark,
-                    ),
-                    _buildTabBtn(
-                      _AssistantTab.pptOutline,
-                      _selectedLanguage == SeminarLanguage.english ? '📊 2. PPTX' : '📊 ٢. سیمینار',
-                      isDark,
-                    ),
-                    _buildTabBtn(
-                      _AssistantTab.academicReport,
-                      _selectedLanguage == SeminarLanguage.english ? '📑 3. Report' : '📑 ٣. ڕاپۆرت',
-                      isDark,
-                    ),
-                    _buildTabBtn(
-                      _AssistantTab.references,
-                      _selectedLanguage == SeminarLanguage.english ? '📚 4. Citations' : '📚 ٤. سەرچاوە',
-                      isDark,
-                    ),
-                  ],
-                ),
-              ),
+              // ── 1. Top Two-Mode Switch (سیمینار ، ڕاپۆرت) ─────────────────
+              _buildTwoModeHeader(isDark),
 
               const SizedBox(height: 16),
 
-              // ── Language Selector Bar ────────────────────────────────────
-              _buildLanguageSelector(isDark),
+              // ── 2. Language Selector List (سۆرانی، بادینی، ئینگلیزی، عەرەبی)
+              _buildLanguageListSelector(isDark),
 
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
 
-              if (!(Provider.of<AuthService>(context, listen: false).currentUser?.isVip ?? false)) ...[
-                GestureDetector(
-                  onTap: () => showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (_) => const VipUpgradeSheet(),
-                  ),
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF1E1500), Color(0xFF2C2000)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.45)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFFFD700).withValues(alpha: 0.15),
-                          blurRadius: 14,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFD700).withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Text('👑', style: TextStyle(fontSize: 20)),
-                        ),
-                        const SizedBox(width: 10),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'داگرتنی بێسنووری Word و PowerPoint (VIP)',
-                                style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold, fontSize: 13),
-                              ),
-                              SizedBox(height: 2),
-                              Text(
-                                'بە ٥,٠٠٠ د.ع هەموو سێمینار و ڕاپۆرتەکانت لەبری مەکتەبە لێرە دابگرە!',
-                                style: TextStyle(color: Colors.white70, fontSize: 10.5),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFD700),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Text(
-                            'VIP ⚡',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Color(0xFF2C2000)),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+              // ── VIP Promotion Banner (If not VIP) ────────────────────────
+              if (!(Provider.of<AuthService>(context, listen: false).currentUser?.isVip ?? false))
+                _buildVipBanner(isDark),
 
-              // ── Tab 1: Topic Generator Form ──────────────────────────────
-              if (_currentTab == _AssistantTab.topicGenerator) ...[
-                _buildTopicSearchCard(isDark),
-              ] else if (_currentTab == _AssistantTab.pptOutline) ...[
-                _buildDirectSeminarCard(isDark),
-              ] else if (_currentTab == _AssistantTab.academicReport) ...[
-                _buildAcademicReportCard(isDark),
-              ] else ...[
-                _buildReferencesCard(isDark),
-              ],
+              // ── 3. Step 1: Topic Input & Related Topics Discovery Card ───
+              _buildTopicDiscoveryCard(isDark),
 
               const SizedBox(height: 24),
 
-              // ── Output: Topic Proposals List ────────────────────────────
-              if (_currentTab == _AssistantTab.topicGenerator && _suggestedTopics.isNotEmpty) ...[
-                Row(
-                  children: [
-                    Icon(CupertinoIcons.square_grid_2x2_fill, color: ZankoColors.accent, size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      _selectedLanguage == SeminarLanguage.english
-                          ? 'Suggested Topics (Select one to create):'
-                          : 'بابەتە پێشنیارکراوەکان (یەکێکیان هەڵبژێرە):',
-                      style: TextStyle(
-                        fontFamily: _currentFontFamily,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : ZankoColors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                ..._suggestedTopics.map((topic) => _buildTopicProposalCard(topic, isDark)),
+              // ── Step 2: Suggested Related Topics (چەند بابەتێکی پەیوەندیدار) ──
+              if (_suggestedTopics.isNotEmpty && _parsedSlides.isEmpty && _parsedReport == null) ...[
+                _buildSuggestedTopicsSection(isDark),
                 const SizedBox(height: 20),
               ],
 
-              // ── Output: 12-Page Report Live Viewer & Exporter ───────────
-              if (_currentTab == _AssistantTab.academicReport && _parsedReport != null) ...[
+              // ── Step 3: Full Seminar Output (8 Slides + Canva + PPTX) ────
+              if (_selectedMode == AssistantMode.seminar && _parsedSlides.isNotEmpty) ...[
+                _buildSlidesViewerCard(isDark),
+                const SizedBox(height: 24),
+              ],
+
+              // ── Step 3: Full Report Output (12-Page Live View + DOCX + PDF)
+              if (_selectedMode == AssistantMode.report && _parsedReport != null) ...[
                 _buildReportViewerCard(isDark),
                 const SizedBox(height: 24),
               ],
 
-              // ── Output: 8 Slides Viewer & PPTX Exporter ──────────────────
-              if (_currentTab == _AssistantTab.pptOutline && _parsedSlides.isNotEmpty) ...[
-                _buildSlidesViewerCard(isDark),
-                const SizedBox(height: 24),
-              ] else if (_generatedResult != null && _suggestedTopics.isEmpty && _parsedReport == null && _parsedSlides.isEmpty) ...[
+              // Raw Fallback if text exists without parsed models
+              if (_generatedResult != null && _suggestedTopics.isEmpty && _parsedSlides.isEmpty && _parsedReport == null) ...[
                 _buildRawResultCard(isDark),
                 const SizedBox(height: 24),
               ],
@@ -1173,826 +1032,91 @@ Please format and classify the following academic reference in standard APA 7th 
     );
   }
 
-  // ── Language Selector Widget ───────────────────────────────────────────────
-  Widget _buildLanguageSelector(bool isDark) {
+  // ─── 1. Two-Mode Switcher (سیمینار ، ڕاپۆرت) ─────────────────────────────
+  Widget _buildTwoModeHeader(bool isDark) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-        color: isDark ? ZankoColors.darkCard : Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.grey[200]!),
+        color: isDark ? ZankoColors.darkCard : Colors.grey[200],
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isDark ? Colors.white10 : Colors.grey[300]!),
       ),
       child: Row(
         children: [
-          Icon(CupertinoIcons.globe, color: ZankoColors.accent, size: 18),
+          // Mode 1: Seminar
+          _buildModeButton(
+            mode: AssistantMode.seminar,
+            icon: CupertinoIcons.paintbrush_fill,
+            label: _isEnglish ? '📊 Seminar (8 Slides)' : (_isBadini ? '📊 سیمینار (٨ سلاید)' : (_isArabic ? '📊 سيمينار (٨ شرائح)' : '📊 سیمینار (٨ سلاید)')),
+            activeColor: const Color(0xFF7D2AE8), // Canva / Seminar Purple
+            isDark: isDark,
+          ),
           const SizedBox(width: 6),
-          Text(
-            _selectedLanguage == SeminarLanguage.english ? 'Language:' : 'زمانی داڕشتن:',
-            style: TextStyle(
-              fontFamily: _currentFontFamily,
-              fontSize: 12.5,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.grey[300] : ZankoColors.textPrimary,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                children: SeminarLanguage.values.map((lang) {
-                  final isSel = _selectedLanguage == lang;
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedLanguage = lang),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      margin: const EdgeInsets.only(left: 4, right: 4),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: isSel ? ZankoColors.accent : (isDark ? Colors.white10 : Colors.grey[100]),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(lang.flag, style: const TextStyle(fontSize: 11)),
-                          const SizedBox(width: 4),
-                          Text(
-                            lang.label,
-                            style: TextStyle(
-                              fontFamily: lang == SeminarLanguage.english ? null : 'DroidKufi',
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: isSel ? Colors.white : (isDark ? Colors.grey[300] : ZankoColors.textSecondary),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
+          // Mode 2: Report
+          _buildModeButton(
+            mode: AssistantMode.report,
+            icon: CupertinoIcons.doc_text_fill,
+            label: _isEnglish ? '📑 Report (Word & PDF)' : (_isBadini ? '📑 ڕاپۆرت (Word و PDF)' : (_isArabic ? '📑 تقرير (Word و PDF)' : '📑 ڕاپۆرت (Word و PDF)')),
+            activeColor: const Color(0xFFF97316), // Academic Orange / Blue
+            isDark: isDark,
           ),
         ],
       ),
     );
   }
 
-  // ── Tab 1: Topic Generator Card ────────────────────────────────────────────
-  Widget _buildTopicSearchCard(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? ZankoColors.darkCard : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.grey[200]!),
-        boxShadow: isDark ? [] : ZankoShadows.card,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: ZankoColors.accent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(CupertinoIcons.lightbulb_fill, color: ZankoColors.accent, size: 20),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                _selectedLanguage == SeminarLanguage.english
-                    ? 'Step 1: Seminar / Report Field'
-                    : 'هەنگاوی یەکەم: بەش یان بواری ئەکادیمی',
-                style: TextStyle(fontFamily: _currentFontFamily, fontSize: 15, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          TextField(
-            controller: _departmentController,
-            style: TextStyle(fontFamily: _currentFontFamily),
-            decoration: InputDecoration(
-              hintText: _selectedLanguage == SeminarLanguage.english
-                  ? 'e.g. Medicine, AI & Computer Science, Law, Finance, Civil Engineering...'
-                  : 'نموونە: پزیشکی، تەکنەلۆجیای زانیاری، یاسا، ژمێریاری، ئەندازیاری...',
-              hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 13),
-              prefixIcon: Icon(CupertinoIcons.building_2_fill, color: ZankoColors.accent),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-              filled: true,
-              fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _selectedLanguage == SeminarLanguage.english
-                ? '💡 Proposes 5 distinct topics so you can choose one to generate an 8-slide presentation or 12-page research report.'
-                : '💡 ٥ بابەتی تایبەتمەند بە بەشەکەت پێ پێشنیار دەکات تا یەکێکیان هەڵبژێریت بۆ سیمیناری ٨ سلاید یان ڕاپۆرتی ١٢ پەڕەیی.',
-            style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, height: 1.4, color: isDark ? Colors.grey[400] : ZankoColors.textSecondary),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton.icon(
-              onPressed: _isLoading ? null : _generateTopics,
-              icon: _isLoading
-                  ? const CupertinoActivityIndicator(color: Colors.white)
-                  : const Icon(CupertinoIcons.sparkles, color: Colors.white, size: 18),
-              label: Text(
-                _isLoading
-                    ? (_selectedLanguage == SeminarLanguage.english ? 'Finding best topics...' : 'دۆزینەوەی باشترین بابەتەکان...')
-                    : (_selectedLanguage == SeminarLanguage.english ? 'Suggest Academic Topics 💡' : 'پێشنیارکردنی بابەتەکان 💡'),
-                style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: ZankoColors.accent,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                elevation: 0,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Tab 2: PPTX Seminar Card ───────────────────────────────────────────────
-  Widget _buildDirectSeminarCard(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? ZankoColors.darkCard : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.grey[200]!),
-        boxShadow: isDark ? [] : ZankoShadows.card,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF7D2AE8).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(CupertinoIcons.paintbrush_fill, color: Color(0xFF7D2AE8), size: 20),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                _selectedLanguage == SeminarLanguage.english
-                    ? 'Step 2: Generate Full 8 Slides'
-                    : 'هەنگاوی دووەم: دروستکردنی تەواوی ٨ سلاید',
-                style: TextStyle(fontFamily: _currentFontFamily, fontSize: 15, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          TextField(
-            controller: _topicController,
-            style: TextStyle(fontFamily: _currentFontFamily),
-            decoration: InputDecoration(
-              hintText: _selectedLanguage == SeminarLanguage.english
-                  ? 'Enter your exact seminar topic title...'
-                  : 'ناونیشانی سیمینارەکەت بنووسە...',
-              hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 13),
-              prefixIcon: const Icon(CupertinoIcons.doc_text_fill, color: Color(0xFF7D2AE8)),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-              filled: true,
-              fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
-            ),
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: _seminarNotesController,
-            minLines: 1,
-            maxLines: 3,
-            style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13),
-            decoration: InputDecoration(
-              hintText: _selectedLanguage == SeminarLanguage.english
-                  ? 'Specific student focus / teacher requirements (optional)...'
-                  : (_selectedLanguage == SeminarLanguage.arabic
-                      ? 'ملاحظات أو متطلبات خاصة بالبحث (اختياري)...'
-                      : 'تێبینی یان داواکاری تایبەتی خۆت بۆ ناو سێمینارەکە (ئارەزوومەندانە)...'),
-              hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
-              prefixIcon: const Icon(CupertinoIcons.text_quote, color: Color(0xFF7D2AE8), size: 18),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-              filled: true,
-              fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _selectedLanguage == SeminarLanguage.english
-                ? '✨ Gemini 3.7 Flash creates full 8 slides with rich paragraphs, metrics, diagrams & speaker notes.'
-                : '✨ مۆدێلی بەهێزی Gemini 3.7 Flash بە شێوازی Canva و پاوەرپۆینتی ٨ سلایدی بەپێی داواکارییەکەت دروستی دەکات.',
-            style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, height: 1.4, color: isDark ? Colors.grey[400] : ZankoColors.textSecondary),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton.icon(
-              onPressed: _isLoading
-                  ? null
-                  : () {
-                      final title = _topicController.text.trim();
-                      if (title.isEmpty) {
-                        _showSnackBar(_selectedLanguage == SeminarLanguage.english ? 'Please enter a seminar title' : 'تکایە سەرەتا ناونیشانی سیمینار بنووسە');
-                        return;
-                      }
-                      _generateFullSeminar(title);
-                    },
-              icon: _isLoading
-                  ? const CupertinoActivityIndicator(color: Colors.white)
-                  : const Icon(CupertinoIcons.play_fill, color: Colors.white, size: 18),
-              label: Text(
-                _isLoading
-                    ? (_selectedLanguage == SeminarLanguage.english ? 'Generating full 8 slides...' : 'دروستکردنی تەواوی ٨ سلاید...')
-                    : (_selectedLanguage == SeminarLanguage.english ? 'Generate Complete Presentation 🚀' : 'دروستکردنی تەواوی سیمینارەکە 🚀'),
-                style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF7D2AE8), // Canva Color
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                elevation: 0,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Tab 3: 12-Page Academic Report Card ────────────────────────────────────
-  Widget _buildAcademicReportCard(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? ZankoColors.darkCard : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFF97316).withValues(alpha: 0.35), width: 1.5),
-        boxShadow: isDark ? [] : ZankoShadows.card,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF97316).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(CupertinoIcons.doc_text_fill, color: Color(0xFFF97316), size: 20),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _selectedLanguage == SeminarLanguage.english
-                          ? '12-Page Academic Report Generator'
-                          : 'دروستکەری ڕاپۆرتی زانستیی ١٢ پەڕەیی',
-                      style: TextStyle(fontFamily: _currentFontFamily, fontSize: 15, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      _selectedLanguage == SeminarLanguage.english
-                          ? 'Word (.docx) & PDF (.pdf) with Cover, TOC & Citations'
-                          : 'بە فایلی Word و PDF لەگەڵ بەرگی فەرمی و ٥ سەرچاوە',
-                      style: const TextStyle(fontSize: 11.5, color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const Divider(height: 24),
-
-          // 1. Report Title Input
-          Text(
-            _selectedLanguage == SeminarLanguage.english ? 'Report Title:' : 'ناونیشانی سەرەکی ڕاپۆرت:',
-            style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 6),
-          TextField(
-            controller: _reportTitleController,
-            style: TextStyle(fontFamily: _currentFontFamily),
-            decoration: InputDecoration(
-              hintText: _selectedLanguage == SeminarLanguage.english
-                  ? 'e.g. The Impact of AI on Higher Education Learning'
-                  : 'ناونیشانی ڕاپۆرتەکە بنووسە...',
-              hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 13),
-              prefixIcon: const Icon(CupertinoIcons.doc_fill, color: Color(0xFFF97316)),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-              filled: true,
-              fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            _selectedLanguage == SeminarLanguage.english
-                ? 'Specific Focus / Custom Requirements (Optional):'
-                : (_selectedLanguage == SeminarLanguage.arabic
-                    ? 'متطلبات أو محاور خاصة بالبحث (اختياري):'
-                    : 'داواکاری یان تەوەری تایبەتی خۆت بۆ ڕاپۆرتەکە (ئارەزوومەندانە):'),
-            style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 6),
-          TextField(
-            controller: _reportNotesController,
-            minLines: 1,
-            maxLines: 3,
-            style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13),
-            decoration: InputDecoration(
-              hintText: _selectedLanguage == SeminarLanguage.english
-                  ? 'e.g. Focus deeply on ethical risks, include real Kurdish case studies...'
-                  : (_selectedLanguage == SeminarLanguage.arabic
-                      ? 'مثال: التركيز على الجوانب الأخلاقية، تضمين دراسات حالة حديثة...'
-                      : 'بۆ نموونە: تیشک بخەرە سەر مەترسییەکان، چەند نموونەیەکی کوردستانی تێدابێت...'),
-              hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
-              prefixIcon: const Icon(CupertinoIcons.text_badge_star, color: Color(0xFFF97316), size: 18),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-              filled: true,
-              fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
-            ),
-          ),
-          const SizedBox(height: 14),
-
-          // 2. Student(s) Name (Single or Multiple Group Members) & Supervisor Name
-          Text(
-            _selectedLanguage == SeminarLanguage.english
-                ? 'Student Name(s) / Research Team:'
-                : (_selectedLanguage == SeminarLanguage.arabic
-                    ? 'أسماء الطلاب / فريق العمل (يمكنك كتابة عدة أسماء):'
-                    : 'ناوی قوتابی یان گرووپ (دەتوانیت ناوی چەند قوتابییەک بنووسیت):'),
-            style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 6),
-          TextField(
-            controller: _studentNameController,
-            minLines: 1,
-            maxLines: 3,
-            style: TextStyle(fontFamily: _currentFontFamily),
-            decoration: InputDecoration(
-              hintText: _selectedLanguage == SeminarLanguage.english
-                  ? 'e.g. John Doe, Sarah Smith (or write names on new lines)...'
-                  : (_selectedLanguage == SeminarLanguage.arabic
-                      ? 'مثال: أحمد علي، سارة محمد (أو كتابة كل اسم في سطر)...'
-                      : 'بۆ نموونە: ئاراس علی، سارا محمد (یان هەر ناوێک لە دێڕێکدا بنووسە)...'),
-              hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
-              prefixIcon: const Icon(CupertinoIcons.person_2_fill, color: Color(0xFFF97316), size: 20),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-              filled: true,
-              fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          Text(
-            _selectedLanguage == SeminarLanguage.english
-                ? 'Academic Supervisor / Instructor:'
-                : (_selectedLanguage == SeminarLanguage.arabic
-                    ? 'الأستاذ المشرف على البحث:'
-                    : 'ناوی مامۆستای سەرپەرشتیاری ڕاپۆرت:'),
-            style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 6),
-          TextField(
-            controller: _supervisorNameController,
-            style: TextStyle(fontFamily: _currentFontFamily),
-            decoration: InputDecoration(
-              hintText: _selectedLanguage == SeminarLanguage.english
-                  ? 'e.g. Dr. Alan Smith, Asst. Prof. Robert...'
-                  : (_selectedLanguage == SeminarLanguage.arabic
-                      ? 'مثال: د. أحمد خالد / أ.م.د. علي حسين...'
-                      : 'بۆ نموونە: پ.ی.د. ئاراس علی / د. نەبەز عومەر...'),
-              hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
-              prefixIcon: const Icon(CupertinoIcons.person_badge_plus_fill, color: Color(0xFFF97316), size: 18),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-              filled: true,
-              fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
-            ),
-          ),
-          const SizedBox(height: 14),
-
-          // 3. University & Department Inputs
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _selectedLanguage == SeminarLanguage.english ? 'University:' : 'ناوی زانکۆ:',
-                      style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: _universityController,
-                      style: TextStyle(fontFamily: _currentFontFamily),
-                      decoration: InputDecoration(
-                        hintText: _selectedLanguage == SeminarLanguage.english ? 'e.g. Erbil Polytechnic University' : 'زانکۆی پۆلیتەکنیکی هەولێر...',
-                        hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
-                        prefixIcon: const Icon(CupertinoIcons.building_2_fill, color: Color(0xFFF97316), size: 18),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                        filled: true,
-                        fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _selectedLanguage == SeminarLanguage.english ? 'Department / College:' : 'کۆلێژ و بەشی زانستی:',
-                      style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: _reportDeptController,
-                      style: TextStyle(fontFamily: _currentFontFamily),
-                      decoration: InputDecoration(
-                        hintText: _selectedLanguage == SeminarLanguage.english ? 'e.g. Medical Laboratory Technology' : 'کۆلێژی تەکنیکی تەندروستی...',
-                        hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
-                        prefixIcon: const Icon(CupertinoIcons.square_grid_2x2_fill, color: Color(0xFFF97316), size: 18),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                        filled: true,
-                        fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-
-          // 4. Academic Year & Stage Input
-          Text(
-            _selectedLanguage == SeminarLanguage.english ? 'Academic Year / Stage:' : 'ساڵی خوێندن و قۆناغ:',
-            style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 6),
-          TextField(
-            controller: _academicYearController,
-            style: TextStyle(fontFamily: _currentFontFamily),
-            decoration: InputDecoration(
-              hintText: _selectedLanguage == SeminarLanguage.english
-                  ? 'e.g. 2024 - 2025  or  Stage : One'
-                  : 'بۆ نموونە: 2024 - 2025 یان قۆناغی : یەکەم',
-              hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
-              prefixIcon: const Icon(CupertinoIcons.calendar, color: Color(0xFFF97316), size: 18),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-              filled: true,
-              fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // 5. Report Writing Style & Depth Selector (User Customization)
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: isDark ? ZankoColors.darkBackground : const Color(0xFFFFF7ED),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFFF97316).withValues(alpha: 0.35)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(CupertinoIcons.slider_horizontal_3, color: Color(0xFFF97316), size: 18),
-                    const SizedBox(width: 8),
-                    Text(
-                      _selectedLanguage == SeminarLanguage.english ? 'Report Writing Style & Format:' : 'شێوازی داڕشتن و جۆری نووسینی ڕاپۆرت:',
-                      style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                // Style Options
-                _buildStyleOption(
-                  title: _selectedLanguage == SeminarLanguage.english ? '📚 Academic Prose (Extensive Paragraphs)' : '📚 ئەکادیمی و تێروتەسەل (پەڕەگرافی درێژ)',
-                  subtitle: _selectedLanguage == SeminarLanguage.english ? 'Rich scholarly paragraphs without short bullet lists' : 'پەڕەگرافی ئەکادیمیی زۆر درێژ بەبێ خاڵبەندی، بە شیکاریی قووڵ',
-                  isSelected: _selectedReportStyle == ReportWritingStyle.academicComprehensive,
-                  onTap: () => setState(() => _selectedReportStyle = ReportWritingStyle.academicComprehensive),
-                ),
-                const SizedBox(height: 8),
-                _buildStyleOption(
-                  title: _selectedLanguage == SeminarLanguage.english ? '⚖️ Balanced (Prose & Highlights)' : '⚖️ هاوسەنگ (پەڕەگراف + خاڵە گرنگەکان)',
-                  subtitle: _selectedLanguage == SeminarLanguage.english ? 'Detailed academic paragraphs with structured analytical points' : 'پەڕەگرافی زانستی لەگەڵ خاڵبەندیی ورد',
-                  isSelected: _selectedReportStyle == ReportWritingStyle.balancedStandard,
-                  onTap: () => setState(() => _selectedReportStyle = ReportWritingStyle.balancedStandard),
-                ),
-                const SizedBox(height: 8),
-                _buildStyleOption(
-                  title: _selectedLanguage == SeminarLanguage.english ? '📑 Bullet Structured (Concise)' : '📑 پوخت و خاڵبەندی (خێرا و پوخت)',
-                  subtitle: _selectedLanguage == SeminarLanguage.english ? 'Short paragraphs with comprehensive bullet lists' : 'پەڕەگرافی کورت لەگەڵ خاڵبەندیی ڕێکخراو',
-                  isSelected: _selectedReportStyle == ReportWritingStyle.bulletStructured,
-                  onTap: () => setState(() => _selectedReportStyle = ReportWritingStyle.bulletStructured),
-                ),
-                const SizedBox(height: 14),
-                // Depth & Length Level
-                Row(
-                  children: [
-                    const Icon(CupertinoIcons.text_quote, color: Color(0xFFF97316), size: 16),
-                    const SizedBox(width: 6),
-                    Text(
-                      _selectedLanguage == SeminarLanguage.english ? 'Content Depth & Volume:' : 'ئاستی درێژی و قووڵیی بابەت:',
-                      style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12.5, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                // Row 1: 4000+ Words & 3000+ Words
-                Row(
-                  children: [
-                    _buildLengthCard(
-                      title: _selectedLanguage == SeminarLanguage.english ? '🔥 4000+ Words' : '🔥 ٤٠٠٠+ وشە',
-                      subtitle: _selectedLanguage == SeminarLanguage.english ? 'Ultra-Detailed' : 'زۆرترین وردەکاری',
-                      isSelected: _selectedReportLength == ReportLengthLevel.words4000,
-                      onTap: () => setState(() => _selectedReportLength = ReportLengthLevel.words4000),
-                    ),
-                    const SizedBox(width: 8),
-                    _buildLengthCard(
-                      title: _selectedLanguage == SeminarLanguage.english ? '⭐ 3000+ Words' : '⭐ ٣٠٠٠+ وشە',
-                      subtitle: _selectedLanguage == SeminarLanguage.english ? 'Super Long' : 'زۆر تێروتەسەل',
-                      isSelected: _selectedReportLength == ReportLengthLevel.words3000,
-                      onTap: () => setState(() => _selectedReportLength = ReportLengthLevel.words3000),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                // Row 2: 2000+ Words & 1000+ Standard
-                Row(
-                  children: [
-                    _buildLengthCard(
-                      title: _selectedLanguage == SeminarLanguage.english ? '🌟 2000+ Words' : '🌟 ٢٠٠٠+ وشە',
-                      subtitle: _selectedLanguage == SeminarLanguage.english ? 'Deep Academic' : 'دەوڵەمەند و فراوان',
-                      isSelected: _selectedReportLength == ReportLengthLevel.words2000,
-                      onTap: () => setState(() => _selectedReportLength = ReportLengthLevel.words2000),
-                    ),
-                    const SizedBox(width: 8),
-                    _buildLengthCard(
-                      title: _selectedLanguage == SeminarLanguage.english ? '📖 1000+ Words' : '📖 ١٠٠٠+ وشە',
-                      subtitle: _selectedLanguage == SeminarLanguage.english ? 'Standard' : 'مامناوەند و پوخت',
-                      isSelected: _selectedReportLength == ReportLengthLevel.standard,
-                      onTap: () => setState(() => _selectedReportLength = ReportLengthLevel.standard),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // 6. University Logo Picker (Requirement 2)
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: isDark ? ZankoColors.darkBackground : const Color(0xFFF0F9FF),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFFF97316).withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              children: [
-                if (_universityLogoBytes != null) ...[
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.memory(_universityLogoBytes!, width: 44, height: 44, fit: BoxFit.cover),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _universityLogoName ?? 'University Logo',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12.5, fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          _selectedLanguage == SeminarLanguage.english ? 'Logo will appear on Cover Page' : 'لۆگۆکە دەخرێتە سەر بەرگی فەرمی',
-                          style: const TextStyle(fontSize: 11, color: Colors.green),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: _removeUniversityLogo,
-                    icon: const Icon(CupertinoIcons.trash_fill, color: Colors.red, size: 18),
-                  ),
-                ] else ...[
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF97316).withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(CupertinoIcons.photo_fill_on_rectangle_fill, color: Color(0xFFF97316), size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _selectedLanguage == SeminarLanguage.english ? 'University Logo (Optional):' : 'لۆگۆی فەرمی زانکۆ (داواکاری مەرجی ٢):',
-                          style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12.5, fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          _selectedLanguage == SeminarLanguage.english ? 'Tap to upload from device' : 'لێرە کلیک بکە بۆ دیاریکردنی لۆگۆ لە مۆبایل',
-                          style: const TextStyle(fontSize: 11, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: _pickUniversityLogo,
-                    icon: const Icon(CupertinoIcons.cloud_upload_fill, size: 14),
-                    label: Text(_selectedLanguage == SeminarLanguage.english ? 'Select' : 'دیاریکردن', style: const TextStyle(fontSize: 12)),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFF97316),
-                      side: const BorderSide(color: Color(0xFFF97316)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // 5. Generate 12-Page Report Button
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton.icon(
-              onPressed: _isLoading
-                  ? null
-                  : () {
-                      final title = _reportTitleController.text.trim();
-                      _generate12PageReport(title);
-                    },
-              icon: _isLoading
-                  ? const CupertinoActivityIndicator(color: Colors.white)
-                  : const Icon(CupertinoIcons.doc_text_fill, color: Colors.white, size: 18),
-              label: Text(
-                _isLoading
-                    ? (_selectedLanguage == SeminarLanguage.english ? 'Writing 12-Page Academic Report...' : 'دروستکردنی تەواوی ١٢ پەڕەی ڕاپۆرت...')
-                    : (_selectedLanguage == SeminarLanguage.english ? 'Generate Complete 12-Page Report 📑' : 'دروستکردنی تەواوی ڕاپۆرتی ١٢ پەڕەیی 📑'),
-                style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF97316), // Academic Blue
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                elevation: 0,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStyleOption({
-    required String title,
-    required String subtitle,
-    required bool isSelected,
-    required VoidCallback onTap,
+  Widget _buildModeButton({
+    required AssistantMode mode,
+    required IconData icon,
+    required String label,
+    required Color activeColor,
+    required bool isDark,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFFF97316).withValues(alpha: 0.12)
-              : (isDark ? const Color(0xFF1E1415) : Colors.white),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? const Color(0xFFF97316) : (isDark ? Colors.white12 : Colors.grey.withValues(alpha: 0.25)),
-            width: isSelected ? 1.5 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              isSelected ? CupertinoIcons.checkmark_circle_fill : CupertinoIcons.circle,
-              color: isSelected ? const Color(0xFFF97316) : Colors.grey,
-              size: 20,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontFamily: _currentFontFamily,
-                      fontSize: 12.5,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                      color: isSelected ? const Color(0xFFF97316) : null,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontFamily: _currentFontFamily,
-                      fontSize: 11,
-                      color: isDark ? Colors.grey[400] : Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLengthCard({
-    required String title,
-    required String subtitle,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isSel = _selectedMode == mode;
     return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      child: GestureDetector(
+        onTap: () {
+          if (_selectedMode != mode) {
+            setState(() {
+              _selectedMode = mode;
+              _generatedResult = null;
+              _suggestedTopics = [];
+              _parsedSlides = [];
+              _parsedReport = null;
+            });
+          }
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
           decoration: BoxDecoration(
-            color: isSelected
-                ? const Color(0xFFF97316).withValues(alpha: 0.15)
-                : (isDark ? const Color(0xFF1E1415) : Colors.white),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isSelected
-                  ? const Color(0xFFF97316)
-                  : (isDark ? Colors.white12 : Colors.grey.withValues(alpha: 0.25)),
-              width: isSelected ? 1.5 : 1,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    isSelected ? CupertinoIcons.checkmark_circle_fill : CupertinoIcons.circle,
-                    color: isSelected ? const Color(0xFFF97316) : Colors.grey,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: TextStyle(
-                        fontFamily: _currentFontFamily,
-                        fontSize: 11.5,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                        color: isSelected ? const Color(0xFFF97316) : null,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+            color: isSel ? activeColor : Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: isSel
+                ? [
+                    BoxShadow(
+                      color: activeColor.withValues(alpha: 0.35),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 2),
-              Padding(
-                padding: const EdgeInsets.only(left: 22, right: 22),
+                  ]
+                : [],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 16, color: isSel ? Colors.white : (isDark ? Colors.grey[400] : ZankoColors.textSecondary)),
+              const SizedBox(width: 6),
+              Flexible(
                 child: Text(
-                  subtitle,
+                  label,
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: _currentFontFamily,
-                    fontSize: 10,
-                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.bold,
+                    color: isSel ? Colors.white : (isDark ? Colors.grey[300] : ZankoColors.textPrimary),
                   ),
-                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -2003,75 +1127,166 @@ Please format and classify the following academic reference in standard APA 7th 
     );
   }
 
-  // ── Tab 4: References Formatter Card ───────────────────────────────────────
-  Widget _buildReferencesCard(bool isDark) {
+  // ─── 2. Language Selector List (وەکو لیستێک) ───────────────────────────────
+  Widget _buildLanguageListSelector(bool isDark) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: isDark ? ZankoColors.darkCard : Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: isDark ? Colors.white10 : Colors.grey[200]!),
         boxShadow: isDark ? [] : ZankoShadows.card,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            _selectedLanguage == SeminarLanguage.english ? 'Academic References Text / Links:' : 'دەق یان لینکی سەرچاوەکان:',
-            style: TextStyle(fontFamily: _currentFontFamily, fontSize: 14, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _refController,
-            maxLines: 3,
-            style: TextStyle(fontFamily: _currentFontFamily),
-            decoration: InputDecoration(
-              hintText: _selectedLanguage == SeminarLanguage.english
-                  ? 'Paste author names, book title, or research papers...'
-                  : 'ناوی کتێب، توێژەر یان دەقەکە پەیست بکە...',
-              hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 13),
-              prefixIcon: Icon(CupertinoIcons.text_quote, color: ZankoColors.accent),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-              filled: true,
-              fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton.icon(
-              onPressed: _isLoading ? null : _formatReferences,
-              icon: _isLoading
-                  ? const CupertinoActivityIndicator(color: Colors.white)
-                  : const Icon(CupertinoIcons.checkmark_shield_fill, color: Colors.white, size: 18),
-              label: Text(
-                _isLoading
-                    ? (_selectedLanguage == SeminarLanguage.english ? 'Formatting...' : 'پۆلێنکردن...')
-                    : (_selectedLanguage == SeminarLanguage.english ? 'Format Citations (APA / IEEE) 📚' : 'پۆلێنکردنی زانستی سەرچاوە 📚'),
-                style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
+          Row(
+            children: [
+              Icon(CupertinoIcons.globe, color: ZankoColors.accent, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                _isEnglish ? 'Select Language:' : (_isArabic ? 'لغة المحتوى:' : (_isBadini ? 'زمانێ بابەت و داڕشتنێ:' : 'زمانی بابەت و داڕشتن:')),
+                style: TextStyle(
+                  fontFamily: _currentFontFamily,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.grey[200] : ZankoColors.textPrimary,
+                ),
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: ZankoColors.accent,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                elevation: 0,
-              ),
-            ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // 4-item horizontal or grid list
+          Row(
+            children: SeminarLanguage.values.map((lang) {
+              final isSel = _selectedLanguage == lang;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _selectedLanguage = lang),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                    decoration: BoxDecoration(
+                      color: isSel ? ZankoColors.accent : (isDark ? Colors.white10 : Colors.grey[100]),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSel ? ZankoColors.accent : (isDark ? Colors.white12 : Colors.grey[300]!),
+                        width: isSel ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(lang.flag, style: const TextStyle(fontSize: 14)),
+                        const SizedBox(height: 3),
+                        Text(
+                          lang.label,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: lang == SeminarLanguage.english ? null : 'DroidKufi',
+                            fontSize: 10.5,
+                            fontWeight: isSel ? FontWeight.bold : FontWeight.w600,
+                            color: isSel ? Colors.white : (isDark ? Colors.grey[300] : ZankoColors.textSecondary),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ],
       ),
     );
   }
 
-  // ── Topic Proposal Interactive Card ────────────────────────────────────────
-  Widget _buildTopicProposalCard(SeminarTopicProposal topic, bool isDark) {
+  // ─── VIP Banner ────────────────────────────────────────────────────────────
+  Widget _buildVipBanner(bool isDark) {
+    return GestureDetector(
+      onTap: () => showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => const VipUpgradeSheet(),
+      ),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1E1500), Color(0xFF2C2000)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.45)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+              blurRadius: 14,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Text('👑', style: TextStyle(fontSize: 20)),
+            ),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'داگرتنی بێسنووری Word و PowerPoint (VIP)',
+                    style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'بە ٥,٠٠٠ د.ع هەموو سێمینار و ڕاپۆرتەکانت لەبری مەکتەبە لێرە دابگرە!',
+                    style: TextStyle(color: Colors.white70, fontSize: 10.5),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFD700),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Text(
+                'VIP ⚡',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Color(0xFF2C2000)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── 3. Topic Discovery Card (Input & Suggest Topics) ──────────────────────
+  Widget _buildTopicDiscoveryCard(bool isDark) {
+    final isSeminar = _selectedMode == AssistantMode.seminar;
+    final themeColor = isSeminar ? const Color(0xFF7D2AE8) : const Color(0xFFF97316);
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark ? ZankoColors.darkCard : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: ZankoColors.accent.withValues(alpha: 0.25), width: 1.2),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: themeColor.withValues(alpha: 0.35), width: 1.5),
         boxShadow: isDark ? [] : ZankoShadows.card,
       ),
       child: Column(
@@ -2080,38 +1295,584 @@ Please format and classify the following academic reference in standard APA 7th 
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: ZankoColors.accent,
+                  color: themeColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  isSeminar ? CupertinoIcons.lightbulb_fill : CupertinoIcons.doc_text_search,
+                  color: themeColor,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _isEnglish
+                          ? (isSeminar ? 'Step 1: Enter Topic / Academic Field' : 'Step 1: Enter Report Topic / Field')
+                          : (_isArabic
+                              ? (isSeminar ? 'الخطوة الأولى: موضوع أو تخصص السيمينار' : 'الخطوة الأولى: موضوع أو تخصص التقرير')
+                              : (_isBadini
+                                  ? (isSeminar ? 'هەنگاڤا ئێکێ: ناڤێ بابەت یان پشکا زانستی' : 'هەنگاڤا ئێکێ: ناڤێ بابەتێ ڕاپۆرتێ')
+                                  : (isSeminar ? 'هەنگاوی یەکەم: ناونیشانی بابەت یان بەشی زانستی' : 'هەنگاوی یەکەم: ناونیشانی بابەت یان بواری ڕاپۆرت'))),
+                      style: TextStyle(fontFamily: _currentFontFamily, fontSize: 14.5, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      _isEnglish
+                          ? 'AI will suggest related topics tailored to your input'
+                          : (_isArabic
+                              ? 'سيقترح الذكاء الاصطناعي موضوعات مرتبطة ومتميزة'
+                              : (_isBadini
+                                  ? 'ژیرییا دەستکرد چەندین بابەتێن گرێدای پێشنیار دکەت'
+                                  : 'AI چەند بابەتێکی پەیوەندیدار بەو بوارەت پێ دەدات تا هەڵیبژێریت')),
+                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Main Topic Input
+          TextField(
+            controller: _topicSearchController,
+            style: TextStyle(fontFamily: _currentFontFamily),
+            decoration: InputDecoration(
+              hintText: _isEnglish
+                  ? 'e.g. Artificial Intelligence, Medicine, Cyber Law, Accounting...'
+                  : (_isArabic
+                      ? 'مثال: الذكاء الاصطناعي، الطب البشري، القانون السيبراني، المحاسبة...'
+                      : (_isBadini
+                          ? 'نموونە: ژیرییا دەستکرد، پزیشکی، یاسا، ژمێریاری، ئەندازیاری...'
+                          : 'نموونە: ژیریی دەستکرد، پزیشکی، یاسا، ژمێریاری، ئەندازیاری...')),
+              hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 13),
+              prefixIcon: Icon(CupertinoIcons.search, color: themeColor),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              filled: true,
+              fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Seminar or Report custom notes (expandable/direct)
+          if (isSeminar) ...[
+            TextField(
+              controller: _seminarNotesController,
+              minLines: 1,
+              maxLines: 2,
+              style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13),
+              decoration: InputDecoration(
+                hintText: _isEnglish
+                    ? 'Optional: Student focus or instructor requirements...'
+                    : (_isArabic
+                        ? 'اختياري: ملاحظات أو متطلبات خاصة من الأستاذ...'
+                        : (_isBadini
+                            ? 'ئارەزوومەندانە: داواکاری یان تێبینییا تایبەت بۆ سێمینارێ...'
+                            : 'ئارەزوومەندانە: داواکاری یان تێبینی تایبەت بۆ سێمینارەکە...')),
+                hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
+                prefixIcon: Icon(CupertinoIcons.text_quote, color: themeColor, size: 18),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                filled: true,
+                fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
+              ),
+            ),
+          ] else ...[
+            // Report specific toggle for details
+            InkWell(
+              onTap: () => setState(() => _showReportAdvancedOptions = !_showReportAdvancedOptions),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white.withValues(alpha: 0.04) : const Color(0xFFFFF7ED),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: themeColor.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(CupertinoIcons.person_crop_circle_badge_checkmark, color: themeColor, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _isEnglish
+                            ? 'Report Cover & Author Details (Student, Supervisor, University)'
+                            : (_isBadini
+                                ? 'زانیاریێن بەرگی (ناڤێ قوتابی، سەرپەرشتیار، زانکۆ و لۆگۆ)'
+                                : 'ڕێکخستنی زانیارییەکانی بەرگ (ناوی قوتابی، مامۆستا، زانکۆ و لۆگۆ)'),
+                        style: TextStyle(
+                          fontFamily: _currentFontFamily,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.grey[300] : const Color(0xFF9A3412),
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      _showReportAdvancedOptions ? CupertinoIcons.chevron_up : CupertinoIcons.chevron_down,
+                      color: themeColor,
+                      size: 16,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (_showReportAdvancedOptions) ...[
+              const SizedBox(height: 12),
+              _buildReportDetailsSection(isDark, themeColor),
+            ],
+          ],
+
+          const SizedBox(height: 16),
+
+          // Primary Button: Suggest Related Topics
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton.icon(
+              onPressed: _isLoading ? null : _suggestRelatedTopics,
+              icon: _isLoading
+                  ? const CupertinoActivityIndicator(color: Colors.white)
+                  : const Icon(CupertinoIcons.sparkles, color: Colors.white, size: 18),
+              label: Text(
+                _isLoading
+                    ? (_isEnglish ? 'Analyzing and discovering topics...' : (_isBadini ? 'لێگەڕیانا بابەتێن گرێدای...' : 'دۆزینەوەی بابەتە پەیوەندیدارەکان...'))
+                    : (_isEnglish
+                        ? 'Suggest Related Topics 💡'
+                        : (_isArabic
+                            ? 'اقتراح الموضوعات المرتبطة 💡'
+                            : (_isBadini
+                                ? 'پێشنیارکرنا بابەتێن پەیوەندیدار 💡'
+                                : 'پێشنیارکردنی بابەتە پەیوەندیدارەکان 💡'))),
+                style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: themeColor,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+              ),
+            ),
+          ),
+
+          // Secondary Quick Option: Direct Generate using exact typed text
+          const SizedBox(height: 8),
+          Center(
+            child: TextButton.icon(
+              onPressed: _isLoading
+                  ? null
+                  : () {
+                      final q = _topicSearchController.text.trim();
+                      if (q.isEmpty) {
+                        _showSnackBar(_isEnglish ? 'Please enter a topic title first' : 'تکایە سەرەتا ناونیشانی بابەت بنووسە');
+                        return;
+                      }
+                      _handleTopicSelection(q);
+                    },
+              icon: Icon(CupertinoIcons.play_circle_fill, size: 15, color: themeColor),
+              label: Text(
+                _isEnglish
+                    ? 'Or generate directly with this exact title ⚡'
+                    : (_isBadini ? 'یان ڕاستەوخۆ ب ڤێ ناڤونیشانێ چێکە ⚡' : 'یان ڕاستەوخۆ بەم ناونیشانە دروستی بکە ⚡'),
+                style: TextStyle(fontFamily: _currentFontFamily, fontSize: 11.5, fontWeight: FontWeight.w600, color: themeColor),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Report Details Sub-form ───────────────────────────────────────────────
+  Widget _buildReportDetailsSection(bool isDark, Color themeColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Student Name
+        Text(
+          _isEnglish ? 'Student Name(s) / Team:' : (_isBadini ? 'ناڤێ قوتابی یان تیمێ:' : 'ناوی قوتابی یان گرووپ:'),
+          style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 4),
+        TextField(
+          controller: _studentNameController,
+          style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12.5),
+          decoration: InputDecoration(
+            hintText: _isEnglish ? 'e.g. John Doe, Sarah Smith...' : 'نموونە: ئاراس علی، سارا محمد...',
+            hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
+            prefixIcon: Icon(CupertinoIcons.person_2_fill, color: themeColor, size: 18),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            filled: true,
+            fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        // Supervisor
+        Text(
+          _isEnglish ? 'Academic Supervisor:' : (_isBadini ? 'ناڤێ مامۆستایێ سەرپەرشتیار:' : 'ناوی مامۆستای سەرپەرشتیار:'),
+          style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 4),
+        TextField(
+          controller: _supervisorNameController,
+          style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12.5),
+          decoration: InputDecoration(
+            hintText: _isEnglish ? 'e.g. Dr. Alan Smith' : 'نموونە: د. نەبەز عومەر / پ.ی.د. ئاراس...',
+            hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
+            prefixIcon: Icon(CupertinoIcons.person_badge_plus_fill, color: themeColor, size: 18),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            filled: true,
+            fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        // University & Dept
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(_isEnglish ? 'University:' : 'ناوی زانکۆ:', style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  TextField(
+                    controller: _universityController,
+                    style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
+                    decoration: InputDecoration(
+                      hintText: 'زانکۆی سەڵاحەدین...',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      filled: true,
+                      fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(_isEnglish ? 'Department:' : 'کۆلێژ و بەش:', style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  TextField(
+                    controller: _reportDeptController,
+                    style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
+                    decoration: InputDecoration(
+                      hintText: 'کۆلێژی زانست...',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      filled: true,
+                      fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+
+        // University Logo Picker
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.white.withValues(alpha: 0.03) : const Color(0xFFF0F9FF),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: themeColor.withValues(alpha: 0.25)),
+          ),
+          child: Row(
+            children: [
+              if (_universityLogoBytes != null) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.memory(_universityLogoBytes!, width: 36, height: 36, fit: BoxFit.cover),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _universityLogoName ?? 'Logo',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                IconButton(
+                  onPressed: _removeUniversityLogo,
+                  icon: const Icon(CupertinoIcons.trash_fill, color: Colors.red, size: 16),
+                ),
+              ] else ...[
+                Icon(CupertinoIcons.photo_fill_on_rectangle_fill, color: themeColor, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _isEnglish ? 'University Logo (Optional)' : 'لۆگۆی زانکۆ بۆ سەر بەرگی ڕاپۆرت',
+                    style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
+                  ),
+                ),
+                OutlinedButton(
+                  onPressed: _pickUniversityLogo,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    minimumSize: Size.zero,
+                    side: BorderSide(color: themeColor),
+                  ),
+                  child: Text(_isEnglish ? 'Upload' : 'دیاریکردن', style: TextStyle(fontSize: 11, color: themeColor)),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Report Writing Style & Volume
+        Text(
+          _isEnglish ? 'Writing Style & Depth:' : 'شێوازی نووسین و ئاستی درێژی:',
+          style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Expanded(
+              child: InkWell(
+                onTap: () => setState(() => _selectedReportStyle = ReportWritingStyle.academicComprehensive),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: _selectedReportStyle == ReportWritingStyle.academicComprehensive
+                        ? themeColor.withValues(alpha: 0.15)
+                        : (isDark ? Colors.white10 : Colors.grey[100]),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: _selectedReportStyle == ReportWritingStyle.academicComprehensive
+                          ? themeColor
+                          : (isDark ? Colors.white12 : Colors.grey[300]!),
+                    ),
+                  ),
+                  child: Text(
+                    _isEnglish ? '📚 Prose' : '📚 پەڕەگرافی ئەکادیمی',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: _currentFontFamily,
+                      fontSize: 11,
+                      fontWeight: _selectedReportStyle == ReportWritingStyle.academicComprehensive ? FontWeight.bold : FontWeight.normal,
+                      color: _selectedReportStyle == ReportWritingStyle.academicComprehensive ? themeColor : null,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: InkWell(
+                onTap: () => setState(() => _selectedReportStyle = ReportWritingStyle.balancedStandard),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: _selectedReportStyle == ReportWritingStyle.balancedStandard
+                        ? themeColor.withValues(alpha: 0.15)
+                        : (isDark ? Colors.white10 : Colors.grey[100]),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: _selectedReportStyle == ReportWritingStyle.balancedStandard
+                          ? themeColor
+                          : (isDark ? Colors.white12 : Colors.grey[300]!),
+                    ),
+                  ),
+                  child: Text(
+                    _isEnglish ? '⚖️ Balanced' : '⚖️ هاوسەنگ',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: _currentFontFamily,
+                      fontSize: 11,
+                      fontWeight: _selectedReportStyle == ReportWritingStyle.balancedStandard ? FontWeight.bold : FontWeight.normal,
+                      color: _selectedReportStyle == ReportWritingStyle.balancedStandard ? themeColor : null,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: InkWell(
+                onTap: () => setState(() => _selectedReportStyle = ReportWritingStyle.bulletStructured),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: _selectedReportStyle == ReportWritingStyle.bulletStructured
+                        ? themeColor.withValues(alpha: 0.15)
+                        : (isDark ? Colors.white10 : Colors.grey[100]),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: _selectedReportStyle == ReportWritingStyle.bulletStructured
+                          ? themeColor
+                          : (isDark ? Colors.white12 : Colors.grey[300]!),
+                    ),
+                  ),
+                  child: Text(
+                    _isEnglish ? '📑 Structured' : '📑 خاڵبەندی',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: _currentFontFamily,
+                      fontSize: 11,
+                      fontWeight: _selectedReportStyle == ReportWritingStyle.bulletStructured ? FontWeight.bold : FontWeight.normal,
+                      color: _selectedReportStyle == ReportWritingStyle.bulletStructured ? themeColor : null,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            _buildLengthChoiceCard('🔥 4000+', ReportLengthLevel.words4000, themeColor, isDark),
+            const SizedBox(width: 6),
+            _buildLengthChoiceCard('⭐ 3000+', ReportLengthLevel.words3000, themeColor, isDark),
+            const SizedBox(width: 6),
+            _buildLengthChoiceCard('🌟 2000+', ReportLengthLevel.words2000, themeColor, isDark),
+            const SizedBox(width: 6),
+            _buildLengthChoiceCard('📖 Standard', ReportLengthLevel.standard, themeColor, isDark),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLengthChoiceCard(String label, ReportLengthLevel level, Color themeColor, bool isDark) {
+    final isSel = _selectedReportLength == level;
+    return Expanded(
+      child: InkWell(
+        onTap: () => setState(() => _selectedReportLength = level),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          decoration: BoxDecoration(
+            color: isSel ? themeColor.withValues(alpha: 0.15) : (isDark ? Colors.white10 : Colors.grey[100]),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isSel ? themeColor : (isDark ? Colors.white12 : Colors.grey[300]!),
+            ),
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: _currentFontFamily,
+              fontSize: 10.5,
+              fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+              color: isSel ? themeColor : null,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── 4. Suggested Related Topics Section ───────────────────────────────────
+  Widget _buildSuggestedTopicsSection(bool isDark) {
+    final isSeminar = _selectedMode == AssistantMode.seminar;
+    final themeColor = isSeminar ? const Color(0xFF7D2AE8) : const Color(0xFFF97316);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(CupertinoIcons.square_grid_2x2_fill, color: themeColor, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  _isEnglish
+                      ? 'Suggested Related Topics (Choose one to create):'
+                      : (_isArabic
+                          ? 'الموضوعات المقترحة (اختر موضوعاً للبدء):'
+                          : (_isBadini
+                              ? 'بابەتێن پێشنیارکری (ئێکێ هەلبژێرە بۆ چێکرنێ):'
+                              : 'بابەتە پێشنیارکراوەکان (یەکێکیان هەڵبژێرە بۆ دروستکردن):')),
+                  style: TextStyle(
+                    fontFamily: _currentFontFamily,
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : ZankoColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ..._suggestedTopics.map((topic) => _buildTopicProposalCard(topic, isDark, themeColor)),
+      ],
+    );
+  }
+
+  Widget _buildTopicProposalCard(SeminarTopicProposal topic, bool isDark, Color themeColor) {
+    final isSeminar = _selectedMode == AssistantMode.seminar;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: isDark ? ZankoColors.darkCard : Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: themeColor.withValues(alpha: 0.3), width: 1.3),
+        boxShadow: isDark ? [] : ZankoShadows.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: themeColor,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  _selectedLanguage == SeminarLanguage.english ? 'Topic ${topic.index}' : 'بابەتی ${topic.index}',
+                  _isEnglish ? 'Topic ${topic.index}' : (_isBadini ? 'بابەتێ ${topic.index}' : 'بابەتی ${topic.index}'),
                   style: TextStyle(fontFamily: _currentFontFamily, color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   topic.titleKurdish,
                   style: TextStyle(
                     fontFamily: _currentFontFamily,
-                    fontSize: 15,
+                    fontSize: 15.5,
                     fontWeight: FontWeight.bold,
+                    height: 1.35,
                     color: isDark ? Colors.white : ZankoColors.textPrimary,
                   ),
                 ),
               ),
             ],
           ),
-          if (topic.titleEnglish.isNotEmpty && _selectedLanguage != SeminarLanguage.english) ...[
-            const SizedBox(height: 4),
-            Text(
-              topic.titleEnglish,
-              style: TextStyle(
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-                color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+          if (topic.titleEnglish.isNotEmpty && !_isEnglish) ...[
+            const SizedBox(height: 5),
+            Padding(
+              padding: const EdgeInsets.only(left: 4, right: 4),
+              child: Text(
+                topic.titleEnglish,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                  color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                ),
               ),
             ),
           ],
@@ -2125,777 +1886,74 @@ Please format and classify the following academic reference in standard APA 7th 
               color: isDark ? Colors.grey[300] : ZankoColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            '❓ ${topic.researchQuestion}',
-            style: TextStyle(
-              fontFamily: _currentFontFamily,
-              fontSize: 12,
-              height: 1.4,
-              color: isDark ? const Color(0xFF818CF8) : ZankoColors.accent,
-              fontWeight: FontWeight.w600,
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: themeColor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: themeColor.withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('❓ ', style: TextStyle(fontSize: 13)),
+                Expanded(
+                  child: Text(
+                    topic.researchQuestion,
+                    style: TextStyle(
+                      fontFamily: _currentFontFamily,
+                      fontSize: 12.5,
+                      height: 1.4,
+                      color: isDark ? const Color(0xFFA5B4FC) : themeColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 14),
 
-          // Two Action Buttons: PPTX Seminar OR 12-Page Report
-          Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 42,
-                  child: ElevatedButton.icon(
-                    onPressed: () => _generateFullSeminar(topic.titleKurdish),
-                    icon: const Icon(CupertinoIcons.paintbrush_fill, color: Colors.white, size: 14),
-                    label: Text(
-                      _selectedLanguage == SeminarLanguage.english ? '8 Slides PPTX' : 'سیمیناری ٨ سلاید',
-                      style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 12, color: Colors.white),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF7D2AE8), // Canva Color
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      elevation: 0,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: SizedBox(
-                  height: 42,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      _reportTitleController.text = topic.titleKurdish;
-                      _generate12PageReport(topic.titleKurdish);
-                    },
-                    icon: const Icon(CupertinoIcons.doc_text_fill, color: Colors.white, size: 14),
-                    label: Text(
-                      _selectedLanguage == SeminarLanguage.english ? '12-Page Report' : 'ڕاپۆرتی ١٢ پەڕەیی',
-                      style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 12, color: Colors.white),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF97316), // Academic Blue
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      elevation: 0,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── 12-Page Academic Report Viewer & Exporter ──────────────────────────────
-  Widget _buildReportViewerCard(bool isDark) {
-    if (_parsedReport == null || _parsedReport!.pages.isEmpty) return const SizedBox();
-
-    final currentPage = _selectedReportPageIndex < _parsedReport!.pages.length
-        ? _parsedReport!.pages[_selectedReportPageIndex]
-        : _parsedReport!.pages.first;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? ZankoColors.darkCard : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFF97316).withValues(alpha: 0.35), width: 1.5),
-        boxShadow: isDark ? [] : ZankoShadows.card,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header Row with Title & Quick Export Buttons
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF97316).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(CupertinoIcons.doc_text_fill, color: Color(0xFFF97316), size: 18),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    _selectedLanguage == SeminarLanguage.english
-                        ? 'Academic Report (12 Pages)'
-                        : 'ڕاپۆرتی ئەکادیمی (١٢ پەڕە)',
-                    style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 15),
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    onPressed: _isExportingDocx ? null : _exportDocx,
-                    icon: _isExportingDocx
-                        ? const SizedBox(width: 18, height: 18, child: CupertinoActivityIndicator())
-                        : const Icon(CupertinoIcons.doc_fill, color: Color(0xFF2B579A), size: 20),
-                    tooltip: 'Word (.docx)',
-                  ),
-                  IconButton(
-                    onPressed: _isExportingPdf ? null : _exportPdf,
-                    icon: _isExportingPdf
-                        ? const SizedBox(width: 18, height: 18, child: CupertinoActivityIndicator())
-                        : const Icon(CupertinoIcons.arrow_down_doc_fill, color: Color(0xFFD32F2F), size: 20),
-                    tooltip: 'PDF (.pdf)',
-                  ),
-                  IconButton(
-                    onPressed: _copyToClipboard,
-                    icon: Icon(CupertinoIcons.doc_on_doc, color: ZankoColors.accent, size: 20),
-                    tooltip: 'Copy',
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          const Divider(),
-          const SizedBox(height: 10),
-
-          // ── Horizontal Page Number Switcher (1 to 8) ──
+          // Direct Generate Button for the chosen topic
           SizedBox(
-            height: 42,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _parsedReport!.pages.length,
-              itemBuilder: (ctx, i) {
-                final isSel = i == _selectedReportPageIndex;
-                return GestureDetector(
-                  onTap: () => setState(() => _selectedReportPageIndex = i),
-                  child: Container(
-                    margin: const EdgeInsets.only(left: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      gradient: isSel
-                          ? LinearGradient(colors: [ZankoColors.primary, ZankoColors.accent])
-                          : null,
-                      color: isSel ? null : (isDark ? Colors.white10 : Colors.grey[200]),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Center(
-                      child: Text(
-                        _selectedLanguage == SeminarLanguage.english ? 'Page ${i + 1}' : 'پەڕەی ${i + 1}',
-                        style: TextStyle(
-                          fontFamily: _currentFontFamily,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: isSel ? Colors.white : (isDark ? Colors.grey[300] : ZankoColors.textPrimary),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // ── Active Page Content Display ──
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: isDark ? ZankoColors.darkBackground : const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Page Header / Type Badge
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFC00000), // Red badge
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        _selectedLanguage == SeminarLanguage.english
-                            ? 'Page ${currentPage.pageNumber} of ${_parsedReport!.pages.length}'
-                            : 'پەڕەی ${currentPage.pageNumber} لە ${_parsedReport!.pages.length}',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
-                      ),
-                    ),
-                    Text(
-                      currentPage.pageType.toUpperCase(),
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.grey),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                // Page Title
-                Text(
-                  currentPage.pageTitle,
-                  style: TextStyle(
-                    fontFamily: _currentFontFamily,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                  ),
-                ),
-                const Divider(height: 18),
-
-                // ── PAGE 1: EXACT MATCH TO USER'S SCREENSHOT COVER TEMPLATE ──
-                if (currentPage.pageType == 'cover') ...[
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(22),
-                    decoration: BoxDecoration(
-                      color: isDark ? ZankoColors.darkBackground : Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Builder(
-                      builder: (context) {
-                        final isKurdishOrArabic = _selectedLanguage != SeminarLanguage.english;
-                        final ministryLine1 = _selectedLanguage == SeminarLanguage.english
-                            ? 'Ministry of higher education'
-                            : (_selectedLanguage == SeminarLanguage.arabic
-                                ? 'وزارة التعليم العالي والبحث العلمي'
-                                : 'وەزارەتی خوێندنی باڵا و توێژینەوەی زانستی');
-
-                        final ministryLine2 = _selectedLanguage == SeminarLanguage.english ? 'And science research' : '';
-
-                        final reportAboutLabel = _selectedLanguage == SeminarLanguage.english
-                            ? 'Report about :'
-                            : (_selectedLanguage == SeminarLanguage.arabic ? 'تقرير حول :' : 'ڕاپۆرت لەبارەی :');
-
-                        final preparedLabel = _selectedLanguage == SeminarLanguage.english
-                            ? 'Prepared by :'
-                            : (_selectedLanguage == SeminarLanguage.arabic ? 'إعداد :' : 'ئامادەکردنی :');
-
-                        final supervisorLabel = _selectedLanguage == SeminarLanguage.english
-                            ? 'supervisor :'
-                            : (_selectedLanguage == SeminarLanguage.arabic ? 'بإشراف :' : 'بەسەرپەرشتیی :');
-
-                        final stageText = _parsedReport!.academicYear.isNotEmpty
-                            ? _parsedReport!.academicYear
-                            : (_selectedLanguage == SeminarLanguage.english ? 'Stage : One' : 'قۆناغی : یەکەم');
-
-                        final studentList = _parsedReport!.studentName
-                            .split(RegExp(r'[\n\r,،]+'))
-                            .map((s) => s.trim())
-                            .where((s) => s.isNotEmpty)
-                            .toList();
-
-                        // Header Info Widget
-                        final headerInfoWidget = Column(
-                          crossAxisAlignment: isKurdishOrArabic ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              ministryLine1,
-                              textAlign: isKurdishOrArabic ? TextAlign.right : TextAlign.left,
-                              style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? Colors.grey[200] : const Color(0xFF0F172A)),
-                            ),
-                            if (ministryLine2.isNotEmpty) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                ministryLine2,
-                                textAlign: isKurdishOrArabic ? TextAlign.right : TextAlign.left,
-                                style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13, color: isDark ? Colors.grey[200] : const Color(0xFF0F172A)),
-                              ),
-                            ],
-                            const SizedBox(height: 2),
-                            Text(
-                              _parsedReport!.universityName,
-                              textAlign: isKurdishOrArabic ? TextAlign.right : TextAlign.left,
-                              style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13, color: isDark ? Colors.grey[200] : const Color(0xFF0F172A)),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              _parsedReport!.departmentName,
-                              textAlign: isKurdishOrArabic ? TextAlign.right : TextAlign.left,
-                              style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12.5, color: isDark ? Colors.grey[300] : const Color(0xFF334155)),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              stageText,
-                              textAlign: isKurdishOrArabic ? TextAlign.right : TextAlign.left,
-                              style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, color: isDark ? Colors.grey[400] : const Color(0xFF475569)),
-                            ),
-                          ],
-                        );
-
-                        // Logo Widget
-                        final logoWidget = _universityLogoBytes != null
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Image.memory(_universityLogoBytes!, width: 64, height: 64, fit: BoxFit.cover),
-                              )
-                            : Container(
-                                width: 58,
-                                height: 58,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFC00000).withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: const Color(0xFFC00000).withValues(alpha: 0.3)),
-                                ),
-                                child: const Center(child: Text('🎓', style: TextStyle(fontSize: 28))),
-                              );
-
-                        // Prepared By Widget
-                        final preparedByWidget = Column(
-                          crossAxisAlignment: isKurdishOrArabic ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              preparedLabel,
-                              textAlign: isKurdishOrArabic ? TextAlign.right : TextAlign.left,
-                              style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 14, color: isDark ? Colors.white : Colors.black),
-                            ),
-                            const SizedBox(height: 4),
-                            if (studentList.isEmpty)
-                              Text(_parsedReport!.studentName, textAlign: isKurdishOrArabic ? TextAlign.right : TextAlign.left, style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.w600, fontSize: 13.5, color: isDark ? Colors.grey[200] : Colors.black87))
-                            else
-                              ...studentList.map((s) => Text(
-                                    s,
-                                    textAlign: isKurdishOrArabic ? TextAlign.right : TextAlign.left,
-                                    style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.w600, fontSize: 13.5, color: isDark ? Colors.grey[200] : Colors.black87),
-                                  )),
-                          ],
-                        );
-
-                        // Supervisor Widget
-                        final supervisorWidget = Column(
-                          crossAxisAlignment: isKurdishOrArabic ? CrossAxisAlignment.start : CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              supervisorLabel,
-                              textAlign: isKurdishOrArabic ? TextAlign.left : TextAlign.right,
-                              style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 14, color: isDark ? Colors.white : Colors.black),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _parsedReport!.supervisorName,
-                              textAlign: isKurdishOrArabic ? TextAlign.left : TextAlign.right,
-                              style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.w600, fontSize: 13.5, color: isDark ? Colors.grey[200] : Colors.black87),
-                            ),
-                          ],
-                        );
-
-                        final yearDisplay = _parsedReport!.academicYear.isNotEmpty ? _parsedReport!.academicYear : '2024-2025';
-
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Top Row: Respect RTL / LTR
-                            if (!isKurdishOrArabic)
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(child: headerInfoWidget),
-                                  const SizedBox(width: 12),
-                                  logoWidget,
-                                ],
-                              )
-                            else
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  logoWidget,
-                                  const SizedBox(width: 12),
-                                  Expanded(child: headerInfoWidget),
-                                ],
-                              ),
-
-                            // Center: "Report about :" in RED, then Title in RED bold
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 48),
-                              child: Center(
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      reportAboutLabel,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontFamily: _currentFontFamily,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                        color: const Color(0xFFC00000), // Crimson Red
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Text(
-                                      _parsedReport!.title,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontFamily: _currentFontFamily,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 22,
-                                        letterSpacing: 0.3,
-                                        color: const Color(0xFFC00000), // Crimson Red
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-
-                            // Bottom Row: Respect RTL / LTR
-                            if (!isKurdishOrArabic)
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(child: preparedByWidget),
-                                  const SizedBox(width: 12),
-                                  Expanded(child: supervisorWidget),
-                                ],
-                              )
-                            else
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(child: supervisorWidget),
-                                  const SizedBox(width: 12),
-                                  Expanded(child: preparedByWidget),
-                                ],
-                              ),
-
-                            // Bottom-Center: Academic Year in RED bold
-                            const SizedBox(height: 40),
-                            Center(
-                              child: Text(
-                                yearDisplay,
-                                style: TextStyle(
-                                  fontFamily: _currentFontFamily,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                  color: const Color(0xFFC00000),
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ] else if (currentPage.pageType == 'toc') ...[
-                  // ── PAGE 2: TABLE OF CONTENTS ──
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 24),
-                      child: Text(
-                        currentPage.pageTitle,
-                        style: TextStyle(
-                          fontFamily: _currentFontFamily,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                          color: const Color(0xFFC00000),
-                        ),
-                      ),
-                    ),
-                  ),
-                  ...currentPage.bulletPoints.map((item) => Container(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
-                        ),
-                        child: Row(
-                          children: [
-                            Text('🔹 ', style: TextStyle(color: const Color(0xFFC00000), fontSize: 13)),
-                            Expanded(
-                              child: Text(
-                                item,
-                                style: TextStyle(
-                                  fontFamily: _currentFontFamily,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )),
-                ] else if (currentPage.pageType == 'references') ...[
-                  // ── PAGE 8: REFERENCES ──
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 24),
-                      child: Text(
-                        currentPage.pageTitle,
-                        style: TextStyle(
-                          fontFamily: _currentFontFamily,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                          color: const Color(0xFFC00000),
-                        ),
-                      ),
-                    ),
-                  ),
-                  ...currentPage.bulletPoints.asMap().entries.map((entry) {
-                    final idx = entry.key + 1;
-                    final refText = entry.value;
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('$idx. ', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-                          Expanded(
-                            child: Text(
-                              refText,
-                              style: TextStyle(
-                                fontFamily: _currentFontFamily,
-                                fontSize: 13,
-                                height: 1.5,
-                                color: isDark ? Colors.grey[200] : const Color(0xFF1E293B),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-                ] else ...[
-                  // ── PAGES 3 TO 7: CONTENT PAGES (2 SECTIONS PER PAGE) ──
-                  if (currentPage.sections.isNotEmpty) ...[
-                    ...currentPage.sections.map((sec) => Container(
-                          margin: const EdgeInsets.only(bottom: 24),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: isDark ? Colors.white.withValues(alpha: 0.02) : Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              // Section Red Title e.g. "1. Introduction"
-                              Text(
-                                '${sec.sectionNumber}. ${sec.title}',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontFamily: _currentFontFamily,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16.5,
-                                  color: const Color(0xFFC00000), // Crimson Red
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              if (sec.content.isNotEmpty)
-                                Text(
-                                  sec.content,
-                                  textAlign: TextAlign.start,
-                                  style: TextStyle(
-                                    fontFamily: _currentFontFamily,
-                                    fontSize: 13.5,
-                                    height: 1.6,
-                                    color: isDark ? Colors.grey[200] : const Color(0xFF1E293B),
-                                  ),
-                                ),
-                              if (sec.bulletPoints.isNotEmpty) ...[
-                                const SizedBox(height: 10),
-                                ...sec.bulletPoints.map((bullet) => Padding(
-                                      padding: const EdgeInsets.only(bottom: 6),
-                                      child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          const Text('• ', style: TextStyle(color: Color(0xFFC00000), fontSize: 16, fontWeight: FontWeight.bold)),
-                                          Expanded(
-                                            child: Text(
-                                              bullet,
-                                              style: TextStyle(
-                                                fontFamily: _currentFontFamily,
-                                                fontSize: 13,
-                                                height: 1.45,
-                                                color: isDark ? Colors.grey[300] : const Color(0xFF334155),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    )),
-                              ],
-                            ],
-                          ),
-                        )),
-
-                    // ── Topic-Specific Scientific Image & Diagram ──
-                    if (currentPage.imageUrl != null && currentPage.imageUrl!.isNotEmpty) ...[
-                      Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.only(top: 8, bottom: 12),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              SizedBox(
-                                height: 190,
-                                child: Image.network(
-                                  currentPage.imageUrl!,
-                                  fit: BoxFit.cover,
-                                  loadingBuilder: (ctx, child, progress) {
-                                    if (progress == null) return child;
-                                    return Container(
-                                      color: isDark ? Colors.grey[900] : const Color(0xFFF1F5F9),
-                                      child: const Center(child: CupertinoActivityIndicator()),
-                                    );
-                                  },
-                                  errorBuilder: (ctx, err, stack) => Container(
-                                    height: 120,
-                                    color: isDark ? Colors.grey[900] : const Color(0xFFF1F5F9),
-                                    child: const Center(
-                                      child: Icon(CupertinoIcons.photo, size: 40, color: Colors.grey),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(CupertinoIcons.photo_fill_on_rectangle_fill, size: 14, color: Color(0xFFC00000)),
-                                    const SizedBox(width: 6),
-                                    Flexible(
-                                      child: Text(
-                                        _selectedLanguage == SeminarLanguage.english
-                                            ? 'Figure (${currentPage.pageNumber - 2}): ${currentPage.pageTitle}'
-                                            : 'شێوەی زانستی (${currentPage.pageNumber - 2}): ${currentPage.pageTitle}',
-                                        style: TextStyle(
-                                          fontFamily: _currentFontFamily,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                          color: isDark ? Colors.grey[300] : const Color(0xFF475569),
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ] else ...[
-                    // Generic fallback content
-                    if (currentPage.content.isNotEmpty)
-                      Text(
-                        currentPage.content,
-                        style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13.5, height: 1.6),
-                      ),
-                  ],
-                ],
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-          const Divider(),
-          const SizedBox(height: 12),
-
-          // ── Dual Download Buttons: Word (.docx) & PDF (.pdf) ──
-          Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 50,
-                  child: ElevatedButton.icon(
-                    onPressed: _isExportingDocx ? null : _exportDocx,
-                    icon: _isExportingDocx
-                        ? const CupertinoActivityIndicator(color: Colors.white)
-                        : const Icon(CupertinoIcons.doc_fill, color: Colors.white, size: 18),
-                    label: Text(
-                      _isExportingDocx
-                          ? (_selectedLanguage == SeminarLanguage.english ? 'Creating...' : 'دروستکردن...')
-                          : (_selectedLanguage == SeminarLanguage.english ? '📄 Download Word' : '📄 داگرتنی Word'),
-                      style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2B579A), // Word Blue
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: 0,
-                    ),
-                  ),
-                ),
+            width: double.infinity,
+            height: 46,
+            child: ElevatedButton.icon(
+              onPressed: () => _handleTopicSelection(topic.titleKurdish),
+              icon: Icon(
+                isSeminar ? CupertinoIcons.play_fill : CupertinoIcons.doc_text_fill,
+                color: Colors.white,
+                size: 16,
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: SizedBox(
-                  height: 50,
-                  child: ElevatedButton.icon(
-                    onPressed: _isExportingPdf ? null : _exportPdf,
-                    icon: _isExportingPdf
-                        ? const CupertinoActivityIndicator(color: Colors.white)
-                        : const Icon(CupertinoIcons.arrow_down_doc_fill, color: Colors.white, size: 18),
-                    label: Text(
-                      _isExportingPdf
-                          ? (_selectedLanguage == SeminarLanguage.english ? 'Creating...' : 'دروستکردن...')
-                          : (_selectedLanguage == SeminarLanguage.english ? '📑 Download PDF' : '📑 داگرتنی PDF'),
-                      style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFD32F2F), // PDF Red
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: 0,
-                    ),
-                  ),
-                ),
+              label: Text(
+                isSeminar
+                    ? (_isEnglish ? 'Generate 8 Slides Seminar 🚀' : (_isBadini ? 'چێکرنا سیمینارێ (٨ سلاید) 🚀' : 'دروستکردنی سیمیناری ٨ سلاید 🚀'))
+                    : (_isEnglish ? 'Generate Academic Report 📑' : (_isBadini ? 'چێکرنا ڕاپۆرتا ئەکادیمی 📑' : 'دروستکردنی ڕاپۆرتی ئەکادیمی 📑')),
+                style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 13.5, color: Colors.white),
               ),
-            ],
+              style: ElevatedButton.styleFrom(
+                backgroundColor: themeColor,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  // ── Canva & PPTX 8 Slides Viewer Component ─────────────────────────────────
+  // ─── 5. Canva & PPTX 8 Slides Viewer Component ─────────────────────────────
   Widget _buildSlidesViewerCard(bool isDark) {
     final currentSlide = _parsedSlides.isNotEmpty && _selectedSlideIndex < _parsedSlides.length
         ? _parsedSlides[_selectedSlideIndex]
         : null;
 
+    final titleForImage = _activeGeneratedTitle ?? _topicSearchController.text.trim();
     final imgUrl = currentSlide?.imageUrl ??
         PptxGeneratorService.getSlideSpecificImageUrl(
-          _topicController.text.trim(),
+          titleForImage,
           _selectedSlideIndex + 1,
         );
 
@@ -2926,7 +1984,7 @@ Please format and classify the following academic reference in standard APA 7th 
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    _selectedLanguage == SeminarLanguage.english
+                    _isEnglish
                         ? 'Presentation (${_parsedSlides.length} Slides)'
                         : 'سیمیناری تەواو (${_parsedSlides.length} سلاید)',
                     style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 15),
@@ -2983,7 +2041,7 @@ Please format and classify the following academic reference in standard APA 7th 
                     ),
                     child: Center(
                       child: Text(
-                        _selectedLanguage == SeminarLanguage.english ? 'Slide ${i + 1}' : 'سلایدی ${i + 1}',
+                        _isEnglish ? 'Slide ${i + 1}' : 'سلایدی ${i + 1}',
                         style: TextStyle(
                           fontFamily: _currentFontFamily,
                           fontSize: 12,
@@ -3100,7 +2158,7 @@ Please format and classify the following academic reference in standard APA 7th 
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    _selectedLanguage == SeminarLanguage.english
+                                    _isEnglish
                                         ? '🖼️ Image & Canva Design: ${currentSlide.visualPrompt!}'
                                         : '🖼️ وێنە و دیزاینی Canva: ${currentSlide.visualPrompt!}',
                                     style: TextStyle(
@@ -3195,7 +2253,7 @@ Please format and classify the following academic reference in standard APA 7th 
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        _selectedLanguage == SeminarLanguage.english
+                                        _isEnglish
                                             ? '🎙️ Speaker Speech Script:'
                                             : '🎙️ وتاری پێشکەشکار بۆ قسەکردن:',
                                         style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amber),
@@ -3239,7 +2297,7 @@ Please format and classify the following academic reference in standard APA 7th 
                     onPressed: _showCanvaInstructions,
                     icon: const Icon(CupertinoIcons.paintbrush_fill, color: Colors.white, size: 18),
                     label: Text(
-                      _selectedLanguage == SeminarLanguage.english ? '🎨 Open in Canva' : '🎨 کردنەوە لە Canva',
+                      _isEnglish ? '🎨 Open in Canva' : '🎨 کردنەوە لە Canva',
                       style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -3261,8 +2319,8 @@ Please format and classify the following academic reference in standard APA 7th 
                         : const Icon(CupertinoIcons.arrow_down_doc_fill, color: Colors.white, size: 18),
                     label: Text(
                       _isExportingPptx
-                          ? (_selectedLanguage == SeminarLanguage.english ? 'Creating...' : 'دروستکردن...')
-                          : (_selectedLanguage == SeminarLanguage.english ? '📥 Download PPTX' : '📥 داگرتنی PPTX'),
+                          ? (_isEnglish ? 'Creating...' : 'دروستکردن...')
+                          : (_isEnglish ? '📥 Download PPTX' : '📥 داگرتنی PPTX'),
                       style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -3275,12 +2333,643 @@ Please format and classify the following academic reference in standard APA 7th 
               ),
             ],
           ),
+
+          // Return to suggested topics button
+          if (_suggestedTopics.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Center(
+              child: TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _parsedSlides = [];
+                    _generatedResult = null;
+                  });
+                },
+                icon: const Icon(CupertinoIcons.arrow_left_circle, size: 16),
+                label: Text(
+                  _isEnglish ? 'Back to suggested topics' : 'گەڕانەوە بۆ لیستی بابەتە پێشنیارکراوەکان',
+                  style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  // ── Raw Text Fallback Card ──────────────────────────────────────────────────
+  // ─── 6. Academic Report Viewer & Exporter ──────────────────────────────────
+  Widget _buildReportViewerCard(bool isDark) {
+    if (_parsedReport == null || _parsedReport!.pages.isEmpty) return const SizedBox();
+
+    final currentPage = _selectedReportPageIndex < _parsedReport!.pages.length
+        ? _parsedReport!.pages[_selectedReportPageIndex]
+        : _parsedReport!.pages.first;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? ZankoColors.darkCard : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFF97316).withValues(alpha: 0.35), width: 1.5),
+        boxShadow: isDark ? [] : ZankoShadows.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF97316).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(CupertinoIcons.doc_text_fill, color: Color(0xFFF97316), size: 18),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _isEnglish
+                        ? 'Academic Report (${_parsedReport!.pages.length} Pages)'
+                        : 'ڕاپۆرتی ئەکادیمی (${_parsedReport!.pages.length} پەڕە)',
+                    style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    onPressed: _isExportingDocx ? null : _exportDocx,
+                    icon: _isExportingDocx
+                        ? const SizedBox(width: 18, height: 18, child: CupertinoActivityIndicator())
+                        : const Icon(CupertinoIcons.doc_fill, color: Color(0xFF2B579A), size: 20),
+                    tooltip: 'Word (.docx)',
+                  ),
+                  IconButton(
+                    onPressed: _isExportingPdf ? null : _exportPdf,
+                    icon: _isExportingPdf
+                        ? const SizedBox(width: 18, height: 18, child: CupertinoActivityIndicator())
+                        : const Icon(CupertinoIcons.arrow_down_doc_fill, color: Color(0xFFD32F2F), size: 20),
+                    tooltip: 'PDF (.pdf)',
+                  ),
+                  IconButton(
+                    onPressed: _copyToClipboard,
+                    icon: Icon(CupertinoIcons.doc_on_doc, color: ZankoColors.accent, size: 20),
+                    tooltip: 'Copy',
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          const Divider(),
+          const SizedBox(height: 10),
+
+          // Horizontal Page Switcher
+          SizedBox(
+            height: 42,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _parsedReport!.pages.length,
+              itemBuilder: (ctx, i) {
+                final isSel = i == _selectedReportPageIndex;
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedReportPageIndex = i),
+                  child: Container(
+                    margin: const EdgeInsets.only(left: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      gradient: isSel
+                          ? LinearGradient(colors: [ZankoColors.primary, ZankoColors.accent])
+                          : null,
+                      color: isSel ? null : (isDark ? Colors.white10 : Colors.grey[200]),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Center(
+                      child: Text(
+                        _isEnglish ? 'Page ${i + 1}' : 'پەڕەی ${i + 1}',
+                        style: TextStyle(
+                          fontFamily: _currentFontFamily,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isSel ? Colors.white : (isDark ? Colors.grey[300] : ZankoColors.textPrimary),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Active Page Content Display
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: isDark ? ZankoColors.darkBackground : const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Page Header / Type Badge
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFC00000), // Crimson Red
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        _isEnglish
+                            ? 'Page ${currentPage.pageNumber} of ${_parsedReport!.pages.length}'
+                            : 'پەڕەی ${currentPage.pageNumber} لە ${_parsedReport!.pages.length}',
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                      ),
+                    ),
+                    Text(
+                      currentPage.pageType.toUpperCase(),
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.grey),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // Page Title
+                Text(
+                  currentPage.pageTitle,
+                  style: TextStyle(
+                    fontFamily: _currentFontFamily,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+                const Divider(height: 18),
+
+                // Page 1: Cover Page
+                if (currentPage.pageType == 'cover') ...[
+                  _buildCoverPageView(isDark),
+                ] else if (currentPage.pageType == 'toc') ...[
+                  // Page 2: Table of Contents
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Text(
+                        currentPage.pageTitle,
+                        style: TextStyle(
+                          fontFamily: _currentFontFamily,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: const Color(0xFFC00000),
+                        ),
+                      ),
+                    ),
+                  ),
+                  ...currentPage.bulletPoints.map((item) => Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Text('🔹 ', style: TextStyle(color: Color(0xFFC00000), fontSize: 13)),
+                            Expanded(
+                              child: Text(
+                                item,
+                                style: TextStyle(
+                                  fontFamily: _currentFontFamily,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13.5,
+                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )),
+                ] else if (currentPage.pageType == 'references') ...[
+                  // Page 8: References
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Text(
+                        currentPage.pageTitle,
+                        style: TextStyle(
+                          fontFamily: _currentFontFamily,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: const Color(0xFFC00000),
+                        ),
+                      ),
+                    ),
+                  ),
+                  ...currentPage.bulletPoints.asMap().entries.map((entry) {
+                    final idx = entry.key + 1;
+                    final refText = entry.value;
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('$idx. ', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          Expanded(
+                            child: Text(
+                              refText,
+                              style: TextStyle(
+                                fontFamily: _currentFontFamily,
+                                fontSize: 12.5,
+                                height: 1.5,
+                                color: isDark ? Colors.grey[200] : const Color(0xFF1E293B),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ] else ...[
+                  // Content Sections
+                  if (currentPage.sections.isNotEmpty) ...[
+                    ...currentPage.sections.map((sec) => Container(
+                          margin: const EdgeInsets.only(bottom: 20),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.white.withValues(alpha: 0.02) : Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                '${sec.sectionNumber}. ${sec.title}',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: _currentFontFamily,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15.5,
+                                  color: const Color(0xFFC00000),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              if (sec.content.isNotEmpty)
+                                Text(
+                                  sec.content,
+                                  textAlign: TextAlign.start,
+                                  style: TextStyle(
+                                    fontFamily: _currentFontFamily,
+                                    fontSize: 13,
+                                    height: 1.6,
+                                    color: isDark ? Colors.grey[200] : const Color(0xFF1E293B),
+                                  ),
+                                ),
+                              if (sec.bulletPoints.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                ...sec.bulletPoints.map((bullet) => Padding(
+                                      padding: const EdgeInsets.only(bottom: 6),
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Text('• ', style: TextStyle(color: Color(0xFFC00000), fontSize: 15, fontWeight: FontWeight.bold)),
+                                          Expanded(
+                                            child: Text(
+                                              bullet,
+                                              style: TextStyle(
+                                                fontFamily: _currentFontFamily,
+                                                fontSize: 12.5,
+                                                height: 1.45,
+                                                color: isDark ? Colors.grey[300] : const Color(0xFF334155),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )),
+                              ],
+                            ],
+                          ),
+                        )),
+
+                    // Diagram
+                    if (currentPage.imageUrl != null && currentPage.imageUrl!.isNotEmpty) ...[
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(top: 6, bottom: 12),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Column(
+                            children: [
+                              SizedBox(
+                                height: 170,
+                                width: double.infinity,
+                                child: Image.network(
+                                  currentPage.imageUrl!,
+                                  fit: BoxFit.cover,
+                                  loadingBuilder: (ctx, child, progress) => progress == null ? child : const Center(child: CupertinoActivityIndicator()),
+                                  errorBuilder: (ctx, err, stack) => Container(height: 120, color: Colors.grey[900], child: const Center(child: Icon(CupertinoIcons.photo, size: 40, color: Colors.grey))),
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+                                child: Text(
+                                  _isEnglish
+                                      ? 'Figure (${currentPage.pageNumber - 2}): ${currentPage.pageTitle}'
+                                      : 'شێوەی زانستی (${currentPage.pageNumber - 2}): ${currentPage.pageTitle}',
+                                  style: TextStyle(fontFamily: _currentFontFamily, fontSize: 11.5, fontWeight: FontWeight.bold, color: const Color(0xFFC00000)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ],
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+          const Divider(),
+          const SizedBox(height: 12),
+
+          // Download Word & PDF
+          Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 50,
+                  child: ElevatedButton.icon(
+                    onPressed: _isExportingDocx ? null : _exportDocx,
+                    icon: _isExportingDocx
+                        ? const CupertinoActivityIndicator(color: Colors.white)
+                        : const Icon(CupertinoIcons.doc_fill, color: Colors.white, size: 18),
+                    label: Text(
+                      _isExportingDocx
+                          ? (_isEnglish ? 'Creating...' : 'دروستکردن...')
+                          : (_isEnglish ? '📄 Download Word' : '📄 داگرتنی Word'),
+                      style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2B579A), // Word Blue
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: SizedBox(
+                  height: 50,
+                  child: ElevatedButton.icon(
+                    onPressed: _isExportingPdf ? null : _exportPdf,
+                    icon: _isExportingPdf
+                        ? const CupertinoActivityIndicator(color: Colors.white)
+                        : const Icon(CupertinoIcons.arrow_down_doc_fill, color: Colors.white, size: 18),
+                    label: Text(
+                      _isExportingPdf
+                          ? (_isEnglish ? 'Creating...' : 'دروستکردن...')
+                          : (_isEnglish ? '📑 Download PDF' : '📑 داگرتنی PDF'),
+                      style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD32F2F), // PDF Red
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // Return to suggested topics button
+          if (_suggestedTopics.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Center(
+              child: TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _parsedReport = null;
+                    _generatedResult = null;
+                  });
+                },
+                icon: const Icon(CupertinoIcons.arrow_left_circle, size: 16),
+                label: Text(
+                  _isEnglish ? 'Back to suggested topics' : 'گەڕانەوە بۆ لیستی بابەتە پێشنیارکراوەکان',
+                  style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCoverPageView(bool isDark) {
+    final isKurdishOrArabic = !_isEnglish;
+    final ministryLine1 = _isEnglish
+        ? 'Ministry of higher education'
+        : (_isArabic
+            ? 'وزارة التعليم العالي والبحث العلمي'
+            : (_isBadini ? 'وەزارەتا خوێندنا باڵا و ڤەکۆلینێن زانستی' : 'وەزارەتی خوێندنی باڵا و توێژینەوەی زانستی'));
+
+    final ministryLine2 = _isEnglish ? 'And science research' : '';
+
+    final reportAboutLabel = _isEnglish
+        ? 'Report about :'
+        : (_isArabic ? 'تقرير حول :' : (_isBadini ? 'ڕاپۆرت ل دۆر :' : 'ڕاپۆرت لەبارەی :'));
+
+    final preparedLabel = _isEnglish
+        ? 'Prepared by :'
+        : (_isArabic ? 'إعداد :' : (_isBadini ? 'ئامادەکرن ژ لایێ :' : 'ئامادەکردنی :'));
+
+    final supervisorLabel = _isEnglish
+        ? 'supervisor :'
+        : (_isArabic ? 'بإشراف :' : (_isBadini ? 'ب سەرپەرشتیا :' : 'بەسەرپەرشتیی :'));
+
+    final stageText = _parsedReport!.academicYear.isNotEmpty
+        ? _parsedReport!.academicYear
+        : (_isEnglish ? 'Stage : One' : (_isBadini ? 'قۆناغا : ئێکێ' : 'قۆناغی : یەکەم'));
+
+    final studentList = _parsedReport!.studentName
+        .split(RegExp(r'[\n\r,،]+'))
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? ZankoColors.darkBackground : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (!isKurdishOrArabic) ...[
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(ministryLine1, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                      if (ministryLine2.isNotEmpty) Text(ministryLine2, style: const TextStyle(fontSize: 12)),
+                      Text(_parsedReport!.universityName, style: const TextStyle(fontSize: 12)),
+                      Text(_parsedReport!.departmentName, style: const TextStyle(fontSize: 11.5, color: Colors.grey)),
+                      Text(stageText, style: const TextStyle(fontSize: 11.5, color: Colors.grey)),
+                    ],
+                  ),
+                ),
+                _buildLogoWidget(),
+              ] else ...[
+                _buildLogoWidget(),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(ministryLine1, textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                      Text(_parsedReport!.universityName, textAlign: TextAlign.right, style: const TextStyle(fontSize: 12)),
+                      Text(_parsedReport!.departmentName, textAlign: TextAlign.right, style: const TextStyle(fontSize: 11.5, color: Colors.grey)),
+                      Text(stageText, textAlign: TextAlign.right, style: const TextStyle(fontSize: 11.5, color: Colors.grey)),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 36),
+            child: Center(
+              child: Column(
+                children: [
+                  Text(reportAboutLabel, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFFC00000))),
+                  const SizedBox(height: 8),
+                  Text(
+                    _parsedReport!.title,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Color(0xFFC00000)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (!isKurdishOrArabic) ...[
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(preparedLabel, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                      if (studentList.isEmpty)
+                        Text(_parsedReport!.studentName, style: const TextStyle(fontSize: 12.5))
+                      else
+                        ...studentList.map((s) => Text(s, style: const TextStyle(fontSize: 12.5))),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(supervisorLabel, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                      Text(_parsedReport!.supervisorName, style: const TextStyle(fontSize: 12.5)),
+                    ],
+                  ),
+                ),
+              ] else ...[
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(supervisorLabel, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                      Text(_parsedReport!.supervisorName, style: const TextStyle(fontSize: 12.5)),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(preparedLabel, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                      if (studentList.isEmpty)
+                        Text(_parsedReport!.studentName, style: const TextStyle(fontSize: 12.5))
+                      else
+                        ...studentList.map((s) => Text(s, textAlign: TextAlign.right, style: const TextStyle(fontSize: 12.5))),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 24),
+          Center(
+            child: Text(
+              _parsedReport!.academicYear.isNotEmpty ? _parsedReport!.academicYear : '2024-2025',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFFC00000)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLogoWidget() {
+    return _universityLogoBytes != null
+        ? ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.memory(_universityLogoBytes!, width: 56, height: 56, fit: BoxFit.cover),
+          )
+        : Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: const Color(0xFFC00000).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFC00000).withValues(alpha: 0.3)),
+            ),
+            child: const Center(child: Text('🎓', style: TextStyle(fontSize: 24))),
+          );
+  }
+
+  // ─── Raw Result Fallback Card ──────────────────────────────────────────────
   Widget _buildRawResultCard(bool isDark) {
     return Container(
       width: double.infinity,
@@ -3302,7 +2991,7 @@ Please format and classify the following academic reference in standard APA 7th 
                   Icon(CupertinoIcons.checkmark_seal_fill, color: ZankoColors.accent, size: 20),
                   const SizedBox(width: 8),
                   Text(
-                    _selectedLanguage == SeminarLanguage.english ? 'Results' : 'ئەنجامەکان',
+                    _isEnglish ? 'Results' : 'ئەنجامەکان',
                     style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 15),
                   ),
                 ],
@@ -3329,41 +3018,7 @@ Please format and classify the following academic reference in standard APA 7th 
     );
   }
 
-  Widget _buildTabBtn(_AssistantTab tab, String label, bool isDark) {
-    final isSel = _currentTab == tab;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            _currentTab = tab;
-            _generatedResult = null;
-            _parsedSlides = [];
-            _suggestedTopics = [];
-          });
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: isSel ? ZankoColors.accent : Colors.transparent,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: _currentFontFamily,
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: isSel ? Colors.white : (isDark ? Colors.grey[400] : ZankoColors.textSecondary),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ── Fallback Topics ────────────────────────────────────────────────────────
+  // ─── Fallback Topics Pool ──────────────────────────────────────────────────
   String _generateFallbackTopicsText(String dept) {
     final safeDept = dept.trim().isEmpty ? 'زانست و تەکنۆلۆژیا' : dept.trim();
     final dLower = safeDept.toLowerCase();
@@ -3374,216 +3029,90 @@ Please format and classify the following academic reference in standard APA 7th 
       pool = [
         {
           'ku': 'کاریگەریی نانۆتەکنۆلۆژیا لە دەستنیشانکردن و چارەسەری نەخۆشییە شێرپەنجەییەکان',
+          'badini': 'کارتێکرنا نانۆتەکنۆلۆژیایێ د دەستنیشانکرن و چارەسەرکرنا نەخۆشیێن شێرپەنجەیێ دا',
           'en': 'Nanotechnology Applications in Oncology Diagnosis and Targeted Therapy',
           'sum': 'لێکۆڵینەوە لەسەر بەکارهێنانی تەنۆلکە نانۆییەکان بۆ گەیاندنی دەرمان بە خانە تووشبووەکان بەبێ زیانگەیاندن بە خانە ساغەکان.',
           'q': 'چۆن نانۆپارتیکڵەکان دەتوانن ڕێژەی کاریگەریی چارەسەری کیمیایی بەرز بکەنەوە؟',
         },
         {
           'ku': 'ڕۆڵی ژیریی دەستکرد لە شیکاریی وێنەی پزیشکی و تیشکناسی (Radiology)',
+          'badini': 'ڕۆلێ ژیرییا دەستکرد د شیکاریا وێنەیێن پزیشکی و تیشکێ دا (Radiology)',
           'en': 'Artificial Intelligence in Medical Image Processing and Radiology',
           'sum': 'هەڵسەنگاندنی ئەلگۆریتمەکانی بینینی کۆمپیوتەری بۆ دەستنیشانکردنی زووەوەختی وەرەم و شکانە وردەکان بە وردبینی ٩٨٪.',
           'q': 'تا چەند مۆدێلە قووڵەکان دەتوانن یارمەتیدەری پزیشکانی تیشک بن لە کەمکردنەوەی هەڵەکاندا؟',
         },
         {
           'ku': 'بەرگری دژەبەکتریایی (Antibiotic Resistance) و بەکارهێنانی چارەسەری بەکتریۆفەیج',
+          'badini': 'بەرگرییا دژەبەکتریایی (Antibiotic Resistance) و بکارئینانا چارەسەرییا بەکتریۆفەیج',
           'en': 'Bacterial Resistance to Antibiotics and Bacteriophage Therapy',
           'sum': 'شیکاریی مەترسییەکانی بڵاوبوونەوەی سوپەربەکتریای بەرگریکار و چارەسەرە نوێیە بایۆلۆجییەکان.',
           'q': 'ئایا چارەسەری بەکتریۆفەیج دەتوانێت جێگرەوەی دژەبەکتریا باوەکان بێت؟',
         },
         {
           'ku': 'کاریگەریی مایکڕۆبایۆمی ڕیخۆڵە لەسەر نەخۆشییە دەماری و دەروونییەکان (Gut-Brain Axis)',
+          'badini': 'کارتێکرنا مایکڕۆبایۆما ڕیڤیکان ل سەر نەخۆشیێن دەماری و دەروونی (Gut-Brain Axis)',
           'en': 'Gut Microbiome and the Gut-Brain Axis in Neurological Disorders',
           'sum': 'لێکۆڵینەوە لە پەیوەندی نێوان بەکتریای سوودبەخشی هەرس و باری دەروونی و نەخۆشییەکانی پارکینسۆن و خەمۆکی.',
           'q': 'میکانیزمە بایۆکیمیاییەکانی پەیوەندی نێوان کۆئەندامی هەرس و مێشک چین؟',
         },
-        {
-          'ku': 'بەکارهێنانی پشکنینی بایۆمارکەرە پێشکەوتووەکان لە دەستنیشانکردنی زووی نەخۆشییەکانی دڵ',
-          'en': 'Advanced Cardiac Biomarkers in Early Cardiovascular Risk Assessment',
-          'sum': 'شیکاریی پێوەرە تاقیگەییە نوێیەکان و ترۆپۆنینی هەستیار بۆ پێشبینیکردنی جەڵتەی دڵ.',
-          'q': 'بایۆمارکەرە نوێیەکان چۆن کاتی دەستنیشانکردنی نەخۆشییە مەترسیدارەکان کەم دەکەنەوە؟',
-        },
-        {
-          'ku': 'تەکنۆلۆژیای CRISPR و دەستکاریکردنی جینەکان لە نەخۆشییە بۆماوەییەکاندا',
-          'en': 'CRISPR-Cas9 Gene Editing in Genetic Diseases & Clinical Ethics',
-          'sum': 'شیکاریی پێشکەوتنەکانی دەستکاریکردنی جین بۆ چارەسەری نەخۆشییەکانی خوێن و تالاسیما.',
-          'q': 'ڕەهەندە تەکنیکی و ئەخلاقییەکانی بەکارهێنانی CRISPR لە کلینیکەکاندا چین؟',
-        },
-      ];
-    } else if (dLower.contains('ئەندازیار') || dLower.contains('بیناساز') || dLower.contains('کارەبا') || dLower.contains('میکانیک') || dLower.contains('تەلارساز') || dLower.contains('eng') || dLower.contains('civil') || dLower.contains('arch') || dLower.contains('electric') || dLower.contains('هندس')) {
-      pool = [
-        {
-          'ku': 'بیناسازیی سەوز و بەکارهێنانی کەرەستەی خۆڕاگر لە شارە زیرەکەکاندا',
-          'en': 'Green Building Technologies and Sustainable Materials in Smart Cities',
-          'sum': 'لێکۆڵینەوە لە کەمکردنەوەی بەفیڕۆچوونی وزە و بەکارهێنانی کۆنکرێتی خۆچاککەرەوە لە باڵەخانە نوێیەکاندا.',
-          'q': 'چۆن دیزاینی بیناسازیی سەوز دەتوانێت تێچووی وزە بە ڕێژەی ٥٠٪ کەم بکاتەوە؟',
-        },
-        {
-          'ku': 'پەرەپێدانی تۆڕە زیرەکەکانی کارەبا (Smart Grids) و ئاوێتەکردنی وزەی خۆر',
-          'en': 'Smart Electrical Grids and Renewable Solar Energy Integration',
-          'sum': 'شیکاریی دابەشکردنی کارەبای بەرهەمهاتوو لە سەرچاوە نوێبووەکان بە شێوازێکی هاوسەنگ و سەقامگیر.',
-          'q': 'میکانیزمە سەرەکییەکانی بەڕێوەبردنی بارگرانی لە تۆڕە زیرەکەکاندا چین؟',
-        },
-        {
-          'ku': 'بەکارهێنانی ڕۆبۆت و پرینتەری 3D لە کەرتی بیناسازی و پیشەسازیدا',
-          'en': '3D Concrete Printing and Autonomous Robotics in Construction',
-          'sum': 'هەڵسەنگاندنی خێرایی دروستکردنی باڵەخانە بە پرینتەری سێ دووری و کەمکردنەوەی پاشماوەی کەرەستەکان.',
-          'q': 'ئایا چاپکردنی سێ دووری دەتوانێت کاتی جێبەجێکردنی پڕۆژە ئەندازیارییەکان بۆ نیوە کەم بکاتەوە؟',
-        },
-        {
-          'ku': 'شیکاریی پەستانی داینامیکی و بەرگریی باڵەخانە بەرزەکان لە بەرامبەر بومەلەرزەدا',
-          'en': 'Seismic Resilience and Structural Dynamic Analysis of High-Rise Buildings',
-          'sum': 'بەکارهێنانی سیستەمی دامپەری بنەڕەتی و ژمێریاری پێشکەوتوو بۆ کەمکردنەوەی لەرزین.',
-          'q': 'بەهێزترین تەکنیکەکان چین بۆ پاراستنی باڵەخانەکان لە بەرامبەر زەمینلەرزە بەهێزەکاندا؟',
-        },
-        {
-          'ku': 'پاترییە پێشکەوتووەکانی لیتیۆم و هایدرۆجین لە ئۆتۆمبێلە کارەباییەکاندا (EV)',
-          'en': 'Solid-State Battery Technologies and Hydrogen Fuel in Electric Vehicles',
-          'sum': 'شیکاریی بەرزکردنەوەی توانای پاشەکەوتکردنی وزە و خێرایی شەحنکردنەوە لە سیستمە هاوچەرخەکاندا.',
-          'q': 'ئایا پاترییە دۆخ-ڕەقەکان دەتوانن جێگەی پاترییە شلەکان بگرنەوە بە کارایی بەرزتر؟',
-        },
-      ];
-    } else if (dLower.contains('یاسا') || dLower.contains('ماف') || dLower.contains('سیاس') || dLower.contains('law') || dLower.contains('polit') || dLower.contains('legal') || dLower.contains('حقوق') || dLower.contains('قانون')) {
-      pool = [
-        {
-          'ku': 'یاسای تاوانە ئەلیکترۆنییەکان و پاراستنی مافی تایبەتێتی تاک لە سەردەمی دیجیتاڵیدا',
-          'en': 'Cybercrime Legislation and Digital Privacy Protection Laws',
-          'sum': 'شیکاریی چوارچێوە یاساییەکان بۆ بەرەنگاربوونەوەی ساختەکاری دارایی و دەستدرێژی بۆ سەر زانیاری کەسی.',
-          'q': 'یاسا هاوچەرخەکان تا چەند دەتوانن سنوور بۆ تاوانە سنووربەزێنە ئەلیکترۆنییەکان دابنێن؟',
-        },
-        {
-          'ku': 'بەرپرسیارێتیی یاسایی لە بەرامبەر هەڵەی سیستمە خودموختارەکان و ژیریی دەستکرد',
-          'en': 'Legal Liability and Regulatory Frameworks for Autonomous AI Systems',
-          'sum': 'لێکۆڵینەوە لە کێشەکانی دەستنیشانکردنی تاوانبار لە کاتی ڕوودانی زیان بەهۆی ئۆتۆمبێلی بێ شۆفێر یان بڕیاری ئۆتۆماتیکی.',
-          'q': 'بەرپرسیارێتی یاسایی دەکەوێتە ئەستۆی دروستکەر، بەکارهێنەر، یاخود خودی سیستەمەکە؟',
-        },
-        {
-          'ku': 'مافەکانی مرۆڤ و پاراستنی ژینگە لە یاسای نێودەوڵەتیدا',
-          'en': 'International Environmental Law and Human Rights Protections',
-          'sum': 'شیکاریی پەیماننامە نێودەوڵەتییەکان بۆ سزادانی ئەو وڵات و کۆمپانیایانەی دەبنە هۆی پیسبوونی گەورەی ژینگە.',
-          'q': 'ئایا پیسکردنی ژینگە دەکرێت وەک تاوان دژی مرۆڤایەتی لە دادگای نێودەوڵەتی بناسێنرێت؟',
-        },
-        {
-          'ku': 'گرێبەستە ئەلیکترۆنییەکان و بەڵگەنامەی دیجیتاڵی لە یاسای بازرگانیدا',
-          'en': 'Electronic Contracts and Digital Evidence Admissibility in Commercial Law',
-          'sum': 'هەڵسەنگاندنی باوەڕپێکراوی ئیمزای ئەلیکترۆنی و بەڵگەنامە دیجیتاڵییەکان لە بەردەم دادگاکاندا.',
-          'q': 'مەرجە بنەڕەتییەکانی سەلماندنی گرێبەستی ئەلیکترۆنی لە یاسای دادوەریدا چین؟',
-        },
-      ];
-    } else if (dLower.contains('هونەر') || dLower.contains('شێوەکار') || dLower.contains('مۆسیقا') || dLower.contains('شانۆ') || dLower.contains('ئەدەب') || dLower.contains('مێژوو') || dLower.contains('جوگراف') || dLower.contains('فەلسەف') || dLower.contains('دەروون') || dLower.contains('کۆمەڵناسی') || dLower.contains('میدیا') || dLower.contains('ڕاگەیاندن') || dLower.contains('پەروەردە') || dLower.contains('art') || dLower.contains('fine') || dLower.contains('design') || dLower.contains('history') || dLower.contains('media') || dLower.contains('psych') || dLower.contains('فنون') || dLower.contains('فن') || dLower.contains('تاريخ')) {
-      pool = [
-        {
-          'ku': 'کاریگەریی تەکنۆلۆژیای دیجیتاڵ لەسەر پەرەسەندنی هونەری شێوەکاری و دیزاین',
-          'en': 'Digital Technology Impact on Modern Fine Arts and Graphic Design',
-          'sum': 'لێکۆڵینەوە لە تێکەڵبوونی هۆشیاری دیجیتاڵی و مۆدێلە ڕەنگاواڵەکان لە دروستکردنی تابلۆ و پەیکەرسازی هاوچەرخدا.',
-          'q': 'چۆن میدیای دیجیتاڵی تێگەیشتنی بینەر بۆ تابلۆ ئەکادیمییەکان دەگۆڕێت؟',
-        },
-        {
-          'ku': 'شیکاریی سیمۆتیکی (Semiotics) و هەڵهێنجانی هێماکان لە شانۆ و سینەمای ڕۆژهەڵاتی ناوەڕاستدا',
-          'en': 'Semiotics and Visual Symbolism in Contemporary Middle Eastern Cinema and Theater',
-          'sum': 'شیکردنەوەی ئاماژە و هێما درامییەکان لە دەقی شانۆیی و بەرھەمھێنانی بەرهەمە سینەماییەکاندا.',
-          'q': 'هێما درامییەکان چۆن پەیامی فەلسەفی بە بینەران دەگەیەنن؟',
-        },
-        {
-          'ku': 'دیزاینی بینراو (Visual Design) و بنەماکانی میماریا لە پاراستنی کەلەپوور و فۆلکلۆردا',
-          'en': 'Visual Design & Architectural Aesthetics in Cultural Heritage Preservation',
-          'sum': 'هەڵسەنگاندنی ڕۆڵی دیزاین و فۆتۆگرافیی ئەکادیمی لە پاراستنی شوێنەوارە هونەری و کلتورییەکان.',
-          'q': 'دیزاینەرانی هاوچەرخ چۆن دەتوانن هەستی فۆلکلۆری لە کارە نوێیەکاندا بپارێزن؟',
-        },
-        {
-          'ku': 'کاریگەریی دەروونناسیی ڕەنگەکان (Color Psychology) لەسەر ڕەفتاری بینەر و بەرهەمی هونەری',
-          'en': 'Color Psychology & Aesthetic Perception in Visual Arts and Advertising',
-          'sum': 'لێکۆڵینەوە لە کاردانەوەی دەماری و دەروونی بینەر بەرامبەر هارمۆنیی ڕەنگەکان لە کارە هونەرییەکاندا.',
-          'q': 'شیکاری ڕەنگەکان چۆن یارمەتی هونەرمەند دەدات کاریگەری دەروونی دروست بکات؟',
-        },
-      ];
-    } else if (dLower.contains('بازرگان') || dLower.contains('ئابوور') || dLower.contains('کارگێڕ') || dLower.contains('دارایی') || dLower.contains('ژمێریار') || dLower.contains('busin') || dLower.contains('econ') || dLower.contains('manage') || dLower.contains('finan') || dLower.contains('تجارة') || dLower.contains('اقتصاد')) {
-      pool = [
-        {
-          'ku': 'کاریگەریی دراوە دیجیتاڵییەکان و بلۆکچەین لەسەر سیستەمی بانکیی جیهانی',
-          'en': 'Central Bank Digital Currencies (CBDC) and Blockchain in Modern Banking',
-          'sum': 'شیکاریی گۆڕانکارییە داراییەکان و خێرایی حەواڵەکردنی نێودەوڵەتی بەبێ نێوەندگیر.',
-          'q': 'دراوە دیجیتاڵییەکانی بانکی ناوەندی چۆن مەترسییەکانی هەڵئاوسان کەم دەکەنەوە؟',
-        },
-        {
-          'ku': 'ستراتیژییەکانی بەبازاڕکردنی دیجیتاڵی و شیکاریی ڕەفتاری کڕیار بە ژیریی دەستکرد',
-          'en': 'AI-Driven Digital Marketing Strategies and Consumer Behavior Analytics',
-          'sum': 'لێکۆڵینەوە لە بەکارهێنانی داتای گەورە بۆ پێشبینیکردنی پێداویستییەکانی کڕیار و بەرزکردنەوەی فرۆش.',
-          'q': 'چۆن مۆدێلە پێشبینیکەرەکان ڕێژەی گەڕانەوەی وەبەرهێنان (ROI) زیاد دەکەن؟',
-        },
-        {
-          'ku': 'بەڕێوەبردنی زنجیرەی دابینکردن (Supply Chain) لە کاتی قەیرانە نێودەوڵەتییەکاندا',
-          'en': 'Resilient Supply Chain Management and Logistics During Global Crises',
-          'sum': 'هەڵسەنگاندنی بەکارهێنانی ئەلگۆریتمە هۆشیارەکان بۆ پێشبینیکردنی دواکەوتنی کەلوپەل و کەمکردنەوەی زەرەر.',
-          'q': 'چی ڕێکارێک یارمەتی کۆمپانیاکان دەدات پارێزگاری لە بەردەوامی هێڵی بەرهەمهێنان بکەن؟',
-        },
-        {
-          'ku': 'حووکمڕانیی کۆمپانیاکان (Corporate Governance) و شەفافیەتی دارایی لە بازاڕی پشکەکاندا',
-          'en': 'Corporate Governance, Financial Transparency, and ESG Investing',
-          'sum': 'شیکاریی پێوەرە ژینگەیی و کۆمەڵایەتییەکان (ESG) لە ڕاکێشانی وەبەرهێنەرە گەورەکاندا.',
-          'q': 'شەفافیەتی دارایی چۆن متمانەی وەبەرهێنەر و بەهای پشکەکان لە بازاڕدا بەرز دەکاتەوە؟',
-        },
       ];
     } else {
-      // Tech, AI, Computer Science & General Academic Pool
       pool = [
         {
           'ku': 'کاریگەریی مۆدێلە گەورەکانی زمان (LLMs) لەسەر شۆڕشی زانستی و فێربوونی ئەکادیمی',
+          'badini': 'کارتێکرنا مۆدێلێن مەزنێن زمان (LLMs) ل سەر شۆڕشا زانستی و فێربوونا ئەکادیمی',
           'en': 'Large Language Models (LLMs) Transforming Scientific Research & Academic Discovery',
           'sum': 'شیکاریی چۆنیەتی بەکارهێنانی ژیریی دەستکرد لە خێراکردنی لێکۆڵینەوەی تاقیگەیی و شیکاری داتا ئاڵۆزەکان.',
           'q': 'چۆن ژیریی دەستکرد دەتوانێت کاتی توێژینەوەی زانستی لە مانگەوە بۆ چەند خولەکێک کەم بکاتەوە؟',
         },
         {
           'ku': 'ئەمنییەتی سایبەری بە مۆدێلی Zero-Trust لە تۆڕە هەورییە نێودەوڵەتییەکاندا',
+          'badini': 'ئەمنییەتا سایبەری ب مۆدێلا Zero-Trust د تۆڕێن عەورێن نێڤدەولەتی دا',
           'en': 'Zero-Trust Architecture and Cloud Security Infrastructure in Modern Networks',
           'sum': 'لێکۆڵینەوە لە پرۆتۆکۆلەکانی پاراستنی داتابەیس و جێبەجێکردنی شفرەکردنی قووڵ لە هەموو لایەنەکانەوە.',
           'q': 'مۆدێلی Zero-Trust چۆن بە تەواوی ڕێگری لە دزەکردنی هاککەرەکان دەکات بۆ ناو تۆڕی ناوەکی؟',
         },
         {
           'ku': 'کۆمپیوتەری کوانتەمی (Quantum Computing) و کاریگەریی لەسەر شکاندنی شفرە کلاسیکییەکان',
+          'badini': 'کۆمپیوتەرا کوانتەمی (Quantum Computing) و کارتێکرنا وێ ل سەر شکاندنا شفرەیێن کەڤن',
           'en': 'Quantum Computing Advancements and the Post-Quantum Cryptography Era',
           'sum': 'شیکاریی توانای پرۆسێسەرە کوانتەمییەکان لە شیکارکردنی ئەلگۆریتمە قورسەکان و پێویستی شفرەی نوێ.',
           'q': 'بۆچی دەبێت سیستمە ئەمنییەکان خۆیان بۆ سەردەمی پۆست-کوانتەم ئامادە بکەن؟',
         },
         {
-          'ku': 'ئینتەرنێتی شتەکان (IoT) و شیکاریی لێواریی داتا (Edge Computing) لە شارە زیرەکەکاندا',
-          'en': 'Internet of Things (IoT) and Edge Computing in Next-Generation Smart Cities',
-          'sum': 'هەڵسەنگاندنی بەستنەوەی هەزاران سێنسەر و شیکارکردنی ڕاستەوخۆی داتا لە شوێنی ڕووداو بۆ کەمکردنەوەی لێتێنسی.',
-          'q': 'چۆن Edge Computing خێرایی وەڵامدانەوەی سیستمە ئۆتۆماتیکییەکان بەرز دەکاتەوە؟',
-        },
-        {
           'ku': 'سیستەمی بلۆکچەین لە بەڕێوەبردنی داتای ئەکادیمی و سەلماندنی بڕوانامە زانکۆییەکان',
+          'badini': 'سیستەمێ بلۆکچەین د بڕێڤەبرنا داتایێن ئەکادیمی و باوەرپێکرنا باوەرنامەیێن زانکۆیێ دا',
           'en': 'Blockchain Technology for Verifiable Academic Credentials and Research Integrity',
           'sum': 'شیکاریی بەکارهێنانی تۆماری نەگۆڕ (Immutable Ledger) بۆ نەهێشتنی تەزویر و ساختەکاری بڕوانامە.',
           'q': 'بلۆکچەین چۆن دەتوانێت ١٠٠٪ ساختەکاری لە بڕوانامە ئەکادیمییەکاندا بنبڕ بکات؟',
         },
-        {
-          'ku': 'دیدگای داهاتوو بۆ نەوەی شەشەمی پەیوەندییەکان (6G Networks) و کەمکردنەوەی دواکەوتن (Ultra-Low Latency)',
-          'en': 'Future Horizons of 6G Wireless Networks and Terahertz Communications',
-          'sum': 'لێکۆڵینەوە لە خێرایی تێراپێکسڵ و پەیوەندی هۆلۆگرامی و بەستنەوەی جیهانی فیزیکی و دیجیتاڵی.',
-          'q': 'تەکنۆلۆژیای 6G چ دەرگایەکی نوێ بۆ نەشتەرگەری لە دوورەوە و کۆنترۆڵی ئۆتۆمبێلەکان دەکاتەوە؟',
-        },
       ];
     }
 
-    // Shuffle pool for maximum variety each request
     pool.shuffle();
-    final selected = pool.take(6).toList();
+    final selected = pool.take(5).toList();
 
     final sb = StringBuffer();
     for (int i = 0; i < selected.length; i++) {
       final item = selected[i];
-      if (_selectedLanguage == SeminarLanguage.english) {
+      final titleStr = _isBadini ? (item['badini'] ?? item['ku']!) : item['ku']!;
+      if (_isEnglish) {
         sb.writeln('### 📌 Topic ${i + 1}: ${item['en']}');
-        sb.writeln('- **Secondary**: ${item['ku']}');
-        sb.writeln('- **💡 Summary & Significance**: Comprehensive academic investigation evaluating modern paradigms and practical implementations in $safeDept.');
-        sb.writeln('- **❓ Research Question**: How does this framework optimize operational efficiency and resolve core challenges in $safeDept?');
-      } else if (_selectedLanguage == SeminarLanguage.arabic) {
-        sb.writeln('### 📌 الموضوع ${i + 1}: ${item['ku']}');
+        sb.writeln('- **Secondary**: $titleStr');
+        sb.writeln('- **💡 Summary & Significance**: Comprehensive academic investigation evaluating modern paradigms in $safeDept.');
+        sb.writeln('- **❓ Research Question**: How does this framework optimize operational efficiency in $safeDept?');
+      } else if (_isArabic) {
+        sb.writeln('### 📌 الموضوع ${i + 1}: $titleStr');
         sb.writeln('- **العنوان الإنجليزي**: ${item['en']}');
         sb.writeln('- **💡 الملخص والأهمية**: ${item['sum']}');
         sb.writeln('- **❓ السؤال البحثي**: ${item['q']}');
+      } else if (_isBadini) {
+        sb.writeln('### 📌 بابەتێ ${i + 1}: $titleStr');
+        sb.writeln('- **ئینگلیزی**: ${item['en']}');
+        sb.writeln('- **💡 پوختەیا بیرۆکەیێ و گرنگی**: ${item['sum']}');
+        sb.writeln('- **❓ پرسیارا سەرەکییا ڤەکۆلینێ**: ${item['q']}');
       } else {
-        sb.writeln('### 📌 بابەتی ${i + 1}: ${item['ku']}');
+        sb.writeln('### 📌 بابەتی ${i + 1}: $titleStr');
         sb.writeln('- **ئینگلیزی**: ${item['en']}');
         sb.writeln('- **💡 کورتەی بیرۆکە و گرنگی**: ${item['sum']}');
         sb.writeln('- **❓ پرسیاری سەرەکی توێژینەوە**: ${item['q']}');
@@ -3598,9 +3127,10 @@ Please format and classify the following academic reference in standard APA 7th 
     final raw = _generateFallbackTopicsText(dept);
     return _parseTopicProposals(raw);
   }
-  // ── Fallback 8 Slide Seminar ───────────────────────────────────────────────
+
+  // ─── Fallback 8 Slide Seminar ──────────────────────────────────────────────
   String _generateFallback8SlideSeminar(String title) {
-    if (_selectedLanguage == SeminarLanguage.english) {
+    if (_isEnglish) {
       return '''
 # 📊 Presentation: "$title" (Canva & PPTX Format)
 ### 🔹 Slide 1: Introduction & Significance
@@ -3640,13 +3170,15 @@ Please format and classify the following academic reference in standard APA 7th 
 ''';
     }
 
+    final isBad = _isBadini;
+
     return '''
-# 📊 سیمیناری تەواوی ٨ سلایدی پاوەرپۆینت بۆ "$title" (Canva Style)
+# 📊 ${isBad ? 'سیمینارا تەمام یا ٨ سلایدان' : 'سیمیناری تەواوی ٨ سلایدی پاوەرپۆینت'} بۆ "$title" (Canva Style)
 ### 🔹 سلایدی ١: ناساندنی گشتی و ناونیشانی سەرەکی
-- لێکۆڵینەوەیەکی زانستیی سەردەمیانە لەسەر شێوازە مۆدێرنەکانی توێژینەوە لە بواری $title.
+- ${isBad ? 'ڤەکۆلینەکا زانستی یا سەردەم ل دۆر شێوازێن مۆدێرن د بواری $title دا.' : 'لێکۆڵینەوەیەکی زانستیی سەردەمیانە لەسەر شێوازە مۆدێرنەکانی توێژینەوە لە بواری $title.'}
 - بەکارهێنانی مۆدێلە پێشکەوتووەکان بۆ شیکردنەوەی داتا و بەرزکردنەوەی کارایی زانستی.
 - تیشکخستنە سەر گرنگیی پراکتیکی و تیۆریی بابەتەکە لە ناوەندە ئەکادیمییەکاندا.
-- 🎙️ **تێبینی پێشکەشکار**: "سڵاو و ڕێز مامۆستایانی بەڕێز، بەخێربێن بۆ ئەم سیمینارە لەسەر ناونیشانی ($title)."
+- 🎙️ **تێبینی پێشکەشکار**: "${isBad ? 'سڵاڤ مامۆستایێن هێژا، ب خێر هاتن بۆ ڤێ سیمینارێ ل سەر ناڤونیشانێ' : 'سڵاو و ڕێز مامۆستایانی بەڕێز، بەخێربێن بۆ ئەم سیمینارە لەسەر ناونیشانی'} ($title)."
 ### 🔹 سلایدی ٢: پاشخانی زانستی و هۆکاری سەرهەڵدانی بابەتەکە
 - شۆڕشی چوارەمی تەکنەلۆجی و گۆڕانی بنەڕەتی لە میتۆدەکانی فێرکاری و لێکۆڵینەوەدا.
 - توانای مۆدێلە زیرەکەکان لە کەمکردنەوەی کاتی لێکۆڵینەوە بە ڕێژەی زیاتر لە ٥٠٪.
@@ -3675,11 +3207,11 @@ Please format and classify the following academic reference in standard APA 7th 
 - Smith, J. A., & Davis, R. M. (2024). Modern Methodologies in Applied Academic Research. Academic Press.
 - World Educational Research Association (2025). Global Standards for Academic Excellence. WERA.
 - UNESCO (2025). Guidance for Applied Generative Technologies in Higher Education. Paris: UNESCO.
-- 🎙️ **تێبینی پێشکەشکار**: "سوپاس بۆ گوێگرتنتان، ئێستا بە خۆشحاڵییەوە دەرگا واڵایە بۆ پرسیارەکانتان."
+- 🎙️ **تێبینی پێشکەشکار**: "${isBad ? 'سوپاس بۆ گوهداریا هەوە، نوکە دەرگەهـ ڤەکرییە بۆ پرسیارێن هەوە.' : 'سوپاس بۆ گوێگرتنتان، ئێستا بە خۆشحاڵییەوە دەرگا واڵایە بۆ پرسیارەکانتان.'}"
 ''';
   }
 
-  // ── Fallback Academic Report (8 Pages Standard) ───────────────────────────
+  // ─── Fallback Academic Report (8 Pages Standard) ───────────────────────────
   String _generateFallback12PageReportText(String title) {
     final lang = _selectedLanguage.code;
     final sections = DocxGeneratorService.getDefaultSections(title, lang);
@@ -3710,33 +3242,5 @@ Please format and classify the following academic reference in standard APA 7th 
     }
 
     return sb.toString();
-  }
-
-  String _generateFallbackReferences(String text) {
-    return '''
-# 📚 پۆلێنکردنی زانستی سەرچاوەکان (APA 7th & IEEE Citation)
-
-## 📌 دەقی شیکارکراو: **"$text"**
-
----
-
-### 📖 ١. فرماتی زانستی APA (APA 7th Edition Format):
-- **ژێدەر (In-text Citation)**: (Smith & Ahmed, 2025)
-- **سەرچاوەی تەواو (Full Reference)**:
-  Smith, J. A., & Ahmed, M. K. (2025). *Modern Developments in Academic Technologies and Artificial Intelligence*. Journal of Educational Technology, 18(2), 112–128. https://doi.org/10.1016/j.jedtech.2025.01.004
-
----
-
-### 📑 ٢. فرماتی زانستی IEEE (IEEE Citation Standard):
-- **ژێدەر (In-text Citation)**: [1]
-- **سەرچاوەی تەواو (Full Reference)**:
-  [1] J. A. Smith and M. K. Ahmed, "Modern Developments in Academic Technologies and Artificial Intelligence," *IEEE Transactions on Learning Technologies*, vol. 18, no. 2, pp. 112–128, Feb. 2025.
-
----
-
-### 🔍 💡 پۆلێنکردنی سەرچاوەکە:
-- **جۆری سەرچاوە**: توێژینەوەی گۆڤاری زانستی هەڵسەنگێندراو (Peer-Reviewed Journal Article).
-- **ئاستی باوەڕپێکراوی**: ⭐️⭐️⭐️⭐️⭐️ (بەرزترین ئاستی ئەکادیمی).
-''';
   }
 }
