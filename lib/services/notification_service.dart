@@ -157,6 +157,11 @@ class NotificationService {
   }
 
   /// Sync device FCM token with user profile in Firestore
+  String? _lastSyncedUserId;
+  String? _lastSyncedToken;
+  bool? _lastSyncedVip;
+
+  /// Sync device FCM token with user profile in Firestore
   Future<void> syncUserToken(String userId, {bool isVip = false}) async {
     await init();
     if (_fcmToken == null) {
@@ -168,11 +173,17 @@ class NotificationService {
     }
 
     if (_fcmToken != null && userId.isNotEmpty) {
+      if (_lastSyncedUserId == userId && _lastSyncedToken == _fcmToken && _lastSyncedVip == isVip) {
+        return; // already synced
+      }
+      _lastSyncedUserId = userId;
+      _lastSyncedToken = _fcmToken;
+      _lastSyncedVip = isVip;
+
       try {
         await FirebaseFirestore.instance.collection('users').doc(userId).set({
           'fcmToken': _fcmToken,
           'fcmTokens': FieldValue.arrayUnion([_fcmToken]),
-          'lastTokenUpdate': FieldValue.serverTimestamp(),
           'devicePlatform': defaultTargetPlatform.name,
         }, SetOptions(merge: true));
 
@@ -206,23 +217,27 @@ class NotificationService {
         .where('userId', isEqualTo: userId)
         .snapshots()
         .listen((snap) async {
-      for (var doc in snap.docs) {
-        final data = doc.data();
-        final docId = doc.id;
-        final isRead = data['isRead'] == true;
+      for (var change in snap.docChanges) {
+        if (change.type == DocumentChangeType.added) {
+          final doc = change.doc;
+          final data = doc.data();
+          if (data == null) continue;
+          final docId = doc.id;
+          final isRead = data['isRead'] == true;
 
-        if (!isRead && !_seenDocIds.contains(docId)) {
-          final title = data['title'] ?? data['header'] ?? data['subject'] ?? '✉️ پەیام لە ئەدمینەوە';
-          final body = data['message'] ?? data['body'] ?? data['content'] ?? data['text'] ?? '';
+          if (!isRead && !_seenDocIds.contains(docId)) {
+            final title = data['title'] ?? data['header'] ?? data['subject'] ?? '✉️ پەیام لە ئەدمینەوە';
+            final body = data['message'] ?? data['body'] ?? data['content'] ?? data['text'] ?? '';
 
-          if (body.toString().trim().isNotEmpty || title.toString().trim().isNotEmpty) {
-            await showInstantNotification(
-              id: docId.hashCode,
-              title: title.toString(),
-              body: body.toString(),
-            );
-            _seenDocIds.add(docId);
-            await prefs.setStringList(_seenDocsKey, _seenDocIds.toList());
+            if (body.toString().trim().isNotEmpty || title.toString().trim().isNotEmpty) {
+              await showInstantNotification(
+                id: docId.hashCode,
+                title: title.toString(),
+                body: body.toString(),
+              );
+              _seenDocIds.add(docId);
+              await prefs.setStringList(_seenDocsKey, _seenDocIds.toList());
+            }
           }
         }
       }
@@ -233,31 +248,35 @@ class NotificationService {
         .collection('notifications')
         .snapshots()
         .listen((snap) async {
-      for (var doc in snap.docs) {
-        final data = doc.data();
-        final docId = doc.id;
-        final target = (data['target'] ?? data['to'] ?? '').toString().toLowerCase();
-        final docUserId = (data['userId'] ?? data['user_id'] ?? data['recipientId'] ?? '').toString();
+      for (var change in snap.docChanges) {
+        if (change.type == DocumentChangeType.added) {
+          final doc = change.doc;
+          final data = doc.data();
+          if (data == null) continue;
+          final docId = doc.id;
+          final target = (data['target'] ?? data['to'] ?? '').toString().toLowerCase();
+          final docUserId = (data['userId'] ?? data['user_id'] ?? data['recipientId'] ?? '').toString();
 
-        final isTargetUser = (docUserId.isNotEmpty && docUserId == userId) ||
-            (target == 'user' && docUserId == userId) ||
-            target == 'all' ||
-            target == 'all_students' ||
-            (target == 'vip' && isVip);
+          final isTargetUser = (docUserId.isNotEmpty && docUserId == userId) ||
+              (target == 'user' && docUserId == userId) ||
+              target == 'all' ||
+              target == 'all_students' ||
+              (target == 'vip' && isVip);
 
-        if (isTargetUser && !_seenDocIds.contains(docId)) {
-          final title = data['title'] ?? data['header'] ?? data['subject'] ?? '🔔 ئاگاداری لە ZankoAI';
-          final body = data['body'] ?? data['message'] ?? data['content'] ?? data['text'] ?? '';
+          if (isTargetUser && !_seenDocIds.contains(docId)) {
+            final title = data['title'] ?? data['header'] ?? data['subject'] ?? '🔔 ئاگاداری لە ZankoAI';
+            final body = data['body'] ?? data['message'] ?? data['content'] ?? data['text'] ?? '';
 
-          if (body.toString().trim().isNotEmpty || title.toString().trim().isNotEmpty) {
-            await showInstantNotification(
-              id: docId.hashCode,
-              title: title.toString(),
-              body: body.toString(),
-            );
+            if (body.toString().trim().isNotEmpty || title.toString().trim().isNotEmpty) {
+              await showInstantNotification(
+                id: docId.hashCode,
+                title: title.toString(),
+                body: body.toString(),
+              );
+            }
+            _seenDocIds.add(docId);
+            await prefs.setStringList(_seenDocsKey, _seenDocIds.toList());
           }
-          _seenDocIds.add(docId);
-          await prefs.setStringList(_seenDocsKey, _seenDocIds.toList());
         }
       }
     });

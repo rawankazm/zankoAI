@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -36,14 +37,21 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
     }
   }
 
+  StreamSubscription? _authStateSub;
+  StreamSubscription? _userDocSub;
+  bool? _lastNotifiedVip;
+
   void _listenToAuthState() {
     if (!_isFirebaseInitialized) return;
-    _auth.authStateChanges().listen((User? firebaseUser) async {
+    _authStateSub?.cancel();
+    _authStateSub = _auth.authStateChanges().listen((User? firebaseUser) async {
+      _userDocSub?.cancel();
       if (firebaseUser == null) {
         _currentUser = null;
+        _lastNotifiedVip = null;
         notifyListeners();
       } else {
-        _firestore.collection('users').doc(firebaseUser.uid).snapshots().listen((doc) {
+        _userDocSub = _firestore.collection('users').doc(firebaseUser.uid).snapshots().listen((doc) {
           if (doc.exists && doc.data() != null) {
             final data = doc.data()!;
             final roleStr = data['role'] as String? ?? 'student';
@@ -65,7 +73,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
               if (role != UserRole.admin) isVip = false;
             }
 
-            _currentUser = UserModel(
+            final newUser = UserModel(
               id: firebaseUser.uid,
               name: data['name'] ?? firebaseUser.displayName ?? 'خوێندکار',
               email: firebaseUser.email ?? '',
@@ -78,9 +86,25 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
               photoUrl: data['photoUrl'],
               vipStatus: vipStatus,
             );
-            NotificationService().listenToAdminNotifications(firebaseUser.uid, isVip);
-            NotificationService().syncUserToken(firebaseUser.uid, isVip: isVip);
-            notifyListeners();
+
+            // Only notify if user model actually changed
+            final changed = _currentUser == null ||
+                _currentUser!.isVip != newUser.isVip ||
+                _currentUser!.vipStatus != newUser.vipStatus ||
+                _currentUser!.name != newUser.name ||
+                _currentUser!.role != newUser.role ||
+                _currentUser!.photoUrl != newUser.photoUrl;
+
+            _currentUser = newUser;
+
+            if (_lastNotifiedVip != isVip) {
+              _lastNotifiedVip = isVip;
+              NotificationService().listenToAdminNotifications(firebaseUser.uid, isVip);
+            }
+
+            if (changed) {
+              notifyListeners();
+            }
           }
         });
       }
