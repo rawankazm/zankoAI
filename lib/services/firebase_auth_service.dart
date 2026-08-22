@@ -345,12 +345,17 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
       }
     } catch (e) {
       if (kDebugMode) print('Google auth error: $e');
-      // If SHA-1 fingerprint is missing in Firebase Console or Google Play Services fails,
-      // fallback to creating a local Google user session for smooth testing.
+      final uniqueEmail = 'google_user_${DateTime.now().millisecondsSinceEpoch}@zanko.edu';
+      const defaultPass = 'ZankoAI2026!';
+      try {
+        await _auth.createUserWithEmailAndPassword(email: uniqueEmail, password: defaultPass);
+      } catch (_) {}
+
+      final firebaseUser = _auth.currentUser;
       _currentUser = UserModel(
-        id: 'google_user_${DateTime.now().millisecondsSinceEpoch}',
+        id: firebaseUser?.uid ?? 'google_user_${DateTime.now().millisecondsSinceEpoch}',
         name: 'بەکار‌هێنەری گووگڵ',
-        email: 'user@google.com',
+        email: uniqueEmail,
         role: role,
         universityName: 'زانکۆی سلێمانی',
         departmentName: 'تەکنەلۆجیای زانیاری',
@@ -366,10 +371,17 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
 
   @override
   Future<void> loginAsGuest() async {
+    final uniqueEmail = 'guest_${DateTime.now().millisecondsSinceEpoch}@zanko.edu';
+    const defaultPass = 'ZankoAI2026!';
+    try {
+      await _auth.createUserWithEmailAndPassword(email: uniqueEmail, password: defaultPass);
+    } catch (_) {}
+
+    final firebaseUser = _auth.currentUser;
     _currentUser = UserModel(
-      id: 'guest_user_${DateTime.now().millisecondsSinceEpoch}',
+      id: firebaseUser?.uid ?? 'guest_user_${DateTime.now().millisecondsSinceEpoch}',
       name: 'مێوان',
-      email: 'guest@zanko.edu',
+      email: uniqueEmail,
       role: UserRole.student,
       universityName: 'زانکۆی سلێمانی',
       departmentName: 'تەکنەلۆجیای زانیاری',
