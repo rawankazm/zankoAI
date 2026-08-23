@@ -23,6 +23,8 @@ import '../update/force_update_screen.dart';
 import '../payment/admin_payment_config_sheet.dart';
 import '../payment/admin_vip_requests_sheet.dart';
 import '../notifications/admin_broadcast_sheet.dart';
+import '../teacher/teacher_dashboard_screen.dart';
+import '../../models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 
@@ -2418,10 +2420,11 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
 
-            // ─── Admin Management Hub (دەسەڵاتەکانی ئەدمین) ───
-            const SizedBox(height: 24),
-            Row(
-              children: [
+            // ─── Admin Management Hub (تەنها بۆ بەڕێوەبەر / ئەدمین) ───
+            if (user?.role == UserRole.admin) ...[
+              const SizedBox(height: 24),
+              Row(
+                children: [
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
@@ -2492,9 +2495,64 @@ class ProfileScreen extends StatelessWidget {
                         builder: (_) => AdminBroadcastSheet(isDark: isDark),
                       ),
                     ),
+                    const Divider(height: 1, indent: 56),
+                    _buildSettingsTile(
+                      context,
+                      icon: CupertinoIcons.square_stack_3d_up_fill,
+                      iconColor: const Color(0xFF8B5CF6),
+                      title: 'داشبۆردی بەڕێوەبردن و وانەبێژی 🎓',
+                      subtitle: 'کۆنترۆڵی تەواوی سیستەم، وانەکان و ئامار',
+                      onTap: () => Navigator.push(
+                        context,
+                        CupertinoPageRoute(builder: (_) => const TeacherDashboardScreen()),
+                      ),
+                    ),
                   ],
                 ),
               ),
+            ] else if (user?.role == UserRole.teacher) ...[
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text('🎓', style: TextStyle(fontSize: 16)),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'داشبۆردی مامۆستا (Teacher Hub)',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : ZankoColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              AppCard(
+                padding: EdgeInsets.zero,
+                child: Column(
+                  children: [
+                    _buildSettingsTile(
+                      context,
+                      icon: CupertinoIcons.square_stack_3d_up_fill,
+                      iconColor: const Color(0xFF8B5CF6),
+                      title: 'داشبۆردی بەڕێوەبردن و وانەبێژی 🎓',
+                      subtitle: 'کۆنترۆڵی وانەکان، کویز، ئاگاداری و فێرخوازان',
+                      onTap: () => Navigator.push(
+                        context,
+                        CupertinoPageRoute(builder: (_) => const TeacherDashboardScreen()),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
 
             const SizedBox(height: 24),
 

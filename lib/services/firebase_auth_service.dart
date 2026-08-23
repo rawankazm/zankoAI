@@ -41,6 +41,51 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
   StreamSubscription? _userDocSub;
   bool? _lastNotifiedVip;
 
+  String _resolveUserName(String? customName, User? fbUser, [String? fallbackName]) {
+    final invalidNames = {
+      'خوێندکار',
+      'student',
+      'بەکار‌هێنەری گووگڵ',
+      'بەکارهێنەری گووگڵ',
+      'بەکار‌هێنەری گوگڵ',
+      'بەکارهێنەری گوگڵ',
+      'google user',
+      'google_user',
+      'user',
+      'null',
+    };
+
+    if (customName != null && customName.trim().isNotEmpty) {
+      final trimmed = customName.trim();
+      if (!invalidNames.contains(trimmed.toLowerCase())) {
+        return trimmed;
+      }
+    }
+
+    if (fbUser?.displayName != null && fbUser!.displayName!.trim().isNotEmpty) {
+      final trimmed = fbUser.displayName!.trim();
+      if (!invalidNames.contains(trimmed.toLowerCase())) {
+        return trimmed;
+      }
+    }
+
+    if (fallbackName != null && fallbackName.trim().isNotEmpty) {
+      final trimmed = fallbackName.trim();
+      if (!invalidNames.contains(trimmed.toLowerCase())) {
+        return trimmed;
+      }
+    }
+
+    if (fbUser?.email != null && fbUser!.email!.contains('@')) {
+      final emailPrefix = fbUser.email!.split('@').first.trim();
+      if (emailPrefix.isNotEmpty && !emailPrefix.startsWith('google_user_') && !emailPrefix.startsWith('guest_')) {
+        return emailPrefix;
+      }
+    }
+
+    return 'خوێندکار';
+  }
+
   void _listenToAuthState() {
     if (!_isFirebaseInitialized) return;
     _authStateSub?.cancel();
@@ -73,27 +118,40 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
               if (role != UserRole.admin) isVip = false;
             }
 
+            final realName = _resolveUserName(data['name'] as String?, firebaseUser);
+            final realPhoto = data['photoUrl'] as String? ?? firebaseUser.photoURL;
+
             final newUser = UserModel(
               id: firebaseUser.uid,
-              name: data['name'] ?? firebaseUser.displayName ?? 'خوێندکار',
-              email: firebaseUser.email ?? '',
+              name: realName,
+              email: (data['email'] as String?)?.isNotEmpty == true ? data['email'] : (firebaseUser.email ?? ''),
               role: role,
               universityName: data['universityName'] ?? 'زانکۆی سلێمانی',
               departmentName: data['departmentName'] ?? 'تەکنەلۆجیای زانیاری',
               cityName: data['cityName'] ?? 'سلێمانی',
               gpa: role == UserRole.student ? (data['gpa'] as num?)?.toDouble() ?? 0.0 : null,
               isVip: isVip,
-              photoUrl: data['photoUrl'],
+              photoUrl: realPhoto,
               vipStatus: vipStatus,
             );
 
+            // Auto-heal old generic placeholder name in Firestore
+            if (data['name'] != realName && realName != 'خوێندکار') {
+              _firestore.collection('users').doc(firebaseUser.uid).set({
+                'name': realName,
+                if (realPhoto != null) 'photoUrl': realPhoto,
+              }, SetOptions(merge: true));
+            }
+
             // Only notify if user model actually changed
             final changed = _currentUser == null ||
+                _currentUser!.id != newUser.id ||
                 _currentUser!.isVip != newUser.isVip ||
                 _currentUser!.vipStatus != newUser.vipStatus ||
                 _currentUser!.name != newUser.name ||
                 _currentUser!.role != newUser.role ||
-                _currentUser!.photoUrl != newUser.photoUrl;
+                _currentUser!.photoUrl != newUser.photoUrl ||
+                _currentUser!.email != newUser.email;
 
             _currentUser = newUser;
 
@@ -105,6 +163,45 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
             if (changed) {
               notifyListeners();
             }
+          } else {
+            // New distinct user document creation
+            final realName = _resolveUserName(null, firebaseUser);
+            final realPhoto = firebaseUser.photoURL;
+            final realEmail = firebaseUser.email ?? '';
+
+            final newUser = UserModel(
+              id: firebaseUser.uid,
+              name: realName,
+              email: realEmail,
+              role: UserRole.student,
+              universityName: 'زانکۆی سلێمانی',
+              departmentName: 'تەکنەلۆجیای زانیاری',
+              cityName: 'سلێمانی',
+              gpa: 0.0,
+              isVip: false,
+              photoUrl: realPhoto,
+              vipStatus: 'none',
+            );
+
+            _currentUser = newUser;
+            notifyListeners();
+
+            try {
+              _firestore.collection('users').doc(firebaseUser.uid).set({
+                'id': firebaseUser.uid,
+                'name': realName,
+                'email': realEmail,
+                'role': 'student',
+                'universityName': 'زانکۆی سلێمانی',
+                'departmentName': 'تەکنەلۆجیای زانیاری',
+                'cityName': 'سلێمانی',
+                'gpa': 0.0,
+                'isVip': false,
+                'vipStatus': 'none',
+                if (realPhoto != null) 'photoUrl': realPhoto,
+                'createdAt': FieldValue.serverTimestamp(),
+              }, SetOptions(merge: true));
+            } catch (_) {}
           }
         });
       }
@@ -112,7 +209,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
   }
 
 
-  Future<void> _fetchUserProfile(User firebaseUser) async {
+  Future<void> _fetchUserProfile(User firebaseUser, [String? fallbackName, String? fallbackEmail, String? fallbackPhoto]) async {
     try {
       final doc = await _firestore.collection('users').doc(firebaseUser.uid).get();
       if (doc.exists && doc.data() != null) {
@@ -130,7 +227,6 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
         if (isVip && role != UserRole.admin && vipExpiresAt != null) {
           final expiryDate = vipExpiresAt.toDate();
           if (DateTime.now().isAfter(expiryDate)) {
-            // VIP بەسەرچوو — ئۆتۆماتیک ڕەتی دەکاتەوە
             isVip = false;
             try {
               await _firestore.collection('users').doc(firebaseUser.uid).set({
@@ -141,57 +237,87 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
           }
         }
 
-        // pending = ئەدمین هێشتا قبووڵی نەکردووە
-        if (vipStatus == 'pending') isVip = false;
+        if (vipStatus == 'pending' || vipStatus == 'rejected' || vipStatus == 'expired') {
+          if (role != UserRole.admin) isVip = false;
+        }
+
+        final realName = _resolveUserName(data['name'] as String?, firebaseUser, fallbackName);
+        final realPhoto = data['photoUrl'] as String? ?? firebaseUser.photoURL ?? fallbackPhoto;
+        final realEmail = (data['email'] as String?)?.isNotEmpty == true
+            ? data['email']
+            : (firebaseUser.email?.isNotEmpty == true ? firebaseUser.email! : (fallbackEmail ?? ''));
 
         _currentUser = UserModel(
           id: firebaseUser.uid,
-          name: data['name'] ?? firebaseUser.displayName ?? 'خوێندکار',
-          email: firebaseUser.email ?? '',
+          name: realName,
+          email: realEmail,
           role: role,
           universityName: data['universityName'] ?? 'زانکۆی سلێمانی',
           departmentName: data['departmentName'] ?? 'تەکنەلۆجیای زانیاری',
           cityName: data['cityName'] ?? 'سلێمانی',
           gpa: role == UserRole.student ? (data['gpa'] as num?)?.toDouble() ?? 0.0 : null,
           isVip: isVip,
+          photoUrl: realPhoto,
+          vipStatus: vipStatus,
         );
+
+        if (data['name'] != realName && realName != 'خوێندکار') {
+          try {
+            await _firestore.collection('users').doc(firebaseUser.uid).set({
+              'name': realName,
+              if (realPhoto != null) 'photoUrl': realPhoto,
+            }, SetOptions(merge: true));
+          } catch (_) {}
+        }
       } else {
+        final realName = _resolveUserName(null, firebaseUser, fallbackName);
+        final realPhoto = firebaseUser.photoURL ?? fallbackPhoto;
+        final realEmail = firebaseUser.email?.isNotEmpty == true ? firebaseUser.email! : (fallbackEmail ?? '');
+
         _currentUser = UserModel(
           id: firebaseUser.uid,
-          name: firebaseUser.displayName ?? 'خوێندکار',
-          email: firebaseUser.email ?? '',
+          name: realName,
+          email: realEmail,
           role: UserRole.student,
           universityName: 'زانکۆی سلێمانی',
           departmentName: 'تەکنەلۆجیای زانیاری',
           cityName: 'سلێمانی',
           gpa: 0.0,
           isVip: false,
+          photoUrl: realPhoto,
+          vipStatus: 'none',
         );
         try {
           await _firestore.collection('users').doc(firebaseUser.uid).set({
-            'name': _currentUser!.name,
-            'email': _currentUser!.email,
+            'id': firebaseUser.uid,
+            'name': realName,
+            'email': realEmail,
             'role': 'student',
             'universityName': 'زانکۆی سلێمانی',
             'departmentName': 'تەکنەلۆجیای زانیاری',
             'cityName': 'سلێمانی',
             'gpa': 0.0,
             'isVip': false,
+            'vipStatus': 'none',
+            if (realPhoto != null) 'photoUrl': realPhoto,
             'createdAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
         } catch (_) {}
       }
     } catch (e) {
+      final realName = _resolveUserName(null, firebaseUser, fallbackName);
       _currentUser = UserModel(
         id: firebaseUser.uid,
-        name: firebaseUser.displayName ?? 'خوێندکار',
-        email: firebaseUser.email ?? '',
+        name: realName,
+        email: firebaseUser.email ?? (fallbackEmail ?? ''),
         role: UserRole.student,
         universityName: 'زانکۆی سلێمانی',
         departmentName: 'تەکنەلۆجیای زانیاری',
         cityName: 'سلێمانی',
         gpa: 0.0,
         isVip: false,
+        photoUrl: firebaseUser.photoURL ?? fallbackPhoto,
+        vipStatus: 'none',
       );
     }
     notifyListeners();
@@ -341,56 +467,159 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
   @override
   Future<bool> loginWithGoogle([UserRole role = UserRole.student]) async {
     try {
-      if (kIsWeb) {
-        final GoogleAuthProvider googleProvider = GoogleAuthProvider();
-        final UserCredential credential = await _auth.signInWithPopup(googleProvider);
-
-        if (credential.user != null) {
-          await _fetchUserProfile(credential.user!);
-          notifyListeners();
-          return true;
-        }
-      } else {
-        final GoogleSignIn googleSignIn = GoogleSignIn();
-        final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-        if (googleUser != null) {
-          final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-          final OAuthCredential credential = GoogleAuthProvider.credential(
-            accessToken: googleAuth.accessToken,
-            idToken: googleAuth.idToken,
-          );
-          final UserCredential userCredential = await _auth.signInWithCredential(credential);
-          if (userCredential.user != null) {
-            await _fetchUserProfile(userCredential.user!);
-            notifyListeners();
-            return true;
-          }
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) print('Google auth error: $e');
-      final uniqueEmail = 'google_user_${DateTime.now().millisecondsSinceEpoch}@zanko.edu';
-      const defaultPass = 'ZankoAI2026!';
+      final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+      GoogleSignInAccount? googleUser;
       try {
-        await _auth.createUserWithEmailAndPassword(email: uniqueEmail, password: defaultPass);
-      } catch (_) {}
+        googleUser = await googleSignIn.signIn();
+      } catch (e) {
+        if (kDebugMode) print('GoogleSignIn picker error: $e');
+        return false;
+      }
 
-      final firebaseUser = _auth.currentUser;
+      if (googleUser == null) return false; // user cancelled account selection
+
+      // Extract real user details directly from Google account
+      final realName = (googleUser.displayName != null && googleUser.displayName!.trim().isNotEmpty)
+          ? googleUser.displayName!.trim()
+          : googleUser.email.split('@').first;
+      final realEmail = googleUser.email.trim();
+      final realPhoto = googleUser.photoUrl;
+      final googleId = googleUser.id;
+      final defaultUid = 'google_$googleId';
+
+      // Set currentUser immediately so user is logged into the app instantly
       _currentUser = UserModel(
-        id: firebaseUser?.uid ?? 'google_user_${DateTime.now().millisecondsSinceEpoch}',
-        name: 'بەکار‌هێنەری گووگڵ',
-        email: uniqueEmail,
+        id: defaultUid,
+        name: realName,
+        email: realEmail,
         role: role,
         universityName: 'زانکۆی سلێمانی',
         departmentName: 'تەکنەلۆجیای زانیاری',
         cityName: 'سلێمانی',
-        gpa: 3.85,
-        isVip: true,
+        gpa: 0.0,
+        isVip: false,
+        vipStatus: 'none',
+        photoUrl: realPhoto,
       );
       notifyListeners();
+
+      // Run Firebase Auth & Firestore sync in background without blocking the UI
+      _backgroundGoogleSync(
+        googleUser: googleUser,
+        googleId: googleId,
+        realName: realName,
+        realEmail: realEmail,
+        realPhoto: realPhoto,
+        role: role,
+      );
+
       return true;
+    } catch (e) {
+      if (kDebugMode) print('Google auth general error: $e');
+      return false;
     }
-    return false;
+  }
+
+  void _backgroundGoogleSync({
+    required GoogleSignInAccount googleUser,
+    required String googleId,
+    required String realName,
+    required String realEmail,
+    String? realPhoto,
+    required UserRole role,
+  }) async {
+    try {
+      await _ensureFirebase();
+
+      User? fbUser;
+      try {
+        final googleAuth = await googleUser.authentication;
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+        final uc = await _auth.signInWithCredential(credential);
+        fbUser = uc.user;
+      } catch (authErr) {
+        if (kDebugMode) print('Firebase Google credential notice: $authErr');
+        try {
+          final anonCred = await _auth.signInAnonymously();
+          fbUser = anonCred.user;
+        } catch (_) {}
+      }
+
+      if (fbUser != null) {
+        try {
+          if (fbUser.displayName != realName) await fbUser.updateDisplayName(realName);
+          if (realPhoto != null && fbUser.photoURL != realPhoto) await fbUser.updatePhotoURL(realPhoto);
+        } catch (_) {}
+      }
+
+      final finalUid = fbUser?.uid ?? 'google_$googleId';
+
+      // Check existing document to preserve roles/VIP
+      DocumentSnapshot? existingDoc;
+      try {
+        existingDoc = await _firestore.collection('users').doc(finalUid).get();
+      } catch (_) {}
+
+      UserRole resolvedRole = role;
+      bool isVip = false;
+      String vipStatus = 'none';
+
+      if (existingDoc != null && existingDoc.exists && existingDoc.data() != null) {
+        final data = existingDoc.data() as Map<String, dynamic>;
+        final roleStr = data['role'] as String? ?? 'student';
+        resolvedRole = roleStr == 'admin'
+            ? UserRole.admin
+            : (roleStr == 'teacher' ? UserRole.teacher : role);
+        isVip = data['isVip'] == true || resolvedRole == UserRole.admin;
+        vipStatus = data['vipStatus'] as String? ?? 'none';
+      }
+
+      // Update Firestore document with real info
+      try {
+        final Map<String, dynamic> updateData = {
+          'id': finalUid,
+          'name': realName,
+          'email': realEmail,
+          if (realPhoto != null) 'photoUrl': realPhoto,
+          'googleId': googleId,
+          'lastLoginAt': FieldValue.serverTimestamp(),
+        };
+        if (existingDoc == null || !existingDoc.exists) {
+          updateData['role'] = role == UserRole.admin ? 'admin' : (role == UserRole.teacher ? 'teacher' : 'student');
+          updateData['universityName'] = 'زانکۆی سلێمانی';
+          updateData['departmentName'] = 'تەکنەلۆجیای زانیاری';
+          updateData['cityName'] = 'سلێمانی';
+          updateData['createdAt'] = FieldValue.serverTimestamp();
+        }
+        await _firestore.collection('users').doc(finalUid).set(updateData, SetOptions(merge: true));
+      } catch (_) {}
+
+      if (fbUser != null) {
+        try {
+          await _fetchUserProfile(fbUser, realName, realEmail, realPhoto);
+        } catch (_) {
+          _currentUser = UserModel(
+            id: finalUid,
+            name: realName,
+            email: realEmail,
+            role: resolvedRole,
+            universityName: 'زانکۆی سلێمانی',
+            departmentName: 'تەکنەلۆجیای زانیاری',
+            cityName: 'سلێمانی',
+            gpa: 0.0,
+            isVip: isVip,
+            vipStatus: vipStatus,
+            photoUrl: realPhoto,
+          );
+          notifyListeners();
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print('Background Google sync error: $e');
+    }
   }
 
   @override
@@ -421,6 +650,11 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
     } catch (e) {
       if (kDebugMode) print('Logout error: $e');
     }
+    try {
+      if (!kIsWeb) {
+        await GoogleSignIn().signOut();
+      }
+    } catch (_) {}
     _currentUser = null;
     notifyListeners();
   }

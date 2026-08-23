@@ -12,6 +12,7 @@ import 'teacher_lectures_screen.dart';
 import 'teacher_announcements_screen.dart';
 import '../payment/admin_payment_config_sheet.dart';
 import '../payment/admin_vip_requests_sheet.dart';
+import '../notifications/admin_broadcast_sheet.dart';
 import '../../theme.dart';
 
 class TeacherDashboardScreen extends StatelessWidget {
@@ -311,6 +312,18 @@ class _QuickActionsGrid extends StatelessWidget {
         'icon': Icons.payments_rounded,
         'color': const Color(0xFFB8860B),
         'onTap': () => AdminPaymentConfigSheet.show(context),
+      },
+      {
+        'label': 'ناردنی ئاگاداری گشتی 📢',
+        'sublabel': 'ناردنی ڕاستەوخۆی نۆتیفیکەیشن بۆ هەموو قوتابیان',
+        'icon': Icons.campaign_rounded,
+        'color': const Color(0xFFE11D48),
+        'onTap': () => showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) => AdminBroadcastSheet(isDark: theme.brightness == Brightness.dark),
+        ),
       },
     ];
 

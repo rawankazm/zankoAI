@@ -9,10 +9,23 @@
       "client_info": {
         "mobilesdk_app_id": "1:658020179072:android:75f948816199e3eed2da65",
         "android_client_info": {
-          "package_name": "com.zanko.student"
+          "package_name": "com.birdev.tomar_tv"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "658020179072-kvbqn8d0tg1ohvv03pvgqlsmrg4oi5bp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.birdev.tomar_tv",
+            "certificate_hash": "136cee617b195fca0f499844da19c01de401958c"
+          }
+        },
+        {
+          "client_id": "658020179072-61227ie552ik74mq9der2iumthlk2dq5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAebiUPE9OyxhrHjanHy98ZXeVBJm0FRvA"
@@ -20,7 +33,63 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "658020179072-61227ie552ik74mq9der2iumthlk2dq5.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "658020179072-6c063v4lnb63gole8oneoi0tijjejujp.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.birdev.tomarTv"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:658020179072:android:0a4c35518737e826d2da65",
+        "android_client_info": {
+          "package_name": "com.zanko.student"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "658020179072-qv23ddu50pf7u3ccf9preovdlnep501f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zanko.student",
+            "certificate_hash": "136cee617b195fca0f499844da19c01de401958c"
+          }
+        },
+        {
+          "client_id": "658020179072-61227ie552ik74mq9der2iumthlk2dq5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAebiUPE9OyxhrHjanHy98ZXeVBJm0FRvA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "658020179072-61227ie552ik74mq9der2iumthlk2dq5.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "658020179072-6c063v4lnb63gole8oneoi0tijjejujp.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.birdev.tomarTv"
+              }
+            }
+          ]
         }
       }
     }

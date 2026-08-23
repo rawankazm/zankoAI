@@ -156,17 +156,15 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
     // ── Ensure Firebase Auth is signed in with a valid account so Firestore never denies permission
     if (FirebaseAuth.instance.currentUser == null) {
       try {
-        final fallbackEmail = (user?.email != null && user!.email.contains('@') && !user.email.contains('google.com') && !user.email.contains('guest@'))
-            ? user.email
-            : 'student_${DateTime.now().millisecondsSinceEpoch}@zanko.edu';
-        const fallbackPass = 'ZankoAI2026!';
+        await FirebaseAuth.instance.signInAnonymously();
+      } catch (_) {
         try {
-          await FirebaseAuth.instance.signInWithEmailAndPassword(email: fallbackEmail, password: fallbackPass);
-        } catch (_) {
+          final fallbackEmail = 'student_${DateTime.now().millisecondsSinceEpoch}@zanko.edu';
+          const fallbackPass = 'ZankoAI2026!';
           await FirebaseAuth.instance.createUserWithEmailAndPassword(email: fallbackEmail, password: fallbackPass);
+        } catch (authErr) {
+          debugPrint('Firebase Auth auto-login notice: $authErr');
         }
-      } catch (authErr) {
-        debugPrint('Firebase Auth auto-login notice: $authErr');
       }
     }
 
@@ -175,10 +173,10 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
         ? firebaseUid
         : (user?.id.isNotEmpty == true ? user!.id : 'user_${DateTime.now().millisecondsSinceEpoch}');
 
-    final userName = (user?.name.isNotEmpty == true && user!.name != 'بەکار‌هێنەری گووگڵ')
+    final userName = (user != null && user.name.isNotEmpty && user.name != 'خوێندکار')
         ? user.name
         : (FirebaseAuth.instance.currentUser?.displayName ?? 'خوێندکار');
-    final userEmail = (user?.email.isNotEmpty == true && !user!.email.contains('google.com'))
+    final userEmail = (user != null && user.email.isNotEmpty)
         ? user.email
         : (FirebaseAuth.instance.currentUser?.email ?? 'student@zanko.edu');
 
@@ -207,6 +205,7 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
       // ── ٢. دروستکردنی doc ID لە کۆڵێکشنێ vip_requests بە تەواوی زانیارییەکان
       final docRef = FirebaseFirestore.instance.collection('vip_requests').doc();
       final requestData = {
+        'id': docRef.id,
         'userId': userId,
         'userName': userName,
         'userEmail': userEmail,
@@ -222,49 +221,44 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet>
         'expiresAt': expiresAt,
       };
 
-      // ── ٣. ناردنی ڕاستەوخۆ بۆ Firestore (بە Timeout بۆ ئەوەی پەکی نەکەوێت)
-      await docRef.set(requestData).timeout(
-        const Duration(seconds: 4),
-        onTimeout: () {
-          debugPrint('Firestore server ACK timeout, write cached locally & syncing');
-        },
-      );
-
       if (mounted) setState(() => _uploadProgress = 0.90);
 
-      // ٤. نوێکردنەوەی دۆخی بەکارهێنەر لە کۆڵێکشنێ users
+      // ── ٣. ناردنی دەستبەجێ بۆ Firestore
       try {
-        await FirebaseFirestore.instance.collection('users').doc(userId).set({
-          'vipStatus': 'pending',
-          'vipPlan': _selectedPlan,
-          'vipRequestedAt': nowTimestamp,
-        }, SetOptions(merge: true)).timeout(
-          const Duration(seconds: 2),
-          onTimeout: () {},
-        );
-      } catch (userDocErr) {
-        debugPrint('User doc update notice: $userDocErr');
+        await docRef.set(requestData);
+      } catch (err) {
+        debugPrint('vip_requests write error: $err');
       }
+
+      // ٤. نوێکردنەوەی دۆخی بەکارهێنەر لە کۆڵێکشنێ users
+      FirebaseFirestore.instance.collection('users').doc(userId).set({
+        'vipStatus': 'pending',
+        'vipPlan': _selectedPlan,
+        'vipRequestedAt': nowTimestamp,
+      }, SetOptions(merge: true)).catchError((err) {
+        debugPrint('User doc update notice: $err');
+      });
 
       // ٥. ناردنی ئاگاداری بۆ ئەدمین
       try {
-        await FirebaseFirestore.instance.collection('notifications').add({
+        FirebaseFirestore.instance.collection('notifications').add({
           'userId': 'admin',
           'title': '👑 داواکاری نوێی VIP',
           'body': '$userName داوای بەشداریکردنی $_planTitle کردووە.',
           'type': 'vip_request',
+          'requestId': docRef.id,
           'isRead': false,
           'createdAt': nowTimestamp,
-        }).timeout(
-          const Duration(seconds: 2),
-          onTimeout: () => FirebaseFirestore.instance.collection('notifications').doc(),
-        );
-      } catch (notifErr) {
-        debugPrint('Admin notification notice: $notifErr');
+        });
+      } catch (err) {
+        debugPrint('Admin notification notice: $err');
       }
 
       // ٦. ڕیلۆدکردنی بەکارهێنەر لەناو ئەپ
       try { authService.reloadUser(); } catch (_) {}
+
+      // کورتە وەستانێکی خێرا بۆ ئەنیمەیشن
+      await Future.delayed(const Duration(milliseconds: 300));
 
       if (mounted) {
         setState(() {
