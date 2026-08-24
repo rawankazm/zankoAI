@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -679,6 +680,10 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                 ),
                 const Divider(height: 20),
 
+                // Voice Waveform Visualizer
+                VoiceWaveformWidget(isPlaying: _isPlaying),
+                const SizedBox(height: 14),
+
                 // Explanation text
                 Container(
                   width: double.infinity,
@@ -818,6 +823,99 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ─── Animated Voice Waveform Visualizer ──────────────────────────────────────
+class VoiceWaveformWidget extends StatefulWidget {
+  final bool isPlaying;
+  final Color primaryColor;
+  final Color accentColor;
+
+  const VoiceWaveformWidget({
+    super.key,
+    required this.isPlaying,
+    this.primaryColor = const Color(0xFF10B981),
+    this.accentColor = const Color(0xFF06B6D4),
+  });
+
+  @override
+  State<VoiceWaveformWidget> createState() => _VoiceWaveformWidgetState();
+}
+
+class _VoiceWaveformWidgetState extends State<VoiceWaveformWidget> with SingleTickerProviderStateMixin {
+  late AnimationController _animController;
+  final List<double> _baseHeights = [
+    0.3, 0.6, 0.9, 0.4, 0.8, 1.0, 0.5, 0.7, 0.3, 0.8, 0.6, 1.0,
+    0.7, 0.4, 0.9, 0.5, 0.8, 0.3, 0.6, 0.9, 0.4, 0.7, 0.5, 0.3
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animController,
+      builder: (context, _) {
+        return Container(
+          height: 48,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: widget.primaryColor.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: widget.primaryColor.withValues(alpha: widget.isPlaying ? 0.25 : 0.1),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: List.generate(_baseHeights.length, (i) {
+              final phase = (i / _baseHeights.length) * 3.14;
+              final wave = widget.isPlaying
+                  ? math.sin(_animController.value * 2 * 3.14 + phase).abs()
+                  : 0.15;
+              final heightFactor = (0.2 + wave * _baseHeights[i] * 0.8).clamp(0.15, 1.0);
+
+              return Container(
+                width: 3.5,
+                height: 32 * heightFactor,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [widget.primaryColor, widget.accentColor],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                  borderRadius: BorderRadius.circular(4),
+                  boxShadow: widget.isPlaying
+                      ? [
+                          BoxShadow(
+                            color: widget.primaryColor.withValues(alpha: 0.3),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
+                          )
+                        ]
+                      : null,
+                ),
+              );
+            }),
+          ),
+        );
+      },
     );
   }
 }

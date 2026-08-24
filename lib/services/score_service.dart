@@ -54,6 +54,7 @@ class ScoreService extends ChangeNotifier {
     _examTotalQuestions = prefs.getInt('score_exam_total') ?? 0;
     _examCorrectAnswers = prefs.getInt('score_exam_correct') ?? 0;
     _todayStudyMinutes = prefs.getInt('today_study_minutes') ?? 0;
+    await checkAndUpdateStreak();
     notifyListeners();
   }
 
@@ -79,6 +80,54 @@ class ScoreService extends ChangeNotifier {
     _todayStudyMinutes += minutes;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('today_study_minutes', _todayStudyMinutes);
+    notifyListeners();
+  }
+
+  // ─── Daily Study Streak 🔥 ────────────────────────────────────────────────
+  int _streakCount = 1;
+  String? _lastStreakDate;
+  int get streakCount => _streakCount;
+
+  bool get isStreakCompletedToday {
+    if (_lastStreakDate == null) return false;
+    final now = DateTime.now();
+    final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    return _lastStreakDate == todayStr;
+  }
+
+  Future<void> checkAndUpdateStreak() async {
+    final prefs = await SharedPreferences.getInstance();
+    _streakCount = prefs.getInt('study_streak_count') ?? 1;
+    _lastStreakDate = prefs.getString('study_last_streak_date');
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
+    if (_lastStreakDate == null) {
+      _streakCount = 1;
+      _lastStreakDate = todayStr;
+      await prefs.setInt('study_streak_count', _streakCount);
+      await prefs.setString('study_last_streak_date', todayStr);
+    } else {
+      final parts = _lastStreakDate!.split('-').map(int.parse).toList();
+      final lastDate = DateTime(parts[0], parts[1], parts[2]);
+      final diffDays = today.difference(lastDate).inDays;
+
+      if (diffDays == 1) {
+        // Consecutive day streak increment!
+        _streakCount += 1;
+        _lastStreakDate = todayStr;
+        await prefs.setInt('study_streak_count', _streakCount);
+        await prefs.setString('study_last_streak_date', todayStr);
+      } else if (diffDays > 1) {
+        // Missed more than 1 day - reset streak
+        _streakCount = 1;
+        _lastStreakDate = todayStr;
+        await prefs.setInt('study_streak_count', _streakCount);
+        await prefs.setString('study_last_streak_date', todayStr);
+      }
+    }
     notifyListeners();
   }
 

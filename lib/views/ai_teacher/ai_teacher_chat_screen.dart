@@ -400,15 +400,37 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
         isPendingVip: isPendingVip,
       );
       if (mounted) {
+        final words = response.split(' ');
+        final assistantIndex = _messages.length;
         setState(() {
+          _isTyping = false;
           _messages.add({
             'role': 'assistant',
-            'content': response,
+            'content': '',
             'time': _formatTime(),
           });
-          _isTyping = false;
         });
-        await _saveChatHistory();
+
+        // Fast & smooth streaming typing animation
+        String streamedText = '';
+        const chunkSize = 3;
+        for (int i = 0; i < words.length; i += chunkSize) {
+          if (!mounted) break;
+          final chunk = words.sublist(i, (i + chunkSize > words.length) ? words.length : i + chunkSize).join(' ');
+          streamedText += (streamedText.isEmpty ? '' : ' ') + chunk;
+          setState(() {
+            _messages[assistantIndex]['content'] = streamedText;
+          });
+          _scrollToBottom();
+          await Future.delayed(const Duration(milliseconds: 20));
+        }
+
+        if (mounted) {
+          setState(() {
+            _messages[assistantIndex]['content'] = response;
+          });
+          await _saveChatHistory();
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -457,15 +479,36 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       final response = await aiService.solveImageQuestion(bytes, promptText, isVip: isVip, isPendingVip: isPendingVip);
 
       if (mounted) {
+        final words = response.split(' ');
+        final assistantIndex = _messages.length;
         setState(() {
+          _isTyping = false;
           _messages.add({
             'role': 'assistant',
-            'content': response,
+            'content': '',
             'time': _formatTime(),
           });
-          _isTyping = false;
         });
-        await _saveChatHistory();
+
+        String streamedText = '';
+        const chunkSize = 3;
+        for (int i = 0; i < words.length; i += chunkSize) {
+          if (!mounted) break;
+          final chunk = words.sublist(i, (i + chunkSize > words.length) ? words.length : i + chunkSize).join(' ');
+          streamedText += (streamedText.isEmpty ? '' : ' ') + chunk;
+          setState(() {
+            _messages[assistantIndex]['content'] = streamedText;
+          });
+          _scrollToBottom();
+          await Future.delayed(const Duration(milliseconds: 20));
+        }
+
+        if (mounted) {
+          setState(() {
+            _messages[assistantIndex]['content'] = response;
+          });
+          await _saveChatHistory();
+        }
         _scrollToBottom();
       }
     } catch (e) {

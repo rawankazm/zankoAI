@@ -108,6 +108,92 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
+  void _showStreakDialog(BuildContext context, ScoreService scoreService) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isDark ? ZankoColors.darkCard : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[600],
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              width: 76,
+              height: 76,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFF9500), Color(0xFFFF3B30)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF9500).withValues(alpha: 0.4),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: const Center(
+                child: Text('🔥', style: TextStyle(fontSize: 38)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '${scoreService.streakCount} ڕۆژ بەردەوامی لە خوێندن!',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: isDark ? Colors.white : ZankoColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'دەستخۆش! بەردەوام بە لە خوێندن و ئەنجامدانی کویزەکان بۆ ئەوەی زنجیرەی ئاگرەکەت بەردەوام بێت و نمرەکانت بەرز ببنەوە.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 46,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF9500),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text(
+                  'بەردەوام بە 🔥',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -226,7 +312,45 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 6),
+                              const SizedBox(width: 8),
+
+                              // Daily Streak Badge 🔥
+                              Consumer<ScoreService>(
+                                builder: (context, scoreService, _) {
+                                  final streak = scoreService.streakCount;
+                                  return GestureDetector(
+                                    onTap: () => _showStreakDialog(context, scoreService),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFFF9500).withValues(alpha: isDark ? 0.18 : 0.12),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: const Color(0xFFFF9500).withValues(alpha: 0.35),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Text('🔥', style: TextStyle(fontSize: 14)),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '$streak',
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w800,
+                                              color: Color(0xFFFF9500),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: 8),
+
                               // Notification bell
                               GestureDetector(
                                 onTap: () => Navigator.push(

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -57,7 +58,7 @@ class KurdishTtsService {
   String _prepareKurdishPhonetics(String text) {
     String result = text;
 
-    // Convert technical acronyms into clear Kurdish spoken syllables
+    // 1. Convert technical acronyms into clear spoken syllables
     result = result.replaceAll(RegExp(r'\bPDF\b', caseSensitive: false), 'پی دی ئێف');
     result = result.replaceAll(RegExp(r'\bAI\b', caseSensitive: false), 'ئەی ئای');
     result = result.replaceAll(RegExp(r'\bIT\b', caseSensitive: false), 'ئای تی');
@@ -71,7 +72,19 @@ class KurdishTtsService {
     result = result.replaceAll(RegExp(r'\bCSS\b', caseSensitive: false), 'سی ئێس ئێس');
     result = result.replaceAll(RegExp(r'\bSQL\b', caseSensitive: false), 'ئێس کیوو ئێڵ');
 
-    // Convert digits into smooth spoken Kurdish words
+    // 2. Kurdish-specific letters transliterated for smooth TTS articulation
+    result = result.replaceAll('چ', 'تش'); // Ch -> Tsh
+    result = result.replaceAll('پ', 'ب');   // P -> B
+    result = result.replaceAll('گ', 'ك');   // G -> K
+    result = result.replaceAll('ژ', 'ج');   // Zh -> J
+    result = result.replaceAll('ڤ', 'ف');   // V -> F
+    result = result.replaceAll('ێ', 'ي');   // Kurdish Ê -> Y
+    result = result.replaceAll('ۆ', 'و');   // Kurdish Ô -> W
+    result = result.replaceAll('ڵ', 'ل');   // Kurdish Ł -> L
+    result = result.replaceAll('ڕ', 'ر');   // Kurdish Ř -> R
+    result = result.replaceAll('ە', 'ه');   // Kurdish Ae -> H
+
+    // 3. Convert digits into smooth spoken Kurdish words
     result = result.replaceAll('0', ' صفر ').replaceAll('٠', ' صفر ');
     result = result.replaceAll('1', ' یەک ').replaceAll('١', ' یەک ');
     result = result.replaceAll('2', ' دوو ').replaceAll('٢', ' دوو ');
@@ -83,7 +96,7 @@ class KurdishTtsService {
     result = result.replaceAll('8', ' هەشت ').replaceAll('٨', ' هەشت ');
     result = result.replaceAll('9', ' نۆ ').replaceAll('٩', ' نۆ ');
 
-    // Normalize punctuation for smooth natural speech pacing
+    // 4. Normalize punctuation for smooth natural speech pacing
     result = result.replaceAll(';', '،');
     result = result.replaceAll('؛', '،');
     result = result.replaceAll(':', '، ');
@@ -94,7 +107,7 @@ class KurdishTtsService {
     return result.replaceAll(RegExp(r'\s+'), ' ').trim();
   }
 
-  /// Split long text into natural chunks for speech synthesis (<= 140 chars)
+  /// Split long text into natural chunks for speech synthesis (<= 300 chars)
   List<String> _splitIntoChunks(String text) {
     final List<String> chunks = [];
     final sentences = text.split(RegExp(r'(?<=[.،!؟\n;؛?])\s+'));
@@ -106,7 +119,7 @@ class KurdishTtsService {
 
       if (current.isEmpty) {
         current = s;
-      } else if (current.length + s.length < 130) {
+      } else if (current.length + s.length < 280) {
         current += ' $s';
       } else {
         chunks.add(current);
@@ -121,13 +134,13 @@ class KurdishTtsService {
     // Split any oversized chunk
     final List<String> finalChunks = [];
     for (var c in chunks) {
-      if (c.length <= 140) {
+      if (c.length <= 320) {
         finalChunks.add(c);
       } else {
         final words = c.split(' ');
         String sub = '';
         for (var w in words) {
-          if (sub.length + w.length < 130) {
+          if (sub.length + w.length < 280) {
             sub = sub.isEmpty ? w : '$sub $w';
           } else {
             if (sub.isNotEmpty) finalChunks.add(sub);
@@ -190,13 +203,13 @@ class KurdishTtsService {
           'input': {'text': text},
           'voice': {
             'languageCode': isEn ? 'en-US' : 'ar-XA',
-            'name': isEn ? 'en-US-Wavenet-D' : 'ar-XA-Wavenet-B',
+            'name': isEn ? 'en-US-Neural2-D' : 'ar-XA-Wavenet-B',
             'ssmlGender': 'MALE'
           },
           'audioConfig': {
             'audioEncoding': 'MP3',
-            'speakingRate': (0.96 * _playbackSpeed).clamp(0.5, 2.0),
-            'pitch': 0.0
+            'speakingRate': (0.92 * _playbackSpeed).clamp(0.5, 2.0),
+            'pitch': -0.5
           }
         };
 
@@ -221,11 +234,127 @@ class KurdishTtsService {
     return null;
   }
 
+  /// Fetch Native Kurdish Audio from Open-Source Neural Models (Hugging Face / Kurdish MMS / FastPitch)
+  Future<Uint8List?> _fetchHuggingFaceKurdishAudio(String text) async {
+    if (_currentLangCode != 'ku' && _currentLangCode != 'ckb') return null;
+
+    final endpoints = [
+      'https://api-inference.huggingface.co/models/facebook/mms-tts-kmr-script_arabic',
+    ];
+
+    final client = HttpClient();
+    client.connectionTimeout = const Duration(seconds: 4);
+
+    for (final endpoint in endpoints) {
+      try {
+        final uri = Uri.parse(endpoint);
+        final request = await client.postUrl(uri);
+        request.headers.set('content-type', 'application/json');
+
+        final body = jsonEncode({'inputs': text});
+        request.add(utf8.encode(body));
+
+        final response = await request.close().timeout(const Duration(seconds: 6));
+        if (response.statusCode == 200) {
+          final builder = BytesBuilder();
+          await for (final byteChunk in response) {
+            builder.add(byteChunk);
+          }
+          final bytes = builder.takeBytes();
+          if (bytes.isNotEmpty) {
+            client.close();
+            return bytes;
+          }
+        }
+      } catch (e) {
+        debugPrint('Hugging Face Kurdish Audio fetch error: $e');
+      }
+    }
+
+    client.close();
+    return null;
+  }
+
+  String? _elevenLabsApiKey = 'sk_94dc918798a1f5b4542f7b5e90cca8cf30f73a916ef90519';
+  String _elevenLabsVoiceId = 'CwhRBWXzGAHq8TQ4Fs17'; // Roger (ElevenLabs)
+
+  /// Configure custom ElevenLabs credentials & voice
+  void setElevenLabsConfig({String? apiKey, String? voiceId}) {
+    if (apiKey != null && apiKey.trim().isNotEmpty) {
+      _elevenLabsApiKey = apiKey.trim();
+    }
+    if (voiceId != null && voiceId.trim().isNotEmpty) {
+      _elevenLabsVoiceId = voiceId.trim();
+    }
+  }
+
+  /// Fetch ultra-realistic studio voice audio from ElevenLabs (Eleven Multilingual v2)
+  Future<Uint8List?> _fetchElevenLabsAudio(String text, {String? apiKey, String? voiceId}) async {
+    final key = (apiKey != null && apiKey.trim().isNotEmpty)
+        ? apiKey.trim()
+        : (_elevenLabsApiKey != null && _elevenLabsApiKey!.trim().isNotEmpty)
+            ? _elevenLabsApiKey!.trim()
+            : null;
+
+    if (key == null || key.isEmpty) return null;
+
+    final targetVoice = (voiceId != null && voiceId.trim().isNotEmpty)
+        ? voiceId.trim()
+        : _elevenLabsVoiceId;
+
+    final client = HttpClient();
+    client.connectionTimeout = const Duration(seconds: 8);
+
+    try {
+      final uri = Uri.parse('https://api.elevenlabs.io/v1/text-to-speech/$targetVoice');
+      final request = await client.postUrl(uri);
+      request.headers.set('xi-api-key', key);
+      request.headers.set('content-type', 'application/json');
+      request.headers.set('accept', 'audio/mpeg');
+
+      final bodyMap = {
+        'text': text,
+        'model_id': 'eleven_multilingual_v2',
+        'voice_settings': {
+          'stability': 0.5,
+          'similarity_boost': 0.75,
+          'style': 0.0,
+          'use_speaker_boost': true
+        }
+      };
+
+      request.add(utf8.encode(jsonEncode(bodyMap)));
+      final response = await request.close().timeout(const Duration(seconds: 12));
+
+      if (response.statusCode == 200) {
+        final builder = BytesBuilder();
+        await for (final byteChunk in response) {
+          builder.add(byteChunk);
+        }
+        final bytes = builder.takeBytes();
+        if (bytes.isNotEmpty) {
+          client.close();
+          return bytes;
+        }
+      } else {
+        final errBody = await response.transform(utf8.decoder).join();
+        debugPrint('ElevenLabs API response (${response.statusCode}): $errBody');
+      }
+    } catch (e) {
+      debugPrint('ElevenLabs audio fetch error: $e');
+    }
+
+    client.close();
+    return null;
+  }
+
   /// Start speaking text
   Future<void> speak(
     String rawText, {
     String? languageCode,
     String? apiKey,
+    String? elevenLabsKey,
+    String? elevenLabsVoiceId,
     double speed = 1.0,
     VoidCallback? onDone,
   }) async {
@@ -233,6 +362,12 @@ class KurdishTtsService {
 
     _onDone = onDone;
     _customApiKey = apiKey;
+    if (elevenLabsKey != null && elevenLabsKey.isNotEmpty) {
+      _elevenLabsApiKey = elevenLabsKey;
+    }
+    if (elevenLabsVoiceId != null && elevenLabsVoiceId.isNotEmpty) {
+      _elevenLabsVoiceId = elevenLabsVoiceId;
+    }
     _playbackSpeed = speed;
     final clean = _cleanText(rawText);
     if (clean.isEmpty) return;
@@ -266,7 +401,41 @@ class KurdishTtsService {
     final chunk = _chunks[_currentChunkIndex];
     _currentChunkIndex++;
 
-    // 1. Try High-Quality Google Cloud Neural Wavenet Voice First
+    // 1. TOP PRIORITY: ElevenLabs (Eleven Multilingual v2 - Roger Voice)
+    try {
+      final elevenBytes = await _fetchElevenLabsAudio(chunk);
+      if (elevenBytes != null && elevenBytes.isNotEmpty) {
+        await _audioPlayer.stop();
+        await _audioPlayer.setPlaybackRate(_playbackSpeed);
+        await _audioPlayer.play(
+          BytesSource(elevenBytes),
+          mode: PlayerMode.mediaPlayer,
+        );
+        return;
+      }
+    } catch (e) {
+      debugPrint('ElevenLabs Voice failed, falling back: $e');
+    }
+
+    // 2. Try Native Kurdish Open-Source Model (Hugging Face Meta MMS) for Kurdish text
+    if (_currentLangCode == 'ku' || _currentLangCode == 'ckb') {
+      try {
+        final hfBytes = await _fetchHuggingFaceKurdishAudio(chunk);
+        if (hfBytes != null && hfBytes.isNotEmpty) {
+          await _audioPlayer.stop();
+          await _audioPlayer.setPlaybackRate(_playbackSpeed);
+          await _audioPlayer.play(
+            BytesSource(hfBytes),
+            mode: PlayerMode.mediaPlayer,
+          );
+          return;
+        }
+      } catch (e) {
+        debugPrint('Hugging Face Kurdish Voice failed, falling back: $e');
+      }
+    }
+
+    // 3. Try High-Quality Google Cloud Neural Voice with Enhanced Kurdish Phonetics
     try {
       final neuralBytes = await _fetchGoogleCloudNeuralAudio(chunk, apiKey: _customApiKey);
       if (neuralBytes != null && neuralBytes.isNotEmpty) {
@@ -279,7 +448,7 @@ class KurdishTtsService {
         return;
       }
     } catch (e) {
-      debugPrint('Neural Wavenet Voice failed, trying standard endpoint: $e');
+      debugPrint('Neural Voice failed, trying standard endpoint: $e');
     }
 
     // 2. Fallback to enhanced Google Translate Audio endpoint
