@@ -65,39 +65,72 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
   }
 
   void _listenToPaymentConfig() {
-    try {
-      FirebaseFirestore.instance
-          .collection('config')
-          .doc('payment_config')
-          .snapshots()
-          .listen((snap) {
-        if (snap.exists && snap.data() != null && mounted) {
-          final data = snap.data()!;
-          setState(() {
-            if (data['whatsappNumber'] != null &&
-                data['whatsappNumber'].toString().trim().isNotEmpty) {
-              _whatsappNumber = data['whatsappNumber'].toString().trim();
-            }
-            if (data['telegramUsername'] != null &&
-                data['telegramUsername'].toString().trim().isNotEmpty) {
-              _telegramUsername = data['telegramUsername'].toString().trim();
-            }
-            if (data['fibNumber'] != null &&
-                data['fibNumber'].toString().trim().isNotEmpty) {
-              _fibNumber = data['fibNumber'].toString().trim();
-            }
-            if (data['fastPayNumber'] != null &&
-                data['fastPayNumber'].toString().trim().isNotEmpty) {
-              _fastPayNumber = data['fastPayNumber'].toString().trim();
-            }
-            if (data['zainCashNumber'] != null &&
-                data['zainCashNumber'].toString().trim().isNotEmpty) {
-              _zainCashNumber = data['zainCashNumber'].toString().trim();
-            }
-          });
+    void parseData(Map<String, dynamic>? data) {
+      if (data == null || !mounted) return;
+      setState(() {
+        final whatsapp = data['whatsappNumber'] ??
+            data['whatsAppNumber'] ??
+            data['whatsapp'] ??
+            data['whatsapp_number'];
+        if (whatsapp != null && whatsapp.toString().trim().isNotEmpty) {
+          _whatsappNumber = whatsapp.toString().trim();
+        }
+
+        final telegram = data['telegramUsername'] ??
+            data['telegram'] ??
+            data['telegramUser'] ??
+            data['telegram_username'];
+        if (telegram != null && telegram.toString().trim().isNotEmpty) {
+          _telegramUsername = telegram.toString().trim();
+        }
+
+        final fib = data['fibNumber'] ?? data['fib'] ?? data['fib_number'];
+        if (fib != null && fib.toString().trim().isNotEmpty) {
+          _fibNumber = fib.toString().trim();
+        }
+
+        final fastpay = data['fastPayNumber'] ??
+            data['fastpay'] ??
+            data['fastPay'] ??
+            data['fastpay_number'];
+        if (fastpay != null && fastpay.toString().trim().isNotEmpty) {
+          _fastPayNumber = fastpay.toString().trim();
+        }
+
+        final zaincash = data['zainCashNumber'] ??
+            data['zaincash'] ??
+            data['zainCash'] ??
+            data['zaincash_number'];
+        if (zaincash != null && zaincash.toString().trim().isNotEmpty) {
+          _zainCashNumber = zaincash.toString().trim();
         }
       });
-    } catch (_) {}
+    }
+
+    // 1. Instant Direct Fetch
+    FirebaseFirestore.instance
+        .collection('config')
+        .doc('payment_config')
+        .get()
+        .then((doc) {
+      if (doc.exists) parseData(doc.data());
+    }).catchError((e) {
+      debugPrint('payment_config initial get warning: $e');
+    });
+
+    // 2. Real-time Live Subscription
+    FirebaseFirestore.instance
+        .collection('config')
+        .doc('payment_config')
+        .snapshots()
+        .listen(
+      (snap) {
+        if (snap.exists) parseData(snap.data());
+      },
+      onError: (err) {
+        debugPrint('payment_config snapshots error: $err');
+      },
+    );
   }
 
   String _formatPrice(int price) {
