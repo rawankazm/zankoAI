@@ -28,8 +28,8 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
   String _selectedPlan = '1_month'; // '1_month', '3_months', '9_months'
   bool _showAccounts = false;
 
-  String _whatsappNumber = '07507899090';
-  String _telegramUsername = 'zanko_support';
+  String _whatsappNumber = '07509987345';
+  String _telegramUsername = 'rawankurdi';
   String _fibNumber = 'FIB-ZANKO-9090';
   String _fastPayNumber = '0750 789 9090';
   String _zainCashNumber = '0780 789 9090';

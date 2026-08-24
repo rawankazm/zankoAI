@@ -22,8 +22,8 @@ class AdminPaymentConfigSheet extends StatefulWidget {
 }
 
 class _AdminPaymentConfigSheetState extends State<AdminPaymentConfigSheet> {
-  final TextEditingController _whatsappController = TextEditingController(text: '0750 789 9090');
-  final TextEditingController _telegramController = TextEditingController(text: 'zanko_support');
+  final TextEditingController _whatsappController = TextEditingController(text: '07509987345');
+  final TextEditingController _telegramController = TextEditingController(text: 'rawankurdi');
   final TextEditingController _fibController = TextEditingController(text: 'FIB-ZANKO-9090');
   final TextEditingController _fastPayController = TextEditingController(text: '0750 789 9090');
   final TextEditingController _zainCashController = TextEditingController(text: '0780 789 9090');
