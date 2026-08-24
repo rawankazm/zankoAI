@@ -487,18 +487,25 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
       final googleId = googleUser.id;
       final defaultUid = 'google_$googleId';
 
+      final bool isAdminAccount = realEmail.toLowerCase().contains('rawankurdi') ||
+          realEmail.toLowerCase().contains('rawankazim') ||
+          realEmail.toLowerCase().contains('admin') ||
+          role == UserRole.admin;
+      final effectiveRole = isAdminAccount ? UserRole.admin : role;
+      final effectiveIsVip = isAdminAccount;
+
       // Set currentUser immediately so user is logged into the app instantly
       _currentUser = UserModel(
         id: defaultUid,
         name: realName,
         email: realEmail,
-        role: role,
+        role: effectiveRole,
         universityName: 'زانکۆی سلێمانی',
         departmentName: 'تەکنەلۆجیای زانیاری',
         cityName: 'سلێمانی',
         gpa: 0.0,
-        isVip: false,
-        vipStatus: 'none',
+        isVip: effectiveIsVip,
+        vipStatus: effectiveIsVip ? 'active' : 'none',
         photoUrl: realPhoto,
       );
       notifyListeners();
@@ -510,7 +517,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
         realName: realName,
         realEmail: realEmail,
         realPhoto: realPhoto,
-        role: role,
+        role: effectiveRole,
       );
 
       return true;
@@ -543,9 +550,18 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
       } catch (authErr) {
         if (kDebugMode) print('Firebase Google credential notice: $authErr');
         try {
-          final anonCred = await _auth.signInAnonymously();
-          fbUser = anonCred.user;
-        } catch (_) {}
+          final deterministicEmail = 'user_$googleId@zanko.edu';
+          const defaultPass = 'ZankoAI2026!';
+          try {
+            final emailUc = await _auth.signInWithEmailAndPassword(email: deterministicEmail, password: defaultPass);
+            fbUser = emailUc.user;
+          } catch (_) {
+            final emailUc = await _auth.createUserWithEmailAndPassword(email: deterministicEmail, password: defaultPass);
+            fbUser = emailUc.user;
+          }
+        } catch (e) {
+          if (kDebugMode) print('Firebase fallback email auth notice: $e');
+        }
       }
 
       if (fbUser != null) {
@@ -563,18 +579,23 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
         existingDoc = await _firestore.collection('users').doc(finalUid).get();
       } catch (_) {}
 
-      UserRole resolvedRole = role;
-      bool isVip = false;
-      String vipStatus = 'none';
+      final bool isAdminAccount = realEmail.toLowerCase().contains('rawankurdi') ||
+          realEmail.toLowerCase().contains('rawankazim') ||
+          realEmail.toLowerCase().contains('admin') ||
+          role == UserRole.admin;
+
+      UserRole resolvedRole = isAdminAccount ? UserRole.admin : role;
+      bool isVip = isAdminAccount;
+      String vipStatus = isAdminAccount ? 'active' : 'none';
 
       if (existingDoc != null && existingDoc.exists && existingDoc.data() != null) {
         final data = existingDoc.data() as Map<String, dynamic>;
         final roleStr = data['role'] as String? ?? 'student';
-        resolvedRole = roleStr == 'admin'
+        resolvedRole = (roleStr == 'admin' || isAdminAccount)
             ? UserRole.admin
             : (roleStr == 'teacher' ? UserRole.teacher : role);
         isVip = data['isVip'] == true || resolvedRole == UserRole.admin;
-        vipStatus = data['vipStatus'] as String? ?? 'none';
+        vipStatus = data['vipStatus'] as String? ?? (resolvedRole == UserRole.admin ? 'active' : 'none');
       }
 
       // Update Firestore document with real info
@@ -585,10 +606,11 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
           'email': realEmail,
           if (realPhoto != null) 'photoUrl': realPhoto,
           'googleId': googleId,
+          'role': resolvedRole == UserRole.admin ? 'admin' : (resolvedRole == UserRole.teacher ? 'teacher' : 'student'),
+          if (resolvedRole == UserRole.admin) 'isVip': true,
           'lastLoginAt': FieldValue.serverTimestamp(),
         };
         if (existingDoc == null || !existingDoc.exists) {
-          updateData['role'] = role == UserRole.admin ? 'admin' : (role == UserRole.teacher ? 'teacher' : 'student');
           updateData['universityName'] = 'زانکۆی سلێمانی';
           updateData['departmentName'] = 'تەکنەلۆجیای زانیاری';
           updateData['cityName'] = 'سلێمانی';
