@@ -149,6 +149,17 @@ class NotificationService {
       if (initialMessage != null) {
         debugPrint('App opened from terminated state FCM message: ${initialMessage.data}');
       }
+
+      // 9. Handle Token Refresh
+      _fcm.onTokenRefresh.listen((newToken) {
+        _fcmToken = newToken;
+        if (_lastSyncedUserId != null && _lastSyncedUserId!.isNotEmpty) {
+          FirebaseFirestore.instance.collection('users').doc(_lastSyncedUserId!).set({
+            'fcmToken': newToken,
+            'fcmTokens': FieldValue.arrayUnion([newToken]),
+          }, SetOptions(merge: true)).catchError((_) {});
+        }
+      });
     } catch (e) {
       debugPrint('FCM initialization notice: $e');
     }

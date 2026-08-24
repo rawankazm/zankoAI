@@ -1,0 +1,124 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if caller is admin
+    function isAdmin() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    // Helper function to check if user is authenticated
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // 1. Users Collection
+    match /users/{userId} {
+      allow read: if isAuth();
+      allow write: if (isAuth() && request.auth.uid == userId) || isAdmin();
+
+      match /notifications/{notifId} {
+        allow read, write: if (isAuth() && request.auth.uid == userId) || isAdmin();
+      }
+    }
+
+    // 2. VIP Requests
+    match /vip_requests/{id} {
+      allow create: if isAuth();
+      allow read, write: if isAdmin() || (isAuth() && resource.data.userId == request.auth.uid);
+    }
+
+    // 3. Config (Payment info, App version, Gemini key)
+    match /config/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin() || isAuth();
+    }
+
+    // 4. Ads
+    match /ads/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 5. Notifications & Broadcasts
+    match /notifications/{id} {
+      allow read: if true;
+      allow create, write: if isAuth() || isAdmin();
+    }
+
+    match /notifications_queue/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /direct_messages/{id} {
+      allow read: if isAuth() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow write: if isAdmin() || isAuth();
+    }
+
+    // 6. User Feedback
+    match /user_feedback/{id} {
+      allow create: if isAuth() || true;
+      allow read, write: if isAdmin();
+    }
+
+    match /feedback/{id} {
+      allow create: if isAuth() || true;
+      allow read, write: if isAdmin();
+    }
+
+    // 7. ZankoLine Departments & Universities
+    match /zankoline_departments/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 8. Academic Departments & Courses
+    match /departments/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /courses/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 9. Study & Learning Collections
+    match /notes/{id} {
+      allow read, write: if isAuth();
+    }
+
+    match /schedule/{id} {
+      allow read, write: if isAuth();
+    }
+
+    match /flashcards/{id} {
+      allow read, write: if isAuth();
+    }
+
+    match /reminders/{id} {
+      allow read, write: if isAuth();
+    }
+
+    match /quizzes/{id} {
+      allow read: if true;
+      allow write: if isAuth() || isAdmin();
+    }
+
+    match /lectures/{id} {
+      allow read: if true;
+      allow write: if isAuth() || isAdmin();
+    }
+
+    match /announcements/{id} {
+      allow read: if true;
+      allow write: if isAuth() || isAdmin();
+    }
+
+    match /enrollments/{id} {
+      allow read, write: if isAuth();
+    }
+  }
+}

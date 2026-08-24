@@ -17,6 +17,8 @@ abstract class DatabaseService extends ChangeNotifier {
   List<Map<String, dynamic>> get enrollmentRequests;
   List<LectureModel> get lectures;
   List<AnnouncementModel> get announcements;
+  List<Map<String, dynamic>> get departments;
+  List<Map<String, dynamic>> get courses;
 
   int get completedPomodoros;
   int get quizzesTaken;
@@ -80,6 +82,10 @@ class MockDatabaseService extends ChangeNotifier implements DatabaseService {
   List<LectureModel> get lectures => _lectures;
   @override
   List<AnnouncementModel> get announcements => _announcements;
+  @override
+  List<Map<String, dynamic>> get departments => [];
+  @override
+  List<Map<String, dynamic>> get courses => [];
 
   @override
   int get completedPomodoros => _completedPomodoros;

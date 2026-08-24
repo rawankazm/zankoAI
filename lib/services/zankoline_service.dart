@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'ai_service.dart';
 
 class ZankolineDepartmentModel {
@@ -24,9 +25,9 @@ class ZankolineDepartmentModel {
     required this.parallelFeeIqd,
   });
 
-  factory ZankolineDepartmentModel.fromJson(Map<String, dynamic> json) {
-    final collegeName = (json['college'] ?? '').toString();
-    final rawMinMark = json['min_mark'];
+  factory ZankolineDepartmentModel.fromJson(Map<String, dynamic> json, {String? docId}) {
+    final collegeName = (json['department'] ?? json['college'] ?? '').toString();
+    final rawMinMark = json['minScoreGeneral'] ?? json['min_mark'];
     final double minMarkVal = rawMinMark != null ? (rawMinMark as num).toDouble() : 50.0;
 
     int defaultFee = 1000000;
@@ -48,11 +49,11 @@ class ZankolineDepartmentModel {
       defaultFee = 750000;
     }
 
-    final rawFee = json['parallel_fee_iqd'];
+    final rawFee = json['yearlyFee'] ?? json['parallel_fee_iqd'];
     final int feeVal = rawFee != null ? (rawFee as num).toInt() : defaultFee;
 
     return ZankolineDepartmentModel(
-      id: (json['id'] ?? '').toString(),
+      id: docId ?? (json['id'] ?? '').toString(),
       university: (json['university'] ?? '').toString(),
       college: collegeName,
       minMark: minMarkVal,
@@ -86,13 +87,34 @@ class ZankolineService extends ChangeNotifier {
   final AiService _aiService;
   List<ZankolineDepartmentModel> _departments = [];
   bool _isLoading = false;
+  final Map<String, ZankolineDepartmentModel> _deptMap = {};
 
   ZankolineService(this._aiService) {
     loadDepartments();
+    _listenToFirestoreDepartments();
   }
 
   bool get isLoading => _isLoading;
   List<ZankolineDepartmentModel> get departments => _departments;
+
+  void _listenToFirestoreDepartments() {
+    try {
+      FirebaseFirestore.instance
+          .collection('zankoline_departments')
+          .snapshots()
+          .listen((snapshot) {
+        for (var doc in snapshot.docs) {
+          final data = doc.data();
+          final item = ZankolineDepartmentModel.fromJson(data, docId: doc.id);
+          _deptMap[doc.id] = item;
+        }
+        _departments = _deptMap.values.toList();
+        notifyListeners();
+      }, onError: (err) {
+        if (kDebugMode) print('Firestore zankoline stream warning: $err');
+      });
+    } catch (_) {}
+  }
 
   Future<void> loadDepartments() async {
     _isLoading = true;
@@ -100,7 +122,15 @@ class ZankolineService extends ChangeNotifier {
     try {
       final jsonStr = await rootBundle.loadString('assets/data/krg_zankoline.json');
       final List<dynamic> jsonList = jsonDecode(jsonStr);
-      _departments = jsonList.map((e) => ZankolineDepartmentModel.fromJson(e)).toList();
+      for (var e in jsonList) {
+        final item = ZankolineDepartmentModel.fromJson(e);
+        if (item.id.isNotEmpty) {
+          _deptMap[item.id] = item;
+        } else {
+          _deptMap['${item.university}_${item.college}'] = item;
+        }
+      }
+      _departments = _deptMap.values.toList();
     } catch (e) {
       if (kDebugMode) print('Error loading Zankoline dataset: $e');
     } finally {

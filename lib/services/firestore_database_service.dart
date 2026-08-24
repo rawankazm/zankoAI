@@ -23,6 +23,8 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
   final List<Map<String, dynamic>> _enrollmentRequests = [];
   final List<LectureModel> _lectures = [];
   final List<AnnouncementModel> _announcements = [];
+  final List<Map<String, dynamic>> _departments = [];
+  final List<Map<String, dynamic>> _courses = [];
 
   int _completedPomodoros = 0;
   int _quizzesTaken = 0;
@@ -36,6 +38,8 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
   StreamSubscription? _lecturesSub;
   StreamSubscription? _announcementsSub;
   StreamSubscription? _enrollmentsSub;
+  StreamSubscription? _departmentsSub;
+  StreamSubscription? _coursesSub;
   StreamSubscription? _authSub;
 
   @override
@@ -54,6 +58,10 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
   List<LectureModel> get lectures => _lectures;
   @override
   List<AnnouncementModel> get announcements => _announcements;
+  @override
+  List<Map<String, dynamic>> get departments => _departments;
+  @override
+  List<Map<String, dynamic>> get courses => _courses;
 
   @override
   int get completedPomodoros => _completedPomodoros;
@@ -87,6 +95,8 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
     _lecturesSub?.cancel();
     _announcementsSub?.cancel();
     _enrollmentsSub?.cancel();
+    _departmentsSub?.cancel();
+    _coursesSub?.cancel();
   }
 
   @override
@@ -100,6 +110,8 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
       _listenToLectures();
       _listenToAnnouncements();
       _listenToEnrollmentRequests();
+      _listenToDepartments();
+      _listenToCourses();
     } catch (e) {
       if (kDebugMode) print('Firestore loadData note: $e');
     }
@@ -324,6 +336,42 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
           'teacherName': data['teacherName'] ?? '',
           'status': data['status'] ?? 'pending',
           'createdAt': (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+        });
+      }
+      notifyListeners();
+    }, onError: (_) {});
+  }
+
+  void _listenToDepartments() {
+    _departmentsSub?.cancel();
+    _departmentsSub = _firestore.collection('departments').snapshots().listen((snapshot) {
+      _departments.clear();
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        _departments.add({
+          'id': doc.id,
+          'name': data['name'] ?? '',
+          'faculty': data['faculty'] ?? '',
+          'head': data['head'] ?? '',
+        });
+      }
+      notifyListeners();
+    }, onError: (_) {});
+  }
+
+  void _listenToCourses() {
+    _coursesSub?.cancel();
+    _coursesSub = _firestore.collection('courses').snapshots().listen((snapshot) {
+      _courses.clear();
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        _courses.add({
+          'id': doc.id,
+          'title': data['title'] ?? '',
+          'code': data['code'] ?? '',
+          'department': data['department'] ?? '',
+          'semester': data['semester'] ?? '',
+          'credits': data['credits'] ?? 3,
         });
       }
       notifyListeners();
