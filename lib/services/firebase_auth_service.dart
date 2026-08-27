@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../models/user_model.dart';
+import '../firebase_options.dart';
 import 'auth_service.dart';
 import 'notification_service.dart';
 
@@ -33,7 +34,9 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
 
   Future<void> _ensureFirebase() async {
     if (Firebase.apps.isEmpty) {
-        await Firebase.initializeApp();
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
     }
   }
 

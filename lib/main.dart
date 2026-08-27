@@ -24,14 +24,26 @@ import 'package:device_preview/device_preview.dart';
 
 import 'package:flutter/foundation.dart';
 
+import 'firebase_options.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp();
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
     }
-    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-    await NotificationService().init();
+    if (!kIsWeb) {
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+      await NotificationService().init();
+    } else {
+      try {
+        await NotificationService().init();
+      } catch (e) {
+        debugPrint('Web notification init notice: $e');
+      }
+    }
   } catch (e) {
     debugPrint('Firebase core initialization notice: $e');
   }
