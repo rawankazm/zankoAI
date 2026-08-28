@@ -182,10 +182,21 @@ class PptxGeneratorService {
       final trimmed = line.trim();
       if (trimmed.isEmpty) continue;
 
-      // Detect slide headers e.g. "### 🔹 سلایدی ١: ناساندن", "### Slide 1: Title", "1️⃣ بابەتی یەکەم:", "## Slide 1", "### 1."
-      final isSlideHeader = RegExp(r'^(#+\s*)?(🔹|🔸|▪️|▫️|🔻|\d+️⃣|\d+[\.\:\)\-])?\s*(سلایدی|سلايد|Slide|بابەت|بابەتی|الشريحة|\d+)\s*[:\-–]?\s*', caseSensitive: false).hasMatch(trimmed) ||
-          RegExp(r'^#{1,4}\s+', caseSensitive: false).hasMatch(trimmed) ||
-          RegExp(r'^(سلایدی|سلايد|Slide)\s*\d+', caseSensitive: false).hasMatch(trimmed);
+      // Skip top-level document headers like "# 💡 بابەتی سیمینار" or "# Presentation Title"
+      if (trimmed.startsWith('# ') && !RegExp(r'(سلاید|سلايد|Slide|الشريحة)', caseSensitive: false).hasMatch(trimmed)) {
+        continue;
+      }
+
+      // Detect explicit slide headers e.g. "### 🔹 سلایدی ١: ناساندن", "### Slide 1: Title", "1️⃣ سلایدی یەکەم:", "## Slide 1", "**سلایدی ١: ...**"
+      final isExplicitSlideKeyword = RegExp(
+        r'^(#{1,4}\s*)?(🔹|🔸|▪️|▫️|🔻|\d+️⃣)?\s*(\*\*)?(سلایدی|سلايد|Slide|الشريحة)\s*(\d+|[٠-٩]+|[١-٩]+|یەکەم|دووەم|سێیەم|چوارەم|پێنجەم|شەشەم|حەوتەم|هەشتەم|الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن)?\s*[:\-–\.]?\s*',
+        caseSensitive: false,
+      ).hasMatch(trimmed);
+
+      final isMarkdownSlideHeading = RegExp(r'^#{2,3}\s+', caseSensitive: false).hasMatch(trimmed) &&
+          (trimmed.contains('سلاید') || trimmed.contains('Slide') || trimmed.contains('سلايد') || trimmed.contains('الشريحة') || trimmed.contains('🔹') || trimmed.contains('🔸') || RegExp(r'\b(Slide\s*\d+)\b', caseSensitive: false).hasMatch(trimmed));
+
+      final isSlideHeader = isExplicitSlideKeyword || isMarkdownSlideHeading;
 
       if (isSlideHeader) {
         if (inSlide) {
@@ -197,7 +208,7 @@ class PptxGeneratorService {
         String cleanTitle = trimmed
             .replaceAll(RegExp(r'^#+\s*'), '')
             .replaceAll(RegExp(r'^(🔹|🔸|▪️|▫️|🔻|\d+️⃣)\s*'), '')
-            .replaceAll(RegExp(r'^(سلایدی|سلايد|Slide|بابەت|بابەتی|الشريحة)\s*\d*[:\-–]\s*', caseSensitive: false), '')
+            .replaceAll(RegExp(r'^(سلایدی|سلايد|Slide|الشريحة)\s*(\d+|[٠-٩]+|[١-٩]+|یەکەم|دووەم|سێیەم|چوارەم|پێنجەم|شەشەم|حەوتەم|هەشتەم)?[:\-–\.]?\s*', caseSensitive: false), '')
             .replaceAll('**', '')
             .replaceAll('*', '')
             .trim();
@@ -318,76 +329,118 @@ class PptxGeneratorService {
     ];
   }
 
-  /// Generates a valid OpenXML PowerPoint (.pptx) file with real embedded images and Kurdish/Arabic app fonts
+  /// Generates a valid OpenXML PowerPoint (.pptx) file with real embedded images and Kurdish/Arabic Calibri fonts
   static Future<List<int>> createPptxBytes(
     List<SlideModel> slides, {
-    String presentationTitle = 'ZankoAI Seminar',
+    required String presentationTitle,
     String languageCode = 'ku',
+    String? studentName,
+    String? supervisorName,
+    String? university,
+    String? department,
+    List<int>? logoBytes,
   }) async {
     final archive = Archive();
 
+    List<int> toUtf8(String str) => utf8.encode(str);
+
     // 1. [Content_Types].xml (including image extensions)
     final contentTypesXml = _buildContentTypesXml(slides.length);
-    archive.addFile(ArchiveFile('[Content_Types].xml', contentTypesXml.length, utf8.encode(contentTypesXml)));
+    final contentTypesBytes = toUtf8(contentTypesXml);
+    archive.addFile(ArchiveFile('[Content_Types].xml', contentTypesBytes.length, contentTypesBytes));
 
     // 2. _rels/.rels
     final rootRelsXml = _buildRootRelsXml();
-    archive.addFile(ArchiveFile('_rels/.rels', rootRelsXml.length, utf8.encode(rootRelsXml)));
+    final rootRelsBytes = toUtf8(rootRelsXml);
+    archive.addFile(ArchiveFile('_rels/.rels', rootRelsBytes.length, rootRelsBytes));
 
     // 3. ppt/_rels/presentation.xml.rels
     final presRelsXml = _buildPresentationRelsXml(slides.length);
-    archive.addFile(ArchiveFile('ppt/_rels/presentation.xml.rels', presRelsXml.length, utf8.encode(presRelsXml)));
+    final presRelsBytes = toUtf8(presRelsXml);
+    archive.addFile(ArchiveFile('ppt/_rels/presentation.xml.rels', presRelsBytes.length, presRelsBytes));
 
     // 4. ppt/presentation.xml
     final presXml = _buildPresentationXml(slides.length);
-    archive.addFile(ArchiveFile('ppt/presentation.xml', presXml.length, utf8.encode(presXml)));
+    final presBytes = toUtf8(presXml);
+    archive.addFile(ArchiveFile('ppt/presentation.xml', presBytes.length, presBytes));
 
     // 5. ppt/slideMasters/slideMaster1.xml & rels
     final slideMasterXml = _buildSlideMasterXml();
-    archive.addFile(ArchiveFile('ppt/slideMasters/slideMaster1.xml', slideMasterXml.length, utf8.encode(slideMasterXml)));
+    final slideMasterBytes = toUtf8(slideMasterXml);
+    archive.addFile(ArchiveFile('ppt/slideMasters/slideMaster1.xml', slideMasterBytes.length, slideMasterBytes));
 
     final slideMasterRelsXml = _buildSlideMasterRelsXml();
-    archive.addFile(ArchiveFile('ppt/slideMasters/_rels/slideMaster1.xml.rels', slideMasterRelsXml.length, utf8.encode(slideMasterRelsXml)));
+    final slideMasterRelsBytes = toUtf8(slideMasterRelsXml);
+    archive.addFile(ArchiveFile('ppt/slideMasters/_rels/slideMaster1.xml.rels', slideMasterRelsBytes.length, slideMasterRelsBytes));
 
     // 6. ppt/slideLayouts/slideLayout1.xml & slideLayout2.xml & rels
     final layout1Xml = _buildSlideLayoutXml('Title Slide');
-    archive.addFile(ArchiveFile('ppt/slideLayouts/slideLayout1.xml', layout1Xml.length, utf8.encode(layout1Xml)));
+    final layout1Bytes = toUtf8(layout1Xml);
+    archive.addFile(ArchiveFile('ppt/slideLayouts/slideLayout1.xml', layout1Bytes.length, layout1Bytes));
 
     final layout2Xml = _buildSlideLayoutXml('Title and Content');
-    archive.addFile(ArchiveFile('ppt/slideLayouts/slideLayout2.xml', layout2Xml.length, utf8.encode(layout2Xml)));
+    final layout2Bytes = toUtf8(layout2Xml);
+    archive.addFile(ArchiveFile('ppt/slideLayouts/slideLayout2.xml', layout2Bytes.length, layout2Bytes));
 
     final layoutRelsXml = _buildSlideLayoutRelsXml();
-    archive.addFile(ArchiveFile('ppt/slideLayouts/_rels/slideLayout1.xml.rels', layoutRelsXml.length, utf8.encode(layoutRelsXml)));
-    archive.addFile(ArchiveFile('ppt/slideLayouts/_rels/slideLayout2.xml.rels', layoutRelsXml.length, utf8.encode(layoutRelsXml)));
+    final layoutRelsBytes = toUtf8(layoutRelsXml);
+    archive.addFile(ArchiveFile('ppt/slideLayouts/_rels/slideLayout1.xml.rels', layoutRelsBytes.length, layoutRelsBytes));
+    archive.addFile(ArchiveFile('ppt/slideLayouts/_rels/slideLayout2.xml.rels', layoutRelsBytes.length, layoutRelsBytes));
 
-    // 7. ppt/theme/theme1.xml with Droid Arabic Kufi & Segoe UI fontScheme
+    // 7. ppt/theme/theme1.xml with Calibri fontScheme
     final themeXml = _buildThemeXml();
-    archive.addFile(ArchiveFile('ppt/theme/theme1.xml', themeXml.length, utf8.encode(themeXml)));
+    final themeBytes = toUtf8(themeXml);
+    archive.addFile(ArchiveFile('ppt/theme/theme1.xml', themeBytes.length, themeBytes));
 
-    // 8. Fetch real images asynchronously and embed into PPTX media/ + slides/
+    final hasCustomLogo = logoBytes != null && logoBytes.isNotEmpty;
+    if (hasCustomLogo) {
+      archive.addFile(ArchiveFile('ppt/media/logo.png', logoBytes.length, logoBytes));
+    }
+
+    // 8. Fetch real images in parallel asynchronously and embed into PPTX media/ + slides/
+    final imageFutures = slides.asMap().entries.map((entry) {
+      final slideNum = entry.key + 1;
+      final slide = entry.value;
+      final imgUrl = slide.imageUrl ?? getSlideSpecificImageUrl(presentationTitle, slideNum);
+      return _fetchOrGenerateImageBytes(imgUrl);
+    }).toList();
+
+    final allImageBytes = await Future.wait(imageFutures);
+
     for (int i = 0; i < slides.length; i++) {
       final slideNum = i + 1;
       final slide = slides[i];
-      final imgUrl = slide.imageUrl ?? getSlideSpecificImageUrl(presentationTitle, slideNum);
+      final imageBytes = allImageBytes[i];
+      final isFirst = i == 0;
 
-      // Download real image bytes from web
-      final imageBytes = await _fetchOrGenerateImageBytes(imgUrl);
       archive.addFile(ArchiveFile('ppt/media/image$slideNum.jpeg', imageBytes.length, imageBytes));
 
-      // Build slide XML with DrawingML <p:pic> image frame and Kurdish/Arabic typography
+      // Build slide XML
       final slideXml = _buildSlideXml(
         slide,
         slideNum,
         slides.length,
-        isFirstSlide: i == 0,
-        hasImage: true,
+        isFirstSlide: isFirst,
+        hasImage: !isFirst,
+        hasLogo: isFirst && hasCustomLogo,
         languageCode: languageCode,
+        studentName: studentName,
+        supervisorName: supervisorName,
+        university: university,
+        department: department,
       );
-      archive.addFile(ArchiveFile('ppt/slides/slide$slideNum.xml', slideXml.length, utf8.encode(slideXml)));
+      final slideBytes = toUtf8(slideXml);
+      archive.addFile(ArchiveFile('ppt/slides/slide$slideNum.xml', slideBytes.length, slideBytes));
 
       // Build relationship linking slide to layout and embedded image
-      final slideRelXml = _buildSlideRelsXml(i == 0 ? 1 : 2, hasImage: true, imageIndex: slideNum);
-      archive.addFile(ArchiveFile('ppt/slides/_rels/slide$slideNum.xml.rels', slideRelXml.length, utf8.encode(slideRelXml)));
+      final slideRelXml = _buildSlideRelsXml(
+        isFirst ? 1 : 2,
+        hasImage: !isFirst,
+        imageIndex: slideNum,
+        hasLogo: isFirst && hasCustomLogo,
+      );
+      final slideRelBytes = toUtf8(slideRelXml);
+      archive.addFile(ArchiveFile('ppt/slides/_rels/slide$slideNum.xml.rels', slideRelBytes.length, slideRelBytes));
     }
 
     final zipEncoder = ZipEncoder();
@@ -396,12 +449,30 @@ class PptxGeneratorService {
 
   /// Exports PPTX bytes to a temporary file and triggers the system Share / Open With sheet
   static Future<void> exportAndSharePptx({
-    required String rawContent,
+    List<SlideModel>? slides,
+    String? rawContent,
     required String title,
     String languageCode = 'ku',
+    String? studentName,
+    String? supervisorName,
+    String? university,
+    String? department,
+    List<int>? logoBytes,
   }) async {
-    final slides = parseSlidesFromText(rawContent, defaultTitle: title);
-    final bytes = await createPptxBytes(slides, presentationTitle: title, languageCode: languageCode);
+    final effectiveSlides = (slides != null && slides.isNotEmpty)
+        ? slides
+        : (rawContent != null ? parseSlidesFromText(rawContent, defaultTitle: title) : <SlideModel>[]);
+
+    final bytes = await createPptxBytes(
+      effectiveSlides,
+      presentationTitle: title,
+      languageCode: languageCode,
+      studentName: studentName,
+      supervisorName: supervisorName,
+      university: university,
+      department: department,
+      logoBytes: logoBytes,
+    );
 
     final tempDir = await getTemporaryDirectory();
     final cleanFileName = title
@@ -482,7 +553,7 @@ class PptxGeneratorService {
   static String _buildPresentationXml(int slideCount) {
     final buffer = StringBuffer();
     buffer.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n');
-    buffer.write('<p:presentation xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">\n');
+    buffer.write('<p:presentation xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">\n');
     buffer.write('  <p:sldMasterIdLst>\n');
     buffer.write('    <p:sldMasterId id="2147483648" r:id="rId1"/>\n');
     buffer.write('  </p:sldMasterIdLst>\n');
@@ -495,6 +566,7 @@ class PptxGeneratorService {
     buffer.write('  </p:sldIdLst>\n');
     buffer.write('  <p:sldSz cx="12192000" cy="6858000" type="screen16x9"/>\n');
     buffer.write('  <p:notesSz cx="6858000" cy="9144000"/>\n');
+    buffer.write('  <p:defaultTextStyle/>\n');
     buffer.write('</p:presentation>');
     return buffer.toString();
   }
@@ -513,6 +585,7 @@ class PptxGeneratorService {
         '    <p:sldLayoutId id="2147483649" r:id="rId1"/>\n'
         '    <p:sldLayoutId id="2147483650" r:id="rId2"/>\n'
         '  </p:sldLayoutIdLst>\n'
+        '  <p:txStyles><p:titleStyle/><p:bodyStyle/><p:otherStyle/></p:txStyles>\n'
         '</p:sldMaster>';
   }
 
@@ -527,13 +600,14 @@ class PptxGeneratorService {
 
   static String _buildSlideLayoutXml(String layoutName) {
     return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
-        '<p:sldLayout xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" type="cust" preserve="1">\n'
+        '<p:sldLayout xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" type="blank" preserve="1">\n'
         '  <p:cSld name="$layoutName">\n'
         '    <p:spTree>\n'
         '      <p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>\n'
         '      <p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>\n'
         '    </p:spTree>\n'
         '  </p:cSld>\n'
+        '  <p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>\n'
         '</p:sldLayout>';
   }
 
@@ -546,25 +620,25 @@ class PptxGeneratorService {
 
   static String _buildThemeXml() {
     return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
-        '<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="ZankoCanvaModern">\n'
+        '<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="ZankoAcademic">\n'
         '  <a:themeElements>\n'
-        '    <a:clrScheme name="ZankoCanva">\n'
+        '    <a:clrScheme name="ZankoModernBlue">\n'
         '      <a:dk1><a:srgbClr val="0F172A"/></a:dk1>\n'
         '      <a:lt1><a:srgbClr val="FFFFFF"/></a:lt1>\n'
-        '      <a:dk2><a:srgbClr val="334155"/></a:dk2>\n'
+        '      <a:dk2><a:srgbClr val="1E293B"/></a:dk2>\n'
         '      <a:lt2><a:srgbClr val="F8FAFC"/></a:lt2>\n'
-        '      <a:accent1><a:srgbClr val="7D2AE8"/></a:accent1>\n'
-        '      <a:accent2><a:srgbClr val="00C4CC"/></a:accent2>\n'
-        '      <a:accent3><a:srgbClr val="6366F1"/></a:accent3>\n'
-        '      <a:accent4><a:srgbClr val="10B981"/></a:accent4>\n'
-        '      <a:accent5><a:srgbClr val="F59E0B"/></a:accent5>\n'
-        '      <a:accent6><a:srgbClr val="EF4444"/></a:accent6>\n'
-        '      <a:hlink><a:srgbClr val="7D2AE8"/></a:hlink>\n'
-        '      <a:folHlink><a:srgbClr val="00C4CC"/></a:folHlink>\n'
+        '      <a:accent1><a:srgbClr val="2563EB"/></a:accent1>\n'
+        '      <a:accent2><a:srgbClr val="38BDF8"/></a:accent2>\n'
+        '      <a:accent3><a:srgbClr val="10B981"/></a:accent3>\n'
+        '      <a:accent4><a:srgbClr val="F59E0B"/></a:accent4>\n'
+        '      <a:accent5><a:srgbClr val="6366F1"/></a:accent5>\n'
+        '      <a:accent6><a:srgbClr val="EC4899"/></a:accent6>\n'
+        '      <a:hlink><a:srgbClr val="38BDF8"/></a:hlink>\n'
+        '      <a:folHlink><a:srgbClr val="818CF8"/></a:folHlink>\n'
         '    </a:clrScheme>\n'
-        '    <a:fontScheme name="ZankoAppFonts">\n'
-        '      <a:majorFont><a:latin typeface="Segoe UI"/><a:ea typeface=""/><a:cs typeface="Droid Arabic Kufi"/></a:majorFont>\n'
-        '      <a:minorFont><a:latin typeface="Segoe UI"/><a:ea typeface=""/><a:cs typeface="Droid Arabic Kufi"/></a:minorFont>\n'
+        '    <a:fontScheme name="CalibriScheme">\n'
+        '      <a:majorFont><a:latin typeface="Calibri"/><a:ea typeface=""/><a:cs typeface="Calibri"/></a:majorFont>\n'
+        '      <a:minorFont><a:latin typeface="Calibri"/><a:ea typeface=""/><a:cs typeface="Calibri"/></a:minorFont>\n'
         '    </a:fontScheme>\n'
         '    <a:fmtScheme name="Office">\n'
         '      <a:fillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:fillStyleLst>\n'
@@ -576,13 +650,16 @@ class PptxGeneratorService {
         '</a:theme>';
   }
 
-  static String _buildSlideRelsXml(int layoutIndex, {bool hasImage = false, int? imageIndex}) {
+  static String _buildSlideRelsXml(int layoutIndex, {bool hasImage = false, int? imageIndex, bool hasLogo = false}) {
     final buffer = StringBuffer();
     buffer.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n');
     buffer.write('<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n');
     buffer.write('  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout$layoutIndex.xml"/>\n');
     if (hasImage && imageIndex != null) {
       buffer.write('  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image$imageIndex.jpeg"/>\n');
+    }
+    if (hasLogo) {
+      buffer.write('  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/logo.png"/>\n');
     }
     buffer.write('</Relationships>');
     return buffer.toString();
@@ -594,30 +671,35 @@ class PptxGeneratorService {
     int totalSlides, {
     bool isFirstSlide = false,
     bool hasImage = false,
+    bool hasLogo = false,
     String languageCode = 'ku',
+    String? studentName,
+    String? supervisorName,
+    String? university,
+    String? department,
   }) {
     final isEnglish = languageCode == 'en';
     final isArabic = languageCode == 'ar';
+    final isBad = languageCode == 'ku_badini' || languageCode == 'badini';
     final isRtl = !isEnglish;
 
     final langAttr = isEnglish ? 'en-US' : (isArabic ? 'ar-SA' : 'ar-IQ');
-    final latinFont = 'Segoe UI';
-    final csFont = isEnglish ? 'Segoe UI' : 'Droid Arabic Kufi'; // App Font!
+    const latinFont = 'Calibri';
+    const csFont = 'Calibri';
     final algn = isRtl ? 'r' : 'l';
     final rtlColVal = isRtl ? '1' : '0';
     final rtlAttr = isRtl ? 'rtl="1"' : 'rtl="0"';
 
-    final subTitleText = isEnglish
-        ? 'Comprehensive Academic Presentation | Canva &amp; PowerPoint Format'
-        : (isArabic
-            ? 'عرض تقديمي أكاديمي متكامل | Canva &amp; PowerPoint Presentation'
-            : 'سیمیناری ئەکادیمی ئامادەکراو | Canva &amp; PowerPoint Presentation');
+    final effectiveUniv = (university != null && university.trim().isNotEmpty)
+        ? university.trim()
+        : (isEnglish ? 'Salahaddin University - Erbil' : 'زانکۆی سەڵاحەدین - هەولێر');
+    final effectiveDept = (department != null && department.trim().isNotEmpty) ? department.trim() : '';
 
     final footerText = isEnglish
-        ? 'ZankoAI 🎓 | Canva &amp; PPT Template | Slide $slideIndex of $totalSlides'
+        ? 'ZankoAI Academic Presentation • Slide $slideIndex of $totalSlides'
         : (isArabic
-            ? 'ZankoAI 🎓 | Canva &amp; PPT Template | الشريحة $slideIndex من $totalSlides'
-            : 'ZankoAI 🎓 | Canva &amp; PPT Template | سلایدی $slideIndex لە $totalSlides');
+            ? 'ZankoAI العرض الأكاديمي • الشريحة $slideIndex من $totalSlides'
+            : 'ZankoAI پرێزێنتەیشنی ئەکادیمی • سلایدی $slideIndex لە $totalSlides');
 
     final buffer = StringBuffer();
     buffer.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n');
@@ -628,21 +710,89 @@ class PptxGeneratorService {
     buffer.write('      <p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>\n');
 
     if (isFirstSlide) {
-      // ── Canva Title Slide Layout ──
-      // Background Accent Gradient Card
+      // ═════════════════════════════════════════════════════════════════════════
+      // SLIDE 1: PURE ACADEMIC COVER SLIDE (TITLE, SUPERVISOR, STUDENT, LOGO ONLY)
+      // ═════════════════════════════════════════════════════════════════════════
+      // Background Canvas Card
       buffer.write('      <p:sp>\n');
-      buffer.write('        <p:nvSpPr><p:cNvPr id="2" name="BackCard"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n');
+      buffer.write('        <p:nvSpPr><p:cNvPr id="2" name="TitleBackground"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n');
       buffer.write('        <p:spPr>\n');
-      buffer.write('          <a:xfrm><a:off x="600000" y="600000"/><a:ext cx="10992000" cy="5658000"/></a:xfrm>\n');
-      buffer.write('          <a:prstGeom prst="roundRect"><a:avLst><a:gd name="adj" fmla="val 2000"/></a:avLst></a:prstGeom>\n');
+      buffer.write('          <a:xfrm><a:off x="400000" y="400000"/><a:ext cx="11392000" cy="6058000"/></a:xfrm>\n');
+      buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
       buffer.write('          <a:solidFill><a:srgbClr val="0F172A"/></a:solidFill>\n');
+      buffer.write('          <a:ln w="19050"><a:solidFill><a:srgbClr val="1E293B"/></a:solidFill></a:ln>\n');
       buffer.write('        </p:spPr>\n');
       buffer.write('      </p:sp>\n');
 
-      // Main Title
+      // Top Radiant Line
       buffer.write('      <p:sp>\n');
-      buffer.write('        <p:nvSpPr><p:cNvPr id="3" name="Title"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr/></p:nvSpPr>\n');
-      buffer.write('        <p:spPr><a:xfrm><a:off x="1000000" y="1200000"/><a:ext cx="10192000" cy="2400000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>\n');
+      buffer.write('        <p:nvSpPr><p:cNvPr id="3" name="TopGlow"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n');
+      buffer.write('        <p:spPr>\n');
+      buffer.write('          <a:xfrm><a:off x="400000" y="400000"/><a:ext cx="11392000" cy="90000"/></a:xfrm>\n');
+      buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
+      buffer.write('          <a:solidFill><a:srgbClr val="2563EB"/></a:solidFill>\n');
+      buffer.write('        </p:spPr>\n');
+      buffer.write('      </p:sp>\n');
+
+      // 1. UNIVERSITY LOGO / EMBLEM (Top Center)
+      if (hasLogo) {
+        buffer.write('      <p:pic>\n');
+        buffer.write('        <p:nvPicPr><p:cNvPr id="4" name="UniversityLogo"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr>\n');
+        buffer.write('        <p:blipFill><a:blip r:embed="rId3"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>\n');
+        buffer.write('        <p:spPr><a:xfrm><a:off x="5496000" y="600000"/><a:ext cx="1200000" cy="1200000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>\n');
+        buffer.write('      </p:pic>\n');
+
+        // University Name under Logo
+        buffer.write('      <p:sp>\n');
+        buffer.write('        <p:nvSpPr><p:cNvPr id="5" name="UnivName"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n');
+        buffer.write('        <p:spPr>\n');
+        buffer.write('          <a:xfrm><a:off x="2500000" y="1900000"/><a:ext cx="7192000" cy="380000"/></a:xfrm>\n');
+        buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
+        buffer.write('          <a:solidFill><a:srgbClr val="1E293B"/></a:solidFill>\n');
+        buffer.write('          <a:ln w="12700"><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill></a:ln>\n');
+        buffer.write('        </p:spPr>\n');
+        buffer.write('        <p:txBody>\n');
+        buffer.write('          <a:bodyPr anchor="ctr" rtlCol="0"/>\n');
+        buffer.write('          <a:lstStyle/>\n');
+        buffer.write('          <a:p>\n');
+        buffer.write('            <a:pPr algn="ctr"/>\n');
+        buffer.write('            <a:r>\n');
+        buffer.write('              <a:rPr lang="$langAttr" sz="1300" b="1"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
+        buffer.write('              <a:t>${_escapeXml(effectiveUniv)}</a:t>\n');
+        buffer.write('            </a:r>\n');
+        buffer.write('          </a:p>\n');
+        buffer.write('        </p:txBody>\n');
+        buffer.write('      </p:sp>\n');
+      } else {
+        // University Emblem Badge Pill (Top Center)
+        buffer.write('      <p:sp>\n');
+        buffer.write('        <p:nvSpPr><p:cNvPr id="4" name="UnivBadge"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n');
+        buffer.write('        <p:spPr>\n');
+        buffer.write('          <a:xfrm><a:off x="3100000" y="800000"/><a:ext cx="5992000" cy="450000"/></a:xfrm>\n');
+        buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
+        buffer.write('          <a:solidFill><a:srgbClr val="1E293B"/></a:solidFill>\n');
+        buffer.write('          <a:ln w="12700"><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill></a:ln>\n');
+        buffer.write('        </p:spPr>\n');
+        buffer.write('        <p:txBody>\n');
+        buffer.write('          <a:bodyPr anchor="ctr" rtlCol="0"/>\n');
+        buffer.write('          <a:lstStyle/>\n');
+        buffer.write('          <a:p>\n');
+        buffer.write('            <a:pPr algn="ctr"/>\n');
+        buffer.write('            <a:r>\n');
+        buffer.write('              <a:rPr lang="$langAttr" sz="1350" b="1"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
+        buffer.write('              <a:t>${_escapeXml(effectiveUniv)}</a:t>\n');
+        buffer.write('            </a:r>\n');
+        buffer.write('          </a:p>\n');
+        buffer.write('        </p:txBody>\n');
+        buffer.write('      </p:sp>\n');
+      }
+
+      // 2. MAIN PRESENTATION TOPIC TITLE (Center)
+      final titleY = hasLogo ? '2380000' : '1500000';
+      final titleHeight = hasLogo ? '1600000' : '2200000';
+      buffer.write('      <p:sp>\n');
+      buffer.write('        <p:nvSpPr><p:cNvPr id="6" name="Title"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr/></p:nvSpPr>\n');
+      buffer.write('        <p:spPr><a:xfrm><a:off x="900000" y="$titleY"/><a:ext cx="10392000" cy="$titleHeight"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>\n');
       buffer.write('        <p:txBody>\n');
       buffer.write('          <a:bodyPr anchor="ctr" rtlCol="$rtlColVal"/>\n');
       buffer.write('          <a:lstStyle/>\n');
@@ -653,56 +803,108 @@ class PptxGeneratorService {
       buffer.write('              <a:t>${_escapeXml(slide.title)}</a:t>\n');
       buffer.write('            </a:r>\n');
       buffer.write('          </a:p>\n');
+      if (effectiveDept.isNotEmpty) {
+        buffer.write('          <a:p>\n');
+        buffer.write('            <a:pPr algn="ctr" $rtlAttr><a:spcBef><a:spcPts val="1200"/></a:spcBef></a:pPr>\n');
+        buffer.write('            <a:r>\n');
+        buffer.write('              <a:rPr lang="$langAttr" sz="1500"><a:solidFill><a:srgbClr val="94A3B8"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
+        buffer.write('              <a:t>${_escapeXml(effectiveDept)}</a:t>\n');
+        buffer.write('            </a:r>\n');
+        buffer.write('          </a:p>\n');
+      }
+      buffer.write('        </p:txBody>\n');
+      buffer.write('      </p:sp>\n');
+
+      // 3. STUDENT & 4. SUPERVISOR CARDS (Bottom)
+      final effectiveStudent = (studentName != null && studentName.trim().isNotEmpty)
+          ? studentName.trim()
+          : (isEnglish ? 'Student / Research Team' : (isBad ? 'قوتابیێن بەشێ زانستی' : 'قوتابیانی بەش'));
+      final effectiveSupervisor = (supervisorName != null && supervisorName.trim().isNotEmpty)
+          ? supervisorName.trim()
+          : (isEnglish ? 'Academic Supervisor' : (isBad ? 'مامۆستایێ سەرپەرشتیار' : 'مامۆستای سەرپەرشتیار'));
+
+      final studentLabel = isEnglish ? 'Prepared By:' : (isArabic ? 'إعداد الطالب / الفريق:' : (isBad ? 'ئامادەکرن ژ لایێ:' : 'ئامادەکردنی:'));
+      final supervisorLabel = isEnglish ? 'Supervised By:' : (isArabic ? 'إشراف الأستاذ المشرف:' : (isBad ? 'سەرپەرشتیار:' : 'مامۆستای سەرپەرشتیار:'));
+
+      // Card 1: Student (Left in LTR, Right in RTL)
+      buffer.write('      <p:sp>\n');
+      buffer.write('        <p:nvSpPr><p:cNvPr id="7" name="StudentCard"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n');
+      buffer.write('        <p:spPr>\n');
+      buffer.write('          <a:xfrm><a:off x="1000000" y="4200000"/><a:ext cx="4900000" cy="1800000"/></a:xfrm>\n');
+      buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
+      buffer.write('          <a:solidFill><a:srgbClr val="111827"/></a:solidFill>\n');
+      buffer.write('          <a:ln w="15875"><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill></a:ln>\n');
+      buffer.write('        </p:spPr>\n');
+      buffer.write('        <p:txBody>\n');
+      buffer.write('          <a:bodyPr anchor="ctr" rtlCol="$rtlColVal" lIns="200000" tIns="160000" rIns="200000" bIns="160000"/>\n');
+      buffer.write('          <a:lstStyle/>\n');
       buffer.write('          <a:p>\n');
-      buffer.write('            <a:pPr algn="ctr" $rtlAttr spaceBefore="180000"/>\n');
+      buffer.write('            <a:pPr algn="ctr" $rtlAttr/>\n');
       buffer.write('            <a:r>\n');
-      buffer.write('              <a:rPr lang="$langAttr" sz="1800"><a:solidFill><a:srgbClr val="00C4CC"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
-      buffer.write('              <a:t>$subTitleText</a:t>\n');
+      buffer.write('              <a:rPr lang="$langAttr" sz="1300" b="1"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
+      buffer.write('              <a:t>$studentLabel</a:t>\n');
+      buffer.write('            </a:r>\n');
+      buffer.write('          </a:p>\n');
+      buffer.write('          <a:p>\n');
+      buffer.write('            <a:pPr algn="ctr" $rtlAttr><a:spcBef><a:spcPts val="800"/></a:spcBef></a:pPr>\n');
+      buffer.write('            <a:r>\n');
+      buffer.write('              <a:rPr lang="$langAttr" sz="1800" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
+      buffer.write('              <a:t>${_escapeXml(effectiveStudent)}</a:t>\n');
       buffer.write('            </a:r>\n');
       buffer.write('          </a:p>\n');
       buffer.write('        </p:txBody>\n');
       buffer.write('      </p:sp>\n');
 
-      // First Slide Points / Author Info Box
+      // Card 2: Supervisor (Right in LTR, Left in RTL)
       buffer.write('      <p:sp>\n');
-      buffer.write('        <p:nvSpPr><p:cNvPr id="4" name="Info"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n');
-      buffer.write('        <p:spPr><a:xfrm><a:off x="1000000" y="3700000"/><a:ext cx="10192000" cy="1900000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>\n');
+      buffer.write('        <p:nvSpPr><p:cNvPr id="8" name="SupervisorCard"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n');
+      buffer.write('        <p:spPr>\n');
+      buffer.write('          <a:xfrm><a:off x="6292000" y="4200000"/><a:ext cx="4900000" cy="1800000"/></a:xfrm>\n');
+      buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
+      buffer.write('          <a:solidFill><a:srgbClr val="111827"/></a:solidFill>\n');
+      buffer.write('          <a:ln w="15875"><a:solidFill><a:srgbClr val="10B981"/></a:solidFill></a:ln>\n');
+      buffer.write('        </p:spPr>\n');
       buffer.write('        <p:txBody>\n');
-      buffer.write('          <a:bodyPr anchor="t" rtlCol="$rtlColVal"/>\n');
+      buffer.write('          <a:bodyPr anchor="ctr" rtlCol="$rtlColVal" lIns="200000" tIns="160000" rIns="200000" bIns="160000"/>\n');
       buffer.write('          <a:lstStyle/>\n');
-
-      for (var bullet in slide.bulletPoints) {
-        buffer.write('          <a:p>\n');
-        buffer.write('            <a:pPr algn="ctr" $rtlAttr spaceBefore="80000"/>\n');
-        buffer.write('            <a:r>\n');
-        buffer.write('              <a:rPr lang="$langAttr" sz="1600"><a:solidFill><a:srgbClr val="CBD5E1"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
-        buffer.write('              <a:t>${_escapeXml(bullet)}</a:t>\n');
-        buffer.write('            </a:r>\n');
-        buffer.write('          </a:p>\n');
-      }
-
+      buffer.write('          <a:p>\n');
+      buffer.write('            <a:pPr algn="ctr" $rtlAttr/>\n');
+      buffer.write('            <a:r>\n');
+      buffer.write('              <a:rPr lang="$langAttr" sz="1300" b="1"><a:solidFill><a:srgbClr val="34D399"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
+      buffer.write('              <a:t>$supervisorLabel</a:t>\n');
+      buffer.write('            </a:r>\n');
+      buffer.write('          </a:p>\n');
+      buffer.write('          <a:p>\n');
+      buffer.write('            <a:pPr algn="ctr" $rtlAttr><a:spcBef><a:spcPts val="800"/></a:spcBef></a:pPr>\n');
+      buffer.write('            <a:r>\n');
+      buffer.write('              <a:rPr lang="$langAttr" sz="1800" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
+      buffer.write('              <a:t>${_escapeXml(effectiveSupervisor)}</a:t>\n');
+      buffer.write('            </a:r>\n');
+      buffer.write('          </a:p>\n');
       buffer.write('        </p:txBody>\n');
       buffer.write('      </p:sp>\n');
 
     } else {
-      // ── Canva Split-Screen Slide Layout (Image + Text Card) ──
+      // ═════════════════════════════════════════════════════════════════════════
+      // SLIDES 2..N: ACADEMIC CONTENT SLIDES (TOP TITLE + SPLIT IMAGE & CONTENT)
+      // ═════════════════════════════════════════════════════════════════════════
       // Top Gradient Accent Bar
       buffer.write('      <p:sp>\n');
       buffer.write('        <p:nvSpPr><p:cNvPr id="2" name="TopAccent"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n');
-      buffer.write('        <p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="12192000" cy="180000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="7D2AE8"/></a:solidFill></p:spPr>\n');
+      buffer.write('        <p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="12192000" cy="120000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill></p:spPr>\n');
       buffer.write('      </p:sp>\n');
 
       // Slide Title Box (Top)
       buffer.write('      <p:sp>\n');
       buffer.write('        <p:nvSpPr><p:cNvPr id="3" name="Title"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr/></p:nvSpPr>\n');
-      buffer.write('        <p:spPr><a:xfrm><a:off x="600000" y="380000"/><a:ext cx="10992000" cy="850000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>\n');
+      buffer.write('        <p:spPr><a:xfrm><a:off x="600000" y="300000"/><a:ext cx="10992000" cy="850000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>\n');
       buffer.write('        <p:txBody>\n');
       buffer.write('          <a:bodyPr anchor="ctr" rtlCol="$rtlColVal"/>\n');
       buffer.write('          <a:lstStyle/>\n');
       buffer.write('          <a:p>\n');
       buffer.write('            <a:pPr algn="$algn" $rtlAttr/>\n');
       buffer.write('            <a:r>\n');
-      buffer.write('              <a:rPr lang="$langAttr" sz="2500" b="1"><a:solidFill><a:srgbClr val="0F172A"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
+      buffer.write('              <a:rPr lang="$langAttr" sz="2400" b="1"><a:solidFill><a:srgbClr val="0F172A"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
       buffer.write('              <a:t>${_escapeXml(slide.title)}</a:t>\n');
       buffer.write('            </a:r>\n');
       buffer.write('          </a:p>\n');
@@ -710,9 +912,9 @@ class PptxGeneratorService {
       buffer.write('      </p:sp>\n');
 
       // Picture Frame Positions (Left side for RTL, Right side for LTR)
-      final picX = isRtl ? '7200000' : '7200000';
-      final textX = '600000';
-      final textWidth = hasImage ? '6400000' : '10992000';
+      final picX = isRtl ? '600000' : '6992000';
+      final textX = isRtl ? '5400000' : '600000';
+      final textWidth = hasImage ? '6192000' : '10992000';
 
       if (hasImage) {
         buffer.write('      <p:pic>\n');
@@ -726,8 +928,8 @@ class PptxGeneratorService {
         buffer.write('          <a:stretch><a:fillRect/></a:stretch>\n');
         buffer.write('        </p:blipFill>\n');
         buffer.write('        <p:spPr>\n');
-        buffer.write('          <a:xfrm><a:off x="$picX" y="1350000"/><a:ext cx="4400000" cy="4850000"/></a:xfrm>\n');
-        buffer.write('          <a:prstGeom prst="roundRect"><a:avLst><a:gd name="adj" fmla="val 1500"/></a:avLst></a:prstGeom>\n');
+        buffer.write('          <a:xfrm><a:off x="$picX" y="1300000"/><a:ext cx="4600000" cy="4900000"/></a:xfrm>\n');
+        buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
         buffer.write('          <a:ln w="19050"><a:solidFill><a:srgbClr val="CBD5E1"/></a:solidFill></a:ln>\n');
         buffer.write('        </p:spPr>\n');
         buffer.write('      </p:pic>\n');
@@ -737,46 +939,21 @@ class PptxGeneratorService {
       buffer.write('      <p:sp>\n');
       buffer.write('        <p:nvSpPr><p:cNvPr id="4" name="ContentBox"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n');
       buffer.write('        <p:spPr>\n');
-      buffer.write('          <a:xfrm><a:off x="$textX" y="1350000"/><a:ext cx="$textWidth" cy="4850000"/></a:xfrm>\n');
-      buffer.write('          <a:prstGeom prst="roundRect"><a:avLst><a:gd name="adj" fmla="val 1500"/></a:avLst></a:prstGeom>\n');
+      buffer.write('          <a:xfrm><a:off x="$textX" y="1300000"/><a:ext cx="$textWidth" cy="4900000"/></a:xfrm>\n');
+      buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
       buffer.write('          <a:solidFill><a:srgbClr val="F8FAFC"/></a:solidFill>\n');
       buffer.write('          <a:ln w="12700"><a:solidFill><a:srgbClr val="E2E8F0"/></a:solidFill></a:ln>\n');
       buffer.write('        </p:spPr>\n');
       buffer.write('        <p:txBody>\n');
-      buffer.write('          <a:bodyPr anchor="t" rtlCol="$rtlColVal" lIns="300000" tIns="300000" rIns="300000" bIns="300000"/>\n');
+      buffer.write('          <a:bodyPr anchor="t" rtlCol="$rtlColVal" lIns="250000" tIns="250000" rIns="250000" bIns="250000"/>\n');
       buffer.write('          <a:lstStyle/>\n');
 
-      if (slide.visualPrompt != null && slide.visualPrompt!.isNotEmpty) {
-        final visualPrefix = isEnglish ? '🖼️ Visual Focus:' : (isArabic ? '🖼️ التركيز البصري:' : '🖼️ وێنەی پەیوەندیدار:');
-        buffer.write('          <a:p>\n');
-        buffer.write('            <a:pPr algn="$algn" $rtlAttr spaceBefore="40000"/>\n');
-        buffer.write('            <a:r>\n');
-        buffer.write('              <a:rPr lang="$langAttr" sz="1200" b="1"><a:solidFill><a:srgbClr val="7D2AE8"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
-        buffer.write('              <a:t>$visualPrefix ${_escapeXml(slide.visualPrompt!)}</a:t>\n');
-        buffer.write('            </a:r>\n');
-        buffer.write('          </a:p>\n');
-      }
-
       for (var bullet in slide.bulletPoints) {
-        final indentTag = isRtl ? 'marR="240000" indent="-240000"' : 'marL="240000" indent="-240000"';
         buffer.write('          <a:p>\n');
-        buffer.write('            <a:pPr algn="$algn" $rtlAttr $indentTag spaceBefore="120000">\n');
-        buffer.write('              <a:buChar char="🔹"/>\n');
-        buffer.write('            </a:pPr>\n');
+        buffer.write('            <a:pPr algn="$algn" $rtlAttr><a:spcBef><a:spcPts val="1200"/></a:spcBef><a:buClr><a:srgbClr val="2563EB"/></a:buClr><a:buSzPts val="1400"/><a:buFont typeface="Arial"/><a:buChar char="•"/></a:pPr>\n');
         buffer.write('            <a:r>\n');
         buffer.write('              <a:rPr lang="$langAttr" sz="1600"><a:solidFill><a:srgbClr val="1E293B"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
         buffer.write('              <a:t>${_escapeXml(bullet)}</a:t>\n');
-        buffer.write('            </a:r>\n');
-        buffer.write('          </a:p>\n');
-      }
-
-      if (slide.speakerNotes != null && slide.speakerNotes!.isNotEmpty) {
-        final notesPrefix = isEnglish ? '🎙️ Speaker Note:' : (isArabic ? '🎙️ ملاحظات المتحدث:' : '🎙️ تێبینی قسەکردن:');
-        buffer.write('          <a:p>\n');
-        buffer.write('            <a:pPr algn="$algn" $rtlAttr spaceBefore="200000"/>\n');
-        buffer.write('            <a:r>\n');
-        buffer.write('              <a:rPr lang="$langAttr" sz="1300" i="1"><a:solidFill><a:srgbClr val="64748B"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
-        buffer.write('              <a:t>$notesPrefix ${_escapeXml(slide.speakerNotes!)}</a:t>\n');
         buffer.write('            </a:r>\n');
         buffer.write('          </a:p>\n');
       }
@@ -793,7 +970,7 @@ class PptxGeneratorService {
       buffer.write('          <a:lstStyle/>\n');
       buffer.write('          <a:p>\n');
       buffer.write('            <a:pPr algn="$algn" $rtlAttr/>\n');
-      buffer.write('            <a:r><a:rPr lang="$langAttr" sz="1200"><a:solidFill><a:srgbClr val="94A3B8"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr><a:t>$footerText</a:t></a:r>\n');
+      buffer.write('            <a:r><a:rPr lang="$langAttr" sz="1100"><a:solidFill><a:srgbClr val="94A3B8"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr><a:t>$footerText</a:t></a:r>\n');
       buffer.write('          </a:p>\n');
       buffer.write('        </p:txBody>\n');
       buffer.write('      </p:sp>\n');
@@ -801,6 +978,7 @@ class PptxGeneratorService {
 
     buffer.write('    </p:spTree>\n');
     buffer.write('  </p:cSld>\n');
+    buffer.write('  <p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>\n');
     buffer.write('</p:sld>');
     return buffer.toString();
   }

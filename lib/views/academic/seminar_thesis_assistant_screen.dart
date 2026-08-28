@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -13,7 +14,7 @@ import '../../theme.dart';
 import '../payment/vip_upgrade_sheet.dart';
 
 enum AssistantMode {
-  seminar, // سیمینار (PowerPoint / Canva 8 Slides)
+  seminar, // سیمینار (PowerPoint 8 Slides)
   report,  // ڕاپۆرت (Academic Report 10 Sections / Word & PDF)
 }
 
@@ -120,9 +121,8 @@ class _SeminarThesisAssistantScreenState
     super.dispose();
   }
 
-  /// Returns Calibri for Kurdish/Arabic and Times New Roman for English
-  String? get _currentFontFamily =>
-      _selectedLanguage == SeminarLanguage.english ? 'Times New Roman' : 'Calibri';
+  /// Unified modern Calibri font for all languages (Kurdish, Arabic, and English)
+  String? get _currentFontFamily => 'Calibri';
 
   bool get _isEnglish => _selectedLanguage == SeminarLanguage.english;
   bool get _isArabic => _selectedLanguage == SeminarLanguage.arabic;
@@ -318,28 +318,29 @@ You MUST strictly integrate, address, and highlight these exact points throughou
         : '';
 
     final prompt = '''
-You are a premier presentation designer and university professor specialized in creating Canva-style modern academic presentations.
-Write a full, ready-to-present, 8-slide seminar presentation strictly and exclusively about the selected topic: "$topicTitle".
+You are a senior university professor, academic supervisor, and master presentation designer.
+Create an exhaustive, highly intellectual, university-grade 8-slide academic PowerPoint presentation strictly on: "$topicTitle".
 $langPrompt
 
 $customRequirements
 
-CRITICAL REQUIREMENTS:
-1. The presentation MUST contain exactly 8 Slides.
-2. The content must be strictly about "$topicTitle" with real in-depth academic facts, data metrics, and analysis.
-3. Mix conceptual narrative statements, highlight statistics/percentages, process flow steps, and analytical takeaways (4-5 points per slide).
-4. For each slide, include 🖼️ **Visual/Diagram Suggestion**.
-5. For each slide, write the full **🎙️ Speaker Speech Script**.
+MANDATORY SCHOLARLY QUALITY & VERTICAL LAYOUT MANDATE:
+1. The presentation MUST contain exactly 8 sequentially structured slides.
+2. The language MUST be pure, sophisticated academic prose (زانستی، پاراو، دەوڵەمەند، بە زاراوەی ئەکادیمیی قووڵ و ڕێکخراو).
+3. For EACH SLIDE, write 4 to 5 substantial, well-articulated academic bullet points with bold leading terms (e.g. - **پێناسە و گرنگیی تیۆری**: شرۆڤەی ورد...). Each point must be detailed and informative (25-35 words per bullet) so that the slide content is rich, well-proportioned, and fills the slide vertically without leaving empty spaces at the bottom.
+4. Include quantitative metrics, benchmark percentages (٪), and empirical facts throughout the points.
+5. For EACH SLIDE, provide a distinct visual theme tag: 🖼️ **Visual Focus: [Specific Visual Theme]**
+6. For EACH SLIDE, provide an insightful presenter delivery advice note: 🎙️ **تێبینی و ڕێنمایی پێشکەشکار: [Presentation Advice]**
 
 SLIDE STRUCTURE:
-- Slide 1: Main Title, Scope & Presenter Card
-- Slide 2: Background Context & Technology Evolution
-- Slide 3: Core Problem Statement & Limitations
-- Slide 4: Strategic Research Objectives & Benefits
-- Slide 5: Methodology, System Architecture & Analytical Framework
-- Slide 6: Key Findings, Statistical Data & Comparative Results
-- Slide 7: Practical Impact, Real-world Implementation & Roadmap
-- Slide 8: Academic Citations (APA 7th Standard), Conclusion & Q&A
+- Slide 1: Main Title, Research Thesis, Scope & Presenter Identification
+- Slide 2: Theoretical Foundations, Historical Evolution & Academic Context
+- Slide 3: Core Problem Statement, Practical Challenges & Research Motivation
+- Slide 4: Strategic Research Objectives, Hypotheses & Target Outcomes
+- Slide 5: Methodology, Analytical Framework & Implementation Tools
+- Slide 6: Empirical Findings, Quantitative Metrics (٪), and Comparative Benchmarks
+- Slide 7: Critical Discussion, Practical Impact & Strategic Recommendations
+- Slide 8: Scientific Conclusion, Summary of Contributions, APA 7th Academic References
 ''';
 
     try {
@@ -585,12 +586,12 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
   Future<bool> _checkVipExportLimit(String fileType) async {
     final authService = Provider.of<AuthService>(context, listen: false);
     final isVip = authService.currentUser?.isVip ?? false;
-    if (isVip) return true;
+    if (isVip || kDebugMode) return true;
 
     final prefs = await SharedPreferences.getInstance();
     final exportCount = prefs.getInt('academic_export_count') ?? 0;
 
-    if (exportCount >= 1) {
+    if (exportCount >= 5) {
       if (!mounted) return false;
       showDialog(
         context: context,
@@ -724,7 +725,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 
   // ─── Export PPTX (.pptx) ───────────────────────────────────────────────────
   Future<void> _exportPptx() async {
-    if (_generatedResult == null || _generatedResult!.isEmpty) {
+    if (_parsedSlides.isEmpty && (_generatedResult == null || _generatedResult!.isEmpty)) {
       _showSnackBar(_isEnglish ? 'Please generate the seminar with AI first' : 'تکایە سەرەتا سیمینارەکە بە AI دروست بکە');
       return;
     }
@@ -737,120 +738,29 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
     try {
       String title = _activeGeneratedTitle ?? (_topicSearchController.text.trim().isNotEmpty
           ? _topicSearchController.text.trim()
-          : 'Seminar Presentation');
+          : (_parsedSlides.isNotEmpty ? _parsedSlides.first.title : 'Seminar Presentation'));
 
       await PptxGeneratorService.exportAndSharePptx(
-        rawContent: _generatedResult!,
+        slides: _parsedSlides,
+        rawContent: _generatedResult,
         title: title,
         languageCode: _selectedLanguage.code,
+        studentName: _studentNameController.text.trim(),
+        supervisorName: _supervisorNameController.text.trim(),
+        university: _universityController.text.trim(),
+        department: _reportDeptController.text.trim(),
+        logoBytes: _universityLogoBytes,
       );
 
       _showSnackBar(_isEnglish
           ? '✅ PowerPoint (.pptx) file created successfully'
           : '✅ فایلی PowerPoint (.pptx) بە سەرکەوتوویی دروستکرا');
-    } catch (e) {
-      _showSnackBar('⚠️ Error creating PPT file: $e');
+    } catch (e, stack) {
+      debugPrint('Error exporting PPTX: $e\n$stack');
+      _showSnackBar('⚠️ هەڵە لە دروستکردنی فایلی پاوەرپۆینت: $e');
     } finally {
       if (mounted) setState(() => _isExportingPptx = false);
     }
-  }
-
-  void _showCanvaInstructions() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        final isDark = Theme.of(ctx).brightness == Brightness.dark;
-        return Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: isDark ? ZankoColors.darkCard : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [Color(0xFF7D2AE8), Color(0xFF00C4CC)]),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Icon(CupertinoIcons.paintbrush_fill, color: Colors.white, size: 22),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _isEnglish ? 'Import to Canva 🎨' : 'هاوردەکردن بۆ Canva 🎨',
-                          style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 17),
-                        ),
-                        const Text('Canva Presentation Integration', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                      ],
-                    ),
-                  ),
-                  IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(CupertinoIcons.xmark_circle_fill)),
-                ],
-              ),
-              const Divider(height: 24),
-              _buildCanvaStep(_isEnglish
-                  ? '1. Download the PowerPoint (.pptx) file with the button below.'
-                  : '١. فایلی PowerPoint (.pptx) دابگرە بە دوگمەی خوارەوە.'),
-              _buildCanvaStep(_isEnglish
-                  ? '2. Open Canva App or go to canva.com.'
-                  : '٢. ئەپی Canva یان ماڵپەڕی canva.com بکەرەوە.'),
-              _buildCanvaStep(_isEnglish
-                  ? '3. Click on "Upload / Drag & Drop" at the top.'
-                  : '٣. لە بەشی سەرەوە کلیک لەسەر «Upload / Drag and Drop» بکە.'),
-              _buildCanvaStep(_isEnglish
-                  ? '4. Select the .pptx file, and all 8 slides will instantly open with Canva animations and templates! ✨'
-                  : '٤. فایلی .pptx هەڵبژێرە، دەستبەجێ هەموو ٨ سلایدەکە بە ئەنیمەیشن و دیزاینی Canva دەکرێنەوە! ✨'),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    _exportPptx();
-                  },
-                  icon: const Icon(CupertinoIcons.arrow_down_doc_fill, color: Colors.white, size: 18),
-                  label: Text(
-                    _isEnglish ? 'Download PPTX for Canva 🚀' : 'داگرتنی فایلی PPTX بۆ Canva 🚀',
-                    style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF7D2AE8),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildCanvaStep(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(CupertinoIcons.checkmark_circle_fill, color: Color(0xFF00C4CC), size: 18),
-          const SizedBox(width: 8),
-          Expanded(child: Text(text, style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13.5, height: 1.4))),
-        ],
-      ),
-    );
   }
 
   void _copyToClipboard() {
@@ -1008,7 +918,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                 const SizedBox(height: 20),
               ],
 
-              // ── Step 3: Full Seminar Output (8 Slides + Canva + PPTX) ────
+              // ── Step 3: Full Seminar Output (8 Slides + PowerPoint PPTX) ────
               if (_selectedMode == AssistantMode.seminar && _parsedSlides.isNotEmpty) ...[
                 _buildSlidesViewerCard(isDark),
                 const SizedBox(height: 24),
@@ -1046,9 +956,9 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
           // Mode 1: Seminar
           _buildModeButton(
             mode: AssistantMode.seminar,
-            icon: CupertinoIcons.paintbrush_fill,
-            label: _isEnglish ? '📊 Seminar (8 Slides)' : (_isBadini ? '📊 سیمینار (٨ سلاید)' : (_isArabic ? '📊 سيمينار (٨ شرائح)' : '📊 سیمینار (٨ سلاید)')),
-            activeColor: const Color(0xFF7D2AE8), // Canva / Seminar Purple
+            icon: CupertinoIcons.tv_fill,
+            label: _isEnglish ? '📊 Seminar (PowerPoint 8 Slides)' : (_isBadini ? '📊 سیمینار (٨ سلایدێن پاوەرپۆینت)' : (_isArabic ? '📊 سيمينار (بوربوينت ٨ شرائح)' : '📊 سیمینار (٨ سلایدی پاوەرپۆینت)')),
+            activeColor: const Color(0xFF2563EB), // PowerPoint / Academic Blue
             isDark: isDark,
           ),
           const SizedBox(width: 6),
@@ -1057,7 +967,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
             mode: AssistantMode.report,
             icon: CupertinoIcons.doc_text_fill,
             label: _isEnglish ? '📑 Report (Word & PDF)' : (_isBadini ? '📑 ڕاپۆرت (Word و PDF)' : (_isArabic ? '📑 تقرير (Word و PDF)' : '📑 ڕاپۆرت (Word و PDF)')),
-            activeColor: const Color(0xFFF97316), // Academic Orange / Blue
+            activeColor: const Color(0xFFF97316), // Academic Orange
             isDark: isDark,
           ),
         ],
@@ -1360,7 +1270,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 
           const SizedBox(height: 12),
 
-          // Seminar or Report custom notes (expandable/direct)
+          // Seminar custom notes (optional)
           if (isSeminar) ...[
             TextField(
               controller: _seminarNotesController,
@@ -1382,50 +1292,57 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                 fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
               ),
             ),
-          ] else ...[
-            // Report specific toggle for details
-            InkWell(
-              onTap: () => setState(() => _showReportAdvancedOptions = !_showReportAdvancedOptions),
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.white.withValues(alpha: 0.04) : const Color(0xFFFFF7ED),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: themeColor.withValues(alpha: 0.3)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(CupertinoIcons.person_crop_circle_badge_checkmark, color: themeColor, size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _isEnglish
-                            ? 'Report Cover & Author Details (Student, Supervisor, University)'
-                            : (_isBadini
-                                ? 'زانیاریێن بەرگی (ناڤێ قوتابی، سەرپەرشتیار، زانکۆ و لۆگۆ)'
-                                : 'ڕێکخستنی زانیارییەکانی بەرگ (ناوی قوتابی، مامۆستا، زانکۆ و لۆگۆ)'),
-                        style: TextStyle(
-                          fontFamily: _currentFontFamily,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.grey[300] : const Color(0xFF9A3412),
-                        ),
+            const SizedBox(height: 10),
+          ],
+
+          // Author & Cover Details (Student, Supervisor, University) for both Seminar and Report
+          InkWell(
+            onTap: () => setState(() => _showReportAdvancedOptions = !_showReportAdvancedOptions),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white.withValues(alpha: 0.04) : (isSeminar ? const Color(0xFFEFF6FF) : const Color(0xFFFFF7ED)),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: themeColor.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(CupertinoIcons.person_crop_circle_badge_checkmark, color: themeColor, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      isSeminar
+                          ? (_isEnglish
+                              ? 'Slide 1 Cover & Author Details (Student, Supervisor, University)'
+                              : (_isBadini
+                                  ? 'زانیاریێن بەرگێ سلایدا ١ (ناڤێ قوتابی، سەرپەرشتیار، زانکۆ)'
+                                  : 'زانیارییەکانی بەرگی سلایدی ١ (ناوی قوتابی، مامۆستا، زانکۆ)'))
+                          : (_isEnglish
+                              ? 'Report Cover & Author Details (Student, Supervisor, University)'
+                              : (_isBadini
+                                  ? 'زانیاریێن بەرگی (ناڤێ قوتابی، سەرپەرشتیار، زانکۆ و لۆگۆ)'
+                                  : 'ڕێکخستنی زانیارییەکانی بەرگ (ناوی قوتابی، مامۆستا، زانکۆ و لۆگۆ)')),
+                      style: TextStyle(
+                        fontFamily: _currentFontFamily,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.grey[300] : (isSeminar ? const Color(0xFF1E40AF) : const Color(0xFF9A3412)),
                       ),
                     ),
-                    Icon(
-                      _showReportAdvancedOptions ? CupertinoIcons.chevron_up : CupertinoIcons.chevron_down,
-                      color: themeColor,
-                      size: 16,
-                    ),
-                  ],
-                ),
+                  ),
+                  Icon(
+                    _showReportAdvancedOptions ? CupertinoIcons.chevron_up : CupertinoIcons.chevron_down,
+                    color: themeColor,
+                    size: 16,
+                  ),
+                ],
               ),
             ),
-            if (_showReportAdvancedOptions) ...[
-              const SizedBox(height: 12),
-              _buildReportDetailsSection(isDark, themeColor),
-            ],
+          ),
+          if (_showReportAdvancedOptions) ...[
+            const SizedBox(height: 12),
+            _buildReportDetailsSection(isDark, themeColor),
           ],
 
           const SizedBox(height: 16),
@@ -1944,7 +1861,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
     );
   }
 
-  // ─── 5. Canva & PPTX 8 Slides Viewer Component ─────────────────────────────
+  // ─── 5. PowerPoint PPTX 8 Slides Viewer Component ─────────────────────────────
   Widget _buildSlidesViewerCard(bool isDark) {
     final currentSlide = _parsedSlides.isNotEmpty && _selectedSlideIndex < _parsedSlides.length
         ? _parsedSlides[_selectedSlideIndex]
@@ -1963,7 +1880,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
       decoration: BoxDecoration(
         color: isDark ? ZankoColors.darkCard : Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFF7D2AE8).withValues(alpha: 0.35), width: 1.5),
+        border: Border.all(color: const Color(0xFF2563EB).withValues(alpha: 0.35), width: 1.5),
         boxShadow: isDark ? [] : ZankoShadows.card,
       ),
       child: Column(
@@ -1977,16 +1894,16 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF7D2AE8).withValues(alpha: 0.15),
+                      color: const Color(0xFF2563EB).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(CupertinoIcons.paintbrush_fill, color: Color(0xFF7D2AE8), size: 18),
+                    child: const Icon(CupertinoIcons.tv_fill, color: Color(0xFF2563EB), size: 18),
                   ),
                   const SizedBox(width: 8),
                   Text(
                     _isEnglish
-                        ? 'Presentation (${_parsedSlides.length} Slides)'
-                        : 'سیمیناری تەواو (${_parsedSlides.length} سلاید)',
+                        ? 'PowerPoint Presentation (${_parsedSlides.length} Slides)'
+                        : 'پرێزێنتەیشنی پاوەرپۆینت (${_parsedSlides.length} سلاید)',
                     style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 15),
                   ),
                 ],
@@ -1995,16 +1912,11 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    onPressed: _showCanvaInstructions,
-                    icon: const Icon(CupertinoIcons.square_arrow_up_on_square_fill, color: Color(0xFF00C4CC), size: 20),
-                    tooltip: 'Canva',
-                  ),
-                  IconButton(
                     onPressed: _isExportingPptx ? null : _exportPptx,
                     icon: _isExportingPptx
                         ? const SizedBox(width: 18, height: 18, child: CupertinoActivityIndicator())
-                        : const Icon(CupertinoIcons.arrow_down_doc_fill, color: Color(0xFFD24726), size: 20),
-                    tooltip: 'PPTX',
+                        : const Icon(CupertinoIcons.arrow_down_doc_fill, color: Color(0xFF2563EB), size: 20),
+                    tooltip: 'PowerPoint (.pptx)',
                   ),
                   IconButton(
                     onPressed: _copyToClipboard,
@@ -2034,7 +1946,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
                       gradient: isSel
-                          ? const LinearGradient(colors: [Color(0xFF7D2AE8), Color(0xFF00C4CC)])
+                          ? const LinearGradient(colors: [Color(0xFF2563EB), Color(0xFF06B6D4)])
                           : null,
                       color: isSel ? null : (isDark ? Colors.white10 : Colors.grey[200]),
                       borderRadius: BorderRadius.circular(14),
@@ -2075,11 +1987,11 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                       children: [
                         Image.network(
                           imgUrl,
-                          height: 150,
+                          height: 160,
                           width: double.infinity,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) => Container(
-                            height: 150,
+                            height: 160,
                             decoration: const BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
@@ -2091,7 +2003,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                           ),
                         ),
                         Container(
-                          height: 150,
+                          height: 160,
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
@@ -2109,11 +2021,13 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF7D2AE8),
+                              color: const Color(0xFF2563EB),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
-                              'Canva / Slide ${_selectedSlideIndex + 1} of 8',
+                              _isEnglish
+                                  ? 'Slide ${_selectedSlideIndex + 1} of ${_parsedSlides.length} • HD'
+                                  : 'سلایدی ${_selectedSlideIndex + 1} لە ${_parsedSlides.length} • HD',
                               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
                             ),
                           ),
@@ -2142,139 +2056,306 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (currentSlide.visualPrompt != null && currentSlide.visualPrompt!.isNotEmpty) ...[
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF00C4CC).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: const Color(0xFF00C4CC).withValues(alpha: 0.3)),
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                        // ─── SLIDE 1 (COVER PAGE): PURE LAYOUT (LOGO, TITLE, STUDENT, SUPERVISOR) ───
+                        if (_selectedSlideIndex == 0) ...[
+                          // University Logo / Emblem Header
+                          Center(
+                            child: Column(
                               children: [
-                                const Icon(CupertinoIcons.photo_fill_on_rectangle_fill, color: Color(0xFF00A3A8), size: 18),
-                                const SizedBox(width: 8),
-                                Expanded(
+                                if (_universityLogoBytes != null) ...[
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: Image.memory(
+                                      _universityLogoBytes!,
+                                      height: 52,
+                                      width: 52,
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                ],
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: const Color(0xFF2563EB).withValues(alpha: 0.3)),
+                                  ),
                                   child: Text(
-                                    _isEnglish
-                                        ? '🖼️ Image & Canva Design: ${currentSlide.visualPrompt!}'
-                                        : '🖼️ وێنە و دیزاینی Canva: ${currentSlide.visualPrompt!}',
+                                    _universityController.text.trim().isNotEmpty
+                                        ? '🏛️ ${_universityController.text.trim()}'
+                                        : (_isEnglish ? '🏛️ Academic University Presentation' : '🏛️ زانکۆی سەڵاحەدین - هەولێر'),
                                     style: TextStyle(
                                       fontFamily: _currentFontFamily,
                                       fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: isDark ? Colors.grey[200] : const Color(0xFF006B6E),
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF1D4ED8),
                                     ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 14),
-                        ],
 
-                        ...currentSlide.bulletPoints.asMap().entries.map((entry) {
-                          final idx = entry.key + 1;
-                          final text = entry.value;
-                          final isMetric = text.contains('٪') || text.contains('%') || text.contains('accuracy') || text.contains('کارایی') || text.contains('ڕێژە');
+                          const SizedBox(height: 16),
 
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            padding: const EdgeInsets.all(12),
+                          // Main Topic Title
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: isMetric
-                                  ? const Color(0xFF7D2AE8).withValues(alpha: 0.06)
-                                  : (isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: isMetric
-                                    ? const Color(0xFF7D2AE8).withValues(alpha: 0.25)
-                                    : (isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
-                              ),
+                              color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFF2563EB).withValues(alpha: 0.35)),
                             ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Column(
                               children: [
-                                Container(
-                                  width: 24,
-                                  height: 24,
-                                  decoration: BoxDecoration(
-                                    color: isMetric ? const Color(0xFF7D2AE8) : ZankoColors.accent.withValues(alpha: 0.15),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      '$idx',
-                                      style: TextStyle(
-                                        fontFamily: _currentFontFamily,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: isMetric ? Colors.white : ZankoColors.accent,
-                                      ),
-                                    ),
+                                Text(
+                                  currentSlide.title,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontFamily: _currentFontFamily,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
                                   ),
                                 ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    text,
+                                if (_reportDeptController.text.trim().isNotEmpty) ...[
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    _reportDeptController.text.trim(),
+                                    textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontFamily: _currentFontFamily,
-                                      fontSize: 13.5,
-                                      height: 1.5,
-                                      fontWeight: isMetric ? FontWeight.w600 : FontWeight.normal,
-                                      color: isDark ? Colors.grey[200] : ZankoColors.textPrimary,
+                                      fontSize: 12.5,
+                                      color: isDark ? Colors.grey[400] : const Color(0xFF64748B),
                                     ),
                                   ),
-                                ),
+                                ],
                               ],
                             ),
-                          );
-                        }),
+                          ),
 
-                        if (currentSlide.speakerNotes != null && currentSlide.speakerNotes!.isNotEmpty) ...[
-                          const Divider(height: 20),
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.amber.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Icon(CupertinoIcons.mic_fill, color: Colors.amber, size: 18),
-                                const SizedBox(width: 8),
-                                Expanded(
+                          const SizedBox(height: 14),
+
+                          // Author (Student) & Supervisor Double Cards
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF0284C7).withValues(alpha: 0.08),
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(color: const Color(0xFF0284C7).withValues(alpha: 0.3)),
+                                  ),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        _isEnglish
-                                            ? '🎙️ Speaker Speech Script:'
-                                            : '🎙️ وتاری پێشکەشکار بۆ قسەکردن:',
-                                        style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amber),
+                                        _isEnglish ? '👨‍🎓 Prepared by:' : (_isBadini ? '👨‍🎓 ئامادەکرن ژ لایێ:' : '👨‍🎓 ئامادەکردنی:'),
+                                        style: TextStyle(fontFamily: _currentFontFamily, fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF0284C7)),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        currentSlide.speakerNotes!,
-                                        style: TextStyle(
-                                          fontFamily: _currentFontFamily,
-                                          fontSize: 12.5,
-                                          height: 1.5,
-                                          fontStyle: FontStyle.italic,
-                                          color: isDark ? Colors.grey[200] : Colors.grey[800],
-                                        ),
+                                        _studentNameController.text.trim().isNotEmpty
+                                            ? _studentNameController.text.trim()
+                                            : (_isEnglish ? 'Student / Team' : 'ناوی قوتابی / تیم'),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13, fontWeight: FontWeight.bold),
                                       ),
                                     ],
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF10B981).withValues(alpha: 0.08),
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _isEnglish ? '👨‍🏫 Supervised by:' : (_isBadini ? '👨‍🏫 سەرپەرشتیار:' : '👨‍🏫 سەرپەرشتیاری:'),
+                                        style: TextStyle(fontFamily: _currentFontFamily, fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF10B981)),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        _supervisorNameController.text.trim().isNotEmpty
+                                            ? _supervisorNameController.text.trim()
+                                            : (_isEnglish ? 'Supervisor' : 'مامۆستای سەرپەرشتیار'),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13, fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
+
+                          if (currentSlide.bulletPoints.isNotEmpty) ...[
+                            const SizedBox(height: 14),
+                            Text(
+                              _isEnglish ? '📌 Slide 1 Academic Focus & Overview:' : '📌 تەوەر و خاڵە سەرەکییەکانی ناساندن:',
+                              style: TextStyle(
+                                fontFamily: _currentFontFamily,
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.grey[300] : const Color(0xFF1E293B),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            ...currentSlide.bulletPoints.asMap().entries.map((entry) {
+                              final idx = entry.key + 1;
+                              final text = entry.value;
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      width: 22,
+                                      height: 22,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF2563EB).withValues(alpha: 0.15),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          '$idx',
+                                          style: TextStyle(
+                                            fontFamily: _currentFontFamily,
+                                            fontSize: 10.5,
+                                            fontWeight: FontWeight.bold,
+                                            color: const Color(0xFF2563EB),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        text,
+                                        style: TextStyle(
+                                          fontFamily: _currentFontFamily,
+                                          fontSize: 13,
+                                          height: 1.45,
+                                          color: isDark ? Colors.grey[200] : ZankoColors.textPrimary,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                          ],
+                        ] else ...[
+                          // ─── SLIDES 2 TO 8: CONTENT BULLET POINTS & RESEARCH DATA ───
+                          if (currentSlide.visualPrompt != null && currentSlide.visualPrompt!.isNotEmpty) ...[
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF2563EB).withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: const Color(0xFF2563EB).withValues(alpha: 0.25)),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Icon(CupertinoIcons.photo_fill_on_rectangle_fill, color: Color(0xFF2563EB), size: 18),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      _isEnglish
+                                          ? '🎯 Slide Visual Focus: ${currentSlide.visualPrompt!}'
+                                          : '🎯 تیشکۆ و وێنەی سەرەکی: ${currentSlide.visualPrompt!}',
+                                      style: TextStyle(
+                                        fontFamily: _currentFontFamily,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: isDark ? Colors.grey[200] : const Color(0xFF1E3A8A),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                          ],
+
+                          ...currentSlide.bulletPoints.asMap().entries.map((entry) {
+                            final idx = entry.key + 1;
+                            final text = entry.value;
+                            final isMetric = text.contains('٪') || text.contains('%') || text.contains('accuracy') || text.contains('کارایی') || text.contains('ڕێژە');
+
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: isMetric
+                                    ? const Color(0xFF2563EB).withValues(alpha: 0.06)
+                                    : (isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: isMetric
+                                      ? const Color(0xFF2563EB).withValues(alpha: 0.25)
+                                      : (isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+                                ),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    width: 24,
+                                    height: 24,
+                                    decoration: BoxDecoration(
+                                      color: isMetric ? const Color(0xFF2563EB) : ZankoColors.accent.withValues(alpha: 0.15),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        '$idx',
+                                        style: TextStyle(
+                                          fontFamily: _currentFontFamily,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: isMetric ? Colors.white : ZankoColors.accent,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      text,
+                                      style: TextStyle(
+                                        fontFamily: _currentFontFamily,
+                                        fontSize: 13.5,
+                                        height: 1.5,
+                                        fontWeight: isMetric ? FontWeight.w600 : FontWeight.normal,
+                                        color: isDark ? Colors.grey[200] : ZankoColors.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
                         ],
                       ],
                     ),
@@ -2282,56 +2363,78 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                 ],
               ),
             ),
+
+            // Separate Presenter Guidance Card
+            if (currentSlide.speakerNotes != null && currentSlide.speakerNotes!.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(CupertinoIcons.lightbulb_fill, color: Colors.amber, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _isEnglish
+                                ? '💡 Presenter Advice & Delivery Tips:'
+                                : (_isArabic ? '💡 نصائح وإرشادات للمتحدث أثناء العرض:' : '💡 ئامۆژگاری و ڕێنمایی بۆ پێشکەشکار:'),
+                            style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12.5, fontWeight: FontWeight.bold, color: Colors.amber[800]),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            currentSlide.speakerNotes!,
+                            style: TextStyle(
+                              fontFamily: _currentFontFamily,
+                              fontSize: 12.5,
+                              height: 1.55,
+                              color: isDark ? Colors.grey[300] : const Color(0xFF451A03),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
 
           const SizedBox(height: 20),
           const Divider(),
           const SizedBox(height: 12),
 
-          Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 50,
-                  child: ElevatedButton.icon(
-                    onPressed: _showCanvaInstructions,
-                    icon: const Icon(CupertinoIcons.paintbrush_fill, color: Colors.white, size: 18),
-                    label: Text(
-                      _isEnglish ? '🎨 Open in Canva' : '🎨 کردنەوە لە Canva',
-                      style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF7D2AE8), // Canva Purple
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: 0,
-                    ),
-                  ),
-                ),
+          // Primary Full-Width PowerPoint Download Action
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: _isExportingPptx ? null : _exportPptx,
+              icon: _isExportingPptx
+                  ? const CupertinoActivityIndicator(color: Colors.white)
+                  : const Icon(CupertinoIcons.arrow_down_doc_fill, color: Colors.white, size: 20),
+              label: Text(
+                _isExportingPptx
+                    ? (_isEnglish ? 'Creating Presentation...' : 'دروستکردنی فایلی پاوەرپۆینت...')
+                    : (_isEnglish ? '📥 Download PowerPoint (.pptx)' : '📥 داگرتنی فایلی پاوەرپۆینت (.pptx)'),
+                style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 14.5, color: Colors.white),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: SizedBox(
-                  height: 50,
-                  child: ElevatedButton.icon(
-                    onPressed: _isExportingPptx ? null : _exportPptx,
-                    icon: _isExportingPptx
-                        ? const CupertinoActivityIndicator(color: Colors.white)
-                        : const Icon(CupertinoIcons.arrow_down_doc_fill, color: Colors.white, size: 18),
-                    label: Text(
-                      _isExportingPptx
-                          ? (_isEnglish ? 'Creating...' : 'دروستکردن...')
-                          : (_isEnglish ? '📥 Download PPTX' : '📥 داگرتنی PPTX'),
-                      style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFD24726), // PowerPoint Color
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: 0,
-                    ),
-                  ),
-                ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2563EB), // Royal Sapphire Blue
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 3,
+                shadowColor: const Color(0xFF2563EB).withValues(alpha: 0.4),
               ),
-            ],
+            ),
           ),
 
           // Return to suggested topics button
@@ -3132,82 +3235,124 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
   String _generateFallback8SlideSeminar(String title) {
     if (_isEnglish) {
       return '''
-# 📊 Presentation: "$title" (Canva & PPTX Format)
-### 🔹 Slide 1: Introduction & Significance
-- Comprehensive investigation into $title.
-- Integrating neural computational frameworks.
-- Aligning with global peer-reviewed benchmarks.
-- 🎙️ **Speaker Script**: "Good morning esteemed professors. Today we present our findings on $title."
-### 🔹 Slide 2: Background Context & Technology Evolution
-- Paradigm shifts across the educational landscape.
-- Over 70% of universities adopting digital cloud tools.
-- 🎙️ **Speaker Script**: "As shown in this developmental timeline, rapid advancements have transformed this field."
-### 🔹 Slide 3: Core Problem Statement & Limitations
-- High human fatigue in legacy manual workflows.
-- Inherent statistical inaccuracies in non-automated workflows.
-- 🎙️ **Speaker Script**: "The core motivation stems from these legacy bottlenecks."
-### 🔹 Slide 4: Strategic Research Objectives
-- Framework delivering 95%+ classification accuracy.
-- Reducing operational time by over 40%.
-- 🎙️ **Speaker Script**: "Our primary objective is delivering an empirically validated framework."
-### 🔹 Slide 5: Methodology & Architecture
-- Rigorous experimental design with standardized benchmarks.
-- Multi-stage cross-validation ensuring reproducibility.
-- 🎙️ **Speaker Script**: "Our methodology is engineered on an empirical foundation."
-### 🔹 Slide 6: Key Findings & Data Analysis
-- Surge of +85% in overall operational throughput.
-- Error rates suppressed to under 3%.
-- 🎙️ **Speaker Script**: "Our experimental results demonstrate decisive improvements."
-### 🔹 Slide 7: Practical Impact & Roadmap
-- Strategic guidance for institutional deployment.
-- Ethical governance and data security standards.
-- 🎙️ **Speaker Script**: "We recommend institutional leaders adopt these deployment phases."
-### 🔹 Slide 8: Academic Citations & Q&A
-- Smith, J. A., & Davis, R. M. (2024). Modern Methodologies in Applied Academic Research. Academic Press.
-- World Educational Research Association (2025). Global Standards for Academic Excellence. WERA.
-- UNESCO (2025). Guidance for Applied Generative Technologies in Higher Education. Paris: UNESCO.
-- 🎙️ **Speaker Script**: "Thank you sincerely for your attention. I welcome your questions."
+# 📊 Presentation: "$title" (PowerPoint PPTX Format)
+### 🔹 Slide 1: Introduction & Research Scope
+- **Theoretical Foundations**: Comprehensive academic investigation into the foundational and applied dimensions of $title.
+- **Core Research Thesis**: Integrating modern computational frameworks and empirical validation paradigms.
+- **Academic Significance**: Addressing critical research gaps and establishing a benchmark model for academic excellence.
+- **Methodological Alignment**: Formulating rigorous evaluation criteria aligned with international peer-reviewed standards.
+- 🎙️ **Speaker Guidance**: "Good morning esteemed professors and colleagues. Today I present our comprehensive investigation on $title."
+
+### 🔹 Slide 2: Theoretical Framework & Literature Context
+- **Historical Trajectory**: Analysis of the historical paradigm shifts and evolutionary stages within this research domain.
+- **Conceptual Paradigms**: Synthesizing core theoretical models established across contemporary peer-reviewed literature.
+- **Global Adoption Metrics**: Over 78% of modern institutions are shifting towards integrated analytical frameworks.
+- **Underlying Mechanisms**: Granular examination of the structural and behavioral characteristics governing system performance.
+- 🎙️ **Speaker Guidance**: "As illustrated in this foundational framework, this domain has undergone critical evolutionary transitions."
+
+### 🔹 Slide 3: Core Problem Statement & Research Challenges
+- **Systemic Bottlenecks**: Critical evaluation of the limitations inherent in legacy methodologies and manual protocols.
+- **Resource Constraints**: High operational overhead and time consumption exceeding 45% in conventional approaches.
+- **Data Inconsistencies**: Empirical vulnerabilities leading to stochastic errors in legacy data processing.
+- **Research Imperative**: The urgent academic and practical necessity of engineering a robust, automated framework.
+- 🎙️ **Speaker Guidance**: "The primary impetus for this research lies in directly resolving these systemic bottlenecks."
+
+### 🔹 Slide 4: Strategic Research Objectives & Hypotheses
+- **Primary Objective**: Developing an end-to-end framework achieving exceeding 95.4% empirical accuracy.
+- **Efficiency Optimization**: Reducing computational and operational latency by greater than 40% across benchmarks.
+- **Quantitative Hypotheses**: Formulating verifiable hypotheses regarding scalability, precision, and stability.
+- **Institutional Applicability**: Establishing standardized guidelines for practical deployment across higher education.
+- 🎙️ **Speaker Guidance**: "Our primary objective is delivering an empirically validated, scalable academic solution."
+
+### 🔹 Slide 5: Methodology & Architectural Design
+- **Experimental Protocol**: Multi-stage quantitative methodology incorporating empirical sampling and cross-validation.
+- **System Architecture**: Modular pipeline design optimized for throughput, data integrity, and reproducibility.
+- **Analytical Metrics**: Employment of standardized statistical indicators including F1-score, precision, and variance.
+- **Validation Pipeline**: 5-fold cross-validation conducted under rigorous experimental parameters.
+- 🎙️ **Speaker Guidance**: "The proposed architecture is engineered on a mathematically robust and reproducible foundation."
+
+### 🔹 Slide 6: Empirical Findings & Comparative Benchmarks
+- **Performance Surge**: Demonstrating an 87.6% surge in overall throughput compared to conventional baselines.
+- **Error Minimization**: Significant reduction in systemic error rates, maintained strictly below 2.8%.
+- **Statistical Significance**: Validated with a p-value of less than 0.001 across all randomized trial cohorts.
+- **Comparative Superiority**: Consistently outperforming legacy frameworks across speed, precision, and resource footprint.
+- 🎙️ **Speaker Guidance**: "Our experimental results demonstrate decisive, statistically significant superiority over legacy baselines."
+
+### 🔹 Slide 7: Critical Discussion & Strategic Recommendations
+- **Academic Implications**: Enriching the current body of literature with verifiable empirical evidence and insights.
+- **Deployment Strategy**: Structured phased roadmap for enterprise and university infrastructure integration.
+- **Policy & Governance**: Establishing robust protocols for ethical data governance, security, and compliance.
+- **Future Horizons**: Identifying key avenues for longitudinal research and algorithmic refinement.
+- 🎙️ **Speaker Guidance**: "We recommend that academic institutions adopt these structured deployment phases."
+
+### 🔹 Slide 8: Scientific Conclusion & APA References
+- **Summary of Contributions**: Successful validation of a high-impact, scalable framework for $title.
+- **Final Conclusions**: Demonstrating that structured automated frameworks deliver superior empirical outcomes.
+- **Academic References**: Smith, J. A., & Davis, R. M. (2024). Modern Methodologies in Applied Academic Research. Academic Press.
+- **Global Standards**: World Educational Research Association (2025). Global Standards for Academic Excellence. WERA.
+- 🎙️ **Speaker Guidance**: "Thank you sincerely for your attention. I warmly welcome your questions and critical discussions."
 ''';
     }
 
     final isBad = _isBadini;
 
     return '''
-# 📊 ${isBad ? 'سیمینارا تەمام یا ٨ سلایدان' : 'سیمیناری تەواوی ٨ سلایدی پاوەرپۆینت'} بۆ "$title" (Canva Style)
-### 🔹 سلایدی ١: ناساندنی گشتی و ناونیشانی سەرەکی
-- ${isBad ? 'ڤەکۆلینەکا زانستی یا سەردەم ل دۆر شێوازێن مۆدێرن د بواری $title دا.' : 'لێکۆڵینەوەیەکی زانستیی سەردەمیانە لەسەر شێوازە مۆدێرنەکانی توێژینەوە لە بواری $title.'}
-- بەکارهێنانی مۆدێلە پێشکەوتووەکان بۆ شیکردنەوەی داتا و بەرزکردنەوەی کارایی زانستی.
-- تیشکخستنە سەر گرنگیی پراکتیکی و تیۆریی بابەتەکە لە ناوەندە ئەکادیمییەکاندا.
-- 🎙️ **تێبینی پێشکەشکار**: "${isBad ? 'سڵاڤ مامۆستایێن هێژا، ب خێر هاتن بۆ ڤێ سیمینارێ ل سەر ناڤونیشانێ' : 'سڵاو و ڕێز مامۆستایانی بەڕێز، بەخێربێن بۆ ئەم سیمینارە لەسەر ناونیشانی'} ($title)."
-### 🔹 سلایدی ٢: پاشخانی زانستی و هۆکاری سەرهەڵدانی بابەتەکە
-- شۆڕشی چوارەمی تەکنەلۆجی و گۆڕانی بنەڕەتی لە میتۆدەکانی فێرکاری و لێکۆڵینەوەدا.
-- توانای مۆدێلە زیرەکەکان لە کەمکردنەوەی کاتی لێکۆڵینەوە بە ڕێژەی زیاتر لە ٥٠٪.
-- 🎙️ **تێبینی پێشکەشکار**: "وەک لە هێڵکارییەکەدا دەبینین، ئەم بوارە لە ماوەیەکی کەمدا بازدانی گەورەی ئەنجامداوە."
-### 🔹 سلایدی ٣: کێشەی سەرەکی توێژینەوە و بەربەستە نەریتییەکان
-- سنوورداریی لە کات و سەرچاوە مرۆییەکان لە شیکردنەوەی هەزاران داتای زانستی بە شێوازی دەستی.
-- بوونی نادروستی و هەڵەی مرۆیی لە پرۆسەی کۆکردنەوە و پۆلێنکردنی داتای توێژینەوەکاندا.
-- 🎙️ **تێبینی پێشکەشکار**: "هۆکاری سەرەکی هەڵبژاردنی ئەم بابەتە بریتی بوو لە بوونی ئەم ئاستەنگ و بۆشاییە زانستییە."
-### 🔹 سلایدی ٤: ئامانجە سەرەکییەکان و دەستکەوتە چاوەڕوانکراوەکان
-- دەستنیشانکردنی کاریگەرترین میکانیزمەکان بۆ ئۆتۆماتیکردنی شیکارییە ئەکادیمییەکان بە وردبینی بەرز.
-- کەمکردنەوەی تێچووی کات و ماددی لە توێژینەوە زانستییەکاندا بە ڕێژەی زیاتر لە ٤٠٪.
-- 🎙️ **تێبینی پێشکەشکار**: "ئامانجمان لەم کارەدا پێشکەشکردنی چارەسەرێکی زانستیی سەلمێنراوە."
-### 🔹 سلایدی ٥: میتۆدۆلۆجی، تەکنیک و کەرەستە بەکارهاتووەکان
-- پەیڕەوکردنی میتۆدی زانستیی تاقیکاری لەسەر داتای مەیدانیی وەرگیراو.
-- بەکارهێنانی ئەلگۆریتم و مۆدێلە شیکارییەکان بۆ پۆلێنکردنی زانیارییەکان بە وردیی ٩٥٪.
-- 🎙️ **تێبینی پێشکەشکار**: "میتۆدۆلۆجی ئەم توێژینەوەیە لەسەر چوارچێوەیەکی زانستیی توندوتۆڵ بنیاتنراوە."
-### 🔹 سلایدی ٦: شیکاریی زانستی و دەرئەنجامە ئامارییەکان
-- بەدەستهێنانی کاراییەکی بەرچاو بە ڕێژەی ٨٥٪ لە خێرایی جێبەجێکردنی پرۆسەکاندا.
-- دابەزینی ڕێژەی هەڵە و کەموکوڕییەکان بۆ کەمتر لە ٣٪.
-- 🎙️ **تێبینی پێشکەشکار**: "وەک لە چارتەکاندا دەردەکەوێت، داتاکان بە ڕوونی دەیسەلمێنن کە ئەم شێوازە سەرکەوتووە."
-### 🔹 سلایدی ٧: کاریگەریی پراکتیکی، ڕاسپاردە و پێشنیارەکان
-- پێشنیار بۆ زانکۆکان تا ژێرخانی پێویست دابین بکەن بۆ هاندانی ئەم پڕۆژانە.
-- دانانی ڕێسای ئەخلاقی و پرۆتۆکۆلی پاراستن لە کاتی جێبەجێکردندا.
-- 🎙️ **تێبینی پێشکەشکار**: "لە پێناو بەردەوامی ئەم دەستکەوتانە، گرنگە ئەم پێشنیارانە بخرێنە بواری جێبەجێکردنەوە."
-### 🔹 سلایدی ٨: سەرچاوە زانستییە باوەڕپێکراوەکان و وەڵامدانەوەی پرسیارەکان
-- Smith, J. A., & Davis, R. M. (2024). Modern Methodologies in Applied Academic Research. Academic Press.
-- World Educational Research Association (2025). Global Standards for Academic Excellence. WERA.
-- UNESCO (2025). Guidance for Applied Generative Technologies in Higher Education. Paris: UNESCO.
-- 🎙️ **تێبینی پێشکەشکار**: "${isBad ? 'سوپاس بۆ گوهداریا هەوە، نوکە دەرگەهـ ڤەکرییە بۆ پرسیارێن هەوە.' : 'سوپاس بۆ گوێگرتنتان، ئێستا بە خۆشحاڵییەوە دەرگا واڵایە بۆ پرسیارەکانتان.'}"
+# 📊 ${isBad ? 'سیمینارا تەمام یا ٨ سلایدان' : 'سیمیناری تەواوی ٨ سلایدی پاوەرپۆینت'} بۆ "$title" (PowerPoint Presentation)
+### 🔹 سلایدی ١: ناساندنی زانستی، چەمک و گرنگیی بابەتەکە
+- **پێناسە و گرنگیی تیۆری**: لێکۆڵینەوەیەکی زانستیی سەردەمیانە لەسەر بنەما و ڕەهەندە سەرەکییەکانی $title.
+- **تێزی سەرەکیی توێژینەوە**: بەکارهێنانی مۆدێلە پێشکەوتووەکان بۆ شیکردنەوەی داتا و بەرزکردنەوەی کارایی زانستی.
+- **گرنگی لە ناوەندە ئەکادیمییەکاندا**: تیشکخستنە سەر بەهای پراکتیکی و پێویستیی ناوەندە زانستییەکان بەم بابەتە.
+- **ئامانجی گشتیی سیمینار**: خستنەڕووی چارەسەرێکی زانستیی سەلمێنراو بۆ چارەسەری ئاستەنگە هەنووکەییەکان.
+- 🎙️ **تێبینی و ڕێنمایی پێشکەشکار**: "${isBad ? 'سڵاڤ مامۆستایێن هێژا، ب خێر هاتن بۆ ڤێ سیمینارێ ل سەر ناڤونیشانێ' : 'سڵاو و ڕێز مامۆستایانی بەڕێز، بەخێربێن بۆ ئەم سیمینارە لەسەر ناونیشانی'} ($title)."
+
+### 🔹 سلایدی ٢: پاشخانی مێژوویی و ژێرخانی تیۆری
+- **قۆناغەکانی گەشەسەندن**: شیکاریی قۆناغە یەک لە دوای یەکەکانی پێشکەوتنی ئەم بوارە لە توێژینەوە جیهانییەکاندا.
+- **چەمکە سەرەکییەکان**: پۆلێنکردنی تیۆرییە زانستییە پێشەنگەکان کە ئەم لێکۆڵینەوەیە پشتیان پێ دەبەستێت.
+- **شۆڕشی تەکنەلۆجی**: گۆڕانی بنەڕەتی لە میتۆدەکانی فێرکاری بە ڕێژەی زیاتر لە ٧٥٪ لە زانکۆ پێشکەوتووەکاندا.
+- **ڕۆڵی داتا لە بڕیارداندا**: کاریگەریی ڕاستەوخۆی مۆدێلە مۆدێرنەکان لە کەمکردنەوەی کات و بەرزکردنەوەی وردبینی.
+- 🎙️ **تێبینی و ڕێنمایی پێشکەشکار**: "وەک لە هێڵکاریی چەمکەکاندا دیارە، ئەم زانستە لە ماوەیەکی کەمدا گۆڕانکاریی ڕیشەیی بەخۆیەوە بینیوە."
+
+### 🔹 سلایدی ٣: کێشەی سەرەکیی توێژینەوە و ئاستەنگەکان
+- **بەربەستە نەریتییەکان**: دیاریکردنی کەموکوڕییەکانی شێوازی کارکردنی کۆن و میتۆدە کلاسیکییەکان.
+- **بەفیڕۆچوونی کات و تێچوو**: ڕێژەی بەفیڕۆچوونی سەرچاوە مرۆییەکان لە شێوازی دەستیدا دەگاتە سەرووی ٤٥٪.
+- **هەڵە و نادروستی لە داتادا**: بوونی نادروستیی ئاماری بەهۆی پشتبەستن بە شیکاریی ناکامڵ و کۆن.
+- **پێویستی بە چارەسەری مۆدێرن**: پێویستیی ناوەندە زانستییەکان بە میکانیزمێکی نوێی زانستی و پارێزراو.
+- 🎙️ **تێبینی و ڕێنمایی پێشکەشکار**: "هۆکاری سەرەکیی هەڵبژاردنی ئەم توێژینەوەیە چارەسەرکردنی ئەم بۆشایی و ئاستەنگە ڕاستەقینانەیە."
+
+### 🔹 سلایدی ٤: ئامانجە ستراتیجییەکان و فرەوانکردنی تواناکان
+- **ئامانجی سەرەکی**: پەرەپێدانی چوارچێوەیەکی زانستی کە دەگاتە ئاستی وردبینیی سەرووی ٩٥٪.
+- **کەمکردنەوەی تێچووی کات**: کەمکردنەوەی ماوەی جێبەجێکردنی پرۆسەکان بە ڕێژەی زیاتر لە ٤٠٪.
+- **گریمانە زانستییەکان**: داڕشتنی کۆمەڵێک گریمانەی تاقیکاریی سەلمێنراو بۆ سەقامگیریی سیستەمەکە.
+- **بەرزکردنەوەی ستاندارد**: گونجاندنی دەرئەنجامەکان لەگەڵ ستانداردە نێودەوڵەتییەکانی فێرکاریی باڵا.
+- 🎙️ **تێبینی و ڕێنمایی پێشکەشکار**: "ئامانجمان تەنها باسکردن نییە، بەڵکو گەیشتنە بە ئەنجامێکی پێوانەکراو و سەلمێنراو."
+
+### 🔹 سلایدی ٥: میتۆدۆلۆجی و تەکنیکە بەکارهاتووەکان
+- **شێوازی تاقیکاری**: پەیڕەوکردنی میتۆدۆلۆجیی زانستیی فرەقۆناغ لەسەر بنەمای داتای مەیدانیی باوەڕپێکراو.
+- **پێکهاتەی سیستەم**: داڕشتنی چوارچێوەیەکی مۆدێرن کە گەرەنتیی دووبارەبوونەوە و دروستیی ئەنجامەکان دەکات.
+- **کەرەستە و پێوەرەکان**: بەکارهێنانی مۆدێلە شیکارییەکان بۆ پۆلێنکردن و هەڵسەنگاندنی ئەنجامەکان.
+- **دڵنیابوونەوە لە کوالێتی**: ئەنجامدانی پشکنینی فرەلایەنە لەژێر پێوەرە ئەکادیمییە توندەکاندا.
+- 🎙️ **تێبینی و ڕێنمایی پێشکەشکار**: "میتۆدۆلۆجی ئەم کارە لەسەر چوارچێوەیەکی زانستیی ورد و پشتڕاستکراوە بنیاتنراوە."
+
+### 🔹 سلایدی ٦: شیکاریی داتای ئەزموونی و دەرئەنجامەکان
+- **بەرزبوونەوەی کارایی**: بەدەستهێنانی کاراییەکی بەرچاو بە ڕێژەی ٨٧.٦٪ بەراورد بە شێوازە نەریتییەکان.
+- **کەمبوونەوەی ڕێژەی هەڵە**: دابەزینی بەرچاوی ڕێژەی کێشە و هەڵەکان بۆ کەمتر لە ٢.٨٪.
+- **سەلماندنی ئاماری**: بەدەستهێنانی بەهای ئاماریی باوەڕپێکراو (p < 0.001) لە تاقیکردنەوەکاندا.
+- **بەراوردکاریی گشتی**: سەلماندنی باڵادەستیی سیستەمەکە لە ڕووی خێرایی، کواڵیتی و پاراستنی سەرچاوەکان.
+- 🎙️ **تێبینی و ڕێنمایی پێشکەشکار**: "وەک لە داتاکاندا دەردەکەوێت، بەڵگە زانستییەکان بە ڕوونی سەرکەوتنی ئەم میتۆدە دەسەلمێنن."
+
+### 🔹 سلایدی ٧: گفتوگۆی زانستی، کاریگەریی پراکتیکی و ڕاسپاردەکان
+- **کاریگەری لەسەر توێژینەوە**: دەوڵەمەندکردنی کتێبخانەی زانستی بە دەرئەنجامی پراکتیکی و جێبەجێکراو.
+- **پێشنیار بۆ ناوەندەکان**: داواکاری لە زانکۆ و ناوەندەکان بۆ دابینکردنی ژێرخانی پێویست بۆ ئەم پڕۆژانە.
+- **پاراستن و ڕەوشتی زانستی**: دانانی پرۆتۆکۆلی توندوتۆڵ بۆ پاراستنی داتا و ڕەچاوکردنی ئیتیکی زانستی.
+- **ئاسۆی داهاتوو**: کردنەوەی دەرگای نوێ لەبەردەم توێژەران بۆ ئەنجامدانی لێکۆڵینەوەی درێژخایەنتر.
+- 🎙️ **تێبینی و ڕێنمایی پێشکەشکار**: "لە پێناو چەسپاندنی ئەم دەستکەوتانە، زۆر گرنگە ئەم ڕاسپاردانە بخرێنە بواری جێبەجێکردنەوە."
+
+### 🔹 سلایدی ٨: دەرئەنجامی کۆتایی و سەرچاوە زانستییە باوەڕپێکراوەکان
+- **پوختەی دەستکەوتەکان**: سەلماندنی سەرکەوتووانەی پڕۆژەکە و گەیشتن بە تەواوی ئامانجە دیاریکراوەکان.
+- **پەیامی کۆتایی**: ئەم توێژینەوەیە هەنگاوێکی کردارییە بۆ بەرزکردنەوەی ئاستی زانستی و پێشخستنی بوارەکە.
+- **سەرچاوە سەرەکییەکان**: Smith, J. A., & Davis, R. M. (2024). Modern Methodologies in Applied Academic Research. Academic Press.
+- **ڕێکخراوە جیهانییەکان**: World Educational Research Association (2025). Global Standards for Academic Excellence. WERA.
+- 🎙️ **تێبینی و ڕێنمایی پێشکەشکار**: "${isBad ? 'سوپاس بۆ گوهداریا هەوە، نوکە دەرگەهـ ڤەکرییە بۆ پرسیارێن هەوە.' : 'سوپاس بۆ گوێگرتنتان، ئێستا بە خۆشحاڵییەوە دەرگا واڵایە بۆ پرسیار و سەرنجەکانتان.'}"
 ''';
   }
 

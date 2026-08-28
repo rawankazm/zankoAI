@@ -470,7 +470,10 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
   @override
   Future<bool> loginWithGoogle([UserRole role = UserRole.student]) async {
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        scopes: ['email', 'profile'],
+        serverClientId: '658020179072-61227ie552ik74mq9der2iumthlk2dq5.apps.googleusercontent.com',
+      );
       GoogleSignInAccount? googleUser;
       try {
         googleUser = await googleSignIn.signIn();
