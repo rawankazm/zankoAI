@@ -148,6 +148,9 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
     final userEmail = user?.email ?? 'نادیار';
     final userId = user?.id ?? '';
 
+    // Auto-record VIP request into Firestore vip_requests & users collection
+    await _recordVipRequestInFirestore('whatsapp');
+
     final priceStr = _formatPrice(_planPrice);
     final message = '''
 سڵاو بەڕێزم 👑
@@ -197,6 +200,9 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
     final userEmail = user?.email ?? 'نادیار';
     final userId = user?.id ?? '';
 
+    // Auto-record VIP request into Firestore vip_requests & users collection
+    await _recordVipRequestInFirestore('telegram');
+
     final priceStr = _formatPrice(_planPrice);
     final message = '''
 سڵاو، دەمەوێت VIP چالاک بکەم 👑
@@ -229,6 +235,76 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
           ),
         );
       }
+    }
+  }
+
+  bool _isSubmittingInApp = false;
+
+  Future<void> _recordVipRequestInFirestore(String method) async {
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final user = authService.currentUser;
+      if (user == null || user.isGuest) return;
+
+      // 1. Write or update to vip_requests collection
+      final reqDoc = FirebaseFirestore.instance.collection('vip_requests').doc(user.id);
+      await reqDoc.set({
+        'id': user.id,
+        'userId': user.id,
+        'userEmail': user.email,
+        'userName': user.name,
+        'photoUrl': user.photoUrl,
+        'plan': _selectedPlan,
+        'planTitle': _planTitle,
+        'price': _planPrice,
+        'method': method, // 'whatsapp', 'telegram', 'in_app'
+        'status': 'pending',
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      // 2. Also ensure user document in users collection has pending status
+      await FirebaseFirestore.instance.collection('users').doc(user.id).set({
+        'id': user.id,
+        'uid': user.id,
+        'email': user.email,
+        'name': user.name,
+        'vipStatus': 'pending',
+        'requestedPlan': _selectedPlan,
+        'vipRequestedAt': FieldValue.serverTimestamp(),
+        'lastLoginAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('Error recording VIP request to Firestore: $e');
+    }
+  }
+
+  Future<void> _submitInAppVipRequest() async {
+    if (_isSubmittingInApp) return;
+    setState(() => _isSubmittingInApp = true);
+
+    try {
+      await _recordVipRequestInFirestore('in_app');
+      HapticFeedback.mediumImpact();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle_rounded, color: Colors.white),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text('داواکاری VIP بە سەرکەوتوویی بۆ ئەدمین نێردرا! پاش کەمێکی تر چالاک دەبێت 👑'),
+                ),
+              ],
+            ),
+            backgroundColor: ZankoColors.success,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmittingInApp = false);
     }
   }
 
@@ -642,6 +718,39 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                     ),
                     const Icon(CupertinoIcons.arrow_left, size: 18, color: Colors.white),
                   ],
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              // In-App Direct VIP Request Button
+              OutlinedButton.icon(
+                onPressed: _isSubmittingInApp ? null : _submitInAppVipRequest,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 16),
+                  side: BorderSide(
+                    color: const Color(0xFFFFD700).withValues(alpha: 0.7),
+                    width: 1.5,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  backgroundColor: const Color(0xFFFFD700).withValues(alpha: 0.08),
+                ),
+                icon: _isSubmittingInApp
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFFFD700)),
+                      )
+                    : const Icon(CupertinoIcons.star_circle_fill, color: Color(0xFFFFD700), size: 20),
+                label: Text(
+                  _isSubmittingInApp ? 'ناردنی داواکاری...' : '👑 ناردنی داواکاری ڕاستەوخۆ بۆ سیستەمی ئەدمین',
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w800,
+                    color: isDark ? const Color(0xFFFFE066) : const Color(0xFFB8860B),
+                  ),
                 ),
               ),
 

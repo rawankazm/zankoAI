@@ -1,11 +1,16 @@
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../main.dart';
 import '../models/user_model.dart';
 import '../firebase_options.dart';
+import '../views/auth/login_screen.dart';
 import 'auth_service.dart';
 import 'notification_service.dart';
 
@@ -43,6 +48,191 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
   StreamSubscription? _authStateSub;
   StreamSubscription? _userDocSub;
   bool? _lastNotifiedVip;
+  bool? _lastNotifiedAdmin;
+  bool _isHandlingBlockedOrDeleted = false;
+
+  void _showAccountDeletedDialog() {
+    if (_isHandlingBlockedOrDeleted) return;
+    _isHandlingBlockedOrDeleted = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = rootNavigatorKey.currentContext;
+      if (context != null) {
+        rootNavigatorKey.currentState?.pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.white),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text('هەژمارەکەت لە وێبسایتی ئەدمین سڕایەوە. دەتوانیت بە هەژمارێکی تر داخیل بیتەوە.'),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.blueGrey,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+      _isHandlingBlockedOrDeleted = false;
+    });
+  }
+
+  void _showAccountBlockedDialog() {
+    if (_isHandlingBlockedOrDeleted) return;
+    _isHandlingBlockedOrDeleted = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = rootNavigatorKey.currentContext;
+      if (context != null) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF1E222B),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              title: const Row(
+                children: [
+                  Icon(CupertinoIcons.slash_circle_fill, color: Colors.redAccent, size: 28),
+                  SizedBox(width: 10),
+                  Text(
+                    'ئاگاداری بلۆککردن',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
+              ),
+              content: const Text(
+                'بلۆک کرایت بەهۆی پابەند نەبوونت بە یاسا و ڕێساکانی ئەپەکە.',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14.5,
+                  height: 1.5,
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                    rootNavigatorKey.currentState?.pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      (route) => false,
+                    );
+                    _isHandlingBlockedOrDeleted = false;
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.redAccent,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  ),
+                  child: const Text(
+                    'باشە',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      } else {
+        _isHandlingBlockedOrDeleted = false;
+      }
+    });
+  }
+
+  void _showPromotedToAdminDialog() {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final context = rootNavigatorKey.currentContext;
+      if (context == null) return;
+
+      // Fetch admin website URL dynamically from config
+      String adminUrl = 'https://zankoai-admin.web.app';
+      try {
+        final cfgDoc = await _firestore.collection('config').doc('app_config').get();
+        if (cfgDoc.exists && cfgDoc.data() != null) {
+          final fetched = cfgDoc.data()!['admin_website_url'] ?? cfgDoc.data()!['admin_url'];
+          if (fetched != null && fetched.toString().trim().isNotEmpty) {
+            adminUrl = fetched.toString().trim();
+          }
+        }
+      } catch (_) {}
+
+      if (!context.mounted) return;
+
+      showDialog(
+        context: context,
+        builder: (ctx) {
+          return AlertDialog(
+            backgroundColor: const Color(0xFF1E222B),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            title: const Row(
+              children: [
+                Icon(Icons.admin_panel_settings_rounded, color: Color(0xFFFFD700), size: 28),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'تۆ کراویت بە ئەدمین! 👑',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 17,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            content: const Text(
+              'پیرۆزە! هەژمارەکەت کراوە بە بەڕێوەبەر (Admin) لە ZankoAI. ئایا دەتەوێت بچیتە بەشی وێبسایتی ئەدمین بۆ بەڕێوەبردنی بەکارهێنەران و داواکارییەکان؟',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.grey[400],
+                ),
+                child: const Text('لابردن / نەخێر', style: TextStyle(fontSize: 13.5)),
+              ),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  Navigator.of(ctx).pop();
+                  final uri = Uri.parse(adminUrl);
+                  try {
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    } else {
+                      await launchUrl(uri, mode: LaunchMode.platformDefault);
+                    }
+                  } catch (e) {
+                    debugPrint('Could not launch admin url: $e');
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFFD700),
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                ),
+                icon: const Icon(Icons.open_in_browser_rounded, size: 18),
+                label: const Text('وێبسایتی ئەدمین', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+              ),
+            ],
+          );
+        },
+      );
+    });
+  }
 
   String _resolveUserName(String? customName, User? fbUser, [String? fallbackName]) {
     final invalidNames = {
@@ -97,77 +287,12 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
       if (firebaseUser == null) {
         _currentUser = null;
         _lastNotifiedVip = null;
+        _lastNotifiedAdmin = null;
         notifyListeners();
       } else {
         _userDocSub = _firestore.collection('users').doc(firebaseUser.uid).snapshots().listen((doc) {
-          if (doc.exists && doc.data() != null) {
-            final data = doc.data()!;
-            final roleStr = data['role'] as String? ?? 'student';
-            final role = roleStr == 'admin'
-                ? UserRole.admin
-                : (roleStr == 'teacher' ? UserRole.teacher : UserRole.student);
-
-            bool isVip = data['isVip'] == true || role == UserRole.admin;
-            final vipStatus = data['vipStatus'] as String? ?? 'none';
-            final vipExpiresAt = data['vipExpiresAt'] as Timestamp?;
-
-            if (isVip && role != UserRole.admin && vipExpiresAt != null) {
-              if (DateTime.now().isAfter(vipExpiresAt.toDate())) {
-                isVip = false;
-              }
-            }
-
-            if (vipStatus == 'pending' || vipStatus == 'rejected' || vipStatus == 'expired') {
-              if (role != UserRole.admin) isVip = false;
-            }
-
-            final realName = _resolveUserName(data['name'] as String?, firebaseUser);
-            final realPhoto = data['photoUrl'] as String? ?? firebaseUser.photoURL;
-
-            final newUser = UserModel(
-              id: firebaseUser.uid,
-              name: realName,
-              email: (data['email'] as String?)?.isNotEmpty == true ? data['email'] : (firebaseUser.email ?? ''),
-              role: role,
-              universityName: data['universityName'] ?? 'زانکۆی سلێمانی',
-              departmentName: data['departmentName'] ?? 'تەکنەلۆجیای زانیاری',
-              cityName: data['cityName'] ?? 'سلێمانی',
-              gpa: role == UserRole.student ? (data['gpa'] as num?)?.toDouble() ?? 0.0 : null,
-              isVip: isVip,
-              photoUrl: realPhoto,
-              vipStatus: vipStatus,
-            );
-
-            // Auto-heal old generic placeholder name in Firestore
-            if (data['name'] != realName && realName != 'خوێندکار') {
-              _firestore.collection('users').doc(firebaseUser.uid).set({
-                'name': realName,
-                if (realPhoto != null) 'photoUrl': realPhoto,
-              }, SetOptions(merge: true));
-            }
-
-            // Only notify if user model actually changed
-            final changed = _currentUser == null ||
-                _currentUser!.id != newUser.id ||
-                _currentUser!.isVip != newUser.isVip ||
-                _currentUser!.vipStatus != newUser.vipStatus ||
-                _currentUser!.name != newUser.name ||
-                _currentUser!.role != newUser.role ||
-                _currentUser!.photoUrl != newUser.photoUrl ||
-                _currentUser!.email != newUser.email;
-
-            _currentUser = newUser;
-
-            if (_lastNotifiedVip != isVip) {
-              _lastNotifiedVip = isVip;
-              NotificationService().listenToAdminNotifications(firebaseUser.uid, isVip);
-            }
-
-            if (changed) {
-              notifyListeners();
-            }
-          } else {
-            // New distinct user document creation
+          if (!doc.exists || doc.data() == null) {
+            // New user or guest user initial document creation
             final realName = _resolveUserName(null, firebaseUser);
             final realPhoto = firebaseUser.photoURL;
             final realEmail = firebaseUser.email ?? '';
@@ -192,6 +317,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
             try {
               _firestore.collection('users').doc(firebaseUser.uid).set({
                 'id': firebaseUser.uid,
+                'uid': firebaseUser.uid,
                 'name': realName,
                 'email': realEmail,
                 'role': 'student',
@@ -201,10 +327,120 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
                 'gpa': 0.0,
                 'isVip': false,
                 'vipStatus': 'none',
-                if (realPhoto != null) 'photoUrl': realPhoto,
+                'photoUrl': ?realPhoto,
                 'createdAt': FieldValue.serverTimestamp(),
+                'lastLoginAt': FieldValue.serverTimestamp(),
               }, SetOptions(merge: true));
             } catch (_) {}
+            return;
+          }
+
+          final data = doc.data()!;
+
+          // 1. Check if user document was deleted by Admin from website
+          if (data['isDeleted'] == true) {
+            if (_currentUser != null && !_isHandlingBlockedOrDeleted) {
+              _auth.signOut().catchError((_) {});
+              _currentUser = null;
+              _lastNotifiedVip = null;
+              _lastNotifiedAdmin = null;
+              notifyListeners();
+              _showAccountDeletedDialog();
+            }
+            return;
+          }
+
+          // 2. Check if user was blocked by Admin from website
+          final isBlocked = data['isBlocked'] == true || data['status'] == 'blocked' || data['isBanned'] == true;
+          if (isBlocked) {
+            if (!_isHandlingBlockedOrDeleted) {
+              _auth.signOut().catchError((_) {});
+              _currentUser = null;
+              _lastNotifiedVip = null;
+              _lastNotifiedAdmin = null;
+              notifyListeners();
+              _showAccountBlockedDialog();
+            }
+            return;
+          }
+
+          final roleStr = data['role'] as String? ?? 'student';
+          final role = roleStr == 'admin'
+              ? UserRole.admin
+              : (roleStr == 'teacher' ? UserRole.teacher : UserRole.student);
+
+          // 3. Check if user was promoted to Admin
+          if (role == UserRole.admin && _lastNotifiedAdmin != true) {
+            _lastNotifiedAdmin = true;
+            _showPromotedToAdminDialog();
+          }
+
+          bool isVip = data['isVip'] == true || role == UserRole.admin;
+          final vipStatus = data['vipStatus'] as String? ?? 'none';
+          final vipExpiresAt = data['vipExpiresAt'] as Timestamp?;
+
+          if (isVip && role != UserRole.admin && vipExpiresAt != null) {
+            if (DateTime.now().isAfter(vipExpiresAt.toDate())) {
+              isVip = false;
+            }
+          }
+
+          if (vipStatus == 'pending' || vipStatus == 'rejected' || vipStatus == 'expired') {
+            if (role != UserRole.admin) isVip = false;
+          }
+
+          final realName = _resolveUserName(data['name'] as String?, firebaseUser);
+          final realPhoto = data['photoUrl'] as String? ?? firebaseUser.photoURL;
+
+          final realEmail = (data['email'] as String?)?.isNotEmpty == true
+              ? (data['email'] as String)
+              : (firebaseUser.email?.isNotEmpty == true ? firebaseUser.email! : '');
+
+          final newUser = UserModel(
+            id: firebaseUser.uid,
+            name: realName,
+            email: realEmail,
+            role: role,
+            universityName: data['universityName'] ?? 'زانکۆی سلێمانی',
+            departmentName: data['departmentName'] ?? 'تەکنەلۆجیای زانیاری',
+            cityName: data['cityName'] ?? 'سلێمانی',
+            gpa: role == UserRole.student ? (data['gpa'] as num?)?.toDouble() ?? 0.0 : null,
+            isVip: isVip,
+            photoUrl: realPhoto,
+            vipStatus: vipStatus,
+          );
+
+          // Auto-heal name & ensure email and latest login timestamp exist in Firestore
+          try {
+            _firestore.collection('users').doc(firebaseUser.uid).set({
+              'id': firebaseUser.uid,
+              'uid': firebaseUser.uid,
+              'name': realName,
+              if (realEmail.isNotEmpty) 'email': realEmail,
+              'photoUrl': ?realPhoto,
+              'lastLoginAt': FieldValue.serverTimestamp(),
+            }, SetOptions(merge: true));
+          } catch (_) {}
+
+          // Only notify if user model actually changed
+          final changed = _currentUser == null ||
+              _currentUser!.id != newUser.id ||
+              _currentUser!.isVip != newUser.isVip ||
+              _currentUser!.vipStatus != newUser.vipStatus ||
+              _currentUser!.name != newUser.name ||
+              _currentUser!.role != newUser.role ||
+              _currentUser!.photoUrl != newUser.photoUrl ||
+              _currentUser!.email != newUser.email;
+
+          _currentUser = newUser;
+
+          if (_lastNotifiedVip != isVip) {
+            _lastNotifiedVip = isVip;
+            NotificationService().listenToAdminNotifications(firebaseUser.uid, isVip);
+          }
+
+          if (changed) {
+            notifyListeners();
           }
         });
       }
@@ -217,6 +453,26 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
       final doc = await _firestore.collection('users').doc(firebaseUser.uid).get();
       if (doc.exists && doc.data() != null) {
         final data = doc.data()!;
+
+        // 1. Check if user document was deleted by Admin
+        if (data['isDeleted'] == true) {
+          await _auth.signOut().catchError((_) {});
+          _currentUser = null;
+          notifyListeners();
+          _showAccountDeletedDialog();
+          return;
+        }
+
+        // 2. Check if user was blocked by Admin
+        final isBlocked = data['isBlocked'] == true || data['status'] == 'blocked' || data['isBanned'] == true;
+        if (isBlocked) {
+          await _auth.signOut().catchError((_) {});
+          _currentUser = null;
+          notifyListeners();
+          _showAccountBlockedDialog();
+          return;
+        }
+
         final roleStr = data['role'] as String? ?? 'student';
         final role = roleStr == 'admin'
             ? UserRole.admin
@@ -264,14 +520,16 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
           vipStatus: vipStatus,
         );
 
-        if (data['name'] != realName && realName != 'خوێندکار') {
-          try {
-            await _firestore.collection('users').doc(firebaseUser.uid).set({
-              'name': realName,
-              if (realPhoto != null) 'photoUrl': realPhoto,
-            }, SetOptions(merge: true));
-          } catch (_) {}
-        }
+        try {
+          await _firestore.collection('users').doc(firebaseUser.uid).set({
+            'id': firebaseUser.uid,
+            'uid': firebaseUser.uid,
+            'name': realName,
+            if (realEmail.isNotEmpty) 'email': realEmail,
+            'photoUrl': ?realPhoto,
+            'lastLoginAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+        } catch (_) {}
       } else {
         final realName = _resolveUserName(null, firebaseUser, fallbackName);
         final realPhoto = firebaseUser.photoURL ?? fallbackPhoto;
@@ -293,6 +551,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
         try {
           await _firestore.collection('users').doc(firebaseUser.uid).set({
             'id': firebaseUser.uid,
+            'uid': firebaseUser.uid,
             'name': realName,
             'email': realEmail,
             'role': 'student',
@@ -302,8 +561,9 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
             'gpa': 0.0,
             'isVip': false,
             'vipStatus': 'none',
-            if (realPhoto != null) 'photoUrl': realPhoto,
+            'photoUrl': ?realPhoto,
             'createdAt': FieldValue.serverTimestamp(),
+            'lastLoginAt': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
         } catch (_) {}
       }
@@ -472,7 +732,6 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn(
         scopes: ['email', 'profile'],
-        serverClientId: '658020179072-61227ie552ik74mq9der2iumthlk2dq5.apps.googleusercontent.com',
       );
       GoogleSignInAccount? googleUser;
       try {
@@ -596,6 +855,23 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
 
       if (existingDoc != null && existingDoc.exists && existingDoc.data() != null) {
         final data = existingDoc.data() as Map<String, dynamic>;
+        final isDeleted = data['isDeleted'] == true;
+        final isBlocked = data['isBlocked'] == true || data['status'] == 'blocked' || data['isBanned'] == true;
+        if (isDeleted) {
+          await _auth.signOut().catchError((_) {});
+          _currentUser = null;
+          notifyListeners();
+          _showAccountDeletedDialog();
+          return;
+        }
+        if (isBlocked) {
+          await _auth.signOut().catchError((_) {});
+          _currentUser = null;
+          notifyListeners();
+          _showAccountBlockedDialog();
+          return;
+        }
+
         final roleStr = data['role'] as String? ?? 'student';
         resolvedRole = (roleStr == 'admin' || isAdminAccount)
             ? UserRole.admin
@@ -610,7 +886,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
           'id': finalUid,
           'name': realName,
           'email': realEmail,
-          if (realPhoto != null) 'photoUrl': realPhoto,
+          'photoUrl': ?realPhoto,
           'googleId': googleId,
           'role': resolvedRole == UserRole.admin ? 'admin' : (resolvedRole == UserRole.teacher ? 'teacher' : 'student'),
           if (resolvedRole == UserRole.admin) 'isVip': true,
@@ -653,20 +929,18 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
   @override
   Future<void> loginAsGuest() async {
     final uniqueEmail = 'guest_${DateTime.now().millisecondsSinceEpoch}@zanko.edu';
-    const defaultPass = 'ZankoAI2026!';
-    try {
-      await _auth.createUserWithEmailAndPassword(email: uniqueEmail, password: defaultPass);
-    } catch (_) {}
-
-    final firebaseUser = _auth.currentUser;
+    final uid = 'guest_${DateTime.now().millisecondsSinceEpoch}';
     _currentUser = UserModel(
-      id: firebaseUser?.uid ?? 'guest_user_${DateTime.now().millisecondsSinceEpoch}',
+      id: uid,
       name: 'مێوان',
       email: uniqueEmail,
       role: UserRole.student,
       universityName: 'زانکۆی سلێمانی',
       departmentName: 'تەکنەلۆجیای زانیاری',
+      cityName: 'سلێمانی',
       gpa: 0.0,
+      isVip: false,
+      vipStatus: 'none',
     );
     notifyListeners();
   }

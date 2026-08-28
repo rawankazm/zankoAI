@@ -20,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen>
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
 
-  bool _isLoginMode = true;
+  final bool _isLoginMode = true;
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -93,15 +93,18 @@ class _LoginScreenState extends State<LoginScreen>
         _errorMessage = 'وشەی نهێنی زۆر لاوازە (لانی کەم ٦ پیت).';
       } else if (errStr.contains('invalid-email')) {
         _errorMessage = 'ئیمەیڵەکە شێوازێکی دروستی نییە.';
+      } else {
+        _errorMessage = 'پڕۆسەکە سەرکەوتوو نەبوو. تکایە هێڵی ئینتەرنێتەکەت بپشکنە.';
       }
     }
 
     if (!mounted) return;
 
     if (success) {
-      Navigator.pushReplacement(
+      Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const NavigationShell()),
+        (route) => false,
       );
     } else {
       setState(() {
@@ -112,6 +115,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Future<void> _loginWithGoogle() async {
+    if (_isLoading) return;
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -124,9 +128,10 @@ class _LoginScreenState extends State<LoginScreen>
       if (!mounted) return;
 
       if (success) {
-        Navigator.pushReplacement(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const NavigationShell()),
+          (route) => false,
         );
       } else {
         setState(() {
@@ -138,20 +143,28 @@ class _LoginScreenState extends State<LoginScreen>
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = 'هەڵە لە چوونەژوورەوە بە گووگڵ: تکایە دڵنیابەرەوە لە پەیوەندی ئینتەرنێت یان خزمەتگوزاری گووگڵ.';
+        _errorMessage = 'هەڵە لە چوونەژوورەوە بە گووگڵ: تکایە دڵنیابەرەوە لە پەیوەندی ئینتەرنێت.';
       });
     }
   }
 
   Future<void> _loginAsGuest() async {
+    if (_isLoading) return;
     setState(() => _isLoading = true);
-    final authService = Provider.of<AuthService>(context, listen: false);
-    await authService.loginAsGuest();
-    if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const NavigationShell()),
-    );
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      await authService.loginAsGuest();
+      if (!mounted) return;
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const NavigationShell()),
+        (route) => false,
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -196,7 +209,7 @@ class _LoginScreenState extends State<LoginScreen>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                            color: theme.colorScheme.primary.withOpacity(0.2),
+                            color: theme.colorScheme.primary.withValues(alpha: 0.2),
                             width: 1.5),
                       ),
                       child: ClipOval(
@@ -205,7 +218,7 @@ class _LoginScreenState extends State<LoginScreen>
                           width: 80,
                           height: 80,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Icon(
+                          errorBuilder: (context, error, stackTrace) => Icon(
                             Icons.school_rounded,
                             size: 80,
                             color: theme.colorScheme.primary,
@@ -228,7 +241,7 @@ class _LoginScreenState extends State<LoginScreen>
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -240,7 +253,7 @@ class _LoginScreenState extends State<LoginScreen>
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.error.withOpacity(0.1),
+                        color: theme.colorScheme.error.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -342,7 +355,7 @@ class _LoginScreenState extends State<LoginScreen>
                                             icon: Image.network(
                                               'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1024px-Google_%22G%22_logo.svg.png',
                                               height: 22,
-                                              errorBuilder: (_, __, ___) =>
+                                              errorBuilder: (context, error, stackTrace) =>
                                                   const Icon(Icons.g_mobiledata, size: 24),
                                             ),
                                             label: Text(t('google_login')),

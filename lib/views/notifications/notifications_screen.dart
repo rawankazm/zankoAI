@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/language_provider.dart';
@@ -155,6 +156,249 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     if (diff.inMinutes < 60) return '${diff.inMinutes} خولەک پێشتر';
     if (diff.inHours < 24) return '${diff.inHours} کاتژمێر پێشتر';
     return '${diff.inDays} ڕۆژ پێشتر';
+  }
+
+  String _formatDetailDate(DateTime time) {
+    final hour = time.hour == 0 ? 12 : (time.hour > 12 ? time.hour - 12 : time.hour);
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = time.hour >= 12 ? 'PM' : 'AM';
+    return '${time.year}/${time.month.toString().padLeft(2, '0')}/${time.day.toString().padLeft(2, '0')} • $hour:$minute $period';
+  }
+
+  void _showNotificationDetail(NotificationItem item) {
+    if (!item.isRead) {
+      setState(() {
+        item.isRead = true;
+      });
+      FirebaseFirestore.instance
+          .collection('direct_messages')
+          .doc(item.id)
+          .update({'isRead': true})
+          .catchError((_) {});
+    }
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+          ),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1C1F26) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.5),
+                blurRadius: 30,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Pull Handle
+                const SizedBox(height: 12),
+                Center(
+                  child: Container(
+                    width: 44,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white24 : Colors.black12,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Header with Category Badge and Close button
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: item.color.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: item.color.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(item.icon, size: 16, color: item.color),
+                            const SizedBox(width: 6),
+                            Text(
+                              item.category == 'Admin Direct' ? 'پەیامی فەرمی ئەدمین' : item.category,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: item.color,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      // Formatted Time & Date
+                      Text(
+                        _formatDetailDate(item.time),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () => Navigator.pop(ctx),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            CupertinoIcons.xmark,
+                            size: 16,
+                            color: isDark ? Colors.white70 : Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 14),
+                const Divider(height: 1, thickness: 0.8),
+
+                // Scrollable Notification Content
+                Flexible(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.all(22),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Title
+                        SelectableText(
+                          item.title,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            height: 1.4,
+                            color: isDark ? Colors.white : ZankoColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Body Message
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF14171D) : const Color(0xFFF7F8FA),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.05),
+                            ),
+                          ),
+                          child: SelectableText(
+                            item.body.isNotEmpty ? item.body : 'هیچ دەقێکی زیادە نییە.',
+                            style: TextStyle(
+                              fontSize: 15,
+                              height: 1.6,
+                              fontWeight: FontWeight.w400,
+                              color: isDark ? Colors.grey[200] : const Color(0xFF222831),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const Divider(height: 1, thickness: 0.8),
+
+                // Action Toolbar (Copy, Delete)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  child: Row(
+                    children: [
+                      // 1. Copy
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: "${item.title}\n\n${item.body}"));
+                            HapticFeedback.lightImpact();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('دەقی ئاگادارییەکە کۆپی کرا! 📋'),
+                                backgroundColor: Colors.blueGrey,
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          },
+                          icon: const Icon(CupertinoIcons.doc_on_doc, size: 17),
+                          label: const Text(
+                            'کۆپیکردنی دەق',
+                            style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: ZankoColors.primary,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+
+                      // 2. Delete
+                      IconButton(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          setState(() {
+                            _notifications.removeWhere((n) => n.id == item.id);
+                          });
+                          FirebaseFirestore.instance
+                              .collection('direct_messages')
+                              .doc(item.id)
+                              .delete()
+                              .catchError((_) {});
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('ئاگادارییەکە سڕایەوە 🗑️'),
+                              backgroundColor: Colors.redAccent,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                        icon: const Icon(CupertinoIcons.trash, color: Colors.redAccent, size: 20),
+                        tooltip: 'سڕینەوە',
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.redAccent.withValues(alpha: 0.12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          padding: const EdgeInsets.all(12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -334,14 +578,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             padding: const EdgeInsets.only(bottom: 12),
                             child: AppCard(
                               padding: const EdgeInsets.all(16),
-                              onTap: () {
-                                if (!item.isRead) {
-                                  FirebaseFirestore.instance
-                                      .collection('direct_messages')
-                                      .doc(item.id)
-                                      .update({'isRead': true});
-                                }
-                              },
+                              onTap: () => _showNotificationDetail(item),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -373,7 +610,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                               child: Text(
                                                 item.title,
                                                 style: TextStyle(
-                                                  fontSize: 14,
+                                                  fontSize: 14.5,
                                                   fontWeight: item.isRead
                                                       ? FontWeight.w600
                                                       : FontWeight.w800,
@@ -397,13 +634,34 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                         const SizedBox(height: 6),
                                         Text(
                                           item.body,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
-                                            fontSize: 12,
-                                            height: 1.35,
+                                            fontSize: 12.5,
+                                            height: 1.38,
                                             color: isDark
                                                 ? Colors.grey[400]
                                                 : ZankoColors.textSecondary,
                                           ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Row(
+                                          children: [
+                                            Text(
+                                              'بۆ خوێندنەوەی تەواو لێبدە',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600,
+                                                color: ZankoColors.primary,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Icon(
+                                              CupertinoIcons.chevron_left,
+                                              size: 11,
+                                              color: ZankoColors.primary,
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),

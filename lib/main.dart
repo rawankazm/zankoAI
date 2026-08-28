@@ -56,6 +56,8 @@ void main() async {
   );
 }
 
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
 class ZankoApp extends StatelessWidget {
   const ZankoApp({super.key});
 
@@ -95,6 +97,7 @@ class ZankoApp extends StatelessWidget {
       child: Consumer2<LanguageProvider, ThemeProvider>(
         builder: (context, langProvider, themeProvider, child) {
           return MaterialApp(
+            navigatorKey: rootNavigatorKey,
             title: 'ZankoAI',
             debugShowCheckedModeBanner: false,
             builder: DevicePreview.appBuilder,

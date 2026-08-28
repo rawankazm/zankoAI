@@ -7,12 +7,16 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart' as sync_pdf;
 import '../../services/language_provider.dart';
 import '../../services/ai_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/database_service.dart';
 import '../../services/kurdish_tts_service.dart';
+import '../../models/note_model.dart';
 import '../../theme.dart';
 import '../payment/vip_upgrade_sheet.dart';
 
@@ -32,6 +36,17 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   final List<Map<String, String>> _messages = [];
   bool _isTyping = false;
 
+  // Active Teaching Mode
+  int _selectedModeIndex = 0;
+  final List<Map<String, dynamic>> _modes = [
+    {'title': 'گشتی 🧑‍🏫', 'tag': 'General Academic'},
+    {'title': 'کۆد و IT 💻', 'tag': 'Coding & Computer Science'},
+    {'title': 'بیرکاری و زانست 📐', 'tag': 'Math, Physics & Engineering'},
+    {'title': 'پزیشکی و دەرمان 🏥', 'tag': 'Medicine & Health'},
+    {'title': 'کورتکردنەوە 📝', 'tag': 'Summarize & Simplify'},
+    {'title': 'تاقیکردنەوە ⚡', 'tag': 'Exam Preparation & Prediction'},
+  ];
+
   // Real Audio Recording & Speech-to-Text State
   final AudioRecorder _audioRecorder = AudioRecorder();
   String? _recordedVoiceFilePath;
@@ -39,15 +54,54 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   bool _isTranscribingVoice = false;
   int _recordSeconds = 0;
   Timer? _recordTimer;
+  String? _currentlySpeakingMsg;
 
-
-
-  final List<String> _suggestions = [
-    'Explain this topic',
-    'Generate Quiz',
-    'Summarize PDF',
-    'Teach me Calculus',
-  ];
+  List<String> get _currentSuggestions {
+    switch (_selectedModeIndex) {
+      case 1:
+        return [
+          'پێناسەی OOP و چەمکەکانی',
+          'جیاوازی نێوان SQL و NoSQL',
+          'چۆن فلاتەر کار دەکات؟',
+          'شیکاری ئەم هەڵەی کۆدە',
+        ];
+      case 2:
+        return [
+          'یاسای داتاشراو (Derivatives)',
+          'تەواوکاری شیکار بکە (Integrals)',
+          'ماتریسەکان لە جەبری هێڵی',
+          'یاساکانی نیوتن لە فیزیا',
+        ];
+      case 3:
+        return [
+          'ئەناتۆمی و فرمانی دڵ',
+          'جیاوازی بەکتریا و ڤایرۆس',
+          'چەمکی Pharmacokinetics',
+          'نیشانەکانی کەمخوێنی (Anemia)',
+        ];
+      case 4:
+        return [
+          'مەلزەمەکەم بۆ کورت بکەرەوە',
+          'دەرکێشانی خاڵە سەرەکییەکان',
+          'پوختەی ئەم پارچە دەقە',
+          'ڕوونکردنەوەی بە سادەیی',
+        ];
+      case 5:
+        return [
+          '٥ پرسیاری تاقیکردنەوە پێشبینی بکە',
+          'کویزی خێرا لەسەر ئەم بابەتە',
+          'پلانی خوێندن بۆ ٣ ڕۆژ',
+          'گرنگترین پێناسەکانی فاینەڵ',
+        ];
+      default:
+        return [
+          'باسی ئەم بابەتەم بۆ بکە',
+          'پوختەی وانەکە چییە؟',
+          'ڕێنمایی بۆ خوێندنی تاقیکردنەوە',
+          'شیکاری پرسیاری زانستی',
+        ];
+    }
+  }
 
   @override
   void initState() {
@@ -393,59 +447,43 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
           .where((m) => m['content'] != welcomeText && (m['role'] == 'user' || m['role'] == 'assistant'))
           .toList();
 
+      final modePrefix = _selectedModeIndex != 0
+          ? "[تایبەتمەندی: ${_modes[_selectedModeIndex]['tag']}]\n"
+          : "";
+
       final response = await aiService.askTeacher(
-        text,
+        modePrefix + text,
         historyToSend,
         isVip: isVip,
         isPendingVip: isPendingVip,
       );
+
       if (mounted) {
-        final words = response.split(' ');
-        final assistantIndex = _messages.length;
         setState(() {
           _isTyping = false;
           _messages.add({
             'role': 'assistant',
-            'content': '',
+            'content': response,
             'time': _formatTime(),
           });
         });
-
-        // Fast & smooth streaming typing animation
-        String streamedText = '';
-        const chunkSize = 3;
-        for (int i = 0; i < words.length; i += chunkSize) {
-          if (!mounted) break;
-          final chunk = words.sublist(i, (i + chunkSize > words.length) ? words.length : i + chunkSize).join(' ');
-          streamedText += (streamedText.isEmpty ? '' : ' ') + chunk;
-          setState(() {
-            _messages[assistantIndex]['content'] = streamedText;
-          });
-          _scrollToBottom();
-          await Future.delayed(const Duration(milliseconds: 20));
-        }
-
-        if (mounted) {
-          setState(() {
-            _messages[assistantIndex]['content'] = response;
-          });
-          await _saveChatHistory();
-        }
+        await _saveChatHistory();
+        _scrollToBottom();
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _messages.add({
             'role': 'assistant',
-            'content': '⚠️ ببورە، کێشەیەک لە پێوەستبوون بە سێرڤەرەکانی AI دروستبوو. تکایە دووبارە هەوڵ بدەرەوە.',
+            'content': '⚠️ ببورە، کێشەیەک لە پەیوەندی بە سێرڤەر ڕوویدا. تکایە دووبارە پرسیارەکەت بنووسەوە.',
             'time': _formatTime(),
           });
           _isTyping = false;
         });
         await _saveChatHistory();
+        _scrollToBottom();
       }
     }
-    _scrollToBottom();
   }
 
   Future<void> _pickAndSolveImage() async {
@@ -462,7 +500,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       setState(() {
         _messages.add({
           'role': 'user',
-          'content': '📷 [وێنەی تاقیکردنەوە/پرسیار بارکرا]: ${image.name}\n${promptText.isNotEmpty ? promptText : ""}',
+          'content': '📷 [وێنەی پرسیار/تاقیکردنەوە بارکرا]: ${image.name}\n${promptText.isNotEmpty ? promptText : ""}',
           'time': timestamp,
         });
         _isTyping = true;
@@ -479,41 +517,187 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       final response = await aiService.solveImageQuestion(bytes, promptText, isVip: isVip, isPendingVip: isPendingVip);
 
       if (mounted) {
-        final words = response.split(' ');
-        final assistantIndex = _messages.length;
         setState(() {
           _isTyping = false;
           _messages.add({
             'role': 'assistant',
-            'content': '',
+            'content': response,
             'time': _formatTime(),
           });
         });
-
-        String streamedText = '';
-        const chunkSize = 3;
-        for (int i = 0; i < words.length; i += chunkSize) {
-          if (!mounted) break;
-          final chunk = words.sublist(i, (i + chunkSize > words.length) ? words.length : i + chunkSize).join(' ');
-          streamedText += (streamedText.isEmpty ? '' : ' ') + chunk;
-          setState(() {
-            _messages[assistantIndex]['content'] = streamedText;
-          });
-          _scrollToBottom();
-          await Future.delayed(const Duration(milliseconds: 20));
-        }
-
-        if (mounted) {
-          setState(() {
-            _messages[assistantIndex]['content'] = response;
-          });
-          await _saveChatHistory();
-        }
+        await _saveChatHistory();
         _scrollToBottom();
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isTyping = false);
+      }
+    }
+  }
+
+  Future<void> _pickAndSolvePdf() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'txt'],
+      );
+
+      if (result == null || result.files.isEmpty) return;
+      final file = result.files.first;
+
+      String extractedText = '';
+      if (file.bytes != null) {
+        if (file.name.toLowerCase().endsWith('.pdf')) {
+          final doc = sync_pdf.PdfDocument(inputBytes: file.bytes!);
+          extractedText = sync_pdf.PdfTextExtractor(doc).extractText();
+          doc.dispose();
+        } else {
+          extractedText = utf8.decode(file.bytes!);
+        }
+      } else if (file.path != null) {
+        final ioFile = File(file.path!);
+        final bytes = await ioFile.readAsBytes();
+        if (file.name.toLowerCase().endsWith('.pdf')) {
+          final doc = sync_pdf.PdfDocument(inputBytes: bytes);
+          extractedText = sync_pdf.PdfTextExtractor(doc).extractText();
+          doc.dispose();
+        } else {
+          extractedText = utf8.decode(bytes);
+        }
+      }
+
+      if (extractedText.trim().isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('نەتوانرا دەقی ئەم فایلە دەربهێنرێت.')),
+          );
+        }
+        return;
+      }
+
+      final safeText = extractedText.length > 5000 ? extractedText.substring(0, 5000) : extractedText;
+      final promptToSend = "📄 [فایلی وانە: ${file.name}]\nتکایە ئەم فایلەی خوارەوە بە کورتی و زانستی شی بکەرەوە و خاڵە سەرەکییەکانی دیاری بکە:\n\n$safeText";
+
+      _sendMessage(promptToSend);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('هەڵە لە خوێندنەوەی فایل: $e')),
+        );
+      }
+    }
+  }
+
+  void _showAttachmentOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E222A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(10)),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'هاوپێچکردنی پرسیار یان وانە 📎',
+              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildAttachmentOption(
+                  icon: CupertinoIcons.photo,
+                  color: Colors.purpleAccent,
+                  label: 'وێنەی گەلەری',
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _pickAndSolveImage();
+                  },
+                ),
+                _buildAttachmentOption(
+                  icon: CupertinoIcons.doc_text_fill,
+                  color: Colors.blueAccent,
+                  label: 'فایلی PDF/وانە',
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _pickAndSolvePdf();
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAttachmentOption({
+    required IconData icon,
+    required Color color,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(height: 8),
+            Text(label, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _saveAsNote(String content) async {
+    try {
+      final db = Provider.of<DatabaseService>(context, listen: false);
+      final firstLine = content.split('\n').firstWhere((l) => l.trim().isNotEmpty, orElse: () => 'تێبینی مامۆستا');
+      final cleanTitle = firstLine.replaceAll('#', '').replaceAll('*', '').trim();
+      final title = cleanTitle.length > 40 ? '${cleanTitle.substring(0, 40)}...' : cleanTitle;
+
+      await db.addNote(NoteModel(
+        id: 'note_${DateTime.now().millisecondsSinceEpoch}',
+        title: title.isNotEmpty ? title : 'تێبینی وانەی ZankoAI',
+        content: content,
+        createdAt: DateTime.now(),
+        isAiFormatted: true,
+        courseName: _modes[_selectedModeIndex]['title'],
+      ));
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ بە سەرکەوتوویی لە بەشی تێبینییەکان پاشەکەوت کرا! 📑'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('هەڵە لە پاشەکەوتکردنی تێبینی: $e')),
+        );
       }
     }
   }
@@ -560,6 +744,8 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     );
   }
 
+
+
   Widget _buildHeader(BuildContext context) {
     final canPop = Navigator.canPop(context);
     final lang = Provider.of<LanguageProvider>(context);
@@ -569,118 +755,185 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     return Container(
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 8,
-        bottom: 12,
+        bottom: 10,
         left: 16,
         right: 16,
       ),
       color: const Color(0xFF15181E),
-      child: Row(
+      child: Column(
         children: [
-          if (canPop) ...[
-            _buildNeumorphicButton(
-              icon: CupertinoIcons.arrow_left,
-              onTap: () => Navigator.pop(context),
-              iconColor: ZankoColors.primary,
-            ),
-            const SizedBox(width: 12),
-          ],
-
-          // User Avatar & Name
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.4),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: CircleAvatar(
-              radius: 20,
-              backgroundColor: const Color(0xFF2A2E37),
-              child: Icon(Icons.psychology_rounded, color: ZankoColors.primary, size: 22),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
+          Row(
             children: [
-              Text(
-                lang.translate('ai_tutor'),
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  letterSpacing: -0.2,
+              if (canPop) ...[
+                _buildNeumorphicButton(
+                  icon: CupertinoIcons.arrow_left,
+                  onTap: () => Navigator.pop(context),
+                  iconColor: ZankoColors.primary,
                 ),
-              ),
-              Row(
-                children: [
-                  Container(
-                    width: 7,
-                    height: 7,
-                    decoration: BoxDecoration(
-                      color: isVip ? const Color(0xFFFFD700) : const Color(0xFF10B981),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    isVip ? 'VIP 👑 (بێسنوور)' : 'ڕژێمی بەخۆڕایی',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: isVip ? const Color(0xFFFFD700) : Colors.white60,
-                      fontWeight: isVip ? FontWeight.bold : FontWeight.normal,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const Spacer(),
-          if (!isVip)
-            GestureDetector(
-              onTap: () => VipUpgradeSheet.show(context),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                margin: const EdgeInsets.only(right: 8),
+                const SizedBox(width: 10),
+              ],
+
+              // Teacher Avatar
+              Container(
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFB8860B), Color(0xFFFFD700)],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.4), width: 1.5),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFFFD700).withValues(alpha: 0.3),
+                      color: ZankoColors.primary.withValues(alpha: 0.25),
                       blurRadius: 8,
                     ),
                   ],
                 ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('👑', style: TextStyle(fontSize: 13)),
-                    SizedBox(width: 4),
-                    Text(
-                      'VIP',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF2C1F00),
-                      ),
-                    ),
-                  ],
+                child: CircleAvatar(
+                  radius: 19,
+                  backgroundColor: const Color(0xFF2A2E37),
+                  child: Icon(Icons.psychology_rounded, color: ZankoColors.primary, size: 22),
                 ),
               ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        lang.translate('ai_tutor'),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: Colors.green.withValues(alpha: 0.4), width: 0.8),
+                        ),
+                        child: const Text(
+                          '⚡ Gemini 3.7 Flash',
+                          style: TextStyle(fontSize: 10, color: Colors.greenAccent, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: BoxDecoration(
+                          color: isVip ? const Color(0xFFFFD700) : const Color(0xFF10B981),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        isVip ? 'VIP 👑 (نامەی بێسنوور)' : 'ڕژێمی ئاسایی',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isVip ? const Color(0xFFFFD700) : Colors.white60,
+                          fontWeight: isVip ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const Spacer(),
+              if (!isVip)
+                GestureDetector(
+                  onTap: () => VipUpgradeSheet.show(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                    margin: const EdgeInsets.only(right: 6),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFB8860B), Color(0xFFFFD700)],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('👑', style: TextStyle(fontSize: 12)),
+                        SizedBox(width: 3),
+                        Text(
+                          'VIP',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF2C1F00),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              _buildNeumorphicButton(
+                icon: Icons.key_rounded,
+                onTap: () => _showApiKeyDialog(context),
+                iconColor: ZankoColors.primary,
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Teaching Mode Horizontal Selector
+          SizedBox(
+            height: 34,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _modes.length,
+              itemBuilder: (context, index) {
+                final isSelected = _selectedModeIndex == index;
+                final mode = _modes[index];
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() => _selectedModeIndex = index);
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isSelected ? ZankoColors.primary : const Color(0xFF1E222A),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: isSelected ? ZankoColors.primary : Colors.white.withValues(alpha: 0.08),
+                          width: 1,
+                        ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: ZankoColors.primary.withValues(alpha: 0.4),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                )
+                              ]
+                            : null,
+                      ),
+                      child: Center(
+                        child: Text(
+                          mode['title'],
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                            color: isSelected ? Colors.white : Colors.white70,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
-          _buildNeumorphicButton(
-            icon: Icons.key_rounded,
-            onTap: () => _showApiKeyDialog(context),
-            iconColor: ZankoColors.primary,
           ),
         ],
       ),
@@ -689,15 +942,14 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
 
   Widget _buildDateHeader() {
     return Container(
-      margin: const EdgeInsets.only(top: 8, bottom: 16),
+      margin: const EdgeInsets.only(top: 4, bottom: 12),
       child: Center(
         child: Text(
-          'Today',
+          'ئەمڕۆ / Today',
           style: TextStyle(
-            fontSize: 13,
+            fontSize: 12,
             fontWeight: FontWeight.w500,
-            color: Colors.white.withValues(alpha: 0.4),
-            letterSpacing: 0.2,
+            color: Colors.white.withOpacity(0.4),
           ),
         ),
       ),
@@ -767,161 +1019,209 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     );
   }
 
-  String? _currentlySpeakingMsg;
+  Widget _buildBubbleAction({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    Color color = Colors.white70,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1B1E26),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withOpacity(0.06)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 13, color: color),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildMessageBubble(Map<String, String> msg, bool isUser) {
     final content = msg['content'] ?? '';
-    final time = msg['time'] ?? '4:09 pm';
+    final time = msg['time'] ?? _formatTime();
     final isSpeaking = _currentlySpeakingMsg == content;
-    final isLimitMsg = !isUser && (content.contains('Free Daily Limit Reached') || content.contains('سنووری ٥'));
+    final isLimitMsg = !isUser && (content.contains('Free Daily Limit Reached') || content.contains('سنووری ١٠'));
 
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.84,
+          maxWidth: MediaQuery.of(context).size.width * 0.88,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
+        child: Column(
+          crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
-            if (!isUser) ...[
-              GestureDetector(
-                onTap: () async {
-                  if (isSpeaking) {
-                    await KurdishTtsService().stop();
-                    if (mounted) setState(() => _currentlySpeakingMsg = null);
-                  } else {
-                    if (mounted) setState(() => _currentlySpeakingMsg = content);
-                    final lang = Provider.of<LanguageProvider>(context, listen: false);
-                    String langCode = 'ku';
-                    if (lang.currentLanguage == AppLanguage.arabic) {
-                      langCode = 'ar';
-                    } else if (lang.currentLanguage == AppLanguage.english) {
-                      langCode = 'en';
-                    }
-                    await KurdishTtsService().speak(content, languageCode: langCode);
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  margin: const EdgeInsets.only(right: 6, bottom: 4),
-                  decoration: BoxDecoration(
-                    color: isSpeaking ? ZankoColors.primary : const Color(0xFF252934),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: (isSpeaking ? ZankoColors.primary : Colors.black).withValues(alpha: 0.3),
-                        blurRadius: 6,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: isUser
+                  ? BoxDecoration(
+                      color: ZankoColors.primary,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(18),
+                        topRight: Radius.circular(18),
+                        bottomLeft: Radius.circular(18),
+                        bottomRight: Radius.circular(4),
                       ),
-                    ],
-                  ),
-                  child: Icon(
-                    isSpeaking ? CupertinoIcons.speaker_3_fill : CupertinoIcons.speaker_2_fill,
-                    color: isSpeaking ? Colors.white : ZankoColors.primary,
-                    size: 16,
-                  ),
-                ),
-              ),
-            ],
-            Flexible(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: isUser
-                    ? BoxDecoration(
-                        color: ZankoColors.primary,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          topRight: Radius.circular(16),
-                          bottomLeft: Radius.circular(16),
-                          bottomRight: Radius.circular(4),
+                      boxShadow: [
+                        BoxShadow(
+                          color: ZankoColors.primary.withOpacity(0.35),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: ZankoColors.primary.withValues(alpha: 0.35),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      )
-                    : BoxDecoration(
-                        color: isLimitMsg ? const Color(0xFF2C2003) : const Color(0xFF1E222A),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          topRight: Radius.circular(16),
-                          bottomLeft: Radius.circular(4),
-                          bottomRight: Radius.circular(16),
-                        ),
-                        border: Border.all(
-                          color: isLimitMsg
-                              ? const Color(0xFFFFD700).withValues(alpha: 0.5)
-                              : (isSpeaking ? ZankoColors.primary.withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.06)),
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: isLimitMsg ? const Color(0xFFFFD700).withValues(alpha: 0.15) : Colors.black.withValues(alpha: 0.45),
-                            blurRadius: 10,
-                            offset: const Offset(2, 4),
-                          ),
-                        ],
+                      ],
+                    )
+                  : BoxDecoration(
+                      color: isLimitMsg ? const Color(0xFF2C2003) : const Color(0xFF1E222A),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(18),
+                        topRight: Radius.circular(18),
+                        bottomLeft: Radius.circular(4),
+                        bottomRight: Radius.circular(18),
                       ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Wrap(
-                      alignment: WrapAlignment.end,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 12,
-                      runSpacing: 4,
-                      children: [
-                        Text(
-                          content,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            height: 1.35,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            time,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w400,
-                              color: isUser ? Colors.white.withValues(alpha: 0.8) : Colors.white38,
-                            ),
-                          ),
+                      border: Border.all(
+                        color: isLimitMsg
+                            ? const Color(0xFFFFD700).withOpacity(0.5)
+                            : Colors.white.withOpacity(0.08),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.4),
+                          blurRadius: 10,
+                          offset: const Offset(2, 4),
                         ),
                       ],
                     ),
-                    if (isLimitMsg) ...[
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () => VipUpgradeSheet.show(context),
-                          icon: const Text('👑', style: TextStyle(fontSize: 16)),
-                          label: const Text(
-                            'بەرزکردنەوە بۆ VIP — پەیامی بێسنوور',
-                            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFB8860B),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                          ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    content,
+                    style: const TextStyle(
+                      fontSize: 14.5,
+                      height: 1.45,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Align(
+                    alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                    child: Text(
+                      time,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        color: isUser ? Colors.white.withOpacity(0.7) : Colors.white38,
+                      ),
+                    ),
+                  ),
+                  if (isLimitMsg) ...[
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => VipUpgradeSheet.show(context),
+                        icon: const Text('👑', style: TextStyle(fontSize: 15)),
+                        label: const Text(
+                          'بەرزکردنەوە بۆ VIP — پەیامی بێسنوور',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFB8860B),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
                         ),
                       ),
-                    ],
+                    ),
                   ],
-                ),
+                ],
               ),
             ),
+
+            // Action Toolbar for Assistant Messages (Copy, Save Note, TTS, Deeper Explanation)
+            if (!isUser && !isLimitMsg && content.isNotEmpty) ...[
+              const SizedBox(height: 5),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 1. Copy
+                  _buildBubbleAction(
+                    icon: CupertinoIcons.doc_on_doc,
+                    label: 'کۆپی',
+                    onTap: () {
+                      Clipboard.setData(ClipboardData(text: content));
+                      HapticFeedback.lightImpact();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('دەقی وەڵامەکە کۆپی کرا! 📋'),
+                          backgroundColor: Colors.blueGrey,
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 6),
+
+                  // 2. Save to Notes
+                  _buildBubbleAction(
+                    icon: CupertinoIcons.bookmark,
+                    label: 'تێبینی',
+                    color: Colors.amberAccent,
+                    onTap: () => _saveAsNote(content),
+                  ),
+                  const SizedBox(width: 6),
+
+                  // 3. Read Aloud (TTS)
+                  _buildBubbleAction(
+                    icon: isSpeaking ? CupertinoIcons.speaker_3_fill : CupertinoIcons.speaker_2,
+                    label: isSpeaking ? 'وەستان' : 'دەنگ',
+                    color: isSpeaking ? ZankoColors.primary : Colors.white70,
+                    onTap: () async {
+                      if (isSpeaking) {
+                        await KurdishTtsService().stop();
+                        if (mounted) setState(() => _currentlySpeakingMsg = null);
+                      } else {
+                        if (mounted) setState(() => _currentlySpeakingMsg = content);
+                        final lang = Provider.of<LanguageProvider>(context, listen: false);
+                        String langCode = 'ku';
+                        if (lang.currentLanguage == AppLanguage.arabic) {
+                          langCode = 'ar';
+                        } else if (lang.currentLanguage == AppLanguage.english) {
+                          langCode = 'en';
+                        }
+                        await KurdishTtsService().speak(content, languageCode: langCode);
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 6),
+
+                  // 4. Explain More
+                  _buildBubbleAction(
+                    icon: CupertinoIcons.sparkles,
+                    label: 'ڕوونکردنەوەی زیاتر',
+                    color: Colors.cyanAccent,
+                    onTap: () {
+                      _sendMessage('تکایە بە شێوازێکی قووڵتر و بە نموونەی زیاتر ئەم بابەتە شی بکەرەوە.');
+                    },
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -932,6 +1232,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context);
     final hasText = _controller.text.trim().isNotEmpty;
+    final suggestions = _currentSuggestions;
 
     return Scaffold(
       backgroundColor: const Color(0xFF15181E),
@@ -939,7 +1240,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
         top: false,
         child: Column(
           children: [
-            // Custom Header
+            // Custom Header with Mode Selector
             _buildHeader(context),
 
             // Messages List
@@ -964,7 +1265,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                             color: const Color(0xFF1E222A),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.06),
+                              color: Colors.white.withOpacity(0.06),
                             ),
                           ),
                           child: Row(
@@ -978,12 +1279,13 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                   valueColor: AlwaysStoppedAnimation<Color>(ZankoColors.primary),
                                 ),
                               ),
-                              SizedBox(width: 10),
-                              Text(
-                                lang.translate('ai_typing'),
-                                style: const TextStyle(
-                                  fontSize: 13,
+                              const SizedBox(width: 10),
+                              const Text(
+                                'مامۆستا ZankoAI وەڵامت دەداتەوە... ⚡',
+                                style: TextStyle(
+                                  fontSize: 12.5,
                                   color: Colors.white70,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
@@ -995,55 +1297,52 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
               ),
             ),
 
-
-            // Early Suggestions Pills
-            if (_messages.length <= 5)
-
-              SizedBox(
-                height: 36,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: _suggestions.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: ActionChip(
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        backgroundColor: const Color(0xFF1E222A),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          side: BorderSide(
-                            color: ZankoColors.primary,
-                            width: 1,
-                          ),
+            // Mode-specific suggestions pills
+            SizedBox(
+              height: 36,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: suggestions.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ActionChip(
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      backgroundColor: const Color(0xFF1E222A),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                        side: BorderSide(
+                          color: ZankoColors.primary.withOpacity(0.6),
+                          width: 1,
                         ),
-                        label: Text(
-                          _suggestions[index],
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: ZankoColors.primary,
-                          ),
-                        ),
-                        onPressed: () => _sendMessage(_suggestions[index]),
                       ),
-                    );
-                  },
-                ),
+                      label: Text(
+                        suggestions[index],
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: ZankoColors.primary,
+                        ),
+                      ),
+                      onPressed: () => _sendMessage(suggestions[index]),
+                    ),
+                  );
+                },
               ),
+            ),
 
-            // Gemini Flash Transcribing HUD Indicator
+            // Voice Transcribing Indicator
             if (_isTranscribingVoice)
               Container(
-                margin: const EdgeInsets.only(bottom: 8),
+                margin: const EdgeInsets.only(top: 6, bottom: 4),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: ZankoColors.primary.withValues(alpha: 0.18),
+                  color: ZankoColors.primary.withOpacity(0.18),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: ZankoColors.primary.withValues(alpha: 0.4),
+                    color: ZankoColors.primary.withOpacity(0.4),
                     width: 1.2,
                   ),
                 ),
@@ -1053,7 +1352,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                     CupertinoActivityIndicator(color: Colors.white),
                     SizedBox(width: 10),
                     Text(
-                      'Gemini Flash دەنگەکەت دەکاتە دەق... ⚡',
+                      'دەنگەکەت دەکرێتە دەق... ⚡',
                       style: TextStyle(
                         fontSize: 12.5,
                         color: Colors.white,
@@ -1081,15 +1380,15 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                         borderRadius: BorderRadius.circular(30),
                         border: Border.all(
                           color: _isRecording
-                              ? Colors.redAccent.withValues(alpha: 0.6)
-                              : Colors.white.withValues(alpha: 0.08),
+                              ? Colors.redAccent.withOpacity(0.6)
+                              : Colors.white.withOpacity(0.08),
                           width: _isRecording ? 1.5 : 1,
                         ),
                         boxShadow: [
                           BoxShadow(
                             color: _isRecording
-                                ? Colors.redAccent.withValues(alpha: 0.2)
-                                : Colors.black.withValues(alpha: 0.5),
+                                ? Colors.redAccent.withOpacity(0.2)
+                                : Colors.black.withOpacity(0.5),
                             blurRadius: 16,
                             offset: const Offset(0, 6),
                           ),
@@ -1164,7 +1463,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                     decoration: InputDecoration(
                                       hintText: lang.translate('type_message'),
                                       hintStyle: const TextStyle(
-                                        fontSize: 15,
+                                        fontSize: 14,
                                         color: Color(0xFF6C717B),
                                       ),
                                       border: InputBorder.none,
@@ -1174,23 +1473,15 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                     ),
                                   ),
                                 ),
-                                 // Attachment Icon
-                                 IconButton(
-                                   icon: Icon(
-                                     CupertinoIcons.paperclip,
-                                     color: ZankoColors.primary,
-                                     size: 20,
-                                   ),
-                                   onPressed: _pickAndSolveImage,
-                                 ),
-                                // Camera Icon
+                                // Attachment Icon (PDF / Image / Notes)
                                 IconButton(
                                   icon: Icon(
-                                    CupertinoIcons.camera_fill,
+                                    CupertinoIcons.paperclip,
                                     color: ZankoColors.primary,
                                     size: 20,
                                   ),
-                                  onPressed: _pickAndSolveImage,
+                                  tooltip: 'هاوپێچکردنی فایل یان وێنە',
+                                  onPressed: _showAttachmentOptions,
                                 ),
                               ],
                             ),
@@ -1199,7 +1490,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
 
                   const SizedBox(width: 10),
 
-                  // Floating Glowing Action Button (Mic / Stop & Transcribe / Send)
+                  // Glowing Action Button (Mic / Stop & Transcribe / Send)
                   GestureDetector(
                     onTap: () {
                       if (hasText) {
@@ -1221,7 +1512,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: (_isRecording ? const Color(0xFFE11D48) : ZankoColors.primary).withValues(alpha: 0.6),
+                            color: (_isRecording ? const Color(0xFFE11D48) : ZankoColors.primary).withOpacity(0.6),
                             blurRadius: 16,
                             offset: const Offset(0, 4),
                           ),
