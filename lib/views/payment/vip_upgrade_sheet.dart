@@ -34,7 +34,6 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
   String _telegramUsername = 'rawankurdi';
   String _fibNumber = 'FIB-ZANKO-9090';
   String _fastPayNumber = '0750 789 9090';
-  String _zainCashNumber = '0780 789 9090';
 
   int get _planPrice {
     switch (_selectedPlan) {
@@ -97,14 +96,6 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
             data['fastpay_number'];
         if (fastpay != null && fastpay.toString().trim().isNotEmpty) {
           _fastPayNumber = fastpay.toString().trim();
-        }
-
-        final zaincash = data['zainCashNumber'] ??
-            data['zaincash'] ??
-            data['zainCash'] ??
-            data['zaincash_number'];
-        if (zaincash != null && zaincash.toString().trim().isNotEmpty) {
-          _zainCashNumber = zaincash.toString().trim();
         }
       });
     }
@@ -597,7 +588,7 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'ژمارەکانی پارەدان (FastPay, FIB, ZainCash)',
+                                'ژمارەکانی پارەدان (FastPay, FIB)',
                                 style: TextStyle(
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w700,
@@ -633,14 +624,6 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                               number: _fibNumber,
                               color: const Color(0xFF0F172A),
                               icon: Icons.account_balance_rounded,
-                              isDark: isDark,
-                            ),
-                            const SizedBox(height: 8),
-                            _buildPaymentRow(
-                              title: 'ZainCash',
-                              number: _zainCashNumber,
-                              color: ZankoColors.primary,
-                              icon: Icons.phone_android_rounded,
                               isDark: isDark,
                             ),
                             const SizedBox(height: 8),

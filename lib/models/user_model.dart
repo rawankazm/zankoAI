@@ -72,6 +72,7 @@ class UserModel {
       'name': name,
       'email': email,
       'isVip': isVip,
+      'vipStatus': vipStatus,
       'role': role.toString().split('.').last,
       'universityName': universityName,
       'departmentName': departmentName,
@@ -87,6 +88,8 @@ class UserModel {
       id: map['id'] ?? '',
       name: map['name'] ?? '',
       email: map['email'] ?? '',
+      isVip: map['isVip'] == true,
+      vipStatus: map['vipStatus'] ?? (map['isVip'] == true ? 'active' : 'none'),
       role: UserRole.values.firstWhere(
         (e) => e.toString().split('.').last == map['role'],
         orElse: () => UserRole.student,
