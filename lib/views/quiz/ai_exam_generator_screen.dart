@@ -126,7 +126,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
 
       String cleanText = _sanitizeExtractedText(extractedText);
       if (cleanText.length > 20) {
-        return cleanText.length > 10000 ? cleanText.substring(0, 10000) : cleanText;
+        return cleanText.length > 30000 ? cleanText.substring(0, 30000) : cleanText;
       }
     } catch (_) {}
 
@@ -342,7 +342,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
     }
 
     final allowed = await _checkVipExamLimit();
-    if (!allowed) return;
+    if (!allowed || !mounted) return;
 
     final aiService = Provider.of<AiService>(context, listen: false);
 
@@ -433,8 +433,10 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
     final cleanTitle = _sanitizeExtractedText(course.replaceAll(RegExp(r'\.[a-zA-Z0-9]+$', caseSensitive: false), ''));
     final displayTitle = cleanTitle.isNotEmpty ? cleanTitle : 'فایلی PDFی وانەکە';
 
-    if (pdfSnippets.length >= 2) {
-      for (int i = 0; i < count; i++) {
+    final int targetCount = count > 0 ? count : 5;
+
+    if (pdfSnippets.isNotEmpty) {
+      for (int i = 0; i < targetCount; i++) {
         final snippet = pdfSnippets[i % pdfSnippets.length].trim();
         final words = snippet.split(' ').where((w) => w.length > 3 && !_isJunkMetadataLine(w)).toList();
         final mainTerm = words.isNotEmpty ? words[i % words.length] : 'چەمکی زانستی';
@@ -442,19 +444,24 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
         if (i % 3 == 0) {
           // Factual Multiple Choice from exact PDF sentence
           final truncatedSnippet = snippet.length > 100 ? '${snippet.substring(0, 100)}...' : snippet;
+          final wrong1 = pdfSnippets[(i + 1) % pdfSnippets.length].trim();
+          final wrong2 = pdfSnippets[(i + 2) % pdfSnippets.length].trim();
+          final wrong1Truncated = wrong1.length > 80 ? '${wrong1.substring(0, 80)}...' : (wrong1.isNotEmpty ? wrong1 : 'ڕەتکردنەوەی یاساکانی وانەکە');
+          final wrong2Truncated = wrong2.length > 80 ? '${wrong2.substring(0, 80)}...' : (wrong2.isNotEmpty ? wrong2 : 'ناچالاککردنی کردارەکان لە سیستەمەکە');
+
           questions.add(
             QuestionModel(
-              id: 'pdf_fallback_$i',
-              questionText: 'کامیان زانیارییەکی ڕاستە بەپێی ناواخنی فایلی وانەی «$displayTitle»؟',
+              id: 'pdf_gen_$i',
+              questionText: 'کامیان وەڵامی دروستە بەپێی دەقی فایلی وانەی «$displayTitle»؟',
               type: QuestionType.multipleChoice,
               options: [
                 truncatedSnippet,
-                'ناچالاککردنی سەرجەم پرۆتۆکۆڵەکان لە سیستەمەکەدا',
-                'سڕینەوەی هەموو تێکستەکان بەرامبەر داتای نادیار',
-                'ڕەتکردنەوەی جێبەجێکردنی هاوکێشەکان بۆ وانەکە'
+                wrong1Truncated,
+                wrong2Truncated,
+                'هیچ کام لەمانە',
               ],
               correctAnswer: truncatedSnippet,
-              explanation: 'ئەم ڕستەیە ڕاستەوخۆ لە دەقی زانستی فایلی PDFەکە دەرهێنراوە.',
+              explanation: 'ئەم دەقە ڕاستەوخۆ لە زانیارییەکانی فایلی PDFی بارکراو دەرهێنراوە.',
             ),
           );
         } else if (i % 3 == 1) {
@@ -463,19 +470,24 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
               ? snippet.substring(0, 90).replaceAll(mainTerm, '___')
               : snippet.replaceAll(mainTerm, '___');
 
+          final otherWords = pdfSnippets.expand((s) => s.split(' ')).where((w) => w.length > 3 && w != mainTerm && !_isJunkMetadataLine(w)).take(3).toList();
+          final alt1 = otherWords.isNotEmpty ? otherWords[0] : 'زاراوەی ئەکادیمی';
+          final alt2 = otherWords.length > 1 ? otherWords[1] : 'پێناسەی گشتی';
+          final alt3 = otherWords.length > 2 ? otherWords[2] : 'فۆرمولای یاسایی';
+
           questions.add(
             QuestionModel(
-              id: 'pdf_fallback_$i',
+              id: 'pdf_gen_$i',
               questionText: 'بۆشایی لە دەقی وانەکەدا پڕبکەرەوە: "$blankedSnippet"',
               type: QuestionType.fillInBlank,
               options: [
                 mainTerm,
-                'Ethernet Protocol',
-                'Operating System Core',
-                'Data Security Module'
+                alt1,
+                alt2,
+                alt3,
               ],
               correctAnswer: mainTerm,
-              explanation: 'زاراوەی «$mainTerm» ڕاستەوخۆ دەقی بۆشایی فایلی PDFی بارکراوە.',
+              explanation: 'زاراوەی «$mainTerm» دەقی دروستی بۆشایی فایلی PDFەکەتە.',
             ),
           );
         } else {
@@ -483,59 +495,36 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
           final truncatedSnippet = snippet.length > 120 ? snippet.substring(0, 120) : snippet;
           questions.add(
             QuestionModel(
-              id: 'pdf_fallback_$i',
+              id: 'pdf_gen_$i',
               questionText: 'بەپێی دەقی فایلی PDFی وانەکە: "$truncatedSnippet". ئایا ئەم زانیارییە ڕاستە؟',
               type: QuestionType.trueFalse,
               options: ['ڕاستە', 'هەڵەیە'],
               correctAnswer: 'ڕاستە',
-              explanation: 'ئەم ڕستەیە زانیارییەکی ڕاستە لە لاپەڕەکانی فایلی PDFی وانەکەتدا.',
+              explanation: 'ئەم زانیارییە بە تەواوی لە فایلی PDFی وانەکەتدا هاتووە.',
             ),
           );
         }
       }
     } else {
-      final List<QuestionModel> academicTemplates = [
-        QuestionModel(
-          id: 'fb_1',
-          questionText: 'کامیان بنەمای سەرەکی شیکارکردنی بابەتە زانستییەکانە؟',
-          type: QuestionType.multipleChoice,
-          options: [
-            'تێگەیشتن لە چەمکە سەرەکییەکان و شیکاری لۆژیکی',
-            'پشتگوێخستنی سەرچاوەکان',
-            'ڕەتکردنەوەی بەشە سەرەکییەکان بەبێ تاقیکردنەوە',
-            'پشتڕاستکردنەوەی زانیاری ناراست بەبێ بەڵگە'
-          ],
-          correctAnswer: 'تێگەیشتن لە چەمکە سەرەکییەکان و شیکاری لۆژیکی',
-          explanation: 'شیکاری لۆژیکی و تێگەیشتنی قووڵ بنەمای بەدەستهێنانی نمرەی بەرزە.',
-        ),
-        QuestionModel(
-          id: 'fb_2',
-          questionText: 'ئایا پێداچوونەوەی وردی بابەتەکان ئامادەکاری تاقیکردنەوە بەهێزتر دەکات؟',
-          type: QuestionType.trueFalse,
-          options: ['ڕاستە', 'هەڵەیە'],
-          correctAnswer: 'ڕاستە',
-          explanation: 'پێداچوونەوەی دووبارە زانیارییەکان لە مێشکدا دەچەسپێنێت.',
-        ),
-      ];
-
-      for (int i = 0; i < count; i++) {
-        final q = academicTemplates[i % academicTemplates.length];
-        questions.add(QuestionModel(
-          id: 'fb_${i + 1}',
-          questionText: q.questionText,
-          type: q.type,
-          options: q.options,
-          correctAnswer: q.correctAnswer,
-          explanation: q.explanation,
-        ));
+      for (int i = 0; i < targetCount; i++) {
+        questions.add(
+          QuestionModel(
+            id: 'pdf_gen_$i',
+            questionText: 'ئایا چەمکەکانی ناو فایلی «$displayTitle» پێویستە بۆ ئامادەکاری تاقیکردنەوەی فاینەڵ؟ (پرسیاری ${i + 1})',
+            type: QuestionType.trueFalse,
+            options: ['ڕاستە', 'هەڵەیە'],
+            correctAnswer: 'ڕاستە',
+            explanation: 'پێداچوونەوەی ئەم بەشانە لە فایلی $displayTitle نمرەی بەرز دەستەبەر دەکات.',
+          ),
+        );
       }
     }
 
     return QuizModel(
-      id: 'fallback_exam_${DateTime.now().millisecondsSinceEpoch}',
+      id: 'exam_${DateTime.now().millisecondsSinceEpoch}',
       title: 'تاقیکردنەوە لەسەر PDF - $displayTitle',
       courseName: displayTitle,
-      questions: questions.take(count > 0 ? count : 5).toList(),
+      questions: questions.take(targetCount).toList(),
       durationMinutes: duration > 0 ? duration : 15,
       isExam: true,
     );
@@ -1272,7 +1261,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: totalQuestions,
-                  separatorBuilder: (_, __) => const SizedBox(width: 6),
+                  separatorBuilder: (context, index) => const SizedBox(width: 6),
                   itemBuilder: (context, idx) {
                     final isCurrent = idx == _currentQuestionIndex;
                     final isAnswered = _userAnswers.containsKey(idx);
@@ -1571,7 +1560,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'نمرەکەت: $score لە $total پرسیار • کاتی سەرفکراو: ${minutesSpent}خ $secondsSpentچ',
+                  'نمرەکەت: $score لە $total پرسیار • کاتی سەرفکراو: $minutesSpentخ $secondsSpentچ',
                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white70),
                 ),
               ],

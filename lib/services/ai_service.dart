@@ -308,11 +308,12 @@ class ZankoAiService extends ChangeNotifier implements AiService {
       if (_lastWorkingKey != null && _lastWorkingKey!.trim().isNotEmpty) _lastWorkingKey!.trim(),
       if (_apiKey != null && _apiKey!.trim().isNotEmpty) _apiKey!.trim(),
       if (_defaultApiKey.trim().isNotEmpty) _defaultApiKey.trim(),
+      if (_fallbackWorkingKey.trim().isNotEmpty) _fallbackWorkingKey.trim(),
     ];
 
     for (final keyToUse in keysToTry) {
       if (keyToUse.isEmpty) continue;
-      for (final m in _validFastModels.take(2)) {
+      for (final m in _validFastModels) {
         try {
           final model = gemini.GenerativeModel(
             model: m,
@@ -329,7 +330,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
             ])
           ];
 
-          final response = await model.generateContent(content).timeout(const Duration(seconds: 6));
+          final response = await model.generateContent(content).timeout(const Duration(seconds: 25));
           if (response.text != null && response.text!.isNotEmpty) {
             _lastWorkingKey = keyToUse;
             _lastWorkingModel = m;
@@ -808,7 +809,7 @@ class StudentCard extends StatelessWidget {
 
   Map<String, dynamic> _getMockSummary(String pdfName) {
     return {
-      'summary': "ئەم فایلە ('$pdfName') باسی بنەماکانی پەیوەندی لە تۆڕە کۆمپیوتەرییەکاندا دەکات. ڕوونیدەکاتەوە کە چۆن کۆمپیوتەرەکان لە ڕێگەی پرۆتۆکۆلە جیاوازەکانەوە پەیوەندی بەیەکەوە دەکەن بۆ ئاڵوگۆڕکردنی داتا.",
+      'summary': "ئەم فایلە ('$pdfName') باسی بنەماکانی پەیوەندی لە تۆڕە کۆمپیوتەرەکاندا دەکات. ڕوونیدەکاتەوە کە چۆن کۆمپیوتەرەکان لە ڕێگەی پرۆتۆکۆلە جیاوازەکانەوە پەیوەندی بەیەکەوە دەکەن بۆ ئاڵوگۆڕکردنی داتا.",
       'keyPoints': [
         "پێناسەی تۆڕ: کۆمەڵێک ئامێرن کە بە یەکەوە بەستراون بۆ هاوبەشکردنی سەرچاوەکان.",
         "مۆدێلی OSI: لە ٧ چین پێکهاتووە (فیزیکی، بەستنی داتا، تۆڕ، گواستنەوە، دانیشتن، پێشکەشکردن، جێبەجێکردن).",
@@ -941,12 +942,9 @@ $fileText
 """;
 
       final response = await _callGemini(prompt);
-      return _parseQuizJson(response, "کویزی فایلی بارکراو", courseName);
+      return _parseQuizJson(response, "کویزی فایلی بارکراو", courseName, pdfContent: fileText);
     } catch (e) {
-      if (_isNetworkError(e)) {
-        return _generateMockQuiz("📡 (کویزی ئۆفلاین) - $courseName", courseName);
-      }
-      return _generateMockQuiz("تاقیکردنەوە لەسەر دەقی فایلی بارکراو", courseName);
+      return _generateMockExam("تاقیکردنەوە لەسەر دەقی فایلی بارکراو", courseName, 5, 10, "Medium", pdfContent: fileText);
     }
   }
 
@@ -1038,7 +1036,14 @@ $pdfContext
         }
 
         if (response.isNotEmpty) {
-          return _parseQuizJson(response, "تاقیکردنەوە لەسەر $courseName", courseName, overrideDuration: durationMinutes, pdfContent: pdfContent);
+          return _parseQuizJson(
+            response,
+            "تاقیکردنەوە لەسەر $courseName",
+            courseName,
+            overrideDuration: durationMinutes,
+            expectedCount: questionCount,
+            pdfContent: pdfContent,
+          );
         }
       } catch (e) {
         return _generateMockExam("تاقیکردنەوە لەسەر PDF - $courseName", courseName, questionCount, durationMinutes, difficulty, pdfContent: pdfContent);
@@ -1048,16 +1053,28 @@ $pdfContext
     return _generateMockExam("تاقیکردنەوە لەسەر PDF - $courseName", courseName, questionCount, durationMinutes, difficulty, pdfContent: pdfContent);
   }
 
-  QuizModel _parseQuizJson(String responseText, String defaultTitle, String courseName, {int? overrideDuration, String? pdfContent}) {
+  QuizModel _parseQuizJson(
+    String responseText,
+    String defaultTitle,
+    String courseName, {
+    int? overrideDuration,
+    int? expectedCount,
+    String? pdfContent,
+  }) {
     try {
       String jsonText = responseText.trim();
-      if (jsonText.startsWith("```json")) {
-        jsonText = jsonText.substring(7);
-      } else if (jsonText.startsWith("```")) {
-        jsonText = jsonText.substring(3);
-      }
-      if (jsonText.endsWith("```")) {
-        jsonText = jsonText.substring(0, jsonText.length - 3);
+      final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(jsonText);
+      if (jsonMatch != null) {
+        jsonText = jsonMatch.group(0)!;
+      } else {
+        if (jsonText.startsWith("```json")) {
+          jsonText = jsonText.substring(7);
+        } else if (jsonText.startsWith("```")) {
+          jsonText = jsonText.substring(3);
+        }
+        if (jsonText.endsWith("```")) {
+          jsonText = jsonText.substring(0, jsonText.length - 3);
+        }
       }
       jsonText = jsonText.trim();
 
@@ -1073,37 +1090,58 @@ $pdfContext
         final correctAns = qMap['correct_answer'] ?? qMap['correctAnswer'] ?? (options.isNotEmpty ? options[0] : '');
         final explanation = qMap['explanation'] ?? qMap['explanation_kurdi'] ?? qMap['reason'];
 
+        if (qText.toString().trim().isEmpty) continue;
+
         QuestionType qType = QuestionType.multipleChoice;
         final typeStr = qMap['type']?.toString().toLowerCase() ?? '';
         if (typeStr == 'truefalse' || options.length == 2) {
           qType = QuestionType.trueFalse;
-        } else if (typeStr == 'fillinblank' || qText.contains('___')) {
+        } else if (typeStr == 'fillinblank' || qText.toString().contains('___')) {
           qType = QuestionType.fillInBlank;
         }
 
         questions.add(QuestionModel(
           id: 'q_${Random().nextInt(100000)}',
-          questionText: qText,
+          questionText: qText.toString().trim(),
           type: qType,
           options: options.isNotEmpty ? options : null,
-          correctAnswer: correctAns.toString(),
-          explanation: explanation?.toString(),
+          correctAnswer: correctAns.toString().trim(),
+          explanation: explanation?.toString().trim(),
         ));
       }
 
       if (questions.isEmpty) {
-        return _generateMockExam(defaultTitle, courseName, 10, overrideDuration ?? 15, "Medium", pdfContent: pdfContent);
+        return _generateMockExam(
+          defaultTitle,
+          courseName,
+          expectedCount ?? 10,
+          overrideDuration ?? 15,
+          "Medium",
+          pdfContent: pdfContent,
+        );
       }
+
+      final finalQuestions = (expectedCount != null && expectedCount > 0 && questions.length > expectedCount)
+          ? questions.take(expectedCount).toList()
+          : questions;
 
       return QuizModel(
         id: 'quiz_${Random().nextInt(10000)}',
         title: data['title'] ?? defaultTitle,
         courseName: courseName,
         durationMinutes: overrideDuration ?? data['durationMinutes'] ?? 15,
-        questions: questions,
+        questions: finalQuestions,
+        isExam: true,
       );
     } catch (_) {
-      return _generateMockExam(defaultTitle, courseName, 10, overrideDuration ?? 15, "Medium", pdfContent: pdfContent);
+      return _generateMockExam(
+        defaultTitle,
+        courseName,
+        expectedCount ?? 10,
+        overrideDuration ?? 15,
+        "Medium",
+        pdfContent: pdfContent,
+      );
     }
   }
 
