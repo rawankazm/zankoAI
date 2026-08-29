@@ -26,6 +26,7 @@ import '../quiz/ai_exam_generator_screen.dart';
 import '../quiz/quiz_screen.dart';
 import '../schedule/schedule_screen.dart';
 import '../payment/vip_upgrade_sheet.dart';
+import '../leaderboard/leaderboard_screen.dart';
 
 // ─── Home Screen ─────────────────────────────────────────────────────────────
 class HomeScreen extends StatefulWidget {
@@ -504,11 +505,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 22),
 
-                        // ── 6. Academic AI Tools Grid ──────────────────────────
+                        // ── 6. Featured Smart Highlights Section ───────────────
                         _staggered(
                           6,
+                          _FeaturedPowerHubSection(isDark: isDark),
+                        ),
+                        const SizedBox(height: 22),
+
+                        // ── 7. Academic AI Tools Grid ──────────────────────────
+                        _staggered(
+                          7,
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -523,9 +531,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                         const SizedBox(height: 16),
 
-                        // ── 7. Sponsor Ad Banner ───────────────────────────────
+                        // ── 8. Sponsor Ad Banner ───────────────────────────────
                         _staggered(
-                          7,
+                          8,
                           const AdBannerWidget(screenName: 'home'),
                         ),
                         const SizedBox(height: 100),
@@ -1091,7 +1099,220 @@ class _GpaSection extends StatelessWidget {
   }
 }
 
-// ─── Quick AI Tools ───────────────────────────────────────────────────────
+
+
+// ─── Featured Power Hub Section (Leaderboard, Roadmap, Online Archive) ─────
+class _FeaturedPowerHubSection extends StatelessWidget {
+  final bool isDark;
+
+  const _FeaturedPowerHubSection({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFF9500).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(CupertinoIcons.star_fill, color: Color(0xFFFF9500), size: 16),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'بەشە سەرەکی و تایبەتەکان',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: isDark ? Colors.white : ZankoColors.textPrimary,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+              ],
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: ZankoColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'تایبەت ✨',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: ZankoColors.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+
+        // Leaderboard & Ranking Card
+        _FeaturedHighlightCard(
+          isDark: isDark,
+          title: 'ڕیزبەندی سەرانسەری خوێندکاران',
+          subtitle: 'کۆکردنەوەی خاڵ و بینینی پلەکەت لەسەر ئاستی سەرجەم زانکۆکان 🏆',
+          badgeText: '👑 TOP 100 • کێبڕکێی زانکۆکان',
+          actionText: 'بینینی ڕیزبەندی',
+          icon: CupertinoIcons.rosette,
+          gradient: const LinearGradient(
+            colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          accentColor: const Color(0xFFF59E0B),
+          onTap: () => Navigator.push(
+            context,
+            CupertinoPageRoute(builder: (_) => const LeaderboardScreen()),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FeaturedHighlightCard extends StatelessWidget {
+  final bool isDark;
+  final String title;
+  final String subtitle;
+  final String badgeText;
+  final String actionText;
+  final IconData icon;
+  final LinearGradient gradient;
+  final Color accentColor;
+  final VoidCallback onTap;
+
+  const _FeaturedHighlightCard({
+    required this.isDark,
+    required this.title,
+    required this.subtitle,
+    required this.badgeText,
+    required this.actionText,
+    required this.icon,
+    required this.gradient,
+    required this.accentColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedScaleButton(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E222B) : Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: accentColor.withValues(alpha: isDark ? 0.3 : 0.2),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: accentColor.withValues(alpha: isDark ? 0.15 : 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    gradient: gradient,
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: accentColor.withValues(alpha: 0.35),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Icon(icon, color: Colors.white, size: 24),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: accentColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          badgeText,
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.bold,
+                            color: accentColor,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 15.5,
+                          fontWeight: FontWeight.w800,
+                          color: isDark ? Colors.white : ZankoColors.textPrimary,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    CupertinoIcons.arrow_up_left,
+                    color: accentColor,
+                    size: 16,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 12.5,
+                height: 1.4,
+                color: isDark ? Colors.grey[350] : ZankoColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _QuickAiToolsGrid extends StatelessWidget {
   final bool isDark;
 
@@ -1293,6 +1514,15 @@ class _QuickAiToolsGrid extends StatelessWidget {
     final langProvider = Provider.of<LanguageProvider>(context);
 
     final tools = [
+      _ToolData(
+        icon: CupertinoIcons.rosette,
+        title: 'ڕیزبەندی و دەستکەوت',
+        color: const Color(0xFFF59E0B),
+        onTap: () => Navigator.push(
+          context,
+          CupertinoPageRoute(builder: (_) => const LeaderboardScreen()),
+        ),
+      ),
       _ToolData(
         icon: CupertinoIcons.book_fill,
         title: 'سیمینار و ڕاپۆرت',

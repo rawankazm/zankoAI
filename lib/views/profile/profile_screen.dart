@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/services.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
 import '../../widgets/ad_banner_widget.dart';
@@ -15,9 +14,6 @@ import '../../services/theme_provider.dart';
 import '../../services/score_service.dart';
 import '../auth/login_screen.dart';
 import '../payment/vip_upgrade_sheet.dart';
-import '../leaderboard/leaderboard_screen.dart';
-import '../offline/offline_downloads_screen.dart';
-import '../study_plan/ai_study_roadmap_screen.dart';
 import '../../services/app_version_service.dart';
 import '../update/force_update_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -2219,117 +2215,7 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 14),
 
-            // ─── Referral Card: Invite Friends & Earn Free VIP ───
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E222B) : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isDark ? Colors.white12 : const Color(0xFFE2E8F0),
-                  width: 1.2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF3B82F6).withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Text('🎁', style: TextStyle(fontSize: 20)),
-                      ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'بانگهێشتی هاوڕێیان — VIP بە دیاری وەربگرە!',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13.5,
-                              ),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              '٣ هاوڕێت بانگهێشت بکە ➔ ٧ ڕۆژ VIP بە بێبەرامبەر وەربگرە ✨',
-                              style: TextStyle(fontSize: 11, color: Colors.grey),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  const Divider(height: 1),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: isDark ? Colors.black26 : const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: isDark ? Colors.white12 : Colors.grey.withValues(alpha: 0.2)),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'کۆد: ${user?.id.isNotEmpty == true ? user!.id.substring(0, user.id.length > 6 ? 6 : user.id.length).toUpperCase() : "ZANKO"}',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                              ),
-                              GestureDetector(
-                                onTap: () {
-                                  final code = user?.id.isNotEmpty == true ? user!.id.substring(0, user.id.length > 6 ? 6 : user.id.length).toUpperCase() : "ZANKO";
-                                  Clipboard.setData(ClipboardData(text: code));
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('کۆدی بانگهێشت کۆپی کرا 📋')),
-                                  );
-                                },
-                                child: Icon(CupertinoIcons.doc_on_doc, size: 16, color: ZankoColors.primary),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          final code = user?.id.isNotEmpty == true ? user!.id.substring(0, user.id.length > 6 ? 6 : user.id.length).toUpperCase() : "ZANKO";
-                          Share.share(
-                            '🎓 سڵاو هاوڕێم! من ئەپی Zanko AI بەکاردەهێنم بۆ دروستکردنی سێمینار، ڕاپۆرت، پێشبینی پرسیاری تاقیکردنەوە و کورتکردنەوەی مەلزەمەکانم.\n\nتۆش لەم لینکەوە دایبەزێنە تاوەکو بەیەکەوە سوود لە زیرەکی دەستکرد ببینین:\nhttps://zankoai.app/download?ref=$code',
-                          );
-                        },
-                        icon: const Icon(CupertinoIcons.share, size: 14),
-                        label: const Text('ناردن', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFB8860B),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
 
             const SizedBox(height: 16),
             const AdBannerWidget(screenName: 'profile'),
@@ -2431,42 +2317,6 @@ class ProfileScreen extends StatelessWidget {
               padding: EdgeInsets.zero,
               child: Column(
                 children: [
-                  _buildSettingsTile(
-                    context,
-                    icon: CupertinoIcons.star_circle_fill,
-                    iconColor: const Color(0xFFFF9F0A),
-                    title: langProvider.translate('leaderboard_title'),
-                    subtitle: 'پلەکانت ببینە و ببە بە بەرزترین نمرە',
-                    onTap: () => Navigator.push(
-                      context,
-                      CupertinoPageRoute(builder: (_) => const LeaderboardScreen()),
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 56),
-                  _buildSettingsTile(
-                    context,
-                    icon: CupertinoIcons.arrow_down_circle_fill,
-                    iconColor: const Color(0xFF10B981),
-                    title: langProvider.translate('offline_archive'),
-                    subtitle: 'پێداچوونەوەی داتاکان بەبێ ئینتەرنێت',
-                    onTap: () => Navigator.push(
-                      context,
-                      CupertinoPageRoute(builder: (_) => const OfflineDownloadsScreen()),
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 56),
-                  _buildSettingsTile(
-                    context,
-                    icon: CupertinoIcons.calendar_today,
-                    iconColor: const Color(0xFF6366F1),
-                    title: langProvider.translate('study_roadmap'),
-                    subtitle: 'داڕشتنی پلانی ڕۆژانە و ژماردنی پێچەوانەی تاقیکردنەوە',
-                    onTap: () => Navigator.push(
-                      context,
-                      CupertinoPageRoute(builder: (_) => const AiStudyRoadmapScreen()),
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 56),
                   _buildSettingsTile(
                     context,
                     icon: CupertinoIcons.moon_fill,
