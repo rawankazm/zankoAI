@@ -146,13 +146,13 @@ class _StudentCoursesEnrollScreenState
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: hasRequest
-                      ? statusColor.withOpacity(0.4)
-                      : theme.colorScheme.outline.withOpacity(0.15),
+                      ? statusColor.withValues(alpha: 0.4)
+                      : theme.colorScheme.outline.withValues(alpha: 0.15),
                   width: hasRequest ? 2 : 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
+                    color: Colors.black.withValues(alpha: 0.04),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   )
@@ -165,7 +165,7 @@ class _StudentCoursesEnrollScreenState
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: (hasRequest ? statusColor : const Color(0xFF1565C0))
-                          .withOpacity(0.1),
+                          .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(
@@ -188,7 +188,7 @@ class _StudentCoursesEnrollScreenState
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.onSurface.withOpacity(0.5),
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                               ),
                             ),
                           ],
@@ -205,13 +205,13 @@ class _StudentCoursesEnrollScreenState
                           children: [
                             Icon(Icons.person_outline_rounded,
                                 size: 14,
-                                color: theme.colorScheme.onSurface.withOpacity(0.5)),
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
                             const SizedBox(width: 4),
                             Text(
                               tName,
                               style: TextStyle(
                                 fontSize: 13,
-                                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                               ),
                             ),
                           ],
@@ -226,9 +226,9 @@ class _StudentCoursesEnrollScreenState
                       padding:
                           const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.12),
+                        color: statusColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: statusColor.withOpacity(0.2)),
+                        border: Border.all(color: statusColor.withValues(alpha: 0.2)),
                       ),
                       child: Text(
                         statusLabel,

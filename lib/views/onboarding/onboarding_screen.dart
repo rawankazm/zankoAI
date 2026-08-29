@@ -39,8 +39,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        pageBuilder: (_, a, __) => const NavigationShell(),
-        transitionsBuilder: (_, a, __, child) => FadeTransition(opacity: a, child: child),
+        pageBuilder: (_, a, _) => const NavigationShell(),
+        transitionsBuilder: (_, a, _, child) => FadeTransition(opacity: a, child: child),
         transitionDuration: const Duration(milliseconds: 500),
       ),
     );
@@ -134,7 +134,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   height: 200,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.08),
+                    color: Colors.white.withValues(alpha: 0.08),
                   ),
                 ),
               ),
@@ -146,7 +146,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   height: 160,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.08),
+                    color: Colors.white.withValues(alpha: 0.08),
                   ),
                 ),
               ),
@@ -282,7 +282,7 @@ class _PageContent extends StatelessWidget {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(32),
               border: Border.all(color: Colors.white30, width: 1.5),
             ),
@@ -317,7 +317,7 @@ class _PageContent extends StatelessWidget {
             page.body,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.85),
+              color: Colors.white.withValues(alpha: 0.85),
               fontSize: 16,
               height: 1.6,
               fontWeight: FontWeight.w400,

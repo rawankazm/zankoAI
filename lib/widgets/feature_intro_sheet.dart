@@ -575,7 +575,7 @@ class _FeatureIntroSheet extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(colors: data.gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: primary.withOpacity(0.35), blurRadius: 16, offset: const Offset(0, 6))],
+                boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.35), blurRadius: 16, offset: const Offset(0, 6))],
               ),
               child: Icon(data.icon, color: Colors.white, size: 36),
             ),

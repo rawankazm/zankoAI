@@ -51,6 +51,7 @@ class _StudyPlannerScreenState extends State<StudyPlannerScreen> {
       setState(() {
         _isGenerating = false;
       });
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${Provider.of<LanguageProvider>(context, listen: false).translate('failed_to_generate')}: $e')),
       );
@@ -59,8 +60,8 @@ class _StudyPlannerScreenState extends State<StudyPlannerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final __lang = Provider.of<LanguageProvider>(context);
-    String t(String key) => __lang.translate(key);
+    final lang = Provider.of<LanguageProvider>(context);
+    String t(String key) => lang.translate(key);
     final theme = Theme.of(context);
     final langProvider = Provider.of<LanguageProvider>(context);
 
@@ -170,7 +171,7 @@ class _StudyPlannerScreenState extends State<StudyPlannerScreen> {
                                 Expanded(
                                   child: Container(
                                     width: 2.5,
-                                    color: theme.colorScheme.primary.withOpacity(0.3),
+                                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
                                   ),
                                 ),
                             ],

@@ -300,7 +300,7 @@ It structures key academic definitions for rapid study and exam preparation.
                       Text(
                         t('upload_area_desc'),
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withOpacity(0.6)),
+                        style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton.icon(
@@ -645,9 +645,9 @@ class _DocumentReaderScreenState extends State<DocumentReaderScreen> {
             margin: const EdgeInsets.only(top: 16, bottom: 8),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFF6C5CE7).withOpacity(0.12),
+              color: const Color(0xFF6C5CE7).withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFF6C5CE7).withOpacity(0.3)),
+              border: Border.all(color: const Color(0xFF6C5CE7).withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
@@ -672,7 +672,7 @@ class _DocumentReaderScreenState extends State<DocumentReaderScreen> {
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
+            color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isDark ? Colors.white12 : Colors.grey.shade200,
@@ -681,7 +681,7 @@ class _DocumentReaderScreenState extends State<DocumentReaderScreen> {
                 ? []
                 : [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
+                      color: Colors.black.withValues(alpha: 0.03),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -697,7 +697,7 @@ class _DocumentReaderScreenState extends State<DocumentReaderScreen> {
                     height: 24,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF6C5CE7).withOpacity(0.15),
+                      color: const Color(0xFF6C5CE7).withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
                     child: Text(
@@ -726,7 +726,7 @@ class _DocumentReaderScreenState extends State<DocumentReaderScreen> {
                 style: TextStyle(
                   fontSize: _fontSize,
                   height: 1.65,
-                  color: isDark ? Colors.white.withOpacity(0.9) : const Color(0xFF2D3436),
+                  color: isDark ? Colors.white.withValues(alpha: 0.9) : const Color(0xFF2D3436),
                 ),
               ),
             ],

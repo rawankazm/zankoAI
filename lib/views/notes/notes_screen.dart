@@ -116,7 +116,7 @@ class _NotesScreenState extends State<NotesScreen> {
                         width: 40,
                         height: 5,
                         decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.3),
+                          color: Colors.grey.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
@@ -164,7 +164,7 @@ class _NotesScreenState extends State<NotesScreen> {
 
                     // Course Dropdown
                     DropdownButtonFormField<String>(
-                      value: _courses.contains(_selectedCourse) ? _selectedCourse : _courses.first,
+                      initialValue: _courses.contains(_selectedCourse) ? _selectedCourse : _courses.first,
                       isExpanded: true,
                       decoration: InputDecoration(
                         filled: true,
@@ -383,7 +383,7 @@ class _NotesScreenState extends State<NotesScreen> {
                           height: h,
                           margin: const EdgeInsets.symmetric(horizontal: 2),
                           decoration: BoxDecoration(
-                            color: Colors.redAccent.withOpacity(0.85),
+                            color: Colors.redAccent.withValues(alpha: 0.85),
                             borderRadius: BorderRadius.circular(3),
                           ),
                         );
@@ -539,7 +539,7 @@ class _NotesScreenState extends State<NotesScreen> {
     return Scaffold(
       backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
       appBar: AppBar(
-        backgroundColor: (isDark ? ZankoColors.darkBackground : ZankoColors.background).withOpacity(0.9),
+        backgroundColor: (isDark ? ZankoColors.darkBackground : ZankoColors.background).withValues(alpha: 0.9),
         elevation: 0,
         title: Text(
           langProvider.translate('notes_title'),
@@ -573,7 +573,7 @@ class _NotesScreenState extends State<NotesScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: isDark ? [] : ZankoShadows.card,
                 border: Border.all(
-                  color: isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFEFEFF6),
+                  color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFEFEFF6),
                 ),
               ),
               child: TextField(
@@ -627,7 +627,7 @@ class _NotesScreenState extends State<NotesScreen> {
                     side: BorderSide(
                       color: isSelected
                           ? ZankoColors.primary
-                          : (isDark ? Colors.white.withOpacity(0.1) : const Color(0xFFE5E5EA)),
+                          : (isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFE5E5EA)),
                     ),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     label: Text(
@@ -658,7 +658,7 @@ class _NotesScreenState extends State<NotesScreen> {
                         Icon(
                           CupertinoIcons.doc_text_search,
                           size: 64,
-                          color: ZankoColors.textSecondary.withOpacity(0.5),
+                          color: ZankoColors.textSecondary.withValues(alpha: 0.5),
                         ),
                         const SizedBox(height: 14),
                         Text(
@@ -724,7 +724,7 @@ class _NotesScreenState extends State<NotesScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: isDark ? [] : ZankoShadows.card,
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFF0F0F6),
+          color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF0F0F6),
         ),
       ),
       child: InkWell(
@@ -752,7 +752,7 @@ class _NotesScreenState extends State<NotesScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: color.withOpacity(0.12),
+                          color: color.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -847,7 +847,7 @@ class _NotesScreenState extends State<NotesScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: isDark ? [] : ZankoShadows.card,
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFF0F0F6),
+          color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF0F0F6),
         ),
       ),
       child: ListTile(
@@ -857,7 +857,7 @@ class _NotesScreenState extends State<NotesScreen> {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
+            color: color.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
           child: Icon(

@@ -101,6 +101,7 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
         }
       }
 
+      if (!mounted) return;
       final aiService = Provider.of<AiService>(context, listen: false);
       final transcript = await aiService.transcribeAudio(recordedBytes, _audioFileName);
       setState(() {
@@ -138,6 +139,8 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
           } catch (_) {}
         }
 
+        if (!mounted) return;
+        final aiService = Provider.of<AiService>(context, listen: false);
         setState(() {
           _audioFileName = file.name;
           _isLoading = true;
@@ -145,7 +148,6 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
           _summarizedResult = '';
         });
 
-        final aiService = Provider.of<AiService>(context, listen: false);
         final transcript = await aiService.transcribeAudio(bytes, file.name);
 
         setState(() {
@@ -244,7 +246,7 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
             children: [
               // Info Card
               Card(
-                color: theme.colorScheme.primaryContainer.withOpacity(0.15),
+                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.15),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Row(
@@ -276,7 +278,7 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                       width: 90,
                       height: 90,
                       decoration: BoxDecoration(
-                        color: _isRecording ? Colors.red.withOpacity(0.2) : theme.colorScheme.primary.withOpacity(0.1),
+                        color: _isRecording ? Colors.red.withValues(alpha: 0.2) : theme.colorScheme.primary.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: _isRecording ? Colors.red : theme.colorScheme.primary,
@@ -311,7 +313,7 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
               Center(
                 child: Text(
                   t('exam_predictor_or_label'),
-                  style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.primary.withOpacity(0.5)),
+                  style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.primary.withValues(alpha: 0.5)),
                 ),
               ),
               const SizedBox(height: 16),
@@ -335,7 +337,7 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.teal.withOpacity(0.1),
+                    color: Colors.teal.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -370,7 +372,7 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                 Card(
                   elevation: 1,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  color: theme.brightness == Brightness.dark ? Colors.white10 : Colors.purple.shade50.withOpacity(0.4),
+                  color: theme.brightness == Brightness.dark ? Colors.white10 : Colors.purple.shade50.withValues(alpha: 0.4),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: SelectableText(

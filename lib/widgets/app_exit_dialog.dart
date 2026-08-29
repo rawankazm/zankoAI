@@ -8,7 +8,7 @@ class AppExitDialog extends StatelessWidget {
     return showDialog<bool>(
       context: context,
       barrierDismissible: true,
-      barrierColor: Colors.black.withOpacity(0.6),
+      barrierColor: Colors.black.withValues(alpha: 0.6),
       builder: (context) => const AppExitDialog(),
     );
   }
@@ -24,12 +24,12 @@ class AppExitDialog extends StatelessWidget {
           color: const Color(0xFF1E2435),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: Colors.white.withOpacity(0.08),
+            color: Colors.white.withValues(alpha: 0.08),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.4),
+              color: Colors.black.withValues(alpha: 0.4),
               blurRadius: 24,
               offset: const Offset(0, 10),
             ),

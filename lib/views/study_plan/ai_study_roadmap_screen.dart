@@ -94,7 +94,7 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                               scrollDirection: Axis.horizontal,
                               physics: const BouncingScrollPhysics(),
                               itemCount: roadmaps.length,
-                              separatorBuilder: (_, __) => const SizedBox(width: 8),
+                              separatorBuilder: (_, _) => const SizedBox(width: 8),
                               itemBuilder: (context, idx) {
                                 final rm = roadmaps[idx];
                                 final isSelected = idx == _selectedRoadmapIndex;
@@ -187,7 +187,7 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: currentRoadmap.tasks.length,
-                            separatorBuilder: (_, __) => const SizedBox(height: 12),
+                            separatorBuilder: (_, _) => const SizedBox(height: 12),
                             itemBuilder: (context, idx) {
                               final task = currentRoadmap.tasks[idx];
                               return _buildTaskTimelineTile(context, currentRoadmap.id, task, isDark, roadmapService);

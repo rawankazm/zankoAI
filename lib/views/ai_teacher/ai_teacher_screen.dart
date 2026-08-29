@@ -254,8 +254,8 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               color: aiService.hasRealApiKey 
-                  ? Colors.green.shade900.withOpacity(0.2) 
-                  : Colors.amber.shade900.withOpacity(0.2),
+                  ? Colors.green.shade900.withValues(alpha: 0.2) 
+                  : Colors.amber.shade900.withValues(alpha: 0.2),
               child: Row(
                 children: [
                   Icon(
@@ -296,7 +296,7 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
                       decoration: BoxDecoration(
                         color: isUser 
                             ? theme.colorScheme.primary 
-                            : theme.colorScheme.surfaceVariant,
+                            : theme.colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.only(
                           topLeft: const Radius.circular(16),
                           topRight: const Radius.circular(16),
@@ -398,7 +398,7 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
                     t('ai_thinking'),
                     style: TextStyle(
                       fontStyle: FontStyle.italic,
-                      color: theme.colorScheme.onSurface.withOpacity(0.5),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                       fontSize: 12,
                     ),
                   ),
@@ -456,7 +456,7 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: _isListening ? Colors.red.withOpacity(0.2) : theme.colorScheme.primary.withOpacity(0.1),
+                        color: _isListening ? Colors.red.withValues(alpha: 0.2) : theme.colorScheme.primary.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(

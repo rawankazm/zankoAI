@@ -217,7 +217,7 @@ class _OfflineDownloadsScreenState extends State<OfflineDownloadsScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       physics: const BouncingScrollPhysics(),
                       itemCount: filteredItems.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      separatorBuilder: (_, _) => const SizedBox(height: 10),
                       itemBuilder: (context, index) {
                         final item = filteredItems[index];
                         return _buildOfflineItemCard(context, item, isDark, offlineService);

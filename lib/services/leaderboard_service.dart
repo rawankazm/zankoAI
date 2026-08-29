@@ -49,7 +49,7 @@ class LeaderboardService extends ChangeNotifier {
   static final LeaderboardService instance = LeaderboardService._();
   LeaderboardService._();
 
-  int _streakDays = 3;
+  final int _streakDays = 3;
 
   int get streakDays => _streakDays;
 

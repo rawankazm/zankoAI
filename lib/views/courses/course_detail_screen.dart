@@ -677,7 +677,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                               gradient: LinearGradient(
                                 colors: [
                                   widget.themeColor,
-                                  widget.themeColor.withOpacity(0.7),
+                                  widget.themeColor.withValues(alpha: 0.7),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(18),
@@ -726,7 +726,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                 value: widget.progress,
                                 minHeight: 8,
                                 backgroundColor: isDark
-                                    ? Colors.white.withOpacity(0.08)
+                                    ? Colors.white.withValues(alpha: 0.08)
                                     : const Color(0xFFEFEFF7),
                                 valueColor: AlwaysStoppedAnimation<Color>(widget.themeColor),
                               ),
@@ -872,7 +872,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                           gradient: LinearGradient(
                             colors: [
                               widget.themeColor,
-                              widget.themeColor.withOpacity(0.85),
+                              widget.themeColor.withValues(alpha: 0.85),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(14),
@@ -918,7 +918,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                           borderRadius: BorderRadius.circular(ZankoRadius.card),
                           border: Border.all(
                             color: isDark
-                                ? Colors.white.withOpacity(0.08)
+                                ? Colors.white.withValues(alpha: 0.08)
                                 : const Color(0xFFEFEFF5),
                           ),
                         ),
@@ -978,7 +978,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                           width: 44,
                                           height: 44,
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFFFF3B30).withOpacity(0.1),
+                                            color: const Color(0xFFFF3B30).withValues(alpha: 0.1),
                                             borderRadius: BorderRadius.circular(14),
                                           ),
                                           child: const Icon(
@@ -1061,7 +1061,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(vertical: 8),
                                             decoration: BoxDecoration(
-                                              color: ZankoColors.primary.withOpacity(0.08),
+                                              color: ZankoColors.primary.withValues(alpha: 0.08),
                                               borderRadius: BorderRadius.circular(12),
                                             ),
                                             child: Row(
@@ -1104,7 +1104,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(vertical: 8),
                                             decoration: BoxDecoration(
-                                              color: const Color(0xFFAF52DE).withOpacity(0.08),
+                                              color: const Color(0xFFAF52DE).withValues(alpha: 0.08),
                                               borderRadius: BorderRadius.circular(12),
                                             ),
                                             child: Row(

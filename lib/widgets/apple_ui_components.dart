@@ -45,7 +45,7 @@ class AppCard extends StatelessWidget {
             (isDark
                 ? [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.35),
+                      color: Colors.black.withValues(alpha: 0.35),
                       blurRadius: 18,
                       offset: const Offset(0, 6),
                     ),
@@ -53,7 +53,7 @@ class AppCard extends StatelessWidget {
                 : ZankoShadows.card),
         border: border ??
             Border.all(
-              color: isDark ? Colors.white.withOpacity(0.12) : const Color(0xFFF0F0F6),
+              color: isDark ? Colors.white.withValues(alpha: 0.12) : const Color(0xFFF0F0F6),
               width: 1,
             ),
       ),
@@ -224,12 +224,12 @@ class GlassContainer extends StatelessWidget {
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            color: effectiveColor.withOpacity(opacity),
+            color: effectiveColor.withValues(alpha: opacity),
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
               color: isDark
-                  ? Colors.white.withOpacity(0.12)
-                  : Colors.white.withOpacity(0.8),
+                  ? Colors.white.withValues(alpha: 0.12)
+                  : Colors.white.withValues(alpha: 0.8),
               width: 1.5,
             ),
           ),
@@ -269,7 +269,7 @@ class AppleSearchBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(ZankoRadius.input),
         boxShadow: isDark ? [] : ZankoShadows.card,
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.1) : const Color(0xFFEFEFF7),
+          color: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFEFEFF7),
           width: 1,
         ),
       ),
@@ -407,7 +407,7 @@ class _RingPainter extends CustomPainter {
     final radius = (size.width - strokeWidth) / 2;
 
     final bgPaint = Paint()
-      ..color = isDark ? Colors.white.withOpacity(0.12) : const Color(0xFFEFEFF7)
+      ..color = isDark ? Colors.white.withValues(alpha: 0.12) : const Color(0xFFEFEFF7)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
@@ -706,7 +706,7 @@ class QuickActionCard extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: isDark ? bgColor.withOpacity(0.2) : bgColor,
+              color: isDark ? bgColor.withValues(alpha: 0.2) : bgColor,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(icon, color: iconColor, size: 20),
@@ -751,10 +751,10 @@ class StatisticCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
-          color: color.withOpacity(isDark ? 0.18 : 0.08),
+          color: color.withValues(alpha: isDark ? 0.18 : 0.08),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isDark ? color.withOpacity(0.25) : Colors.transparent,
+            color: isDark ? color.withValues(alpha: 0.25) : Colors.transparent,
           ),
         ),
         child: Column(
@@ -839,15 +839,15 @@ class CourseCard extends StatelessWidget {
       textColor = Colors.grey;
     } else if (diffDays == 0) {
       text = 'ئەمڕۆیە! ⚠️';
-      badgeColor = const Color(0xFFFF3B30).withOpacity(0.15);
+      badgeColor = const Color(0xFFFF3B30).withValues(alpha: 0.15);
       textColor = const Color(0xFFFF3B30);
     } else if (diffDays <= 3) {
       text = '$diffDays ڕۆژی ماوە 🔥';
-      badgeColor = const Color(0xFFFF9500).withOpacity(0.15);
+      badgeColor = const Color(0xFFFF9500).withValues(alpha: 0.15);
       textColor = const Color(0xFFFF9500);
     } else {
       text = '$diffDays ڕۆژی ماوە';
-      badgeColor = defaultColor.withOpacity(0.12);
+      badgeColor = defaultColor.withValues(alpha: 0.12);
       textColor = defaultColor;
     }
 
@@ -856,7 +856,7 @@ class CourseCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: badgeColor,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: textColor.withOpacity(0.25), width: 0.8),
+        border: Border.all(color: textColor.withValues(alpha: 0.25), width: 0.8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -984,7 +984,7 @@ class CourseCard extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: progress,
                     minHeight: 6,
-                    backgroundColor: isDark ? Colors.white.withOpacity(0.12) : const Color(0xFFEFEFF7),
+                    backgroundColor: isDark ? Colors.white.withValues(alpha: 0.12) : const Color(0xFFEFEFF7),
                     valueColor: AlwaysStoppedAnimation<Color>(gradientStart),
                   ),
                 ),
@@ -1809,7 +1809,7 @@ class GlassButton extends StatelessWidget {
           color: isDark ? ZankoColors.darkCard : Colors.white,
           shape: BoxShape.circle,
           border: Border.all(
-            color: isDark ? Colors.white.withOpacity(0.12) : const Color(0xFFF0F0F6),
+            color: isDark ? Colors.white.withValues(alpha: 0.12) : const Color(0xFFF0F0F6),
           ),
           boxShadow: isDark ? [] : ZankoShadows.card,
         ),

@@ -8,8 +8,8 @@ class StatsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final __lang = Provider.of<LanguageProvider>(context);
-    String t(String key) => __lang.translate(key);
+    final lang = Provider.of<LanguageProvider>(context);
+    String t(String key) => lang.translate(key);
     final theme = Theme.of(context);
     final dbService = Provider.of<DatabaseService>(context);
     final langProvider = Provider.of<LanguageProvider>(context);
@@ -146,7 +146,7 @@ class StatsScreen extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   title,
-                  style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withOpacity(0.6)),
+                  style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
                 ),
               ],
             ),
@@ -172,12 +172,12 @@ class StatsScreen extends StatelessWidget {
     final theme = Theme.of(context);
     return Card(
       color: isUnlocked 
-          ? color.withOpacity(0.08) 
-          : theme.cardColor.withOpacity(0.5),
+          ? color.withValues(alpha: 0.08) 
+          : theme.cardColor.withValues(alpha: 0.5),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: isUnlocked ? color.withOpacity(0.3) : Colors.grey.withOpacity(0.2),
+          color: isUnlocked ? color.withValues(alpha: 0.3) : Colors.grey.withValues(alpha: 0.2),
           width: 1.5,
         ),
       ),
@@ -192,7 +192,7 @@ class StatsScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: isUnlocked ? color.withOpacity(0.15) : Colors.grey.withOpacity(0.1),
+                    color: isUnlocked ? color.withValues(alpha: 0.15) : Colors.grey.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -234,7 +234,7 @@ class StatsScreen extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 9,
-                color: isUnlocked ? theme.colorScheme.onSurface.withOpacity(0.7) : Colors.grey.shade500,
+                color: isUnlocked ? theme.colorScheme.onSurface.withValues(alpha: 0.7) : Colors.grey.shade500,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,

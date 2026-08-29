@@ -161,7 +161,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
               style: const TextStyle(color: Colors.white, fontSize: 14),
               decoration: InputDecoration(
                 hintText: 'AIzaSy...',
-                hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                 filled: true,
                 fillColor: const Color(0xFF15181E),
                 border: OutlineInputBorder(
@@ -250,6 +250,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('ai_chat_history');
     await prefs.remove('ai_chat_saved_time');
+    if (!mounted) return;
     final lang = Provider.of<LanguageProvider>(context, listen: false);
     setState(() {
       _messages.clear();
@@ -440,6 +441,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     await _saveChatHistory();
 
     try {
+      if (!mounted) return;
       final lang = Provider.of<LanguageProvider>(context, listen: false);
       final welcomeText = lang.translate('ai_welcome');
       final historyToSend = _messages
@@ -509,6 +511,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       _scrollToBottom();
       await _saveChatHistory();
 
+      if (!mounted) return;
       final aiService = Provider.of<AiService>(context, listen: false);
       final authService = Provider.of<AuthService>(context, listen: false);
       final isVip = authService.currentUser?.isVip ?? false;
@@ -653,9 +656,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
+          color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
@@ -949,7 +952,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
-            color: Colors.white.withOpacity(0.4),
+            color: Colors.white.withValues(alpha: 0.4),
           ),
         ),
       ),
@@ -1032,7 +1035,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
         decoration: BoxDecoration(
           color: const Color(0xFF1B1E26),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.06)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1078,7 +1081,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: ZankoColors.primary.withOpacity(0.35),
+                          color: ZankoColors.primary.withValues(alpha: 0.35),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -1094,13 +1097,13 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                       ),
                       border: Border.all(
                         color: isLimitMsg
-                            ? const Color(0xFFFFD700).withOpacity(0.5)
-                            : Colors.white.withOpacity(0.08),
+                            ? const Color(0xFFFFD700).withValues(alpha: 0.5)
+                            : Colors.white.withValues(alpha: 0.08),
                         width: 1,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.4),
+                          color: Colors.black.withValues(alpha: 0.4),
                           blurRadius: 10,
                           offset: const Offset(2, 4),
                         ),
@@ -1125,7 +1128,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                       time,
                       style: TextStyle(
                         fontSize: 10.5,
-                        color: isUser ? Colors.white.withOpacity(0.7) : Colors.white38,
+                        color: isUser ? Colors.white.withValues(alpha: 0.7) : Colors.white38,
                       ),
                     ),
                   ),
@@ -1265,7 +1268,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                             color: const Color(0xFF1E222A),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.06),
+                              color: Colors.white.withValues(alpha: 0.06),
                             ),
                           ),
                           child: Row(
@@ -1314,7 +1317,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18),
                         side: BorderSide(
-                          color: ZankoColors.primary.withOpacity(0.6),
+                          color: ZankoColors.primary.withValues(alpha: 0.6),
                           width: 1,
                         ),
                       ),
@@ -1339,10 +1342,10 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 margin: const EdgeInsets.only(top: 6, bottom: 4),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: ZankoColors.primary.withOpacity(0.18),
+                  color: ZankoColors.primary.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: ZankoColors.primary.withOpacity(0.4),
+                    color: ZankoColors.primary.withValues(alpha: 0.4),
                     width: 1.2,
                   ),
                 ),
@@ -1380,15 +1383,15 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                         borderRadius: BorderRadius.circular(30),
                         border: Border.all(
                           color: _isRecording
-                              ? Colors.redAccent.withOpacity(0.6)
-                              : Colors.white.withOpacity(0.08),
+                              ? Colors.redAccent.withValues(alpha: 0.6)
+                              : Colors.white.withValues(alpha: 0.08),
                           width: _isRecording ? 1.5 : 1,
                         ),
                         boxShadow: [
                           BoxShadow(
                             color: _isRecording
-                                ? Colors.redAccent.withOpacity(0.2)
-                                : Colors.black.withOpacity(0.5),
+                                ? Colors.redAccent.withValues(alpha: 0.2)
+                                : Colors.black.withValues(alpha: 0.5),
                             blurRadius: 16,
                             offset: const Offset(0, 6),
                           ),
@@ -1512,7 +1515,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: (_isRecording ? const Color(0xFFE11D48) : ZankoColors.primary).withOpacity(0.6),
+                            color: (_isRecording ? const Color(0xFFE11D48) : ZankoColors.primary).withValues(alpha: 0.6),
                             blurRadius: 16,
                             offset: const Offset(0, 4),
                           ),

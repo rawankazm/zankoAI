@@ -36,6 +36,7 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${Provider.of<LanguageProvider>(context, listen: false).translate('error')}: $e')),
       );
@@ -103,7 +104,7 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
             children: [
               // Info Card
               Card(
-                color: theme.colorScheme.primaryContainer.withOpacity(0.2),
+                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.2),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Row(
@@ -146,7 +147,7 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
               Center(
                 child: Text(
                   orLabel,
-                  style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.primary.withOpacity(0.6)),
+                  style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.primary.withValues(alpha: 0.6)),
                 ),
               ),
               const SizedBox(height: 12),

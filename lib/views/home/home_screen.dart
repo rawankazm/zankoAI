@@ -41,7 +41,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late AnimationController _entranceController;
   late AnimationController _gpaController;
   late Animation<double> _gpaAnimation;
-  final TextEditingController _searchController = TextEditingController();
 
   // Demo data
   final double _gpaValue = 0.0;
@@ -72,7 +71,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void dispose() {
     _entranceController.dispose();
     _gpaController.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -372,29 +370,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // ── 1. AI Search Bar ──────────────────────────────────
+                        // ── 1. VIP Upgrade Promo Card ──────────────────────────
                         _staggered(
                           1,
-                          _AiSearchBar(
-                            controller: _searchController,
-                            isDark: isDark,
-                            onSubmitted: (query) {
-                              if (query.trim().isNotEmpty) {
-                                Navigator.push(
-                                  context,
-                                  CupertinoPageRoute(
-                                    builder: (_) => const AiTeacherChatScreen(),
-                                  ),
-                                );
-                              }
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        // ── 2. VIP Upgrade Promo Card ──────────────────────────
-                        _staggered(
-                          2,
                           _VipPromoCard(
                             isDark: isDark,
                             isVip: user?.isVip ?? false,
@@ -402,7 +380,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                         const SizedBox(height: 12),
 
-                        // ── 3. AI Hero Assistant Card ──────────────────────────
+                        // ── 2. AI Hero Assistant Card ──────────────────────────
                         _staggered(
                           3,
                           AIHeroCard(
@@ -586,165 +564,6 @@ class _NotificationBellButton extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-// ─── AI Search Bar ─────────────────────────────────────────────────────────
-class _AiSearchBar extends StatefulWidget {
-  final TextEditingController controller;
-  final bool isDark;
-  final ValueChanged<String> onSubmitted;
-
-  const _AiSearchBar({
-    required this.controller,
-    required this.isDark,
-    required this.onSubmitted,
-  });
-
-  @override
-  State<_AiSearchBar> createState() => _AiSearchBarState();
-}
-
-class _AiSearchBarState extends State<_AiSearchBar> with SingleTickerProviderStateMixin {
-  bool _isFocused = false;
-  final FocusNode _focusNode = FocusNode();
-  late AnimationController _glowController;
-  late Animation<double> _glowAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _glowController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2000),
-    )..repeat(reverse: true);
-    _glowAnimation = Tween<double>(begin: 0.6, end: 1.0).animate(
-      CurvedAnimation(parent: _glowController, curve: Curves.easeInOutSine),
-    );
-    _focusNode.addListener(() {
-      if (mounted) {
-        setState(() => _isFocused = _focusNode.hasFocus);
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _glowController.dispose();
-    _focusNode.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _glowAnimation,
-      builder: (context, child) {
-        return Container(
-          height: 58,
-          decoration: BoxDecoration(
-            color: widget.isDark
-                ? ZankoColors.darkCard
-                : Colors.white,
-            borderRadius: BorderRadius.circular(ZankoRadius.input),
-            border: Border.all(
-              color: _isFocused
-                  ? ZankoColors.primary.withValues(alpha: _glowAnimation.value * 0.5)
-                  : (widget.isDark
-                      ? Colors.white.withValues(alpha: 0.1)
-                      : const Color(0xFFEFEFF7)),
-              width: 1.5,
-            ),
-            boxShadow: [
-              if (_isFocused)
-                BoxShadow(
-                  color: ZankoColors.primary.withValues(alpha: 0.15 * _glowAnimation.value),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                )
-              else
-                BoxShadow(
-                  color: widget.isDark
-                      ? Colors.black.withValues(alpha: 0.2)
-                      : Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-            ],
-          ),
-          child: Row(
-            children: [
-              const SizedBox(width: 18),
-              AnimatedBuilder(
-                animation: _glowAnimation,
-                builder: (context, child) {
-                  return Icon(
-                    CupertinoIcons.sparkles,
-                    color: ZankoColors.primary.withValues(alpha: _glowAnimation.value),
-                    size: 20,
-                  );
-                },
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextField(
-                  controller: widget.controller,
-                  focusNode: _focusNode,
-                  onSubmitted: widget.onSubmitted,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: widget.isDark ? Colors.white : ZankoColors.textPrimary,
-                    letterSpacing: -0.2,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: 'Ask AI anything...',
-                    hintStyle: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: widget.isDark
-                          ? Colors.grey[500]
-                          : ZankoColors.textSecondary.withValues(alpha: 0.7),
-                    ),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
-                    isDense: true,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: () {
-                  if (widget.controller.text.trim().isNotEmpty) {
-                    widget.onSubmitted(widget.controller.text.trim());
-                  }
-                },
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  margin: const EdgeInsets.only(right: 6),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [ZankoColors.primary, ZankoColors.accent],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    CupertinoIcons.arrow_up,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 }

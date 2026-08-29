@@ -222,7 +222,6 @@ class ZankoTheme {
           gradientColors: [Color(0xFFFFD700), Color(0xFFD97706)],
         );
       case AppThemeType.sunsetAmber:
-      default:
         return const ThemeColorsData(
           primary: Color(0xFFF97316),
           accent: Color(0xFFF43F5E),
@@ -277,7 +276,7 @@ class ZankoTheme {
         labelLarge: _ts(size: 15, weight: FontWeight.w600, color: ZankoColors.textPrimary, languageFontFamily: languageFontFamily),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: colors.background.withOpacity(0.85),
+        backgroundColor: colors.background.withValues(alpha: 0.85),
         foregroundColor: ZankoColors.textPrimary,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -342,7 +341,6 @@ class ZankoTheme {
     );
 
     return base.copyWith(
-      dialogBackgroundColor: colors.darkCard,
       dialogTheme: DialogThemeData(
         backgroundColor: colors.darkCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -358,7 +356,7 @@ class ZankoTheme {
         labelLarge: _ts(size: 15, weight: FontWeight.w600, color: colors.darkTextPrimary, languageFontFamily: languageFontFamily),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: colors.darkBackground.withOpacity(0.9),
+        backgroundColor: colors.darkBackground.withValues(alpha: 0.9),
         foregroundColor: colors.darkTextPrimary,
         elevation: 0,
         scrolledUnderElevation: 0,

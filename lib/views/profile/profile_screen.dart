@@ -270,7 +270,7 @@ class ProfileScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: isDark ? ZankoColors.darkBackground : const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: ZankoColors.primary.withOpacity(0.3), width: 1.5),
+                      border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.3), width: 1.5),
                       boxShadow: ZankoShadows.card,
                     ),
                     child: Column(
@@ -288,7 +288,7 @@ class ProfileScreen extends StatelessWidget {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: ZankoColors.primary.withOpacity(0.3),
+                                    color: ZankoColors.primary.withValues(alpha: 0.3),
                                     blurRadius: 12,
                                     offset: const Offset(0, 4),
                                   ),
@@ -299,7 +299,7 @@ class ProfileScreen extends StatelessWidget {
                                 child: Image.asset(
                                   'assets/images/student_avatar_3d.png',
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => const Icon(
+                                  errorBuilder: (_, _, _) => const Icon(
                                     CupertinoIcons.person_fill,
                                     color: Colors.white,
                                     size: 60,
@@ -523,7 +523,7 @@ class ProfileScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: isDark ? ZankoColors.darkBackground : Colors.grey[100],
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.amber.withOpacity(0.5)),
+                        border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -676,7 +676,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   SwitchListTile(
-                    activeColor: ZankoColors.primary,
+                    activeThumbColor: ZankoColors.primary,
                     title: const Text('ئاگادارکردنەوەی تاقیکردنەوەکان', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                     subtitle: const Text('ناردنی بیرخەرەوەی ژێرمێژووی تاقیکردنەوەی میدترم و فایناڵ', style: TextStyle(fontSize: 12)),
                     value: dailyExamAlert,
@@ -684,7 +684,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const Divider(),
                   SwitchListTile(
-                    activeColor: ZankoColors.primary,
+                    activeThumbColor: ZankoColors.primary,
                     title: const Text('بیرخەرەوەی بەردەوامیی خوێندن', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                     subtitle: const Text('ناردنی بیرخەرەوە بۆ پاراستنی زنجیرەی ڕۆژانەی دراسەکردن', style: TextStyle(fontSize: 12)),
                     value: studyReminder,
@@ -692,7 +692,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const Divider(),
                   SwitchListTile(
-                    activeColor: ZankoColors.primary,
+                    activeThumbColor: ZankoColors.primary,
                     title: const Text('هەواڵ و نوێکارییەکانی زانکۆ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                     subtitle: const Text('ئاگادارکردنەوە لە زانکۆلاین و هەواڵە گرنگەکان', style: TextStyle(fontSize: 12)),
                     value: campusNews,
@@ -700,7 +700,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const Divider(),
                   SwitchListTile(
-                    activeColor: ZankoColors.primary,
+                    activeThumbColor: ZankoColors.primary,
                     title: const Text('ئاگادارکردنەوەی بەشداربوونی VIP', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                     subtitle: const Text('بیرخەرەوەی ماوەی بەسەرچوونی هەژماری VIP', style: TextStyle(fontSize: 12)),
                     value: vipAlerts,
@@ -868,7 +868,7 @@ class ProfileScreen extends StatelessWidget {
                   child: Image.asset(
                     'assets/images/logo.png',
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Icon(CupertinoIcons.sparkles, color: ZankoColors.primary, size: 50),
+                    errorBuilder: (_, _, _) => Icon(CupertinoIcons.sparkles, color: ZankoColors.primary, size: 50),
                   ),
                 ),
               ),
@@ -1080,7 +1080,7 @@ class ProfileScreen extends StatelessWidget {
                                 border: Border.all(color: ZankoColors.primary, width: 3),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: ZankoColors.primary.withOpacity(0.35),
+                                    color: ZankoColors.primary.withValues(alpha: 0.35),
                                     blurRadius: 18,
                                     offset: const Offset(0, 4),
                                   ),
@@ -1088,10 +1088,10 @@ class ProfileScreen extends StatelessWidget {
                               ),
                               child: ClipOval(
                                 child: selectedAvatar.startsWith('http')
-                                    ? Image.network(selectedAvatar, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 55))
+                                    ? Image.network(selectedAvatar, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(Icons.person, size: 55))
                                     : (selectedAvatar.startsWith('assets/')
-                                        ? Image.asset(selectedAvatar, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 55))
-                                        : Image.file(File(selectedAvatar), fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 55))),
+                                        ? Image.asset(selectedAvatar, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(Icons.person, size: 55))
+                                        : Image.file(File(selectedAvatar), fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(Icons.person, size: 55))),
                               ),
                             ),
                             Positioned(
@@ -1411,13 +1411,13 @@ class ProfileScreen extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: isSelected
-              ? ZankoColors.primary.withOpacity(0.12)
+              ? ZankoColors.primary.withValues(alpha: 0.12)
               : (isDark ? ZankoColors.darkCardSecondary : Colors.grey[50]),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
                 ? ZankoColors.primary
-                : (isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFEFEFF5)),
+                : (isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFEFEFF5)),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -1702,7 +1702,7 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
       appBar: AppBar(
-        backgroundColor: (isDark ? ZankoColors.darkBackground : ZankoColors.background).withOpacity(0.9),
+        backgroundColor: (isDark ? ZankoColors.darkBackground : ZankoColors.background).withValues(alpha: 0.9),
         elevation: 0,
         title: Text(
           t('settings_profile'),
@@ -2007,14 +2007,14 @@ class ProfileScreen extends StatelessWidget {
                                   child: ClipOval(
                                     child: (user?.photoUrl != null && user!.photoUrl!.isNotEmpty)
                                         ? (user.photoUrl!.startsWith('http')
-                                            ? Image.network(user.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36))
+                                            ? Image.network(user.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36))
                                             : (user.photoUrl!.startsWith('assets/')
-                                                ? Image.asset(user.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36))
-                                                : Image.file(File(user.photoUrl!), fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36))))
+                                                ? Image.asset(user.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36))
+                                                : Image.file(File(user.photoUrl!), fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36))))
                                         : Image.asset(
                                             'assets/images/student_avatar_3d.png',
                                             fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36),
+                                            errorBuilder: (_, _, _) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36),
                                           ),
                                   ),
                                 ),
@@ -2324,7 +2324,7 @@ class ProfileScreen extends StatelessWidget {
                     title: langProvider.translate('dark_mode'),
                     trailing: CupertinoSwitch(
                       value: themeProvider.isDarkMode,
-                      activeColor: themeProvider.primaryColor,
+                      activeTrackColor: themeProvider.primaryColor,
                       onChanged: (val) => themeProvider.toggleTheme(val),
                     ),
                   ),
@@ -2460,7 +2460,7 @@ class ProfileScreen extends StatelessWidget {
         width: 34,
         height: 34,
         decoration: BoxDecoration(
-          color: iconColor.withOpacity(0.12),
+          color: iconColor.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(icon, color: iconColor, size: 18),

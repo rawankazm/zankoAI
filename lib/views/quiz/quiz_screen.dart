@@ -78,7 +78,7 @@ class _QuizScreenState extends State<QuizScreen> {
   bool _isGenerating = false;
   QuizModel? _activeQuiz;
   int _currentQuestionIndex = 0;
-  Map<int, String> _userAnswers = {}; // Maps question index to selected answer
+  final Map<int, String> _userAnswers = {}; // Maps question index to selected answer
   bool _quizCompleted = false;
   int _score = 0;
 
@@ -189,6 +189,7 @@ class _QuizScreenState extends State<QuizScreen> {
         }
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${Provider.of<LanguageProvider>(context, listen: false).translate('failed_to_load')}: $e')),
       );
@@ -250,6 +251,7 @@ class _QuizScreenState extends State<QuizScreen> {
       setState(() {
         _isGenerating = false;
       });
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('هەڵەیەک ڕوویدا لە دروستکردنی کویز: $e', style: const TextStyle(fontFamily: 'Noto Sans Arabic'))),
       );
@@ -391,12 +393,12 @@ class _QuizScreenState extends State<QuizScreen> {
                         const SizedBox(height: 4),
                         Text(
                           Provider.of<LanguageProvider>(context, listen: false).translate('generate_quiz_desc'),
-                          style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withOpacity(0.6), fontFamily: 'Noto Sans Arabic'),
+                          style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontFamily: 'Noto Sans Arabic'),
                         ),
                         const SizedBox(height: 20),
                         // Course Selection Dropdown
                         DropdownButtonFormField<String>(
-                          value: _selectedCourse,
+                          initialValue: _selectedCourse,
                           isExpanded: true,
                           decoration: InputDecoration(
                             labelText: Provider.of<LanguageProvider>(context, listen: false).translate('course_name_field'),
@@ -468,7 +470,7 @@ class _QuizScreenState extends State<QuizScreen> {
                         
                         // Topic Dropdown Selection
                         DropdownButtonFormField<String>(
-                          value: (_courseTopics[_selectedCourse]?.contains(_selectedTopic) == true)
+                          initialValue: (_courseTopics[_selectedCourse]?.contains(_selectedTopic) == true)
                               ? _selectedTopic
                               : _courseTopics[_selectedCourse]?.first,
                           isExpanded: true,
@@ -702,7 +704,7 @@ class _QuizScreenState extends State<QuizScreen> {
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
-                                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                                   ),
                                 ),
                               ],
@@ -715,7 +717,7 @@ class _QuizScreenState extends State<QuizScreen> {
                               ? Provider.of<LanguageProvider>(context, listen: false).translate('score_perfect')
                               : Provider.of<LanguageProvider>(context, listen: false).translate('score_good'),
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontFamily: 'Noto Sans Arabic', color: theme.colorScheme.onSurface.withOpacity(0.7)),
+                          style: TextStyle(fontFamily: 'Noto Sans Arabic', color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
                         ),
                         const SizedBox(height: 24),
                         Row(
@@ -761,46 +763,52 @@ class _QuizScreenState extends State<QuizScreen> {
   List<Widget> _buildQuestionInputs(QuestionModel question, int questionIndex) {
     if (question.type == QuestionType.trueFalse) {
       return [
-        ListTile(
-          title: const Text('ڕاستە / True', style: TextStyle(fontFamily: 'Noto Sans Arabic')),
-          leading: Radio<String>(
-            value: 'ڕاستە',
-            groupValue: _userAnswers[questionIndex],
-            onChanged: (val) {
-              setState(() {
-                _userAnswers[questionIndex] = val!;
-              });
-            },
-          ),
-        ),
-        ListTile(
-          title: const Text('هەڵەیە / False', style: TextStyle(fontFamily: 'Noto Sans Arabic')),
-          leading: Radio<String>(
-            value: 'هەڵەیە',
-            groupValue: _userAnswers[questionIndex],
-            onChanged: (val) {
-              setState(() {
-                _userAnswers[questionIndex] = val!;
-              });
-            },
+        RadioGroup<String>(
+          groupValue: _userAnswers[questionIndex],
+          onChanged: (val) {
+            setState(() {
+              _userAnswers[questionIndex] = val!;
+            });
+          },
+          child: Column(
+            children: [
+              ListTile(
+                title: const Text('ڕاستە / True', style: TextStyle(fontFamily: 'Noto Sans Arabic')),
+                leading: Radio<String>(
+                  value: 'ڕاستە',
+                ),
+              ),
+              ListTile(
+                title: const Text('هەڵەیە / False', style: TextStyle(fontFamily: 'Noto Sans Arabic')),
+                leading: Radio<String>(
+                  value: 'هەڵەیە',
+                ),
+              ),
+            ],
           ),
         ),
       ];
     } else if (question.type == QuestionType.multipleChoice && question.options != null) {
-      return question.options!.map((opt) {
-        return ListTile(
-          title: Text(opt, style: const TextStyle(fontFamily: 'Noto Sans Arabic')),
-          leading: Radio<String>(
-            value: opt,
-            groupValue: _userAnswers[questionIndex],
-            onChanged: (val) {
-              setState(() {
-                _userAnswers[questionIndex] = val!;
-              });
-            },
+      return [
+        RadioGroup<String>(
+          groupValue: _userAnswers[questionIndex],
+          onChanged: (val) {
+            setState(() {
+              _userAnswers[questionIndex] = val!;
+            });
+          },
+          child: Column(
+            children: question.options!.map((opt) {
+              return ListTile(
+                title: Text(opt, style: const TextStyle(fontFamily: 'Noto Sans Arabic')),
+                leading: Radio<String>(
+                  value: opt,
+                ),
+              );
+            }).toList(),
           ),
-        );
-      }).toList();
+        ),
+      ];
     } else if (question.type == QuestionType.fillInBlank) {
       final controller = _blankControllers[questionIndex] ?? TextEditingController();
       return [

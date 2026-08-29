@@ -183,7 +183,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                           scrollDirection: Axis.horizontal,
                           physics: const BouncingScrollPhysics(),
                           itemCount: badges.length,
-                          separatorBuilder: (_, __) => const SizedBox(width: 10),
+                          separatorBuilder: (_, _) => const SizedBox(width: 10),
                           itemBuilder: (context, index) {
                             final b = badges[index];
                             return Container(
@@ -316,7 +316,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       scrollDirection: Axis.horizontal,
                       physics: const BouncingScrollPhysics(),
                       itemCount: _departmentList.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      separatorBuilder: (_, _) => const SizedBox(width: 8),
                       itemBuilder: (context, index) {
                         final dept = _departmentList[index];
                         final isSelected = dept == _selectedDepartment;
@@ -460,7 +460,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: restRankings.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final student = restRankings[index];
                     return Container(

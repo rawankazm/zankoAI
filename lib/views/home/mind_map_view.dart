@@ -265,7 +265,7 @@ class _MindMapViewState extends State<MindMapView> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.hub_outlined, size: 64, color: theme.colorScheme.primary.withOpacity(0.3)),
+                          Icon(Icons.hub_outlined, size: 64, color: theme.colorScheme.primary.withValues(alpha: 0.3)),
                           const SizedBox(height: 16),
                           Text(
                             t('mind_map_empty'),
@@ -320,18 +320,18 @@ class _MindMapViewState extends State<MindMapView> {
                                               colors: node.depth == 0
                                                   ? [theme.colorScheme.primary, theme.colorScheme.secondary]
                                                   : (node.depth == 1
-                                                      ? [theme.colorScheme.tertiary, theme.colorScheme.tertiary.withOpacity(0.7)]
+                                                      ? [theme.colorScheme.tertiary, theme.colorScheme.tertiary.withValues(alpha: 0.7)]
                                                       : [Colors.blueGrey.shade700, Colors.blueGrey.shade500]),
                                             ),
                                             shape: BoxShape.circle,
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black.withOpacity(0.2),
+                                                color: Colors.black.withValues(alpha: 0.2),
                                                 blurRadius: 6,
                                                 offset: const Offset(0, 3),
                                               )
                                             ],
-                                            border: Border.all(color: Colors.white.withOpacity(0.7), width: 1.5),
+                                            border: Border.all(color: Colors.white.withValues(alpha: 0.7), width: 1.5),
                                           ),
                                           child: Center(
                                             child: Padding(
@@ -407,7 +407,7 @@ class MindMapPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = theme.colorScheme.primary.withOpacity(0.4)
+      ..color = theme.colorScheme.primary.withValues(alpha: 0.4)
       ..strokeWidth = 2.0
       ..style = PaintingStyle.stroke;
 

@@ -200,7 +200,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: _quickTopics.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
                     itemBuilder: (context, index) {
                       final item = _quickTopics[index];
                       return GestureDetector(
@@ -211,7 +211,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                             color: isDark ? ZankoColors.darkCard : Colors.white,
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: ZankoColors.primary.withOpacity(0.25),
+                              color: ZankoColors.primary.withValues(alpha: 0.25),
                             ),
                           ),
                           child: Row(
@@ -243,11 +243,11 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                     color: isDark ? ZankoColors.darkCard : Colors.white,
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(
-                      color: isDark ? Colors.white12 : ZankoColors.primary.withOpacity(0.15),
+                      color: isDark ? Colors.white12 : ZankoColors.primary.withValues(alpha: 0.15),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
                         blurRadius: 16,
                         offset: const Offset(0, 4),
                       ),
@@ -308,7 +308,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFF6C5CE7).withOpacity(0.35),
+                                    color: const Color(0xFF6C5CE7).withValues(alpha: 0.35),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -344,7 +344,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                     alignment: Alignment.center,
                     child: Column(
                       children: [
-                        Icon(CupertinoIcons.layers, size: 54, color: ZankoColors.primary.withOpacity(0.5)),
+                        Icon(CupertinoIcons.layers, size: 54, color: ZankoColors.primary.withValues(alpha: 0.5)),
                         const SizedBox(height: 14),
                         Text(
                           t('flashcards_empty_state'),
@@ -368,7 +368,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: ZankoColors.primary.withOpacity(0.12),
+                              color: ZankoColors.primary.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -385,7 +385,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF10B981).withOpacity(0.15),
+                                color: const Color(0xFF10B981).withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Row(
@@ -466,7 +466,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                                 : (isDark ? Colors.white10 : Colors.grey[200]),
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: _currentIndex > 0 ? ZankoColors.primary.withOpacity(0.3) : Colors.transparent,
+                              color: _currentIndex > 0 ? ZankoColors.primary.withValues(alpha: 0.3) : Colors.transparent,
                             ),
                           ),
                           child: Icon(
@@ -495,7 +495,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                           decoration: BoxDecoration(
                             color: _learnedCardIndices.contains(_currentIndex)
                                 ? const Color(0xFF10B981)
-                                : ZankoColors.primary.withOpacity(0.12),
+                                : ZankoColors.primary.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(24),
                           ),
                           child: Row(
@@ -539,7 +539,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                                 : (isDark ? Colors.white10 : Colors.grey[200]),
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: _currentIndex < cards.length - 1 ? ZankoColors.primary.withOpacity(0.3) : Colors.transparent,
+                              color: _currentIndex < cards.length - 1 ? ZankoColors.primary.withValues(alpha: 0.3) : Colors.transparent,
                             ),
                           ),
                           child: Icon(
@@ -582,10 +582,10 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: borderColor.withOpacity(0.5), width: 1.8),
+        border: Border.all(color: borderColor.withValues(alpha: 0.5), width: 1.8),
         boxShadow: [
           BoxShadow(
-            color: borderColor.withOpacity(0.25),
+            color: borderColor.withValues(alpha: 0.25),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -598,7 +598,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
-              color: borderColor.withOpacity(0.2),
+              color: borderColor.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
@@ -641,14 +641,14 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(CupertinoIcons.refresh_thin, size: 14, color: textColor.withOpacity(0.7)),
+              Icon(CupertinoIcons.refresh_thin, size: 14, color: textColor.withValues(alpha: 0.7)),
               const SizedBox(width: 6),
               Text(
                 tip,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: textColor.withOpacity(0.7),
+                  color: textColor.withValues(alpha: 0.7),
                 ),
               ),
             ],

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:zanko_ai/services/docx_generator_service.dart';
@@ -12,13 +13,13 @@ void main() {
     final notoSansBytes = File('assets/fonts/NotoSansArabic-Regular.ttf').readAsBytesSync();
 
     final testPhrases = [
-      'حکومەتی هەرێمی کوردستان - عێراق',
-      'وەزارەتی خوێندنی باڵا و توێژینەوەی زانستی',
-      'کاریگەریی ژیریی دەستکرد لەسەر تەکنۆلۆژیای زانیاری',
-      'ئامادەکردنی: ڕاوان ئەحمەد، سارا محەمەد، کاروان ڕەزا',
-      'بەسەرپەرشتیی: پ.ی.د. نەبەز عومەر (2024 - 2025)',
-      '١. پێشەکی و گرنگیی زانستیی بابەتەکە لە سەردەمی مۆدێرندا',
-      'ڕاپۆرتی زانستی پێشکەش بە بەشی تەکنۆلۆژیای زانیاری کراوە.',
+      'Ø­Ú©ÙˆÙ…Û•ØªÛŒ Ù‡Û•Ø±ÛŽÙ…ÛŒ Ú©ÙˆØ±Ø¯Ø³ØªØ§Ù† - Ø¹ÛŽØ±Ø§Ù‚',
+      'ÙˆÛ•Ø²Ø§Ø±Û•ØªÛŒ Ø®ÙˆÛŽÙ†Ø¯Ù†ÛŒ Ø¨Ø§ÚµØ§ Ùˆ ØªÙˆÛŽÚ˜ÛŒÙ†Û•ÙˆÛ•ÛŒ Ø²Ø§Ù†Ø³ØªÛŒ',
+      'Ú©Ø§Ø±ÛŒÚ¯Û•Ø±ÛŒÛŒ Ú˜ÛŒØ±ÛŒÛŒ Ø¯Û•Ø³ØªÚ©Ø±Ø¯ Ù„Û•Ø³Û•Ø± ØªÛ•Ú©Ù†Û†Ù„Û†Ú˜ÛŒØ§ÛŒ Ø²Ø§Ù†ÛŒØ§Ø±ÛŒ',
+      'Ø¦Ø§Ù…Ø§Ø¯Û•Ú©Ø±Ø¯Ù†ÛŒ: Ú•Ø§ÙˆØ§Ù† Ø¦Û•Ø­Ù…Û•Ø¯ØŒ Ø³Ø§Ø±Ø§ Ù…Ø­Û•Ù…Û•Ø¯ØŒ Ú©Ø§Ø±ÙˆØ§Ù† Ú•Û•Ø²Ø§',
+      'Ø¨Û•Ø³Û•Ø±Ù¾Û•Ø±Ø´ØªÛŒÛŒ: Ù¾.ÛŒ.Ø¯. Ù†Û•Ø¨Û•Ø² Ø¹ÙˆÙ…Û•Ø± (2024 - 2025)',
+      'Ù¡. Ù¾ÛŽØ´Û•Ú©ÛŒ Ùˆ Ú¯Ø±Ù†Ú¯ÛŒÛŒ Ø²Ø§Ù†Ø³ØªÛŒÛŒ Ø¨Ø§Ø¨Û•ØªÛ•Ú©Û• Ù„Û• Ø³Û•Ø±Ø¯Û•Ù…ÛŒ Ù…Û†Ø¯ÛŽØ±Ù†Ø¯Ø§',
+      'Ú•Ø§Ù¾Û†Ø±ØªÛŒ Ø²Ø§Ù†Ø³ØªÛŒ Ù¾ÛŽØ´Ú©Û•Ø´ Ø¨Û• Ø¨Û•Ø´ÛŒ ØªÛ•Ú©Ù†Û†Ù„Û†Ú˜ÛŒØ§ÛŒ Ø²Ø§Ù†ÛŒØ§Ø±ÛŒ Ú©Ø±Ø§ÙˆÛ•.',
     ];
 
     // Approach A: Calibri + KurdishArabicReshaper.shapeAndReorder (alignment: right)
@@ -45,7 +46,7 @@ void main() {
       doc.dispose();
       File('C:/Users/rawan/.gemini/antigravity/brain/c0a7c93f-d782-4611-b466-eee7f2d7974d/scratch/kurdish_calibri_bidi.pdf')
           .writeAsBytesSync(bytes);
-      print('Saved kurdish_calibri_bidi.pdf (${bytes.length} bytes)');
+      debugPrint('Saved kurdish_calibri_bidi.pdf (${bytes.length} bytes)');
     }
 
     // Approach B: NotoSans + KurdishArabicReshaper.shapeAndReorder
@@ -72,18 +73,18 @@ void main() {
       doc.dispose();
       File('C:/Users/rawan/.gemini/antigravity/brain/c0a7c93f-d782-4611-b466-eee7f2d7974d/scratch/kurdish_notosans_bidi.pdf')
           .writeAsBytesSync(bytes);
-      print('Saved kurdish_notosans_bidi.pdf (${bytes.length} bytes)');
+      debugPrint('Saved kurdish_notosans_bidi.pdf (${bytes.length} bytes)');
     }
 
     // Approach C: Full 8-Page Academic Report Generation (Kurdish)
     {
       final report = DocxGeneratorService.parseReportFromText(
         rawText: '',
-        title: 'کاریگەریی ژیریی دەستکرد لەسەر تەکنۆلۆژیای زانیاری',
-        studentName: 'ڕاوان ئەحمەد\nسارا محەمەد',
-        supervisorName: 'پ.ی.د. نەبەز عومەر',
-        universityName: 'زانکۆی پۆلیتەکنیکی هەولێر',
-        departmentName: 'بەشی تەکنۆلۆژیای زانیاری',
+        title: 'Ú©Ø§Ø±ÛŒÚ¯Û•Ø±ÛŒÛŒ Ú˜ÛŒØ±ÛŒÛŒ Ø¯Û•Ø³ØªÚ©Ø±Ø¯ Ù„Û•Ø³Û•Ø± ØªÛ•Ú©Ù†Û†Ù„Û†Ú˜ÛŒØ§ÛŒ Ø²Ø§Ù†ÛŒØ§Ø±ÛŒ',
+        studentName: 'Ú•Ø§ÙˆØ§Ù† Ø¦Û•Ø­Ù…Û•Ø¯\nØ³Ø§Ø±Ø§ Ù…Ø­Û•Ù…Û•Ø¯',
+        supervisorName: 'Ù¾.ÛŒ.Ø¯. Ù†Û•Ø¨Û•Ø² Ø¹ÙˆÙ…Û•Ø±',
+        universityName: 'Ø²Ø§Ù†Ú©Û†ÛŒ Ù¾Û†Ù„ÛŒØªÛ•Ú©Ù†ÛŒÚ©ÛŒ Ù‡Û•ÙˆÙ„ÛŽØ±',
+        departmentName: 'Ø¨Û•Ø´ÛŒ ØªÛ•Ú©Ù†Û†Ù„Û†Ú˜ÛŒØ§ÛŒ Ø²Ø§Ù†ÛŒØ§Ø±ÛŒ',
         academicYear: '2024 - 2025',
         languageCode: 'ku',
       );
@@ -92,18 +93,18 @@ void main() {
       expect(pdfBytes.length > 50000, true);
       File('C:/Users/rawan/.gemini/antigravity/brain/c0a7c93f-d782-4611-b466-eee7f2d7974d/scratch/full_kurdish_report.pdf')
           .writeAsBytesSync(pdfBytes);
-      print('Saved full_kurdish_report.pdf (${pdfBytes.length} bytes)');
+      debugPrint('Saved full_kurdish_report.pdf (${pdfBytes.length} bytes)');
     }
 
     // Approach D: Full 8-Page Academic Report Generation (Arabic)
     {
       final report = DocxGeneratorService.parseReportFromText(
         rawText: '',
-        title: 'أثر الذكاء الاصطناعي في هندسة البرمجيات والأنظمة الذكية',
-        studentName: 'أحمد علي\nسارة محمد',
-        supervisorName: 'أ.د. عبد الله عمر',
-        universityName: 'جامعة بغداد',
-        departmentName: 'قسم علوم الحاسوب',
+        title: 'Ø£Ø«Ø± Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„Ø§ØµØ·Ù†Ø§Ø¹ÙŠ ÙÙŠ Ù‡Ù†Ø¯Ø³Ø© Ø§Ù„Ø¨Ø±Ù…Ø¬ÙŠØ§Øª ÙˆØ§Ù„Ø£Ù†Ø¸Ù…Ø© Ø§Ù„Ø°ÙƒÙŠØ©',
+        studentName: 'Ø£Ø­Ù…Ø¯ Ø¹Ù„ÙŠ\nØ³Ø§Ø±Ø© Ù…Ø­Ù…Ø¯',
+        supervisorName: 'Ø£.Ø¯. Ø¹Ø¨Ø¯ Ø§Ù„Ù„Ù‡ Ø¹Ù…Ø±',
+        universityName: 'Ø¬Ø§Ù…Ø¹Ø© Ø¨ØºØ¯Ø§Ø¯',
+        departmentName: 'Ù‚Ø³Ù… Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³ÙˆØ¨',
         academicYear: '2024 - 2025',
         languageCode: 'ar',
       );
@@ -112,7 +113,7 @@ void main() {
       expect(pdfBytes.length > 50000, true);
       File('C:/Users/rawan/.gemini/antigravity/brain/c0a7c93f-d782-4611-b466-eee7f2d7974d/scratch/full_arabic_report.pdf')
           .writeAsBytesSync(pdfBytes);
-      print('Saved full_arabic_report.pdf (${pdfBytes.length} bytes)');
+      debugPrint('Saved full_arabic_report.pdf (${pdfBytes.length} bytes)');
     }
   });
 }

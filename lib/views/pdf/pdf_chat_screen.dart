@@ -534,7 +534,7 @@ $text
     return Scaffold(
       backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
       appBar: AppBar(
-        backgroundColor: (isDark ? ZankoColors.darkBackground : ZankoColors.background).withOpacity(0.9),
+        backgroundColor: (isDark ? ZankoColors.darkBackground : ZankoColors.background).withValues(alpha: 0.9),
         elevation: 0,
         title: Text(
           langProvider.translate('pdf_chat'),
@@ -555,8 +555,8 @@ $text
             // PDF Upload Hero Container
             AppCard(
               padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
-              color: ZankoColors.primary.withOpacity(0.06),
-              border: Border.all(color: ZankoColors.primary.withOpacity(0.25), width: 1.5),
+              color: ZankoColors.primary.withValues(alpha: 0.06),
+              border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.25), width: 1.5),
               onTap: _pickPdfFile,
               child: Column(
                 children: [
@@ -627,7 +627,7 @@ $text
                     width: 46,
                     height: 46,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFF3B30).withOpacity(0.12),
+                      color: const Color(0xFFFF3B30).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Icon(
