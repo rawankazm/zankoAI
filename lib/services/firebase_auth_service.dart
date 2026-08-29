@@ -48,7 +48,8 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
   StreamSubscription? _authStateSub;
   StreamSubscription? _userDocSub;
   bool? _lastNotifiedVip;
-  bool? _lastNotifiedAdmin;
+  UserRole? _lastKnownRole;
+  bool _isFirstSnapshotAfterLogin = true;
   bool _isHandlingBlockedOrDeleted = false;
 
   void _showAccountDeletedDialog() {
@@ -169,7 +170,14 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
   }
 
   void _showPromotedToAdminDialog() {
+    // Only show if user is fully authenticated, not guest, and not currently being deleted/blocked
+    if (_currentUser == null || _currentUser!.id.startsWith('guest_') || _auth.currentUser == null || _isHandlingBlockedOrDeleted) {
+      return;
+    }
+
     void display(BuildContext context, String adminUrl) {
+      if (!context.mounted) return;
+
       showDialog(
         context: context,
         builder: (ctx) {
@@ -307,13 +315,14 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
     _authStateSub?.cancel();
     _authStateSub = _auth.authStateChanges().listen((User? firebaseUser) async {
       _userDocSub?.cancel();
+      _isFirstSnapshotAfterLogin = true;
+      _lastKnownRole = null;
       if (firebaseUser == null) {
         if (_currentUser != null && _currentUser!.id.startsWith('guest_')) {
           return;
         }
         _currentUser = null;
         _lastNotifiedVip = null;
-        _lastNotifiedAdmin = null;
         notifyListeners();
       } else {
         if (_currentUser == null || _currentUser!.id != firebaseUser.uid) {
@@ -355,6 +364,8 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
             );
 
             _currentUser = newUser;
+            _isFirstSnapshotAfterLogin = false;
+            _lastKnownRole = UserRole.student;
             notifyListeners();
 
             try {
@@ -370,7 +381,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
                 'gpa': 0.0,
                 'isVip': false,
                 'vipStatus': 'none',
-                'photoUrl': ?realPhoto,
+                'photoUrl': realPhoto,
                 'createdAt': FieldValue.serverTimestamp(),
                 'lastLoginAt': FieldValue.serverTimestamp(),
               }, SetOptions(merge: true));
@@ -386,7 +397,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
               _auth.signOut().catchError((_) {});
               _currentUser = null;
               _lastNotifiedVip = null;
-              _lastNotifiedAdmin = null;
+              _lastKnownRole = null;
               notifyListeners();
               _showAccountDeletedDialog();
             }
@@ -401,7 +412,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
               _auth.signOut().catchError((_) {});
               _currentUser = null;
               _lastNotifiedVip = null;
-              _lastNotifiedAdmin = null;
+              _lastKnownRole = null;
               notifyListeners();
               _showAccountBlockedDialog(blockReason);
             }
@@ -413,15 +424,16 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
               ? UserRole.admin
               : (roleStr == 'teacher' ? UserRole.teacher : UserRole.student);
 
-          // 3. Check if user was promoted to Admin or Demoted
-          if (role == UserRole.admin) {
-            if (_lastNotifiedAdmin != true) {
-              _lastNotifiedAdmin = true;
-              _showPromotedToAdminDialog();
+          // 3. Check if user was promoted to Admin in real-time from Admin website
+          if (!_isFirstSnapshotAfterLogin) {
+            if (_lastKnownRole != null && _lastKnownRole != UserRole.admin && role == UserRole.admin) {
+              if (_currentUser != null && !_currentUser!.id.startsWith('guest_')) {
+                _showPromotedToAdminDialog();
+              }
             }
-          } else {
-            _lastNotifiedAdmin = false;
           }
+          _isFirstSnapshotAfterLogin = false;
+          _lastKnownRole = role;
 
           final vipStatus = data['vipStatus'] as String? ?? 'none';
           final vipExpiresAt = data['vipExpiresAt'] as Timestamp?;
