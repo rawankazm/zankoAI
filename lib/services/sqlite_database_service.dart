@@ -43,6 +43,10 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
   List<LectureModel> get lectures => _lectures;
   @override
   List<AnnouncementModel> get announcements => _announcements;
+  @override
+  List<Map<String, dynamic>> get departments => [];
+  @override
+  List<Map<String, dynamic>> get courses => [];
 
   @override
   int get completedPomodoros => _completedPomodoros;
@@ -183,37 +187,6 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
       'courseName': 'بنکەی زانیاری',
     });
 
-    // Mock Schedule
-    final mockSchedules = [
-      {
-        'id': 's1',
-        'courseName': 'سیستەمی کارپێکردن (OS)',
-        'time': '08:30 - 10:00',
-        'location': 'هۆڵی ٤، بەشی تەکنەلۆجیای زانیاری',
-        'dayName': 'شەممە',
-        'teacherName': 'د. ڕێبین ئەحمەد',
-      },
-      {
-        'id': 's2',
-        'courseName': 'بەرنامەسازی پێشکەوتوو (Dart & Flutter)',
-        'time': '10:15 - 11:45',
-        'location': 'لابۆراتۆری ٣، بەشی کۆمپیوتەر',
-        'dayName': 'شەممە',
-        'teacherName': 'م. شادان عومەر',
-      },
-      {
-        'id': 's3',
-        'courseName': 'بنکەی زانیاری',
-        'time': '08:30 - 10:00',
-        'location': 'هۆڵی ٢، بەشی تەکنەلۆجیای زانیاری',
-        'dayName': 'یەکشەممە',
-        'teacherName': 'م. هێمن مستەفا',
-      },
-    ];
-    for (var item in mockSchedules) {
-      await db.insert('schedule', item);
-    }
-
     // Mock Quiz
     await db.insert('quizzes', {
       'id': 'q1',
@@ -304,12 +277,15 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
       ));
     }
 
-    // Load Schedule
+    // Load Schedule (Purge legacy dummy mock items if any)
+    await db.delete('schedule', where: 'id IN (?, ?, ?, ?)', whereArgs: ['s1', 's2', 's3', 's4']);
     final scheduleMaps = await db.query('schedule');
     _schedule.clear();
     for (var m in scheduleMaps) {
+      final id = m['id'] as String;
+      if (id == 's1' || id == 's2' || id == 's3' || id == 's4') continue;
       _schedule.add(ScheduleModel(
-        id: m['id'] as String,
+        id: id,
         courseName: m['courseName'] as String,
         time: m['time'] as String,
         location: m['location'] as String,

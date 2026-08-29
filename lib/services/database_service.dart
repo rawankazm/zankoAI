@@ -119,42 +119,6 @@ class MockDatabaseService extends ChangeNotifier implements DatabaseService {
       ),
     ]);
 
-    // Kurdish schedule items
-    _schedule.addAll([
-      ScheduleModel(
-        id: 's1',
-        courseName: 'سیستەمی کارپێکردن (OS)',
-        time: '08:30 - 10:00',
-        location: 'هۆڵی ٤، بەشی تەکنەلۆجیای زانیاری',
-        dayName: 'شەممە',
-        teacherName: 'د. ڕێبین ئەحمەد',
-      ),
-      ScheduleModel(
-        id: 's2',
-        courseName: 'بەرنامەسازی پێشکەوتوو (Dart & Flutter)',
-        time: '10:15 - 11:45',
-        location: 'لابۆراتۆری ٣، بەشی کۆمپیوتەر',
-        dayName: 'شەممە',
-        teacherName: 'م. شادان عومەر',
-      ),
-      ScheduleModel(
-        id: 's3',
-        courseName: 'بنکەی زانیاری',
-        time: '08:30 - 10:00',
-        location: 'هۆڵی ٢، بەشی تەکنەلۆجیای زانیاری',
-        dayName: 'یەکشەممە',
-        teacherName: 'م. هێمن مستەفا',
-      ),
-      ScheduleModel(
-        id: 's4',
-        courseName: 'پێداچوونەوەی پڕۆژەی دەرچوون',
-        time: '12:00 - 13:30',
-        location: 'هۆڵی فڕەنسی',
-        dayName: 'دووشەممە',
-        teacherName: 'د. ڕێبین ئەحمەد',
-      ),
-    ]);
-
     // Kurdish quizzes
     _quizzes.add(
       QuizModel(
