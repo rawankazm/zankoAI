@@ -181,7 +181,7 @@ class ProfileScreen extends StatelessWidget {
                             Navigator.pop(context);
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('✅ پێشنیارەکەت بە سەرکەوتووی گەیشتە تیمی ZankoAI!'),
+                                content: Text('✅ پێشنیارەکەت بە سەرکەوتووی گەیشتە تیمی birdev!'),
                                 backgroundColor: Color(0xFF10B981),
                               ),
                             );
@@ -2485,7 +2485,7 @@ class ProfileScreen extends StatelessWidget {
                     icon: CupertinoIcons.chat_bubble_text_fill,
                     iconColor: const Color(0xFF10B981),
                     title: '💬 ڕا و پێشنیارەکان',
-                    subtitle: 'ناردنی داواکاری و پێشنیار بۆ تیمی ZankoAI',
+                    subtitle: 'ناردنی داواکاری و پێشنیار بۆ تیمی birdev',
                     onTap: () => _showFeedbackModal(context, user),
                   ),
                   const Divider(height: 1, indent: 56),

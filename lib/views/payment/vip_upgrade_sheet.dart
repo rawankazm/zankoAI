@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
 import '../../theme.dart';
+import '../auth/login_screen.dart';
 
 class VipUpgradeSheet extends StatefulWidget {
   const VipUpgradeSheet({super.key});
@@ -26,7 +28,7 @@ class VipUpgradeSheet extends StatefulWidget {
 
 class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
   String _selectedPlan = '1_month'; // '1_month', '3_months', '9_months'
-  bool _showAccounts = false;
+  bool _showAccounts = true;
 
   String _whatsappNumber = '07509987345';
   String _telegramUsername = 'rawankurdi';
@@ -107,7 +109,6 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
       });
     }
 
-    // 1. Instant Direct Fetch
     FirebaseFirestore.instance
         .collection('config')
         .doc('payment_config')
@@ -118,7 +119,6 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
       debugPrint('payment_config initial get warning: $e');
     });
 
-    // 2. Real-time Live Subscription
     FirebaseFirestore.instance
         .collection('config')
         .doc('payment_config')
@@ -140,28 +140,102 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
     );
   }
 
-  // ── Open WhatsApp with pre-filled message ─────────────────────────────────
+  // ── Register VIP Request to Firestore for Admin Panel ─────────────────────
+  Future<bool> _registerVipRequest({
+    required BuildContext ctx,
+    required dynamic user,
+    required String platform,
+  }) async {
+    if (user == null || user.isGuest == true) {
+      if (mounted) {
+        ScaffoldMessenger.of(ctx).showSnackBar(
+          SnackBar(
+            content: const Text('تکایە سەرەتا بچۆ ژوورەوە (Login) بۆ ئەوەی داواکارییەکەت لە سیستەم تۆمار بکرێت'),
+            backgroundColor: Colors.orange[800],
+            action: SnackBarAction(
+              label: 'داخیلبوون',
+              textColor: Colors.white,
+              onPressed: () {
+                Navigator.push(
+                  ctx,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              },
+            ),
+          ),
+        );
+      }
+      return false;
+    }
+
+    try {
+      final reqDoc = FirebaseFirestore.instance.collection('vip_requests').doc(user.id);
+      final userDoc = FirebaseFirestore.instance.collection('users').doc(user.id);
+
+      final priceStr = _formatPrice(_planPrice);
+
+      await Future.wait([
+        reqDoc.set({
+          'id': user.id,
+          'userId': user.id,
+          'userEmail': user.email,
+          'userName': user.name,
+          'photoUrl': user.photoUrl,
+          'plan': _selectedPlan,
+          'planTitle': _planTitle,
+          'price': _planPrice,
+          'amount': '$priceStr د.ع',
+          'paymentMethod': platform,
+          'transactionId': 'لە چاتی $platform دەنێردرێت 💬',
+          'receiptImageUrl': '',
+          'method': platform.toLowerCase(),
+          'status': 'pending',
+          'notes': 'داواکاری لە ڕێگەی $platform نێردراوە',
+          'requestedAt': FieldValue.serverTimestamp(),
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true)),
+        userDoc.set({
+          'vipStatus': 'pending',
+          'requestedPlan': _selectedPlan,
+          'vipRequestedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true)),
+      ]);
+      return true;
+    } catch (e) {
+      debugPrint('Error creating vip_request: $e');
+      return true; // proceed to open chat
+    }
+  }
+
+  // ── Open WhatsApp ─────────────────────────────────────────────────────────
   Future<void> _launchWhatsApp() async {
     final authService = Provider.of<AuthService>(context, listen: false);
     final user = authService.currentUser;
-    final userName = user?.name ?? 'بەکارهێنەری Zanko AI';
+
+    final registered = await _registerVipRequest(
+      ctx: context,
+      user: user,
+      platform: 'WhatsApp',
+    );
+    if (!registered) return;
+
+    final userName = user?.name ?? 'خوێندکار';
     final userEmail = user?.email ?? 'نادیار';
     final userId = user?.id ?? '';
-
-    // Auto-record VIP request into Firestore vip_requests & users collection
-    await _recordVipRequestInFirestore('whatsapp');
 
     final priceStr = _formatPrice(_planPrice);
     final message = '''
 سڵاو بەڕێزم 👑
-دەمەوێت بەشداری VIP لە ئەپڵیکەیشنی Zanko AI چالاک بکەم:
+دەمەوێت بەشداری VIP لە Zanko AI چالاک بکەم:
 
-📌 زانیارییەکان:
-• پلان: $_planTitle
-• بڕی پارە: $priceStr د.ع
-• ناوی بەکارهێنەر: $userName
+📌 زانیاری داواکاری:
+• پلان: $_planTitle ($priceStr د.ع)
+• ناوی خوێندکار: $userName
 • ئیمەیڵ: $userEmail
 • ئایدی هەژمار: $userId
+
+(وێنەی وەسڵی پارەدانەکەم لە خوارەوە هاوپێچ کردووە 🧾👇)
 '''.trim();
 
     String cleanPhone = _whatsappNumber.replaceAll(RegExp(r'[^0-9]'), '');
@@ -196,20 +270,30 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
   Future<void> _launchTelegram() async {
     final authService = Provider.of<AuthService>(context, listen: false);
     final user = authService.currentUser;
-    final userName = user?.name ?? 'بەکارهێنەری Zanko AI';
+
+    final registered = await _registerVipRequest(
+      ctx: context,
+      user: user,
+      platform: 'Telegram',
+    );
+    if (!registered) return;
+
+    final userName = user?.name ?? 'خوێندکار';
     final userEmail = user?.email ?? 'نادیار';
     final userId = user?.id ?? '';
 
-    // Auto-record VIP request into Firestore vip_requests & users collection
-    await _recordVipRequestInFirestore('telegram');
-
     final priceStr = _formatPrice(_planPrice);
     final message = '''
-سڵاو، دەمەوێت VIP چالاک بکەم 👑
-پلان: $_planTitle ($priceStr د.ع)
-ناو: $userName
-ئیمەیڵ: $userEmail
-ئایدی: $userId
+سڵاو بەڕێزم 👑
+دەمەوێت بەشداری VIP لە Zanko AI چالاک بکەم:
+
+📌 زانیاری داواکاری:
+• پلان: $_planTitle ($priceStr د.ع)
+• ناوی خوێندکار: $userName
+• ئیمەیڵ: $userEmail
+• ئایدی هەژمار: $userId
+
+(وێنەی وەسڵی پارەدانەکەم لە خوارەوە هاوپێچ کردووە 🧾👇)
 '''.trim();
 
     String cleanUsername = _telegramUsername
@@ -238,76 +322,6 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
     }
   }
 
-  bool _isSubmittingInApp = false;
-
-  Future<void> _recordVipRequestInFirestore(String method) async {
-    try {
-      final authService = Provider.of<AuthService>(context, listen: false);
-      final user = authService.currentUser;
-      if (user == null || user.isGuest) return;
-
-      // 1. Write or update to vip_requests collection
-      final reqDoc = FirebaseFirestore.instance.collection('vip_requests').doc(user.id);
-      await reqDoc.set({
-        'id': user.id,
-        'userId': user.id,
-        'userEmail': user.email,
-        'userName': user.name,
-        'photoUrl': user.photoUrl,
-        'plan': _selectedPlan,
-        'planTitle': _planTitle,
-        'price': _planPrice,
-        'method': method, // 'whatsapp', 'telegram', 'in_app'
-        'status': 'pending',
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-
-      // 2. Also ensure user document in users collection has pending status
-      await FirebaseFirestore.instance.collection('users').doc(user.id).set({
-        'id': user.id,
-        'uid': user.id,
-        'email': user.email,
-        'name': user.name,
-        'vipStatus': 'pending',
-        'requestedPlan': _selectedPlan,
-        'vipRequestedAt': FieldValue.serverTimestamp(),
-        'lastLoginAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-    } catch (e) {
-      debugPrint('Error recording VIP request to Firestore: $e');
-    }
-  }
-
-  Future<void> _submitInAppVipRequest() async {
-    if (_isSubmittingInApp) return;
-    setState(() => _isSubmittingInApp = true);
-
-    try {
-      await _recordVipRequestInFirestore('in_app');
-      HapticFeedback.mediumImpact();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Row(
-              children: [
-                Icon(Icons.check_circle_rounded, color: Colors.white),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text('داواکاری VIP بە سەرکەوتوویی بۆ ئەدمین نێردرا! پاش کەمێکی تر چالاک دەبێت 👑'),
-                ),
-              ],
-            ),
-            backgroundColor: ZankoColors.success,
-            duration: const Duration(seconds: 4),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isSubmittingInApp = false);
-    }
-  }
-
   void _copyToClipboard(String text, String label) {
     Clipboard.setData(ClipboardData(text: text));
     HapticFeedback.mediumImpact();
@@ -324,10 +338,12 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final lang = Provider.of<LanguageProvider>(context);
-    final textDir = lang.textDirection;
+    final authService = Provider.of<AuthService>(context);
+    final user = authService.currentUser;
+    final isVip = user?.isVip == true;
 
     return Directionality(
-      textDirection: textDir,
+      textDirection: lang.textDirection,
       child: Container(
         decoration: BoxDecoration(
           color: isDark ? ZankoColors.darkCard : Colors.white,
@@ -429,9 +445,9 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                       child: const Text('👑', style: TextStyle(fontSize: 32)),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      'بەشداریکردنی نایابی VIP',
-                      style: TextStyle(
+                    Text(
+                      isVip ? 'ئەندامی نایابی VIP (چالاکە 👑)' : 'بەشداریکردنی نایابی VIP',
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w900,
                         color: Color(0xFFFFD700),
@@ -439,11 +455,11 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'هەموو ئامرازە ئەکادیمییە پێشکەوتووەکان بەبێ سنوور بۆ سەرکەوتنت لە زانکۆ',
+                      'ڕاپۆرت و سێمینار بە Word و PPTX + تاقیکردنەوە و چاتی بێسنوور',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: Colors.white.withValues(alpha: 0.85),
                         height: 1.4,
                       ),
                     ),
@@ -487,7 +503,7 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
 
               // ── Plan Selection ────────────────────────────────────────────
               Text(
-                'پلانی گونجاو بۆ خۆت هەڵبژێرە:',
+                '١. پلانی گونجاو بۆ خۆت هەڵبژێرە:',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -545,218 +561,17 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
 
               const SizedBox(height: 18),
 
-              // ── VIP Perks Checklist ───────────────────────────────────────
+              // ── Payment Accounts Reference ────────────────────────────────
               Text(
-                'سوودە تایبەتەکانی VIP:',
+                '٢. پارەکە بۆ یەکێک لەم ژمارانە بنێرە:',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: isDark ? Colors.white : ZankoColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 10),
-              _buildFeatureRow(
-                CupertinoIcons.doc_richtext,
-                'ڕاپۆرت و سێمینار بە Word و PowerPoint',
-                'داگرتنی ڕاستەوخۆی فایلی .docx و .pptx بە فۆرماتی ئەکادیمی و سەرچاوە',
-              ),
-              _buildFeatureRow(
-                CupertinoIcons.sparkles,
-                'پێشبینیکەری پرسیاری تاقیکردنەوە (AI Exam)',
-                'پێشبینی ئەو پرسیارانەی ئەگەری ٩٠٪ لە فاینەڵ دێنەوە لەگەڵ تاقیکردنەوەی تاقیکاری',
-              ),
-              _buildFeatureRow(
-                CupertinoIcons.chat_bubble_2_fill,
-                'گفتوگۆ و پرسیاری بێسنوور لەگەڵ مامۆستای AI',
-                'لابردنی هەموو جۆرە سنووردارکردنێکی ڕۆژانە بۆ گفتوگۆ',
-              ),
-              _buildFeatureRow(
-                CupertinoIcons.camera_viewfinder,
-                'شیکارکردنی وێنەی مەلزەمە و پرسیاری ئاڵۆز',
-                'شیکارکردنی هاوکێشە، ماتماتیک، پزیشکی و ئەندازیاری بە هەنگاو',
-              ),
-              _buildFeatureRow(
-                CupertinoIcons.bolt_fill,
-                'خێرایی وەڵامدانەوە و ژیریی مۆدێلی بەرز',
-                'وەڵامدانەوەی پێشینەدار (Priority) بە بەرزترین وردبینی',
-              ),
-              _buildFeatureRow(
-                CupertinoIcons.star_circle_fill,
-                'تاجی زێڕینی VIP 👑',
-                'نیشانەی جیاواز لەسەر پرۆفایل و ڕیزبەندی لیدەربۆرد',
-              ),
+              const SizedBox(height: 8),
 
-              const SizedBox(height: 12),
-              const Divider(),
-              const SizedBox(height: 12),
-
-              // ── Direct Purchase via WhatsApp & Telegram ───────────────────
-              Text(
-                'کڕین و چالاککردنی دەستبەجێ:',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : ZankoColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'بە یەک کلیک لە ڕێگەی WhatsApp یان Telegram پەیوەندی بکە و بە کەمتر لە ٥ خولەک بەشدارییەکەت بۆ چالاک دەکرێت ✨',
-                style: TextStyle(
-                  fontSize: 11.5,
-                  color: isDark ? Colors.grey[400] : Colors.grey[600],
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // WhatsApp Primary Button
-              ElevatedButton(
-                onPressed: _launchWhatsApp,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF25D366),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 2,
-                  shadowColor: const Color(0xFF25D366).withValues(alpha: 0.4),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        CupertinoIcons.chat_bubble_fill,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'کڕینی VIP لە ڕێگەی WhatsApp',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '$_planTitle — ${_formatPrice(_planPrice)} د.ع',
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              color: Colors.white.withValues(alpha: 0.9),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Icon(CupertinoIcons.arrow_left, size: 18, color: Colors.white),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              // Telegram Secondary Button
-              ElevatedButton(
-                onPressed: _launchTelegram,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF229ED9),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 1,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        CupertinoIcons.paperplane_fill,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'کڕین لە ڕێگەی Telegram',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'پەیوەندی بە تیمی پشتگیری لە تەلەگرام',
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              color: Colors.white.withValues(alpha: 0.88),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Icon(CupertinoIcons.arrow_left, size: 18, color: Colors.white),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              // In-App Direct VIP Request Button
-              OutlinedButton.icon(
-                onPressed: _isSubmittingInApp ? null : _submitInAppVipRequest,
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 16),
-                  side: BorderSide(
-                    color: const Color(0xFFFFD700).withValues(alpha: 0.7),
-                    width: 1.5,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  backgroundColor: const Color(0xFFFFD700).withValues(alpha: 0.08),
-                ),
-                icon: _isSubmittingInApp
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFFFD700)),
-                      )
-                    : const Icon(CupertinoIcons.star_circle_fill, color: Color(0xFFFFD700), size: 20),
-                label: Text(
-                  _isSubmittingInApp ? 'ناردنی داواکاری...' : '👑 ناردنی داواکاری ڕاستەوخۆ بۆ سیستەمی ئەدمین',
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w800,
-                    color: isDark ? const Color(0xFFFFE066) : const Color(0xFFB8860B),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // ── Payment Accounts Reference Accordion ───────────────────────
               Container(
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF1E222B) : Colors.grey[50],
@@ -771,10 +586,7 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                       onTap: () => setState(() => _showAccounts = !_showAccounts),
                       borderRadius: BorderRadius.circular(16),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                         child: Row(
                           children: [
                             const Icon(
@@ -785,18 +597,16 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'ژمارەکانی پارەدان (FIB, FastPay, ZainCash)',
+                                'ژمارەکانی پارەدان (FastPay, FIB, ZainCash)',
                                 style: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 12.5,
                                   fontWeight: FontWeight.w700,
                                   color: isDark ? Colors.white : ZankoColors.textPrimary,
                                 ),
                               ),
                             ),
                             Icon(
-                              _showAccounts
-                                  ? CupertinoIcons.chevron_up
-                                  : CupertinoIcons.chevron_down,
+                              _showAccounts ? CupertinoIcons.chevron_up : CupertinoIcons.chevron_down,
                               size: 16,
                               color: Colors.grey,
                             ),
@@ -833,9 +643,9 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                               icon: Icons.phone_android_rounded,
                               isDark: isDark,
                             ),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: 8),
                             Text(
-                              '💡 دەتوانیت بڕی پارەکە بۆ ئەم ژمارانە بنێریت و پاشان لە واتسئاپ داوای چالاککردن بکەیت.',
+                              '📌 دوای ناردنی پارەکە، لە خوارەوە لە ڕێگەی واتسئاپ یان تەلەگرام وێنەی وەسڵەکە بنێرە.',
                               style: TextStyle(
                                 fontSize: 11,
                                 color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -850,6 +660,176 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                 ),
               ),
 
+              const SizedBox(height: 20),
+
+              // ── Step 3: Send Receipt via WhatsApp / Telegram ──────────────
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isDark
+                        ? [const Color(0xFF1B262C), const Color(0xFF161E2E)]
+                        : [const Color(0xFFF0FDF4), const Color(0xFFF8FAFC)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.4),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.08),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF10B981).withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            CupertinoIcons.paperplane_fill,
+                            color: Color(0xFF10B981),
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            '٣. ناردنی وێنەی وەسڵ بۆ بەڕێوەبەر:',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : ZankoColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.black.withValues(alpha: 0.25) : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: isDark ? Colors.white10 : Colors.grey[200]!),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('🧾', style: TextStyle(fontSize: 18)),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'دوای ئەوەی پارەکەت نارد، لە ڕێگەی واتسئاپ یان تەلەگرام وێنەی وەسڵەکەت بنێرە تاوەکو ئەدمین ڕاستەوخۆ VIPەکەت بۆ چالاک بکات ⚡',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                height: 1.45,
+                                color: isDark ? Colors.grey[300] : Colors.grey[700],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // WhatsApp Button
+                    ElevatedButton.icon(
+                      onPressed: _launchWhatsApp,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF25D366),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 2,
+                      ),
+                      icon: const Icon(CupertinoIcons.chat_bubble_fill, size: 20),
+                      label: const Text(
+                        'ناردنی وێنەی وەسڵ لە واتسئاپ (WhatsApp) 💬',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Telegram Button
+                    ElevatedButton.icon(
+                      onPressed: _launchTelegram,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF229ED9),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 2,
+                      ),
+                      icon: const Icon(CupertinoIcons.paperplane_fill, size: 20),
+                      label: const Text(
+                        'ناردنی وێنەی وەسڵ لە تەلەگرام (Telegram) ✈️',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // ── VIP Perks Checklist ───────────────────────────────────────
+              Text(
+                'سوودە تایبەتەکانی VIP:',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : ZankoColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 10),
+              _buildFeatureRow(
+                CupertinoIcons.doc_richtext,
+                'ڕاپۆرت و سێمینار بە Word و PowerPoint',
+                'داگرتنی ڕاستەوخۆی فایلی .docx و .pptx بە فۆرماتی ئەکادیمی و سەرچاوە',
+              ),
+              _buildFeatureRow(
+                CupertinoIcons.sparkles,
+                'پێشبینیکەری پرسیاری تاقیکردنەوە (AI Exam)',
+                'پێشبینی ئەو پرسیارانەی ئەگەری ٩٠٪ لە فاینەڵ دێنەوە لەگەڵ تاقیکردنەوەی تاقیکاری',
+              ),
+              _buildFeatureRow(
+                CupertinoIcons.chat_bubble_2_fill,
+                'گفتوگۆ و پرسیاری بێسنوور لەگەڵ مامۆستای AI',
+                'لابردنی هەموو جۆرە سنووردارکردنێکی ڕۆژانە بۆ گفتوگۆ',
+              ),
+              _buildFeatureRow(
+                CupertinoIcons.camera_viewfinder,
+                'شیکارکردنی وێنەی مەلزەمە و پرسیاری ئاڵۆز',
+                'شیکارکردنی هاوکێشە، ماتماتیک، پزیشکی و ئەندازیاری بە هەنگاو',
+              ),
+              _buildFeatureRow(
+                CupertinoIcons.bolt_fill,
+                'خێرایی وەڵامدانەوە و ژیریی مۆدێلی بەرز',
+                'وەڵامدانەوەی پێشینەدار (Priority) بە بەرزترین وردبینی',
+              ),
+
               const SizedBox(height: 14),
 
               Row(
@@ -862,7 +842,7 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'پارێزراو و پشتڕاستکراوە لەلایەن تیمی فەرمی Zanko AI',
+                    'پارێزراو و پشتڕاستکراوە لەلایەن تیمی birdev',
                     style: TextStyle(
                       fontSize: 11,
                       color: isDark ? Colors.grey[400] : Colors.grey[600],

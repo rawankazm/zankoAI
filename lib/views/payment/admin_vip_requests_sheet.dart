@@ -28,9 +28,10 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
   final Map<String, bool> _processingIds = {};
 
   int _getPlanDays(String? plan) {
+    if (plan == '9_months' || plan == '9months') return 270;
     if (plan == 'yearly' || plan == 'annual') return 365;
-    if (plan == 'semester' || plan == '3months') return 90;
-    return 30; // default monthly
+    if (plan == '3_months' || plan == 'semester' || plan == '3months') return 90;
+    return 30; // default 1_month / monthly
   }
 
   String _formatDate(dynamic timestamp) {
@@ -494,10 +495,11 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
                       final planTitle = data['planTitle'] as String? ?? 'پلان مانگانە';
                       final paymentMethod = data['paymentMethod'] as String? ?? 'FastPay';
                       final transactionId = data['transactionId'] as String? ?? '---';
-                      final amount = data['amount'] as String? ?? '5,000 د.ع';
+                      final amount = data['amount'] as String? ?? (data['price'] != null ? '${data['price']} د.ع' : '5,000 د.ع');
                       final receiptImageUrl = data['receiptImageUrl'] as String?;
+                      final notes = data['notes'] as String?;
                       final status = data['status'] as String? ?? 'pending';
-                      final requestedAt = data['requestedAt'];
+                      final requestedAt = data['requestedAt'] ?? data['createdAt'];
                       final isProcessing = _processingIds[requestId] == true;
 
                       return _buildRequestCard(
@@ -510,6 +512,7 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
                         planTitle: planTitle,
                         paymentMethod: paymentMethod,
                         transactionId: transactionId,
+                        notes: notes,
                         amount: amount,
                         receiptImageUrl: receiptImageUrl,
                         status: status,
@@ -575,6 +578,7 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
     required String planTitle,
     required String paymentMethod,
     required String transactionId,
+    String? notes,
     required String amount,
     required String? receiptImageUrl,
     required String status,
@@ -717,6 +721,22 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
               ],
             ),
           ),
+          if (notes != null && notes.trim().isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.black.withValues(alpha: 0.2) : Colors.amber.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.amber.withValues(alpha: 0.25)),
+              ),
+              child: Text(
+                '📝 تێبینی خوێندکار: $notes',
+                style: TextStyle(fontSize: 11.5, color: isDark ? Colors.amber[200] : const Color(0xFF9A5B00)),
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
 
           // Row 3: Receipt Button & Actions
