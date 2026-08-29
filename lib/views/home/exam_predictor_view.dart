@@ -1,6 +1,9 @@
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 import '../../services/ai_service.dart';
 import '../../services/language_provider.dart';
 
@@ -14,26 +17,53 @@ class ExamPredictorView extends StatefulWidget {
 class _ExamPredictorViewState extends State<ExamPredictorView> {
   final TextEditingController _textController = TextEditingController();
   String _fileName = '';
-  String _fileContent = '';
   bool _isLoading = false;
   String _predictionResult = '';
+
+  String _extractTextFromPdfBytes(Uint8List bytes) {
+    try {
+      final PdfDocument document = PdfDocument(inputBytes: bytes);
+      final String extractedText = PdfTextExtractor(document).extractText();
+      document.dispose();
+      final cleanText = extractedText.trim();
+      if (cleanText.isNotEmpty) {
+        return cleanText.length > 20000 ? cleanText.substring(0, 20000) : cleanText;
+      }
+    } catch (_) {}
+    return String.fromCharCodes(bytes.length > 50000 ? bytes.sublist(0, 50000) : bytes);
+  }
 
   Future<void> _pickFile() async {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['txt', 'md'],
+        allowedExtensions: ['pdf', 'txt', 'md'],
+        withData: true,
       );
 
-      if (result != null) {
+      if (result != null && result.files.isNotEmpty) {
         final file = result.files.single;
-        setState(() {
-          _fileName = file.name;
-          if (file.bytes != null) {
-            _fileContent = String.fromCharCodes(file.bytes!);
-            _textController.text = _fileContent;
+        Uint8List? bytes = file.bytes;
+        if (bytes == null && file.path != null) {
+          final localFile = File(file.path!);
+          if (await localFile.exists()) {
+            bytes = await localFile.readAsBytes();
           }
-        });
+        }
+
+        if (bytes != null) {
+          String text = '';
+          if (file.name.toLowerCase().endsWith('.pdf')) {
+            text = _extractTextFromPdfBytes(bytes);
+          } else {
+            text = String.fromCharCodes(bytes);
+          }
+
+          setState(() {
+            _fileName = file.name;
+            _textController.text = text;
+          });
+        }
       }
     } catch (e) {
       if (!mounted) return;

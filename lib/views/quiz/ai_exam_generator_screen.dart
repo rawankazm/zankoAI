@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/quiz_model.dart';
 import '../../services/ai_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/database_service.dart';
 import '../../services/language_provider.dart';
 import '../../theme.dart';
 import '../../services/score_service.dart';
@@ -32,6 +33,11 @@ class AiExamGeneratorScreen extends StatefulWidget {
 
 class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
   // Config state
+  String _inputMode = 'pdf'; // 'pdf' or 'topic'
+  final TextEditingController _courseController = TextEditingController();
+  final TextEditingController _topicController = TextEditingController();
+  final Map<int, TextEditingController> _blankControllers = {};
+
   String _selectedDifficulty = 'Medium'; // Easy, Medium, Hard
   String _selectedQuestionType = 'Mixed'; // MCQ, TrueFalse, Mixed
   int _questionCount = 10; // 5, 10, 15, 20
@@ -52,8 +58,26 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
   int _secondsSpent = 0;
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.initialCourse != null && widget.initialCourse!.isNotEmpty) {
+      _courseController.text = widget.initialCourse!;
+      _inputMode = 'topic';
+    }
+    if (widget.initialTopic != null && widget.initialTopic!.isNotEmpty) {
+      _topicController.text = widget.initialTopic!;
+      _inputMode = 'topic';
+    }
+  }
+
+  @override
   void dispose() {
     _examTimer?.cancel();
+    _courseController.dispose();
+    _topicController.dispose();
+    for (var c in _blankControllers.values) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -322,14 +346,17 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
 
   // ─── Start Exam ────────────────────────────────────────────────────────────
   Future<void> _generateAndStartExam() async {
-    if (_pdfFileContent == null || _pdfFileName == null) {
+    final courseText = _courseController.text.trim();
+    final topicText = _topicController.text.trim();
+
+    if (_inputMode == 'pdf' && (_pdfFileContent == null || _pdfFileName == null)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Row(
             children: [
               Icon(CupertinoIcons.exclamationmark_triangle_fill, color: Colors.white, size: 20),
               SizedBox(width: 10),
-              Expanded(child: Text('تکایە سەرەتا فایلی PDFی وانەکە باربکە بۆ ئەوەی پرسیارەکان دروست بکرێن! 📄')),
+              Expanded(child: Text('تکایە سەرەتا فایلی PDFی وانەکە باربکە یان بپەڕەرەوە بۆ بەشی دەق! 📄')),
             ],
           ),
           backgroundColor: ZankoColors.warning,
@@ -341,24 +368,46 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
       return;
     }
 
+    if (_inputMode == 'topic' && courseText.isEmpty && topicText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('تکایە ناوی وانە یان بابەت بنووسە'),
+          backgroundColor: ZankoColors.warning,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+      return;
+    }
+
     final allowed = await _checkVipExamLimit();
     if (!allowed || !mounted) return;
 
     final aiService = Provider.of<AiService>(context, listen: false);
+    final dbService = Provider.of<DatabaseService>(context, listen: false);
 
     setState(() {
       _isGenerating = true;
       _activeExam = null;
       _currentQuestionIndex = 0;
       _userAnswers.clear();
+      _blankControllers.clear();
       _examCompleted = false;
       _secondsSpent = 0;
     });
 
-    final String rawName = _pdfFileName!.replaceAll(RegExp(r'\.(pdf|txt)$', caseSensitive: false), '');
-    final String cleanFileName = _sanitizeExtractedText(rawName);
-    final courseToUse = cleanFileName.isNotEmpty ? cleanFileName : 'فایلی PDFی بارکراو';
-    final topicToUse = 'ناوەرۆکی $courseToUse';
+    String courseToUse;
+    String topicToUse;
+
+    if (_inputMode == 'pdf' && _pdfFileName != null) {
+      final String rawName = _pdfFileName!.replaceAll(RegExp(r'\.(pdf|txt)$', caseSensitive: false), '');
+      final String cleanFileName = _sanitizeExtractedText(rawName);
+      courseToUse = cleanFileName.isNotEmpty ? cleanFileName : 'فایلی PDFی بارکراو';
+      topicToUse = 'ناوەڕۆکی $courseToUse';
+    } else {
+      courseToUse = courseText.isNotEmpty ? courseText : (topicText.isNotEmpty ? topicText : 'تاقیکردنەوەی گشتی');
+      topicToUse = topicText.isNotEmpty ? topicText : courseToUse;
+    }
 
     try {
       QuizModel exam;
@@ -370,11 +419,20 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
           questionType: _selectedQuestionType,
           questionCount: _questionCount,
           durationMinutes: _durationMinutes,
-          pdfContent: _pdfFileContent,
-          pdfBytes: _pdfFileBytes,
+          pdfContent: _inputMode == 'pdf' ? _pdfFileContent : null,
+          pdfBytes: _inputMode == 'pdf' ? _pdfFileBytes : null,
         );
       } else {
         exam = await aiService.generateQuiz(topicToUse, courseToUse);
+      }
+
+      await dbService.addQuiz(exam);
+
+      // Initialize blank controllers
+      for (int i = 0; i < exam.questions.length; i++) {
+        if (exam.questions[i].type == QuestionType.fillInBlank) {
+          _blankControllers[i] = TextEditingController();
+        }
       }
 
       if (mounted) {
@@ -387,7 +445,22 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
         _startTimer();
       }
     } catch (e) {
-      final fallbackExam = _generateFallbackExam(topicToUse, courseToUse, _questionCount, _durationMinutes);
+      final fallbackExam = _generateFallbackExam(
+        topicToUse,
+        courseToUse,
+        _questionCount,
+        _durationMinutes,
+        pdfText: _inputMode == 'pdf' ? _pdfFileContent : null,
+      );
+
+      await dbService.addQuiz(fallbackExam);
+
+      for (int i = 0; i < fallbackExam.questions.length; i++) {
+        if (fallbackExam.questions[i].type == QuestionType.fillInBlank) {
+          _blankControllers[i] = TextEditingController();
+        }
+      }
+
       if (mounted) {
         setState(() {
           _activeExam = fallbackExam;
@@ -419,10 +492,10 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
         line.trim().length < 10;
   }
 
-  QuizModel _generateFallbackExam(String topic, String course, int count, int duration) {
+  QuizModel _generateFallbackExam(String topic, String course, int count, int duration, {String? pdfText}) {
     List<String> pdfSnippets = [];
-    if (_pdfFileContent != null && _pdfFileContent!.trim().isNotEmpty) {
-      pdfSnippets = _pdfFileContent!
+    if (pdfText != null && pdfText.trim().isNotEmpty) {
+      pdfSnippets = pdfText
           .split(RegExp(r'[\.\?\!\n;]'))
           .map((s) => _sanitizeExtractedText(s))
           .where((s) => s.length > 15 && !_isJunkMetadataLine(s) && RegExp(r'[a-zA-Z\u0600-\u06FF]').hasMatch(s))
@@ -431,90 +504,84 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
 
     final List<QuestionModel> questions = [];
     final cleanTitle = _sanitizeExtractedText(course.replaceAll(RegExp(r'\.[a-zA-Z0-9]+$', caseSensitive: false), ''));
-    final displayTitle = cleanTitle.isNotEmpty ? cleanTitle : 'فایلی PDFی وانەکە';
+    final displayTitle = cleanTitle.isNotEmpty ? cleanTitle : 'وانەی دیاریکراو';
 
     final int targetCount = count > 0 ? count : 5;
 
-    if (pdfSnippets.isNotEmpty) {
+    if (pdfSnippets.length >= 2) {
       for (int i = 0; i < targetCount; i++) {
         final snippet = pdfSnippets[i % pdfSnippets.length].trim();
         final words = snippet.split(' ').where((w) => w.length > 3 && !_isJunkMetadataLine(w)).toList();
-        final mainTerm = words.isNotEmpty ? words[i % words.length] : 'چەمکی زانستی';
+        final mainTerm = words.isNotEmpty ? words[i % words.length] : 'چەمکی سەرەکی';
 
         if (i % 3 == 0) {
-          // Factual Multiple Choice from exact PDF sentence
+          // Factual Multiple Choice
           final truncatedSnippet = snippet.length > 100 ? '${snippet.substring(0, 100)}...' : snippet;
-          final wrong1 = pdfSnippets[(i + 1) % pdfSnippets.length].trim();
-          final wrong2 = pdfSnippets[(i + 2) % pdfSnippets.length].trim();
+          final wrong1 = (pdfSnippets.length > 1) ? pdfSnippets[(i + 1) % pdfSnippets.length].trim() : 'ناچالاککردنی سەرجەم پرۆتۆکۆلەکان';
+          final wrong2 = (pdfSnippets.length > 2) ? pdfSnippets[(i + 2) % pdfSnippets.length].trim() : 'سڕینەوەی هەموو تێکستەکان بەرامبەر داتای نادیار';
           final wrong1Truncated = wrong1.length > 80 ? '${wrong1.substring(0, 80)}...' : (wrong1.isNotEmpty ? wrong1 : 'ڕەتکردنەوەی یاساکانی وانەکە');
           final wrong2Truncated = wrong2.length > 80 ? '${wrong2.substring(0, 80)}...' : (wrong2.isNotEmpty ? wrong2 : 'ناچالاککردنی کردارەکان لە سیستەمەکە');
 
+          final rawOpts = [truncatedSnippet, wrong1Truncated, wrong2Truncated, 'هیچ کام لەمانە'];
+          final shuffledOpts = List<String>.from(rawOpts)..shuffle();
+
           questions.add(
             QuestionModel(
-              id: 'pdf_gen_$i',
-              questionText: 'کامیان وەڵامی دروستە بەپێی دەقی فایلی وانەی «$displayTitle»؟',
+              id: 'fallback_gen_$i',
+              questionText: 'کامیان زانیارییەکی ڕاستە دەربارەی بابەتی «$displayTitle»؟',
               type: QuestionType.multipleChoice,
-              options: [
-                truncatedSnippet,
-                wrong1Truncated,
-                wrong2Truncated,
-                'هیچ کام لەمانە',
-              ],
+              options: shuffledOpts,
               correctAnswer: truncatedSnippet,
-              explanation: 'ئەم دەقە ڕاستەوخۆ لە زانیارییەکانی فایلی PDFی بارکراو دەرهێنراوە.',
+              explanation: 'ئەم زانیارییە بە دروستی دەربارەی دەقی وانەکەت دەرهێنراوە.',
             ),
           );
         } else if (i % 3 == 1) {
-          // Fill-in-the-blank from PDF main term
+          // Fill-in-the-blank
           final blankedSnippet = snippet.length > 90
               ? snippet.substring(0, 90).replaceAll(mainTerm, '___')
               : snippet.replaceAll(mainTerm, '___');
 
-          final otherWords = pdfSnippets.expand((s) => s.split(' ')).where((w) => w.length > 3 && w != mainTerm && !_isJunkMetadataLine(w)).take(3).toList();
-          final alt1 = otherWords.isNotEmpty ? otherWords[0] : 'زاراوەی ئەکادیمی';
-          final alt2 = otherWords.length > 1 ? otherWords[1] : 'پێناسەی گشتی';
-          final alt3 = otherWords.length > 2 ? otherWords[2] : 'فۆرمولای یاسایی';
-
           questions.add(
             QuestionModel(
-              id: 'pdf_gen_$i',
+              id: 'fallback_gen_$i',
               questionText: 'بۆشایی لە دەقی وانەکەدا پڕبکەرەوە: "$blankedSnippet"',
               type: QuestionType.fillInBlank,
-              options: [
-                mainTerm,
-                alt1,
-                alt2,
-                alt3,
-              ],
+              options: null,
               correctAnswer: mainTerm,
-              explanation: 'زاراوەی «$mainTerm» دەقی دروستی بۆشایی فایلی PDFەکەتە.',
+              explanation: 'زاراوەی «$mainTerm» دەقی دروستی بۆشایی وانەکەیە.',
             ),
           );
         } else {
-          // True/False from exact PDF sentence
+          // True/False
           final truncatedSnippet = snippet.length > 120 ? snippet.substring(0, 120) : snippet;
+          final isTrue = i % 2 == 0;
           questions.add(
             QuestionModel(
-              id: 'pdf_gen_$i',
-              questionText: 'بەپێی دەقی فایلی PDFی وانەکە: "$truncatedSnippet". ئایا ئەم زانیارییە ڕاستە؟',
+              id: 'fallback_gen_$i',
+              questionText: isTrue
+                  ? 'دەربارەی وانەی «$displayTitle»: "$truncatedSnippet". ئایا ئەم زانیارییە ڕاستە؟'
+                  : 'ئایا چەمکی "$mainTerm" لە وانەی «$displayTitle» بە تەواوی ناچالاک دەکرێت؟',
               type: QuestionType.trueFalse,
               options: ['ڕاستە', 'هەڵەیە'],
-              correctAnswer: 'ڕاستە',
-              explanation: 'ئەم زانیارییە بە تەواوی لە فایلی PDFی وانەکەتدا هاتووە.',
+              correctAnswer: isTrue ? 'ڕاستە' : 'هەڵەیە',
+              explanation: isTrue ? 'ئەم زانیارییە ڕاستە بەپێی وانەکە.' : 'ئەم زانیارییە پێچەوانەی چەمکی زانستی وانەکەیە.',
             ),
           );
         }
       }
     } else {
       for (int i = 0; i < targetCount; i++) {
+        final isTrue = i % 2 == 0;
         questions.add(
           QuestionModel(
-            id: 'pdf_gen_$i',
-            questionText: 'ئایا چەمکەکانی ناو فایلی «$displayTitle» پێویستە بۆ ئامادەکاری تاقیکردنەوەی فاینەڵ؟ (پرسیاری ${i + 1})',
+            id: 'fallback_gen_$i',
+            questionText: isTrue
+                ? 'لە بابەتی ($displayTitle)، پێداچوونەوە بە چەمکە سەرەکییەکان گرنگە بۆ ئامادەکاری تاقیکردنەوەی فاینەڵ؟'
+                : 'لە بابەتی ($displayTitle)، بابەتە تیۆرییەکان گرنگ نین بۆ سەرکەوتن لە تاقیکردنەوەدا؟',
             type: QuestionType.trueFalse,
             options: ['ڕاستە', 'هەڵەیە'],
-            correctAnswer: 'ڕاستە',
-            explanation: 'پێداچوونەوەی ئەم بەشانە لە فایلی $displayTitle نمرەی بەرز دەستەبەر دەکات.',
+            correctAnswer: isTrue ? 'ڕاستە' : 'هەڵەیە',
+            explanation: isTrue ? 'پێداچوونەوەی ئەم بابەتانە نمرەی بەرز دەستەبەر دەکات.' : 'سەرجەم بابەتەکان بۆ تاقیکردنەوە پێویستن.',
           ),
         );
       }
@@ -522,7 +589,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
 
     return QuizModel(
       id: 'exam_${DateTime.now().millisecondsSinceEpoch}',
-      title: 'تاقیکردنەوە لەسەر PDF - $displayTitle',
+      title: 'تاقیکردنەوە لەسەر $displayTitle',
       courseName: displayTitle,
       questions: questions.take(targetCount).toList(),
       durationMinutes: duration > 0 ? duration : 15,
@@ -561,13 +628,80 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
     if (_activeExam == null) return 0;
     int score = 0;
     for (int i = 0; i < _activeExam!.questions.length; i++) {
-      final userAns = _userAnswers[i]?.trim().toLowerCase();
-      final correctAns = _activeExam!.questions[i].correctAnswer.trim().toLowerCase();
-      if (userAns != null && userAns == correctAns) {
+      final q = _activeExam!.questions[i];
+      String? userAns = _userAnswers[i];
+      if (q.type == QuestionType.fillInBlank) {
+        userAns = _blankControllers[i]?.text.trim() ?? userAns;
+      }
+      if (AiService.isAnswerCorrect(userAns, q.correctAnswer, options: q.options)) {
         score++;
       }
     }
     return score;
+  }
+
+  void _exportExamText() {
+    if (_activeExam == null) return;
+
+    final StringBuffer buffer = StringBuffer();
+    buffer.writeln('==============================');
+    buffer.writeln('ZankoAI - ${_activeExam!.title}');
+    buffer.writeln('وانە: ${_activeExam!.courseName}');
+    buffer.writeln('ماوە: ${_activeExam!.durationMinutes} خولەک');
+    buffer.writeln('==============================\n');
+
+    for (int i = 0; i < _activeExam!.questions.length; i++) {
+      final q = _activeExam!.questions[i];
+      buffer.writeln('${i + 1}. ${q.questionText}');
+      if (q.type == QuestionType.multipleChoice && q.options != null) {
+        for (var opt in q.options!) {
+          buffer.writeln('   [ ] $opt');
+        }
+      } else if (q.type == QuestionType.trueFalse) {
+        buffer.writeln('   [ ] ڕاستە / True');
+        buffer.writeln('   [ ] هەڵەیە / False');
+      } else if (q.type == QuestionType.fillInBlank) {
+        buffer.writeln('   بۆشایی پڕ بکەرەوە: __________________');
+      }
+      buffer.writeln('   وەڵامی ڕاست: ${q.correctAnswer}');
+      if (q.explanation != null && q.explanation!.isNotEmpty) {
+        buffer.writeln('   شیکردنەوە: ${q.explanation}');
+      }
+      buffer.writeln();
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        final text = buffer.toString();
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('تاقیکردنەوەی ئامادەکراو بۆ چاپ', style: TextStyle(fontFamily: 'Noto Sans Arabic', fontSize: 16)),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              child: SelectableText(text, style: const TextStyle(fontFamily: 'Courier', fontSize: 11.5)),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: text));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('کۆپیکرا بۆ Clipboard!', style: TextStyle(fontFamily: 'Noto Sans Arabic'))),
+                );
+                Navigator.pop(ctx);
+              },
+              child: const Text('کۆپیکردن', style: TextStyle(fontFamily: 'Noto Sans Arabic', fontWeight: FontWeight.bold)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('داخستن', style: TextStyle(fontFamily: 'Noto Sans Arabic')),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -802,92 +936,143 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
             const SizedBox(height: 16),
           ],
 
-          // 1. STEP 1: Upload PDF File (REQUIRED)
-          _buildLabel('١. بارکردنی فایلی PDFی وانەکە (پێویستە 📄)', isDark),
+          // 1. STEP 1: Source Selection (PDF or Topic)
+          _buildLabel('١. سەرچاوەی تاقیکردنەوە (Source)', isDark),
           const SizedBox(height: 8),
-          GestureDetector(
-            onTap: _pickPdfFile,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              padding: const EdgeInsets.all(20),
+          Row(
+            children: [
+              _buildPillChoice('📄 لە فایلی PDF', 'pdf', _inputMode == 'pdf', isDark, () {
+                setState(() => _inputMode = 'pdf');
+              }),
+              const SizedBox(width: 8),
+              _buildPillChoice('✍️ نووسینی وانە و بابەت', 'topic', _inputMode == 'topic', isDark, () {
+                setState(() => _inputMode = 'topic');
+              }),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          if (_inputMode == 'pdf') ...[
+            GestureDetector(
+              onTap: _pickPdfFile,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: hasPdf
+                      ? (isDark ? ZankoColors.darkCard : const Color(0xFFF0FDF4))
+                      : (isDark ? ZankoColors.darkCard : Colors.white),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: hasPdf
+                        ? ZankoColors.success
+                        : (isDark ? ZankoColors.primary.withValues(alpha: 0.5) : ZankoColors.primary),
+                    width: hasPdf ? 2.0 : 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (hasPdf ? ZankoColors.success : ZankoColors.primary).withValues(alpha: isDark ? 0.15 : 0.08),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: (hasPdf ? ZankoColors.success : ZankoColors.primary).withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        hasPdf ? CupertinoIcons.doc_checkmark_fill : CupertinoIcons.cloud_upload_fill,
+                        color: hasPdf ? ZankoColors.success : ZankoColors.primary,
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            hasPdf ? _pdfFileName! : 'کلیک لێرە بکە بۆ هەڵبژاردن و بارکردنی فایلی PDF',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: hasPdf
+                                  ? (isDark ? Colors.white : ZankoColors.textPrimary)
+                                  : (isDark ? Colors.grey[300] : ZankoColors.primary),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            hasPdf
+                                ? 'فایلی PDF بە سەرکەوتوویی ئامادەکرا ✅ (دەقەکە شیکارکرا)'
+                                : 'تکایە فایلی PDFی وانەکەت هەڵبژێرە لە مۆبایلەکەت',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: hasPdf ? FontWeight.w600 : FontWeight.normal,
+                              color: hasPdf
+                                  ? ZankoColors.success
+                                  : (isDark ? Colors.grey[500] : ZankoColors.textSecondary),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (hasPdf)
+                      IconButton(
+                        icon: const Icon(CupertinoIcons.xmark_circle_fill, color: Colors.grey, size: 22),
+                        onPressed: () => setState(() {
+                          _pdfFileName = null;
+                          _pdfFileContent = null;
+                        }),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ] else ...[
+            Container(
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: hasPdf
-                    ? (isDark ? ZankoColors.darkCard : const Color(0xFFF0FDF4))
-                    : (isDark ? ZankoColors.darkCard : Colors.white),
+                color: isDark ? ZankoColors.darkCard : Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: hasPdf
-                      ? ZankoColors.success
-                      : (isDark ? ZankoColors.primary.withValues(alpha: 0.5) : ZankoColors.primary),
-                  width: hasPdf ? 2.0 : 1.5,
+                  color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFEFEFF7),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: (hasPdf ? ZankoColors.success : ZankoColors.primary).withValues(alpha: isDark ? 0.15 : 0.08),
-                    blurRadius: 14,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
               ),
-              child: Row(
+              child: Column(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: (hasPdf ? ZankoColors.success : ZankoColors.primary).withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      hasPdf ? CupertinoIcons.doc_checkmark_fill : CupertinoIcons.cloud_upload_fill,
-                      color: hasPdf ? ZankoColors.success : ZankoColors.primary,
-                      size: 28,
+                  TextField(
+                    controller: _courseController,
+                    decoration: InputDecoration(
+                      labelText: 'ناوی وانە / کۆرس',
+                      hintText: 'نموونە: Operating Systems، فیزیا، یاسا...',
+                      prefixIcon: Icon(CupertinoIcons.book_fill, color: ZankoColors.primary),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          hasPdf ? _pdfFileName! : 'کلیک لێرە بکە بۆ هەڵبژاردن و بارکردنی فایلی PDF',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: hasPdf
-                                ? (isDark ? Colors.white : ZankoColors.textPrimary)
-                                : (isDark ? Colors.grey[300] : ZankoColors.primary),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          hasPdf
-                              ? 'فایلی PDF بە سەرکەوتوویی ئامادەکرا ✅ (دەقەکە شیکارکرا)'
-                              : 'تکایە سەرەتا فایلی PDFی وانەکەت هەڵبژێرە لە مۆبایلەکەت',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: hasPdf ? FontWeight.w600 : FontWeight.normal,
-                            color: hasPdf
-                                ? ZankoColors.success
-                                : (isDark ? Colors.grey[500] : ZankoColors.textSecondary),
-                          ),
-                        ),
-                      ],
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _topicController,
+                    decoration: InputDecoration(
+                      labelText: 'بابەتی دیاریکراو (ئارەزوومەندانە)',
+                      hintText: 'نموونە: Memory Management، هاوکێشەکان...',
+                      prefixIcon: Icon(CupertinoIcons.tag_fill, color: ZankoColors.primary),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     ),
                   ),
-                  if (hasPdf)
-                    IconButton(
-                      icon: const Icon(CupertinoIcons.xmark_circle_fill, color: Colors.grey, size: 22),
-                      onPressed: () => setState(() {
-                        _pdfFileName = null;
-                        _pdfFileContent = null;
-                      }),
-                    ),
                 ],
               ),
             ),
-          ),
+          ],
           const SizedBox(height: 24),
 
           // 2. Difficulty Level
@@ -1020,19 +1205,19 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
             child: ElevatedButton(
               onPressed: _generateAndStartExam,
               style: ElevatedButton.styleFrom(
-                backgroundColor: hasPdf ? ZankoColors.primary : ZankoColors.primary.withValues(alpha: 0.7),
+                backgroundColor: ZankoColors.primary,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                 elevation: 6,
                 shadowColor: ZankoColors.primary.withValues(alpha: 0.4),
               ),
-              child: Row(
+              child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(hasPdf ? CupertinoIcons.sparkles : CupertinoIcons.cloud_upload_fill, color: Colors.white, size: 22),
-                  const SizedBox(width: 10),
+                  Icon(CupertinoIcons.sparkles, color: Colors.white, size: 22),
+                  SizedBox(width: 10),
                   Text(
-                    hasPdf ? '🚀 دروستکردنی تاقیکردنەوە لە PDF' : '📄 سەرەتا فایلی PDF باربکە',
-                    style: const TextStyle(
+                    '🚀 دەستپێکردنی تاقیکردنەوە بە AI',
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -1338,7 +1523,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                             child: Text(
                               currentQuestion.type == QuestionType.trueFalse
                                   ? 'ڕاست یان هەڵە'
-                                  : 'هەڵبژاردن (MCQ)',
+                                  : (currentQuestion.type == QuestionType.fillInBlank
+                                      ? 'بۆشایی پڕبکەرەوە'
+                                      : 'هەڵبژاردن (MCQ)'),
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
@@ -1347,7 +1534,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                             ),
                           ),
                           Text(
-                            '📄 لە فایلی PDF',
+                            _inputMode == 'pdf' ? '📄 لە فایلی PDF' : '📚 بەپێی بابەت',
                             style: TextStyle(
                               fontSize: 11,
                               color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
@@ -1370,8 +1557,93 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Options List
-                if (currentQuestion.options != null && currentQuestion.options!.isNotEmpty)
+                // Question Inputs based on type
+                if (currentQuestion.type == QuestionType.fillInBlank) ...[
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isDark ? ZankoColors.darkCard : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF0F0F6),
+                      ),
+                    ),
+                    child: TextField(
+                      controller: _blankControllers[_currentQuestionIndex] ??= TextEditingController(text: _userAnswers[_currentQuestionIndex] ?? ''),
+                      decoration: InputDecoration(
+                        labelText: 'وەڵامەکەت لێرە بنووسە',
+                        hintText: 'وەڵامی دروستی بۆشایییەکە بنووسە...',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        prefixIcon: Icon(CupertinoIcons.pencil, color: ZankoColors.primary),
+                      ),
+                      onChanged: (val) {
+                        _userAnswers[_currentQuestionIndex] = val.trim();
+                      },
+                    ),
+                  ),
+                ] else if (currentQuestion.type == QuestionType.trueFalse) ...[
+                  ...['ڕاستە', 'هەڵەیە'].map((opt) {
+                    final isSelected = _userAnswers[_currentQuestionIndex] == opt;
+                    final isTrueOpt = opt == 'ڕاستە';
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _userAnswers[_currentQuestionIndex] = opt;
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? (isTrueOpt ? ZankoColors.success.withValues(alpha: 0.15) : ZankoColors.error.withValues(alpha: 0.15))
+                                : (isDark ? ZankoColors.darkCard : Colors.white),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isSelected
+                                  ? (isTrueOpt ? ZankoColors.success : ZankoColors.error)
+                                  : (isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF0F0F6)),
+                              width: isSelected ? 2 : 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: isSelected
+                                      ? (isTrueOpt ? ZankoColors.success : ZankoColors.error)
+                                      : (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[200]),
+                                ),
+                                child: Center(
+                                  child: isSelected
+                                      ? const Icon(CupertinoIcons.checkmark_alt, size: 18, color: Colors.white)
+                                      : null,
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Text(
+                                  isTrueOpt ? 'ڕاستە / True ✅' : 'هەڵەیە / False ❌',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                    color: isSelected
+                                        ? (isTrueOpt ? ZankoColors.success : ZankoColors.error)
+                                        : (isDark ? Colors.grey[200] : ZankoColors.textPrimary),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ] else if (currentQuestion.options != null && currentQuestion.options!.isNotEmpty) ...[
                   ...currentQuestion.options!.map((opt) {
                     final isSelected = _userAnswers[_currentQuestionIndex] == opt;
                     return Padding(
@@ -1432,6 +1704,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                       ),
                     );
                   }),
+                ],
               ],
             ),
           ),
@@ -1583,8 +1856,11 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
           ..._activeExam!.questions.asMap().entries.map((entry) {
             final idx = entry.key;
             final q = entry.value;
-            final userAns = _userAnswers[idx];
-            final isCorrect = userAns != null && userAns.trim().toLowerCase() == q.correctAnswer.trim().toLowerCase();
+            String? userAns = _userAnswers[idx];
+            if (q.type == QuestionType.fillInBlank) {
+              userAns = _blankControllers[idx]?.text.trim() ?? userAns;
+            }
+            final isCorrect = AiService.isAnswerCorrect(userAns, q.correctAnswer, options: q.options);
 
             return Container(
               margin: const EdgeInsets.only(bottom: 16),
@@ -1705,26 +1981,40 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
 
           const SizedBox(height: 20),
 
-          // Retake & Ask AI Action Buttons
+          // Action Buttons: Export, Retake, Ask AI
           Row(
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {
-                    setState(() {
-                      _activeExam = null;
-                      _examCompleted = false;
-                    });
-                  },
-                  icon: const Icon(CupertinoIcons.refresh),
-                  label: const Text('دووبارەکردنەوە'),
+                  onPressed: _exportExamText,
+                  icon: const Icon(CupertinoIcons.share, size: 16),
+                  label: const Text('چاپ / هەناردە', style: TextStyle(fontSize: 11.5)),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _activeExam = null;
+                      _examCompleted = false;
+                      _userAnswers.clear();
+                      _blankControllers.clear();
+                    });
+                  },
+                  icon: const Icon(CupertinoIcons.refresh, size: 16),
+                  label: const Text('دووبارەکردنەوە', style: TextStyle(fontSize: 11.5)),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () {
@@ -1733,8 +2023,8 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                       CupertinoPageRoute(builder: (_) => const AiTeacherChatScreen()),
                     );
                   },
-                  icon: const Icon(CupertinoIcons.chat_bubble_2_fill, color: Colors.white),
-                  label: const Text('پرسیار لە AI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  icon: const Icon(CupertinoIcons.chat_bubble_2_fill, color: Colors.white, size: 16),
+                  label: const Text('AI مامۆستا', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11.5)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ZankoColors.primary,
                     padding: const EdgeInsets.symmetric(vertical: 14),

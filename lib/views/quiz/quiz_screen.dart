@@ -272,7 +272,7 @@ class _QuizScreenState extends State<QuizScreen> {
         userAnswer = _userAnswers[i] ?? '';
       }
 
-      if (userAnswer.toLowerCase() == q.correctAnswer.toLowerCase()) {
+      if (AiService.isAnswerCorrect(userAnswer, q.correctAnswer, options: q.options)) {
         score++;
       }
     }
@@ -763,50 +763,90 @@ class _QuizScreenState extends State<QuizScreen> {
   List<Widget> _buildQuestionInputs(QuestionModel question, int questionIndex) {
     if (question.type == QuestionType.trueFalse) {
       return [
-        RadioGroup<String>(
-          groupValue: _userAnswers[questionIndex],
-          onChanged: (val) {
-            setState(() {
-              _userAnswers[questionIndex] = val!;
-            });
-          },
-          child: Column(
-            children: [
-              ListTile(
-                title: const Text('ڕاستە / True', style: TextStyle(fontFamily: 'Noto Sans Arabic')),
-                leading: Radio<String>(
-                  value: 'ڕاستە',
+        Column(
+          children: [
+            Card(
+              elevation: 0,
+              color: _userAnswers[questionIndex] == 'ڕاستە' ? Colors.green.withValues(alpha: 0.12) : null,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: _userAnswers[questionIndex] == 'ڕاستە' ? Colors.green : Theme.of(context).dividerColor,
+                  width: _userAnswers[questionIndex] == 'ڕاستە' ? 1.5 : 1.0,
                 ),
               ),
-              ListTile(
-                title: const Text('هەڵەیە / False', style: TextStyle(fontFamily: 'Noto Sans Arabic')),
-                leading: Radio<String>(
-                  value: 'هەڵەیە',
+              child: ListTile(
+                onTap: () {
+                  setState(() {
+                    _userAnswers[questionIndex] = 'ڕاستە';
+                  });
+                },
+                title: const Text('ڕاستە / True', style: TextStyle(fontFamily: 'Noto Sans Arabic', fontWeight: FontWeight.w600)),
+                leading: Icon(
+                  _userAnswers[questionIndex] == 'ڕاستە' ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                  color: _userAnswers[questionIndex] == 'ڕاستە' ? Colors.green : Colors.grey,
                 ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 8),
+            Card(
+              elevation: 0,
+              color: _userAnswers[questionIndex] == 'هەڵەیە' ? Colors.red.withValues(alpha: 0.12) : null,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: _userAnswers[questionIndex] == 'هەڵەیە' ? Colors.red : Theme.of(context).dividerColor,
+                  width: _userAnswers[questionIndex] == 'هەڵەیە' ? 1.5 : 1.0,
+                ),
+              ),
+              child: ListTile(
+                onTap: () {
+                  setState(() {
+                    _userAnswers[questionIndex] = 'هەڵەیە';
+                  });
+                },
+                title: const Text('هەڵەیە / False', style: TextStyle(fontFamily: 'Noto Sans Arabic', fontWeight: FontWeight.w600)),
+                leading: Icon(
+                  _userAnswers[questionIndex] == 'هەڵەیە' ? Icons.cancel_rounded : Icons.radio_button_unchecked_rounded,
+                  color: _userAnswers[questionIndex] == 'هەڵەیە' ? Colors.red : Colors.grey,
+                ),
+              ),
+            ),
+          ],
         ),
       ];
     } else if (question.type == QuestionType.multipleChoice && question.options != null) {
       return [
-        RadioGroup<String>(
-          groupValue: _userAnswers[questionIndex],
-          onChanged: (val) {
-            setState(() {
-              _userAnswers[questionIndex] = val!;
-            });
-          },
-          child: Column(
-            children: question.options!.map((opt) {
-              return ListTile(
-                title: Text(opt, style: const TextStyle(fontFamily: 'Noto Sans Arabic')),
-                leading: Radio<String>(
-                  value: opt,
+        Column(
+          children: question.options!.map((opt) {
+            final isSelected = _userAnswers[questionIndex] == opt;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Card(
+                elevation: 0,
+                color: isSelected ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.12) : null,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).dividerColor,
+                    width: isSelected ? 1.5 : 1.0,
+                  ),
                 ),
-              );
-            }).toList(),
-          ),
+                child: ListTile(
+                  onTap: () {
+                    setState(() {
+                      _userAnswers[questionIndex] = opt;
+                    });
+                  },
+                  title: Text(opt, style: TextStyle(fontFamily: 'Noto Sans Arabic', fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+                  leading: Icon(
+                    isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                    color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
         ),
       ];
     } else if (question.type == QuestionType.fillInBlank) {
@@ -816,6 +856,8 @@ class _QuizScreenState extends State<QuizScreen> {
           controller: controller,
           decoration: InputDecoration(
             hintText: Provider.of<LanguageProvider>(context, listen: false).translate('type_answer'),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            prefixIcon: const Icon(Icons.edit_note_rounded),
           ),
           onChanged: (value) {
             _userAnswers[questionIndex] = value.trim();

@@ -49,6 +49,59 @@ abstract class AiService extends ChangeNotifier {
     String? pdfName,
     String targetLanguage = 'ku',
   });
+
+  /// Helper to robustly check if a user answer matches the correct answer
+  static bool isAnswerCorrect(String? userAns, String? correctAns, {List<String>? options}) {
+    if (userAns == null || correctAns == null) return false;
+    final u = userAns.trim();
+    final c = correctAns.trim();
+    if (u.isEmpty || c.isEmpty) return false;
+
+    // Direct case-insensitive equality
+    if (u.toLowerCase() == c.toLowerCase()) return true;
+
+    // True/False equivalence (Kurdish, Arabic, English)
+    const truthy = {'ڕاستە', 'ڕاست', 'true', 't', '1', 'صح', 'صحيح', 'yes', 'y'};
+    const falsy = {'هەڵەیە', 'هەڵە', 'false', 'f', '0', 'خطأ', 'no', 'n'};
+    final uLower = u.toLowerCase();
+    final cLower = c.toLowerCase();
+    if (truthy.contains(uLower) && truthy.contains(cLower)) return true;
+    if (falsy.contains(uLower) && falsy.contains(cLower)) return true;
+
+    // Helper to strip leading option identifiers e.g. "A) ", "1. ", "B - "
+    String stripPrefix(String s) {
+      return s.replaceFirst(RegExp(r'^[A-Da-d0-9][\.\)\:\-]\s*'), '').trim().toLowerCase();
+    }
+
+    final uClean = stripPrefix(u);
+    final cClean = stripPrefix(c);
+    if (uClean.isNotEmpty && uClean == cClean) return true;
+
+    // Letter matching (A, B, C, D / 0, 1, 2, 3) against options
+    if (options != null && options.isNotEmpty) {
+      final letterMap = {'a': 0, 'b': 1, 'c': 2, 'd': 3, '0': 0, '1': 1, '2': 2, '3': 3};
+      if (letterMap.containsKey(cLower)) {
+        final targetIdx = letterMap[cLower]!;
+        if (targetIdx < options.length) {
+          final optText = options[targetIdx];
+          if (uLower == optText.toLowerCase() || uClean == stripPrefix(optText)) return true;
+        }
+      }
+      if (letterMap.containsKey(uLower)) {
+        final targetIdx = letterMap[uLower]!;
+        if (targetIdx < options.length) {
+          final optText = options[targetIdx];
+          if (cLower == optText.toLowerCase() || cClean == stripPrefix(optText)) return true;
+        }
+      }
+    }
+
+    // Punctuation and whitespace invariant comparison
+    String sanitize(String s) => s.replaceAll(RegExp(r'[\s\p{P}]', unicode: true), '').toLowerCase();
+    if (sanitize(u) == sanitize(c)) return true;
+
+    return false;
+  }
 }
 
 class ZankoAiService extends ChangeNotifier implements AiService {
@@ -370,6 +423,36 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     final qLower = query.toLowerCase().trim();
     final isEnglish = RegExp(r'^[a-zA-Z0-9\s\?\!\.,\-_]+$').hasMatch(query) || (qLower.contains('explain') || qLower.contains('what is') || qLower.contains('how to') || qLower.contains('difference'));
 
+    // 0. Translation & Vocabulary (Kurdish to English / English to Kurdish)
+    if (qLower.contains('وەرگێڕان') || qLower.contains('translate') || qLower.contains('ترجم') || qLower.contains('dashboard') || qLower.contains('داشبۆرد')) {
+      return """
+# 🌐 وەرگێڕانی وورد و ئەکادیمی بۆ ئینگلیزی (English Translation)
+
+ئەمەش وەرگێڕانی ستاندارد و پڕۆفیشناڵی دەق و زاراوەکانە:
+
+---
+
+## 📊 بەشەکانی سەرەکی داشبۆرد (Dashboard Sections):
+| دەقی کوردی (Kurdish) | هاوتای ئینگلیزی (English Translation) |
+| :--- | :--- |
+| **داشبۆردی سەرپەرشتیار** | **Admin Dashboard / Supervisor Panel** |
+| **کۆی گشتی بەکارهێنەران** | **Total Users (26)** |
+| **بەکارهێنەران** | **Users / Members** |
+| **مامۆستایان** | **Teachers / Lecturers / Faculty** |
+| **کۆرس و وانەکان** | **Courses & Lectures** |
+| **زانکۆکانی زانکۆلاین** | **ZankoLine Universities** |
+| **بەشە زانستییەکان** | **Academic / Scientific Departments** |
+| **داواکارییەکانی VIP** | **VIP Requests / Subscriptions** |
+| **گەورەکردن** | **Expand / Fullscreen View** |
+
+---
+
+### 💡 شیکردنەوەی ئەکادیمی و بەکارهێنان:
+- دەستەواژەی **Admin Dashboard** لە سیستەمە ئەکادیمی و زانکۆییەکان بۆ پنێڵی بەڕێوەبردنی گشتی داتا بەکاردێت.
+- دەستەواژەی **Department** ئاماژەیە بۆ بەشە ئەکادیمییە پسپۆڕییەکانی زانکۆ.
+""";
+    }
+
     // 1. Computer Science & Software / Flutter
     if (qLower.contains('flutter') || qLower.contains('فلاتەر') || qLower.contains('فلاتر') || qLower.contains('widget') || qLower.contains('state')) {
       if (isEnglish) {
@@ -587,8 +670,8 @@ class StudentCard extends StatelessWidget {
     client.connectionTimeout = const Duration(seconds: 10);
 
     final modelsToTry = _lastWorkingModel != null
-        ? [_lastWorkingModel!, ..._validFastModels.where((m) => m != _lastWorkingModel)]
-        : _validFastModels;
+        ? [_lastWorkingModel!, ..._validVisionModels.where((m) => m != _lastWorkingModel)]
+        : _validVisionModels;
 
     final base64Data = base64Encode(mediaBytes);
 
@@ -621,7 +704,7 @@ class StudentCard extends StatelessWidget {
         };
 
         request.add(utf8.encode(jsonEncode(bodyMap)));
-        final response = await request.close().timeout(const Duration(seconds: 25));
+        final response = await request.close().timeout(const Duration(seconds: 20));
         final respStr = await response.transform(utf8.decoder).join();
 
         if (response.statusCode == 200) {
@@ -655,15 +738,31 @@ class StudentCard extends StatelessWidget {
   Future<String> _callGeminiMultimodal(Uint8List mediaBytes, String prompt, {String mimeType = 'image/jpeg'}) async {
     final keysToTry = <String>[
       if (_lastWorkingKey != null && _lastWorkingKey!.trim().isNotEmpty) _lastWorkingKey!.trim(),
-      if (_apiKey != null && _apiKey!.trim().isNotEmpty) _apiKey!.trim(),
-      if (_defaultApiKey.trim().isNotEmpty) _defaultApiKey.trim(),
+      if (_apiKey != null && _apiKey!.trim().isNotEmpty && _apiKey != _lastWorkingKey) _apiKey!.trim(),
+      if (_defaultApiKey.trim().isNotEmpty && _defaultApiKey != _apiKey && _defaultApiKey != _lastWorkingKey) _defaultApiKey.trim(),
+      if (_fallbackWorkingKey.trim().isNotEmpty && _fallbackWorkingKey != _apiKey && _fallbackWorkingKey != _lastWorkingKey) _fallbackWorkingKey.trim(),
     ];
 
     final isAudio = mimeType.startsWith('audio');
+    String actualMime = mimeType;
+    if (!isAudio && mediaBytes.length > 8) {
+      if (mediaBytes[0] == 0x89 && mediaBytes[1] == 0x50 && mediaBytes[2] == 0x4E && mediaBytes[3] == 0x47) {
+        actualMime = 'image/png';
+      } else if (mediaBytes[0] == 0xFF && mediaBytes[1] == 0xD8 && mediaBytes[2] == 0xFF) {
+        actualMime = 'image/jpeg';
+      } else if (mediaBytes.length > 12 &&
+          mediaBytes[0] == 0x52 &&
+          mediaBytes[1] == 0x49 &&
+          mediaBytes[2] == 0x46 &&
+          mediaBytes[3] == 0x46) {
+        actualMime = 'image/webp';
+      }
+    }
+
     final systemPrompt = isAudio
         ? "تۆ سیستمێکی زۆر پێشکەوتووی نوسینەوەی دەنگی (Speech-to-Text). گوێ لەم تۆمارە دەنگییە بگرە و بە وردی و تەواوی وشە بە وشە بە زمانی قسەکەرەکە (کوردی سۆرانی، کوردی بادینی، زمانی عەرەبی، یان ئینگلیزی) دەقەکە بنووسەوە. تکایە تەنها و تەنها دەقی ئاخاوتنەکە بنووسەوە بەبێ هیچ پێشەکی، سەردێڕ، یان کۆمێنتی زیادە."
         : "تۆ مامۆستایەکی زۆر زیرەک و شارەزای هەموو بوارە ئەکادیمییەکان، بڕوانامەکان، بەڵگەنامەکان، بیرکاری و زانستەکانی بە ناوی ZankoAI. "
-          "ئەم وێنەیە بە تەواوی و بە وردی شیکار بکە. ئەگەر بەکارهێنەر پرسیار یان تێبینییەکی تایبەتی هەبوو لەسەر وێنەکە (وەک ناوی کەس، پرسیارێکی دیاریکراو، یان داواکارییەک)، وەڵامی ورد و ڕاستەوخۆ دەربارەی وێنەکە بدەرەوە بە هەمان زمانی پرسیارەکە (کوردی سۆرانی، کوردی بادینی، عەرەبی، یان ئینگلیزی).";
+          "ئەم وێنەیە بە تەواوی و بە وردی شیکار بکە. ئەگەر بەکارهێنەر پرسیار یان تێبینییەکی تایبەتی هەبوو لەسەر وێنەکە (وەک ناوی کەس، پرسیارێکی دیاریکراو، یان داواکارییەک وەک وەرگێڕان)، وەڵامی ورد و ڕاستەوخۆ دەربارەی وێنەکە بدەرەوە بە هەمان زمانی پرسیارەکە (کوردی سۆرانی، کوردی بادینی، عەرەبی، یان ئینگلیزی).";
 
     final defaultPrompt = isAudio
         ? "Transcribe the spoken words in this audio exactly in Kurdish (Sorani/Badini), Arabic, or English."
@@ -685,11 +784,11 @@ class StudentCard extends StatelessWidget {
           final content = [
             gemini.Content.multi([
               gemini.TextPart(effectivePrompt),
-              gemini.DataPart(mimeType, mediaBytes),
+              gemini.DataPart(actualMime, mediaBytes),
             ])
           ];
 
-          final response = await model.generateContent(content).timeout(const Duration(seconds: 25));
+          final response = await model.generateContent(content).timeout(const Duration(seconds: 20));
           if (response.text != null && response.text!.isNotEmpty) {
             _lastWorkingKey = keyToUse;
             _lastWorkingModel = m;
@@ -705,10 +804,10 @@ class StudentCard extends StatelessWidget {
             final contentNoSys = [
               gemini.Content.multi([
                 gemini.TextPart("$systemPrompt\n\nپرسیاری بەکارهێنەر: $effectivePrompt"),
-                gemini.DataPart(mimeType, mediaBytes),
+                gemini.DataPart(actualMime, mediaBytes),
               ])
             ];
-            final respNoSys = await modelNoSys.generateContent(contentNoSys).timeout(const Duration(seconds: 25));
+            final respNoSys = await modelNoSys.generateContent(contentNoSys).timeout(const Duration(seconds: 20));
             if (respNoSys.text != null && respNoSys.text!.isNotEmpty) {
               _lastWorkingKey = keyToUse;
               _lastWorkingModel = m;
@@ -724,7 +823,7 @@ class StudentCard extends StatelessWidget {
         mediaBytes,
         effectivePrompt,
         systemPrompt,
-        mimeType: mimeType,
+        mimeType: actualMime,
       );
       if (httpResult.isNotEmpty) {
         return httpResult;
@@ -732,6 +831,12 @@ class StudentCard extends StatelessWidget {
     }
 
     if (isAudio) return "";
+
+    // If query has specific academic instructions (like translation or math), provide fallback response
+    if (effectivePrompt != defaultPrompt && effectivePrompt.length > 5) {
+      return _generateAcademicResponse(effectivePrompt, systemInstruction: systemPrompt);
+    }
+
     return "⚠️ **نەتوانرا وێنەکە لە سێرڤەری زیرەکی دەستکرد شیکار بکرێت**\n\n"
            "تکایە دڵنیابە کلیلی کارای Gemini API (کە بە AIzaSy دەست پێدەکات) لە ئەدمین پەنێڵ لە بەشی Settings یان لە دوگمەی 🔑 ی سەرەوە دانراوە.";
   }
@@ -1070,6 +1175,59 @@ $pdfContext
     return _generateMockExam("تاقیکردنەوە لەسەر PDF - $courseName", courseName, questionCount, durationMinutes, difficulty, pdfContent: pdfContent);
   }
 
+  /// Helper to robustly check if a user answer matches the correct answer
+  static bool isAnswerCorrect(String? userAns, String? correctAns, {List<String>? options}) {
+    if (userAns == null || correctAns == null) return false;
+    final u = userAns.trim();
+    final c = correctAns.trim();
+    if (u.isEmpty || c.isEmpty) return false;
+
+    // Direct case-insensitive equality
+    if (u.toLowerCase() == c.toLowerCase()) return true;
+
+    // True/False equivalence (Kurdish, Arabic, English)
+    const truthy = {'ڕاستە', 'ڕاست', 'true', 't', '1', 'صح', 'صحيح', 'yes', 'y'};
+    const falsy = {'هەڵەیە', 'هەڵە', 'false', 'f', '0', 'خطأ', 'no', 'n'};
+    final uLower = u.toLowerCase();
+    final cLower = c.toLowerCase();
+    if (truthy.contains(uLower) && truthy.contains(cLower)) return true;
+    if (falsy.contains(uLower) && falsy.contains(cLower)) return true;
+
+    // Helper to strip leading option identifiers e.g. "A) ", "1. ", "B - "
+    String stripPrefix(String s) {
+      return s.replaceFirst(RegExp(r'^[A-Da-d0-9][\.\)\:\-]\s*'), '').trim().toLowerCase();
+    }
+
+    final uClean = stripPrefix(u);
+    final cClean = stripPrefix(c);
+    if (uClean.isNotEmpty && uClean == cClean) return true;
+
+    // Letter matching (A, B, C, D / 0, 1, 2, 3) against options
+    if (options != null && options.isNotEmpty) {
+      final letterMap = {'a': 0, 'b': 1, 'c': 2, 'd': 3, '0': 0, '1': 1, '2': 2, '3': 3};
+      if (letterMap.containsKey(cLower)) {
+        final targetIdx = letterMap[cLower]!;
+        if (targetIdx < options.length) {
+          final optText = options[targetIdx];
+          if (uLower == optText.toLowerCase() || uClean == stripPrefix(optText)) return true;
+        }
+      }
+      if (letterMap.containsKey(uLower)) {
+        final targetIdx = letterMap[uLower]!;
+        if (targetIdx < options.length) {
+          final optText = options[targetIdx];
+          if (cLower == optText.toLowerCase() || cClean == stripPrefix(optText)) return true;
+        }
+      }
+    }
+
+    // Punctuation and whitespace invariant comparison
+    String sanitize(String s) => s.replaceAll(RegExp(r'[\s\p{P}]', unicode: true), '').toLowerCase();
+    if (sanitize(u) == sanitize(c)) return true;
+
+    return false;
+  }
+
   QuizModel _parseQuizJson(
     String responseText,
     String defaultTitle,
@@ -1101,28 +1259,61 @@ $pdfContext
       final rawQuestions = (data['questions'] ?? data['quiz'] ?? []) as List;
       for (var q in rawQuestions) {
         final qMap = Map<String, dynamic>.from(q);
-        final qText = qMap['question'] ?? qMap['questionText'] ?? qMap['title'] ?? '';
+        final qText = (qMap['question'] ?? qMap['questionText'] ?? qMap['title'] ?? '').toString().trim();
         final optionsRaw = qMap['options'] ?? qMap['choices'];
-        final options = optionsRaw != null ? List<String>.from(optionsRaw) : <String>[];
-        final correctAns = qMap['correct_answer'] ?? qMap['correctAnswer'] ?? (options.isNotEmpty ? options[0] : '');
+        List<String> options = optionsRaw != null ? List<String>.from(optionsRaw) : <String>[];
+        var correctAns = (qMap['correct_answer'] ?? qMap['correctAnswer'] ?? '').toString().trim();
         final explanation = qMap['explanation'] ?? qMap['explanation_kurdi'] ?? qMap['reason'];
 
-        if (qText.toString().trim().isEmpty) continue;
+        if (qText.isEmpty) continue;
 
         QuestionType qType = QuestionType.multipleChoice;
         final typeStr = qMap['type']?.toString().toLowerCase() ?? '';
-        if (typeStr == 'truefalse' || options.length == 2) {
+        if (typeStr == 'truefalse' || (options.length == 2 && (options.contains('ڕاستە') || options.contains('True')))) {
           qType = QuestionType.trueFalse;
-        } else if (typeStr == 'fillinblank' || qText.toString().contains('___')) {
+        } else if (typeStr == 'fillinblank' || qText.contains('___')) {
           qType = QuestionType.fillInBlank;
+        }
+
+        // Normalize True/False options and answers
+        if (qType == QuestionType.trueFalse) {
+          options = ['ڕاستە', 'هەڵەیە'];
+          final cLower = correctAns.toLowerCase();
+          if (cLower.contains('true') || cLower.contains('ڕاست') || cLower == 't' || cLower == '1' || cLower.contains('صح')) {
+            correctAns = 'ڕاستە';
+          } else if (cLower.contains('false') || cLower.contains('هەڵە') || cLower == 'f' || cLower == '0' || cLower.contains('خطأ')) {
+            correctAns = 'هەڵەیە';
+          } else {
+            correctAns = 'ڕاستە';
+          }
+        } else if (options.isNotEmpty) {
+          // Map single-letter/index correct answers (A, B, C, D / 0, 1, 2, 3) to the actual option text
+          final letterMap = {'a': 0, 'b': 1, 'c': 2, 'd': 3, '0': 0, '1': 1, '2': 2, '3': 3};
+          final cLower = correctAns.toLowerCase();
+          if (letterMap.containsKey(cLower)) {
+            final idx = letterMap[cLower]!;
+            if (idx < options.length) {
+              correctAns = options[idx];
+            }
+          } else {
+            // Check if correctAns matches an option partially
+            for (var opt in options) {
+              if (isAnswerCorrect(opt, correctAns)) {
+                correctAns = opt;
+                break;
+              }
+            }
+          }
+        } else if (correctAns.isEmpty && options.isNotEmpty) {
+          correctAns = options[0];
         }
 
         questions.add(QuestionModel(
           id: 'q_${Random().nextInt(100000)}',
-          questionText: qText.toString().trim(),
+          questionText: qText,
           type: qType,
           options: options.isNotEmpty ? options : null,
-          correctAnswer: correctAns.toString().trim(),
+          correctAnswer: correctAns,
           explanation: explanation?.toString().trim(),
         ));
       }
@@ -1393,17 +1584,20 @@ $pdfContext
         if (i % 3 == 0) {
           // Factual Multiple Choice from exact PDF sentence
           final truncatedSnippet = snippet.length > 100 ? '${snippet.substring(0, 100)}...' : snippet;
+          final wrong1 = (pdfSnippets.length > 1) ? pdfSnippets[(i + 1) % pdfSnippets.length].trim() : 'ناچالاککردنی سەرجەم پرۆتۆکۆلەکان';
+          final wrong2 = (pdfSnippets.length > 2) ? pdfSnippets[(i + 2) % pdfSnippets.length].trim() : 'سڕینەوەی هەموو تێکستەکان بەرامبەر داتای نادیار';
+          final wrong1Truncated = wrong1.length > 80 ? '${wrong1.substring(0, 80)}...' : (wrong1.isNotEmpty ? wrong1 : 'ڕەتکردنەوەی یاساکانی وانەکە');
+          final wrong2Truncated = wrong2.length > 80 ? '${wrong2.substring(0, 80)}...' : (wrong2.isNotEmpty ? wrong2 : 'ناچالاککردنی کردارەکان لە سیستەمەکە');
+
+          final rawOpts = [truncatedSnippet, wrong1Truncated, wrong2Truncated, 'هیچ کام لەمانە'];
+          final shuffledOpts = List<String>.from(rawOpts)..shuffle();
+
           examQuestions.add(
             QuestionModel(
               id: 'pdf_ex_$i',
               questionText: 'کامیان زانیارییەکی ڕاستە بەپێی ناوەرۆکی فایلی وانەی «$displayTitle»؟',
               type: QuestionType.multipleChoice,
-              options: [
-                truncatedSnippet,
-                'ناچالاککردنی سەرجەم پرۆتۆکۆلەکان لە سیستەمەکەدا',
-                'سڕینەوەی هەموو تێکستەکان بەرامبەر داتای نادیار',
-                'ڕەتکردنەوەی جێبەجێکردنی هاوکێشەکان بۆ وانەکە'
-              ],
+              options: shuffledOpts,
               correctAnswer: truncatedSnippet,
               explanation: 'ئەم ڕستەیە ڕاستەوخۆ لە دەقی زانستی فایلی PDFەکە دەرهێنراوە.',
             ),
@@ -1419,12 +1613,7 @@ $pdfContext
               id: 'pdf_ex_$i',
               questionText: 'بۆشایی لە دەقی وانەکەدا پڕبکەرەوە: "$blankedSnippet"',
               type: QuestionType.fillInBlank,
-              options: [
-                mainTerm,
-                'Ethernet Protocol',
-                'Operating System Core',
-                'Data Security Module'
-              ],
+              options: null,
               correctAnswer: mainTerm,
               explanation: 'زاراوەی «$mainTerm» ڕاستەوخۆ دەقی بۆشایی فایلی PDFی بارکراوە.',
             ),
@@ -1432,28 +1621,38 @@ $pdfContext
         } else {
           // True/False from exact PDF sentence
           final truncatedSnippet = snippet.length > 120 ? snippet.substring(0, 120) : snippet;
+          final isTrue = i % 2 == 0;
           examQuestions.add(
             QuestionModel(
               id: 'pdf_ex_$i',
-              questionText: 'بەپێی دەقی فایلی PDFی وانەکە: "$truncatedSnippet". ئایا ئەم زانیارییە ڕاستە؟',
+              questionText: isTrue
+                  ? 'بەپێی دەقی فایلی PDFی وانەکە: "$truncatedSnippet". ئایا ئەم زانیارییە ڕاستە؟'
+                  : 'ئایا چەمکی "$mainTerm" لە وانەی «$displayTitle» بە تەواوی ناچالاک دەکرێت؟',
               type: QuestionType.trueFalse,
               options: ['ڕاستە', 'هەڵەیە'],
-              correctAnswer: 'ڕاستە',
-              explanation: 'ئەم ڕستەیە زانیارییەکی ڕاستە لە لاپەڕەکانی فایلی PDFی وانەکەتدا.',
+              correctAnswer: isTrue ? 'ڕاستە' : 'هەڵەیە',
+              explanation: isTrue
+                  ? 'ئەم ڕستەیە زانیارییەکی ڕاستە لە لاپەڕەکانی فایلی PDFی وانەکەتدا.'
+                  : 'ئەم زانیارییە هەڵەیە و پێچەوانەی چەمکە زانستییەکانی وانەکەیە.',
             ),
           );
         }
       }
     } else {
       for (int i = 0; i < count; i++) {
+        final isTrue = i % 2 == 0;
         examQuestions.add(
           QuestionModel(
             id: 'pdf_ex_$i',
-            questionText: 'لە وانەی ($displayTitle)، پێداچوونەوە بە چەمکە زانستییەکان بەشێکی گرنگە بۆ ئامادەکاری تاقیکردنەوەی فاینەڵ؟',
+            questionText: isTrue
+                ? 'لە وانەی ($displayTitle)، پێداچوونەوە بە چەمکە زانستییەکان بەشێکی گرنگە بۆ ئامادەکاری تاقیکردنەوەی فاینەڵ؟'
+                : 'لە وانەی ($displayTitle)، مەلزەمە و تێبینییەکان گرنگ نین بۆ سەرکەوتن لە تاقیکردنەوەدا؟',
             type: QuestionType.trueFalse,
             options: ['ڕاستە', 'هەڵەیە'],
-            correctAnswer: 'ڕاستە',
-            explanation: 'پێداچوونەوە بە بەشەکانی وانەی $displayTitle یارمەتیدەرە بۆ نمرەی بەرز.',
+            correctAnswer: isTrue ? 'ڕاستە' : 'هەڵەیە',
+            explanation: isTrue
+                ? 'پێداچوونەوە بە بەشەکانی وانەی $displayTitle یارمەتیدەرە بۆ نمرەی بەرز.'
+                : 'تێبینی و چەمکەکان سەرەکیترین بەشی تاقیکردنەوەن.',
           ),
         );
       }
@@ -1461,7 +1660,7 @@ $pdfContext
 
     return QuizModel(
       id: 'exam_${Random().nextInt(10000)}',
-      title: 'تاقیکردنەوە لەسەر PDF - $displayTitle',
+      title: 'تاقیکردنەوە لەسەر $displayTitle',
       courseName: displayTitle,
       questions: examQuestions.take(count > 0 ? count : 5).toList(),
       durationMinutes: duration,
