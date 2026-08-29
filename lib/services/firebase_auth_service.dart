@@ -82,7 +82,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
     });
   }
 
-  void _showAccountBlockedDialog() {
+  void _showAccountBlockedDialog([String? customReason]) {
     if (_isHandlingBlockedOrDeleted) return;
     _isHandlingBlockedOrDeleted = true;
 
@@ -93,51 +93,60 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
           context: context,
           barrierDismissible: false,
           builder: (ctx) {
-            return AlertDialog(
-              backgroundColor: const Color(0xFF1E222B),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              title: const Row(
-                children: [
-                  Icon(CupertinoIcons.slash_circle_fill, color: Colors.redAccent, size: 28),
-                  SizedBox(width: 10),
-                  Text(
-                    'ئاگاداری بلۆککردن',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 18,
+            return Directionality(
+              textDirection: TextDirection.rtl,
+              child: AlertDialog(
+                backgroundColor: const Color(0xFF1E222B),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                title: const Row(
+                  children: [
+                    Icon(CupertinoIcons.slash_circle_fill, color: Colors.redAccent, size: 28),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'ئاگاداری بلۆککردن ⛔',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                content: Text(
+                  (customReason != null && customReason.trim().isNotEmpty)
+                      ? customReason.trim()
+                      : 'بلۆک کرایت بە هۆکاری پابەند نەبوونت بە یاسا و ڕێساکانی ئەپەکە.',
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14.5,
+                    height: 1.6,
+                  ),
+                ),
+                actions: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                      rootNavigatorKey.currentState?.pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        (route) => false,
+                      );
+                      _isHandlingBlockedOrDeleted = false;
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    ),
+                    child: const Text(
+                      'باشە / چوونەدەرەوە',
+                      style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
               ),
-              content: const Text(
-                'بلۆک کرایت بەهۆی پابەند نەبوونت بە یاسا و ڕێساکانی ئەپەکە.',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14.5,
-                  height: 1.5,
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(ctx).pop();
-                    rootNavigatorKey.currentState?.pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      (route) => false,
-                    );
-                    _isHandlingBlockedOrDeleted = false;
-                  },
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.redAccent,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  ),
-                  child: const Text(
-                    'باشە',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
             );
           },
         );
@@ -152,8 +161,8 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
       final context = rootNavigatorKey.currentContext;
       if (context == null) return;
 
-      // Fetch admin website URL dynamically from config
-      String adminUrl = 'https://zankoai-admin.web.app';
+      // Fetch admin website URL dynamically from config (default: https://zanko-admin.vercel.app/)
+      String adminUrl = 'https://zanko-admin.vercel.app/';
       try {
         final cfgDoc = await _firestore.collection('config').doc('app_config').get();
         if (cfgDoc.exists && cfgDoc.data() != null) {
@@ -169,65 +178,68 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
       showDialog(
         context: context,
         builder: (ctx) {
-          return AlertDialog(
-            backgroundColor: const Color(0xFF1E222B),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            title: const Row(
-              children: [
-                Icon(Icons.admin_panel_settings_rounded, color: Color(0xFFFFD700), size: 28),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'تۆ کراویت بە ئەدمین! 👑',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 17,
+          return Directionality(
+            textDirection: TextDirection.rtl,
+            child: AlertDialog(
+              backgroundColor: const Color(0xFF1E222B),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              title: const Row(
+                children: [
+                  Icon(Icons.admin_panel_settings_rounded, color: Color(0xFFFFD700), size: 28),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'تۆ کراویت بە ئەدمین! 👑',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 17,
+                      ),
                     ),
                   ),
+                ],
+              ),
+              content: const Text(
+                'پیرۆزە! هەژمارەکەت کراوە بە بەڕێوەبەر (Admin) لە ZankoAI. ئایا دەتەوێت بچیتە بەشی وێبسایتی ئەدمین بۆ بەڕێوەبردنی بەکارهێنەران و داواکارییەکان؟',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.grey[400],
+                  ),
+                  child: const Text('لابردن / نەخێر', style: TextStyle(fontSize: 13.5)),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    Navigator.of(ctx).pop();
+                    final uri = Uri.parse(adminUrl);
+                    try {
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      } else {
+                        await launchUrl(uri, mode: LaunchMode.platformDefault);
+                      }
+                    } catch (e) {
+                      debugPrint('Could not launch admin url: $e');
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFD700),
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  ),
+                  icon: const Icon(Icons.open_in_browser_rounded, size: 18),
+                  label: const Text('وێبسایتی ئەدمین', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
                 ),
               ],
             ),
-            content: const Text(
-              'پیرۆزە! هەژمارەکەت کراوە بە بەڕێوەبەر (Admin) لە ZankoAI. ئایا دەتەوێت بچیتە بەشی وێبسایتی ئەدمین بۆ بەڕێوەبردنی بەکارهێنەران و داواکارییەکان؟',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
-                height: 1.5,
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.grey[400],
-                ),
-                child: const Text('لابردن / نەخێر', style: TextStyle(fontSize: 13.5)),
-              ),
-              ElevatedButton.icon(
-                onPressed: () async {
-                  Navigator.of(ctx).pop();
-                  final uri = Uri.parse(adminUrl);
-                  try {
-                    if (await canLaunchUrl(uri)) {
-                      await launchUrl(uri, mode: LaunchMode.externalApplication);
-                    } else {
-                      await launchUrl(uri, mode: LaunchMode.platformDefault);
-                    }
-                  } catch (e) {
-                    debugPrint('Could not launch admin url: $e');
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFFD700),
-                  foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                ),
-                icon: const Icon(Icons.open_in_browser_rounded, size: 18),
-                label: const Text('وێبسایتی ئەدمین', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-              ),
-            ],
           );
         },
       );
@@ -285,11 +297,31 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
     _authStateSub = _auth.authStateChanges().listen((User? firebaseUser) async {
       _userDocSub?.cancel();
       if (firebaseUser == null) {
+        if (_currentUser != null && _currentUser!.id.startsWith('guest_')) {
+          return;
+        }
         _currentUser = null;
         _lastNotifiedVip = null;
         _lastNotifiedAdmin = null;
         notifyListeners();
       } else {
+        if (_currentUser == null || _currentUser!.id != firebaseUser.uid) {
+          final realName = _resolveUserName(null, firebaseUser);
+          _currentUser = UserModel(
+            id: firebaseUser.uid,
+            name: realName,
+            email: firebaseUser.email ?? '',
+            role: UserRole.student,
+            universityName: 'زانکۆی سلێمانی',
+            departmentName: 'تەکنەلۆجیای زانیاری',
+            cityName: 'سلێمانی',
+            gpa: 0.0,
+            isVip: false,
+            photoUrl: firebaseUser.photoURL,
+            vipStatus: 'none',
+          );
+          notifyListeners();
+        }
         _userDocSub = _firestore.collection('users').doc(firebaseUser.uid).snapshots().listen((doc) {
           if (!doc.exists || doc.data() == null) {
             // New user or guest user initial document creation
@@ -352,6 +384,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
 
           // 2. Check if user was blocked by Admin from website
           final isBlocked = data['isBlocked'] == true || data['status'] == 'blocked' || data['isBanned'] == true;
+          final blockReason = data['blockReason'] as String? ?? data['banReason'] as String?;
           if (isBlocked) {
             if (!_isHandlingBlockedOrDeleted) {
               _auth.signOut().catchError((_) {});
@@ -359,7 +392,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
               _lastNotifiedVip = null;
               _lastNotifiedAdmin = null;
               notifyListeners();
-              _showAccountBlockedDialog();
+              _showAccountBlockedDialog(blockReason);
             }
             return;
           }
@@ -369,10 +402,14 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
               ? UserRole.admin
               : (roleStr == 'teacher' ? UserRole.teacher : UserRole.student);
 
-          // 3. Check if user was promoted to Admin
-          if (role == UserRole.admin && _lastNotifiedAdmin != true) {
-            _lastNotifiedAdmin = true;
-            _showPromotedToAdminDialog();
+          // 3. Check if user was promoted to Admin or Demoted
+          if (role == UserRole.admin) {
+            if (_lastNotifiedAdmin != true) {
+              _lastNotifiedAdmin = true;
+              _showPromotedToAdminDialog();
+            }
+          } else {
+            _lastNotifiedAdmin = false;
           }
 
           bool isVip = data['isVip'] == true || role == UserRole.admin;
@@ -450,7 +487,11 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
 
   Future<void> _fetchUserProfile(User firebaseUser, [String? fallbackName, String? fallbackEmail, String? fallbackPhoto]) async {
     try {
-      final doc = await _firestore.collection('users').doc(firebaseUser.uid).get();
+      final doc = await _firestore
+          .collection('users')
+          .doc(firebaseUser.uid)
+          .get()
+          .timeout(const Duration(seconds: 5));
       if (doc.exists && doc.data() != null) {
         final data = doc.data()!;
 
@@ -465,11 +506,12 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
 
         // 2. Check if user was blocked by Admin
         final isBlocked = data['isBlocked'] == true || data['status'] == 'blocked' || data['isBanned'] == true;
+        final blockReason = data['blockReason'] as String? ?? data['banReason'] as String?;
         if (isBlocked) {
           await _auth.signOut().catchError((_) {});
           _currentUser = null;
           notifyListeners();
-          _showAccountBlockedDialog();
+          _showAccountBlockedDialog(blockReason);
           return;
         }
 
@@ -600,23 +642,41 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
   @override
   Future<bool> loginWithRole(String email, String password, UserRole role) async {
     try {
-      await _ensureFirebase();
-      final credential = await _auth.signInWithEmailAndPassword(
-        email: email.trim(),
-        password: password,
-      );
+      await _ensureFirebase().timeout(const Duration(seconds: 5));
+      final credential = await _auth
+          .signInWithEmailAndPassword(
+            email: email.trim(),
+            password: password,
+          )
+          .timeout(const Duration(seconds: 12));
 
       if (credential.user != null) {
-        await _fetchUserProfile(credential.user!);
-        if (_currentUser != null) {
-          _currentUser = _currentUser!.copyWith(role: role);
-          try {
-            await _firestore.collection('users').doc(credential.user!.uid).set({
-              'role': role == UserRole.teacher ? 'teacher' : 'student',
-            }, SetOptions(merge: true));
-          } catch (_) {}
-        }
+        final fbUser = credential.user!;
+        final fallbackName = fbUser.displayName ?? email.split('@').first;
+        _currentUser = UserModel(
+          id: fbUser.uid,
+          name: fallbackName,
+          email: fbUser.email ?? email.trim(),
+          role: role,
+          universityName: 'زانکۆی سلێمانی',
+          departmentName: 'تەکنەلۆجیای زانیاری',
+          cityName: 'سلێمانی',
+          gpa: 0.0,
+          isVip: false,
+          photoUrl: fbUser.photoURL,
+          vipStatus: 'none',
+        );
         notifyListeners();
+
+        // Background update and profile fetch
+        _fetchUserProfile(fbUser).catchError((e) {
+          if (kDebugMode) print('Background fetch profile error: $e');
+        });
+        _firestore.collection('users').doc(fbUser.uid).set({
+          'role': role == UserRole.teacher ? 'teacher' : 'student',
+          'lastLoginAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true)).catchError((_) {});
+
         return true;
       }
     } on FirebaseAuthException catch (e) {
@@ -663,15 +723,17 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
         : 'سلێمانی';
 
     try {
-      await _ensureFirebase();
-      final credential = await _auth.createUserWithEmailAndPassword(
-        email: email.trim(),
-        password: password,
-      );
+      await _ensureFirebase().timeout(const Duration(seconds: 5));
+      final credential = await _auth
+          .createUserWithEmailAndPassword(
+            email: email.trim(),
+            password: password,
+          )
+          .timeout(const Duration(seconds: 12));
 
       if (credential.user != null) {
         final uid = credential.user!.uid;
-        await credential.user!.updateDisplayName(name);
+        credential.user!.updateDisplayName(name).catchError((_) {});
 
         final newUser = UserModel(
           id: uid,
@@ -684,23 +746,23 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
           gpa: role == UserRole.student ? 0.0 : null,
         );
 
-        try {
-          await _firestore.collection('users').doc(uid).set({
-            'uid': uid,
-            'name': name,
-            'email': email.trim(),
-            'role': 'student',
-            'universityName': uni,
-            'departmentName': dept,
-            'cityName': city,
-            'createdAt': FieldValue.serverTimestamp(),
-          });
-        } catch (e) {
-          if (kDebugMode) print('Firestore set user error: $e');
-        }
-
         _currentUser = newUser;
         notifyListeners();
+
+        _firestore.collection('users').doc(uid).set({
+          'uid': uid,
+          'name': name,
+          'email': email.trim(),
+          'role': role == UserRole.teacher ? 'teacher' : 'student',
+          'universityName': uni,
+          'departmentName': dept,
+          'cityName': city,
+          'createdAt': FieldValue.serverTimestamp(),
+          'lastLoginAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true)).catchError((e) {
+          if (kDebugMode) print('Firestore set user error: $e');
+        });
+
         return true;
       }
     } on FirebaseAuthException catch (e) {
@@ -735,7 +797,10 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
       );
       GoogleSignInAccount? googleUser;
       try {
-        googleUser = await googleSignIn.signIn();
+        googleUser = await googleSignIn.signIn().timeout(
+          const Duration(seconds: 25),
+          onTimeout: () => null,
+        );
       } catch (e) {
         if (kDebugMode) print('GoogleSignIn picker error: $e');
         return false;
@@ -857,6 +922,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
         final data = existingDoc.data() as Map<String, dynamic>;
         final isDeleted = data['isDeleted'] == true;
         final isBlocked = data['isBlocked'] == true || data['status'] == 'blocked' || data['isBanned'] == true;
+        final blockReason = data['blockReason'] as String? ?? data['banReason'] as String?;
         if (isDeleted) {
           await _auth.signOut().catchError((_) {});
           _currentUser = null;
@@ -868,7 +934,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
           await _auth.signOut().catchError((_) {});
           _currentUser = null;
           notifyListeners();
-          _showAccountBlockedDialog();
+          _showAccountBlockedDialog(blockReason);
           return;
         }
 
@@ -884,12 +950,14 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
       try {
         final Map<String, dynamic> updateData = {
           'id': finalUid,
+          'uid': finalUid,
           'name': realName,
           'email': realEmail,
           'photoUrl': ?realPhoto,
           'googleId': googleId,
           'role': resolvedRole == UserRole.admin ? 'admin' : (resolvedRole == UserRole.teacher ? 'teacher' : 'student'),
-          if (resolvedRole == UserRole.admin) 'isVip': true,
+          'isVip': isVip,
+          'vipStatus': vipStatus,
           'lastLoginAt': FieldValue.serverTimestamp(),
         };
         if (existingDoc == null || !existingDoc.exists) {

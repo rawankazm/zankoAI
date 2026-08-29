@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -123,15 +124,20 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
     bool success = false;
 
     try {
-      success = await authService.register(
-        _nameController.text.trim(),
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-        UserRole.student,
-        universityName: _universityController.text.trim(),
-        departmentName: _departmentController.text.trim(),
-        cityName: langProvider.translate(_selectedCityKey),
-      );
+      success = await authService
+          .register(
+            _nameController.text.trim(),
+            _emailController.text.trim(),
+            _passwordController.text.trim(),
+            UserRole.student,
+            universityName: _universityController.text.trim(),
+            departmentName: _departmentController.text.trim(),
+            cityName: langProvider.translate(_selectedCityKey),
+          )
+          .timeout(const Duration(seconds: 15));
+    } on TimeoutException {
+      success = false;
+      _errorMessage = 'پڕۆسەکە کاتی بەسەرچوو. تکایە هێڵی ئینتەرنێتەکەت بپشکنە.';
     } catch (e) {
       success = false;
       final errStr = e.toString().toLowerCase();
@@ -142,7 +148,14 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
       } else if (errStr.contains('invalid-email')) {
         _errorMessage = 'ئیمەیڵەکە شێوازێکی دروستی نییە.';
       } else {
-        _errorMessage = 'تۆمارکردن سەرکەوتوو نەبوو: ${e.toString().replaceAll('Exception: ', '')}';
+        _errorMessage = 'تۆمارکردن سەرکەوتوو نەبوو. تکایە هێڵی ئینتەرنێتەکەت بپشکنە.';
+      }
+    } finally {
+      if (mounted && !success) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage ??= 'تۆمارکردن سەرکەوتوو نەبوو.';
+        });
       }
     }
 
@@ -153,11 +166,6 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
         context,
         MaterialPageRoute(builder: (context) => const NavigationShell()),
       );
-    } else {
-      setState(() {
-        _isLoading = false;
-        _errorMessage ??= 'تۆمارکردن سەرکەوتوو نەبوو.';
-      });
     }
   }
 
@@ -360,7 +368,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
 
                             // City Dropdown Select (5 Kurdish Cities)
                             DropdownButtonFormField<String>(
-                              value: _selectedCityKey,
+                              initialValue: _selectedCityKey,
                               decoration: InputDecoration(
                                 labelText: t('select_city'),
                                 prefixIcon: const Icon(Icons.location_city_outlined),

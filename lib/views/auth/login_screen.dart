@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
@@ -67,19 +68,26 @@ class _LoginScreenState extends State<LoginScreen>
 
     try {
       if (_isLoginMode) {
-        success = await authService.loginWithRole(
-          _emailController.text.trim(),
-          _passwordController.text.trim(),
-          UserRole.student,
-        );
+        success = await authService
+            .loginWithRole(
+              _emailController.text.trim(),
+              _passwordController.text.trim(),
+              UserRole.student,
+            )
+            .timeout(const Duration(seconds: 15));
       } else {
-        success = await authService.register(
-          _nameController.text.trim(),
-          _emailController.text.trim(),
-          _passwordController.text.trim(),
-          UserRole.student,
-        );
+        success = await authService
+            .register(
+              _nameController.text.trim(),
+              _emailController.text.trim(),
+              _passwordController.text.trim(),
+              UserRole.student,
+            )
+            .timeout(const Duration(seconds: 15));
       }
+    } on TimeoutException {
+      success = false;
+      _errorMessage = 'پڕۆسەکە کاتی بەسەرچوو. تکایە هێڵی ئینتەرنێتەکەت بپشکنە.';
     } catch (e) {
       success = false;
       final errStr = e.toString().toLowerCase();
@@ -96,6 +104,13 @@ class _LoginScreenState extends State<LoginScreen>
       } else {
         _errorMessage = 'پڕۆسەکە سەرکەوتوو نەبوو. تکایە هێڵی ئینتەرنێتەکەت بپشکنە.';
       }
+    } finally {
+      if (mounted && !success) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage ??= 'پڕۆسەکە سەرکەوتوو نەبوو. تکایە زانیارییەکان بپشکنە.';
+        });
+      }
     }
 
     if (!mounted) return;
@@ -106,11 +121,6 @@ class _LoginScreenState extends State<LoginScreen>
         MaterialPageRoute(builder: (context) => const NavigationShell()),
         (route) => false,
       );
-    } else {
-      setState(() {
-        _isLoading = false;
-        _errorMessage ??= 'پڕۆسەکە سەرکەوتوو نەبوو. تکایە زانیارییەکان بپشکنە.';
-      });
     }
   }
 
@@ -121,36 +131,44 @@ class _LoginScreenState extends State<LoginScreen>
       _errorMessage = null;
     });
 
+    bool success = false;
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
-      final success = await authService.loginWithGoogle(UserRole.student);
-
-      if (!mounted) return;
-
-      if (success) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const NavigationShell()),
-          (route) => false,
-        );
-      } else {
+      success = await authService
+          .loginWithGoogle(UserRole.student)
+          .timeout(const Duration(seconds: 25), onTimeout: () => false);
+    } on TimeoutException {
+      success = false;
+      _errorMessage = 'چوونەژوورەوە بە گووگڵ کاتی بەسەرچوو. تکایە هێڵی ئینتەرنێتەکەت بپشکنە.';
+    } catch (e) {
+      success = false;
+      _errorMessage = 'هەڵە لە چوونەژوورەوە بە گووگڵ. تکایە دووبارە تاقیبکەرەوە.';
+    } finally {
+      if (mounted && !success) {
         setState(() {
           _isLoading = false;
-          _errorMessage = 'چوونەژوورەوە بە گووگڵ بەدی نەهات. تکایە دووبارە تاقیبکەرەوە.';
+          _errorMessage ??= 'چوونەژوورەوە بە گووگڵ بەدی نەهات. تکایە دووبارە تاقیبکەرەوە.';
         });
       }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'هەڵە لە چوونەژوورەوە بە گووگڵ: تکایە دڵنیابەرەوە لە پەیوەندی ئینتەرنێت.';
-      });
+    }
+
+    if (!mounted) return;
+
+    if (success) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const NavigationShell()),
+        (route) => false,
+      );
     }
   }
 
   Future<void> _loginAsGuest() async {
     if (_isLoading) return;
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       await authService.loginAsGuest();
@@ -162,7 +180,10 @@ class _LoginScreenState extends State<LoginScreen>
       );
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'هەڵەیەک ڕوویدا لە چوونەژوورەوە وەک میوان.';
+        });
       }
     }
   }
@@ -334,8 +355,25 @@ class _LoginScreenState extends State<LoginScreen>
                               const SizedBox(height: 24),
 
                               _isLoading
-                                  ? const Center(
-                                      child: CircularProgressIndicator())
+                                  ? Column(
+                                      children: [
+                                        const Center(
+                                            child: CircularProgressIndicator()),
+                                        const SizedBox(height: 12),
+                                        TextButton(
+                                          onPressed: () {
+                                            setState(() => _isLoading = false);
+                                          },
+                                          child: const Text(
+                                            'پەشیمانبوونەوە / هەڵوەشاندنەوە',
+                                            style: TextStyle(
+                                                fontSize: 13,
+                                                color: Colors.grey,
+                                                fontWeight: FontWeight.w600),
+                                          ),
+                                        ),
+                                      ],
+                                    )
                                   : Column(
                                       children: [
                                         SizedBox(
