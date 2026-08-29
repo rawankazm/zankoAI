@@ -17,8 +17,7 @@ import '../payment/vip_upgrade_sheet.dart';
 import '../../services/app_version_service.dart';
 import '../update/force_update_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -742,82 +741,173 @@ class ProfileScreen extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: isDark ? ZankoColors.darkCard : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40, height: 5,
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey[700] : Colors.grey[300],
-                    borderRadius: BorderRadius.circular(10),
+      builder: (ctx) {
+        return FractionallySizedBox(
+          heightFactor: 0.88,
+          child: Container(
+            padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 20),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF131824) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 44,
+                    height: 4.5,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white24 : Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  const Icon(CupertinoIcons.lock_fill, color: Color(0xFF34C759), size: 24),
-                  const SizedBox(width: 10),
-                  Text(
-                    'تایبەتمەندی و ئاسایش',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: isDark ? Colors.white : ZankoColors.textPrimary,
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: ZankoColors.primary.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(CupertinoIcons.shield_lefthalf_fill, color: ZankoColors.primary, size: 20),
+                    ),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'سیاسەتی پاراستنی نهێنی ZankoAI',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Privacy Policy & Terms of Service',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(CupertinoIcons.xmark_circle_fill, color: Colors.grey),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ],
+                ),
+                const Divider(height: 24),
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '🛡️ پێشەکی',
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: ZankoColors.primary),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'ئەپی ZankoAI پابەندە بە پاراستنی تەواوی نهێنی و زانیارییە کەسییەکانی بەکارهێنەران و خوێندکاران. داتاکانت بە پارێزراوی ڕادەگیرێن و بە هیچ جۆرێک لەگەڵ لایەنی سێیەم هاوبەش ناکرێن.',
+                          style: TextStyle(fontSize: 13.5, height: 1.5),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          '📋 ئەو زانیارییانەی کۆدەکرێنەوە',
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: ZankoColors.primary),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          '• زانیاری هەژمار: ناو، ئیمەیڵ، زانکۆ و قۆناغی خوێندن.\n'
+                          '• ناوەڕۆکی نێردراو: پرسیارەکان، تێبینییە دەنگییەکان بۆ نوسینەوە، و وێنەی هاوکێشەکان بۆ شیکارکردنی ئەکادیمی لەلایەن AI.\n'
+                          '• داتاکان بە تشفیری پێشکەوتووی TLS 1.3 دەگوازرێنەوە.',
+                          style: TextStyle(fontSize: 13.5, height: 1.6),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          '🤖 بەکارهێنانی ژیریی دەستکرد (AI)',
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: ZankoColors.primary),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'پرسیارەکان لە ڕێگەی سێرڤەری پارێزراوی Google Gemini API بە مەبەستی فێرکاری و دەرکردنی ئەنجامی شیکاری پرسیارەکان دەخوێندرێنەوە و پارێزراون.',
+                          style: TextStyle(fontSize: 13.5, height: 1.5),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          '📞 پەیوەندی و تیمی گەشەپێدەر (birdev)',
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: ZankoColors.primary),
+                        ),
+                        const SizedBox(height: 6),
+                        InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () async {
+                            final uri = Uri.parse('https://www.birdev.tech/');
+                            if (await canLaunchUrl(uri)) {
+                              await launchUrl(uri, mode: LaunchMode.externalApplication);
+                            }
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Row(
+                              children: [
+                                Icon(CupertinoIcons.globe, size: 15, color: ZankoColors.primary),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'ماڵپەڕی فەرمی: www.birdev.tech',
+                                  style: TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: ZankoColors.primary,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          '• واتسئەپ: 07509987345\n• تێلیگرام: @rawankurdi',
+                          style: TextStyle(fontSize: 13.5, height: 1.6),
+                        ),
+                        const SizedBox(height: 20),
+                        const Divider(),
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(CupertinoIcons.trash_fill, color: ZankoColors.error),
+                          title: const Text('سڕینەوەی کاشی ئۆفلاین (Clear Cache)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+                          subtitle: const Text('سڕینەوەی فایلی کاتی و پاککردنەوەی فەزای مۆبایلەکەت', style: TextStyle(fontSize: 11.5)),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('کاشی ئۆفلاینی ئەپەکە بە سەرکەوتوویی پاککرایەوە 🧹'),
+                                backgroundColor: ZankoColors.success,
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                      ],
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              const ListTile(
-                leading: Icon(CupertinoIcons.shield_fill, color: Color(0xFF34C759)),
-                title: Text('پاراستن و تشفیرکردنی داتاکان', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                subtitle: Text('سەرجەم زانیارییەکانت بە پرۆتۆکۆلی TLS 1.3 بە پارێزراوی ڕامگیراون.', style: TextStyle(fontSize: 12)),
-              ),
-              const Divider(),
-              const ListTile(
-                leading: Icon(CupertinoIcons.person_badge_minus_fill, color: Color(0xFF007AFF)),
-                title: Text('پایەندبوون بە تایبەتمەندی بەکارهێنەر', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                subtitle: Text('زانیارییە کەسییەکانت بە هیچ جۆرێک لەگەڵ لایەنی سێیەم هاوبەش ناکرێن.', style: TextStyle(fontSize: 12)),
-              ),
-              const Divider(),
-              ListTile(
-                leading: const Icon(CupertinoIcons.trash_fill, color: ZankoColors.error),
-                title: const Text('سڕینەوەی کاشی ئۆفلاین (Clear Cache)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                subtitle: const Text('سڕینەوەی فایلی کاتی و پاککردنەوەی فەزای مۆبایلەکەت', style: TextStyle(fontSize: 12)),
-                onTap: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('کاشی ئۆفلاینی ئەپەکە بە سەرکەوتوویی پاککرایەوە 🧹'),
-                      backgroundColor: ZankoColors.success,
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: OutlinedButton.styleFrom(
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ZankoColors.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: const Text('داخستن', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text('پەسەندە و تێگەیشتم', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -946,22 +1036,31 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.black.withValues(alpha: 0.2) : Colors.grey[100],
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(CupertinoIcons.heart_fill, color: ZankoColors.error, size: 16),
-                    SizedBox(width: 8),
-                    Text(
-                      'گەشەپێدراوە لەلایەن تیمەکانی birdev ★',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                  ],
+              InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: () async {
+                  final uri = Uri.parse('https://www.birdev.tech/');
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.black.withValues(alpha: 0.2) : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(CupertinoIcons.heart_fill, color: ZankoColors.error, size: 16),
+                      SizedBox(width: 8),
+                      Text(
+                        'گەشەپێدراوە لەلایەن تیمی birdev ★ (birdev.tech)',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -2433,6 +2532,52 @@ class ProfileScreen extends StatelessWidget {
                     },
                   ),
                 ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // birdev footer & copyright
+            Center(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () async {
+                  final uri = Uri.parse('https://www.birdev.tech/');
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(CupertinoIcons.sparkles, size: 14, color: ZankoColors.primary),
+                          const SizedBox(width: 6),
+                          Text(
+                            'گەشەی پێدراوە لەلایەن تیمی birdev',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.grey[300] : Colors.grey[800],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'سەرجەم مافەکانی پارێزراوە © ${DateTime.now().year}',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: isDark ? Colors.grey[500] : Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
 
