@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/language_provider.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
@@ -14,64 +16,98 @@ class CoursesScreen extends StatefulWidget {
 }
 
 class _CoursesScreenState extends State<CoursesScreen> {
-  late final List<Map<String, dynamic>> _courses;
+  List<Map<String, dynamic>> _courses = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
-    _courses = [
-      {
-        'id': '1',
-        'title': 'Calculus & Linear Algebra',
-        'subtitle': '18 Lessons • Chapter 4',
-        'progress': 0.76,
-        'icon': CupertinoIcons.function,
-        'color': const Color(0xFF6C5CE7),
-        'midtermDate': now.add(const Duration(days: 5)),
-        'finalDate': now.add(const Duration(days: 24)),
-      },
-      {
-        'id': '2',
-        'title': 'Machine Learning Fundamentals',
-        'subtitle': '12 Lessons • Neural Networks',
-        'progress': 0.80,
-        'icon': CupertinoIcons.sparkles,
-        'color': const Color(0xFFAF52DE),
-        'midtermDate': now.add(const Duration(days: 2)),
-        'finalDate': now.add(const Duration(days: 19)),
-      },
-      {
-        'id': '3',
-        'title': 'Data Structures & Algorithms',
-        'subtitle': '24 Lessons • Trees & Graphs',
-        'progress': 0.45,
-        'icon': CupertinoIcons.square_grid_2x2,
-        'color': const Color(0xFF007AFF),
-        'midtermDate': now, // Today
-        'finalDate': now.add(const Duration(days: 15)),
-      },
-      {
-        'id': '4',
-        'title': 'Python & Data Science',
-        'subtitle': '20 Lessons • Pandas & NumPy',
-        'progress': 0.60,
-        'icon': CupertinoIcons.chevron_left_slash_chevron_right,
-        'color': const Color(0xFFFF9F0A),
-        'midtermDate': now.subtract(const Duration(days: 4)), // Passed
-        'finalDate': now.add(const Duration(days: 10)),
-      },
-      {
-        'id': '5',
-        'title': 'Operating Systems',
-        'subtitle': '15 Lessons • Memory Management',
-        'progress': 0.90,
-        'icon': CupertinoIcons.device_desktop,
-        'color': const Color(0xFF34C759),
-        'midtermDate': now.subtract(const Duration(days: 15)),
-        'finalDate': now.add(const Duration(days: 3)),
-      },
-    ];
+    _loadSavedCourses();
+  }
+
+  Future<void> _loadSavedCourses() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedData = prefs.getString('user_custom_courses_list_v2');
+
+      if (savedData != null && savedData.isNotEmpty) {
+        final List<dynamic> decoded = jsonDecode(savedData);
+        final List<Map<String, dynamic>> loaded = [];
+
+        final dummyTitles = {
+          'Calculus & Linear Algebra',
+          'Machine Learning Fundamentals',
+          'Data Structures & Algorithms',
+          'Python & Data Science',
+          'Operating Systems',
+        };
+
+        for (var item in decoded) {
+          if (item is Map<String, dynamic>) {
+            final title = item['title']?.toString() ?? '';
+            if (dummyTitles.contains(title)) continue;
+
+            loaded.add({
+              'id': item['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+              'title': title,
+              'subtitle': item['subtitle']?.toString() ?? '10 Lessons • Chapter 1',
+              'progress': (item['progress'] as num?)?.toDouble() ?? 0.0,
+              'icon': _getIconFromCode(item['iconCode'] as int?),
+              'color': Color(item['colorValue'] as int? ?? 0xFF6C5CE7),
+              'midtermDate': item['midtermDate'] != null ? DateTime.tryParse(item['midtermDate']) : null,
+              'finalDate': item['finalDate'] != null ? DateTime.tryParse(item['finalDate']) : null,
+            });
+          }
+        }
+        setState(() {
+          _courses = loaded;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _courses = [];
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      setState(() {
+        _courses = [];
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _saveCoursesToPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final List<Map<String, dynamic>> toSave = _courses.map((c) {
+        return {
+          'id': c['id'],
+          'title': c['title'],
+          'subtitle': c['subtitle'],
+          'progress': c['progress'],
+          'iconCode': (c['icon'] as IconData?)?.codePoint ?? CupertinoIcons.book.codePoint,
+          'colorValue': (c['color'] as Color?)?.toARGB32() ?? 0xFF6C5CE7,
+          'midtermDate': (c['midtermDate'] as DateTime?)?.toIso8601String(),
+          'finalDate': (c['finalDate'] as DateTime?)?.toIso8601String(),
+        };
+      }).toList();
+
+      await prefs.setString('user_custom_courses_list_v2', jsonEncode(toSave));
+    } catch (_) {}
+  }
+
+  IconData _getIconFromCode(int? code) {
+    if (code == null) return CupertinoIcons.book;
+    final Map<int, IconData> iconMap = {
+      CupertinoIcons.function.codePoint: CupertinoIcons.function,
+      CupertinoIcons.sparkles.codePoint: CupertinoIcons.sparkles,
+      CupertinoIcons.square_grid_2x2.codePoint: CupertinoIcons.square_grid_2x2,
+      CupertinoIcons.chevron_left_slash_chevron_right.codePoint: CupertinoIcons.chevron_left_slash_chevron_right,
+      CupertinoIcons.device_desktop.codePoint: CupertinoIcons.device_desktop,
+      CupertinoIcons.book.codePoint: CupertinoIcons.book,
+    };
+    return iconMap[code] ?? CupertinoIcons.book;
   }
 
   void _showAddOrEditCourseModal([Map<String, dynamic>? existingCourse, int? index]) {
@@ -80,7 +116,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
     final titleController = TextEditingController(text: existingCourse?['title'] ?? '');
     final subtitleController = TextEditingController(text: existingCourse?['subtitle'] ?? '');
-    double progress = existingCourse?['progress'] ?? 0.5;
+    double progress = existingCourse?['progress'] ?? 0.0;
 
     DateTime? midtermDate = existingCourse?['midtermDate'] as DateTime?;
     DateTime? finalDate = existingCourse?['finalDate'] as DateTime?;
@@ -99,7 +135,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
             return Container(
               padding: EdgeInsets.only(
-                top: 20, left: 20, right: 20,
+                top: 20,
+                left: 20,
+                right: 20,
                 bottom: MediaQuery.of(context).viewInsets.bottom + 20,
               ),
               decoration: BoxDecoration(
@@ -113,7 +151,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   children: [
                     Center(
                       child: Container(
-                        width: 40, height: 4,
+                        width: 40,
+                        height: 4,
                         decoration: BoxDecoration(
                           color: Colors.grey[400],
                           borderRadius: BorderRadius.circular(10),
@@ -122,7 +161,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      isEditing ? 'دەستکاریکردنی وانە' : 'زیادکردنی وانەی نوێ',
+                      isEditing ? 'دەستکاریکردنی وانە ✏️' : 'زیادکردنی وانەی نوێ 📚',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -156,7 +195,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     const SizedBox(height: 16),
                     Text(
                       'ڕێژەی پێشکەوتن: ${(progress * 100).round()}%',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isDark ? Colors.grey[300] : ZankoColors.textSecondary),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.grey[300] : ZankoColors.textSecondary,
+                      ),
                     ),
                     Slider(
                       value: progress,
@@ -212,7 +255,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             onPressed: () async {
                               final picked = await showDatePicker(
                                 context: context,
-                                initialDate: midtermDate ?? DateTime.now(),
+                                initialDate: midtermDate ?? DateTime.now().add(const Duration(days: 14)),
                                 firstDate: DateTime(2020),
                                 lastDate: DateTime(2030),
                               );
@@ -233,7 +276,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
 
                     // Final Date Picker
                     Container(
@@ -318,6 +361,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             }
                           });
 
+                          _saveCoursesToPrefs();
+
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -362,6 +407,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
               setState(() {
                 _courses.removeAt(index);
               });
+              _saveCoursesToPrefs();
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -386,7 +432,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
     return Scaffold(
       backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
       appBar: AppBar(
-        backgroundColor: (isDark ? ZankoColors.darkBackground : ZankoColors.background).withOpacity(0.9),
+        backgroundColor: (isDark ? ZankoColors.darkBackground : ZankoColors.background).withValues(alpha: 0.9),
         elevation: 0,
         title: Text(
           langProvider.translate('all_courses'),
@@ -400,108 +446,142 @@ class _CoursesScreenState extends State<CoursesScreen> {
         centerTitle: false,
       ),
       body: SafeArea(
-        child: _courses.isEmpty
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(CupertinoIcons.book, size: 60, color: Colors.grey),
-                    const SizedBox(height: 12),
-                    const Text('هیچ وانەیەک نییە!', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    ElevatedButton.icon(
-                      onPressed: () => _showAddOrEditCourseModal(),
-                      icon: const Icon(CupertinoIcons.add, size: 18),
-                      label: const Text('زیادکردنی یەکەم وانە'),
-                    ),
-                  ],
-                ),
-              )
-            : ListView.builder(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 110),
-                itemCount: _courses.length + 1,
-                itemBuilder: (context, index) {
-                  // Top Add Course Banner Card
-                  if (index == 0) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: GestureDetector(
-                        onTap: () => _showAddOrEditCourseModal(),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                ZankoColors.primary,
-                                ZankoColors.primary.withOpacity(0.85),
-                              ],
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _courses.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: ZankoColors.primary.withValues(alpha: 0.12),
+                              shape: BoxShape.circle,
                             ),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: ZankoShadows.floating,
+                            child: Icon(CupertinoIcons.book_fill, size: 40, color: ZankoColors.primary),
                           ),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(CupertinoIcons.add_circled_solid, color: Colors.white, size: 24),
-                              SizedBox(width: 10),
-                              Text(
-                                '➕ زیادکردنی وانەی نوێ',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
+                          const SizedBox(height: 18),
+                          Text(
+                            'هیچ وانەیەک تۆمار نەکراوە',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : ZankoColors.textPrimary,
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'دەتوانیت وانەکانی ئەم سیمیستەرەت لێرە زیاد بکەیت تا کاتی تاقیکردنەوە و بەرەوپێشچوونت بزانیت.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: () => _showAddOrEditCourseModal(),
+                            icon: const Icon(CupertinoIcons.add, size: 18, color: Colors.white),
+                            label: const Text('زیادکردنی وانەی نوێ', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: ZankoColors.primary,
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                          ),
+                        ],
                       ),
-                    );
-                  }
-
-                  final c = _courses[index - 1];
-                  final courseIndex = index - 1;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: CourseCard(
-                      title: c['title'] as String,
-                      subtitle: c['subtitle'] as String,
-                      progress: c['progress'] as double,
-                      icon: c['icon'] as IconData,
-                      gradientStart: c['color'] as Color,
-                      gradientEnd: (c['color'] as Color).withOpacity(0.8),
-                      midtermDate: c['midtermDate'] as DateTime?,
-                      finalDate: c['finalDate'] as DateTime?,
-                      onEdit: () => _showAddOrEditCourseModal(c, courseIndex),
-                      onDelete: () => _deleteCourse(courseIndex),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          CupertinoPageRoute(
-                            builder: (context) => CourseDetailScreen(
-                              courseTitle: c['title'] as String,
-                              courseSubtitle: c['subtitle'] as String,
-                              progress: c['progress'] as double,
-                              icon: c['icon'] as IconData,
-                              themeColor: c['color'] as Color,
-                              midtermDate: c['midtermDate'] as DateTime?,
-                              finalDate: c['finalDate'] as DateTime?,
-                              onExamDatesChanged: (mDate, fDate) {
-                                setState(() {
-                                  _courses[courseIndex]['midtermDate'] = mDate;
-                                  _courses[courseIndex]['finalDate'] = fDate;
-                                });
-                              },
+                    ),
+                  )
+                : ListView.builder(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 110),
+                    itemCount: _courses.length + 1,
+                    itemBuilder: (context, index) {
+                      // Top Add Course Banner Card
+                      if (index == 0) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: GestureDetector(
+                            onTap: () => _showAddOrEditCourseModal(),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    ZankoColors.primary,
+                                    ZankoColors.primary.withValues(alpha: 0.85),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: ZankoShadows.floating,
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(CupertinoIcons.add_circled_solid, color: Colors.white, size: 22),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'زیادکردنی وانەی نوێ',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         );
-                      },
-                    ),
-                  );
+                      }
 
-                },
-              ),
+                      final c = _courses[index - 1];
+                      final courseIndex = index - 1;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: CourseCard(
+                          title: c['title'] as String,
+                          subtitle: c['subtitle'] as String,
+                          progress: c['progress'] as double,
+                          icon: c['icon'] as IconData,
+                          gradientStart: c['color'] as Color,
+                          gradientEnd: (c['color'] as Color).withValues(alpha: 0.8),
+                          midtermDate: c['midtermDate'] as DateTime?,
+                          finalDate: c['finalDate'] as DateTime?,
+                          onEdit: () => _showAddOrEditCourseModal(c, courseIndex),
+                          onDelete: () => _deleteCourse(courseIndex),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              CupertinoPageRoute(
+                                builder: (context) => CourseDetailScreen(
+                                  courseTitle: c['title'] as String,
+                                  courseSubtitle: c['subtitle'] as String,
+                                  progress: c['progress'] as double,
+                                  icon: c['icon'] as IconData,
+                                  themeColor: c['color'] as Color,
+                                  midtermDate: c['midtermDate'] as DateTime?,
+                                  finalDate: c['finalDate'] as DateTime?,
+                                  onExamDatesChanged: (mDate, fDate) {
+                                    setState(() {
+                                      _courses[courseIndex]['midtermDate'] = mDate;
+                                      _courses[courseIndex]['finalDate'] = fDate;
+                                    });
+                                    _saveCoursesToPrefs();
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
       ),
     );
   }
