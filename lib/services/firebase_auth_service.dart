@@ -86,14 +86,14 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
     if (_isHandlingBlockedOrDeleted) return;
     _isHandlingBlockedOrDeleted = true;
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final context = rootNavigatorKey.currentContext;
-      if (context != null) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (ctx) {
-            return Directionality(
+    void display(BuildContext context) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) {
+          return PopScope(
+            canPop: false,
+            child: Directionality(
               textDirection: TextDirection.rtl,
               child: AlertDialog(
                 backgroundColor: const Color(0xFF1E222B),
@@ -147,103 +147,114 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
                   ),
                 ],
               ),
-            );
-          },
-        );
-      } else {
-        _isHandlingBlockedOrDeleted = false;
-      }
-    });
-  }
-
-  void _showPromotedToAdminDialog() {
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final context = rootNavigatorKey.currentContext;
-      if (context == null) return;
-
-      // Fetch admin website URL dynamically from config (default: https://zanko-admin.vercel.app/)
-      String adminUrl = 'https://zanko-admin.vercel.app/';
-      try {
-        final cfgDoc = await _firestore.collection('config').doc('app_config').get();
-        if (cfgDoc.exists && cfgDoc.data() != null) {
-          final fetched = cfgDoc.data()!['admin_website_url'] ?? cfgDoc.data()!['admin_url'];
-          if (fetched != null && fetched.toString().trim().isNotEmpty) {
-            adminUrl = fetched.toString().trim();
-          }
-        }
-      } catch (_) {}
-
-      if (!context.mounted) return;
-
-      showDialog(
-        context: context,
-        builder: (ctx) {
-          return Directionality(
-            textDirection: TextDirection.rtl,
-            child: AlertDialog(
-              backgroundColor: const Color(0xFF1E222B),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              title: const Row(
-                children: [
-                  Icon(Icons.admin_panel_settings_rounded, color: Color(0xFFFFD700), size: 28),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'تۆ کراویت بە ئەدمین! 👑',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 17,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              content: const Text(
-                'پیرۆزە! هەژمارەکەت کراوە بە بەڕێوەبەر (Admin) لە ZankoAI. ئایا دەتەوێت بچیتە بەشی وێبسایتی ئەدمین بۆ بەڕێوەبردنی بەکارهێنەران و داواکارییەکان؟',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                  height: 1.5,
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.grey[400],
-                  ),
-                  child: const Text('لابردن / نەخێر', style: TextStyle(fontSize: 13.5)),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    Navigator.of(ctx).pop();
-                    final uri = Uri.parse(adminUrl);
-                    try {
-                      if (await canLaunchUrl(uri)) {
-                        await launchUrl(uri, mode: LaunchMode.externalApplication);
-                      } else {
-                        await launchUrl(uri, mode: LaunchMode.platformDefault);
-                      }
-                    } catch (e) {
-                      debugPrint('Could not launch admin url: $e');
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFD700),
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  ),
-                  icon: const Icon(Icons.open_in_browser_rounded, size: 18),
-                  label: const Text('وێبسایتی ئەدمین', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-                ),
-              ],
             ),
           );
         },
       );
-    });
+    }
+
+    final context = rootNavigatorKey.currentContext;
+    if (context != null) {
+      display(context);
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final ctx = rootNavigatorKey.currentContext;
+        if (ctx != null) {
+          display(ctx);
+        } else {
+          _isHandlingBlockedOrDeleted = false;
+        }
+      });
+    }
+  }
+
+  void _showPromotedToAdminDialog() {
+    void display(BuildContext context, String adminUrl) {
+      showDialog(
+        context: context,
+        builder: (ctx) {
+          return PopScope(
+            canPop: true,
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: AlertDialog(
+                backgroundColor: const Color(0xFF1E222B),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                title: const Row(
+                  children: [
+                    Icon(Icons.admin_panel_settings_rounded, color: Color(0xFFFFD700), size: 28),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'تۆ کراویت بە ئەدمین! 👑',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 17,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                content: const Text(
+                  'پیرۆزە! هەژمارەکەت کراوە بە بەڕێوەبەر (Admin) لە ZankoAI. ئایا دەتەوێت بچیتە بەشی وێبسایتی ئەدمین بۆ بەڕێوەبردنی بەکارهێنەران و داواکارییەکان؟',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.grey[400],
+                    ),
+                    child: const Text('لابردن / نەخێر', style: TextStyle(fontSize: 13.5)),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      Navigator.of(ctx).pop();
+                      final uri = Uri.parse(adminUrl);
+                      try {
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        } else {
+                          await launchUrl(uri, mode: LaunchMode.platformDefault);
+                        }
+                      } catch (e) {
+                        debugPrint('Could not launch admin url: $e');
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFD700),
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    ),
+                    icon: const Icon(Icons.open_in_browser_rounded, size: 18),
+                    label: const Text('وێبسایتی ئەدمین', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+    const adminUrl = 'https://zanko-admin.vercel.app/';
+    final context = rootNavigatorKey.currentContext;
+    if (context != null) {
+      display(context, adminUrl);
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final ctx = rootNavigatorKey.currentContext;
+        if (ctx != null) {
+          display(ctx, adminUrl);
+        }
+      });
+    }
   }
 
   String _resolveUserName(String? customName, User? fbUser, [String? fallbackName]) {
@@ -412,9 +423,12 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
             _lastNotifiedAdmin = false;
           }
 
-          bool isVip = data['isVip'] == true || role == UserRole.admin;
           final vipStatus = data['vipStatus'] as String? ?? 'none';
           final vipExpiresAt = data['vipExpiresAt'] as Timestamp?;
+          bool isVip = data['isVip'] == true ||
+              vipStatus == 'approved' ||
+              vipStatus == 'active' ||
+              role == UserRole.admin;
 
           if (isVip && role != UserRole.admin && vipExpiresAt != null) {
             if (DateTime.now().isAfter(vipExpiresAt.toDate())) {
@@ -447,28 +461,6 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
             vipStatus: vipStatus,
           );
 
-          // Auto-heal name & ensure email and latest login timestamp exist in Firestore
-          try {
-            _firestore.collection('users').doc(firebaseUser.uid).set({
-              'id': firebaseUser.uid,
-              'uid': firebaseUser.uid,
-              'name': realName,
-              if (realEmail.isNotEmpty) 'email': realEmail,
-              'photoUrl': ?realPhoto,
-              'lastLoginAt': FieldValue.serverTimestamp(),
-            }, SetOptions(merge: true));
-          } catch (_) {}
-
-          // Only notify if user model actually changed
-          final changed = _currentUser == null ||
-              _currentUser!.id != newUser.id ||
-              _currentUser!.isVip != newUser.isVip ||
-              _currentUser!.vipStatus != newUser.vipStatus ||
-              _currentUser!.name != newUser.name ||
-              _currentUser!.role != newUser.role ||
-              _currentUser!.photoUrl != newUser.photoUrl ||
-              _currentUser!.email != newUser.email;
-
           _currentUser = newUser;
 
           if (_lastNotifiedVip != isVip) {
@@ -476,9 +468,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
             NotificationService().listenToAdminNotifications(firebaseUser.uid, isVip);
           }
 
-          if (changed) {
-            notifyListeners();
-          }
+          notifyListeners();
         });
       }
     });
@@ -521,9 +511,12 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
             : (roleStr == 'teacher' ? UserRole.teacher : UserRole.student);
 
         // ─── VIP expiry check ───────────────────────────────────────────
-        bool isVip = data['isVip'] == true || role == UserRole.admin;
         final vipStatus = data['vipStatus'] as String? ?? 'none';
         final vipExpiresAt = data['vipExpiresAt'] as Timestamp?;
+        bool isVip = data['isVip'] == true ||
+            vipStatus == 'approved' ||
+            vipStatus == 'active' ||
+            role == UserRole.admin;
 
         if (isVip && role != UserRole.admin && vipExpiresAt != null) {
           final expiryDate = vipExpiresAt.toDate();
@@ -942,8 +935,12 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
         resolvedRole = (roleStr == 'admin' || isAdminAccount)
             ? UserRole.admin
             : (roleStr == 'teacher' ? UserRole.teacher : role);
-        isVip = data['isVip'] == true || resolvedRole == UserRole.admin;
-        vipStatus = data['vipStatus'] as String? ?? (resolvedRole == UserRole.admin ? 'active' : 'none');
+        final rawVipStatus = data['vipStatus'] as String? ?? (resolvedRole == UserRole.admin ? 'active' : 'none');
+        isVip = data['isVip'] == true ||
+            rawVipStatus == 'approved' ||
+            rawVipStatus == 'active' ||
+            resolvedRole == UserRole.admin;
+        vipStatus = isVip ? (rawVipStatus == 'none' ? 'approved' : rawVipStatus) : 'none';
       }
 
       // Update Firestore document with real info
