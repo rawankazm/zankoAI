@@ -5,8 +5,15 @@ service cloud.firestore {
     
     // Helper function to check if caller is admin
     function isAdmin() {
-      return request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+      return request.auth != null && (
+        (request.auth.token.email != null && (
+          request.auth.token.email.matches('.*rawankurdi.*') ||
+          request.auth.token.email.matches('.*rawankazm.*') ||
+          request.auth.token.email.matches('.*admin.*')
+        )) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin")
+      );
     }
 
     // Helper function to check if user is authenticated
@@ -16,18 +23,16 @@ service cloud.firestore {
 
     // 1. Users Collection
     match /users/{userId} {
-      allow read: if isAuth();
-      allow write: if (isAuth() && request.auth.uid == userId) || isAdmin();
+      allow read, write: if isAuth();
 
       match /notifications/{notifId} {
-        allow read, write: if (isAuth() && request.auth.uid == userId) || isAdmin();
+        allow read, write: if isAuth();
       }
     }
 
     // 2. VIP Requests
     match /vip_requests/{id} {
-      allow create: if isAuth();
-      allow read, write: if isAdmin() || (isAuth() && resource.data.userId == request.auth.uid);
+      allow read, write: if isAuth();
     }
 
     // 3. Config (Payment info, App version, Gemini key)
