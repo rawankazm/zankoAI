@@ -54,7 +54,7 @@ abstract class AiService extends ChangeNotifier {
 class ZankoAiService extends ChangeNotifier implements AiService {
   static const String _defaultApiKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
   static String get _fallbackWorkingKey =>
-      utf8.decode(base64.decode('QVEuQWI4Uk42SW1VVWJtcVByRUEtd0dTN0FDc0ZCQ3Q5UnhFbTRwV05oOElGck5ZckJoQlE='));
+      utf8.decode(base64.decode('QVEuQWI4Uk42SVFKd0hQOVlEY0xpYzlYM2dMdW9LWE9QR2FaYXBzSUlOLUtaLVE1SGZfWXc='));
   String? _apiKey;
 
   ZankoAiService() {
@@ -148,14 +148,14 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     }
   }
 
-  // Official validated high-speed Gemini models (Ranked with Gemini 3.7 Flash as Primary)
+  // Official validated high-speed Gemini models (Ranked with Gemini 3.6 Flash as Primary)
   static const List<String> _validFastModels = [
+    'gemini-3.6-flash',
     'gemini-3.7-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
-    'gemini-2.5-flash',
+    'gemini-3.5-flash',
+    'gemini-3.5-flash-lite',
     'gemini-flash-latest',
-    'gemini-2.0-flash-lite',
+    'gemini-2.5-flash',
   ];
 
   String? _lastWorkingKey;
@@ -586,10 +586,10 @@ class StudentCard extends StatelessWidget {
     Uint8List mediaBytes,
     String prompt,
     String systemPrompt, {
-    String mimeType = 'audio/m4a',
+    String mimeType = 'image/jpeg',
   }) async {
     final client = HttpClient();
-    client.connectionTimeout = const Duration(seconds: 5);
+    client.connectionTimeout = const Duration(seconds: 10);
 
     final modelsToTry = _lastWorkingModel != null
         ? [_lastWorkingModel!, ..._validFastModels.where((m) => m != _lastWorkingModel)]
@@ -597,7 +597,7 @@ class StudentCard extends StatelessWidget {
 
     final base64Data = base64Encode(mediaBytes);
 
-    for (final m in modelsToTry.take(2)) {
+    for (final m in modelsToTry) {
       try {
         final uri = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=$key');
         final request = await client.postUrl(uri);
@@ -626,7 +626,7 @@ class StudentCard extends StatelessWidget {
         };
 
         request.add(utf8.encode(jsonEncode(bodyMap)));
-        final response = await request.close().timeout(const Duration(seconds: 7));
+        final response = await request.close().timeout(const Duration(seconds: 25));
         final respStr = await response.transform(utf8.decoder).join();
 
         if (response.statusCode == 200) {
@@ -653,6 +653,15 @@ class StudentCard extends StatelessWidget {
     return "";
   }
 
+  static const List<String> _validVisionModels = [
+    'gemini-3.6-flash',
+    'gemini-3.7-flash',
+    'gemini-3.5-flash',
+    'gemini-3.1-flash-lite-image',
+    'gemini-flash-latest',
+    'gemini-2.5-flash',
+  ];
+
   Future<String> _callGeminiMultimodal(Uint8List mediaBytes, String prompt, {String mimeType = 'image/jpeg'}) async {
     final keysToTry = <String>[
       if (_lastWorkingKey != null && _lastWorkingKey!.trim().isNotEmpty) _lastWorkingKey!.trim(),
@@ -663,18 +672,19 @@ class StudentCard extends StatelessWidget {
     final isAudio = mimeType.startsWith('audio');
     final systemPrompt = isAudio
         ? "تۆ سیستمێکی زۆر پێشکەوتووی نوسینەوەی دەنگی (Speech-to-Text). گوێ لەم تۆمارە دەنگییە بگرە و بە وردی و تەواوی وشە بە وشە بە زمانی قسەکەرەکە (کوردی سۆرانی، کوردی بادینی، زمانی عەرەبی، یان ئینگلیزی) دەقەکە بنووسەوە. تکایە تەنها و تەنها دەقی ئاخاوتنەکە بنووسەوە بەبێ هیچ پێشەکی، سەردێڕ، یان کۆمێنتی زیادە."
-        : "تۆ مامۆستایەکی زیرەک و شارەزای بە ناوی ZankoAI. ئەم وێنەیەی پرسیارە بە زمانی پرسیارەکە (کوردی سۆرانی، کوردی بادینی، زمانی عەرەبی، یان ئینگلیزی) شیکار بکە بە ڕوونی.";
+        : "تۆ مامۆستایەکی زۆر زیرەک و شارەزای هەموو بوارە ئەکادیمییەکان، بڕوانامەکان، بەڵگەنامەکان، بیرکاری و زانستەکانی بە ناوی ZankoAI. "
+          "ئەم وێنەیە بە تەواوی و بە وردی شیکار بکە. ئەگەر بەکارهێنەر پرسیار یان تێبینییەکی تایبەتی هەبوو لەسەر وێنەکە (وەک ناوی کەس، پرسیارێکی دیاریکراو، یان داواکارییەک)، وەڵامی ورد و ڕاستەوخۆ دەربارەی وێنەکە بدەرەوە بە هەمان زمانی پرسیارەکە (کوردی سۆرانی، کوردی بادینی، عەرەبی، یان ئینگلیزی).";
 
     final defaultPrompt = isAudio
         ? "Transcribe the spoken words in this audio exactly in Kurdish (Sorani/Badini), Arabic, or English."
-        : "ئەم پرسیارەی ناو وێنەکە بە هەنگاو بە هەنگاو شیکار بکە.";
+        : "ئەم وێنەیە بە وردی شیکار بکە و وەڵامی تێبینی یان پرسیارەکەی سەرەوە بدەرەوە.";
 
-    final effectivePrompt = prompt.isNotEmpty ? prompt : defaultPrompt;
+    final effectivePrompt = prompt.trim().isNotEmpty ? prompt.trim() : defaultPrompt;
 
     for (final keyToUse in keysToTry) {
       if (keyToUse.isEmpty) continue;
 
-      for (final m in _validFastModels.take(2)) {
+      for (final m in _validVisionModels) {
         try {
           final model = gemini.GenerativeModel(
             model: m,
@@ -689,13 +699,33 @@ class StudentCard extends StatelessWidget {
             ])
           ];
 
-          final response = await model.generateContent(content).timeout(const Duration(seconds: 7));
+          final response = await model.generateContent(content).timeout(const Duration(seconds: 25));
           if (response.text != null && response.text!.isNotEmpty) {
             _lastWorkingKey = keyToUse;
             _lastWorkingModel = m;
             return response.text!;
           }
-        } catch (_) {}
+        } catch (_) {
+          // Fallback without systemInstruction if rejected by model
+          try {
+            final modelNoSys = gemini.GenerativeModel(
+              model: m,
+              apiKey: keyToUse,
+            );
+            final contentNoSys = [
+              gemini.Content.multi([
+                gemini.TextPart("$systemPrompt\n\nپرسیاری بەکارهێنەر: $effectivePrompt"),
+                gemini.DataPart(mimeType, mediaBytes),
+              ])
+            ];
+            final respNoSys = await modelNoSys.generateContent(contentNoSys).timeout(const Duration(seconds: 25));
+            if (respNoSys.text != null && respNoSys.text!.isNotEmpty) {
+              _lastWorkingKey = keyToUse;
+              _lastWorkingModel = m;
+              return respNoSys.text!;
+            }
+          } catch (_) {}
+        }
       }
 
       // Direct HTTP Multimodal Fallback
@@ -712,10 +742,8 @@ class StudentCard extends StatelessWidget {
     }
 
     if (isAudio) return "";
-    return "📸 **شیکاری پرسیاری وێنەکە لەلایەن مامۆستا ZankoAI**\n\n"
-           "١. پرسیار لە وێنەکەوە خوێندرایەوە و شیکاری هەنگاو بە هەنگاوی بۆ ئەنجامدرا.\n"
-           "٢. بەپێی یاسا زانستییە پەیوەندیدارەکان، شیکارەکە بریتییە لە دەرکێشانی هاوکێشەی سەرەکی و پەیڕەوکردنی قۆناغەکانی بیرکاری.\n"
-           "٣. وەڵامی کۆتایی بە سەرکەوتوویی دیاریکرا.";
+    return "⚠️ **نەتوانرا وێنەکە لە سێرڤەری زیرەکی دەستکرد شیکار بکرێت**\n\n"
+           "تکایە دڵنیابە کلیلی کارای Gemini API (کە بە AIzaSy دەست پێدەکات) لە ئەدمین پەنێڵ لە بەشی Settings یان لە دوگمەی 🔑 ی سەرەوە دانراوە.";
   }
 
   @override
@@ -733,8 +761,7 @@ class StudentCard extends StatelessWidget {
     try {
       return await _callGeminiMultimodal(imageBytes, promptText);
     } catch (e) {
-      return "📸 **شیکاری پرسیاری وێنەکە لەلایەن ZankoAI**\n\n"
-             "پرسیاری ناو وێنەکە بە سەرکەوتوویی شیکار کرا: هەنگاوە سەرەکییەکان و ئەنجامی کۆتایی بە شێوازێکی ڕوون ئەژمار کران.";
+      return "⚠️ **هەڵە لە بارکردنی وێنەکە**: $e\n\nتکایە دووبارە تێبینی یان وێنەکە بنێرەوە.";
     }
   }
 

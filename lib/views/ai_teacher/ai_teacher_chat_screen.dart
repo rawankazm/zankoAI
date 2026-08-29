@@ -40,12 +40,32 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   int _selectedModeIndex = 0;
   final List<Map<String, dynamic>> _modes = [
     {'title': 'گشتی 🧑‍🏫', 'tag': 'General Academic'},
+    {'title': 'هاوکێشە و یاساکان 📐', 'tag': 'Step-by-Step Math & Formula Solver'},
     {'title': 'کۆد و IT 💻', 'tag': 'Coding & Computer Science'},
-    {'title': 'بیرکاری و زانست 📐', 'tag': 'Math, Physics & Engineering'},
     {'title': 'پزیشکی و دەرمان 🏥', 'tag': 'Medicine & Health'},
     {'title': 'کورتکردنەوە 📝', 'tag': 'Summarize & Simplify'},
     {'title': 'تاقیکردنەوە ⚡', 'tag': 'Exam Preparation & Prediction'},
   ];
+
+  // Quick Math & Formula Symbols
+  static const List<String> _mathSymbols = [
+    'x²', 'xⁿ', '√', '∛', '∫', 'dy/dx', 'lim', 'π', '±', '÷', '×',
+    'Δ', 'θ', '∞', 'log', 'ln', 'sin', 'cos', 'tan', '∑', '≠', '≤', '≥', '≈', 'f(x)', 'λ'
+  ];
+  bool _showMathToolbar = false;
+
+  void _insertMathSymbol(String symbol) {
+    final text = _controller.text;
+    final selection = _controller.selection;
+    final start = selection.start >= 0 ? selection.start : text.length;
+    final end = selection.end >= 0 ? selection.end : text.length;
+    final newText = text.replaceRange(start, end, symbol);
+    _controller.value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: start + symbol.length),
+    );
+    setState(() {});
+  }
 
   // Real Audio Recording & Speech-to-Text State
   final AudioRecorder _audioRecorder = AudioRecorder();
@@ -60,17 +80,20 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     switch (_selectedModeIndex) {
       case 1:
         return [
+          'شیکارکردنی هاوکێشەی دووجا (ax² + bx + c = 0)',
+          'دۆزینەوەی داتاشراو (Derivatives dy/dx)',
+          'تەواوکاری دیاریکراو و نادیار (Integrals ∫)',
+          'یاساکانی نیوتن و هێز لە فیزیا (Physics)',
+          'ماتریس و لیمیت (Limits & Matrices)',
+          'هاوکێشەی کیمیایی و باڵانس کردن (Chemistry)',
+          'شیکاری نەخشەی سێگۆشەزانی (Trigonometry)',
+        ];
+      case 2:
+        return [
           'پێناسەی OOP و چەمکەکانی',
           'جیاوازی نێوان SQL و NoSQL',
           'چۆن فلاتەر کار دەکات؟',
           'شیکاری ئەم هەڵەی کۆدە',
-        ];
-      case 2:
-        return [
-          'یاسای داتاشراو (Derivatives)',
-          'تەواوکاری شیکار بکە (Integrals)',
-          'ماتریسەکان لە جەبری هێڵی',
-          'یاساکانی نیوتن لە فیزیا',
         ];
       case 3:
         return [
@@ -131,72 +154,6 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     final minute = now.minute.toString().padLeft(2, '0');
     final period = now.hour >= 12 ? 'pm' : 'am';
     return '$hour:$minute $period';
-  }
-
-  void _showApiKeyDialog(BuildContext context) {
-    final aiService = Provider.of<AiService>(context, listen: false);
-    final lang = Provider.of<LanguageProvider>(context, listen: false);
-    final controller = TextEditingController(text: aiService.apiKey ?? '');
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E222A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          lang.translate('enter_api_key'),
-          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Gemini API Key (Google AI Studio):',
-              style: TextStyle(color: Colors.grey, fontSize: 13),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: controller,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
-              decoration: InputDecoration(
-                hintText: 'AIzaSy...',
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
-                filled: true,
-                fillColor: const Color(0xFF15181E),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(lang.translate('cancel'), style: const TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: ZankoColors.primary,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            onPressed: () {
-              aiService.apiKey = controller.text.trim();
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('✅ API Key updated successfully!'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
-            child: Text(lang.translate('save'), style: const TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
   }
 
   Future<void> _loadChatHistory() async {
@@ -488,36 +445,327 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     }
   }
 
-  Future<void> _pickAndSolveImage() async {
+  Future<void> _pickAndSolveImage({ImageSource source = ImageSource.gallery}) async {
     try {
       final picker = ImagePicker();
-      final image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+      final image = await picker.pickImage(
+        source: source,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 82,
+      );
       if (image == null) return;
 
       final bytes = await image.readAsBytes();
-      final promptText = _controller.text.trim();
-      _controller.clear();
-
-      final timestamp = _formatTime();
-      setState(() {
-        _messages.add({
-          'role': 'user',
-          'content': '📷 [وێنەی پرسیار/تاقیکردنەوە بارکرا]: ${image.name}\n${promptText.isNotEmpty ? promptText : ""}',
-          'time': timestamp,
-        });
-        _isTyping = true;
-      });
-
-      _scrollToBottom();
-      await _saveChatHistory();
-
       if (!mounted) return;
-      final aiService = Provider.of<AiService>(context, listen: false);
-      final authService = Provider.of<AuthService>(context, listen: false);
-      final isVip = authService.currentUser?.isVip ?? false;
-      final isPendingVip = authService.currentUser?.isPendingVip ?? false;
+      _showImagePreviewAndNoteSheet(bytes, image.name);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('نەتوانرا وێنەکە باربکرێت: $e')),
+        );
+      }
+    }
+  }
 
-      final response = await aiService.solveImageQuestion(bytes, promptText, isVip: isVip, isPendingVip: isPendingVip);
+  void _showImagePreviewAndNoteSheet(Uint8List bytes, String imageName) {
+    final noteController = TextEditingController(text: _controller.text.trim());
+    final isMathMode = _selectedModeIndex == 1;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF161922),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetCtx) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Grab handle
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 4.5,
+                        decoration: BoxDecoration(
+                          color: Colors.white24,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Sheet Header
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: ZankoColors.primary.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            isMathMode ? CupertinoIcons.function : CupertinoIcons.photo_fill_on_rectangle_fill,
+                            color: ZankoColors.primary,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isMathMode ? 'شیکاری هاوکێشەی ناو وێنە 📐' : 'ناردنی وێنە لەگەڵ تێبینی 📷',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                imageName,
+                                style: const TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 12,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(CupertinoIcons.xmark_circle_fill, color: Colors.white38),
+                          onPressed: () => Navigator.pop(sheetCtx),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Image Thumbnail Card
+                    Container(
+                      height: 170,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0F1117),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: ZankoColors.primary.withValues(alpha: 0.25),
+                          width: 1.2,
+                        ),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Image.memory(
+                            bytes,
+                            fit: BoxFit.contain,
+                            width: double.infinity,
+                            height: double.infinity,
+                          ),
+                          Positioned(
+                            bottom: 8,
+                            right: 8,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.7),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '${(bytes.lengthInBytes / 1024).toStringAsFixed(1)} KB',
+                                style: const TextStyle(color: Colors.white70, fontSize: 11),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Quick prompt suggestion chips
+                    SizedBox(
+                      height: 32,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          _buildQuickPromptChip('📐 شیکاری هەنگاو بە هەنگاو', noteController, setSheetState),
+                          _buildQuickPromptChip('🎯 تەنها وەڵامی کۆتایی', noteController, setSheetState),
+                          _buildQuickPromptChip('🌐 وەرگێڕان بۆ کوردی', noteController, setSheetState),
+                          _buildQuickPromptChip('💡 ڕوونکردنەوەی سادە', noteController, setSheetState),
+                          _buildQuickPromptChip('📝 کورتکردنەوەی ناوەڕۆک', noteController, setSheetState),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Note Input Box
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E222A),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.1),
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                      child: TextField(
+                        controller: noteController,
+                        maxLines: 3,
+                        minLines: 1,
+                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                        decoration: const InputDecoration(
+                          hintText: 'تێبینی یان پرسیارەکەت لەسەر ئەم وێنەیە بنووسە... (ئارەزوومەندانە)',
+                          hintStyle: TextStyle(color: Colors.white38, fontSize: 13),
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Action Buttons Row
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(sheetCtx),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: const Text(
+                              'پەشیمانبوونەوە',
+                              style: TextStyle(color: Colors.white60, fontSize: 14),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          flex: 2,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              final note = noteController.text.trim();
+                              Navigator.pop(sheetCtx);
+                              _controller.clear();
+                              _processAndSendImage(bytes, imageName, note);
+                            },
+                            icon: const Icon(CupertinoIcons.paperplane_fill, size: 17, color: Colors.black),
+                            label: const Text(
+                              'ناردن بۆ مامۆستا 🚀',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: ZankoColors.primary,
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              elevation: 4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildQuickPromptChip(String text, TextEditingController controller, StateSetter setSheetState) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 6),
+      child: InkWell(
+        onTap: () {
+          setSheetState(() {
+            if (controller.text.isEmpty) {
+              controller.text = text;
+            } else {
+              controller.text = '${controller.text} - $text';
+            }
+          });
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFF242933),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.3)),
+          ),
+          child: Center(
+            child: Text(
+              text,
+              style: TextStyle(
+                color: ZankoColors.primary,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _processAndSendImage(Uint8List bytes, String imageName, String promptText) async {
+    final timestamp = _formatTime();
+    final isMathMode = _selectedModeIndex == 1;
+    final modeTag = isMathMode ? "📐 [شیکاری هاوکێشە و یاسا]" : "📷 [وێنەی پرسیار/وانە]";
+    final base64Image = base64Encode(bytes);
+
+    setState(() {
+      _messages.add({
+        'role': 'user',
+        'content': promptText.isNotEmpty ? promptText : imageName,
+        'time': timestamp,
+        'imageName': imageName,
+        'imageBase64': base64Image,
+        'modeTag': modeTag,
+      });
+      _isTyping = true;
+    });
+
+    _scrollToBottom();
+    await _saveChatHistory();
+
+    if (!mounted) return;
+    final aiService = Provider.of<AiService>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final isVip = authService.currentUser?.isVip ?? false;
+    final isPendingVip = authService.currentUser?.isPendingVip ?? false;
+
+    try {
+      final response = await aiService.solveImageQuestion(
+        bytes,
+        promptText,
+        isVip: isVip,
+        isPendingVip: isPendingVip,
+      );
 
       if (mounted) {
         setState(() {
@@ -533,7 +781,16 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isTyping = false);
+        setState(() {
+          _isTyping = false;
+          _messages.add({
+            'role': 'assistant',
+            'content': '⚠️ ببورە، کێشەیەک لە پەیوەندی بە سێرڤەر ڕوویدا لە کاتی شیکارکردنی وێنەکە.',
+            'time': _formatTime(),
+          });
+        });
+        await _saveChatHistory();
+        _scrollToBottom();
       }
     }
   }
@@ -617,6 +874,15 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
+                _buildAttachmentOption(
+                  icon: CupertinoIcons.camera_fill,
+                  color: Colors.amberAccent,
+                  label: 'کامێرای هاوکێشە',
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _pickAndSolveImage(source: ImageSource.camera);
+                  },
+                ),
                 _buildAttachmentOption(
                   icon: CupertinoIcons.photo,
                   color: Colors.purpleAccent,
@@ -877,11 +1143,6 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                     ),
                   ),
                 ),
-              _buildNeumorphicButton(
-                icon: Icons.key_rounded,
-                onTap: () => _showApiKeyDialog(context),
-                iconColor: ZankoColors.primary,
-              ),
             ],
           ),
           const SizedBox(height: 10),
@@ -1057,6 +1318,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     final time = msg['time'] ?? _formatTime();
     final isSpeaking = _currentlySpeakingMsg == content;
     final isLimitMsg = !isUser && (content.contains('Free Daily Limit Reached') || content.contains('سنووری ١٠'));
+    final imageBase64 = msg['imageBase64'];
+    final imageName = msg['imageName'];
+    final modeTag = msg['modeTag'];
 
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
@@ -1112,15 +1376,79 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    content,
-                    style: const TextStyle(
-                      fontSize: 14.5,
-                      height: 1.45,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white,
+                  // If user sent an image, show interactive thumbnail
+                  if (imageBase64 != null && imageBase64.isNotEmpty) ...[
+                    GestureDetector(
+                      onTap: () => _showFullScreenImage(imageBase64, imageName ?? 'وێنە'),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: Container(
+                          constraints: const BoxConstraints(maxHeight: 220, minWidth: 180),
+                          color: Colors.black.withValues(alpha: 0.25),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Image.memory(
+                                base64Decode(imageBase64),
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                              ),
+                              Positioned(
+                                bottom: 6,
+                                right: 6,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.7),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(CupertinoIcons.viewfinder, size: 12, color: Colors.white),
+                                      SizedBox(width: 4),
+                                      Text('گەورەکردن', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                  ],
+
+                  if (modeTag != null && modeTag.isNotEmpty) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      margin: const EdgeInsets.only(bottom: 5),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        modeTag,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  if (content.isNotEmpty)
+                    Text(
+                      content,
+                      style: const TextStyle(
+                        fontSize: 14.5,
+                        height: 1.45,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.white,
+                      ),
+                    ),
                   const SizedBox(height: 6),
                   Align(
                     alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
@@ -1366,6 +1694,66 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 ),
               ),
 
+            // Math Quick Camera Solve Banner (when in Math & Formula mode)
+            if (_selectedModeIndex == 1)
+              Container(
+                margin: const EdgeInsets.only(left: 16, right: 16, top: 4, bottom: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: ZankoColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: ZankoColors.primary.withValues(alpha: 0.35),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(CupertinoIcons.function, color: ZankoColors.primary, size: 20),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'شیکاری هەنگاو بە هەنگاو: وێنەی هاوکێشە یان یاساکە بگرە 📐',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () => _pickAndSolveImage(source: ImageSource.camera),
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: ZankoColors.primary,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(CupertinoIcons.camera_fill, color: Colors.black, size: 14),
+                            SizedBox(width: 4),
+                            Text(
+                              'کامێرا',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            // Quick Math Symbols Toolbar (when in Math Mode or toggled)
+            if (_selectedModeIndex == 1 || _showMathToolbar)
+              _buildMathSymbolBar(),
+
             const SizedBox(height: 4),
 
             // Bottom Input Bar
@@ -1452,6 +1840,40 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                     size: 22,
                                   ),
                                   onPressed: _showEmojiPicker,
+                                ),
+                                // Math Toolbar Toggle Button
+                                IconButton(
+                                  icon: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: (_selectedModeIndex == 1 || _showMathToolbar)
+                                          ? ZankoColors.primary.withValues(alpha: 0.25)
+                                          : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: (_selectedModeIndex == 1 || _showMathToolbar)
+                                            ? ZankoColors.primary
+                                            : Colors.white24,
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      'f(x)',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: (_selectedModeIndex == 1 || _showMathToolbar)
+                                            ? ZankoColors.primary
+                                            : const Color(0xFF8E95A3),
+                                      ),
+                                    ),
+                                  ),
+                                  tooltip: 'هێما بیرکارییەکان / Math Toolbar',
+                                  onPressed: () {
+                                    setState(() {
+                                      _showMathToolbar = !_showMathToolbar;
+                                    });
+                                  },
                                 ),
                                 // TextField
                                 Expanded(
@@ -1541,5 +1963,85 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildMathSymbolBar() {
+    return Container(
+      height: 38,
+      margin: const EdgeInsets.only(top: 6, bottom: 2),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: _mathSymbols.length,
+        itemBuilder: (context, index) {
+          final sym = _mathSymbols[index];
+          return Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => _insertMathSymbol(sym),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1E222A),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: ZankoColors.primary.withValues(alpha: 0.35),
+                      width: 1,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      sym,
+                      style: TextStyle(
+                        color: ZankoColors.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showFullScreenImage(String base64Str, String title) {
+    try {
+      final bytes = base64Decode(base64Str);
+      showDialog(
+        context: context,
+        builder: (ctx) => Dialog(
+          backgroundColor: Colors.black.withValues(alpha: 0.85),
+          insetPadding: const EdgeInsets.all(12),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              InteractiveViewer(
+                minScale: 0.8,
+                maxScale: 4.0,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.memory(bytes, fit: BoxFit.contain),
+                ),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: IconButton(
+                  icon: const Icon(CupertinoIcons.xmark_circle_fill, color: Colors.white70, size: 32),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } catch (_) {}
   }
 }
