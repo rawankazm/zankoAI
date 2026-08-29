@@ -9,10 +9,12 @@ import '../../theme.dart';
 enum DepartmentCategory {
   all,
   medicine,
-  engineering,
   computer,
+  engineering,
+  business,
   law,
   science,
+  humanities,
 }
 
 class AcademicTerm {
@@ -54,10 +56,12 @@ class _AcademicDictionaryScreenState extends State<AcademicDictionaryScreen> {
     return _dictionaryTerms.where((item) {
       bool matchesCategory = true;
       if (_selectedCategory == DepartmentCategory.medicine) matchesCategory = item.category.contains('پزیشکی');
-      if (_selectedCategory == DepartmentCategory.engineering) matchesCategory = item.category.contains('ئەندازیاری');
       if (_selectedCategory == DepartmentCategory.computer) matchesCategory = item.category.contains('کۆمپیوتەر');
+      if (_selectedCategory == DepartmentCategory.engineering) matchesCategory = item.category.contains('ئەندازیاری');
+      if (_selectedCategory == DepartmentCategory.business) matchesCategory = item.category.contains('کارگێڕی');
       if (_selectedCategory == DepartmentCategory.law) matchesCategory = item.category.contains('یاسا');
       if (_selectedCategory == DepartmentCategory.science) matchesCategory = item.category.contains('زانست');
+      if (_selectedCategory == DepartmentCategory.humanities) matchesCategory = item.category.contains('دەرونزانی');
 
       if (!matchesCategory) return false;
 
@@ -151,7 +155,7 @@ class _AcademicDictionaryScreenState extends State<AcademicDictionaryScreen> {
     return Scaffold(
       backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
       appBar: AppBar(
-        backgroundColor: (isDark ? ZankoColors.darkBackground : ZankoColors.background).withOpacity(0.95),
+        backgroundColor: (isDark ? ZankoColors.darkBackground : ZankoColors.background).withValues(alpha: 0.95),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(CupertinoIcons.back),
@@ -163,7 +167,7 @@ class _AcademicDictionaryScreenState extends State<AcademicDictionaryScreen> {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: ZankoColors.primary.withOpacity(0.15),
+                color: ZankoColors.primary.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: Icon(CupertinoIcons.book_fill, color: ZankoColors.primary, size: 18),
@@ -258,10 +262,12 @@ class _AcademicDictionaryScreenState extends State<AcademicDictionaryScreen> {
                       children: [
                         _buildCategoryChip('هەمووی 🌐', DepartmentCategory.all, isDark),
                         _buildCategoryChip('پزیشکی 🩺', DepartmentCategory.medicine, isDark),
-                        _buildCategoryChip('ئەندازیاری ⚙️', DepartmentCategory.engineering, isDark),
                         _buildCategoryChip('کۆمپیوتەر 💻', DepartmentCategory.computer, isDark),
+                        _buildCategoryChip('ئەندازیاری ⚙️', DepartmentCategory.engineering, isDark),
+                        _buildCategoryChip('کارگێڕی 📊', DepartmentCategory.business, isDark),
                         _buildCategoryChip('یاسا ⚖️', DepartmentCategory.law, isDark),
                         _buildCategoryChip('زانست 🔬', DepartmentCategory.science, isDark),
+                        _buildCategoryChip('دەرونزانی 🧠', DepartmentCategory.humanities, isDark),
                       ],
                     ),
                   ),
@@ -284,7 +290,7 @@ class _AcademicDictionaryScreenState extends State<AcademicDictionaryScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: ZankoColors.primary.withOpacity(0.3),
+                      color: ZankoColors.primary.withValues(alpha: 0.3),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -407,11 +413,11 @@ class _AcademicDictionaryScreenState extends State<AcademicDictionaryScreen> {
         color: isDark ? ZankoColors.darkCard : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFEFEFF7),
+          color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFEFEFF7),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -437,7 +443,7 @@ class _AcademicDictionaryScreenState extends State<AcademicDictionaryScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: ZankoColors.primary.withOpacity(0.12),
+                  color: ZankoColors.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -482,7 +488,7 @@ class _AcademicDictionaryScreenState extends State<AcademicDictionaryScreen> {
               color: isDark ? const Color(0xFF1C1C1E) : const Color(0xFFF9FAFB),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: isDark ? Colors.white.withOpacity(0.05) : const Color(0xFFF3F4F6),
+                color: isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFF3F4F6),
               ),
             ),
             child: Text(
