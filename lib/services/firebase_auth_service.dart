@@ -475,9 +475,10 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
 
           _currentUser = newUser;
 
+          NotificationService().syncUserToken(firebaseUser.uid, isVip: isVip);
           if (_lastNotifiedVip != isVip) {
             _lastNotifiedVip = isVip;
-            NotificationService().listenToAdminNotifications(firebaseUser.uid, isVip);
+            NotificationService().listenToAdminNotifications(firebaseUser.uid, isVip, email: realEmail);
           }
 
           notifyListeners();

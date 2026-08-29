@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/language_provider.dart';
 import '../../services/auth_service.dart';
 import '../../theme.dart';
@@ -14,7 +15,7 @@ class NotificationItem {
   final String title;
   final String body;
   final DateTime time;
-  final String category; // AI Tutor, Course, Quiz, Reminder, Admin Direct
+  final String category; // Admin Direct, Announcement, AI Tutor, Course, Quiz, Reminder
   final IconData icon;
   final Color color;
   bool isRead;
@@ -45,14 +46,42 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   StreamSubscription? _broadcastMsgSub;
   final List<NotificationItem> _directItems = [];
   final List<NotificationItem> _broadcastItems = [];
+  final Set<String> _readDocIds = {};
+  final Set<String> _deletedDocIds = {};
 
-  static const _filterKeys = ['all', 'unread', 'Admin Direct', 'AI Tutor', 'Course', 'Quiz', 'Reminder'];
-  static const _filterLabels = ['هەموو', 'نەخوێنراو', '✉️ پەیامی ئەدمین', '🤖 مامۆستا AI', '📚 وانە', '✏️ کویز', '⏰ بیرخستنەوە'];
+  static const String _prefReadNotificationsKey = 'zanko_read_notifications_v1';
+  static const String _prefDeletedNotificationsKey = 'zanko_deleted_notifications_v1';
+
+  static const _filterKeys = ['all', 'unread', 'Admin Direct', 'Announcement', 'AI Tutor', 'Course', 'Quiz', 'Reminder'];
+  static const _filterLabels = ['هەموو', 'نەخوێنراو', '✉️ پەیامی ئەدمین', '🔔 ئاگاداری گشتی', '🤖 مامۆستا AI', '📚 وانە', '✏️ کویز', '⏰ بیرخستنەوە'];
 
   @override
   void initState() {
     super.initState();
-    _listenToNotifications();
+    _loadLocalPrefs().then((_) {
+      _listenToNotifications();
+    });
+  }
+
+  Future<void> _loadLocalPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _readDocIds.addAll(prefs.getStringList(_prefReadNotificationsKey) ?? []);
+      _deletedDocIds.addAll(prefs.getStringList(_prefDeletedNotificationsKey) ?? []);
+    } catch (_) {}
+  }
+
+  DateTime _parseTimestamp(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is Timestamp) return value.toDate();
+    if (value is DateTime) return value;
+    if (value is int) return DateTime.fromMillisecondsSinceEpoch(value);
+    if (value is String) {
+      try {
+        return DateTime.parse(value);
+      } catch (_) {}
+    }
+    return DateTime.now();
   }
 
   void _listenToNotifications() {
@@ -60,62 +89,109 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final user = authService.currentUser;
     if (user == null || user.isGuest) return;
 
+    final userEmail = user.email.trim().toLowerCase();
+
+    // 1. Direct Messages
+    _directMsgSub?.cancel();
     _directMsgSub = FirebaseFirestore.instance
         .collection('direct_messages')
-        .where('userId', isEqualTo: user.id)
         .snapshots()
         .listen((snap) {
       _directItems.clear();
       for (var doc in snap.docs) {
+        if (_deletedDocIds.contains(doc.id)) continue;
         final data = doc.data();
-        final ts = data['createdAt'] as Timestamp?;
-        final title = data['title'] ?? data['header'] ?? data['subject'] ?? 'پەیام لە ئەدمینەوە';
+        final docUserId = (data['userId'] ?? data['user_id'] ?? data['recipientId'] ?? data['studentId'] ?? '').toString().trim();
+        final docEmail = (data['email'] ?? data['userEmail'] ?? data['recipientEmail'] ?? '').toString().trim().toLowerCase();
+
+        final isMatch = (docUserId.isNotEmpty && docUserId == user.id) ||
+            (userEmail.isNotEmpty && docEmail == userEmail);
+
+        if (!isMatch) continue;
+
+        final title = data['title'] ?? data['header'] ?? data['subject'] ?? '✉️ پەیام لە ئەدمینەوە';
         final body = data['message'] ?? data['body'] ?? data['content'] ?? data['text'] ?? '';
+        final time = _parseTimestamp(data['createdAt'] ?? data['timestamp'] ?? data['date']);
+        final isRead = data['isRead'] == true || _readDocIds.contains(doc.id);
+
         _directItems.add(NotificationItem(
           id: doc.id,
           title: title.toString(),
           body: body.toString(),
-          time: ts?.toDate() ?? DateTime.now(),
+          time: time,
           category: 'Admin Direct',
           icon: CupertinoIcons.mail_solid,
           color: ZankoColors.primary,
-          isRead: data['isRead'] == true,
+          isRead: isRead,
         ));
       }
       _combineAndSetNotifications();
     });
 
+    // 2. Broadcast / Announcements
+    _broadcastMsgSub?.cancel();
     _broadcastMsgSub = FirebaseFirestore.instance
         .collection('notifications')
         .snapshots()
         .listen((snap) {
       _broadcastItems.clear();
       for (var doc in snap.docs) {
+        if (_deletedDocIds.contains(doc.id)) continue;
         final data = doc.data();
-        final target = (data['target'] ?? data['to'] ?? 'all').toString().toLowerCase();
-        final docUserId = data['userId'] ?? data['user_id'] ?? data['recipientId'];
+        final target = (data['target'] ?? data['to'] ?? data['audience'] ?? 'all').toString().trim().toLowerCase();
+        final docUserId = (data['userId'] ?? data['user_id'] ?? data['recipientId'] ?? '').toString().trim();
+        final docEmail = (data['email'] ?? data['userEmail'] ?? '').toString().trim().toLowerCase();
 
-        final isMatch = target == 'all' ||
+        final isMatch = target == '' ||
+            target == 'all' ||
             target == 'all_students' ||
             target == 'students' ||
+            target == 'everyone' ||
             (target == 'vip' && user.isVip) ||
-            (docUserId != null && docUserId == user.id);
+            (docUserId.isNotEmpty && docUserId == user.id) ||
+            (userEmail.isNotEmpty && docEmail == userEmail);
 
-        if (isMatch) {
-          final ts = data['createdAt'] as Timestamp?;
-          final title = data['title'] ?? data['header'] ?? data['subject'] ?? 'ئاگادارکردنەوە';
-          final body = data['body'] ?? data['message'] ?? data['content'] ?? data['text'] ?? '';
-          _broadcastItems.add(NotificationItem(
-            id: doc.id,
-            title: title.toString(),
-            body: body.toString(),
-            time: ts?.toDate() ?? DateTime.now(),
-            category: 'Admin Direct',
-            icon: CupertinoIcons.bell_fill,
-            color: const Color(0xFFFF9F0A),
-            isRead: data['isRead'] == true,
-          ));
+        if (!isMatch) continue;
+
+        final title = data['title'] ?? data['header'] ?? data['subject'] ?? '🔔 ئاگادارکردنەوە';
+        final body = data['body'] ?? data['message'] ?? data['content'] ?? data['text'] ?? '';
+        final time = _parseTimestamp(data['createdAt'] ?? data['timestamp'] ?? data['date']);
+        final rawCat = (data['category'] ?? data['type'] ?? 'Announcement').toString().toLowerCase();
+
+        String category = 'Announcement';
+        IconData icon = CupertinoIcons.bell_fill;
+        Color color = const Color(0xFFFF9F0A);
+
+        if (rawCat.contains('tutor') || rawCat.contains('ai')) {
+          category = 'AI Tutor';
+          icon = CupertinoIcons.sparkles;
+          color = ZankoColors.accent;
+        } else if (rawCat.contains('course') || rawCat.contains('lesson')) {
+          category = 'Course';
+          icon = CupertinoIcons.book_fill;
+          color = const Color(0xFF10B981);
+        } else if (rawCat.contains('quiz') || rawCat.contains('exam')) {
+          category = 'Quiz';
+          icon = CupertinoIcons.pencil_ellipsis_rectangle;
+          color = const Color(0xFF6366F1);
+        } else if (rawCat.contains('remind') || rawCat.contains('schedule')) {
+          category = 'Reminder';
+          icon = CupertinoIcons.alarm_fill;
+          color = const Color(0xFFEC4899);
         }
+
+        final isRead = data['isRead'] == true || _readDocIds.contains(doc.id);
+
+        _broadcastItems.add(NotificationItem(
+          id: doc.id,
+          title: title.toString(),
+          body: body.toString(),
+          time: time,
+          category: category,
+          icon: icon,
+          color: color,
+          isRead: isRead,
+        ));
       }
       _combineAndSetNotifications();
     });
@@ -137,17 +213,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     super.dispose();
   }
 
-
-  void _markAllAsRead() {
-    final authService = Provider.of<AuthService>(context, listen: false);
-    final user = authService.currentUser;
-    if (user == null || user.isGuest) return;
-
+  Future<void> _markAllAsRead() async {
     for (var item in _notifications) {
-      if (!item.isRead) {
-        FirebaseFirestore.instance.collection('direct_messages').doc(item.id).update({'isRead': true});
-      }
+      item.isRead = true;
+      _readDocIds.add(item.id);
+      FirebaseFirestore.instance
+          .collection('direct_messages')
+          .doc(item.id)
+          .update({'isRead': true})
+          .catchError((_) {});
     }
+    setState(() {});
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(_prefReadNotificationsKey, _readDocIds.toList());
+    } catch (_) {}
   }
 
   String _formatTime(DateTime time) {
@@ -165,18 +245,43 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return '${time.year}/${time.month.toString().padLeft(2, '0')}/${time.day.toString().padLeft(2, '0')} • $hour:$minute $period';
   }
 
-  void _showNotificationDetail(NotificationItem item) {
+  Future<void> _deleteNotification(NotificationItem item) async {
+    setState(() {
+      _notifications.removeWhere((n) => n.id == item.id);
+      _directItems.removeWhere((n) => n.id == item.id);
+      _broadcastItems.removeWhere((n) => n.id == item.id);
+    });
+    _deletedDocIds.add(item.id);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(_prefDeletedNotificationsKey, _deletedDocIds.toList());
+    } catch (_) {}
+
+    FirebaseFirestore.instance
+        .collection('direct_messages')
+        .doc(item.id)
+        .delete()
+        .catchError((_) {});
+  }
+
+  Future<void> _showNotificationDetail(NotificationItem item) async {
     if (!item.isRead) {
       setState(() {
         item.isRead = true;
       });
+      _readDocIds.add(item.id);
       FirebaseFirestore.instance
           .collection('direct_messages')
           .doc(item.id)
           .update({'isRead': true})
           .catchError((_) {});
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setStringList(_prefReadNotificationsKey, _readDocIds.toList());
+      } catch (_) {}
     }
 
+    if (!mounted) return;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showModalBottomSheet(
@@ -364,23 +469,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
                       // 2. Delete
                       IconButton(
-                        onPressed: () {
+                        onPressed: () async {
                           Navigator.pop(ctx);
-                          setState(() {
-                            _notifications.removeWhere((n) => n.id == item.id);
-                          });
-                          FirebaseFirestore.instance
-                              .collection('direct_messages')
-                              .doc(item.id)
-                              .delete()
-                              .catchError((_) {});
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('ئاگادارییەکە سڕایەوە 🗑️'),
-                              backgroundColor: Colors.redAccent,
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
+                          await _deleteNotification(item);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('ئاگادارییەکە سڕایەوە 🗑️'),
+                                backgroundColor: Colors.redAccent,
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          }
                         },
                         icon: const Icon(CupertinoIcons.trash, color: Colors.redAccent, size: 20),
                         tooltip: 'سڕینەوە',
@@ -510,75 +610,85 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
             // Notification List
             Expanded(
-              child: filtered.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+              child: RefreshIndicator(
+                color: ZankoColors.primary,
+                onRefresh: () async {
+                  _listenToNotifications();
+                  await Future.delayed(const Duration(milliseconds: 600));
+                },
+                child: filtered.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
                         children: [
-                          Icon(
-                            CupertinoIcons.bell_slash,
-                            size: 54,
-                            color: isDark ? Colors.grey[700] : Colors.grey[300],
-                          ),
-                          const SizedBox(height: 14),
-                          Text(
-                            'هیچ ئاگادارییەکی تازە نییە',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'پەیامە گرنگەکان و FCM Push لێرەدا ڕاستەوخۆ دەردەکەون',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: isDark ? Colors.grey[600] : Colors.grey[500],
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                      itemCount: filtered.length,
-                      itemBuilder: (context, index) {
-                        final item = filtered[index];
-                        return Dismissible(
-                          key: Key(item.id),
-                          direction: DismissDirection.endToStart,
-                          background: Container(
-                            alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            margin: const EdgeInsets.only(bottom: 12),
-                            decoration: BoxDecoration(
-                              color: ZankoColors.error.withValues(alpha: 0.85),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
+                          SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+                          Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(CupertinoIcons.delete, color: Colors.white, size: 22),
-                                SizedBox(width: 8),
+                                Icon(
+                                  CupertinoIcons.bell_slash,
+                                  size: 54,
+                                  color: isDark ? Colors.grey[700] : Colors.grey[300],
+                                ),
+                                const SizedBox(height: 14),
                                 Text(
-                                  'سڕینەوە',
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                  'هیچ ئاگادارییەکی تازە نییە',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: isDark ? Colors.grey[400] : ZankoColors.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'پەیامە فەرمییەکان و ئاگادارییەکان لێرەدا ڕاستەوخۆ دەردەکەون',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: isDark ? Colors.grey[600] : Colors.grey[500],
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                          onDismissed: (_) {
-                            setState(() {
-                              _notifications.removeWhere((n) => n.id == item.id);
-                            });
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: AppCard(
-                              padding: const EdgeInsets.all(16),
-                              onTap: () => _showNotificationDetail(item),
+                        ],
+                      )
+                    : ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                        itemCount: filtered.length,
+                        itemBuilder: (context, index) {
+                          final item = filtered[index];
+                          return Dismissible(
+                            key: Key(item.id),
+                            direction: DismissDirection.endToStart,
+                            background: Container(
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              margin: const EdgeInsets.only(bottom: 12),
+                              decoration: BoxDecoration(
+                                color: ZankoColors.error.withValues(alpha: 0.85),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Icon(CupertinoIcons.delete, color: Colors.white, size: 22),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'سڕینەوە',
+                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            onDismissed: (_) {
+                              _deleteNotification(item);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: AppCard(
+                                padding: const EdgeInsets.all(16),
+                                onTap: () => _showNotificationDetail(item),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -687,6 +797,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         );
                       },
                     ),
+              ),
             ),
           ],
         ),

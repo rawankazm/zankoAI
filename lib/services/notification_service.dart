@@ -213,8 +213,23 @@ class NotificationService {
   static const String _seenDocsKey = 'zanko_seen_notified_docs_v2';
   final Set<String> _seenDocIds = {};
 
-  /// Start listening to admin notifications from Firestore (direct_messages & notifications)
-  Future<void> listenToAdminNotifications(String userId, bool isVip) async {
+  DateTime _parseTimestamp(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is Timestamp) return value.toDate();
+    if (value is DateTime) return value;
+    if (value is int) return DateTime.fromMillisecondsSinceEpoch(value);
+    if (value is String) {
+      try {
+        return DateTime.parse(value);
+      } catch (_) {}
+    }
+    return DateTime.now();
+  }
+
+  /// Start listening to admin notifications from Firestore (direct_messages, notifications & announcements)
+  Future<void> listenToAdminNotifications(String userId, bool isVip, {String? email}) async {
+    if (userId.isEmpty) return;
+
     _adminDirectSub?.cancel();
     _adminBroadcastSub?.cancel();
 
@@ -222,10 +237,11 @@ class NotificationService {
     final savedList = prefs.getStringList(_seenDocsKey) ?? [];
     _seenDocIds.addAll(savedList);
 
-    // 1. Direct Messages Listener (Messages sent specifically to this user)
+    final normalizedEmail = email?.trim().toLowerCase();
+
+    // 1. Direct Messages Listener (Messages sent specifically to this user or email)
     _adminDirectSub = FirebaseFirestore.instance
         .collection('direct_messages')
-        .where('userId', isEqualTo: userId)
         .snapshots()
         .listen((snap) async {
       for (var change in snap.docChanges) {
@@ -234,27 +250,37 @@ class NotificationService {
           final data = doc.data();
           if (data == null) continue;
           final docId = doc.id;
+          final docUserId = (data['userId'] ?? data['user_id'] ?? data['recipientId'] ?? data['studentId'] ?? '').toString().trim();
+          final docEmail = (data['email'] ?? data['userEmail'] ?? data['recipientEmail'] ?? '').toString().trim().toLowerCase();
+
+          final isMatch = (docUserId.isNotEmpty && docUserId == userId) ||
+              (normalizedEmail != null && normalizedEmail.isNotEmpty && docEmail == normalizedEmail);
+
+          if (!isMatch) continue;
+
           final isRead = data['isRead'] == true;
+          final time = _parseTimestamp(data['createdAt'] ?? data['timestamp'] ?? data['date']);
+          final isRecent = DateTime.now().difference(time).inMinutes < 60;
 
           if (!isRead && !_seenDocIds.contains(docId)) {
             final title = data['title'] ?? data['header'] ?? data['subject'] ?? '✉️ پەیام لە ئەدمینەوە';
             final body = data['message'] ?? data['body'] ?? data['content'] ?? data['text'] ?? '';
 
-            if (body.toString().trim().isNotEmpty || title.toString().trim().isNotEmpty) {
+            if (isRecent && (body.toString().trim().isNotEmpty || title.toString().trim().isNotEmpty)) {
               await showInstantNotification(
                 id: docId.hashCode,
                 title: title.toString(),
                 body: body.toString(),
               );
-              _seenDocIds.add(docId);
-              await prefs.setStringList(_seenDocsKey, _seenDocIds.toList());
             }
+            _seenDocIds.add(docId);
+            await prefs.setStringList(_seenDocsKey, _seenDocIds.toList());
           }
         }
       }
     });
 
-    // 2. Broadcast / Targeted Notifications Listener (for in-app data sync & popups)
+    // 2. Broadcast & Announcements Notifications Listener
     _adminBroadcastSub = FirebaseFirestore.instance
         .collection('notifications')
         .snapshots()
@@ -265,20 +291,29 @@ class NotificationService {
           final data = doc.data();
           if (data == null) continue;
           final docId = doc.id;
-          final target = (data['target'] ?? data['to'] ?? '').toString().toLowerCase();
-          final docUserId = (data['userId'] ?? data['user_id'] ?? data['recipientId'] ?? '').toString();
+          final target = (data['target'] ?? data['to'] ?? data['audience'] ?? 'all').toString().trim().toLowerCase();
+          final docUserId = (data['userId'] ?? data['user_id'] ?? data['recipientId'] ?? '').toString().trim();
+          final docEmail = (data['email'] ?? data['userEmail'] ?? '').toString().trim().toLowerCase();
 
-          final isTargetUser = (docUserId.isNotEmpty && docUserId == userId) ||
-              (target == 'user' && docUserId == userId) ||
+          final isTargetUser = target == '' ||
               target == 'all' ||
               target == 'all_students' ||
-              (target == 'vip' && isVip);
+              target == 'students' ||
+              target == 'everyone' ||
+              (target == 'vip' && isVip) ||
+              (docUserId.isNotEmpty && docUserId == userId) ||
+              (normalizedEmail != null && normalizedEmail.isNotEmpty && docEmail == normalizedEmail);
 
-          if (isTargetUser && !_seenDocIds.contains(docId)) {
+          if (!isTargetUser) continue;
+
+          final time = _parseTimestamp(data['createdAt'] ?? data['timestamp'] ?? data['date']);
+          final isRecent = DateTime.now().difference(time).inMinutes < 60;
+
+          if (!_seenDocIds.contains(docId)) {
             final title = data['title'] ?? data['header'] ?? data['subject'] ?? '🔔 ئاگاداری لە ZankoAI';
             final body = data['body'] ?? data['message'] ?? data['content'] ?? data['text'] ?? '';
 
-            if (body.toString().trim().isNotEmpty || title.toString().trim().isNotEmpty) {
+            if (isRecent && (body.toString().trim().isNotEmpty || title.toString().trim().isNotEmpty)) {
               await showInstantNotification(
                 id: docId.hashCode,
                 title: title.toString(),

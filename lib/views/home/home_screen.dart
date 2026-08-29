@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
 import '../../services/score_service.dart';
@@ -353,60 +354,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               const SizedBox(width: 8),
 
                               // Notification bell
-                              GestureDetector(
-                                onTap: () => Navigator.push(
-                                  context,
-                                  CupertinoPageRoute(builder: (_) => const NotificationsScreen()),
-                                ),
-                                child: Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    color: isDark
-                                        ? ZankoColors.darkCard
-                                        : Colors.white,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: isDark
-                                          ? Colors.white.withValues(alpha: 0.1)
-                                          : const Color(0xFFEFEFF7),
-                                      width: 1,
-                                    ),
-                                    boxShadow: isDark
-                                        ? []
-                                        : [
-                                            BoxShadow(
-                                              color: Colors.black.withValues(alpha: 0.04),
-                                              blurRadius: 8,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ],
-                                  ),
-                                  child: Stack(
-                                    children: [
-                                      const Center(
-                                        child: Icon(
-                                          CupertinoIcons.bell,
-                                          color: ZankoColors.textSecondary,
-                                          size: 20,
-                                        ),
-                                      ),
-                                      Positioned(
-                                        top: 8,
-                                        right: 8,
-                                        child: Container(
-                                          width: 7,
-                                          height: 7,
-                                          decoration: const BoxDecoration(
-                                            color: ZankoColors.error,
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
+                              _NotificationBellButton(isDark: isDark),
                             ],
                           ),
                         ),
@@ -553,6 +501,94 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 // ═══════════════════════════════════════════════════════════════════════════════
 // SUB-WIDGETS
 // ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── Notification Bell Button ──────────────────────────────────────────────
+class _NotificationBellButton extends StatelessWidget {
+  final bool isDark;
+
+  const _NotificationBellButton({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final user = authService.currentUser;
+
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        CupertinoPageRoute(builder: (_) => const NotificationsScreen()),
+      ),
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: isDark ? ZankoColors.darkCard : Colors.white,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFEFEFF7),
+            width: 1,
+          ),
+          boxShadow: isDark
+              ? []
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+        ),
+        child: Stack(
+          children: [
+            Center(
+              child: Icon(
+                CupertinoIcons.bell,
+                color: isDark ? Colors.white70 : ZankoColors.textSecondary,
+                size: 20,
+              ),
+            ),
+            if (user != null && !user.isGuest)
+              StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('direct_messages')
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  bool hasUnread = false;
+                  if (snapshot.hasData) {
+                    final normalizedEmail = user.email.trim().toLowerCase();
+                    hasUnread = snapshot.data!.docs.any((doc) {
+                      final data = doc.data() as Map<String, dynamic>?;
+                      if (data == null) return false;
+                      final docUserId = (data['userId'] ?? data['user_id'] ?? data['recipientId'] ?? data['studentId'] ?? '').toString().trim();
+                      final docEmail = (data['email'] ?? data['userEmail'] ?? '').toString().trim().toLowerCase();
+                      final isMatch = (docUserId.isNotEmpty && docUserId == user.id) ||
+                          (normalizedEmail.isNotEmpty && docEmail == normalizedEmail);
+                      return isMatch && data['isRead'] != true;
+                    });
+                  }
+
+                  if (!hasUnread) return const SizedBox.shrink();
+
+                  return Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFF3B30),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  );
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 // ─── AI Search Bar ─────────────────────────────────────────────────────────
 class _AiSearchBar extends StatefulWidget {
@@ -1514,15 +1550,6 @@ class _QuickAiToolsGrid extends StatelessWidget {
     final langProvider = Provider.of<LanguageProvider>(context);
 
     final tools = [
-      _ToolData(
-        icon: CupertinoIcons.rosette,
-        title: 'ڕیزبەندی و دەستکەوت',
-        color: const Color(0xFFF59E0B),
-        onTap: () => Navigator.push(
-          context,
-          CupertinoPageRoute(builder: (_) => const LeaderboardScreen()),
-        ),
-      ),
       _ToolData(
         icon: CupertinoIcons.book_fill,
         title: 'سیمینار و ڕاپۆرت',
