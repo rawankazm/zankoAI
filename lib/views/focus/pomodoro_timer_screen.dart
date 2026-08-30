@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:audioplayers/audioplayers.dart';
 import '../../services/language_provider.dart';
 import '../../theme.dart';
 
@@ -30,10 +28,6 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
   Timer? _timer;
   bool _isRunning = false;
 
-  late final AudioPlayer _audioPlayer;
-  String _selectedSound = 'rain';
-  bool _isPlayingSound = false;
-
   // Stats
   int _completedSessionsToday = 0;
   int _totalStudyMinutesToday = 0;
@@ -41,8 +35,6 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
   @override
   void initState() {
     super.initState();
-    _audioPlayer = AudioPlayer();
-    _audioPlayer.setReleaseMode(ReleaseMode.loop);
     _remainingSeconds = _focusDurationMinutes * 60;
     _loadStats();
   }
@@ -50,54 +42,18 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
   @override
   void dispose() {
     _timer?.cancel();
-    _audioPlayer.stop();
-    _audioPlayer.dispose();
     super.dispose();
-  }
-
-  Future<void> _playSound(String soundId) async {
-    final soundUrls = {
-      'lofi': 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
-      'piano': 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3',
-      'rain': 'https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg',
-      'waves': 'https://actions.google.com/sounds/v1/water/ocean_waves.ogg',
-      'forest': 'https://actions.google.com/sounds/v1/ambiences/outdoor_forest.ogg',
-      'zen': 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a8018e.mp3',
-      'alpha': 'https://cdn.pixabay.com/download/audio/2022/10/14/audio_9939f73f27.mp3',
-      'library': 'https://actions.google.com/sounds/v1/ambiences/coffee_shop.ogg',
-    };
-
-    try {
-      final url = soundUrls[soundId];
-      if (url != null) {
-        await _audioPlayer.stop();
-        setState(() {
-          _selectedSound = soundId;
-          _isPlayingSound = true;
-        });
-        await _audioPlayer.play(UrlSource(url));
-      }
-    } catch (e) {
-      if (kDebugMode) print('Audio play error: $e');
-    }
-  }
-
-  Future<void> _toggleSound() async {
-    if (_isPlayingSound) {
-      await _audioPlayer.pause();
-      setState(() => _isPlayingSound = false);
-    } else {
-      await _playSound(_selectedSound);
-    }
   }
 
   Future<void> _loadStats() async {
     final prefs = await SharedPreferences.getInstance();
     final todayKey = DateTime.now().toIso8601String().split('T').first;
-    setState(() {
-      _completedSessionsToday = prefs.getInt('pomo_sessions_$todayKey') ?? 0;
-      _totalStudyMinutesToday = prefs.getInt('pomo_minutes_$todayKey') ?? 0;
-    });
+    if (mounted) {
+      setState(() {
+        _completedSessionsToday = prefs.getInt('pomo_sessions_$todayKey') ?? 0;
+        _totalStudyMinutesToday = prefs.getInt('pomo_minutes_$todayKey') ?? 0;
+      });
+    }
   }
 
   Future<void> _saveSessionCompleted(int minutes) async {
@@ -107,7 +63,9 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
     _totalStudyMinutesToday += minutes;
     await prefs.setInt('pomo_sessions_$todayKey', _completedSessionsToday);
     await prefs.setInt('pomo_minutes_$todayKey', _totalStudyMinutesToday);
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _startTimer() {
@@ -115,7 +73,9 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
     setState(() => _isRunning = true);
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_remainingSeconds > 0) {
-        setState(() => _remainingSeconds--);
+        if (mounted) {
+          setState(() => _remainingSeconds--);
+        }
       } else {
         _onTimerComplete();
       }
@@ -124,38 +84,45 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
 
   void _pauseTimer() {
     _timer?.cancel();
-    setState(() => _isRunning = false);
+    if (mounted) {
+      setState(() => _isRunning = false);
+    }
   }
 
   void _resetTimer() {
     _timer?.cancel();
-    setState(() {
-      _isRunning = false;
-      _remainingSeconds = _getDurationForMode(_mode) * 60;
-    });
+    if (mounted) {
+      setState(() {
+        _isRunning = false;
+        _remainingSeconds = _getDurationForMode(_mode) * 60;
+      });
+    }
   }
 
   void _onTimerComplete() {
     _timer?.cancel();
-    setState(() => _isRunning = false);
+    if (mounted) {
+      setState(() => _isRunning = false);
+    }
 
     if (_mode == _PomodoroMode.focus) {
       _saveSessionCompleted(_focusDurationMinutes);
-      _switchMode(_PomodoroMode.shortBreak);
-      _showCompletionDialog('🎉 کاتی خوێندن بە سەرکەوتوویی تەواو بوو! کاتی ٥ خولەک پشوودانە.');
+      _showBreakSelectionModal();
     } else {
-      _switchMode(_PomodoroMode.focus);
-      _showCompletionDialog('💪 پشوودان تەواو بوو! ئامادەیت بۆ خولێکی نوێی خوێندن؟');
+      _showResumeFocusDialog();
     }
   }
 
-  void _switchMode(_PomodoroMode newMode) {
+  void _switchMode(_PomodoroMode newMode, {bool autoStart = false}) {
     _timer?.cancel();
     setState(() {
       _mode = newMode;
       _isRunning = false;
       _remainingSeconds = _getDurationForMode(newMode) * 60;
     });
+    if (autoStart) {
+      _startTimer();
+    }
   }
 
   int _getDurationForMode(_PomodoroMode mode) {
@@ -169,22 +136,215 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
     }
   }
 
-  void _showCompletionDialog(String message) {
+  /// Displays the interactive modal after 25 min of focus with options for 5 min or 15 min break
+  void _showBreakSelectionModal() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 26),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E2D) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.35),
+              blurRadius: 24,
+              offset: const Offset(0, -6),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Grab Handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white24 : Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+
+            // Header Icon & Title
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Text('🎉', style: TextStyle(fontSize: 26)),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'خولەکە بە سەرکەوتوویی تەواو بوو!',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'ئێستا کاتی پشوودانە، جۆری پشووەکەت هەڵبژێرە:',
+                        style: TextStyle(fontSize: 12.5, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 22),
+
+            // Option 1: Short Break (5 min)
+            InkWell(
+              onTap: () {
+                Navigator.pop(ctx);
+                _switchMode(_PomodoroMode.shortBreak, autoStart: true);
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withValues(alpha: isDark ? 0.15 : 0.08),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.4), width: 1.5),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Text('☕', style: TextStyle(fontSize: 24)),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'پشووی کورت (٥ خولەک)',
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 3),
+                          Text(
+                            'پشوویەکی خێرا بۆ چاوەکانت و ئاو خواردنەوە',
+                            style: TextStyle(fontSize: 11.5, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(CupertinoIcons.play_circle_fill, color: Color(0xFF10B981), size: 28),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Option 2: Long Break (15 min)
+            InkWell(
+              onTap: () {
+                Navigator.pop(ctx);
+                _switchMode(_PomodoroMode.longBreak, autoStart: true);
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF3B82F6).withValues(alpha: isDark ? 0.15 : 0.08),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.4), width: 1.5),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF3B82F6).withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Text('🌴', style: TextStyle(fontSize: 24)),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'پشووی درێژ (١٥ خولەک)',
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 3),
+                          Text(
+                            'پشوویەکی تەواو دوای چەند خولێکی تەرکیز',
+                            style: TextStyle(fontSize: 11.5, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(CupertinoIcons.play_circle_fill, color: Color(0xFF3B82F6), size: 28),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Dialog shown when break time finishes to resume 25-minute focus session
+  void _showResumeFocusDialog() {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('⏱️ کاتژمێری تەرکیز', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text(message, textAlign: TextAlign.center, style: const TextStyle(fontSize: 15)),
+        title: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('💪', style: TextStyle(fontSize: 24)),
+            SizedBox(width: 8),
+            Text('پشوودان تەواو بوو!', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          ],
+        ),
+        content: const Text(
+          'کاتی پشوودان کۆتایی هات. ئایا ئامادەیت بۆ دەستپێکردنی خولێکی نوێی ٢٥ خولەکی تەرکیز؟',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 14, height: 1.5),
+        ),
+        actionsAlignment: MainAxisAlignment.center,
         actions: [
-          Center(
-            child: ElevatedButton(
-              onPressed: () => Navigator.pop(ctx),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: ZankoColors.primary,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              ),
-              child: const Text('دەستپێکردنەوە', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _switchMode(_PomodoroMode.focus, autoStart: true);
+            },
+            icon: const Icon(CupertinoIcons.play_fill, size: 16, color: Colors.white),
+            label: const Text(
+              'دەستپێکردنی تەرکیز (٢٥خ) 🎯',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
           ),
         ],
@@ -347,12 +507,13 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
                   IconButton(
                     onPressed: () {
                       if (_mode == _PomodoroMode.focus) {
-                        _switchMode(_PomodoroMode.shortBreak);
+                        _showBreakSelectionModal();
                       } else {
-                        _switchMode(_PomodoroMode.focus);
+                        _switchMode(_PomodoroMode.focus, autoStart: true);
                       }
                     },
                     iconSize: 28,
+                    tooltip: 'پەڕینەوە',
                     icon: Icon(CupertinoIcons.forward_fill, color: isDark ? Colors.white60 : Colors.grey[600]),
                   ),
                 ],
@@ -360,10 +521,10 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
 
               const SizedBox(height: 32),
 
-              // ── Ambient Focus Sounds Player (Lo-Fi & Nature) ───────────────
+              // ── Pomodoro Technique Tips Card ──────────────────────────────
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   color: isDark ? ZankoColors.darkCard : Colors.white,
                   borderRadius: BorderRadius.circular(24),
@@ -376,50 +537,33 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Icon(CupertinoIcons.music_note_2, color: ZankoColors.primary, size: 20),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: Text(
-                                  'مۆسیقا و دەنگی هێمنکەرەوە (Focus Music)',
-                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: modeColor.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
                           ),
+                          child: Icon(CupertinoIcons.lightbulb_fill, color: modeColor, size: 18),
                         ),
-                        IconButton(
-                          onPressed: _toggleSound,
-                          icon: Icon(
-                            _isPlayingSound ? CupertinoIcons.speaker_2_fill : CupertinoIcons.speaker_slash_fill,
-                            color: _isPlayingSound ? ZankoColors.primary : Colors.grey,
-                            size: 22,
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Text(
+                            'یاسای تەرکیزی پۆمۆدۆرۆ (Pomodoro Rule)',
+                            style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 14),
-
-                    // Sound presets chips
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          _buildSoundChip('lofi', '🎧 Lo-Fi Study Beats'),
-                          _buildSoundChip('piano', '🎹 پیانۆی هێمنی خوێندن'),
-                          _buildSoundChip('rain', '🌧️ بارانی هێمن'),
-                          _buildSoundChip('waves', '🌊 شەپۆلی دەریا'),
-                          _buildSoundChip('forest', '🍃 بای دارستان'),
-                          _buildSoundChip('zen', '🧘 مۆسیقای تەرکیزی قووڵ'),
-                          _buildSoundChip('alpha', '🧠 شەپۆلی ئەلفا'),
-                          _buildSoundChip('library', '📚 دەنگی کتێبخانە'),
-                        ],
+                    const SizedBox(height: 10),
+                    Text(
+                      '• ٢٥ خولەک بە تەواوی تەرکیز بکە بەبێ ئەوەی دەست بۆ مۆبایل و تۆڕە کۆمەڵایەتییەکان ببەیت.\n'
+                      '• دوای هەر خولێک ٥ خولەک پشووی کورت وەربگرە.\n'
+                      '• دوای ٤ خولی تەواو، پشووی درێژی ١٥ خولەکی وەربگرە بۆ نوێکردنەوەی وزەی مێشکت.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        height: 1.6,
+                        color: isDark ? Colors.grey[300] : ZankoColors.textSecondary,
                       ),
                     ),
                   ],
@@ -483,28 +627,6 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildSoundChip(String id, String label) {
-    final isSel = _selectedSound == id && _isPlayingSound;
-    return Padding(
-      padding: const EdgeInsets.only(left: 8),
-      child: ChoiceChip(
-        label: Text(label, style: TextStyle(fontSize: 12, fontWeight: isSel ? FontWeight.bold : FontWeight.normal)),
-        selected: isSel,
-        selectedColor: ZankoColors.primary.withValues(alpha: 0.2),
-        backgroundColor: Colors.transparent,
-        side: BorderSide(color: isSel ? ZankoColors.primary : Colors.grey[400]!),
-        onSelected: (sel) {
-          if (sel) {
-            _playSound(id);
-          } else {
-            _audioPlayer.pause();
-            setState(() => _isPlayingSound = false);
-          }
-        },
       ),
     );
   }
