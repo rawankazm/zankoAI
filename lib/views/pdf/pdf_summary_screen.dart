@@ -366,59 +366,81 @@ It structures key academic definitions for rapid study and exam preparation.
 
               // Summary Results
               if (_pdfSummary != null) ...[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       t('analysis_result'),
                       style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    Wrap(
-                      spacing: 8,
+                    const SizedBox(height: 10),
+                    Row(
                       children: [
-                        ElevatedButton.icon(
-                          onPressed: () async {
-                            await OfflineArchiveService.instance.saveOfflineItem(
-                              category: 'summary',
-                              title: _selectedFileName ?? 'کورتکراوەی PDF',
-                              courseName: 'بەڵگەنامەی PDF',
-                              payload: {
-                                'summaryText': _pdfSummary ?? '',
-                              },
-                            );
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(t('saved_offline')),
-                                  backgroundColor: const Color(0xFF10B981),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () async {
+                              await OfflineArchiveService.instance.saveOfflineItem(
+                                category: 'summary',
+                                title: _selectedFileName ?? 'کورتکراوەی PDF',
+                                courseName: 'بەڵگەنامەی PDF',
+                                payload: {
+                                  'summaryText': _pdfSummary ?? '',
+                                },
+                              );
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(t('saved_offline')),
+                                    backgroundColor: const Color(0xFF10B981),
+                                  ),
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF10B981),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            icon: const Icon(Icons.download_rounded, size: 16),
+                            label: const Text(
+                              'ئۆفلاین 📥',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => DocumentReaderScreen(
+                                    fileName: _selectedFileName ?? t('document'),
+                                    fileContent: _selectedFileContent ??
+                                        'دەقی بەڵگەنامەکە بەردەست نییە یان دەرهێنانی دەقەکە کێشەی تێدایە.',
+                                    pdfBytes: _selectedFileBytes,
+                                  ),
                                 ),
                               );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF10B981),
-                            foregroundColor: Colors.white,
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: theme.colorScheme.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            icon: const Icon(Icons.chrome_reader_mode_rounded, size: 16),
+                            label: const Text(
+                              'خوێندنەوە / Read',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                          icon: const Icon(Icons.download_rounded, size: 16),
-                          label: const Text('ئۆفلاین 📥', style: TextStyle(fontSize: 12)),
-                        ),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => DocumentReaderScreen(
-                                  fileName: _selectedFileName ?? t('document'),
-                                  fileContent: _selectedFileContent ?? 'دەقی بەڵگەنامەکە بەردەست نییە یان دەرهێنانی دەقەکە کێشەی تێدایە.',
-                                  pdfBytes: _selectedFileBytes,
-                                ),
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.chrome_reader_mode_rounded),
-                          label: const Text('خوێندنەوە / Read', style: TextStyle(fontSize: 12)),
                         ),
                       ],
                     ),

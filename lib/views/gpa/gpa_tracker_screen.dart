@@ -219,10 +219,14 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'کۆی گشتی وانەکە (لەسەر ١٠٠):',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'Noto Sans Arabic'),
+                          const Expanded(
+                            child: Text(
+                              'کۆی گشتی وانەکە (لەسەر ١٠٠):',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'Noto Sans Arabic'),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
+                          const SizedBox(width: 8),
                           Text(
                             '${currentTotal.toStringAsFixed(1)} / 100',
                             style: TextStyle(

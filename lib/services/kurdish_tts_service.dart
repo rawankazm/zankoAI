@@ -72,19 +72,7 @@ class KurdishTtsService {
     result = result.replaceAll(RegExp(r'\bCSS\b', caseSensitive: false), 'سی ئێس ئێس');
     result = result.replaceAll(RegExp(r'\bSQL\b', caseSensitive: false), 'ئێس کیوو ئێڵ');
 
-    // 2. Kurdish-specific letters transliterated for smooth TTS articulation
-    result = result.replaceAll('چ', 'تش'); // Ch -> Tsh
-    result = result.replaceAll('پ', 'ب');   // P -> B
-    result = result.replaceAll('گ', 'ك');   // G -> K
-    result = result.replaceAll('ژ', 'ج');   // Zh -> J
-    result = result.replaceAll('ڤ', 'ف');   // V -> F
-    result = result.replaceAll('ێ', 'ي');   // Kurdish Ê -> Y
-    result = result.replaceAll('ۆ', 'و');   // Kurdish Ô -> W
-    result = result.replaceAll('ڵ', 'ل');   // Kurdish Ł -> L
-    result = result.replaceAll('ڕ', 'ر');   // Kurdish Ř -> R
-    result = result.replaceAll('ە', 'ه');   // Kurdish Ae -> H
-
-    // 3. Convert digits into smooth spoken Kurdish words
+    // 2. Convert digits into smooth spoken Kurdish words
     result = result.replaceAll('0', ' صفر ').replaceAll('٠', ' صفر ');
     result = result.replaceAll('1', ' یەک ').replaceAll('١', ' یەک ');
     result = result.replaceAll('2', ' دوو ').replaceAll('٢', ' دوو ');
@@ -96,7 +84,7 @@ class KurdishTtsService {
     result = result.replaceAll('8', ' هەشت ').replaceAll('٨', ' هەشت ');
     result = result.replaceAll('9', ' نۆ ').replaceAll('٩', ' نۆ ');
 
-    // 4. Normalize punctuation for smooth natural speech pacing
+    // 3. Normalize punctuation for smooth natural speech pacing
     result = result.replaceAll(';', '،');
     result = result.replaceAll('؛', '،');
     result = result.replaceAll(':', '، ');

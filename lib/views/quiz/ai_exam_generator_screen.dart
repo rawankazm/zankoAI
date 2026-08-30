@@ -276,9 +276,12 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
           children: [
             Text('👑', style: TextStyle(fontSize: 24)),
             SizedBox(width: 8),
-            Text(
-              'تایبەتمەندی بەشداربووانی VIP',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            Expanded(
+              child: Text(
+                'تایبەتمەندی بەشداربووانی VIP',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
             ),
           ],
         ),
@@ -1406,14 +1409,18 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'پرسیاری ${_currentQuestionIndex + 1} لە $totalQuestions',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white : ZankoColors.textPrimary,
+                            Expanded(
+                              child: Text(
+                                'پرسیاری ${_currentQuestionIndex + 1} لە $totalQuestions',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : ZankoColors.textPrimary,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
+                            const SizedBox(width: 8),
                             Text(
                               '${((_currentQuestionIndex + 1) / totalQuestions * 100).toInt()}%',
                               style: TextStyle(

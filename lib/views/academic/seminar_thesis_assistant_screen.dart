@@ -637,9 +637,12 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
             children: [
               Text('👑', style: TextStyle(fontSize: 24)),
               SizedBox(width: 8),
-              Text(
-                'داگرتنی بێسنووری فایلی ئەکادیمی',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              Expanded(
+                child: Text(
+                  'داگرتنی بێسنووری فایلی ئەکادیمی',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
               ),
             ],
           ),

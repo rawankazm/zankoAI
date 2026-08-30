@@ -1016,11 +1016,15 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                                     ),
                                                   ),
                                                   const SizedBox(width: 8),
-                                                  Text(
-                                                    '• ${t(pdf.dateAdded)}',
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      color: ZankoColors.textSecondary,
+                                                  Expanded(
+                                                    child: Text(
+                                                      '• ${t(pdf.dateAdded)}',
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        color: ZankoColors.textSecondary,
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
                                                     ),
                                                   ),
                                                 ],

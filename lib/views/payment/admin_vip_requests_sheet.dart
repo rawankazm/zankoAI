@@ -140,7 +140,12 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
           children: [
             Icon(Icons.cancel_rounded, color: Colors.red),
             SizedBox(width: 8),
-            Text('ڕەتکردنەوەی داواکاری VIP', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Expanded(
+              child: Text(
+                'ڕەتکردنەوەی داواکاری VIP',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
           ],
         ),
         content: Column(
@@ -740,7 +745,11 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
           const SizedBox(height: 12),
 
           // Row 3: Receipt Button & Actions
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            alignment: WrapAlignment.spaceBetween,
             children: [
               if (receiptImageUrl != null && receiptImageUrl.isNotEmpty)
                 OutlinedButton.icon(
@@ -754,7 +763,6 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                 ),
-              const Spacer(),
 
               if (status == 'pending') ...[
                 OutlinedButton(

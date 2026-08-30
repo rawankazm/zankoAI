@@ -543,27 +543,31 @@ class _OfflineDownloadsScreenState extends State<OfflineDownloadsScreen> {
               ),
               const SizedBox(height: 20),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  ElevatedButton.icon(
-                    onPressed: currentIndex > 0
-                        ? () => setModalState(() {
-                              currentIndex--;
-                              isFlipped = false;
-                            })
-                        : null,
-                    icon: const Icon(CupertinoIcons.arrow_right),
-                    label: const Text('پێشوو'),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: currentIndex > 0
+                          ? () => setModalState(() {
+                                currentIndex--;
+                                isFlipped = false;
+                              })
+                          : null,
+                      icon: const Icon(CupertinoIcons.arrow_right),
+                      label: const Text('پێشوو'),
+                    ),
                   ),
-                  ElevatedButton.icon(
-                    onPressed: currentIndex < cards.length - 1
-                        ? () => setModalState(() {
-                              currentIndex++;
-                              isFlipped = false;
-                            })
-                        : null,
-                    icon: const Icon(CupertinoIcons.arrow_left),
-                    label: const Text('داهاتوو'),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: currentIndex < cards.length - 1
+                          ? () => setModalState(() {
+                                currentIndex++;
+                                isFlipped = false;
+                              })
+                          : null,
+                      icon: const Icon(CupertinoIcons.arrow_left),
+                      label: const Text('داهاتوو'),
+                    ),
                   ),
                 ],
               ),

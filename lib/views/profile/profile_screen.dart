@@ -617,7 +617,14 @@ class ProfileScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : ZankoColors.textSecondary)),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : ZankoColors.textSecondary),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 8),
           Text(val, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black87)),
         ],
       ),
@@ -1010,9 +1017,11 @@ class ProfileScreen extends StatelessWidget {
                               children: [
                                 const Icon(CupertinoIcons.checkmark_seal_fill, color: Colors.white, size: 20),
                                 const SizedBox(width: 10),
-                                Text(
-                                  '🎉 تۆ نوێترین وەشانی ZankoAI بەکاردەهێنیت (v${AppVersionService.currentAppVersion})',
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                Expanded(
+                                  child: Text(
+                                    '🎉 تۆ نوێترین وەشانی ZankoAI بەکاردەهێنیت (v${AppVersionService.currentAppVersion})',
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
                                 ),
                               ],
                             ),
@@ -1055,9 +1064,12 @@ class ProfileScreen extends StatelessWidget {
                     children: [
                       Icon(CupertinoIcons.heart_fill, color: ZankoColors.error, size: 16),
                       SizedBox(width: 8),
-                      Text(
-                        'گەشەپێدراوە لەلایەن تیمی birdev ★ (birdev.tech)',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      Flexible(
+                        child: Text(
+                          'گەشەپێدراوە لەلایەن تیمی birdev ★ (birdev.tech)',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
