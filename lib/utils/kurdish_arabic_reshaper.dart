@@ -19,7 +19,7 @@ class KurdishArabicReshaper {
     0x062F: [0xFEA9, 0xFEAA, 0xFEA9, 0xFEAA], // د
     0x0630: [0xFEAB, 0xFEAC, 0xFEAB, 0xFEAC], // ذ
     0x0631: [0xFEAD, 0xFEAE, 0xFEAD, 0xFEAE], // ر
-    0x0695: [0x0695, 0x0695, 0x0695, 0x0695], // ڕ (Kurdish R - native Unicode 0x0695)
+    0x0695: [0x0695, 0x0695, 0x0695, 0x0695], // ڕ (Kurdish Reh - preserves small V below)
     0x0632: [0xFEAF, 0xFEB0, 0xFEAF, 0xFEB0], // ز
     0x0698: [0xFB8A, 0xFB8B, 0xFB8A, 0xFB8B], // ژ
     0x0633: [0xFEB1, 0xFEB2, 0xFEB3, 0xFEB4], // س
@@ -37,12 +37,12 @@ class KurdishArabicReshaper {
     0x06A9: [0xFB8E, 0xFB8F, 0xFB90, 0xFB91], // ک (Kurdish/Farsi Kaf)
     0x06AF: [0xFB92, 0xFB93, 0xFB94, 0xFB95], // گ
     0x0644: [0xFEDD, 0xFEDE, 0xFEDF, 0xFEE0], // ل
-    0x06B5: [0x06B5, 0x06B5, 0x06B5, 0x06B5], // ڵ (Kurdish Ll - native Unicode 0x06B5)
+    0x06B5: [0x06B5, 0x06B5, 0x06B5, 0x06B5], // ڵ (Kurdish Ll - preserves small V)
     0x0645: [0xFEE1, 0xFEE2, 0xFEE3, 0xFEE4], // م
     0x0646: [0xFEE5, 0xFEE6, 0xFEE7, 0xFEE8], // ن
     0x0647: [0xFEE9, 0xFEEA, 0xFEEB, 0xFEEC], // ه (Arabic Heh)
     0x06BE: [0xFBAA, 0xFBAB, 0xFBAC, 0xFBAD], // ھ (Kurdish Heh Do-Chashmee)
-    0x06D5: [0x06D5, 0x06D5, 0x06D5, 0x06D5], // ە (Kurdish Ae - native Unicode 0x06D5)
+    0x06D5: [0x06D5, 0x06D5, 0x06D5, 0x06D5], // ە (Kurdish Ae - preserves authentic Kurdish Ae)
     0x0629: [0xFE93, 0xFE94, 0xFE93, 0xFE94], // ة (Ta Marbuta)
     0x0648: [0xFEED, 0xFEEE, 0xFEED, 0xFEEE], // و
     0x06C6: [0xFBD9, 0xFBDA, 0xFBD9, 0xFBDA], // ۆ (Kurdish Oe)
@@ -98,11 +98,11 @@ class KurdishArabicReshaper {
   }
 
   static bool _connectsToNext(int code) {
-    return _glyphForms.containsKey(code) && !_rightJoinersOnly.contains(code);
+    return _glyphForms.containsKey(code) && !_rightJoinersOnly.contains(code) && code != 0x200C;
   }
 
   static bool _connectsToPrev(int code) {
-    return _glyphForms.containsKey(code) && code != 0x0621;
+    return _glyphForms.containsKey(code) && code != 0x0621 && code != 0x200C;
   }
 
   /// Normalizes Kurdish text variants and decomposing combining marks
@@ -114,8 +114,7 @@ class KurdishArabicReshaper {
         .replaceAll('\u0648\u065a', '\u06c6') // و + ˇ -> ۆ
         .replaceAll('\u064a\u065a', '\u06ce') // ي + ˇ -> ێ
         .replaceAll('\u06cc\u065a', '\u06ce') // ی + ˇ -> ێ
-        .replaceAll('\u06d0', '\u06ce') // 0x06D0 -> 0x06CE (ێ)
-        .replaceAll('\u200c', ' '); // Replace ZWNJ with space for clean typography
+        .replaceAll('\u06d0', '\u06ce'); // 0x06D0 -> 0x06CE (ێ)
   }
 
   /// Shapes Arabic & Kurdish connected letters into their presentation forms

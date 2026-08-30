@@ -535,7 +535,7 @@ class StudentCard extends StatelessWidget {
     }
 
     // 2. Operating Systems & Memory Management
-    if (qLower.contains('operating system') || qLower.contains('os') || qLower.contains('memory management') || qLower.contains('یادگە') || qLower.contains('بیردانک') || qLower.contains('process') || qLower.contains('deadlock')) {
+    if (qLower.contains('operating system') || qLower.contains('memory management') || qLower.contains('یادگە') || qLower.contains('بیردانک') || qLower.contains('deadlock')) {
       return """
 # ⚙️ بەڕێوەبردنی یادگە لە سیستەمی کارپێکردندا (OS Memory Management)
 

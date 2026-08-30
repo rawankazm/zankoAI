@@ -99,9 +99,14 @@ flutter:
     - assets/fonts/NotoSansArabic-Bold.ttf
     - assets/fonts/NotoNaskhArabic-Regular.ttf
     - assets/fonts/NotoNaskhArabic-Bold.ttf
+    - assets/fonts/K24KurdishBold-Bold.ttf
 
   # Custom fonts for Kurdish Sorani and Arabic
   fonts:
+    - family: K24KurdishBold
+      fonts:
+        - asset: assets/fonts/K24KurdishBold-Bold.ttf
+          weight: 700
     - family: NotoSansArabic
       fonts:
         - asset: assets/fonts/NotoSansArabic-Regular.ttf
@@ -116,6 +121,8 @@ flutter:
       fonts:
         - asset: assets/fonts/calibri.ttf
         - asset: assets/fonts/calibrib.ttf
+          weight: 700
+        - asset: assets/fonts/K24KurdishBold-Bold.ttf
           weight: 700
     - family: Times
       fonts:

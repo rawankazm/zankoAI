@@ -9,7 +9,6 @@ import '../../services/ai_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/docx_generator_service.dart';
 import '../../services/pptx_generator_service.dart';
-import '../../services/report_pdf_generator_service.dart';
 import '../../theme.dart';
 import '../payment/vip_upgrade_sheet.dart';
 
@@ -93,7 +92,6 @@ class _SeminarThesisAssistantScreenState
   bool _isLoading = false;
   bool _isExportingPptx = false;
   bool _isExportingDocx = false;
-  bool _isExportingPdf = false;
   bool _showReportAdvancedOptions = false;
 
   String? _generatedResult;
@@ -108,8 +106,11 @@ class _SeminarThesisAssistantScreenState
   AcademicReportModel? _parsedReport;
   int _selectedReportPageIndex = 0;
 
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void dispose() {
+    _scrollController.dispose();
     _topicSearchController.dispose();
     _seminarNotesController.dispose();
     _studentNameController.dispose();
@@ -121,8 +122,8 @@ class _SeminarThesisAssistantScreenState
     super.dispose();
   }
 
-  /// Unified modern Calibri font for all languages (Kurdish, Arabic, and English)
-  String? get _currentFontFamily => 'Calibri';
+  /// Modern Noto Naskh Arabic font for in-app Kurdish & academic display
+  String? get _currentFontFamily => 'NotoNaskhArabic';
 
   bool get _isEnglish => _selectedLanguage == SeminarLanguage.english;
   bool get _isArabic => _selectedLanguage == SeminarLanguage.arabic;
@@ -219,28 +220,45 @@ Format each topic strictly as:
           response.contains('دەستپێبکەرەوە') ||
           response.contains('⚠️') ||
           response.contains('Error') ||
-          response.contains('blocked');
+          response.contains('blocked') ||
+          response.contains('بەڕێوەبردنی یادگە') ||
+          !response.contains('###');
 
       final content = !isInvalid ? response : _generateFallbackTopicsText(query);
-      _processTopicResponse(content);
+      _processTopicResponse(content, query);
     } catch (e) {
       final fallback = _generateFallbackTopicsText(query);
-      _processTopicResponse(fallback);
+      _processTopicResponse(fallback, query);
     }
   }
 
-  void _processTopicResponse(String rawText) {
-    final topics = _parseTopicProposals(rawText);
+  void _processTopicResponse(String rawText, String query) {
+    var topics = _parseTopicProposals(rawText);
+    if (topics.length < 2) {
+      topics = _getFallbackTopicProposals(query);
+    }
     setState(() {
       _generatedResult = rawText;
       _suggestedTopics = topics;
       _isLoading = false;
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          380,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
   }
 
   List<SeminarTopicProposal> _parseTopicProposals(String rawText) {
     final List<SeminarTopicProposal> list = [];
-    final blocks = rawText.split(RegExp(r'###\s+.*(Topic|بابەت|بابەتی|بابەتێ|الموضوع)\s*'));
+
+    // Split on ### (with any optional emoji/symbols), ##, or **Topic ...**
+    final blocks = rawText.split(RegExp(r'###\s*[^a-zA-Z0-9\u0600-\u06FF\n\r]*\s*(?:Topic|بابەت|بابەتی|بابەتێ|الموضوع|\d+)\s*[\d+٠-٩\-]*\s*[:\.\-]|(?:\*\*Topic\s*\d+:?\*\*)', caseSensitive: false));
 
     int count = 1;
     for (var b in blocks) {
@@ -248,7 +266,7 @@ Format each topic strictly as:
       if (text.isEmpty) continue;
 
       final lines = text.split('\n');
-      String titleMain = lines.first.replaceAll(RegExp(r'^[:\-–\d️⃣\d\.\s]+'), '').replaceAll('**', '').trim();
+      String titleMain = lines.first.replaceAll(RegExp(r'^[:\-–\d️⃣\d\.\s]+'), '').replaceAll('**', '').replaceAll('###', '').trim();
       String titleSecondary = '';
       String summary = '';
       String researchQ = '';
@@ -264,19 +282,32 @@ Format each topic strictly as:
         }
       }
 
-      if (titleMain.isNotEmpty) {
+      if (titleMain.isNotEmpty && titleMain.length > 3) {
         list.add(SeminarTopicProposal(
           index: count++,
           titleKurdish: titleMain,
-          titleEnglish: titleSecondary.isNotEmpty ? titleSecondary : 'Academic Presentation & Report',
+          titleEnglish: titleSecondary.isNotEmpty ? titleSecondary : 'Academic Presentation & Research Report',
           summary: summary.isNotEmpty ? summary : (_isEnglish ? 'Comprehensive academic investigation.' : (_isBadini ? 'ڤەکۆلین و دووڤچوونەکا زانستی یا سەردەم.' : 'توێژینەوە و لێکۆڵینەوەیەکی زانستیی سەردەمیانە.')),
           researchQuestion: researchQ.isNotEmpty ? researchQ : (_isEnglish ? 'How does this solve core research challenges?' : (_isBadini ? 'چەوا ئەڤ بابەتە دکاریت ئاریشەیێن زانستی چارەسەر بکەت؟' : 'چۆن ئەم بابەتە دەتوانێت کێشە زانستییەکان چارەسەر بکات؟')),
         ));
       }
     }
 
-    if (list.isEmpty) {
-      list.addAll(_getFallbackTopicProposals(_topicSearchController.text.trim()));
+    // Ensure at least 5-6 topics are returned
+    if (list.length < 5) {
+      final fallbacks = _getFallbackTopicProposals(_topicSearchController.text.trim());
+      for (var fb in fallbacks) {
+        if (!list.any((t) => t.titleKurdish == fb.titleKurdish)) {
+          list.add(SeminarTopicProposal(
+            index: list.length + 1,
+            titleKurdish: fb.titleKurdish,
+            titleEnglish: fb.titleEnglish,
+            summary: fb.summary,
+            researchQuestion: fb.researchQuestion,
+          ));
+        }
+        if (list.length >= 6) break;
+      }
     }
 
     return list;
@@ -352,7 +383,9 @@ SLIDE STRUCTURE:
           response.contains('دەستپێبکەرەوە') ||
           response.contains('⚠️') ||
           response.contains('Error') ||
-          response.contains('blocked');
+          response.contains('blocked') ||
+          response.contains('بەڕێوەبردنی یادگە') ||
+          (!response.contains('### 🔹') && !response.contains('Slide'));
 
       final content = !isInvalid ? response : _generateFallback8SlideSeminar(topicTitle);
       _processSeminarResponse(content, topicTitle);
@@ -551,7 +584,9 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
           response.contains('دەستپێبکەرەوە') ||
           response.contains('⚠️') ||
           response.contains('Error') ||
-          response.contains('blocked');
+          response.contains('blocked') ||
+          response.contains('بەڕێوەبردنی یادگە') ||
+          !response.contains('###');
 
       final content = !isInvalid ? response : _generateFallback12PageReportText(reportTitle);
       _processReportResponse(content, reportTitle);
@@ -703,25 +738,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
     }
   }
 
-  // ─── Export PDF (.pdf) ─────────────────────────────────────────────────────
-  Future<void> _exportPdf() async {
-    if (_parsedReport == null) {
-      _showSnackBar(_isEnglish ? 'Please generate the report first' : 'تکایە سەرەتا ڕاپۆرتەکە دروست بکە');
-      return;
-    }
 
-    setState(() => _isExportingPdf = true);
-    try {
-      await ReportPdfGeneratorService.exportAndSharePdf(_parsedReport!);
-      _showSnackBar(_isEnglish
-          ? '✅ PDF (.pdf) document created successfully'
-          : '✅ فایلی PDF (.pdf) بە سەرکەوتوویی دروستکرا');
-    } catch (e) {
-      _showSnackBar('⚠️ Error creating PDF file: $e');
-    } finally {
-      if (mounted) setState(() => _isExportingPdf = false);
-    }
-  }
 
   // ─── Export PPTX (.pptx) ───────────────────────────────────────────────────
   Future<void> _exportPptx() async {
@@ -779,7 +796,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
   Future<bool> _checkVipLimit() async {
     final authService = Provider.of<AuthService>(context, listen: false);
     final isVip = authService.currentUser?.isVip ?? false;
-    if (isVip) return true;
+    if (isVip || kDebugMode) return true;
 
     final prefs = await SharedPreferences.getInstance();
     final usage = prefs.getInt('seminar_usage_count') ?? 0;
@@ -888,6 +905,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
           centerTitle: true,
         ),
         body: SingleChildScrollView(
+          controller: _scrollController,
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -1251,6 +1269,8 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
           // Main Topic Input
           TextField(
             controller: _topicSearchController,
+            textInputAction: TextInputAction.search,
+            onSubmitted: (_) => _suggestRelatedTopics(),
             style: TextStyle(fontFamily: _currentFontFamily),
             decoration: InputDecoration(
               hintText: _isEnglish
@@ -1492,6 +1512,26 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 10),
+
+        // Academic Year
+        Text(
+          _isEnglish ? 'Academic Year / Session:' : (_isBadini ? 'ساڵا خوێندنێ یا ئەکادیمی:' : 'ساڵی خوێندنی ئەکادیمی:'),
+          style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 4),
+        TextField(
+          controller: _academicYearController,
+          style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12.5),
+          decoration: InputDecoration(
+            hintText: '2025 - 2026',
+            hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
+            prefixIcon: Icon(CupertinoIcons.calendar, color: themeColor, size: 18),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            filled: true,
+            fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
+          ),
         ),
         const SizedBox(height: 10),
 
@@ -2515,13 +2555,6 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                     tooltip: 'Word (.docx)',
                   ),
                   IconButton(
-                    onPressed: _isExportingPdf ? null : _exportPdf,
-                    icon: _isExportingPdf
-                        ? const SizedBox(width: 18, height: 18, child: CupertinoActivityIndicator())
-                        : const Icon(CupertinoIcons.arrow_down_doc_fill, color: Color(0xFFD32F2F), size: 20),
-                    tooltip: 'PDF (.pdf)',
-                  ),
-                  IconButton(
                     onPressed: _copyToClipboard,
                     icon: Icon(CupertinoIcons.doc_on_doc, color: ZankoColors.accent, size: 20),
                     tooltip: 'Copy',
@@ -2634,8 +2667,8 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                         style: TextStyle(
                           fontFamily: _currentFontFamily,
                           fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: const Color(0xFFC00000),
+                          fontSize: 20,
+                          color: Colors.black,
                         ),
                       ),
                     ),
@@ -2650,7 +2683,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                         ),
                         child: Row(
                           children: [
-                            const Text('🔹 ', style: TextStyle(color: Color(0xFFC00000), fontSize: 13)),
+                            const Text('🔹 ', style: TextStyle(color: Colors.black, fontSize: 14)),
                             Expanded(
                               child: Text(
                                 item,
@@ -2666,7 +2699,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                         ),
                       )),
                 ] else if (currentPage.pageType == 'references') ...[
-                  // Page 8: References
+                  // Page 8: References (Size 20 Bold)
                   Center(
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 20),
@@ -2675,8 +2708,8 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                         style: TextStyle(
                           fontFamily: _currentFontFamily,
                           fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: const Color(0xFFC00000),
+                          fontSize: 20,
+                          color: Colors.black,
                         ),
                       ),
                     ),
@@ -2695,14 +2728,14 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('$idx. ', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          Text('$idx. ', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black)),
                           Expanded(
                             child: Text(
                               refText,
                               style: TextStyle(
                                 fontFamily: _currentFontFamily,
-                                fontSize: 12.5,
-                                height: 1.5,
+                                fontSize: 14,
+                                height: 1.6,
                                 color: isDark ? Colors.grey[200] : const Color(0xFF1E293B),
                               ),
                             ),
@@ -2712,7 +2745,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                     );
                   }),
                 ] else ...[
-                  // Content Sections
+                  // Content Sections (Size 20 Bold Titles, Size 14 Regular Content)
                   if (currentPage.sections.isNotEmpty) ...[
                     ...currentPage.sections.map((sec) => Container(
                           margin: const EdgeInsets.only(bottom: 20),
@@ -2731,37 +2764,37 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                                 style: TextStyle(
                                   fontFamily: _currentFontFamily,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 15.5,
-                                  color: const Color(0xFFC00000),
+                                  fontSize: 20,
+                                  color: Colors.black,
                                 ),
                               ),
-                              const SizedBox(height: 10),
+                              const SizedBox(height: 12),
                               if (sec.content.isNotEmpty)
                                 Text(
                                   sec.content,
                                   textAlign: TextAlign.start,
                                   style: TextStyle(
                                     fontFamily: _currentFontFamily,
-                                    fontSize: 13,
-                                    height: 1.6,
+                                    fontSize: 14,
+                                    height: 1.65,
                                     color: isDark ? Colors.grey[200] : const Color(0xFF1E293B),
                                   ),
                                 ),
                               if (sec.bulletPoints.isNotEmpty) ...[
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 10),
                                 ...sec.bulletPoints.map((bullet) => Padding(
                                       padding: const EdgeInsets.only(bottom: 6),
                                       child: Row(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          const Text('• ', style: TextStyle(color: Color(0xFFC00000), fontSize: 15, fontWeight: FontWeight.bold)),
+                                          const Text('• ', style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
                                           Expanded(
                                             child: Text(
                                               bullet,
                                               style: TextStyle(
                                                 fontFamily: _currentFontFamily,
-                                                fontSize: 12.5,
-                                                height: 1.45,
+                                                fontSize: 14,
+                                                height: 1.5,
                                                 color: isDark ? Colors.grey[300] : const Color(0xFF334155),
                                               ),
                                             ),
@@ -2822,55 +2855,27 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
           const Divider(),
           const SizedBox(height: 12),
 
-          // Download Word & PDF
-          Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 50,
-                  child: ElevatedButton.icon(
-                    onPressed: _isExportingDocx ? null : _exportDocx,
-                    icon: _isExportingDocx
-                        ? const CupertinoActivityIndicator(color: Colors.white)
-                        : const Icon(CupertinoIcons.doc_fill, color: Colors.white, size: 18),
-                    label: Text(
-                      _isExportingDocx
-                          ? (_isEnglish ? 'Creating...' : 'دروستکردن...')
-                          : (_isEnglish ? '📄 Download Word' : '📄 داگرتنی Word'),
-                      style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2B579A), // Word Blue
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: 0,
-                    ),
-                  ),
-                ),
+          // Download Word (.docx) Full Width Primary Button
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: _isExportingDocx ? null : _exportDocx,
+              icon: _isExportingDocx
+                  ? const CupertinoActivityIndicator(color: Colors.white)
+                  : const Icon(CupertinoIcons.doc_fill, color: Colors.white, size: 20),
+              label: Text(
+                _isExportingDocx
+                    ? (_isEnglish ? 'Creating Word file...' : 'دروستکردنی فایلی وۆرد...')
+                    : (_isEnglish ? '📄 Download Word Document (.docx)' : '📄 داگرتنی ڕاپۆرت بە فایلی وۆرد (.docx)'),
+                style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: SizedBox(
-                  height: 50,
-                  child: ElevatedButton.icon(
-                    onPressed: _isExportingPdf ? null : _exportPdf,
-                    icon: _isExportingPdf
-                        ? const CupertinoActivityIndicator(color: Colors.white)
-                        : const Icon(CupertinoIcons.arrow_down_doc_fill, color: Colors.white, size: 18),
-                    label: Text(
-                      _isExportingPdf
-                          ? (_isEnglish ? 'Creating...' : 'دروستکردن...')
-                          : (_isEnglish ? '📑 Download PDF' : '📑 داگرتنی PDF'),
-                      style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFD32F2F), // PDF Red
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: 0,
-                    ),
-                  ),
-                ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2B579A), // Word Blue
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 2,
               ),
-            ],
+            ),
           ),
 
           // Return to suggested topics button
@@ -2898,30 +2903,31 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
   }
 
   Widget _buildCoverPageView(bool isDark) {
-    final isKurdishOrArabic = !_isEnglish;
     final ministryLine1 = _isEnglish
-        ? 'Ministry of higher education'
+        ? 'Kurdistan Regional Government - Iraq'
+        : (_isArabic
+            ? 'حكومة إقليم كوردستان - العراق'
+            : (_isBadini ? 'حکومەتا هەرێما کوردستانێ - عیراق' : 'حکومەتی هەرێمی کوردستان - عێراق'));
+
+    final ministryLine2 = _isEnglish
+        ? 'Ministry of Higher Education & Scientific Research'
         : (_isArabic
             ? 'وزارة التعليم العالي والبحث العلمي'
             : (_isBadini ? 'وەزارەتا خوێندنا باڵا و ڤەکۆلینێن زانستی' : 'وەزارەتی خوێندنی باڵا و توێژینەوەی زانستی'));
 
-    final ministryLine2 = _isEnglish ? 'And science research' : '';
-
-    final reportAboutLabel = _isEnglish
-        ? 'Report about :'
-        : (_isArabic ? 'تقرير حول :' : (_isBadini ? 'ڕاپۆرت ل دۆر :' : 'ڕاپۆرت لەبارەی :'));
-
     final preparedLabel = _isEnglish
-        ? 'Prepared by :'
-        : (_isArabic ? 'إعداد :' : (_isBadini ? 'ئامادەکرن ژ لایێ :' : 'ئامادەکردنی :'));
+        ? 'Prepared by:'
+        : (_isArabic ? 'ئامادەکردنی قوتابی:' : (_isBadini ? 'ئامادەکرن ژ لایێ قوتابی:' : 'ئامادەکردنی خوێندکار:'));
 
     final supervisorLabel = _isEnglish
-        ? 'supervisor :'
-        : (_isArabic ? 'بإشراف :' : (_isBadini ? 'ب سەرپەرشتیا :' : 'بەسەرپەرشتیی :'));
+        ? 'Supervised by:'
+        : (_isArabic ? 'بإشراف الأستاذ:' : (_isBadini ? 'ب سەرپەرشتیا مامۆستای:' : 'بەسەرپەرشتیی مامۆستا:'));
 
-    final stageText = _parsedReport!.academicYear.isNotEmpty
-        ? _parsedReport!.academicYear
-        : (_isEnglish ? 'Stage : One' : (_isBadini ? 'قۆناغا : ئێکێ' : 'قۆناغی : یەکەم'));
+    final academicYearLabel = _isEnglish
+        ? 'Academic Year:'
+        : (_isArabic ? 'العام الدراسي:' : (_isBadini ? 'ساڵا خوێندنا ئەکادیمی:' : 'ساڵی خوێندنی ئەکادیمی:'));
+
+    final yearText = _parsedReport!.academicYear.isNotEmpty ? _parsedReport!.academicYear : '2025 - 2026';
 
     final studentList = _parsedReport!.studentName
         .split(RegExp(r'[\n\r,،]+'))
@@ -2931,122 +2937,195 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
       decoration: BoxDecoration(
-        color: isDark ? ZankoColors.darkBackground : Colors.white,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              if (!isKurdishOrArabic) ...[
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(ministryLine1, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                      if (ministryLine2.isNotEmpty) Text(ministryLine2, style: const TextStyle(fontSize: 12)),
-                      Text(_parsedReport!.universityName, style: const TextStyle(fontSize: 12)),
-                      Text(_parsedReport!.departmentName, style: const TextStyle(fontSize: 11.5, color: Colors.grey)),
-                      Text(stageText, style: const TextStyle(fontSize: 11.5, color: Colors.grey)),
-                    ],
-                  ),
-                ),
-                _buildLogoWidget(),
-              ] else ...[
-                _buildLogoWidget(),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(ministryLine1, textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                      Text(_parsedReport!.universityName, textAlign: TextAlign.right, style: const TextStyle(fontSize: 12)),
-                      Text(_parsedReport!.departmentName, textAlign: TextAlign.right, style: const TextStyle(fontSize: 11.5, color: Colors.grey)),
-                      Text(stageText, textAlign: TextAlign.right, style: const TextStyle(fontSize: 11.5, color: Colors.grey)),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 36),
-            child: Center(
-              child: Column(
-                children: [
-                  Text(reportAboutLabel, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFFC00000))),
-                  const SizedBox(height: 8),
-                  Text(
-                    _parsedReport!.title,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Color(0xFFC00000)),
-                  ),
-                ],
-              ),
+          // ── 1. University Logo & Official Header ──
+          _buildLogoWidget(),
+          const SizedBox(height: 14),
+
+          // Ministry Line 1
+          Text(
+            ministryLine1,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: _currentFontFamily,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
             ),
           ),
+          const SizedBox(height: 3),
+
+          // Ministry Line 2
+          Text(
+            ministryLine2,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: _currentFontFamily,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // University Name (Large, Bold, Solid Black)
+          Text(
+            _parsedReport!.universityName,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: _currentFontFamily,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+
+          // Department Name (Bold, Black)
+          if (_parsedReport!.departmentName.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              _parsedReport!.departmentName,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: _currentFontFamily,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 14),
+          // Clean Divider Line
+          Container(
+            width: 140,
+            height: 1.5,
+            color: const Color(0xFF0F172A),
+          ),
+          const SizedBox(height: 36),
+
+          // ── 2. Report Main Title (Direct, Bold Black, Large) ──
+          Text(
+            DocxGeneratorService.cleanTopicTitle(_parsedReport!.title),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: _currentFontFamily,
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: Colors.black,
+              height: 1.45,
+            ),
+          ),
+
+          const SizedBox(height: 50),
+
+          // ── 3. Student & Supervisor Information (Positioned lower down) ──
           Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (!isKurdishOrArabic) ...[
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(preparedLabel, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                      if (studentList.isEmpty)
-                        Text(_parsedReport!.studentName, style: const TextStyle(fontSize: 12.5))
-                      else
-                        ...studentList.map((s) => Text(s, style: const TextStyle(fontSize: 12.5))),
-                    ],
-                  ),
+              // Prepared By (Student)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      preparedLabel,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: _currentFontFamily,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (studentList.isEmpty)
+                      Text(
+                        _parsedReport!.studentName.isNotEmpty ? _parsedReport!.studentName : 'ناوی قوتابی',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: _currentFontFamily,
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      )
+                    else
+                      ...studentList.map((s) => Padding(
+                            padding: const EdgeInsets.only(bottom: 3),
+                            child: Text(
+                              s,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontFamily: _currentFontFamily,
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                          )),
+                  ],
                 ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(supervisorLabel, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                      Text(_parsedReport!.supervisorName, style: const TextStyle(fontSize: 12.5)),
-                    ],
-                  ),
+              ),
+              const SizedBox(width: 20),
+
+              // Supervised By (Teacher)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      supervisorLabel,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: _currentFontFamily,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _parsedReport!.supervisorName.isNotEmpty ? _parsedReport!.supervisorName : 'ناوی مامۆستا',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: _currentFontFamily,
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
                 ),
-              ] else ...[
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(supervisorLabel, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                      Text(_parsedReport!.supervisorName, style: const TextStyle(fontSize: 12.5)),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(preparedLabel, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                      if (studentList.isEmpty)
-                        Text(_parsedReport!.studentName, style: const TextStyle(fontSize: 12.5))
-                      else
-                        ...studentList.map((s) => Text(s, textAlign: TextAlign.right, style: const TextStyle(fontSize: 12.5))),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ],
           ),
-          const SizedBox(height: 24),
-          Center(
-            child: Text(
-              _parsedReport!.academicYear.isNotEmpty ? _parsedReport!.academicYear : '2024-2025',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFFC00000)),
+
+          const SizedBox(height: 48),
+
+          // ── 4. Academic Year at Bottom ──
+          Text(
+            '$academicYearLabel $yearText',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: _currentFontFamily,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
             ),
           ),
         ],
@@ -3055,21 +3134,68 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
   }
 
   Widget _buildLogoWidget() {
-    return _universityLogoBytes != null
-        ? ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Image.memory(_universityLogoBytes!, width: 56, height: 56, fit: BoxFit.cover),
-          )
-        : Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: const Color(0xFFC00000).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFC00000).withValues(alpha: 0.3)),
+    if (_universityLogoBytes != null && _universityLogoBytes!.isNotEmpty) {
+      return Container(
+        width: 64,
+        height: 64,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: const Color(0xFF0F172A), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
-            child: const Center(child: Text('🎓', style: TextStyle(fontSize: 24))),
-          );
+          ],
+        ),
+        child: ClipOval(
+          child: Image.memory(
+            _universityLogoBytes!,
+            width: 64,
+            height: 64,
+            fit: BoxFit.cover,
+          ),
+        ),
+      );
+    }
+
+    // Official Academic Emblem Seal
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: const Color(0xFF0F172A),
+        border: Border.all(color: const Color(0xFF334155), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.school_rounded, color: Colors.white, size: 26),
+            const SizedBox(height: 2),
+            Text(
+              'ZANKO',
+              style: TextStyle(
+                fontFamily: _currentFontFamily,
+                fontSize: 8,
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFF94A3B8),
+                letterSpacing: 1,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   // ─── Raw Result Fallback Card ──────────────────────────────────────────────
@@ -3128,7 +3254,45 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 
     List<Map<String, String>> pool = [];
 
-    if (dLower.contains('تەندروست') || dLower.contains('پزیشک') || dLower.contains('تاقیگە') || dLower.contains('دەرمان') || dLower.contains('med') || dLower.contains('health') || dLower.contains('nurs') || dLower.contains('pharma') || dLower.contains('طب') || dLower.contains('صح')) {
+    if (dLower.contains('مێژوو') || dLower.contains('کورد') || dLower.contains('شوێنەوار') || dLower.contains('شارستانی') || dLower.contains('hist') || dLower.contains('kurd')) {
+      pool = [
+        {
+          'ku': 'شیکاریی بەڵگەنامە مێژووییەکانی $safeDept و کاریگەرییان لەسەر ناوچەکە',
+          'badini': 'شیکاریا بەلگەنامەیێن مێژوویی یێن $safeDept و کارتێکرنا وان ل سەر دەڤەرێ',
+          'en': 'Historical Documentation & Archival Analysis of $safeDept',
+          'sum': 'لێکۆڵینەوەی قووڵی ئەکادیمی لەسەر سەرچاوە، بەڵگەنامە و دەستنووسە مێژووییەکانی پەیوەست بە $safeDept.',
+          'q': 'سەرچاوە مێژووییەکان چۆن ڕاستیی ڕووداوە سەرەکییەکان دەسەلمێنن؟',
+        },
+        {
+          'ku': 'قۆناغە وەرچەرخانە سیاسی و کەلتوورییەکانی $safeDept لە سەردەمی هاوچەرخدا',
+          'badini': 'قۆناغێن وەرچەرخانا سیاسی و کەلتووری یێن $safeDept د چەرخێ نوی دا',
+          'en': 'Socio-Political Evolutions and Cultural Dynamics in $safeDept',
+          'sum': 'هەڵسەنگاندنی زانستی بۆ گۆڕانکارییە سیاسی، ئابووری و کۆمەڵایەتییەکان لە قۆناغە جیاوازەکاندا.',
+          'q': 'کاریگەریی ئەم قۆناغانە لەسەر دروستبوونی شوناسی هاوچەرخ چی بووە؟',
+        },
+        {
+          'ku': 'پێگەی جوگرافی و ستراتیجیی $safeDept و ململانێ نێودەوڵەتییەکان',
+          'badini': 'پێگەهێ جوگرافی و ستراتیجی یێ $safeDept و ململانێیێن نێڤدەولەتی',
+          'en': 'Geostrategic Significance and Regional Geopolitics of $safeDept',
+          'sum': 'شیکاریی جیۆپۆلەتیکی و بایەخی ستراتیجیی ناوچەکە لە هاوکێشە نێودەوڵەتی و دیپلۆماسییەکاندا.',
+          'q': 'چۆن پێگەی جوگرافی بووەتە هۆی سەرنجڕاکێشانی هێزە هەرێمییەکان؟',
+        },
+        {
+          'ku': 'شوێنەوارە دێرینەکان و میراتی شارستانیی $safeDept',
+          'badini': 'شوێنەوارێن کەڤن و میراتێ شارستانی یێ $safeDept',
+          'en': 'Archaeological Heritage and Ancient Civilizations in $safeDept',
+          'sum': 'پشکنینی پاشماوە شوێنەوارییەکان و بەڵگە زانستییەکان لەسەر دێرینی و پەرەسەندنی شارستانیەتەکە.',
+          'q': 'شوێنەوارە دۆزراوەکان چۆن مێژووی ژیانی مرۆڤایەتی لە ناوچەکەدا ڕوون دەکەنەوە؟',
+        },
+        {
+          'ku': 'ئاسۆی نوێ لە توێژینەوەی ئەکادیمی و میتۆدۆلۆجی سەبارەت بە $safeDept',
+          'badini': 'ئاسۆیێن نوی د ڤەکۆلینێن ئەکادیمی و میتۆدۆلۆجی دا دەربارەی $safeDept',
+          'en': 'Contemporary Historiographical Methodologies in Studying $safeDept',
+          'sum': 'پەیڕەوکردنی میتۆدی زانستیی هاوچەرخ بۆ پێداچوونەوە و شیکاریی بەڵگەنامەیی دەربارەی $safeDept.',
+          'q': 'میتۆدە نوێیەکان چۆن یارمەتیدەری شیکارییەکی بێلایەنانەن؟',
+        },
+      ];
+    } else if (dLower.contains('تەندروست') || dLower.contains('پزیشک') || dLower.contains('تاقیگە') || dLower.contains('دەرمان') || dLower.contains('med') || dLower.contains('health') || dLower.contains('nurs') || dLower.contains('pharma') || dLower.contains('طب') || dLower.contains('صح')) {
       pool = [
         {
           'ku': 'کاریگەریی نانۆتەکنۆلۆژیا لە دەستنیشانکردن و چارەسەری نەخۆشییە شێرپەنجەییەکان',
@@ -3162,42 +3326,46 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
     } else {
       pool = [
         {
-          'ku': 'کاریگەریی مۆدێلە گەورەکانی زمان (LLMs) لەسەر شۆڕشی زانستی و فێربوونی ئەکادیمی',
-          'badini': 'کارتێکرنا مۆدێلێن مەزنێن زمان (LLMs) ل سەر شۆڕشا زانستی و فێربوونا ئەکادیمی',
-          'en': 'Large Language Models (LLMs) Transforming Scientific Research & Academic Discovery',
-          'sum': 'شیکاریی چۆنیەتی بەکارهێنانی ژیریی دەستکرد لە خێراکردنی لێکۆڵینەوەی تاقیگەیی و شیکاری داتا ئاڵۆزەکان.',
-          'q': 'چۆن ژیریی دەستکرد دەتوانێت کاتی توێژینەوەی زانستی لە مانگەوە بۆ چەند خولەکێک کەم بکاتەوە؟',
+          'ku': 'بنەما تیۆرییەکان، پێکهاتەی سەرەکی و چوارچێوەی زانستی لە «$safeDept»',
+          'badini': 'بنەمایێن تیۆری، پێکهاتەیا سەرەکی و چوارچۆڤێ زانستی د «$safeDept» دا',
+          'en': 'Theoretical Foundations and Advanced Frameworks in $safeDept',
+          'sum': 'شیکاریی قووڵی بنەما تیۆرییەکان و شێوازەکانی پەرەپێدانی زانستی لە بواری $safeDept.',
+          'q': 'چۆن ئەم چوارچێوەیە بەشداری لە پێشخستنی زانستیی ئەم بوارەدا دەکات؟',
         },
         {
-          'ku': 'ئەمنییەتی سایبەری بە مۆدێلی Zero-Trust لە تۆڕە هەورییە نێودەوڵەتییەکاندا',
-          'badini': 'ئەمنییەتا سایبەری ب مۆدێلا Zero-Trust د تۆڕێن عەورێن نێڤدەولەتی دا',
-          'en': 'Zero-Trust Architecture and Cloud Security Infrastructure in Modern Networks',
-          'sum': 'لێکۆڵینەوە لە پرۆتۆکۆلەکانی پاراستنی داتابەیس و جێبەجێکردنی شفرەکردنی قووڵ لە هەموو لایەنەکانەوە.',
-          'q': 'مۆدێلی Zero-Trust چۆن بە تەواوی ڕێگری لە دزەکردنی هاککەرەکان دەکات بۆ ناو تۆڕی ناوەکی؟',
+          'ku': 'جێبەجێکردنی پراکتیکی، میتۆدۆلۆجیای سەردەمیانە و بەکارهێنان لە «$safeDept»',
+          'badini': 'جێبەجێکرنا پراکتیکی، میتۆدۆلۆجییا سەردەم و بکارئینان د «$safeDept» دا',
+          'en': 'Practical Methodologies and Contemporary Implementations in $safeDept',
+          'sum': 'لێکۆڵینەوە لەسەر ئەزموونە پراکتیکییەکان و تەکنیکە نوێیەکانی جێبەجێکردن لە $safeDept.',
+          'q': 'کەڵک و دەرئەنجامە پراکتیکییەکانی ئەم تەکنیکانە لەسەر زەمینەی واقیع چین؟',
         },
         {
-          'ku': 'کۆمپیوتەری کوانتەمی (Quantum Computing) و کاریگەریی لەسەر شکاندنی شفرە کلاسیکییەکان',
-          'badini': 'کۆمپیوتەرا کوانتەمی (Quantum Computing) و کارتێکرنا وێ ل سەر شکاندنا شفرەیێن کەڤن',
-          'en': 'Quantum Computing Advancements and the Post-Quantum Cryptography Era',
-          'sum': 'شیکاریی توانای پرۆسێسەرە کوانتەمییەکان لە شیکارکردنی ئەلگۆریتمە قورسەکان و پێویستی شفرەی نوێ.',
-          'q': 'بۆچی دەبێت سیستمە ئەمنییەکان خۆیان بۆ سەردەمی پۆست-کوانتەم ئامادە بکەن؟',
+          'ku': 'ئاستەنگە سەرەکییەکان، ڕەهەندە تەکنیکییەکان و چارەسەرە پێشنیارکراوەکان لە «$safeDept»',
+          'badini': 'ئاریشەیێن سەرەکی، ڕەهەندێن تەکنیکی و چارەسەریێن پێشنیارکری د «$safeDept» دا',
+          'en': 'Critical Challenges, Technical Dimensions & Mitigation Strategies in $safeDept',
+          'sum': 'شیکاریی کێشە و ئاستەنگە ئەکادیمی و پراکتیکییەکان لەگەڵ پێشکەشکردنی چارەسەری زانستی.',
+          'q': 'چۆن دەتوانرێت ئاستەنگە سەرەکییەکانی ئەم بوارە بە کەمترین تێچوو چارەسەر بکرێن؟',
         },
         {
-          'ku': 'سیستەمی بلۆکچەین لە بەڕێوەبردنی داتای ئەکادیمی و سەلماندنی بڕوانامە زانکۆییەکان',
-          'badini': 'سیستەمێ بلۆکچەین د بڕێڤەبرنا داتایێن ئەکادیمی و باوەرپێکرنا باوەرنامەیێن زانکۆیێ دا',
-          'en': 'Blockchain Technology for Verifiable Academic Credentials and Research Integrity',
-          'sum': 'شیکاریی بەکارهێنانی تۆماری نەگۆڕ (Immutable Ledger) بۆ نەهێشتنی تەزویر و ساختەکاری بڕوانامە.',
-          'q': 'بلۆکچەین چۆن دەتوانێت ١٠٠٪ ساختەکاری لە بڕوانامە ئەکادیمییەکاندا بنبڕ بکات؟',
+          'ku': 'بەراوردکاریی سیستەمەکان، پێوەرەکانی کواڵیتی و کارایی لە «$safeDept»',
+          'badini': 'بەراوردکرنا سیستەمان، پێوەرێن کواڵیتی و کاراییێ د «$safeDept» دا',
+          'en': 'Comparative Paradigm, Quality Metrics and Efficiency in $safeDept',
+          'sum': 'هەڵسەنگاندنی بەراوردکاری لە نێوان مۆدێلە جیاوازەکان بە بەکارهێنانی پێوەرە ستانداردەکان.',
+          'q': 'کام مۆدێل بەرزترین ئاستی کارایی و وردبینی دەستەبەر دەکات؟',
+        },
+        {
+          'ku': 'ئاسۆی داهاتوو، داهێنانە پێشکەوتووەکان و ئاراستەی نوێ لە «$safeDept»',
+          'badini': 'ئاسۆیێن پاشەڕۆژێ، داهێنانێن پێشکەفتی و ئاراستەیێن نوی د «$safeDept» دا',
+          'en': 'Future Horizons, Next-Generation Breakthroughs in $safeDept',
+          'sum': 'لێکۆڵینەوە لەسەر ئاراستە و داهێنانە تازەکان کە داهاتووی ئەم بوارە دیاری دەکەن.',
+          'q': 'داهاتووی ئەم بوارە بەرەو چ ئاراستەیەکی زانستی هەنگاو دەنێت؟',
         },
       ];
     }
 
-    pool.shuffle();
-    final selected = pool.take(5).toList();
-
     final sb = StringBuffer();
-    for (int i = 0; i < selected.length; i++) {
-      final item = selected[i];
+    for (int i = 0; i < pool.length; i++) {
+      final item = pool[i];
       final titleStr = _isBadini ? (item['badini'] ?? item['ku']!) : item['ku']!;
       if (_isEnglish) {
         sb.writeln('### 📌 Topic ${i + 1}: ${item['en']}');
@@ -3227,8 +3395,161 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
   }
 
   List<SeminarTopicProposal> _getFallbackTopicProposals(String dept) {
-    final raw = _generateFallbackTopicsText(dept);
-    return _parseTopicProposals(raw);
+    final safeDept = dept.trim().isEmpty ? 'زانست و تەکنۆلۆژیا' : dept.trim();
+    final dLower = safeDept.toLowerCase();
+
+    List<Map<String, String>> pool = [];
+
+    if (dLower.contains('مێژوو') || dLower.contains('کورد') || dLower.contains('شوێنەوار') || dLower.contains('شارستانی') || dLower.contains('hist') || dLower.contains('kurd')) {
+      pool = [
+        {
+          'ku': 'شیکاریی بەڵگەنامە مێژووییەکانی $safeDept و کاریگەرییان لەسەر ناوچەکە',
+          'badini': 'شیکاریا بەلگەنامەیێن مێژوویی یێن $safeDept و کارتێکرنا وان ل سەر دەڤەرێ',
+          'en': 'Historical Documentation & Archival Analysis of $safeDept',
+          'sum': 'لێکۆڵینەوەی قووڵی ئەکادیمی لەسەر سەرچاوە، بەڵگەنامە و دەستنووسە مێژووییەکانی پەیوەست بە $safeDept.',
+          'q': 'سەرچاوە مێژووییەکان چۆن ڕاستیی ڕووداوە سەرەکییەکان دەسەلمێنن؟',
+        },
+        {
+          'ku': 'قۆناغە وەرچەرخانە سیاسی و کەلتوورییەکانی $safeDept لە سەردەمی هاوچەرخدا',
+          'badini': 'قۆناغێن وەرچەرخانا سیاسی و کەلتووری یێن $safeDept د چەرخێ نوی دا',
+          'en': 'Socio-Political Evolutions and Cultural Dynamics in $safeDept',
+          'sum': 'هەڵسەنگاندنی زانستی بۆ گۆڕانکارییە سیاسی، ئابووری و کۆمەڵایەتییەکان لە قۆناغە جیاوازەکاندا.',
+          'q': 'کاریگەریی ئەم قۆناغانە لەسەر دروستبوونی شوناسی هاوچەرخ چی بووە؟',
+        },
+        {
+          'ku': 'پێگەی جوگرافی و ستراتیجیی $safeDept و ململانێ نێودەوڵەتییەکان',
+          'badini': 'پێگەهێ جوگرافی و ستراتیجی یێ $safeDept و ململانێیێن نێڤدەولەتی',
+          'en': 'Geostrategic Significance and Regional Geopolitics of $safeDept',
+          'sum': 'شیکاریی جیۆپۆلەتیکی و بایەخی ستراتیجیی ناوچەکە لە هاوکێشە نێودەوڵەتی و دیپلۆماسییەکاندا.',
+          'q': 'چۆن پێگەی جوگرافی بووەتە هۆی سەرنجڕاکێشانی هێزە هەرێمییەکان؟',
+        },
+        {
+          'ku': 'شوێنەوارە دێرینەکان و میراتی شارستانیی $safeDept',
+          'badini': 'شوێنەوارێن کەڤن و میراتێ شارستانی یێ $safeDept',
+          'en': 'Archaeological Heritage and Ancient Civilizations in $safeDept',
+          'sum': 'پشکنینی پاشماوە شوێنەوارییەکان و بەڵگە زانستییەکان لەسەر دێرینی و پەرەسەندنی شارستانیەتەکە.',
+          'q': 'شوێنەوارە دۆزراوەکان چۆن مێژووی ژیانی مرۆڤایەتی لە ناوچەکەدا ڕوون دەکەنەوە؟',
+        },
+        {
+          'ku': 'ئاسۆی نوێ لە توێژینەوەی ئەکادیمی و میتۆدۆلۆجی سەبارەت بە $safeDept',
+          'badini': 'ئاسۆیێن نوی د ڤەکۆلینێن ئەکادیمی و میتۆدۆلۆجی دا دەربارەی $safeDept',
+          'en': 'Contemporary Historiographical Methodologies in Studying $safeDept',
+          'sum': 'پەیڕەوکردنی میتۆدی زانستیی هاوچەرخ بۆ پێداچوونەوە و شیکاریی بەڵگەنامەیی دەربارەی $safeDept.',
+          'q': 'میتۆدە نوێیەکان چۆن یارمەتیدەری شیکارییەکی بێلایەنانەن؟',
+        },
+        {
+          'ku': 'پەیوەندییە نێودەوڵەتییەکان، دیپلۆماسی و هاوسەنگیی هێز لە مێژووی $safeDept دا',
+          'badini': 'پەیوەندییێن نێڤدەولەتی، دیپلۆماسی و هەڤسەنگیا هێزێ د مێژوویا $safeDept دا',
+          'en': 'Diplomatic Relations and International Alignments in the History of $safeDept',
+          'sum': 'شیکاریی پەیوەندییە سیاسییەکان لەگەڵ دەوڵەت و ئیمپراتۆرییەتە دراوسێکاندا.',
+          'q': 'ڕەهەندە دیپلۆماسییەکان چۆن نەخشەی جیۆپۆلەتیکی ناوچەکەیان گۆڕی؟',
+        },
+      ];
+    } else if (dLower.contains('تەندروست') || dLower.contains('پزیشک') || dLower.contains('تاقیگە') || dLower.contains('دەرمان') || dLower.contains('med') || dLower.contains('health') || dLower.contains('nurs') || dLower.contains('pharma') || dLower.contains('طب') || dLower.contains('صح')) {
+      pool = [
+        {
+          'ku': 'کاریگەریی نانۆتەکنۆلۆژیا لە دەستنیشانکردن و چارەسەری نەخۆشییە شێرپەنجەییەکان',
+          'badini': 'کارتێکرنا نانۆتەکنۆلۆژیایێ د دەستنیشانکرن و چارەسەرکرنا نەخۆشیێن شێرپەنجەیێ دا',
+          'en': 'Nanotechnology Applications in Oncology Diagnosis and Targeted Therapy',
+          'sum': 'لێکۆڵینەوە لەسەر بەکارهێنانی تەنۆلکە نانۆییەکان بۆ گەیاندنی دەرمان بە خانە تووشبووەکان بەبێ زیانگەیاندن بە خانە ساغەکان.',
+          'q': 'چۆن نانۆپارتیکڵەکان دەتوانن ڕێژەی کاریگەریی چارەسەری کیمیایی بەرز بکەنەوە؟',
+        },
+        {
+          'ku': 'ڕۆڵی ژیریی دەستکرد لە شیکاریی وێنەی پزیشکی و تیشکناسی (Radiology)',
+          'badini': 'ڕۆلێ ژیرییا دەستکرد د شیکاریا وێنەیێن پزیشکی و تیشکێ دا (Radiology)',
+          'en': 'Artificial Intelligence in Medical Image Processing and Radiology',
+          'sum': 'هەڵسەنگاندنی ئەلگۆریتمەکانی بینینی کۆمپیوتەری بۆ دەستنیشانکردنی زووەوەختی وەرەم و شکانە وردەکان بە وردبینی ٩٨٪.',
+          'q': 'تا چەند مۆدێلە قووڵەکان دەتوانن یارمەتیدەری پزیشکانی تیشک بن لە کەمکردنەوەی هەڵەکاندا؟',
+        },
+        {
+          'ku': 'بەرگری دژەبەکتریایی (Antibiotic Resistance) و بەکارهێنانی چارەسەری بەکتریۆفەیج',
+          'badini': 'بەرگرییا دژەبەکتریایی (Antibiotic Resistance) و بکارئینانا چارەسەرییا بەکتریۆفەیج',
+          'en': 'Bacterial Resistance to Antibiotics and Bacteriophage Therapy',
+          'sum': 'شیکاریی مەترسییەکانی بڵاوبوونەوەی سوپەربەکتریای بەرگریکار و چارەسەرە نوێیە بایۆلۆجییەکان.',
+          'q': 'ئایا چارەسەری بەکتریۆفەیج دەتوانێت جێگرەوەی دژەبەکتریا باوەکان بێت؟',
+        },
+        {
+          'ku': 'کاریگەریی مایکڕۆبایۆمی ڕیخۆڵە لەسەر نەخۆشییە دەماری و دەروونییەکان (Gut-Brain Axis)',
+          'badini': 'کارتێکرنا مایکڕۆبایۆما ڕیڤیکان ل سەر نەخۆشیێن دەماری و دەروونی (Gut-Brain Axis)',
+          'en': 'Gut Microbiome and the Gut-Brain Axis in Neurological Disorders',
+          'sum': 'لێکۆڵینەوە لە پەیوەندی نێوان بەکتریای سوودبەخشی هەرس و باری دەروونی و نەخۆشییەکانی پارکینسۆن و خەمۆکی.',
+          'q': 'میکانیزمە بایۆکیمیاییەکانی پەیوەندی نێوان کۆئەندامی هەرس و مێشک چین؟',
+        },
+        {
+          'ku': 'جینۆمیکسی کەسی و چارەسەری ئامانجدار لە نەخۆشییە بۆماوەییەکاندا',
+          'badini': 'جینۆمیکسا کەسی و چارەسەرییا ئارمانجدار د نەخۆشیێن بۆماوەیی دا',
+          'en': 'Personalized Genomics and Targeted Therapeutics in Genetic Disorders',
+          'sum': 'شیکاریی گۆڕانکارییە بۆماوەییەکان و چۆنیەتی دروستکردنی دەرمانی تایبەت بە هەر نەخۆشێک.',
+          'q': 'چۆن شیکاریی دی ئێن ئەی ڕێگە لە تووشبوون بە نەخۆشییە درێژخایەنەکان دەگرێت؟',
+        },
+        {
+          'ku': 'بایۆماتریالە پێشکەوتووەکان لە چاندنی ئەندام و دروستکردنی شانەی دەستکرددا',
+          'badini': 'بایۆماتریالێن پێشکەفتی د چاندنا ئەندامان و دروستکرنا شانەیێن دەستکرد دا',
+          'en': 'Advanced Biomaterials in Tissue Engineering and Organ Transplantation',
+          'sum': 'پەرەپێدانی ماددە بایۆلۆجییەکان کە لەگەڵ جەستەی مرۆڤدا دەگونجێن و ڕەت ناکرێنەوە.',
+          'q': 'داهاتووی چاپکردنی سێ ڕەهەندیی ئەندامەکانی جەستە چی بەسەر دێت؟',
+        },
+      ];
+    } else {
+      pool = [
+        {
+          'ku': 'بنەما تیۆرییەکان، پێکهاتەی سەرەکی و چوارچێوەی زانستی لە «$safeDept»',
+          'badini': 'بنەمایێن تیۆری، پێکهاتەیا سەرەکی و چوارچۆڤێ زانستی د «$safeDept» دا',
+          'en': 'Theoretical Foundations and Advanced Frameworks in $safeDept',
+          'sum': 'شیکاریی قووڵی بنەما تیۆرییەکان و شێوازەکانی پەرەپێدانی زانستی لە بواری $safeDept.',
+          'q': 'چۆن ئەم چوارچێوەیە بەشداری لە پێشخستنی زانستیی ئەم بوارەدا دەکات؟',
+        },
+        {
+          'ku': 'جێبەجێکردنی پراکتیکی، میتۆدۆلۆجیای سەردەمیانە و بەکارهێنان لە «$safeDept»',
+          'badini': 'جێبەجێکرنا پراکتیکی، میتۆدۆلۆجییا سەردەم و بکارئینان د «$safeDept» دا',
+          'en': 'Practical Methodologies and Contemporary Implementations in $safeDept',
+          'sum': 'لێکۆڵینەوە لەسەر ئەزموونە پراکتیکییەکان و تەکنیکە نوێیەکانی جێبەجێکردن لە $safeDept.',
+          'q': 'کەڵک و دەرئەنجامە پراکتیکییەکانی ئەم تەکنیکانە لەسەر زەمینەی واقیع چین؟',
+        },
+        {
+          'ku': 'ئاستەنگە سەرەکییەکان، ڕەهەندە تەکنیکییەکان و چارەسەرە پێشنیارکراوەکان لە «$safeDept»',
+          'badini': 'ئاریشەیێن سەرەکی، ڕەهەندێن تەکنیکی و چارەسەریێن پێشنیارکری د «$safeDept» دا',
+          'en': 'Critical Challenges, Technical Dimensions & Mitigation Strategies in $safeDept',
+          'sum': 'شیکاریی کێشە و ئاستەنگە ئەکادیمی و پراکتیکییەکان لەگەڵ پێشکەشکردنی چارەسەری زانستی.',
+          'q': 'چۆن دەتوانرێت ئاستەنگە سەرەکییەکانی ئەم بوارە بە کەمترین تێچوو چارەسەر بکرێن؟',
+        },
+        {
+          'ku': 'بەراوردکاریی سیستەمەکان، پێوەرەکانی کواڵیتی و کارایی لە «$safeDept»',
+          'badini': 'بەراوردکرنا سیستەمان، پێوەرێن کواڵیتی و کاراییێ د «$safeDept» دا',
+          'en': 'Comparative Paradigm, Quality Metrics and Efficiency in $safeDept',
+          'sum': 'هەڵسەنگاندنی بەراوردکاری لە نێوان مۆدێلە جیاوازەکان بە بەکارهێنانی پێوەرە ستانداردەکان.',
+          'q': 'کام مۆدێل بەرزترین ئاستی کارایی و وردبینی دەستەبەر دەکات؟',
+        },
+        {
+          'ku': 'ئاسۆی داهاتوو، داهێنانە پێشکەوتووەکان و ئاراستەی نوێ لە «$safeDept»',
+          'badini': 'ئاسۆیێن پاشەڕۆژێ، داهێنانێن پێشکەفتی و ئاراستەیێن نوی د «$safeDept» دا',
+          'en': 'Future Horizons, Next-Generation Breakthroughs in $safeDept',
+          'sum': 'لێکۆڵینەوە لەسەر ئاراستە و داهێنانە تازەکان کە داهاتووی ئەم بوارە دیاری دەکەن.',
+          'q': 'داهاتووی ئەم بوارە بەرەو چ ئاراستەیەکی زانستی هەنگاو دەنێت؟',
+        },
+        {
+          'ku': 'کاریگەرییە ئابووری، کۆمەڵایەتی و ڕەوشتییەکانی «$safeDept» لە کۆمەڵگەدا',
+          'badini': 'کارتێکرنێن ئابووری، جڤاکی و ئەخلاقی یێن «$safeDept» د جڤاکی دا',
+          'en': 'Socio-Economic, Ethical & Industrial Dimensions of $safeDept',
+          'sum': 'شیکاریی لێکەوتەکانی ئەم بوارە لەسەر پەرەپێدانی بەردەوام و کۆمەڵگەی زانستی.',
+          'q': 'چۆن دەکرێت ئەم زانستە بە شێوازێکی بەرپرسیارانە لە کۆمەڵگەدا خزمەت بکات؟',
+        },
+      ];
+    }
+
+    final List<SeminarTopicProposal> result = [];
+    for (int i = 0; i < pool.length; i++) {
+      final item = pool[i];
+      final titleStr = _isBadini ? (item['badini'] ?? item['ku']!) : item['ku']!;
+      result.add(SeminarTopicProposal(
+        index: i + 1,
+        titleKurdish: titleStr,
+        titleEnglish: item['en'] ?? 'Academic Research & Seminar Topic',
+        summary: item['sum'] ?? 'توێژینەوە و شیکاریی ئەکادیمی.',
+        researchQuestion: item['q'] ?? 'پرسیاری سەرەکیی لێکۆڵینەوە چییە؟',
+      ));
+    }
+    return result;
   }
 
   // ─── Fallback 8 Slide Seminar ──────────────────────────────────────────────

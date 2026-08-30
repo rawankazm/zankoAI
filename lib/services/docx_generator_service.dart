@@ -232,12 +232,149 @@ class DocxGeneratorService {
       return images[(pageIndex - 1).clamp(0, images.length - 1)];
     }
 
-    // 5. Law, Politics, Rights & Humanities / General Academic
+    // 5. Law, Politics, Justice, Constitution & Human Rights
+    if (t.contains('یاسا') ||
+        t.contains('داد') ||
+        t.contains('دەستوور') ||
+        t.contains('ماف') ||
+        t.contains('پەرلەمان') ||
+        t.contains('سیاسەت') ||
+        t.contains('نێودەوڵەتی') ||
+        t.contains('قانون') ||
+        t.contains('عدال') ||
+        t.contains('دستور') ||
+        t.contains('حقوق') ||
+        t.contains('سياس') ||
+        t.contains('برلمان') ||
+        t.contains('law') ||
+        t.contains('legal') ||
+        t.contains('court') ||
+        t.contains('justice') ||
+        t.contains('right') ||
+        t.contains('politic')) {
+      final images = [
+        'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1505664194779-8beaceb93744?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1450133064473-71024230f91b?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1479142506502-19b3a3b7ff33?w=1000&auto=format&fit=crop&q=80',
+      ];
+      return images[(pageIndex - 1).clamp(0, images.length - 1)];
+    }
+
+    // 6. Agriculture, Farming, Nature, Plants & Environment
+    if (t.contains('کشتوکاڵ') ||
+        t.contains('ژینگە') ||
+        t.contains('دارستان') ||
+        t.contains('ڕووەک') ||
+        t.contains('پەلەوەر') ||
+        t.contains('ئاژەڵ') ||
+        t.contains('زەوی') ||
+        t.contains('زراعة') ||
+        t.contains('بيئة') ||
+        t.contains('نبات') ||
+        t.contains('حيوان') ||
+        t.contains('غابات') ||
+        t.contains('agri') ||
+        t.contains('farm') ||
+        t.contains('environ') ||
+        t.contains('plant') ||
+        t.contains('ecolog')) {
+      final images = [
+        'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1516253593875-bd7ba052fbc5?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1495107334309-fcf20504a5ab?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=1000&auto=format&fit=crop&q=80',
+      ];
+      return images[(pageIndex - 1).clamp(0, images.length - 1)];
+    }
+
+    // 7. Psychology, Education, Sociology & Philosophy
+    if (t.contains('پەروەردە') ||
+        t.contains('دەروون') ||
+        t.contains('کۆمەڵناسی') ||
+        t.contains('فەلسەفە') ||
+        t.contains('ڕەفتار') ||
+        t.contains('منداڵ') ||
+        t.contains('تربية') ||
+        t.contains('نفس') ||
+        t.contains('اجتماع') ||
+        t.contains('فلسفة') ||
+        t.contains('تعليم') ||
+        t.contains('psych') ||
+        t.contains('educat') ||
+        t.contains('socio') ||
+        t.contains('philosophy') ||
+        t.contains('pedagog')) {
+      final images = [
+        'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=1000&auto=format&fit=crop&q=80',
+      ];
+      return images[(pageIndex - 1).clamp(0, images.length - 1)];
+    }
+
+    // 8. History, Geography, Archaeology & Heritage
+    if (t.contains('مێژوو') ||
+        t.contains('جوگرافیا') ||
+        t.contains('شوێنەوار') ||
+        t.contains('کەلتوور') ||
+        t.contains('کەلەپوور') ||
+        t.contains('شارستانیەت') ||
+        t.contains('تاريخ') ||
+        t.contains('جغرافيا') ||
+        t.contains('آثار') ||
+        t.contains('حضار') ||
+        t.contains('تراث') ||
+        t.contains('history') ||
+        t.contains('geograph') ||
+        t.contains('archaeol') ||
+        t.contains('heritage')) {
+      final images = [
+        'https://images.unsplash.com/photo-1461360370896-922624d12aa1?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=1000&auto=format&fit=crop&q=80',
+      ];
+      return images[(pageIndex - 1).clamp(0, images.length - 1)];
+    }
+
+    // 9. Languages, Literature, Poetry & Translation
+    if (t.contains('زمان') ||
+        t.contains('ئەدەب') ||
+        t.contains('شێعر') ||
+        t.contains('شیعر') ||
+        t.contains('ڕۆمان') ||
+        t.contains('وەرگێڕان') ||
+        t.contains('لغة') ||
+        t.contains('أدب') ||
+        t.contains('شعر') ||
+        t.contains('رواية') ||
+        t.contains('ترجم') ||
+        t.contains('language') ||
+        t.contains('literat') ||
+        t.contains('poem') ||
+        t.contains('translat')) {
+      final images = [
+        'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1474932430478-367dbb6832c1?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1000&auto=format&fit=crop&q=80',
+      ];
+      return images[(pageIndex - 1).clamp(0, images.length - 1)];
+    }
+
+    // 10. Default General Academic
     final defaultImages = [
-      'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=1000&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=1000&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1450133064473-71024230f91b?w=1000&auto=format&fit=crop&q=80',
       'https://images.unsplash.com/photo-1532012164546-f432f2e3777a?w=1000&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=1000&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1000&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1000&auto=format&fit=crop&q=80',
       'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1000&auto=format&fit=crop&q=80',
     ];
     return defaultImages[(pageIndex - 1).clamp(0, defaultImages.length - 1)];
@@ -745,8 +882,13 @@ class DocxGeneratorService {
     archive.addFile(ArchiveFile('_rels/.rels', rootRelsXml.length, utf8.encode(rootRelsXml)));
 
     // 3. word/_rels/document.xml.rels
-    final docRelsXml = _buildDocumentRelsXml();
+    final hasLogo = report.logoBytes != null && report.logoBytes!.isNotEmpty;
+    final docRelsXml = _buildDocumentRelsXml(hasLogo);
     archive.addFile(ArchiveFile('word/_rels/document.xml.rels', docRelsXml.length, utf8.encode(docRelsXml)));
+
+    if (hasLogo) {
+      archive.addFile(ArchiveFile('word/media/logo.png', report.logoBytes!.length, report.logoBytes!));
+    }
 
     // 4. word/fontTable.xml
     final fontTableXml = _buildFontTableXml();
@@ -820,31 +962,31 @@ class DocxGeneratorService {
 </Relationships>''';
   }
 
-  static String _buildDocumentRelsXml() {
+  static String _buildDocumentRelsXml([bool hasLogo = false]) {
     return '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
   <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/>
-  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/fontTable" Target="fontTable.xml"/>
+  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/fontTable" Target="fontTable.xml"/>${hasLogo ? '\n  <Relationship Id="rIdLogo" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/logo.png"/>' : ''}
 </Relationships>''';
   }
 
   static String _buildFontTableXml() {
     return '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:fonts xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-  <w:font w:name="Noto Naskh Arabic">
-    <w:panose1 w:val="020F0502020204030204"/>
-    <w:charset w:val="00"/>
-    <w:family w:val="swiss"/>
-    <w:pitch w:val="variable"/>
-  </w:font>
-  <w:font w:name="Noto Sans Arabic">
+  <w:font w:name="K24 Kurdish Bold">
     <w:panose1 w:val="020F0502020204030204"/>
     <w:charset w:val="00"/>
     <w:family w:val="swiss"/>
     <w:pitch w:val="variable"/>
   </w:font>
   <w:font w:name="Calibri">
+    <w:panose1 w:val="020F0502020204030204"/>
+    <w:charset w:val="00"/>
+    <w:family w:val="swiss"/>
+    <w:pitch w:val="variable"/>
+  </w:font>
+  <w:font w:name="Noto Sans Arabic">
     <w:panose1 w:val="020F0502020204030204"/>
     <w:charset w:val="00"/>
     <w:family w:val="swiss"/>
@@ -873,17 +1015,17 @@ class DocxGeneratorService {
   <w:docDefaults>
     <w:rPrDefault>
       <w:rPr>
-        <w:rFonts w:ascii="Noto Naskh Arabic" w:hAnsi="Noto Naskh Arabic" w:cs="Noto Naskh Arabic"/>
-        <w:sz w:val="24"/>
-        <w:szCs w:val="24"/>
-        <w:color w:val="1E293B"/>
+        <w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/>
+        <w:sz w:val="28"/>
+        <w:szCs w:val="28"/>
+        <w:color w:val="000000"/>
       </w:rPr>
     </w:rPrDefault>
   </w:docDefaults>
   <w:style w:type="paragraph" w:styleId="Normal" w:default="1">
     <w:name w:val="Normal"/>
     <w:pPr>
-      <w:spacing w:after="160" w:line="320" w:lineRule="auto"/>
+      <w:spacing w:after="160" w:line="360" w:lineRule="auto"/>
     </w:pPr>
   </w:style>
   <w:style w:type="paragraph" w:styleId="Heading1">
@@ -895,9 +1037,9 @@ class DocxGeneratorService {
     <w:rPr>
       <w:b/>
       <w:bCs/>
-      <w:color w:val="881337"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
+      <w:color w:val="000000"/>
+      <w:sz w:val="40"/>
+      <w:szCs w:val="40"/>
     </w:rPr>
   </w:style>
 </w:styles>''';
@@ -907,8 +1049,7 @@ class DocxGeneratorService {
     final sb = StringBuffer();
     final isRtl = report.languageCode != 'en';
     final bidiAttr = isRtl ? '<w:bidi/>' : '';
-    final fontName = isRtl ? 'Noto Naskh Arabic' : 'Times New Roman';
-    final alignAttr = isRtl ? '<w:jc w:val="right"/>' : '<w:jc w:val="both"/>';
+    final fontName = isRtl ? 'Calibri' : 'Times New Roman';
 
     sb.write('''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
@@ -931,14 +1072,6 @@ class DocxGeneratorService {
                 ? 'وەزارەتا خوێندنا باڵا و ڤەکۆلینێن زانستی'
                 : 'وەزارەتی خوێندنی باڵا و توێژینەوەی زانستی'));
 
-    final reportAboutLabel = report.languageCode == 'en'
-        ? 'Academic Research Report'
-        : (report.languageCode == 'ar'
-            ? 'تقرير أكاديمي علمي'
-            : (report.languageCode == 'badini'
-                ? 'ڕاپۆرتا ئەکادیمی یا زانستی'
-                : 'ڕاپۆرتی ئەکادیمی زانستی'));
-
     final preparedLabel = report.languageCode == 'en'
         ? 'Prepared by:'
         : (report.languageCode == 'ar'
@@ -955,13 +1088,58 @@ class DocxGeneratorService {
                 ? 'ب سەرپەرشتیا:'
                 : 'بەسەرپەرشتیی:'));
 
-    // Header Lines
+    final academicYearLabel = report.languageCode == 'en'
+        ? 'Academic Year:'
+        : (report.languageCode == 'ar'
+            ? 'العام الدراسي:'
+            : (report.languageCode == 'badini'
+                ? 'ساڵا خوێندنا ئەکادیمی:'
+                : 'ساڵی خوێندنی ئەکادیمی:'));
+
+    final yearDisplay = report.academicYear.isNotEmpty ? report.academicYear : '2025 - 2026';
+
+    // Logo Image if present
+    if (report.logoBytes != null && report.logoBytes!.isNotEmpty) {
+      sb.write('''
+    <w:p>
+      <w:pPr><w:jc w:val="center"/><w:spacing w:before="60" w:after="140"/></w:pPr>
+      <w:r>
+        <w:drawing>
+          <wp:inline distT="0" distB="0" distL="0" distR="0" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">
+            <wp:extent cx="685800" cy="685800"/>
+            <wp:docPr id="1" name="Logo"/>
+            <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                  <pic:nvPicPr>
+                    <pic:cNvPr id="1" name="Logo"/>
+                    <pic:cNvPicPr/>
+                  </pic:nvPicPr>
+                  <pic:blipFill>
+                    <a:blip r:embed="rIdLogo" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>
+                    <a:stretch><a:fillRect/></a:stretch>
+                  </pic:blipFill>
+                  <pic:spPr>
+                    <a:xfrm><a:off x="0" y="0"/><a:ext cx="685800" cy="685800"/></a:xfrm>
+                    <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+                  </pic:spPr>
+                </pic:pic>
+              </a:graphicData>
+            </a:graphic>
+          </wp:inline>
+        </w:drawing>
+      </w:r>
+    </w:p>''');
+    }
+
+    // Header Lines (Solid Black)
     for (var hLine in [ministryLine1, ministryLine2, report.universityName, report.departmentName]) {
+      if (hLine.trim().isEmpty) continue;
       sb.write('''
     <w:p>
       <w:pPr>$bidiAttr<w:jc w:val="${isRtl ? 'right' : 'left'}"/><w:spacing w:after="60"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="22"/><w:szCs w:val="22"/><w:color w:val="475569"/></w:rPr>
+        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="24"/><w:szCs w:val="24"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml(hLine)}</w:t>
       </w:r>
     </w:p>''');
@@ -970,53 +1148,43 @@ class DocxGeneratorService {
     // Spacer
     sb.write('<w:p><w:pPr><w:spacing w:before="600"/></w:pPr></w:p>');
 
-    // Report Type Badge
-    sb.write('''
-    <w:p>
-      <w:pPr>$bidiAttr<w:jc w:val="center"/><w:spacing w:after="160"/></w:pPr>
-      <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="26"/><w:szCs w:val="26"/><w:color w:val="881337"/></w:rPr>
-        <w:t>${_escapeXml(reportAboutLabel)}</w:t>
-      </w:r>
-    </w:p>''');
-
-    // Main Report Title
+    // Main Report Title (Solid Black & Bold, 24pt)
     sb.write('''
     <w:p>
       <w:pPr>$bidiAttr<w:jc w:val="center"/><w:spacing w:before="120" w:after="400"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="44"/><w:szCs w:val="44"/><w:color w:val="0F172A"/></w:rPr>
+        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="48"/><w:szCs w:val="48"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml(cleanTopicTitle(report.title))}</w:t>
       </w:r>
     </w:p>''');
 
-    // Spacer
-    sb.write('<w:p><w:pPr><w:spacing w:before="800"/></w:pPr></w:p>');
+    // Spacer before Student & Supervisor (Positioned lower down)
+    sb.write('<w:p><w:pPr><w:spacing w:before="1200"/></w:pPr></w:p>');
 
-    // Metadata: Prepared by & Supervisor
+    // Metadata: Prepared by & Supervisor (Solid Black, Size 14)
     sb.write('''
     <w:p>
       <w:pPr>$bidiAttr<w:jc w:val="${isRtl ? 'right' : 'left'}"/><w:spacing w:after="100"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="24"/><w:szCs w:val="24"/><w:color w:val="1E293B"/></w:rPr>
+        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml('$preparedLabel ${report.studentName}')}</w:t>
       </w:r>
     </w:p>
     <w:p>
       <w:pPr>$bidiAttr<w:jc w:val="${isRtl ? 'right' : 'left'}"/><w:spacing w:after="160"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="24"/><w:szCs w:val="24"/><w:color w:val="1E293B"/></w:rPr>
+        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml('$supervisorLabel ${report.supervisorName}')}</w:t>
       </w:r>
     </w:p>''');
 
-    // Academic Year
+    // Academic Year (Solid Black, Size 14)
     sb.write('''
     <w:p>
-      <w:pPr>$bidiAttr<w:jc w:val="center"/><w:spacing w:before="400"/></w:pPr>
+      <w:pPr>$bidiAttr<w:jc w:val="center"/><w:spacing w:before="600"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="24"/><w:szCs w:val="24"/><w:color w:val="64748B"/></w:rPr>
-        <w:t>${_escapeXml(report.academicYear)}</w:t>
+        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
+        <w:t>${_escapeXml('$academicYearLabel $yearDisplay')}</w:t>
       </w:r>
     </w:p>''');
 
@@ -1028,12 +1196,12 @@ class DocxGeneratorService {
       final page = report.pages[i];
 
       if (page.pageType == 'toc') {
-        // Table of Contents Header
+        // Table of Contents Header (Size 20 Bold)
         sb.write('''
     <w:p>
       <w:pPr>$bidiAttr<w:jc w:val="center"/><w:spacing w:before="240" w:after="240"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="34"/><w:szCs w:val="34"/><w:color w:val="881337"/></w:rPr>
+        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="40"/><w:szCs w:val="40"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml(page.pageTitle)}</w:t>
       </w:r>
     </w:p>''');
@@ -1050,18 +1218,18 @@ class DocxGeneratorService {
     <w:p>
       <w:pPr>$bidiAttr<w:jc w:val="${isRtl ? 'right' : 'left'}"/><w:spacing w:after="120"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="22"/><w:szCs w:val="22"/><w:color w:val="1E293B"/></w:rPr>
+        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml(cleanItem)}   . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   $pageStr</w:t>
       </w:r>
     </w:p>''');
         }
       } else if (page.pageType == 'references') {
-        // References Header
+        // References Header (Size 20 Bold)
         sb.write('''
     <w:p>
       <w:pPr>$bidiAttr<w:jc w:val="center"/><w:spacing w:before="240" w:after="240"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="34"/><w:szCs w:val="34"/><w:color w:val="881337"/></w:rPr>
+        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="40"/><w:szCs w:val="40"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml(page.pageTitle)}</w:t>
       </w:r>
     </w:p>''');
@@ -1070,55 +1238,55 @@ class DocxGeneratorService {
           final ref = page.bulletPoints[r];
           sb.write('''
     <w:p>
-      <w:pPr>$bidiAttr$alignAttr<w:spacing w:after="180"/></w:pPr>
+      <w:pPr>$bidiAttr<w:jc w:val="${isRtl ? 'right' : 'both'}"/><w:spacing w:after="180"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="20"/><w:szCs w:val="20"/><w:color w:val="881337"/></w:rPr>
+        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml('[${r + 1}] ')}</w:t>
       </w:r>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:color w:val="1E293B"/></w:rPr>
+        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml(ref)}</w:t>
       </w:r>
     </w:p>''');
         }
       } else {
-        // Content Pages (2 Sections)
+        // Content Pages (2 Sections per Page)
         for (var sec in page.sections) {
-          // Section Title
+          // Section Title (Size 20 Bold - CENTERED as requested)
           sb.write('''
     <w:p>
-      <w:pPr>$bidiAttr<w:jc w:val="${isRtl ? 'right' : 'left'}"/><w:spacing w:before="200" w:after="100"/></w:pPr>
+      <w:pPr>$bidiAttr<w:jc w:val="center"/><w:spacing w:before="240" w:after="120"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="881337"/></w:rPr>
+        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="40"/><w:szCs w:val="40"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml('${sec.sectionNumber}. ${sec.title}')}</w:t>
       </w:r>
     </w:p>''');
 
-          // Paragraphs
+          // Paragraphs (Size 14 Regular - RIGHT-ALIGNED for Kurdish)
           for (var p in sec.content.split('\n')) {
             final trimmedP = p.trim();
             if (trimmedP.isEmpty) continue;
             sb.write('''
     <w:p>
-      <w:pPr>$bidiAttr$alignAttr<w:spacing w:after="140" w:line="320" w:lineRule="auto"/></w:pPr>
+      <w:pPr>$bidiAttr<w:jc w:val="${isRtl ? 'right' : 'both'}"/><w:spacing w:after="160" w:line="360" w:lineRule="auto"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:sz w:val="22"/><w:szCs w:val="22"/><w:color w:val="1E293B"/></w:rPr>
+        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml(trimmedP)}</w:t>
       </w:r>
     </w:p>''');
           }
 
-          // Bullet points
+          // Bullet points (Size 14 - RIGHT-ALIGNED for Kurdish)
           for (var b in sec.bulletPoints) {
             sb.write('''
     <w:p>
-      <w:pPr>$bidiAttr$alignAttr<w:spacing w:after="80"/><w:ind w:left="360" w:right="360"/></w:pPr>
+      <w:pPr>$bidiAttr<w:jc w:val="${isRtl ? 'right' : 'left'}"/><w:spacing w:after="100"/><w:ind w:left="360" w:right="360"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="20"/><w:szCs w:val="20"/><w:color w:val="881337"/></w:rPr>
+        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
         <w:t>• </w:t>
       </w:r>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:color w:val="334155"/></w:rPr>
+        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml(b)}</w:t>
       </w:r>
     </w:p>''');

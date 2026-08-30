@@ -34,23 +34,23 @@ class ReportPdfGeneratorService {
   static Future<void> _initFonts() async {
     if (_cachedNotoRegular == null || _cachedNotoRegular!.isEmpty) {
       _cachedNotoRegular = await _loadFontFromPaths([
+        'assets/fonts/NotoNaskhArabic-Regular.ttf',
+        'assets/fonts/NotoSansArabic-Regular.ttf',
+        'assets/fonts/DroidKufi-Regular.ttf',
         'assets/fonts/calibri.ttf',
         'C:/Windows/Fonts/calibri.ttf',
         'assets/fonts/arial.ttf',
         'C:/Windows/Fonts/arial.ttf',
-        'assets/fonts/DroidKufi-Regular.ttf',
-        'assets/fonts/NotoNaskhArabic-Regular.ttf',
-        'assets/fonts/NotoSansArabic-Regular.ttf',
       ]);
     }
     if (_cachedNotoBold == null || _cachedNotoBold!.isEmpty) {
       _cachedNotoBold = await _loadFontFromPaths([
+        'assets/fonts/NotoNaskhArabic-Bold.ttf',
+        'assets/fonts/NotoSansArabic-Bold.ttf',
         'assets/fonts/calibrib.ttf',
         'C:/Windows/Fonts/calibrib.ttf',
         'assets/fonts/arialbd.ttf',
         'C:/Windows/Fonts/arialbd.ttf',
-        'assets/fonts/NotoNaskhArabic-Bold.ttf',
-        'assets/fonts/NotoSansArabic-Bold.ttf',
       ]);
     }
     if (_cachedTimesRegular == null || _cachedTimesRegular!.isEmpty) {
@@ -117,6 +117,9 @@ class ReportPdfGeneratorService {
 
   /// Generates a pristine 8-page academic PDF document bytes
   static Future<List<int>> createPdfBytes(AcademicReportModel report) async {
+    _cachedNotoRegular = null;
+    _cachedNotoBold = null;
+    _cachedTimesRegular = null;
     await _initFonts();
 
     // ── Pre-fetch images asynchronously for content pages ──
@@ -143,39 +146,39 @@ class ReportPdfGeneratorService {
     final regularFontBytes = isRtl ? _cachedNotoRegular : _cachedTimesRegular;
     final boldFontBytes = isRtl ? _cachedNotoBold : _cachedTimesBold;
 
-    // Academic Typography using official Google Noto Fonts
+    // Academic Typography
     final PdfFont bigTitleFont = (boldFontBytes != null && boldFontBytes.isNotEmpty)
-        ? PdfTrueTypeFont(boldFontBytes, isRtl ? 19 : 21, style: PdfFontStyle.bold)
-        : PdfStandardFont(PdfFontFamily.timesRoman, isRtl ? 19 : 21, style: PdfFontStyle.bold);
-
-    final PdfFont midTitleFont = (boldFontBytes != null && boldFontBytes.isNotEmpty)
-        ? PdfTrueTypeFont(boldFontBytes, 13.5, style: PdfFontStyle.bold)
-        : PdfStandardFont(PdfFontFamily.timesRoman, 14.5, style: PdfFontStyle.bold);
+        ? PdfTrueTypeFont(boldFontBytes, isRtl ? 22 : 24, style: PdfFontStyle.bold)
+        : PdfStandardFont(PdfFontFamily.timesRoman, isRtl ? 22 : 24, style: PdfFontStyle.bold);
 
     final PdfFont sectionTitleFont = (boldFontBytes != null && boldFontBytes.isNotEmpty)
-        ? PdfTrueTypeFont(boldFontBytes, 11, style: PdfFontStyle.bold)
-        : PdfStandardFont(PdfFontFamily.timesRoman, 12, style: PdfFontStyle.bold);
+        ? PdfTrueTypeFont(boldFontBytes, 20, style: PdfFontStyle.bold)
+        : PdfStandardFont(PdfFontFamily.timesRoman, 20, style: PdfFontStyle.bold);
+
+    final PdfFont midTitleFont = (boldFontBytes != null && boldFontBytes.isNotEmpty)
+        ? PdfTrueTypeFont(boldFontBytes, 18, style: PdfFontStyle.bold)
+        : PdfStandardFont(PdfFontFamily.timesRoman, 18, style: PdfFontStyle.bold);
 
     final PdfFont boldBodyFont = (boldFontBytes != null && boldFontBytes.isNotEmpty)
-        ? PdfTrueTypeFont(boldFontBytes, 9.5, style: PdfFontStyle.bold)
-        : PdfStandardFont(PdfFontFamily.timesRoman, 10, style: PdfFontStyle.bold);
+        ? PdfTrueTypeFont(boldFontBytes, 14, style: PdfFontStyle.bold)
+        : PdfStandardFont(PdfFontFamily.timesRoman, 14, style: PdfFontStyle.bold);
 
     final PdfFont bodyFont = (regularFontBytes != null && regularFontBytes.isNotEmpty)
-        ? PdfTrueTypeFont(regularFontBytes, 9.5)
-        : PdfStandardFont(PdfFontFamily.timesRoman, 9.5);
+        ? PdfTrueTypeFont(regularFontBytes, 14)
+        : PdfStandardFont(PdfFontFamily.timesRoman, 14);
 
     final PdfFont smallMutedFont = (regularFontBytes != null && regularFontBytes.isNotEmpty)
-        ? PdfTrueTypeFont(regularFontBytes, 8)
-        : PdfStandardFont(PdfFontFamily.timesRoman, 8);
+        ? PdfTrueTypeFont(regularFontBytes, 12)
+        : PdfStandardFont(PdfFontFamily.timesRoman, 12);
 
     // Academic Color Palette
     final PdfBrush primaryNavy = PdfSolidBrush(PdfColor(15, 23, 42));     // #0F172A
     final PdfBrush academicMaroon = PdfSolidBrush(PdfColor(136, 19, 55)); // #881337
-    final PdfBrush bodyBrush = PdfSolidBrush(PdfColor(30, 41, 59));       // #1E293B
-    final PdfBrush mutedBrush = PdfSolidBrush(PdfColor(100, 116, 139));   // #64748B
+    final PdfBrush bodyBrush = PdfSolidBrush(PdfColor(0, 0, 0));          // #000000 Solid Black
+    final PdfBrush mutedBrush = PdfSolidBrush(PdfColor(71, 85, 105));     // #475569
+    final PdfBrush solidBlack = PdfSolidBrush(PdfColor(0, 0, 0));         // #000000 Solid Black
     final PdfPen subtleBorder = PdfPen(PdfColor(226, 232, 240), width: 0.8);
 
-    final int totalPages = report.pages.length;
     final cleanMainTitle = DocxGeneratorService.cleanTopicTitle(report.title);
 
     for (int pIndex = 0; pIndex < report.pages.length; pIndex++) {
@@ -184,71 +187,19 @@ class ReportPdfGeneratorService {
       final PdfGraphics g = page.graphics;
       final Size pageSize = page.getClientSize();
 
-      final double margin = 0;
-
-      // ── RUNNING HEADER & FOOTER (PAGES 2 TO 8) ──
+      // ── RUNNING FOOTER ONLY (PAGES 2 TO 8) ──
+      // Requirement 6: No header at all, in footer only page numbers
       if (pIndex > 0) {
-        // Running Header (Top)
-        g.drawLine(subtleBorder, Offset(margin, 20), Offset(pageSize.width, 20));
-
-        final headerTopic = cleanMainTitle.length > 40 ? '${cleanMainTitle.substring(0, 38)}...' : cleanMainTitle;
-        if (isRtl) {
-          g.drawString(
-            _fixText(headerTopic, true),
-            smallMutedFont,
-            brush: mutedBrush,
-            bounds: Rect.fromLTWH(0, 6, pageSize.width, 13),
-            format: _fmt(PdfTextAlignment.right, isRtl),
-          );
-          g.drawString(
-            _fixText(report.universityName, true),
-            smallMutedFont,
-            brush: mutedBrush,
-            bounds: Rect.fromLTWH(0, 6, pageSize.width, 13),
-            format: _fmt(PdfTextAlignment.left, isRtl),
-          );
-        } else {
-          g.drawString(
-            report.universityName,
-            smallMutedFont,
-            brush: mutedBrush,
-            bounds: Rect.fromLTWH(0, 6, pageSize.width, 13),
-            format: _fmt(PdfTextAlignment.left, isRtl),
-          );
-          g.drawString(
-            headerTopic,
-            smallMutedFont,
-            brush: mutedBrush,
-            bounds: Rect.fromLTWH(0, 6, pageSize.width, 13),
-            format: _fmt(PdfTextAlignment.right, isRtl),
-          );
-        }
-
-        // Running Footer (Bottom)
         final double footerY = pageSize.height - 18;
-        g.drawLine(subtleBorder, Offset(margin, footerY - 5), Offset(pageSize.width, footerY - 5));
-
         final pageNumKurdish = (pIndex + 1).toString().replaceAll('1', '١').replaceAll('2', '٢').replaceAll('3', '٣').replaceAll('4', '٤').replaceAll('5', '٥').replaceAll('6', '٦').replaceAll('7', '٧').replaceAll('8', '٨');
-        final totalPagesKurdish = totalPages.toString().replaceAll('8', '٨');
-
-        final pageNumText = isRtl
-            ? (report.languageCode == 'ar' ? 'صفحة $pageNumKurdish من $totalPagesKurdish' : 'پەڕەی $pageNumKurdish لە $totalPagesKurdish')
-            : 'Page ${pIndex + 1} of $totalPages';
+        final pageNumText = isRtl ? pageNumKurdish : '${pIndex + 1}';
 
         g.drawString(
           _fixText(pageNumText, isRtl),
           smallMutedFont,
-          brush: mutedBrush,
-          bounds: Rect.fromLTWH(0, footerY, pageSize.width, 13),
+          brush: solidBlack,
+          bounds: Rect.fromLTWH(0, footerY, pageSize.width, 16),
           format: _fmt(PdfTextAlignment.center, isRtl),
-        );
-
-        g.drawString(
-          'ZankoAI Academic Suite',
-          smallMutedFont,
-          brush: mutedBrush,
-          bounds: Rect.fromLTWH(0, footerY, pageSize.width, 13),
-          format: _fmt(isRtl ? PdfTextAlignment.left : PdfTextAlignment.right, isRtl),
         );
       }
 
@@ -268,14 +219,6 @@ class ReportPdfGeneratorService {
                 : (report.languageCode == 'badini'
                     ? 'وەزارەتا خوێندنا باڵا و ڤەکۆلینێن زانستی'
                     : 'وەزارەتی خوێندنی باڵا و توێژینەوەی زانستی'));
-
-        final reportAboutLabel = report.languageCode == 'en'
-            ? 'ACADEMIC RESEARCH REPORT'
-            : (report.languageCode == 'ar'
-                ? 'تقرير بحثي أكاديمي'
-                : (report.languageCode == 'badini'
-                    ? 'ڕاپۆرتا ئەکادیمی یا زانستی'
-                    : 'ڕاپۆرتی ئەکادیمی زانستی'));
 
         final preparedLabel = report.languageCode == 'en'
             ? 'Prepared by:'
@@ -301,42 +244,10 @@ class ReportPdfGeneratorService {
                     ? 'ساڵا خوێندنا ئەکادیمی:'
                     : 'ساڵی خوێندنی ئەکادیمی:'));
 
-        // ── 1. Elegant Academic Outer Frame (چوارچێوەی فەرمی ئەکادیمی) ──
-        final double framePadding = 6;
-        final double frameW = pageSize.width - (framePadding * 2);
-        final double frameH = pageSize.height - (framePadding * 2);
-
-        // Outer Primary Navy Border
-        g.drawRectangle(
-          pen: PdfPen(PdfColor(15, 23, 42), width: 1.5),
-          bounds: Rect.fromLTWH(framePadding, framePadding, frameW, frameH),
-        );
-        // Inner Maroon Accent Border
-        g.drawRectangle(
-          pen: PdfPen(PdfColor(136, 19, 55), width: 0.6),
-          bounds: Rect.fromLTWH(framePadding + 3, framePadding + 3, frameW - 6, frameH - 6),
-        );
-
-        // Corner Ornaments
-        final double cLen = 14;
-        final cornerPen = PdfPen(PdfColor(136, 19, 55), width: 2.0);
-        // Top-Left
-        g.drawLine(cornerPen, Offset(framePadding + 1, framePadding + 1), Offset(framePadding + 1 + cLen, framePadding + 1));
-        g.drawLine(cornerPen, Offset(framePadding + 1, framePadding + 1), Offset(framePadding + 1, framePadding + 1 + cLen));
-        // Top-Right
-        g.drawLine(cornerPen, Offset(framePadding + frameW - 1, framePadding + 1), Offset(framePadding + frameW - 1 - cLen, framePadding + 1));
-        g.drawLine(cornerPen, Offset(framePadding + frameW - 1, framePadding + 1), Offset(framePadding + frameW - 1, framePadding + 1 + cLen));
-        // Bottom-Left
-        g.drawLine(cornerPen, Offset(framePadding + 1, framePadding + frameH - 1), Offset(framePadding + 1 + cLen, framePadding + frameH - 1));
-        g.drawLine(cornerPen, Offset(framePadding + 1, framePadding + frameH - 1), Offset(framePadding + 1, framePadding + frameH - 1 - cLen));
-        // Bottom-Right
-        g.drawLine(cornerPen, Offset(framePadding + frameW - 1, framePadding + frameH - 1), Offset(framePadding + frameW - 1 - cLen, framePadding + frameH - 1));
-        g.drawLine(cornerPen, Offset(framePadding + frameW - 1, framePadding + frameH - 1), Offset(framePadding + frameW - 1, framePadding + frameH - 1 - cLen));
-
-        // ── 2. Official University Header (سەردێڕی فەرمی زانکۆ) ──
-        final double logoSize = 58;
+        // ── 1. Official University Header (سەردێڕی فەرمی زانکۆ) ──
+        final double logoSize = 64;
         final double logoX = (pageSize.width - logoSize) / 2;
-        double headerY = 22;
+        double headerY = 30;
 
         if (report.logoBytes != null && report.logoBytes!.isNotEmpty) {
           try {
@@ -349,140 +260,87 @@ class ReportPdfGeneratorService {
           _drawOfficialEmblem(g, logoX, headerY, logoSize, logoSize);
         }
 
-        headerY += logoSize + 10;
+        headerY += logoSize + 14;
 
         // Ministry Line 1
         g.drawString(
           _fixText(ministryLine1, isRtl),
-          smallMutedFont,
-          brush: mutedBrush,
-          bounds: Rect.fromLTWH(20, headerY, pageSize.width - 40, 14),
+          boldBodyFont,
+          brush: solidBlack,
+          bounds: Rect.fromLTWH(20, headerY, pageSize.width - 40, 18),
           format: PdfStringFormat(alignment: PdfTextAlignment.center),
         );
-        headerY += 13;
+        headerY += 18;
 
         // Ministry Line 2
         g.drawString(
           _fixText(ministryLine2, isRtl),
-          smallMutedFont,
-          brush: mutedBrush,
-          bounds: Rect.fromLTWH(20, headerY, pageSize.width - 40, 14),
-          format: PdfStringFormat(alignment: PdfTextAlignment.center),
-        );
-        headerY += 15;
-
-        // University Name (Bold & Large)
-        g.drawString(
-          _fixText(report.universityName, isRtl),
-          midTitleFont,
-          brush: primaryNavy,
-          bounds: Rect.fromLTWH(20, headerY, pageSize.width - 40, 20),
+          boldBodyFont,
+          brush: solidBlack,
+          bounds: Rect.fromLTWH(20, headerY, pageSize.width - 40, 18),
           format: PdfStringFormat(alignment: PdfTextAlignment.center),
         );
         headerY += 20;
 
-        // Department Name
+        // University Name (Bold & Large Solid Black)
+        g.drawString(
+          _fixText(report.universityName, isRtl),
+          sectionTitleFont,
+          brush: solidBlack,
+          bounds: Rect.fromLTWH(20, headerY, pageSize.width - 40, 24),
+          format: PdfStringFormat(alignment: PdfTextAlignment.center),
+        );
+        headerY += 24;
+
+        // Department Name (Bold Solid Black)
         if (report.departmentName.isNotEmpty) {
           g.drawString(
             _fixText(report.departmentName, isRtl),
             boldBodyFont,
-            brush: academicMaroon,
-            bounds: Rect.fromLTWH(20, headerY, pageSize.width - 40, 16),
+            brush: solidBlack,
+            bounds: Rect.fromLTWH(20, headerY, pageSize.width - 40, 18),
             format: PdfStringFormat(alignment: PdfTextAlignment.center),
           );
-          headerY += 18;
+          headerY += 22;
         }
 
-        // Header Divider
-        headerY += 4;
-        final double divW = pageSize.width - 80;
-        final double divX = 40;
-        g.drawLine(subtleBorder, Offset(divX, headerY), Offset(divX + divW, headerY));
-        g.drawLine(PdfPen(PdfColor(136, 19, 55), width: 1.5), Offset(divX + (divW * 0.35), headerY), Offset(divX + (divW * 0.65), headerY));
+        // Header Divider Line
+        headerY += 6;
+        final double divW = pageSize.width - 120;
+        final double divX = 60;
+        g.drawLine(PdfPen(PdfColor(15, 23, 42), width: 1.2), Offset(divX, headerY), Offset(divX + divW, headerY));
 
-        // ── 3. Main Report Title Card (ناونیشانی سەرەکی ڕاپۆرت) ──
-        double titleCardY = headerY + 22;
-        final titleLines = _wrapRtlTextDynamic(cleanMainTitle, bigTitleFont, pageSize.width - 60, isRtl);
-        final double titleBoxH = (titleLines.length * 28.0) + 52.0;
+        // ── 2. Main Report Title (ناونیشانی سەرەکی ڕاپۆرت - ڕاستەوخۆ بە قەبارەی گەورە و تۆخ) ──
+        double titleCardY = headerY + 45;
+        final titleLines = _wrapRtlTextDynamic(cleanMainTitle, bigTitleFont, pageSize.width - 40, isRtl);
 
-        // Title Background Card
-        g.drawRectangle(
-          brush: PdfSolidBrush(PdfColor(248, 250, 252)),
-          pen: subtleBorder,
-          bounds: Rect.fromLTWH(20, titleCardY, pageSize.width - 40, titleBoxH),
-        );
-
-        // Top & Bottom Accent Bars
-        g.drawRectangle(
-          brush: academicMaroon,
-          bounds: Rect.fromLTWH(20, titleCardY, pageSize.width - 40, 3),
-        );
-
-        // Pill Badge: "ڕاپۆرتی ئەکادیمی زانستی"
-        final double badgeW = 180;
-        final double badgeH = 20;
-        final double badgeX = (pageSize.width - badgeW) / 2;
-        final double badgeY = titleCardY + 12;
-
-        g.drawRectangle(
-          brush: PdfSolidBrush(PdfColor(241, 245, 249)),
-          pen: subtleBorder,
-          bounds: Rect.fromLTWH(badgeX, badgeY, badgeW, badgeH),
-        );
-        g.drawString(
-          _fixText(reportAboutLabel, isRtl),
-          boldBodyFont,
-          brush: academicMaroon,
-          bounds: Rect.fromLTWH(badgeX, badgeY + 2.5, badgeW, 16),
-          format: PdfStringFormat(alignment: PdfTextAlignment.center),
-        );
-
-        // Title Lines
-        double tY = badgeY + badgeH + 10;
         for (var tLine in titleLines) {
           g.drawString(
             tLine,
             bigTitleFont,
-            brush: primaryNavy,
-            bounds: Rect.fromLTWH(30, tY, pageSize.width - 60, 26),
+            brush: solidBlack,
+            bounds: Rect.fromLTWH(20, titleCardY, pageSize.width - 40, 30),
             format: PdfStringFormat(alignment: PdfTextAlignment.center),
           );
-          tY += 28;
+          titleCardY += 32;
         }
 
-        // ── 4. Prepared by & Supervisor Card (زانیاریی قوتابی و سەرپەرشتیار) ──
-        double infoY = titleCardY + titleBoxH + 24;
-        final double infoCardH = 115;
-        final double infoCardW = pageSize.width - 40;
-
-        // Info Card Frame
-        g.drawRectangle(
-          brush: PdfSolidBrush(PdfColor(255, 255, 255)),
-          pen: subtleBorder,
-          bounds: Rect.fromLTWH(20, infoY, infoCardW, infoCardH),
-        );
-
-        // Inner subtle column divider
-        g.drawLine(
-          subtleBorder,
-          Offset(pageSize.width / 2, infoY + 12),
-          Offset(pageSize.width / 2, infoY + infoCardH - 12),
-        );
-
-        final double colWidth = (infoCardW - 30) / 2;
-        final double colRightX = isRtl ? (pageSize.width / 2) + 8 : 30;
-        final double colLeftX = isRtl ? 30 : (pageSize.width / 2) + 8;
+        // ── 3. Prepared by & Supervisor (زانیاریی قوتابی و سەرپەرشتیار لە خوارترەوە) ──
+        final double infoY = pageSize.height - 180;
+        final double colWidth = (pageSize.width - 60) / 2;
+        final double colRightX = isRtl ? (pageSize.width / 2) + 10 : 30;
+        final double colLeftX = isRtl ? 30 : (pageSize.width / 2) + 10;
 
         // Right Box: Prepared by (ئامادەکردنی خوێندکار)
-        double cRightY = infoY + 14;
+        double cRightY = infoY;
         g.drawString(
           _fixText(preparedLabel, isRtl),
-          midTitleFont,
-          brush: academicMaroon,
+          boldBodyFont,
+          brush: solidBlack,
           bounds: Rect.fromLTWH(colRightX, cRightY, colWidth, 18),
           format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
         );
-        cRightY += 22;
+        cRightY += 20;
 
         final studentList = report.studentName
             .split(RegExp(r'[\n\r,?]+'))
@@ -494,48 +352,44 @@ class ReportPdfGeneratorService {
           g.drawString(
             _fixText(st, isRtl),
             boldBodyFont,
-            brush: primaryNavy,
-            bounds: Rect.fromLTWH(colRightX, cRightY, colWidth, 16),
+            brush: solidBlack,
+            bounds: Rect.fromLTWH(colRightX, cRightY, colWidth, 18),
             format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
           );
-          cRightY += 17;
+          cRightY += 18;
         }
 
         // Left Box: Supervised by (بەسەرپەرشتیی مامۆستا)
-        double cLeftY = infoY + 14;
+        double cLeftY = infoY;
         g.drawString(
           _fixText(supervisorLabel, isRtl),
-          midTitleFont,
-          brush: academicMaroon,
+          boldBodyFont,
+          brush: solidBlack,
           bounds: Rect.fromLTWH(colLeftX, cLeftY, colWidth, 18),
           format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
         );
-        cLeftY += 22;
+        cLeftY += 20;
 
         g.drawString(
           _fixText(report.supervisorName, isRtl),
           boldBodyFont,
-          brush: primaryNavy,
-          bounds: Rect.fromLTWH(colLeftX, cLeftY, colWidth, 16),
+          brush: solidBlack,
+          bounds: Rect.fromLTWH(colLeftX, cLeftY, colWidth, 18),
           format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
         );
-        cLeftY += 18;
 
-        // ── 5. Academic Year at Bottom (ساڵی خوێندن) ──
-        final double bottomY = pageSize.height - 42;
-        g.drawLine(subtleBorder, Offset(60, bottomY - 10), Offset(pageSize.width - 60, bottomY - 10));
-
-        final yearDisplay = report.academicYear.isNotEmpty ? report.academicYear : '2024 - 2025';
-        final yearText = isRtl ? '$stageLabel $yearDisplay' : 'Academic Session: $yearDisplay';
+        // ── 4. Academic Year at Bottom (ساڵی خوێندن) ──
+        final double bottomY = pageSize.height - 35;
+        final yearDisplay = report.academicYear.isNotEmpty ? report.academicYear : '2025 - 2026';
+        final yearText = isRtl ? '$stageLabel $yearDisplay' : 'Academic Year: $yearDisplay';
 
         g.drawString(
           _fixText(yearText, isRtl),
-          midTitleFont,
-          brush: primaryNavy,
+          boldBodyFont,
+          brush: solidBlack,
           bounds: Rect.fromLTWH(20, bottomY, pageSize.width - 40, 20),
           format: PdfStringFormat(alignment: PdfTextAlignment.center),
         );
-
       } else if (pageModel.pageType == 'toc') {
         // ── PAGE 2: TABLE OF CONTENTS (پێڕستی ناوەڕۆک) ──
         double currY = 40;
@@ -734,9 +588,9 @@ class ReportPdfGeneratorService {
         for (int sIdx = 0; sIdx < sections.length && sIdx < 2; sIdx++) {
           final sec = sections[sIdx];
 
-          // 1. Section Header Badge
+          // 1. Section Header Badge (Size 20 Bold)
           final secHeader = '${sec.sectionNumber}. ${sec.title}';
-          final double headerBoxH = 22;
+          final double headerBoxH = 28;
 
           g.drawRectangle(
             brush: PdfSolidBrush(PdfColor(241, 245, 249)),
@@ -754,13 +608,13 @@ class ReportPdfGeneratorService {
           g.drawString(
             _fixText(secHeader, isRtl),
             sectionTitleFont,
-            brush: academicMaroon,
-            bounds: Rect.fromLTWH(10, currentY + 3.5, pageSize.width - 20, 16),
+            brush: solidBlack,
+            bounds: Rect.fromLTWH(10, currentY + 2.0, pageSize.width - 20, 24),
             format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
           );
-          currentY += headerBoxH + 8;
+          currentY += headerBoxH + 10;
 
-          // 2. Section Paragraphs
+          // 2. Section Paragraphs (Size 14 Regular)
           final paragraphs = sec.content.split('\n');
           for (var p in paragraphs) {
             final trimmedP = p.trim();
@@ -772,15 +626,15 @@ class ReportPdfGeneratorService {
                 line,
                 bodyFont,
                 brush: bodyBrush,
-                bounds: Rect.fromLTWH(6, currentY, pageSize.width - 12, 16),
+                bounds: Rect.fromLTWH(6, currentY, pageSize.width - 12, 19),
                 format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
               );
-              currentY += 15.5;
+              currentY += 19.5;
             }
             currentY += 6; // Paragraph gap
           }
 
-          // 3. Section Bullet Points
+          // 3. Section Bullet Points (Size 14)
           for (var bullet in sec.bulletPoints) {
             final bulletWrapped = _wrapRtlTextDynamic(bullet, bodyFont, pageSize.width - 32, isRtl);
 
@@ -789,8 +643,8 @@ class ReportPdfGeneratorService {
             g.drawString(
               '•',
               boldBodyFont,
-              brush: academicMaroon,
-              bounds: Rect.fromLTWH(bulletX, currentY, 12, 16),
+              brush: solidBlack,
+              bounds: Rect.fromLTWH(bulletX, currentY, 12, 19),
               format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
             );
 
@@ -800,10 +654,10 @@ class ReportPdfGeneratorService {
                 bLine,
                 bodyFont,
                 brush: bodyBrush,
-                bounds: Rect.fromLTWH(bTextX, currentY, pageSize.width - 26, 16),
+                bounds: Rect.fromLTWH(bTextX, currentY, pageSize.width - 26, 19),
                 format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
               );
-              currentY += 15.5;
+              currentY += 19.5;
             }
             currentY += 3;
           }
@@ -882,19 +736,19 @@ class ReportPdfGeneratorService {
     g.drawEllipse(
       Rect.fromLTWH(x, y, w, h),
       brush: PdfSolidBrush(PdfColor(241, 245, 249)),
-      pen: PdfPen(PdfColor(136, 19, 55), width: 1.5),
+      pen: PdfPen(PdfColor(15, 23, 42), width: 1.5),
     );
     // Inner accent ring
     g.drawEllipse(
       Rect.fromLTWH(x + 4, y + 4, w - 8, h - 8),
-      pen: PdfPen(PdfColor(203, 213, 225), width: 0.8),
+      pen: PdfPen(PdfColor(15, 23, 42), width: 0.8),
     );
     // Center Academic Icon representation
     final PdfFont capFont = PdfStandardFont(PdfFontFamily.timesRoman, 18, style: PdfFontStyle.bold);
     g.drawString(
       'Z',
       capFont,
-      brush: PdfSolidBrush(PdfColor(136, 19, 55)),
+      brush: PdfSolidBrush(PdfColor(15, 23, 42)),
       bounds: Rect.fromLTWH(x, y + (h * 0.28), w, 24),
       format: PdfStringFormat(alignment: PdfTextAlignment.center),
     );

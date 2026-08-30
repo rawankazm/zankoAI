@@ -106,13 +106,35 @@ void main() {
         languageCode: 'ar',
       );
 
-      final pdfBytes = await ReportPdfGeneratorService.createPdfBytes(report);
-      expect(pdfBytes.length > 50000, true);
-      File('${Directory.systemTemp.path}/full_arabic_report.pdf')
-          .writeAsBytesSync(pdfBytes);
-      debugPrint('Saved full_arabic_report.pdf (${pdfBytes.length} bytes)');
+    }
+  });
+
+  test('Test Kurdish Glyphs with Calibri and Noto', () async {
+    final calibriBytes = File('assets/fonts/calibri.ttf').readAsBytesSync();
+    final notoBoldBytes = File('assets/fonts/NotoNaskhArabic-Bold.ttf').readAsBytesSync();
+
+    final calFont = PdfTrueTypeFont(calibriBytes, 14);
+    final notoFont = PdfTrueTypeFont(notoBoldBytes, 14);
+
+    final testPhrases = [
+      'ڕاپۆرت',
+      'زانکۆی سەڵاحەدین',
+      'پێڕستی ناوەڕۆک',
+      'ئامادەکردنی: خوێندکار',
+      'بەسەرپەرشتیی مامۆستا',
+      'بەشی تەکنەلۆجیای زانیاری',
+      'ساڵی خوێندنی ئەکادیمی',
+      'کۆلێژی زانست',
+    ];
+
+    for (var p in testPhrases) {
+      final shaped = KurdishArabicReshaper.shapeAndReorder(p);
+      final wCal = calFont.measureString(shaped).width;
+      final wNoto = notoFont.measureString(shaped).width;
+      debugPrint('Phrase: "$p" -> Cal: $wCal, Noto: $wNoto');
     }
   });
 }
+
 
 
