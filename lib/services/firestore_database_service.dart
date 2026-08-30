@@ -448,25 +448,41 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
 
   @override
   Future<void> addFlashcard(FlashcardModel card) async {
-    await _firestore.collection('flashcards').doc(card.id).set({
-      'front': card.front,
-      'back': card.back,
-      'userId': _userId,
-    });
+    final idx = _flashcards.indexWhere((c) => c.id == card.id);
+    if (idx != -1) {
+      _flashcards[idx] = card;
+    } else {
+      _flashcards.add(card);
+    }
     _flashcardsFlipped++;
     notifyListeners();
+
+    try {
+      if (_userId != null) {
+        await _firestore.collection('flashcards').doc(card.id).set({
+          'front': card.front,
+          'back': card.back,
+          'userId': _userId,
+        });
+      }
+    } catch (_) {}
   }
 
   @override
   Future<void> clearFlashcards() async {
-    final uid = _userId;
-    if (uid == null) return;
-    final batch = _firestore.batch();
-    final snapshot = await _firestore.collection('flashcards').where('userId', isEqualTo: uid).get();
-    for (var doc in snapshot.docs) {
-      batch.delete(doc.reference);
-    }
-    await batch.commit();
+    _flashcards.clear();
+    notifyListeners();
+
+    try {
+      final uid = _userId;
+      if (uid == null) return;
+      final snapshot = await _firestore.collection('flashcards').where('userId', isEqualTo: uid).get();
+      final batch = _firestore.batch();
+      for (var doc in snapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+    } catch (_) {}
   }
 
   @override

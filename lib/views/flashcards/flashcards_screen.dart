@@ -21,6 +21,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
   bool _isGenerating = false;
   int _currentIndex = 0;
   final Set<int> _learnedCardIndices = {};
+  List<FlashcardModel> _localCards = [];
 
   final List<Map<String, String>> _quickTopics = [
     {'title': 'تۆڕەکانی کۆمپیوتەر', 'icon': '🌐'},
@@ -66,26 +67,28 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       if (cards.isEmpty) {
         cards = _generateFallbackCards(topic);
       }
+      setState(() {
+        _localCards = cards;
+        _isGenerating = false;
+        _currentIndex = 0;
+        _learnedCardIndices.clear();
+      });
       await dbService.clearFlashcards();
       for (var card in cards) {
         await dbService.addFlashcard(card);
       }
+    } catch (e) {
+      final fallbackCards = _generateFallbackCards(topic);
       setState(() {
+        _localCards = fallbackCards;
         _isGenerating = false;
         _currentIndex = 0;
         _learnedCardIndices.clear();
       });
-    } catch (e) {
-      final fallbackCards = _generateFallbackCards(topic);
       await dbService.clearFlashcards();
       for (var card in fallbackCards) {
         await dbService.addFlashcard(card);
       }
-      setState(() {
-        _isGenerating = false;
-        _currentIndex = 0;
-        _learnedCardIndices.clear();
-      });
     }
   }
 
@@ -118,6 +121,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
     if (cards.length <= 1) return;
     setState(() {
       cards.shuffle(Random());
+      _localCards = List.from(cards);
       _currentIndex = 0;
       _learnedCardIndices.clear();
     });
@@ -137,7 +141,8 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final dbService = Provider.of<DatabaseService>(context);
 
-    final cards = dbService.flashcards;
+    final dbCards = dbService.flashcards;
+    final cards = _localCards.isNotEmpty ? _localCards : dbCards;
 
     return Directionality(
       textDirection: langProvider.textDirection,

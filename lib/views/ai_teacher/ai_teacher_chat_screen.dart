@@ -302,7 +302,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
           final transcript = await aiService.transcribeAudio(
             bytes,
             'voice_chat.m4a',
-            mimeType: 'audio/m4a',
+            mimeType: 'audio/mp4',
           );
 
           if (mounted) {
@@ -872,34 +872,41 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
             ),
             const SizedBox(height: 16),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildAttachmentOption(
-                  icon: CupertinoIcons.camera_fill,
-                  color: Colors.amberAccent,
-                  label: 'کامێرای هاوکێشە',
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _pickAndSolveImage(source: ImageSource.camera);
-                  },
+                Expanded(
+                  child: _buildAttachmentOption(
+                    icon: CupertinoIcons.camera_fill,
+                    color: Colors.amberAccent,
+                    label: 'کامێرای هاوکێشە',
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _pickAndSolveImage(source: ImageSource.camera);
+                    },
+                  ),
                 ),
-                _buildAttachmentOption(
-                  icon: CupertinoIcons.photo,
-                  color: Colors.purpleAccent,
-                  label: 'وێنەی گەلەری',
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _pickAndSolveImage();
-                  },
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildAttachmentOption(
+                    icon: CupertinoIcons.photo,
+                    color: Colors.purpleAccent,
+                    label: 'وێنەی گەلەری',
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _pickAndSolveImage();
+                    },
+                  ),
                 ),
-                _buildAttachmentOption(
-                  icon: CupertinoIcons.doc_text_fill,
-                  color: Colors.blueAccent,
-                  label: 'فایلی PDF/وانە',
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _pickAndSolvePdf();
-                  },
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildAttachmentOption(
+                    icon: CupertinoIcons.doc_text_fill,
+                    color: Colors.blueAccent,
+                    label: 'فایلی PDF/وانە',
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _pickAndSolvePdf();
+                    },
+                  ),
                 ),
               ],
             ),
@@ -920,17 +927,24 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 28),
+            Icon(icon, color: color, size: 26),
             const SizedBox(height: 8),
-            Text(label, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+            Text(
+              label,
+              style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ),
       ),
@@ -1487,8 +1501,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
             // Action Toolbar for Assistant Messages (Copy, Save Note, TTS, Deeper Explanation)
             if (!isUser && !isLimitMsg && content.isNotEmpty) ...[
               const SizedBox(height: 5),
-              Row(
-                mainAxisSize: MainAxisSize.min,
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
                 children: [
                   // 1. Copy
                   _buildBubbleAction(
@@ -1506,7 +1521,6 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                       );
                     },
                   ),
-                  const SizedBox(width: 6),
 
                   // 2. Save to Notes
                   _buildBubbleAction(
@@ -1515,7 +1529,6 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                     color: Colors.amberAccent,
                     onTap: () => _saveAsNote(content),
                   ),
-                  const SizedBox(width: 6),
 
                   // 3. Read Aloud (TTS)
                   _buildBubbleAction(
@@ -1539,8 +1552,6 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                       }
                     },
                   ),
-                  const SizedBox(width: 6),
-
                   // 4. Explain More
                   _buildBubbleAction(
                     icon: CupertinoIcons.sparkles,

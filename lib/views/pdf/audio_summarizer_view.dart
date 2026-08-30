@@ -43,7 +43,12 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
         final path = '${tempDir.path}/rec_${DateTime.now().millisecondsSinceEpoch}.m4a';
         
         await _audioRecorder.start(
-          const RecordConfig(encoder: AudioEncoder.aacLc),
+          const RecordConfig(
+            encoder: AudioEncoder.aacLc,
+            sampleRate: 44100,
+            bitRate: 128000,
+            numChannels: 1,
+          ),
           path: path,
         );
 
@@ -102,12 +107,23 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
       }
 
       if (!mounted) return;
+      if (recordedBytes == null || recordedBytes.length < 300) {
+        setState(() {
+          _fullTranscript = "دەنگەکە زۆر کورت بوو یان تۆمار نەکرا، تکایە کەمێک زیاتر قسە بکە و دووبارە تاقی بکەرەوە.";
+        });
+        return;
+      }
+
       final aiService = Provider.of<AiService>(context, listen: false);
-      final transcript = await aiService.transcribeAudio(recordedBytes, _audioFileName);
+      final transcript = await aiService.transcribeAudio(
+        recordedBytes,
+        _audioFileName,
+        mimeType: 'audio/mp4',
+      );
       setState(() {
         _fullTranscript = transcript.isNotEmpty
             ? transcript
-            : "نەتوانرا دەنگەکە بە ڕوونی ببیسترێت، تکایە کەمێک نزیکتر لە مایکرۆفۆنەکە قسە بکە و دووبارە تاقی بکەرەوە.";
+            : "نەتوانرا دەنگەکە بە تەواوی بناسرێتەوە، تکایە دڵنیابە لە پەیوەندی ئینتەرنێت و ڕوونی دەنگەکە، یان فایلی دەنگی باربکە.";
       });
     } catch (_) {
       setState(() {
@@ -148,10 +164,26 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
           _summarizedResult = '';
         });
 
-        final transcript = await aiService.transcribeAudio(bytes, file.name);
+        String mime = 'audio/mp4';
+        final ext = file.name.toLowerCase();
+        if (ext.endsWith('.wav')) {
+          mime = 'audio/wav';
+        } else if (ext.endsWith('.mp3')) {
+          mime = 'audio/mp3';
+        } else if (ext.endsWith('.aac')) {
+          mime = 'audio/aac';
+        } else if (ext.endsWith('.ogg')) {
+          mime = 'audio/ogg';
+        } else if (ext.endsWith('.flac')) {
+          mime = 'audio/flac';
+        }
+
+        final transcript = await aiService.transcribeAudio(bytes, file.name, mimeType: mime);
 
         setState(() {
-          _fullTranscript = transcript;
+          _fullTranscript = transcript.isNotEmpty
+              ? transcript
+              : "نەتوانرا دەنگەکە بە تەواوی بناسرێتەوە، تکایە دڵنیابە لە پەیوەندی ئینتەرنێت و ڕوونی دەنگەکە.";
           _isLoading = false;
         });
       }

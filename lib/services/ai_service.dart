@@ -20,7 +20,7 @@ abstract class AiService extends ChangeNotifier {
   Future<String> askTeacher(String userPrompt, List<Map<String, String>> chatHistory, {bool isVip = false, bool isPendingVip = false});
   Future<String> solveImageQuestion(Uint8List imageBytes, String promptText, {bool isVip = false, bool isPendingVip = false});
   Future<Map<String, dynamic>> summarizePdf(String pdfName, String pdfContent);
-  Future<String> transcribeAudio(Uint8List? audioBytes, String audioFileName, {String mimeType = 'audio/m4a'});
+  Future<String> transcribeAudio(Uint8List? audioBytes, String audioFileName, {String mimeType = 'audio/mp4'});
   Future<String> summarizeAudio(String audioFileName, String transcriptText);
   Future<QuizModel> generateQuiz(String topic, String courseName);
   Future<QuizModel> generateQuizFromText(String fileText, String courseName);
@@ -201,9 +201,13 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     }
   }
 
-  // Official Gemini 3.7 Flash model strictly used throughout the entire app
+  // High-performance multimodal Gemini models for text and audio understanding
   static const List<String> _validFastModels = [
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
     'gemini-3.7-flash',
+    'gemini-1.5-pro',
   ];
 
   String? _lastWorkingKey;
@@ -732,7 +736,11 @@ class StudentCard extends StatelessWidget {
   }
 
   static const List<String> _validVisionModels = [
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
     'gemini-3.7-flash',
+    'gemini-1.5-pro',
   ];
 
   Future<String> _callGeminiMultimodal(Uint8List mediaBytes, String prompt, {String mimeType = 'image/jpeg'}) async {
@@ -745,7 +753,25 @@ class StudentCard extends StatelessWidget {
 
     final isAudio = mimeType.startsWith('audio');
     String actualMime = mimeType;
-    if (!isAudio && mediaBytes.length > 8) {
+    if (isAudio) {
+      if (actualMime == 'audio/m4a' || actualMime == 'audio/x-m4a') {
+        actualMime = 'audio/mp4';
+      }
+      if (mediaBytes.length > 12) {
+        if (mediaBytes[0] == 0x52 && mediaBytes[1] == 0x49 && mediaBytes[2] == 0x46 && mediaBytes[3] == 0x46) {
+          actualMime = 'audio/wav';
+        } else if ((mediaBytes[0] == 0x49 && mediaBytes[1] == 0x44 && mediaBytes[2] == 0x33) ||
+            (mediaBytes[0] == 0xFF && (mediaBytes[1] & 0xE0) == 0xE0)) {
+          actualMime = 'audio/mp3';
+        } else if (mediaBytes[4] == 0x66 && mediaBytes[5] == 0x74 && mediaBytes[6] == 0x79 && mediaBytes[7] == 0x70) {
+          actualMime = 'audio/mp4';
+        } else if (mediaBytes[0] == 0x4F && mediaBytes[1] == 0x67 && mediaBytes[2] == 0x67 && mediaBytes[3] == 0x53) {
+          actualMime = 'audio/ogg';
+        } else if (mediaBytes[0] == 0x66 && mediaBytes[1] == 0x4C && mediaBytes[2] == 0x61 && mediaBytes[3] == 0x43) {
+          actualMime = 'audio/flac';
+        }
+      }
+    } else if (mediaBytes.length > 8) {
       if (mediaBytes[0] == 0x89 && mediaBytes[1] == 0x50 && mediaBytes[2] == 0x4E && mediaBytes[3] == 0x47) {
         actualMime = 'image/png';
       } else if (mediaBytes[0] == 0xFF && mediaBytes[1] == 0xD8 && mediaBytes[2] == 0xFF) {
@@ -760,7 +786,7 @@ class StudentCard extends StatelessWidget {
     }
 
     final systemPrompt = isAudio
-        ? "تۆ سیستمێکی زۆر پێشکەوتووی نوسینەوەی دەنگی (Speech-to-Text). گوێ لەم تۆمارە دەنگییە بگرە و بە وردی و تەواوی وشە بە وشە بە زمانی قسەکەرەکە (کوردی سۆرانی، کوردی بادینی، زمانی عەرەبی، یان ئینگلیزی) دەقەکە بنووسەوە. تکایە تەنها و تەنها دەقی ئاخاوتنەکە بنووسەوە بەبێ هیچ پێشەکی، سەردێڕ، یان کۆمێنتی زیادە."
+        ? "You are an advanced AI Speech-to-Text transcriber. Listen to the audio and transcribe every spoken word accurately in the exact language spoken (Kurdish Sorani, Kurdish Badini, Arabic, or English). Output ONLY the transcribed words without any preamble or notes."
         : "تۆ مامۆستایەکی زۆر زیرەک و شارەزای هەموو بوارە ئەکادیمییەکان، بڕوانامەکان، بەڵگەنامەکان، بیرکاری و زانستەکانی بە ناوی ZankoAI. "
           "ئەم وێنەیە بە تەواوی و بە وردی شیکار بکە. ئەگەر بەکارهێنەر پرسیار یان تێبینییەکی تایبەتی هەبوو لەسەر وێنەکە (وەک ناوی کەس، پرسیارێکی دیاریکراو، یان داواکارییەک وەک وەرگێڕان)، وەڵامی ورد و ڕاستەوخۆ دەربارەی وێنەکە بدەرەوە بە هەمان زمانی پرسیارەکە (کوردی سۆرانی، کوردی بادینی، عەرەبی، یان ئینگلیزی).";
 
@@ -788,7 +814,7 @@ class StudentCard extends StatelessWidget {
             ])
           ];
 
-          final response = await model.generateContent(content).timeout(const Duration(seconds: 20));
+          final response = await model.generateContent(content).timeout(const Duration(seconds: 25));
           if (response.text != null && response.text!.isNotEmpty) {
             _lastWorkingKey = keyToUse;
             _lastWorkingModel = m;
@@ -807,7 +833,7 @@ class StudentCard extends StatelessWidget {
                 gemini.DataPart(actualMime, mediaBytes),
               ])
             ];
-            final respNoSys = await modelNoSys.generateContent(contentNoSys).timeout(const Duration(seconds: 20));
+            final respNoSys = await modelNoSys.generateContent(contentNoSys).timeout(const Duration(seconds: 25));
             if (respNoSys.text != null && respNoSys.text!.isNotEmpty) {
               _lastWorkingKey = keyToUse;
               _lastWorkingModel = m;
@@ -942,15 +968,37 @@ class StudentCard extends StatelessWidget {
   }
 
   @override
-  Future<String> transcribeAudio(Uint8List? audioBytes, String audioFileName, {String mimeType = 'audio/m4a'}) async {
+  Future<String> transcribeAudio(Uint8List? audioBytes, String audioFileName, {String mimeType = 'audio/mp4'}) async {
     if (audioBytes != null && audioBytes.isNotEmpty) {
       try {
-        const prompt = "ئەم فایلی دەنگییەی پێدراوە بە تەواوی و وشە بە وشە بە زمانی قسەکەرەکە (کوردی سۆرانی، کوردی بادینی/کرمانجی، زمانی عەرەبی، یان ئینگلیزی) بە نووسین (Speech-to-Text Transcribe) بنووسەوە. تەنها و تەنها دەقی تەواوی ئاخاوتنەکە بنووسەوە بەبێ هیچ سەردێڕ، پێشەکی، یان لێدوانێک.";
-        final result = await _callGeminiMultimodal(audioBytes, prompt, mimeType: mimeType);
-        if (result.trim().isNotEmpty && !result.contains('Error') && !result.contains('blocked')) {
+        const prompt =
+            "You are an expert multilingual speech-to-text transcriber specializing in Kurdish (Sorani and Badini), Arabic, and English.\n"
+            "Listen to this audio recording carefully and transcribe every spoken word accurately.\n\n"
+            "Rules:\n"
+            "1. Output ONLY the transcribed words in their exact spoken language.\n"
+            "2. If spoken in Kurdish, write in proper Kurdish Sorani or Badini script.\n"
+            "3. Do NOT add any preamble, titles, translations, or extra commentary.\n"
+            "4. Transcribe accurately with proper natural punctuation.";
+
+        final effectiveMime = (mimeType.isEmpty || mimeType == 'audio/m4a' || mimeType == 'audio/x-m4a')
+            ? 'audio/mp4'
+            : mimeType;
+
+        final result = await _callGeminiMultimodal(
+          audioBytes,
+          prompt,
+          mimeType: effectiveMime,
+        );
+
+        if (result.trim().isNotEmpty &&
+            !result.contains('Error') &&
+            !result.contains('blocked') &&
+            !result.contains('⚠️')) {
           return result.trim();
         }
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Audio transcription error: $e');
+      }
     }
 
     return "";
@@ -1387,11 +1435,12 @@ $pdfContext
     
     if (hasRealApiKey) {
       try {
-        final prompt = "ئەم تێبینییە یان بابەتەی خوارەوە بخوێنەوە و ٤ فلاشکاردی خوێندنەوەی تایبەت دروست بکە بە زمانی کوردی (سۆرانی). "
-            "هەر فلاشکاردێک پێویستە دەقێکی کورت یان پرسیارێک بێت بۆ پێشەوە (front) و وەڵامەکە یان ماناکەی بۆ دواوە بێت (back). "
-            "تەنها فۆرماتی JSONی خوارەوە بنووسە بەبێ نووسینی تر:\n"
+        final prompt =
+            "ئەم تێبینییە یان بابەتەی خوارەوە بە وردی بخوێنەوە و ٤ بۆ ٦ فلاشکاردی خوێندنەوەی پرۆفێشناڵ و پوخت دروست بکە بە زمانی کوردی (سۆرانی) یان بە زمانی دەقەکە. "
+            "هەر فلاشکاردێک پێویستە چەمک، یاسا، یان پرسیارێک بێت بۆ پێشەوە (front) و وەڵام یان شیکردنەوەیەکی کورت بێت بۆ دواوە (back). "
+            "تەنها و تەنها لە فۆرماتی JSON بنووسە بەبێ هیچ سەردێڕ و دەقی زیادە:\n"
             "[\n"
-            "  { \"front\": \"پرسیارەکە یان زاراوەکە\", \"back\": \"ڕوونکردنەوە کورتەکە یان وەڵامەکە\" }\n"
+            "  { \"front\": \"پرسیار یان زاراوە\", \"back\": \"ڕوونکردنەوە یان وەڵام\" }\n"
             "]\n\n"
             "بابەت:\n$topicOrText";
             
@@ -1413,12 +1462,34 @@ $pdfContext
         }
         jsonText = jsonText.trim();
         
-        final List<dynamic> data = jsonDecode(jsonText);
-        final list = data.map((item) => FlashcardModel(
-          id: 'card_${Random().nextInt(100000)}',
-          front: item['front'] ?? '',
-          back: item['back'] ?? '',
-        )).where((c) => c.front.isNotEmpty && c.back.isNotEmpty).toList();
+        final list = <FlashcardModel>[];
+        try {
+          final List<dynamic> data = jsonDecode(jsonText);
+          for (final item in data) {
+            final f = (item['front'] ?? item['question'] ?? '').toString().trim();
+            final b = (item['back'] ?? item['answer'] ?? '').toString().trim();
+            if (f.isNotEmpty && b.isNotEmpty) {
+              list.add(FlashcardModel(
+                id: 'card_${Random().nextInt(100000)}_${DateTime.now().millisecondsSinceEpoch}',
+                front: f,
+                back: b,
+              ));
+            }
+          }
+        } catch (_) {
+          final regExp = RegExp(r'"(?:front|question)"\s*:\s*"([^"]+)"\s*,\s*"(?:back|answer)"\s*:\s*"([^"]+)"');
+          for (final m in regExp.allMatches(response)) {
+            final f = m.group(1)?.trim() ?? '';
+            final b = m.group(2)?.trim() ?? '';
+            if (f.isNotEmpty && b.isNotEmpty) {
+              list.add(FlashcardModel(
+                id: 'card_${Random().nextInt(100000)}_${DateTime.now().millisecondsSinceEpoch}',
+                front: f,
+                back: b,
+              ));
+            }
+          }
+        }
 
         if (list.isNotEmpty) return list;
       } catch (e) {

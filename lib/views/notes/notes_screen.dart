@@ -421,7 +421,7 @@ class _NotesScreenState extends State<NotesScreen> {
                                   final transcribedText = await aiService.transcribeAudio(
                                     bytes,
                                     'note_voice.m4a',
-                                    mimeType: 'audio/m4a',
+                                    mimeType: 'audio/mp4',
                                   );
 
                                   try {
