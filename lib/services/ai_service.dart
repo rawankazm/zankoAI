@@ -20,7 +20,7 @@ abstract class AiService extends ChangeNotifier {
   Future<String> askTeacher(String userPrompt, List<Map<String, String>> chatHistory, {bool isVip = false, bool isPendingVip = false});
   Future<String> solveImageQuestion(Uint8List imageBytes, String promptText, {bool isVip = false, bool isPendingVip = false});
   Future<Map<String, dynamic>> summarizePdf(String pdfName, String pdfContent);
-  Future<String> transcribeAudio(Uint8List? audioBytes, String audioFileName, {String mimeType = 'audio/mp4'});
+  Future<String> transcribeAudio(Uint8List? audioBytes, String audioFileName, {String mimeType = 'audio/mp4', String language = 'auto'});
   Future<String> summarizeAudio(String audioFileName, String transcriptText);
   Future<QuizModel> generateQuiz(String topic, String courseName);
   Future<QuizModel> generateQuizFromText(String fileText, String courseName);
@@ -107,7 +107,7 @@ abstract class AiService extends ChangeNotifier {
 class ZankoAiService extends ChangeNotifier implements AiService {
   static const String _defaultApiKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
   static String get _fallbackWorkingKey =>
-      utf8.decode(base64.decode('QVEuQWI4Uk42SVFKd0hQOVlEY0xpYzlYM2dMdW9LWE9QR2FaYXBzSUlOLUtaLVE1SGZfWXc='));
+      utf8.decode(base64.decode('QVEuQWI4Uk42S0ZjVEN2REVQbkplbC1aU0xyMEFGSlJFcENmRC1lRnA4cXh2Nk4zcTZFZUE='));
   String? _apiKey;
 
   ZankoAiService() {
@@ -172,8 +172,11 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   }
 
   @override
-  bool get hasRealApiKey => true;
-  bool get hasApiKey => true;
+  bool get hasRealApiKey =>
+      _apiKey != null &&
+      (_apiKey!.trim().startsWith('AIzaSy') || _apiKey!.trim().startsWith('AQ.')) &&
+      _apiKey!.trim().length >= 25;
+  bool get hasApiKey => hasRealApiKey;
 
   @override
   Future<bool> checkAndIncrementDailyLimit({bool isVip = false, bool isPendingVip = false}) async {
@@ -203,11 +206,10 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   // High-performance multimodal Gemini models for text and audio understanding
   static const List<String> _validFastModels = [
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
+    'gemini-3.6-flash',
+    'gemini-3.5-flash',
     'gemini-3.7-flash',
-    'gemini-1.5-pro',
+    'gemini-flash-latest',
   ];
 
   String? _lastWorkingKey;
@@ -253,6 +255,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
         final uri = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=$key');
         final request = await client.postUrl(uri);
         request.headers.set('content-type', 'application/json');
+        request.headers.set('x-goog-api-key', key);
 
         final bodyMap = {
           if (systemInstruction.isNotEmpty)
@@ -671,7 +674,7 @@ class StudentCard extends StatelessWidget {
     String mimeType = 'image/jpeg',
   }) async {
     final client = HttpClient();
-    client.connectionTimeout = const Duration(seconds: 10);
+    client.connectionTimeout = const Duration(seconds: 45);
 
     final modelsToTry = _lastWorkingModel != null
         ? [_lastWorkingModel!, ..._validVisionModels.where((m) => m != _lastWorkingModel)]
@@ -684,6 +687,7 @@ class StudentCard extends StatelessWidget {
         final uri = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=$key');
         final request = await client.postUrl(uri);
         request.headers.set('content-type', 'application/json');
+        request.headers.set('x-goog-api-key', key);
 
         final bodyMap = {
           if (systemPrompt.isNotEmpty)
@@ -708,7 +712,7 @@ class StudentCard extends StatelessWidget {
         };
 
         request.add(utf8.encode(jsonEncode(bodyMap)));
-        final response = await request.close().timeout(const Duration(seconds: 20));
+        final response = await request.close().timeout(const Duration(seconds: 60));
         final respStr = await response.transform(utf8.decoder).join();
 
         if (response.statusCode == 200) {
@@ -727,6 +731,14 @@ class StudentCard extends StatelessWidget {
               }
             }
           }
+        } else if (response.statusCode == 429) {
+          client.close();
+          return "⚠️ **سنووری بەکارهێنانی ڕۆژانەی ئەم کلیلەی گووگڵ (٢٠ داواکاری) تەواو بووە** (Google 429 Quota Exceeded).\n\n"
+                 "تکایە کلیلێکی نوێ لە ڕێگەی دوگمەی 🔑 ی سەرەوە دابنێ تا ڕاستەوخۆ دەنگەکان وەربگێڕێت.";
+        } else if (response.statusCode == 403) {
+          client.close();
+          return "⚠️ **گووگڵ ڕێگری لەم کلیلە کردووە (403 Permission Denied)**.\n\n"
+                 "تکایە کلیلێکی نوێ لە ئەکاونتێکی تری گووگڵ لە aistudio.google.com دروست بکە.";
         }
       } catch (_) {}
     }
@@ -736,11 +748,10 @@ class StudentCard extends StatelessWidget {
   }
 
   static const List<String> _validVisionModels = [
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
+    'gemini-3.6-flash',
+    'gemini-3.5-flash',
     'gemini-3.7-flash',
-    'gemini-1.5-pro',
+    'gemini-flash-latest',
   ];
 
   Future<String> _callGeminiMultimodal(Uint8List mediaBytes, String prompt, {String mimeType = 'image/jpeg'}) async {
@@ -756,12 +767,18 @@ class StudentCard extends StatelessWidget {
     if (isAudio) {
       if (actualMime == 'audio/m4a' || actualMime == 'audio/x-m4a') {
         actualMime = 'audio/mp4';
+      } else if (actualMime == 'audio/x-aac') {
+        actualMime = 'audio/aac';
       }
       if (mediaBytes.length > 12) {
         if (mediaBytes[0] == 0x52 && mediaBytes[1] == 0x49 && mediaBytes[2] == 0x46 && mediaBytes[3] == 0x46) {
           actualMime = 'audio/wav';
+        } else if (mediaBytes[0] == 0xFF && (mediaBytes[1] & 0xF6) == 0xF0) {
+          // AAC ADTS sync header
+          actualMime = 'audio/aac';
         } else if ((mediaBytes[0] == 0x49 && mediaBytes[1] == 0x44 && mediaBytes[2] == 0x33) ||
-            (mediaBytes[0] == 0xFF && (mediaBytes[1] & 0xE0) == 0xE0)) {
+            (mediaBytes[0] == 0xFF && (mediaBytes[1] & 0xE6) == 0xE2)) {
+          // ID3v2 or MP3 header
           actualMime = 'audio/mp3';
         } else if (mediaBytes[4] == 0x66 && mediaBytes[5] == 0x74 && mediaBytes[6] == 0x79 && mediaBytes[7] == 0x70) {
           actualMime = 'audio/mp4';
@@ -798,6 +815,20 @@ class StudentCard extends StatelessWidget {
 
     for (final keyToUse in keysToTry) {
       if (keyToUse.isEmpty) continue;
+
+      // If key is in new AQ. format, use direct HTTP with x-goog-api-key header first
+      if (keyToUse.startsWith('AQ.')) {
+        final httpResult = await _callGeminiMultimodalHttp(
+          keyToUse,
+          mediaBytes,
+          effectivePrompt,
+          systemPrompt,
+          mimeType: actualMime,
+        );
+        if (httpResult.isNotEmpty) {
+          return httpResult;
+        }
+      }
 
       for (final m in _validVisionModels) {
         try {
@@ -843,7 +874,7 @@ class StudentCard extends StatelessWidget {
         }
       }
 
-      // Direct HTTP Multimodal Fallback
+      // Direct HTTP Multimodal Fallback for all other keys
       final httpResult = await _callGeminiMultimodalHttp(
         keyToUse,
         mediaBytes,
@@ -968,17 +999,26 @@ class StudentCard extends StatelessWidget {
   }
 
   @override
-  Future<String> transcribeAudio(Uint8List? audioBytes, String audioFileName, {String mimeType = 'audio/mp4'}) async {
+  Future<String> transcribeAudio(Uint8List? audioBytes, String audioFileName, {String mimeType = 'audio/mp4', String language = 'auto'}) async {
     if (audioBytes != null && audioBytes.isNotEmpty) {
       try {
-        const prompt =
-            "You are an expert multilingual speech-to-text transcriber specializing in Kurdish (Sorani and Badini), Arabic, and English.\n"
-            "Listen to this audio recording carefully and transcribe every spoken word accurately.\n\n"
+        String langInstruction = "transcribe in the exact spoken language (Kurdish Sorani, Kurdish Badini, Arabic, or English)";
+        if (language == 'ku') {
+          langInstruction = "the audio is a Kurdish lecture. Transcribe every spoken word accurately in proper Kurdish Sorani / Badini script";
+        } else if (language == 'ar') {
+          langInstruction = "the audio is an Arabic lecture. Transcribe every spoken word accurately in standard Arabic script";
+        } else if (language == 'en') {
+          langInstruction = "the audio is an English lecture. Transcribe every spoken word accurately in English";
+        }
+
+        final prompt =
+            "You are an expert multilingual speech-to-text transcriber.\n"
+            "Listen to this audio lecture carefully and $langInstruction.\n\n"
             "Rules:\n"
-            "1. Output ONLY the transcribed words in their exact spoken language.\n"
-            "2. If spoken in Kurdish, write in proper Kurdish Sorani or Badini script.\n"
-            "3. Do NOT add any preamble, titles, translations, or extra commentary.\n"
-            "4. Transcribe accurately with proper natural punctuation.";
+            "1. Output ONLY the exact transcribed spoken words in their spoken language.\n"
+            "2. If spoken in Kurdish, transcribe using standard Kurdish alphabet.\n"
+            "3. Do NOT add any preamble, titles, translations, markdown formatting, or extra commentary.\n"
+            "4. Transcribe accurately with natural punctuation and paragraph breaks.";
 
         final effectiveMime = (mimeType.isEmpty || mimeType == 'audio/m4a' || mimeType == 'audio/x-m4a')
             ? 'audio/mp4'
@@ -990,10 +1030,7 @@ class StudentCard extends StatelessWidget {
           mimeType: effectiveMime,
         );
 
-        if (result.trim().isNotEmpty &&
-            !result.contains('Error') &&
-            !result.contains('blocked') &&
-            !result.contains('⚠️')) {
+        if (result.trim().isNotEmpty) {
           return result.trim();
         }
       } catch (e) {

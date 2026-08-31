@@ -105,7 +105,7 @@ void main() {
         academicYear: '2024 - 2025',
         languageCode: 'ar',
       );
-
+      expect(report.title.isNotEmpty, true);
     }
   });
 
