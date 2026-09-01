@@ -75,6 +75,7 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
       // 2. Immediately update user document so auth stream instantly grants VIP
       await FirebaseFirestore.instance.collection('users').doc(userId).set({
         'isVip': true,
+        'vipGracePeriod': false,
         'vipStatus': 'active',
         'vipPlan': plan ?? 'monthly',
         'vipExpiresAt': expiresAt,
@@ -216,6 +217,7 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
       // 2. Update user doc
       await FirebaseFirestore.instance.collection('users').doc(userId).set({
         'isVip': false,
+        'vipGracePeriod': false,
         'vipStatus': 'rejected',
         'vipRejectedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));

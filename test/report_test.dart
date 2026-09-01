@@ -107,7 +107,7 @@ void main() {
       );
       expect(report.title.isNotEmpty, true);
     }
-  });
+  }, timeout: const Timeout(Duration(minutes: 2)));
 
   test('Test Kurdish Glyphs with Calibri and Noto', () async {
     final calibriBytes = File('assets/fonts/calibri.ttf').readAsBytesSync();

@@ -311,6 +311,8 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
     final currentIp = await getPublicIp();
     if (currentIp == null || currentIp.isEmpty) return;
 
+    final localDeviceId = await getDeviceId();
+
     try {
       final doc = await _firestore.collection('users').doc(uid).get().timeout(const Duration(seconds: 6));
       if (doc.exists && doc.data() != null) {
@@ -324,9 +326,25 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
           knownIps = rawKnownIps.map((e) => e.toString().trim()).where((s) => s.isNotEmpty).toList();
         }
 
+        final registeredDeviceId = data['currentDeviceId'] as String?;
+        final isSameVerifiedDevice = registeredDeviceId != null &&
+            registeredDeviceId.isNotEmpty &&
+            registeredDeviceId == localDeviceId;
+
         if (!knownIps.contains(currentIp)) {
           if (knownIps.length >= 3) {
-            // Automatically log security alert for Admin Review
+            // If the student is on the EXACT SAME verified physical device (e.g. 4G cellular dynamic IP changes):
+            if (isSameVerifiedDevice) {
+              // Maintain smooth 3-IP sliding window so dynamic 4G never locks out legitimate owner
+              final updatedIps = [...knownIps.sublist(1), currentIp];
+              await _firestore.collection('users').doc(uid).set({
+                'knownIps': updatedIps,
+                'lastLoginIp': currentIp,
+              }, SetOptions(merge: true));
+              return;
+            }
+
+            // Otherwise, it is a DIFFERENT device or unauthorized IP switch: trigger security alert & block!
             try {
               final name = data['name'] as String? ?? 'خوێندکار';
               final email = data['email'] as String? ?? '';
@@ -335,8 +353,10 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
                 'name': name,
                 'email': email,
                 'type': 'ip_limit_exceeded',
-                'reason': 'تێپەڕاندنی سنووری ٣ ناونیشانی IP جیاواز',
+                'reason': 'تێپەڕاندنی سنووری ٣ ناونیشانی IP لەسەر ئامێری جیاواز',
                 'attemptedIp': currentIp,
+                'attemptedDeviceId': localDeviceId,
+                'registeredDeviceId': registeredDeviceId,
                 'knownIps': knownIps,
                 'status': 'pending',
                 'createdAt': FieldValue.serverTimestamp(),

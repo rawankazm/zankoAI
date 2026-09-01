@@ -109,6 +109,22 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   static String get _fallbackWorkingKey =>
       utf8.decode(base64.decode('QVEuQWI4Uk42S0ZjVEN2REVQbkplbC1aU0xyMEFGSlJFcENmRC1lRnA4cXh2Nk4zcTZFZUE='));
   String? _apiKey;
+  List<String> _keyPool = [];
+  final Map<String, DateTime> _keyCooldowns = {};
+
+  void _markKeyCooldown(String key) {
+    _keyCooldowns[key] = DateTime.now().add(const Duration(seconds: 45));
+  }
+
+  bool _isKeyInCooldown(String key) {
+    final expiry = _keyCooldowns[key];
+    if (expiry == null) return false;
+    if (DateTime.now().isAfter(expiry)) {
+      _keyCooldowns.remove(key);
+      return false;
+    }
+    return true;
+  }
 
   ZankoAiService() {
     _apiKey = _fallbackWorkingKey;
@@ -136,6 +152,14 @@ class ZankoAiService extends ChangeNotifier implements AiService {
           if (doc.exists && doc.data() != null) {
             final key = doc.data()!['gemini_api_key'] ?? doc.data()!['apiKey'];
             final customModel = doc.data()!['gemini_model'] ?? doc.data()!['model'];
+            final rawKeys = doc.data()!['gemini_api_keys'] ?? doc.data()!['api_keys'];
+            
+            if (rawKeys is List) {
+              _keyPool = rawKeys.map((e) => e.toString().trim()).where((s) => s.isNotEmpty).toList();
+            } else if (rawKeys is String && rawKeys.contains(',')) {
+              _keyPool = rawKeys.split(',').map((e) => e.trim()).where((s) => s.isNotEmpty).toList();
+            }
+
             if (customModel != null && customModel.toString().trim().isNotEmpty) {
               _lastWorkingModel = customModel.toString().trim();
             }
@@ -306,14 +330,33 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     return "";
   }
 
-  // Fast & Resilient Gemini Caller
-  Future<String> _callGemini(String prompt, {String systemInstruction = ""}) async {
-    final keysToTry = <String>[
-      if (_lastWorkingKey != null && _lastWorkingKey!.trim().isNotEmpty) _lastWorkingKey!.trim(),
-      if (_apiKey != null && _apiKey!.trim().isNotEmpty && _apiKey != _lastWorkingKey) _apiKey!.trim(),
-      if (_defaultApiKey.trim().isNotEmpty && _defaultApiKey != _apiKey && _defaultApiKey != _lastWorkingKey) _defaultApiKey.trim(),
-      if (_fallbackWorkingKey.trim().isNotEmpty && _fallbackWorkingKey != _apiKey && _fallbackWorkingKey != _lastWorkingKey) _fallbackWorkingKey.trim(),
+  List<String> _getActiveKeys() {
+    final keys = <String>[
+      if (_lastWorkingKey != null && _lastWorkingKey!.trim().isNotEmpty && !_isKeyInCooldown(_lastWorkingKey!))
+        _lastWorkingKey!.trim(),
+      ..._keyPool.where((k) => k.isNotEmpty && !_isKeyInCooldown(k) && k != _lastWorkingKey),
+      if (_apiKey != null && _apiKey!.trim().isNotEmpty && !_isKeyInCooldown(_apiKey!) && !_keyPool.contains(_apiKey) && _apiKey != _lastWorkingKey)
+        _apiKey!.trim(),
+      if (_defaultApiKey.trim().isNotEmpty && !_isKeyInCooldown(_defaultApiKey) && _defaultApiKey != _apiKey && _defaultApiKey != _lastWorkingKey)
+        _defaultApiKey.trim(),
+      if (_fallbackWorkingKey.trim().isNotEmpty && !_isKeyInCooldown(_fallbackWorkingKey) && _fallbackWorkingKey != _apiKey && _fallbackWorkingKey != _lastWorkingKey)
+        _fallbackWorkingKey.trim(),
     ];
+    if (keys.isEmpty) {
+      _keyCooldowns.clear();
+      return [
+        ..._keyPool,
+        if (_apiKey != null && _apiKey!.isNotEmpty) _apiKey!,
+        if (_defaultApiKey.isNotEmpty) _defaultApiKey,
+        _fallbackWorkingKey,
+      ];
+    }
+    return keys;
+  }
+
+  // Fast & Resilient Gemini Caller with Multi-Key Dynamic Pool
+  Future<String> _callGemini(String prompt, {String systemInstruction = ""}) async {
+    final keysToTry = _getActiveKeys();
 
     for (final keyToUse in keysToTry) {
       if (keyToUse.isEmpty) continue;
@@ -345,6 +388,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
         } catch (e) {
           if (_isKeyAuthError(e)) {
             keyFailedAuth = true;
+            _markKeyCooldown(keyToUse);
             break; // Skip remaining models for this bad key immediately
           }
         }
@@ -368,12 +412,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     Uint8List pdfBytes, {
     String systemInstruction = "",
   }) async {
-    final keysToTry = <String>[
-      if (_lastWorkingKey != null && _lastWorkingKey!.trim().isNotEmpty) _lastWorkingKey!.trim(),
-      if (_apiKey != null && _apiKey!.trim().isNotEmpty) _apiKey!.trim(),
-      if (_defaultApiKey.trim().isNotEmpty) _defaultApiKey.trim(),
-      if (_fallbackWorkingKey.trim().isNotEmpty) _fallbackWorkingKey.trim(),
-    ];
+    final keysToTry = _getActiveKeys();
 
     for (final keyToUse in keysToTry) {
       if (keyToUse.isEmpty) continue;
@@ -400,7 +439,12 @@ class ZankoAiService extends ChangeNotifier implements AiService {
             _lastWorkingModel = m;
             return response.text!;
           }
-        } catch (_) {}
+        } catch (e) {
+          if (_isKeyAuthError(e)) {
+            _markKeyCooldown(keyToUse);
+            break;
+          }
+        }
       }
     }
     return _callGemini(prompt, systemInstruction: systemInstruction);
