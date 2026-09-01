@@ -206,10 +206,10 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   // High-performance multimodal Gemini models for text and audio understanding
   static const List<String> _validFastModels = [
-    'gemini-3.6-flash',
-    'gemini-3.5-flash',
-    'gemini-3.7-flash',
-    'gemini-flash-latest',
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-1.5-pro',
   ];
 
   String? _lastWorkingKey;
@@ -244,13 +244,13 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   Future<String> _callGeminiHttp(String key, String prompt, String systemInstruction) async {
     final client = HttpClient();
-    client.connectionTimeout = const Duration(seconds: 4);
+    client.connectionTimeout = const Duration(seconds: 10);
 
     final modelsToTry = _lastWorkingModel != null 
         ? [_lastWorkingModel!, ..._validFastModels.where((m) => m != _lastWorkingModel)]
         : _validFastModels;
 
-    for (final m in modelsToTry.take(2)) {
+    for (final m in modelsToTry.take(3)) {
       try {
         final uri = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=$key');
         final request = await client.postUrl(uri);
@@ -270,7 +270,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
         };
 
         request.add(utf8.encode(jsonEncode(bodyMap)));
-        final response = await request.close().timeout(const Duration(seconds: 5));
+        final response = await request.close().timeout(const Duration(seconds: 25));
         final respStr = await response.transform(utf8.decoder).join();
 
         if (response.statusCode == 200) {
@@ -297,7 +297,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     return "";
   }
 
-  // Fast & Resilient Gemini Caller with Sub-2s Response Pipeline
+  // Fast & Resilient Gemini Caller
   Future<String> _callGemini(String prompt, {String systemInstruction = ""}) async {
     final keysToTry = <String>[
       if (_lastWorkingKey != null && _lastWorkingKey!.trim().isNotEmpty) _lastWorkingKey!.trim(),
@@ -315,8 +315,8 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
       bool keyFailedAuth = false;
 
-      // Try top 2 fast official models with tight 4-5s timeout
-      for (final m in modelsToTry.take(2)) {
+      // Try top fast official models with adequate 25s timeout for complete academic outputs
+      for (final m in modelsToTry.take(3)) {
         try {
           final model = gemini.GenerativeModel(
             model: m,
@@ -327,7 +327,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
           );
 
           final content = [gemini.Content.text(prompt)];
-          final response = await model.generateContent(content).timeout(const Duration(seconds: 5));
+          final response = await model.generateContent(content).timeout(const Duration(seconds: 25));
           if (response.text != null && response.text!.isNotEmpty) {
             _lastWorkingKey = keyToUse;
             _lastWorkingModel = m;
@@ -414,7 +414,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
       for (var msg in chatHistory) {
         historyStr += "${msg['role'] == 'user' ? 'خوێندکار' : 'مامۆستا'}: ${msg['content']}\n";
       }
-      final prompt = "$historyStrخوێندکار: $userPrompt\nمامۆستا:";
+      final prompt = historyStr.isEmpty ? userPrompt : "$historyStrخوێندکار: $userPrompt\nمامۆستا:";
       
       const systemInstruction = 
           "تۆ مامۆستایەکی زیرەک و پرۆفێشناڵی زانکۆی بە ناوی ZankoAI. وەڵامی هەموو پرسیارەکان بە هەمان زمانی پرسیارکەرەکە بدەرەوە بە شێوازێکی پڕۆفێشناڵ، زانستی، و زۆر ڕوون بە بەکارهێنانی سەردێڕ و خاڵبەندی مارکداون: ئەگەر بە کوردی سۆرانی بوو بە سۆرانی، ئەگەر بە کوردی بادینی بوو بە بادینی، ئەگەر بە زمانی عەرەبی بوو بە زمانی عەرەبی پاراو و دروست، و ئەگەر بە ئینگلیزی بوو بە ئینگلیزی.";

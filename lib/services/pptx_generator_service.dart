@@ -28,121 +28,226 @@ class PptxGeneratorService {
   static String getSlideSpecificImageUrl(String topic, int slideIndex) {
     final t = topic.toLowerCase();
 
-    // 1. Medicine & Healthcare
-    if (t.contains('پزیشک') || t.contains('med') || t.contains('health') || t.contains('دکتۆر') || t.contains('نەخۆش') || t.contains('طب') || t.contains('صحة')) {
+    // 1. Medicine, Clinical Healthcare & Surgery
+    if (t.contains('پزیشک') || t.contains('med') || t.contains('health') || t.contains('دکتۆر') || t.contains('نەخۆش') || t.contains('طب') || t.contains('صحة') || t.contains('جراح') || t.contains('clinical')) {
       final images = [
-        'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1581093458791-9f3c3900df4b?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1532012164546-f432f2e3777a?w=800&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&auto=format&fit=crop&q=80', // Slide 1: Medical stethoscope & tablet
+        'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&auto=format&fit=crop&q=80', // Slide 2: Doctor team consulting
+        'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=800&auto=format&fit=crop&q=80', // Slide 3: Clinical patient care
+        'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?w=800&auto=format&fit=crop&q=80', // Slide 4: Healthcare diagnostic technology
+        'https://images.unsplash.com/photo-1581093458791-9f3c3900df4b?w=800&auto=format&fit=crop&q=80', // Slide 5: Medical research lab
+        'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800&auto=format&fit=crop&q=80', // Slide 6: Digital health monitoring
+        'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=800&auto=format&fit=crop&q=80', // Slide 7: Hospital surgery & treatment
+        'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=800&auto=format&fit=crop&q=80', // Slide 8: Future medicine & doctor portrait
       ];
       return images[(slideIndex - 1).clamp(0, images.length - 1)];
     }
 
-    // 2. Cybersecurity & Networks
-    if (t.contains('سایبەر') || t.contains('سکیوریتی') || t.contains('security') || t.contains('cyber') || t.contains('network') || t.contains('أمن')) {
+    // 2. Biology, Genetics, Pharmacy & Laboratory
+    if (t.contains('بایۆلۆجی') || t.contains('دەرمان') || t.contains('تاقیگە') || t.contains('جین') || t.contains('biolog') || t.contains('pharma') || t.contains('gene') || t.contains('lab') || t.contains('أحياء') || t.contains('دواء') || t.contains('مختبر') || t.contains('وراث')) {
       final images = [
-        'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1510511459019-5dda7724fd87?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1532012164546-f432f2e3777a?w=800&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800&auto=format&fit=crop&q=80', // Slide 1: Lab glassware & research
+        'https://images.unsplash.com/photo-1530497610245-94d3c16cda28?w=800&auto=format&fit=crop&q=80', // Slide 2: DNA structure & genetics
+        'https://images.unsplash.com/photo-1576086213369-97a306d36557?w=800&auto=format&fit=crop&q=80', // Slide 3: Microscope cell analysis
+        'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&auto=format&fit=crop&q=80', // Slide 4: Pharmacology pill research
+        'https://images.unsplash.com/photo-1614935151651-0bea6508db6b?w=800&auto=format&fit=crop&q=80', // Slide 5: Biochemical molecular model
+        'https://images.unsplash.com/photo-1581093450021-4a7360e9a6b5?w=800&auto=format&fit=crop&q=80', // Slide 6: Pipetting assay
+        'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&auto=format&fit=crop&q=80', // Slide 7: Scientific chemical culture
+        'https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=800&auto=format&fit=crop&q=80', // Slide 8: Modern biotech horizon
       ];
       return images[(slideIndex - 1).clamp(0, images.length - 1)];
     }
 
-    // 3. AI & Computer Science
-    if (t.contains('ژیری') || t.contains('ai') || t.contains('intelligence') || t.contains('کۆمپیوتەر') || t.contains('computer') || t.contains('ذكاء') || t.contains('تەکنەلۆجیا')) {
+    // 3. AI, Machine Learning, Robotics & Neural Networks
+    if (t.contains('ژیری') || t.contains('دەستکرد') || t.contains('ai') || t.contains('machine learning') || t.contains('neural') || t.contains('robot') || t.contains('ذكاء') || t.contains('اصطناعي') || t.contains('روبوت')) {
       final images = [
-        'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1532012164546-f432f2e3777a?w=800&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80', // Slide 1: Glowing AI neural network
+        'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&auto=format&fit=crop&q=80', // Slide 2: Humanoid robot hand
+        'https://images.unsplash.com/photo-1555255707-c07966088b7b?w=800&auto=format&fit=crop&q=80', // Slide 3: Deep learning code & visual
+        'https://images.unsplash.com/photo-1507146153580-69a1fe6d8aa1?w=800&auto=format&fit=crop&q=80', // Slide 4: Futuristic AI brain concept
+        'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&auto=format&fit=crop&q=80', // Slide 5: Collaborative tech team
+        'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80', // Slide 6: Microchip & processor hardware
+        'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80', // Slide 7: Algorithmic data matrix
+        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80', // Slide 8: Global AI interconnected network
       ];
       return images[(slideIndex - 1).clamp(0, images.length - 1)];
     }
 
-    // 4. Cloud & Big Data
-    if (t.contains('کلاود') || t.contains('cloud') || t.contains('data') || t.contains('داتا') || t.contains('ئامار') || t.contains('بیانات')) {
+    // 4. Cybersecurity, Network Security & Ethical Hacking
+    if (t.contains('سایبەر') || t.contains('سکیوریتی') || t.contains('security') || t.contains('cyber') || t.contains('network') || t.contains('ئاسایش') || t.contains('تۆڕ') || t.contains('أمن') || t.contains('شبك') || t.contains('حماي')) {
       final images = [
-        'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1532012164546-f432f2e3777a?w=800&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&auto=format&fit=crop&q=80', // Slide 1: Cyber lock & security shield
+        'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80', // Slide 2: Server room infrastructure
+        'https://images.unsplash.com/photo-1510511459019-5dda7724fd87?w=800&auto=format&fit=crop&q=80', // Slide 3: Secure terminal interface
+        'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop&q=80', // Slide 4: Threat monitoring dashboard
+        'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&auto=format&fit=crop&q=80', // Slide 5: Security operations center
+        'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80', // Slide 6: Digital cryptography code
+        'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=800&auto=format&fit=crop&q=80', // Slide 7: High-speed optical data cable
+        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80', // Slide 8: Global cybersecurity defense
       ];
       return images[(slideIndex - 1).clamp(0, images.length - 1)];
     }
 
-    // 5. Law & Justice
-    if (t.contains('یاسا') || t.contains('law') || t.contains('داد') || t.contains('justice') || t.contains('قانون') || t.contains('حقوق')) {
+    // 5. Software Engineering, Computer Science & Web/Mobile Dev
+    if (t.contains('کۆمپیوتەر') || t.contains('بەرنامە') || t.contains('نەرمەکاڵا') || t.contains('تەکنەلۆجیا') || t.contains('computer') || t.contains('software') || t.contains('code') || t.contains('program') || t.contains('app') || t.contains('web') || t.contains('حاسوب') || t.contains('برمج') || t.contains('تطوير')) {
       final images = [
-        'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1450133064473-71024230f91b?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1453728013993-6d66e9c9123a?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1532012164546-f432f2e3777a?w=800&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80', // Slide 1: Clean developer workspace & code
+        'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop&q=80', // Slide 2: Laptop and software workflow
+        'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80', // Slide 3: Web architecture design
+        'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&auto=format&fit=crop&q=80', // Slide 4: Coding algorithm screen
+        'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&auto=format&fit=crop&q=80', // Slide 5: Agile software engineering team
+        'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80', // Slide 6: Analytics & data visualization
+        'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&auto=format&fit=crop&q=80', // Slide 7: Software debugging monitor
+        'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=800&auto=format&fit=crop&q=80', // Slide 8: Software engineering blueprint
       ];
       return images[(slideIndex - 1).clamp(0, images.length - 1)];
     }
 
-    // 6. Engineering & Science
-    if (t.contains('ئەندازیار') || t.contains('engineering') || t.contains('بیناسازی') || t.contains('هندسة')) {
+    // 6. Cloud Computing, Big Data, Data Science & Analytics
+    if (t.contains('کلاود') || t.contains('داتا') || t.contains('ئامار') || t.contains('cloud') || t.contains('data') || t.contains('analytics') || t.contains('database') || t.contains('سحاب') || t.contains('بيانات') || t.contains('إحصاء')) {
       final images = [
-        'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1532012164546-f432f2e3777a?w=800&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&auto=format&fit=crop&q=80', // Slide 1: Big data analytics chart
+        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80', // Slide 2: Cloud computing network
+        'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80', // Slide 3: Growth charts & metrics
+        'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80', // Slide 4: Data visualization dashboard
+        'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80', // Slide 5: Data center storage arrays
+        'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80', // Slide 6: Digital connection pathways
+        'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=800&auto=format&fit=crop&q=80', // Slide 7: Database architecture plan
+        'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80', // Slide 8: Data science matrix
       ];
       return images[(slideIndex - 1).clamp(0, images.length - 1)];
     }
 
-    // 7. Business & Management
-    if (t.contains('کارگێڕی') || t.contains('business') || t.contains('ئابووری') || t.contains('ژمێریاری') || t.contains('إدارة') || t.contains('اقتصاد')) {
+    // 7. Civil Engineering, Architecture & Construction
+    if (t.contains('تەلارساز') || t.contains('بیناساز') || t.contains('شارستان') || t.contains('architecture') || t.contains('civil') || t.contains('construction') || t.contains('building') || t.contains('عمار') || t.contains('بناء') || t.contains('إنشاء')) {
       final images = [
-        'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1532012164546-f432f2e3777a?w=800&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&auto=format&fit=crop&q=80', // Slide 1: Modern architectural skyscraper
+        'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&auto=format&fit=crop&q=80', // Slide 2: Architectural blueprint drafting
+        'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&auto=format&fit=crop&q=80', // Slide 3: Construction site engineering
+        'https://images.unsplash.com/photo-1541888946425-d0fbb18f15f7?w=800&auto=format&fit=crop&q=80', // Slide 4: Civil engineering infrastructure
+        'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800&auto=format&fit=crop&q=80', // Slide 5: Interior structural design
+        'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&auto=format&fit=crop&q=80', // Slide 6: Modern sustainable building
+        'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80', // Slide 7: Technical surveying tools
+        'https://images.unsplash.com/photo-1479839672679-a46483c0e7c8?w=800&auto=format&fit=crop&q=80', // Slide 8: Future urban city planning
       ];
       return images[(slideIndex - 1).clamp(0, images.length - 1)];
     }
 
-    // General / Canva Academic Default
+    // 8. Electrical, Mechanical, Energy & General Engineering
+    if (t.contains('ئەندازیار') || t.contains('کارەبا') || t.contains('میکانیک') || t.contains('وزە') || t.contains('خۆر') || t.contains('نەوت') || t.contains('engineer') || t.contains('electric') || t.contains('mechanic') || t.contains('energy') || t.contains('solar') || t.contains('هندس') || t.contains('كهرب') || t.contains('طاق') || t.contains('نفط')) {
+      final images = [
+        'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80', // Slide 1: Industrial engineering precision
+        'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=800&auto=format&fit=crop&q=80', // Slide 2: Solar panels & clean energy
+        'https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&auto=format&fit=crop&q=80', // Slide 3: Circuit board & electronics
+        'https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&auto=format&fit=crop&q=80', // Slide 4: Robotics & mechanical testing
+        'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=800&auto=format&fit=crop&q=80', // Slide 5: Wind turbines renewable power
+        'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&auto=format&fit=crop&q=80', // Slide 6: Precision manufacturing gear
+        'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&auto=format&fit=crop&q=80', // Slide 7: Power system grid
+        'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80', // Slide 8: Next-generation micro-electronics
+      ];
+      return images[(slideIndex - 1).clamp(0, images.length - 1)];
+    }
+
+    // 9. Law, Legal Studies, Judiciary & Politics
+    if (t.contains('یاسا') || t.contains('داد') || t.contains('ماف') || t.contains('دەستوور') || t.contains('پەرلەمان') || t.contains('سیاسەت') || t.contains('قانون') || t.contains('عدال') || t.contains('حقوق') || t.contains('دستور') || t.contains('سياس') || t.contains('law') || t.contains('legal') || t.contains('justice') || t.contains('court') || t.contains('politic')) {
+      final images = [
+        'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop&q=80', // Slide 1: Scales of justice & legal books
+        'https://images.unsplash.com/photo-1505664194779-8beaceb93744?w=800&auto=format&fit=crop&q=80', // Slide 2: Classic law library & gavel
+        'https://images.unsplash.com/photo-1450133064473-71024230f91b?w=800&auto=format&fit=crop&q=80', // Slide 3: Judge gavel & courtroom
+        'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800&auto=format&fit=crop&q=80', // Slide 4: Legal contract agreement
+        'https://images.unsplash.com/photo-1479142506502-19b3a3b7ff33?w=800&auto=format&fit=crop&q=80', // Slide 5: Supreme court pillars
+        'https://images.unsplash.com/photo-1453728013993-6d66e9c9123a?w=800&auto=format&fit=crop&q=80', // Slide 6: Legal research & magnifying focus
+        'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&auto=format&fit=crop&q=80', // Slide 7: International diplomacy handshake
+        'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&auto=format&fit=crop&q=80', // Slide 8: Constitutional legislature hall
+      ];
+      return images[(slideIndex - 1).clamp(0, images.length - 1)];
+    }
+
+    // 10. Business, Management, Economics & Accounting
+    if (t.contains('کارگێڕی') || t.contains('ئابووری') || t.contains('ژمێریاری') || t.contains('بازاڕ') || t.contains('دارایی') || t.contains('بانک') || t.contains('business') || t.contains('manage') || t.contains('econom') || t.contains('finance') || t.contains('account') || t.contains('إدارة') || t.contains('اقتصاد') || t.contains('محاسب') || t.contains('مالي')) {
+      final images = [
+        'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80', // Slide 1: Financial market analysis
+        'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&auto=format&fit=crop&q=80', // Slide 2: Business executive strategy
+        'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&auto=format&fit=crop&q=80', // Slide 3: Corporate project roadmap
+        'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&auto=format&fit=crop&q=80', // Slide 4: Strategic team presentation
+        'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&auto=format&fit=crop&q=80', // Slide 5: Global banking & investment
+        'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&auto=format&fit=crop&q=80', // Slide 6: Client negotiation & partnership
+        'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80', // Slide 7: Modern business collaboration
+        'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&auto=format&fit=crop&q=80', // Slide 8: Corporate headquarters future
+      ];
+      return images[(slideIndex - 1).clamp(0, images.length - 1)];
+    }
+
+    // 11. Psychology, Education & Philosophy
+    if (t.contains('پەروەردە') || t.contains('دەروون') || t.contains('کۆمەڵناسی') || t.contains('فەلسەفە') || t.contains('فێرکاری') || t.contains('تربية') || t.contains('نفس') || t.contains('اجتماع') || t.contains('فلسفة') || t.contains('تعليم') || t.contains('psych') || t.contains('educat') || t.contains('socio') || t.contains('philosophy')) {
+      final images = [
+        'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=800&auto=format&fit=crop&q=80', // Slide 1: University library & academic books
+        'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop&q=80', // Slide 2: Interactive educational lecture
+        'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&auto=format&fit=crop&q=80', // Slide 3: Cognitive learning dynamics
+        'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=800&auto=format&fit=crop&q=80', // Slide 4: University study hall
+        'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&auto=format&fit=crop&q=80', // Slide 5: Teaching auditorium presentation
+        'https://images.unsplash.com/photo-1532012164546-f432f2e3777a?w=800&auto=format&fit=crop&q=80', // Slide 6: Knowledge & intellectual reading
+        'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=80', // Slide 7: Academic examination & research writing
+        'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=80', // Slide 8: Student group academic success
+      ];
+      return images[(slideIndex - 1).clamp(0, images.length - 1)];
+    }
+
+    // 12. History, Archaeology, Culture & Kurdish Studies
+    if (t.contains('مێژوو') || t.contains('شوێنەوار') || t.contains('کورد') || t.contains('کەلتوور') || t.contains('کەلەپوور') || t.contains('شارستانیەت') || t.contains('تاريخ') || t.contains('آثار') || t.contains('حضار') || t.contains('تراث') || t.contains('کرد') || t.contains('history') || t.contains('archaeol') || t.contains('heritage') || t.contains('kurd')) {
+      final images = [
+        'https://images.unsplash.com/photo-1461360370896-922624d12aa1?w=800&auto=format&fit=crop&q=80', // Slide 1: Ancient historical parchment & map
+        'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=800&auto=format&fit=crop&q=80', // Slide 2: Historical library archive
+        'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=800&auto=format&fit=crop&q=80', // Slide 3: Archaeological monument & castle
+        'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=800&auto=format&fit=crop&q=80', // Slide 4: Ancient artifact & sculpture
+        'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&auto=format&fit=crop&q=80', // Slide 5: Historical documents study
+        'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800&auto=format&fit=crop&q=80', // Slide 6: Classic manuscripts
+        'https://images.unsplash.com/photo-1474932430478-367dbb6832c1?w=800&auto=format&fit=crop&q=80', // Slide 7: Vintage literature & heritage
+        'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=800&auto=format&fit=crop&q=80', // Slide 8: Archival preservation
+      ];
+      return images[(slideIndex - 1).clamp(0, images.length - 1)];
+    }
+
+    // 13. Languages, Literature, Poetry & Translation
+    if (t.contains('زمان') || t.contains('ئەدەب') || t.contains('شێعر') || t.contains('شیعر') || t.contains('ڕۆمان') || t.contains('وەرگێڕان') || t.contains('لغة') || t.contains('أدب') || t.contains('شعر') || t.contains('رواية') || t.contains('ترجم') || t.contains('language') || t.contains('literat') || t.contains('poem') || t.contains('translat')) {
+      final images = [
+        'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&auto=format&fit=crop&q=80', // Slide 1: Scholarly reading & open book
+        'https://images.unsplash.com/photo-1474932430478-367dbb6832c1?w=800&auto=format&fit=crop&q=80', // Slide 2: Classical literature collection
+        'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=800&auto=format&fit=crop&q=80', // Slide 3: Language translation manuscript
+        'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800&auto=format&fit=crop&q=80', // Slide 4: Poetry and linguistic study
+        'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&auto=format&fit=crop&q=80', // Slide 5: Grand university library
+        'https://images.unsplash.com/photo-1507842229451-9f232615e324?w=800&auto=format&fit=crop&q=80', // Slide 6: Literary writing desk
+        'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=800&auto=format&fit=crop&q=80', // Slide 7: Bookshelf & linguistics
+        'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=80', // Slide 8: Translation & academic writing
+      ];
+      return images[(slideIndex - 1).clamp(0, images.length - 1)];
+    }
+
+    // 14. Agriculture, Environment, Ecology & Nature
+    if (t.contains('کشتوکاڵ') || t.contains('ژینگە') || t.contains('ڕووەک') || t.contains('دارستان') || t.contains('ئاژەڵ') || t.contains('زەوی') || t.contains('زراعة') || t.contains('بيئة') || t.contains('نبات') || t.contains('غابات') || t.contains('agri') || t.contains('farm') || t.contains('environ') || t.contains('plant') || t.contains('ecolog')) {
+      final images = [
+        'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&auto=format&fit=crop&q=80', // Slide 1: Modern agricultural wheat field
+        'https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=800&auto=format&fit=crop&q=80', // Slide 2: Smart agronomy greenhouse
+        'https://images.unsplash.com/photo-1516253593875-bd7ba052fbc5?w=800&auto=format&fit=crop&q=80', // Slide 3: Environmental forest ecology
+        'https://images.unsplash.com/photo-1495107334309-fcf20504a5ab?w=800&auto=format&fit=crop&q=80', // Slide 4: Sustainable farming & crops
+        'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&auto=format&fit=crop&q=80', // Slide 5: High-tech agricultural drone
+        'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?w=800&auto=format&fit=crop&q=80', // Slide 6: Plant biotechnology laboratory
+        'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=800&auto=format&fit=crop&q=80', // Slide 7: Eco renewable energy farm
+        'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&auto=format&fit=crop&q=80', // Slide 8: Pure ecological preservation
+      ];
+      return images[(slideIndex - 1).clamp(0, images.length - 1)];
+    }
+
+    // 15. General Academic / Canva Template Default (8 Unique HD Images)
     final defaultImages = [
-      'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1532012164546-f432f2e3777a?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&auto=format&fit=crop&q=80', // Slide 1: Professional presentation stage
+      'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=80', // Slide 2: Analytical academic research
+      'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&auto=format&fit=crop&q=80', // Slide 3: Scholarly literature study
+      'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80', // Slide 4: Systematic process diagram
+      'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=80', // Slide 5: University study collaboration
+      'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80', // Slide 6: Quantitative data charts
+      'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80', // Slide 7: Academic seminar discussion
+      'https://images.unsplash.com/photo-1532012164546-f432f2e3777a?w=800&auto=format&fit=crop&q=80', // Slide 8: Grand academic achievement
     ];
     return defaultImages[(slideIndex - 1).clamp(0, defaultImages.length - 1)];
   }
@@ -161,7 +266,15 @@ class PptxGeneratorService {
 
     void saveCurrentSlide() {
       if (currentTitle.isNotEmpty || currentBullets.isNotEmpty) {
-        final assignedTitle = currentTitle.isNotEmpty ? currentTitle : (defaultTitle ?? 'سلايد');
+        String assignedTitle = currentTitle.isNotEmpty ? currentTitle : (defaultTitle ?? 'سلاید');
+        // If Slide 1 and defaultTitle is provided, make sure Slide 1 represents the exact chosen topic title
+        if (slideCounter == 1 && defaultTitle != null && defaultTitle.trim().isNotEmpty) {
+          final t = assignedTitle.trim();
+          if (t.contains('ناساندن') || t.contains('چەمک') || t.contains('گرنگی') || t.contains('Introduction') || t.contains('سلاید') || t.contains('Slide') || t.contains('سلايد') || t.isEmpty) {
+            assignedTitle = defaultTitle.trim();
+          }
+        }
+
         final assignedImg = getSlideSpecificImageUrl(defaultTitle ?? assignedTitle, slideCounter);
         slides.add(SlideModel(
           title: assignedTitle,
@@ -188,14 +301,14 @@ class PptxGeneratorService {
         continue;
       }
 
-      // Detect explicit slide headers e.g. "### 🔹 سلایدی ١: ناساندن", "### Slide 1: Title", "1️⃣ سلایدی یەکەم:", "## Slide 1", "**سلایدی ١: ...**"
+      // Detect explicit slide headers e.g. "### 🔹 سلایدی ١: ناساندن", "### Slide 1: Title", "1️⃣ سلایدی یەکەم:", "## Slide 1", "**سلایدی ١: ...**", "### 1. Title"
       final isExplicitSlideKeyword = RegExp(
-        r'^(#{1,4}\s*)?(🔹|🔸|▪️|▫️|🔻|\d+️⃣)?\s*(\*\*)?(سلایدی|سلايد|Slide|الشريحة)\s*(\d+|[٠-٩]+|[١-٩]+|یەکەم|دووەم|سێیەم|چوارەم|پێنجەم|شەشەم|حەوتەم|هەشتەم|الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن)?\s*[:\-–\.]?\s*',
+        r'^(#{1,4}\s*)?(🔹|🔸|▪️|▫️|🔻|\d+️⃣)?\s*(\*\*)?(سلایدی|سلاید|سڵایدی|سڵاید|سلايد|سلايدي|Slide|الشريحة|شريحة|تەوەری|تەوەرەی|المحور)\s*(\d+|[٠-٩]+|[١-٩]+|یەکەم|دووەم|سێیەم|چوارەم|پێنجەم|شەشەم|حەوتەم|هەشتەم|الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن)?\s*[:\-–\.]?\s*',
         caseSensitive: false,
-      ).hasMatch(trimmed);
+      ).hasMatch(trimmed) || RegExp(r'^#{2,3}\s+\d+[\.:\-]\s+', caseSensitive: false).hasMatch(trimmed);
 
       final isMarkdownSlideHeading = RegExp(r'^#{2,3}\s+', caseSensitive: false).hasMatch(trimmed) &&
-          (trimmed.contains('سلاید') || trimmed.contains('Slide') || trimmed.contains('سلايد') || trimmed.contains('الشريحة') || trimmed.contains('🔹') || trimmed.contains('🔸') || RegExp(r'\b(Slide\s*\d+)\b', caseSensitive: false).hasMatch(trimmed));
+          (trimmed.contains('سلاید') || trimmed.contains('سڵاید') || trimmed.contains('Slide') || trimmed.contains('سلايد') || trimmed.contains('الشريحة') || trimmed.contains('🔹') || trimmed.contains('🔸') || RegExp(r'\b(Slide\s*\d+)\b', caseSensitive: false).hasMatch(trimmed));
 
       final isSlideHeader = isExplicitSlideKeyword || isMarkdownSlideHeading;
 
@@ -209,7 +322,8 @@ class PptxGeneratorService {
         String cleanTitle = trimmed
             .replaceAll(RegExp(r'^#+\s*'), '')
             .replaceAll(RegExp(r'^(🔹|🔸|▪️|▫️|🔻|\d+️⃣)\s*'), '')
-            .replaceAll(RegExp(r'^(سلایدی|سلايد|Slide|الشريحة)\s*(\d+|[٠-٩]+|[١-٩]+|یەکەم|دووەم|سێیەم|چوارەم|پێنجەم|شەشەم|حەوتەم|هەشتەم)?[:\-–\.]?\s*', caseSensitive: false), '')
+            .replaceAll(RegExp(r'^(سلایدی|سلاید|سڵایدی|سڵاید|سلايد|سلايدي|Slide|الشريحة|شريحة|تەوەری|تەوەرەی|المحور)\s*(\d+|[٠-٩]+|[١-٩]+|یەکەم|دووەم|سێیەم|چوارەم|پێنجەم|شەشەم|حەوتەم|هەشتەم|الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن)?[:\-–\.]?\s*', caseSensitive: false), '')
+            .replaceAll(RegExp(r'^\d+[\.:\-]\s*'), '')
             .replaceAll('**', '')
             .replaceAll('*', '')
             .trim();

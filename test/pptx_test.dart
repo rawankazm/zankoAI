@@ -128,4 +128,37 @@ void main() {
 
     expect(bytes.isNotEmpty, true);
   });
+
+  test('Diverse Kurdish and Arabic Slide Header Parsing Resilience', () async {
+    const variedOutput = '''
+# ناونیشانی سەرەکیی پرێزێنتەیشن
+### سڵاید ١: پێناسە و دەستپێک
+- خاڵی یەکەم لەسەر شیکاری
+- خاڵی دووەم دەربارەی گرنگی
+
+### 2. Theoretical Background
+- Literature review findings
+- Historical context
+
+### سلایدی ٣: کێشەی سەرەکی
+- ئاستەنگی داتا و پاراستن
+- تێچووی دارایی
+
+### تەوەرەی ٤: ئامانجەکان
+- بەدەستهێنانی کارایی ٩٠٪
+- کەمکردنەوەی هەڵە
+
+### 5. Methodology
+- Statistical analysis
+- Neural network model
+''';
+
+    final slides = PptxGeneratorService.parseSlidesFromText(variedOutput, defaultTitle: 'تاقیکردنەوە');
+    expect(slides.length, 5);
+    expect(slides[0].title.contains('پێناسە'), true);
+    expect(slides[1].title.contains('Theoretical Background'), true);
+    expect(slides[2].title.contains('کێشەی سەرەکی'), true);
+    expect(slides[3].title.contains('ئامانجەکان'), true);
+    expect(slides[4].title.contains('Methodology'), true);
+  });
 }
