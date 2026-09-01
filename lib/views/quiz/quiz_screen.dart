@@ -1,11 +1,9 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:syncfusion_flutter_pdf/pdf.dart';
 import '../../services/ai_service.dart';
 import '../../services/database_service.dart';
+import '../../services/document_parser_service.dart';
 import '../../services/language_provider.dart';
 import '../../services/score_service.dart';
 import '../../models/quiz_model.dart';
@@ -95,98 +93,15 @@ class _QuizScreenState extends State<QuizScreen> {
     super.dispose();
   }
 
-  // Crash-proof helper to safely extract text from PDF binary
-  String _extractTextFromPdfBytes(Uint8List bytes) {
-    try {
-      final PdfDocument document = PdfDocument(inputBytes: bytes);
-      final String extractedText = PdfTextExtractor(document).extractText();
-      document.dispose();
-
-      final cleanText = extractedText.trim();
-      if (cleanText.isNotEmpty) {
-        return cleanText.length > 10000 ? cleanText.substring(0, 10000) : cleanText;
-      }
-    } catch (_) {}
-
-    try {
-      final maxBytes = bytes.length > 250000 ? bytes.sublist(0, 250000) : bytes;
-      final rawStr = String.fromCharCodes(maxBytes);
-      final StringBuffer buffer = StringBuffer();
-      int start = -1;
-      int charCount = 0;
-      
-      for (int i = 0; i < rawStr.length; i++) {
-        final char = rawStr[i];
-        if (char == '(') {
-          start = i + 1;
-        } else if (char == ')' && start != -1) {
-          final snippet = rawStr.substring(start, i).trim();
-          if (snippet.length > 2 && !snippet.startsWith('/') && !snippet.contains('font')) {
-            buffer.write('$snippet ');
-            charCount += snippet.length;
-            if (charCount > 6000) break;
-          }
-          start = -1;
-        }
-      }
-
-      final extracted = buffer.toString().trim();
-      if (extracted.isNotEmpty) return extracted;
-      
-      final cleanText = rawStr.split('\n').where((l) {
-        final t = l.trim();
-        return !t.startsWith('%') &&
-            !t.contains('obj') &&
-            !t.contains('<<') &&
-            !t.contains('>>') &&
-            !t.contains('/Type') &&
-            !t.contains('endobj') &&
-            !t.contains('/Font') &&
-            t.length > 4;
-      }).join(' ').replaceAll(RegExp(r'\s+'), ' ').trim();
-
-      if (cleanText.isNotEmpty && cleanText.length > 20) {
-        return cleanText.length > 4000 ? cleanText.substring(0, 4000) : cleanText;
-      }
-      return 'دەقی فایلی فێرکاری بۆ تاقیکردنەوە';
-    } catch (_) {
-      return 'تێگەیشتن لە دەقی فایلی بەستراوە';
-    }
-  }
-
   Future<void> _pickQuizFile() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'txt', 'md'],
-        withData: true,
-      );
+      final parsed = await DocumentParserService.pickAndExtractDocument();
 
-      if (result != null && result.files.isNotEmpty) {
-        final file = result.files.single;
-        
-        Uint8List? bytes = file.bytes;
-        if (bytes == null && file.path != null) {
-          final localFile = File(file.path!);
-          if (await localFile.exists()) {
-            bytes = await localFile.readAsBytes();
-          }
-        }
-        
-        if (bytes != null) {
-          String text = '';
-          if (file.name.toLowerCase().endsWith('.pdf')) {
-            text = _extractTextFromPdfBytes(bytes);
-          } else {
-            final maxBytes = bytes.length > 250000 ? bytes.sublist(0, 250000) : bytes;
-            text = String.fromCharCodes(maxBytes);
-          }
-          
-          setState(() {
-            _quizFileName = file.name;
-            _quizFileContent = text;
-          });
-        }
+      if (parsed != null) {
+        setState(() {
+          _quizFileName = parsed.fileName;
+          _quizFileContent = parsed.content;
+        });
       }
     } catch (e) {
       if (!mounted) return;

@@ -7,14 +7,13 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:syncfusion_flutter_pdf/pdf.dart' as sync_pdf;
 import '../../services/language_provider.dart';
 import '../../services/ai_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/database_service.dart';
+import '../../services/document_parser_service.dart';
 import '../../services/kurdish_tts_service.dart';
 import '../../models/note_model.dart';
 import '../../theme.dart';
@@ -797,35 +796,11 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
 
   Future<void> _pickAndSolvePdf() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'txt'],
-      );
+      final parsed = await DocumentParserService.pickAndExtractDocument();
 
-      if (result == null || result.files.isEmpty) return;
-      final file = result.files.first;
+      if (parsed == null) return;
 
-      String extractedText = '';
-      if (file.bytes != null) {
-        if (file.name.toLowerCase().endsWith('.pdf')) {
-          final doc = sync_pdf.PdfDocument(inputBytes: file.bytes!);
-          extractedText = sync_pdf.PdfTextExtractor(doc).extractText();
-          doc.dispose();
-        } else {
-          extractedText = utf8.decode(file.bytes!);
-        }
-      } else if (file.path != null) {
-        final ioFile = File(file.path!);
-        final bytes = await ioFile.readAsBytes();
-        if (file.name.toLowerCase().endsWith('.pdf')) {
-          final doc = sync_pdf.PdfDocument(inputBytes: bytes);
-          extractedText = sync_pdf.PdfTextExtractor(doc).extractText();
-          doc.dispose();
-        } else {
-          extractedText = utf8.decode(bytes);
-        }
-      }
-
+      final extractedText = parsed.content;
       if (extractedText.trim().isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -836,7 +811,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       }
 
       final safeText = extractedText.length > 5000 ? extractedText.substring(0, 5000) : extractedText;
-      final promptToSend = "📄 [فایلی وانە: ${file.name}]\nتکایە ئەم فایلەی خوارەوە بە کورتی و زانستی شی بکەرەوە و خاڵە سەرەکییەکانی دیاری بکە:\n\n$safeText";
+      final promptToSend = "📄 [فایلی وانە: ${parsed.fileName} - ${parsed.typeDisplayName}]\nتکایە ئەم فایلەی خوارەوە بە کورتی و زانستی شی بکەرەوە و خاڵە سەرەکییەکانی دیاری بکە:\n\n$safeText";
 
       _sendMessage(promptToSend);
     } catch (e) {

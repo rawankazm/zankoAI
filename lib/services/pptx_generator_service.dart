@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'pptx_template_data.dart';
 
 class SlideModel {
   final String title;
@@ -344,60 +345,84 @@ class PptxGeneratorService {
 
     List<int> toUtf8(String str) => utf8.encode(str);
 
-    // 1. [Content_Types].xml (including image extensions)
+    // 1. [Content_Types].xml (including core/app/presProps/viewProps/tableStyles/slideLayouts 1..11)
     final contentTypesXml = _buildContentTypesXml(slides.length);
     final contentTypesBytes = toUtf8(contentTypesXml);
     archive.addFile(ArchiveFile('[Content_Types].xml', contentTypesBytes.length, contentTypesBytes));
 
-    // 2. _rels/.rels
+    // 2. _rels/.rels (with core-properties and extended-properties)
     final rootRelsXml = _buildRootRelsXml();
     final rootRelsBytes = toUtf8(rootRelsXml);
     archive.addFile(ArchiveFile('_rels/.rels', rootRelsBytes.length, rootRelsBytes));
 
-    // 3. ppt/_rels/presentation.xml.rels
+    // 3. docProps/core.xml & docProps/app.xml (Required for Protected View)
+    final coreXml = _buildDocPropsCoreXml(presentationTitle);
+    final coreBytes = toUtf8(coreXml);
+    archive.addFile(ArchiveFile('docProps/core.xml', coreBytes.length, coreBytes));
+
+    final appXml = _buildDocPropsAppXml(slides.length);
+    final appBytes = toUtf8(appXml);
+    archive.addFile(ArchiveFile('docProps/app.xml', appBytes.length, appBytes));
+
+    // 4. ppt/_rels/presentation.xml.rels
     final presRelsXml = _buildPresentationRelsXml(slides.length);
     final presRelsBytes = toUtf8(presRelsXml);
     archive.addFile(ArchiveFile('ppt/_rels/presentation.xml.rels', presRelsBytes.length, presRelsBytes));
 
-    // 4. ppt/presentation.xml
+    // 5. ppt/presentation.xml
     final presXml = _buildPresentationXml(slides.length);
     final presBytes = toUtf8(presXml);
     archive.addFile(ArchiveFile('ppt/presentation.xml', presBytes.length, presBytes));
 
-    // 5. ppt/slideMasters/slideMaster1.xml & rels
-    final slideMasterXml = _buildSlideMasterXml();
-    final slideMasterBytes = toUtf8(slideMasterXml);
+    // 6. Native Templates: presProps.xml, viewProps.xml, tableStyles.xml, theme1.xml
+    final presPropsBytes = toUtf8(PptxTemplateData.ppt_presProps_xml);
+    archive.addFile(ArchiveFile('ppt/presProps.xml', presPropsBytes.length, presPropsBytes));
+
+    final viewPropsBytes = toUtf8(PptxTemplateData.ppt_viewProps_xml);
+    archive.addFile(ArchiveFile('ppt/viewProps.xml', viewPropsBytes.length, viewPropsBytes));
+
+    final tableStylesBytes = toUtf8(PptxTemplateData.ppt_tableStyles_xml);
+    archive.addFile(ArchiveFile('ppt/tableStyles.xml', tableStylesBytes.length, tableStylesBytes));
+
+    final themeBytes = toUtf8(PptxTemplateData.ppt_theme_theme1_xml);
+    archive.addFile(ArchiveFile('ppt/theme/theme1.xml', themeBytes.length, themeBytes));
+
+    // 7. SlideMaster and its rels
+    final slideMasterBytes = toUtf8(PptxTemplateData.ppt_slideMasters_slideMaster1_xml);
     archive.addFile(ArchiveFile('ppt/slideMasters/slideMaster1.xml', slideMasterBytes.length, slideMasterBytes));
 
-    final slideMasterRelsXml = _buildSlideMasterRelsXml();
-    final slideMasterRelsBytes = toUtf8(slideMasterRelsXml);
+    final slideMasterRelsBytes = toUtf8(PptxTemplateData.ppt_slideMasters__rels_slideMaster1_xml_rels);
     archive.addFile(ArchiveFile('ppt/slideMasters/_rels/slideMaster1.xml.rels', slideMasterRelsBytes.length, slideMasterRelsBytes));
 
-    // 6. ppt/slideLayouts/slideLayout1.xml & slideLayout2.xml & rels
-    final layout1Xml = _buildSlideLayoutXml('Title Slide');
-    final layout1Bytes = toUtf8(layout1Xml);
-    archive.addFile(ArchiveFile('ppt/slideLayouts/slideLayout1.xml', layout1Bytes.length, layout1Bytes));
+    // 8. SlideLayouts 1..11 and their rels
+    final layouts = [
+      (PptxTemplateData.ppt_slideLayouts_slideLayout1_xml, PptxTemplateData.ppt_slideLayouts__rels_slideLayout1_xml_rels),
+      (PptxTemplateData.ppt_slideLayouts_slideLayout2_xml, PptxTemplateData.ppt_slideLayouts__rels_slideLayout2_xml_rels),
+      (PptxTemplateData.ppt_slideLayouts_slideLayout3_xml, PptxTemplateData.ppt_slideLayouts__rels_slideLayout3_xml_rels),
+      (PptxTemplateData.ppt_slideLayouts_slideLayout4_xml, PptxTemplateData.ppt_slideLayouts__rels_slideLayout4_xml_rels),
+      (PptxTemplateData.ppt_slideLayouts_slideLayout5_xml, PptxTemplateData.ppt_slideLayouts__rels_slideLayout5_xml_rels),
+      (PptxTemplateData.ppt_slideLayouts_slideLayout6_xml, PptxTemplateData.ppt_slideLayouts__rels_slideLayout6_xml_rels),
+      (PptxTemplateData.ppt_slideLayouts_slideLayout7_xml, PptxTemplateData.ppt_slideLayouts__rels_slideLayout7_xml_rels),
+      (PptxTemplateData.ppt_slideLayouts_slideLayout8_xml, PptxTemplateData.ppt_slideLayouts__rels_slideLayout8_xml_rels),
+      (PptxTemplateData.ppt_slideLayouts_slideLayout9_xml, PptxTemplateData.ppt_slideLayouts__rels_slideLayout9_xml_rels),
+      (PptxTemplateData.ppt_slideLayouts_slideLayout10_xml, PptxTemplateData.ppt_slideLayouts__rels_slideLayout10_xml_rels),
+      (PptxTemplateData.ppt_slideLayouts_slideLayout11_xml, PptxTemplateData.ppt_slideLayouts__rels_slideLayout11_xml_rels),
+    ];
 
-    final layout2Xml = _buildSlideLayoutXml('Title and Content');
-    final layout2Bytes = toUtf8(layout2Xml);
-    archive.addFile(ArchiveFile('ppt/slideLayouts/slideLayout2.xml', layout2Bytes.length, layout2Bytes));
-
-    final layoutRelsXml = _buildSlideLayoutRelsXml();
-    final layoutRelsBytes = toUtf8(layoutRelsXml);
-    archive.addFile(ArchiveFile('ppt/slideLayouts/_rels/slideLayout1.xml.rels', layoutRelsBytes.length, layoutRelsBytes));
-    archive.addFile(ArchiveFile('ppt/slideLayouts/_rels/slideLayout2.xml.rels', layoutRelsBytes.length, layoutRelsBytes));
-
-    // 7. ppt/theme/theme1.xml with Calibri fontScheme
-    final themeXml = _buildThemeXml();
-    final themeBytes = toUtf8(themeXml);
-    archive.addFile(ArchiveFile('ppt/theme/theme1.xml', themeBytes.length, themeBytes));
+    for (int i = 0; i < layouts.length; i++) {
+      final layoutNum = i + 1;
+      final layoutXmlBytes = toUtf8(layouts[i].$1);
+      final layoutRelsBytes = toUtf8(layouts[i].$2);
+      archive.addFile(ArchiveFile('ppt/slideLayouts/slideLayout$layoutNum.xml', layoutXmlBytes.length, layoutXmlBytes));
+      archive.addFile(ArchiveFile('ppt/slideLayouts/_rels/slideLayout$layoutNum.xml.rels', layoutRelsBytes.length, layoutRelsBytes));
+    }
 
     final hasCustomLogo = logoBytes != null && logoBytes.isNotEmpty;
     if (hasCustomLogo) {
       archive.addFile(ArchiveFile('ppt/media/logo.png', logoBytes.length, logoBytes));
     }
 
-    // 8. Fetch real images in parallel asynchronously and embed into PPTX media/ + slides/
+    // 9. Fetch real images in parallel asynchronously and embed into PPTX media/ + slides/
     final imageFutures = slides.asMap().entries.map((entry) {
       final slideNum = entry.key + 1;
       final slide = entry.value;
@@ -413,7 +438,15 @@ class PptxGeneratorService {
       final imageBytes = allImageBytes[i];
       final isFirst = i == 0;
 
-      archive.addFile(ArchiveFile('ppt/media/image$slideNum.jpeg', imageBytes.length, imageBytes));
+      // Detect real MIME type by checking magic bytes
+      final isPng = imageBytes.length >= 8 &&
+          imageBytes[0] == 0x89 &&
+          imageBytes[1] == 0x50 &&
+          imageBytes[2] == 0x4E &&
+          imageBytes[3] == 0x47;
+      final imageExt = isPng ? 'png' : 'jpeg';
+
+      archive.addFile(ArchiveFile('ppt/media/image$slideNum.$imageExt', imageBytes.length, imageBytes));
 
       // Build slide XML
       final slideXml = _buildSlideXml(
@@ -437,6 +470,7 @@ class PptxGeneratorService {
         isFirst ? 1 : 2,
         hasImage: !isFirst,
         imageIndex: slideNum,
+        imageExt: imageExt,
         hasLogo: isFirst && hasCustomLogo,
       );
       final slideRelBytes = toUtf8(slideRelXml);
@@ -476,10 +510,14 @@ class PptxGeneratorService {
 
     final tempDir = await getTemporaryDirectory();
     final cleanFileName = title
-        .replaceAll(RegExp(r'[\\/:*?"<>|]'), '_')
-        .replaceAll(' ', '_')
+        .replaceAll(RegExp(r'[\\/:*?"<>|«»“”‘’،,;!?.#%&{}$+=@^~`\(\)\[\]]'), '')
+        .replaceAll(RegExp(r'\s+'), '_')
+        .replaceAll(RegExp(r'_+'), '_')
         .trim();
-    final fileName = '${cleanFileName.isEmpty ? 'Seminar_Presentation' : cleanFileName}.pptx';
+    final truncated = cleanFileName.length > 35
+        ? cleanFileName.substring(0, 35).replaceAll(RegExp(r'_+$'), '')
+        : cleanFileName;
+    final fileName = '${truncated.isEmpty ? 'Seminar_Presentation' : truncated}.pptx';
     final filePath = '${tempDir.path}/$fileName';
 
     final file = File(filePath);
@@ -497,7 +535,8 @@ class PptxGeneratorService {
   // ─────────────────────────────────────────────────────────────────────────
 
   static String _escapeXml(String text) {
-    return text
+    final cleaned = text.replaceAll(RegExp(r'[\x00-\x08\x0B\x0C\x0E-\x1F\uD800-\uDFFF]'), '');
+    return cleaned
         .replaceAll('&', '&amp;')
         .replaceAll('<', '&lt;')
         .replaceAll('>', '&gt;')
@@ -505,25 +544,83 @@ class PptxGeneratorService {
         .replaceAll("'", '&apos;');
   }
 
+  static String _buildDocPropsCoreXml(String title) {
+    final now = DateTime.now().toUtc().toIso8601String();
+    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+        '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" '
+        'xmlns:dc="http://purl.org/dc/elements/1.1/" '
+        'xmlns:dcterms="http://purl.org/dc/terms/" '
+        'xmlns:dcmitype="http://purl.org/dc/dcmitype/" '
+        'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n'
+        '  <dc:title>${_escapeXml(title)}</dc:title>\n'
+        '  <dc:creator>ZankoAI</dc:creator>\n'
+        '  <cp:lastModifiedBy>ZankoAI Academic Suite</cp:lastModifiedBy>\n'
+        '  <dcterms:created xsi:type="dcterms:W3CDTF">$now</dcterms:created>\n'
+        '  <dcterms:modified xsi:type="dcterms:W3CDTF">$now</dcterms:modified>\n'
+        '</cp:coreProperties>';
+  }
+
+  static String _buildDocPropsAppXml(int slideCount) {
+    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+        '<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" '
+        'xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">\n'
+        '  <TotalTime>0</TotalTime>\n'
+        '  <Words>0</Words>\n'
+        '  <Application>Microsoft Office PowerPoint</Application>\n'
+        '  <PresentationFormat>On-screen Show (16:9)</PresentationFormat>\n'
+        '  <Paragraphs>0</Paragraphs>\n'
+        '  <Slides>$slideCount</Slides>\n'
+        '  <Notes>0</Notes>\n'
+        '  <HiddenSlides>0</HiddenSlides>\n'
+        '  <MMClips>0</MMClips>\n'
+        '  <ScaleCrop>false</ScaleCrop>\n'
+        '  <HeadingPairs>\n'
+        '    <vt:vector size="2" baseType="variant">\n'
+        '      <vt:variant><vt:lpstr>Theme</vt:lpstr></vt:variant>\n'
+        '      <vt:variant><vt:i4>1</vt:i4></vt:variant>\n'
+        '    </vt:vector>\n'
+        '  </HeadingPairs>\n'
+        '  <TitlesOfParts>\n'
+        '    <vt:vector size="1" baseType="lpstr">\n'
+        '      <vt:lpstr>ZankoAcademic</vt:lpstr>\n'
+        '    </vt:vector>\n'
+        '  </TitlesOfParts>\n'
+        '  <Company>ZankoAI</Company>\n'
+        '  <LinksUpToDate>false</LinksUpToDate>\n'
+        '  <SharedDoc>false</SharedDoc>\n'
+        '  <HyperlinksChanged>false</HyperlinksChanged>\n'
+        '  <AppVersion>16.0000</AppVersion>\n'
+        '</Properties>';
+  }
+
+
+
   static String _buildContentTypesXml(int slideCount) {
     final buffer = StringBuffer();
     buffer.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n');
     buffer.write('<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">\n');
-    buffer.write('  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>\n');
-    buffer.write('  <Default Extension="xml" ContentType="application/xml"/>\n');
     buffer.write('  <Default Extension="jpeg" ContentType="image/jpeg"/>\n');
     buffer.write('  <Default Extension="jpg" ContentType="image/jpeg"/>\n');
     buffer.write('  <Default Extension="png" ContentType="image/png"/>\n');
+    buffer.write('  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>\n');
+    buffer.write('  <Default Extension="xml" ContentType="application/xml"/>\n');
     buffer.write('  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>\n');
     buffer.write('  <Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/>\n');
-    buffer.write('  <Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/>\n');
-    buffer.write('  <Override PartName="/ppt/slideLayouts/slideLayout2.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/>\n');
+    buffer.write('  <Override PartName="/ppt/presProps.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presProps+xml"/>\n');
+    buffer.write('  <Override PartName="/ppt/viewProps.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.viewProps+xml"/>\n');
     buffer.write('  <Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>\n');
+    buffer.write('  <Override PartName="/ppt/tableStyles.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.tableStyles+xml"/>\n');
+
+    for (int i = 1; i <= 11; i++) {
+      buffer.write('  <Override PartName="/ppt/slideLayouts/slideLayout$i.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/>\n');
+    }
 
     for (int i = 1; i <= slideCount; i++) {
       buffer.write('  <Override PartName="/ppt/slides/slide$i.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>\n');
     }
 
+    buffer.write('  <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>\n');
+    buffer.write('  <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>\n');
     buffer.write('</Types>');
     return buffer.toString();
   }
@@ -532,6 +629,8 @@ class PptxGeneratorService {
     return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
         '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n'
         '  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="ppt/presentation.xml"/>\n'
+        '  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>\n'
+        '  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>\n'
         '</Relationships>';
   }
 
@@ -541,9 +640,12 @@ class PptxGeneratorService {
     buffer.write('<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n');
     buffer.write('  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="slideMasters/slideMaster1.xml"/>\n');
     buffer.write('  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="theme/theme1.xml"/>\n');
+    buffer.write('  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/presProps" Target="presProps.xml"/>\n');
+    buffer.write('  <Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/viewProps" Target="viewProps.xml"/>\n');
+    buffer.write('  <Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/tableStyles" Target="tableStyles.xml"/>\n');
 
     for (int i = 1; i <= slideCount; i++) {
-      buffer.write('  <Relationship Id="rId${i + 2}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide$i.xml"/>\n');
+      buffer.write('  <Relationship Id="rId${i + 5}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide$i.xml"/>\n');
     }
 
     buffer.write('</Relationships>');
@@ -553,110 +655,35 @@ class PptxGeneratorService {
   static String _buildPresentationXml(int slideCount) {
     final buffer = StringBuffer();
     buffer.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n');
-    buffer.write('<p:presentation xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">\n');
+    buffer.write('<p:presentation xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" '
+        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" '
+        'xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" saveSubsetFonts="1">\n');
     buffer.write('  <p:sldMasterIdLst>\n');
     buffer.write('    <p:sldMasterId id="2147483648" r:id="rId1"/>\n');
     buffer.write('  </p:sldMasterIdLst>\n');
     buffer.write('  <p:sldIdLst>\n');
 
     for (int i = 1; i <= slideCount; i++) {
-      buffer.write('    <p:sldId id="${255 + i}" r:id="rId${i + 2}"/>\n');
+      buffer.write('    <p:sldId id="${255 + i}" r:id="rId${i + 5}"/>\n');
     }
 
     buffer.write('  </p:sldIdLst>\n');
-    buffer.write('  <p:sldSz cx="12192000" cy="6858000" type="screen16x9"/>\n');
+    buffer.write('  <p:sldSz cx="12192000" cy="6858000"/>\n');
     buffer.write('  <p:notesSz cx="6858000" cy="9144000"/>\n');
-    buffer.write('  <p:defaultTextStyle/>\n');
+    buffer.write('  <p:defaultTextStyle><a:defPPr><a:defRPr lang="en-US"/></a:defPPr><a:lvl1pPr marL="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl1pPr><a:lvl2pPr marL="457200" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl2pPr><a:lvl3pPr marL="914400" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl3pPr><a:lvl4pPr marL="1371600" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl4pPr><a:lvl5pPr marL="1828800" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl5pPr><a:lvl6pPr marL="2286000" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl6pPr><a:lvl7pPr marL="2743200" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl7pPr><a:lvl8pPr marL="3200400" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl8pPr><a:lvl9pPr marL="3657600" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl9pPr></p:defaultTextStyle>\n');
     buffer.write('</p:presentation>');
     return buffer.toString();
   }
 
-  static String _buildSlideMasterXml() {
-    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
-        '<p:sldMaster xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">\n'
-        '  <p:cSld>\n'
-        '    <p:spTree>\n'
-        '      <p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>\n'
-        '      <p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>\n'
-        '    </p:spTree>\n'
-        '  </p:cSld>\n'
-        '  <p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/>\n'
-        '  <p:sldLayoutIdLst>\n'
-        '    <p:sldLayoutId id="2147483649" r:id="rId1"/>\n'
-        '    <p:sldLayoutId id="2147483650" r:id="rId2"/>\n'
-        '  </p:sldLayoutIdLst>\n'
-        '  <p:txStyles><p:titleStyle/><p:bodyStyle/><p:otherStyle/></p:txStyles>\n'
-        '</p:sldMaster>';
-  }
 
-  static String _buildSlideMasterRelsXml() {
-    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
-        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n'
-        '  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>\n'
-        '  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout2.xml"/>\n'
-        '  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="../theme/theme1.xml"/>\n'
-        '</Relationships>';
-  }
 
-  static String _buildSlideLayoutXml(String layoutName) {
-    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
-        '<p:sldLayout xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" type="blank" preserve="1">\n'
-        '  <p:cSld name="$layoutName">\n'
-        '    <p:spTree>\n'
-        '      <p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>\n'
-        '      <p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>\n'
-        '    </p:spTree>\n'
-        '  </p:cSld>\n'
-        '  <p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>\n'
-        '</p:sldLayout>';
-  }
-
-  static String _buildSlideLayoutRelsXml() {
-    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
-        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n'
-        '  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="../slideMasters/slideMaster1.xml"/>\n'
-        '</Relationships>';
-  }
-
-  static String _buildThemeXml() {
-    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
-        '<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="ZankoAcademic">\n'
-        '  <a:themeElements>\n'
-        '    <a:clrScheme name="ZankoModernBlue">\n'
-        '      <a:dk1><a:srgbClr val="0F172A"/></a:dk1>\n'
-        '      <a:lt1><a:srgbClr val="FFFFFF"/></a:lt1>\n'
-        '      <a:dk2><a:srgbClr val="1E293B"/></a:dk2>\n'
-        '      <a:lt2><a:srgbClr val="F8FAFC"/></a:lt2>\n'
-        '      <a:accent1><a:srgbClr val="2563EB"/></a:accent1>\n'
-        '      <a:accent2><a:srgbClr val="38BDF8"/></a:accent2>\n'
-        '      <a:accent3><a:srgbClr val="10B981"/></a:accent3>\n'
-        '      <a:accent4><a:srgbClr val="F59E0B"/></a:accent4>\n'
-        '      <a:accent5><a:srgbClr val="6366F1"/></a:accent5>\n'
-        '      <a:accent6><a:srgbClr val="EC4899"/></a:accent6>\n'
-        '      <a:hlink><a:srgbClr val="38BDF8"/></a:hlink>\n'
-        '      <a:folHlink><a:srgbClr val="818CF8"/></a:folHlink>\n'
-        '    </a:clrScheme>\n'
-        '    <a:fontScheme name="CalibriScheme">\n'
-        '      <a:majorFont><a:latin typeface="Calibri"/><a:ea typeface=""/><a:cs typeface="Calibri"/></a:majorFont>\n'
-        '      <a:minorFont><a:latin typeface="Calibri"/><a:ea typeface=""/><a:cs typeface="Calibri"/></a:minorFont>\n'
-        '    </a:fontScheme>\n'
-        '    <a:fmtScheme name="Office">\n'
-        '      <a:fillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:fillStyleLst>\n'
-        '      <a:lnStyleLst><a:ln w="9525"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln></a:lnStyleLst>\n'
-        '      <a:effectStyleLst><a:effectStyle><a:effectLst/></a:effectStyle></a:effectStyleLst>\n'
-        '      <a:bgFillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:bgFillStyleLst>\n'
-        '    </a:fmtScheme>\n'
-        '  </a:themeElements>\n'
-        '</a:theme>';
-  }
-
-  static String _buildSlideRelsXml(int layoutIndex, {bool hasImage = false, int? imageIndex, bool hasLogo = false}) {
+  static String _buildSlideRelsXml(int layoutIndex, {bool hasImage = false, int? imageIndex, String imageExt = 'jpeg', bool hasLogo = false}) {
     final buffer = StringBuffer();
     buffer.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n');
     buffer.write('<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n');
     buffer.write('  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout$layoutIndex.xml"/>\n');
     if (hasImage && imageIndex != null) {
-      buffer.write('  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image$imageIndex.jpeg"/>\n');
+      buffer.write('  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image$imageIndex.$imageExt"/>\n');
     }
     if (hasLogo) {
       buffer.write('  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/logo.png"/>\n');
@@ -757,7 +784,7 @@ class PptxGeneratorService {
         buffer.write('          <a:p>\n');
         buffer.write('            <a:pPr algn="ctr"/>\n');
         buffer.write('            <a:r>\n');
-        buffer.write('              <a:rPr lang="$langAttr" sz="1300" b="1"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
+        buffer.write('              <a:rPr lang="$langAttr" sz="1300" b="1"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
         buffer.write('              <a:t>${_escapeXml(effectiveUniv)}</a:t>\n');
         buffer.write('            </a:r>\n');
         buffer.write('          </a:p>\n');
@@ -779,7 +806,7 @@ class PptxGeneratorService {
         buffer.write('          <a:p>\n');
         buffer.write('            <a:pPr algn="ctr"/>\n');
         buffer.write('            <a:r>\n');
-        buffer.write('              <a:rPr lang="$langAttr" sz="1350" b="1"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
+        buffer.write('              <a:rPr lang="$langAttr" sz="1350" b="1"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
         buffer.write('              <a:t>${_escapeXml(effectiveUniv)}</a:t>\n');
         buffer.write('            </a:r>\n');
         buffer.write('          </a:p>\n');
@@ -799,7 +826,7 @@ class PptxGeneratorService {
       buffer.write('          <a:p>\n');
       buffer.write('            <a:pPr algn="ctr" $rtlAttr/>\n');
       buffer.write('            <a:r>\n');
-      buffer.write('              <a:rPr lang="$langAttr" sz="3400" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
+      buffer.write('              <a:rPr lang="$langAttr" sz="3400" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
       buffer.write('              <a:t>${_escapeXml(slide.title)}</a:t>\n');
       buffer.write('            </a:r>\n');
       buffer.write('          </a:p>\n');
@@ -807,7 +834,7 @@ class PptxGeneratorService {
         buffer.write('          <a:p>\n');
         buffer.write('            <a:pPr algn="ctr" $rtlAttr><a:spcBef><a:spcPts val="1200"/></a:spcBef></a:pPr>\n');
         buffer.write('            <a:r>\n');
-        buffer.write('              <a:rPr lang="$langAttr" sz="1500"><a:solidFill><a:srgbClr val="94A3B8"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
+        buffer.write('              <a:rPr lang="$langAttr" sz="1500"><a:solidFill><a:srgbClr val="94A3B8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
         buffer.write('              <a:t>${_escapeXml(effectiveDept)}</a:t>\n');
         buffer.write('            </a:r>\n');
         buffer.write('          </a:p>\n');
@@ -841,14 +868,14 @@ class PptxGeneratorService {
       buffer.write('          <a:p>\n');
       buffer.write('            <a:pPr algn="ctr" $rtlAttr/>\n');
       buffer.write('            <a:r>\n');
-      buffer.write('              <a:rPr lang="$langAttr" sz="1300" b="1"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
+      buffer.write('              <a:rPr lang="$langAttr" sz="1300" b="1"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
       buffer.write('              <a:t>$studentLabel</a:t>\n');
       buffer.write('            </a:r>\n');
       buffer.write('          </a:p>\n');
       buffer.write('          <a:p>\n');
       buffer.write('            <a:pPr algn="ctr" $rtlAttr><a:spcBef><a:spcPts val="800"/></a:spcBef></a:pPr>\n');
       buffer.write('            <a:r>\n');
-      buffer.write('              <a:rPr lang="$langAttr" sz="1800" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
+      buffer.write('              <a:rPr lang="$langAttr" sz="1800" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
       buffer.write('              <a:t>${_escapeXml(effectiveStudent)}</a:t>\n');
       buffer.write('            </a:r>\n');
       buffer.write('          </a:p>\n');
@@ -870,14 +897,14 @@ class PptxGeneratorService {
       buffer.write('          <a:p>\n');
       buffer.write('            <a:pPr algn="ctr" $rtlAttr/>\n');
       buffer.write('            <a:r>\n');
-      buffer.write('              <a:rPr lang="$langAttr" sz="1300" b="1"><a:solidFill><a:srgbClr val="34D399"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
+      buffer.write('              <a:rPr lang="$langAttr" sz="1300" b="1"><a:solidFill><a:srgbClr val="34D399"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
       buffer.write('              <a:t>$supervisorLabel</a:t>\n');
       buffer.write('            </a:r>\n');
       buffer.write('          </a:p>\n');
       buffer.write('          <a:p>\n');
       buffer.write('            <a:pPr algn="ctr" $rtlAttr><a:spcBef><a:spcPts val="800"/></a:spcBef></a:pPr>\n');
       buffer.write('            <a:r>\n');
-      buffer.write('              <a:rPr lang="$langAttr" sz="1800" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
+      buffer.write('              <a:rPr lang="$langAttr" sz="1800" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
       buffer.write('              <a:t>${_escapeXml(effectiveSupervisor)}</a:t>\n');
       buffer.write('            </a:r>\n');
       buffer.write('          </a:p>\n');
@@ -904,7 +931,7 @@ class PptxGeneratorService {
       buffer.write('          <a:p>\n');
       buffer.write('            <a:pPr algn="$algn" $rtlAttr/>\n');
       buffer.write('            <a:r>\n');
-      buffer.write('              <a:rPr lang="$langAttr" sz="2400" b="1"><a:solidFill><a:srgbClr val="0F172A"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
+      buffer.write('              <a:rPr lang="$langAttr" sz="2400" b="1"><a:solidFill><a:srgbClr val="0F172A"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
       buffer.write('              <a:t>${_escapeXml(slide.title)}</a:t>\n');
       buffer.write('            </a:r>\n');
       buffer.write('          </a:p>\n');
@@ -949,11 +976,13 @@ class PptxGeneratorService {
       buffer.write('          <a:lstStyle/>\n');
 
       for (var bullet in slide.bulletPoints) {
+        final cleanBullet = bullet.trim();
+        final displayBullet = cleanBullet.startsWith('•') ? cleanBullet : '• $cleanBullet';
         buffer.write('          <a:p>\n');
-        buffer.write('            <a:pPr algn="$algn" $rtlAttr><a:spcBef><a:spcPts val="1200"/></a:spcBef><a:buClr><a:srgbClr val="2563EB"/></a:buClr><a:buSzPts val="1400"/><a:buFont typeface="Arial"/><a:buChar char="•"/></a:pPr>\n');
+        buffer.write('            <a:pPr algn="$algn" $rtlAttr><a:spcBef><a:spcPts val="600"/></a:spcBef></a:pPr>\n');
         buffer.write('            <a:r>\n');
-        buffer.write('              <a:rPr lang="$langAttr" sz="1600"><a:solidFill><a:srgbClr val="1E293B"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr>\n');
-        buffer.write('              <a:t>${_escapeXml(bullet)}</a:t>\n');
+        buffer.write('              <a:rPr lang="$langAttr" sz="1600"><a:solidFill><a:srgbClr val="1E293B"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
+        buffer.write('              <a:t>${_escapeXml(displayBullet)}</a:t>\n');
         buffer.write('            </a:r>\n');
         buffer.write('          </a:p>\n');
       }
@@ -970,7 +999,7 @@ class PptxGeneratorService {
       buffer.write('          <a:lstStyle/>\n');
       buffer.write('          <a:p>\n');
       buffer.write('            <a:pPr algn="$algn" $rtlAttr/>\n');
-      buffer.write('            <a:r><a:rPr lang="$langAttr" sz="1100"><a:solidFill><a:srgbClr val="94A3B8"/></a:solidFill><a:latin typeface="$latinFont"/><a:ea typeface=""/><a:cs typeface="$csFont"/></a:rPr><a:t>$footerText</a:t></a:r>\n');
+      buffer.write('            <a:r><a:rPr lang="$langAttr" sz="1100"><a:solidFill><a:srgbClr val="94A3B8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr><a:t>$footerText</a:t></a:r>\n');
       buffer.write('          </a:p>\n');
       buffer.write('        </p:txBody>\n');
       buffer.write('      </p:sp>\n');

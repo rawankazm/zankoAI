@@ -1,13 +1,9 @@
-import 'dart:convert';
-import 'dart:io';
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:syncfusion_flutter_pdf/pdf.dart' as sync_pdf;
 import '../../services/ai_service.dart';
+import '../../services/document_parser_service.dart';
 import '../../services/kurdish_tts_service.dart';
 import '../../services/language_provider.dart';
 import '../../theme.dart';
@@ -233,32 +229,14 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
   }
 
   Future<void> _pickAndProcessPdf() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf', 'txt'],
-      withData: true,
-    );
+    final parsed = await DocumentParserService.pickAndExtractDocument();
 
-    if (result == null || result.files.isEmpty) return;
+    if (parsed == null) return;
 
-    final picked = result.files.single;
-    final fileName = picked.name;
+    final fileName = parsed.fileName;
 
     try {
-      String extractedText = '';
-      Uint8List? fileBytes = picked.bytes;
-      if (fileBytes == null && picked.path != null) {
-        fileBytes = await File(picked.path!).readAsBytes();
-      }
-
-      if (fileBytes != null && fileName.toLowerCase().endsWith('.pdf')) {
-        final document = sync_pdf.PdfDocument(inputBytes: fileBytes);
-        final extractor = sync_pdf.PdfTextExtractor(document);
-        extractedText = extractor.extractText();
-        document.dispose();
-      } else if (fileBytes != null) {
-        extractedText = utf8.decode(fileBytes, allowMalformed: true);
-      }
+      String extractedText = parsed.content;
 
       if (extractedText.trim().isEmpty) {
         extractedText = 'Sample English lecture text regarding computer networks and artificial intelligence.';
@@ -269,10 +247,10 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
         _promptLanguageAndGenerate(fileName, extractedText);
       }
     } catch (e) {
-      debugPrint('Error loading PDF for voice tutor: $e');
+      debugPrint('Error loading document for voice tutor: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('هەڵە لە خوێندنەوەی فایلی PDF: $e')),
+          SnackBar(content: Text('هەڵە لە خوێندنەوەی فایل: $e')),
         );
       }
     }

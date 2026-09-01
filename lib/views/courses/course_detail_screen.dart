@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
+import '../../services/document_parser_service.dart';
 import '../../services/language_provider.dart';
 import '../../services/sample_pdf_service.dart';
 import '../../theme.dart';
@@ -176,7 +177,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['pdf'],
+        allowedExtensions: DocumentParserService.allowedExtensions,
       );
 
       if (result != null && result.files.single.name.isNotEmpty) {

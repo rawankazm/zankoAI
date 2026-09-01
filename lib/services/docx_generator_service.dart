@@ -915,10 +915,14 @@ class DocxGeneratorService {
     final bytes = await createDocxBytes(report);
     final tempDir = await getTemporaryDirectory();
     final cleanFileName = cleanTopicTitle(report.title)
-        .replaceAll(RegExp(r'[\\/:*?"<>|]'), '_')
-        .replaceAll(' ', '_')
+        .replaceAll(RegExp(r'[\\/:*?"<>|«»“”‘’،,;!?.#%&{}$+=@^~`\(\)\[\]]'), '')
+        .replaceAll(RegExp(r'\s+'), '_')
+        .replaceAll(RegExp(r'_+'), '_')
         .trim();
-    final fileName = '${cleanFileName.isEmpty ? 'Academic_Report' : cleanFileName}.docx';
+    final truncated = cleanFileName.length > 35
+        ? cleanFileName.substring(0, 35).replaceAll(RegExp(r'_+$'), '')
+        : cleanFileName;
+    final fileName = '${truncated.isEmpty ? 'Academic_Report' : truncated}.docx';
     final filePath = '${tempDir.path}/$fileName';
 
     final file = File(filePath);
@@ -932,7 +936,8 @@ class DocxGeneratorService {
   }
 
   static String _escapeXml(String text) {
-    return text
+    final cleaned = text.replaceAll(RegExp(r'[\x00-\x08\x0B\x0C\x0E-\x1F\uD800-\uDFFF]'), '');
+    return cleaned
         .replaceAll('&', '&amp;')
         .replaceAll('<', '&lt;')
         .replaceAll('>', '&gt;')
@@ -1003,9 +1008,14 @@ class DocxGeneratorService {
 
   static String _buildSettingsXml() {
     return '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+            xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml"
+            xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml">
   <w:defaultTabStop w:val="720"/>
   <w:characterSpacingControl w:val="doNotCompress"/>
+  <w:compat>
+    <w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="15"/>
+  </w:compat>
 </w:settings>''';
   }
 

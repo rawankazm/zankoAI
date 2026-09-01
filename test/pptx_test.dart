@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zanko_ai/services/pptx_generator_service.dart';
 
@@ -21,7 +22,7 @@ void main() {
 
     final bytes = await PptxGeneratorService.createPptxBytes(
       slides,
-      presentationTitle: 'تەکنەلۆجیای زیرەک لە پزیشکیدا',
+      presentationTitle: 'ئاستەنگە سەرەکییەکان ڕەهەندە تەکنیکییەکان',
       studentName: 'ئاراس علی',
       supervisorName: 'د. نەبەز عومەر',
       university: 'زانکۆی سەڵاحەدین',
@@ -29,9 +30,10 @@ void main() {
       logoBytes: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4, 0x89, 0x00, 0x00, 0x00, 0x0A, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9C, 0x63, 0x00, 0x01, 0x00, 0x00, 0x05, 0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82],
     );
     expect(bytes.isNotEmpty, true);
+    File('scratch/test_presentation.pptx').writeAsBytesSync(bytes);
   });
 
-  test('Realistic 8-Slide Kurdish AI Output Parsing', () {
+  test('Realistic 8-Slide Kurdish AI Output Parsing', () async {
     const rawAiResponse = '''
 # 📊 سیمیناری زانستی: زیرەکی دەستکرد
 ### 🔹 سلایدی ١: ناساندنی سیمینار و تێزی سەرەکی
@@ -89,6 +91,17 @@ void main() {
     for (int i = 0; i < parsed.length; i++) {
       expect(parsed[i].bulletPoints.isNotEmpty, true, reason: 'Slide ${i + 1} has no bullets');
     }
+
+    final bytes = await PptxGeneratorService.createPptxBytes(
+      parsed,
+      presentationTitle: 'ئاستەنگە سەرەکییەکان و ڕەهەندە تەکنیکییەکان',
+      studentName: 'ئاراس علی',
+      supervisorName: 'د. نەبەز عومەر',
+      university: 'زانکۆی سەڵاحەدین',
+      department: 'کۆلێژی زانست',
+    );
+    expect(bytes.isNotEmpty, true);
+    File('scratch/test_presentation.pptx').writeAsBytesSync(bytes);
   });
 
   test('PPTX bytes unzipping and schema integrity verification', () async {

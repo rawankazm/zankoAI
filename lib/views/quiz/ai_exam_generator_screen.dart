@@ -1,16 +1,14 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/quiz_model.dart';
 import '../../services/ai_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/database_service.dart';
+import '../../services/document_parser_service.dart';
 import '../../services/language_provider.dart';
 import '../../theme.dart';
 import '../../services/score_service.dart';
@@ -84,21 +82,12 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
   // ─── PDF Picker ─────────────────────────────────────────────────────────────
   Future<void> _pickPdfFile() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'txt'],
-        withData: true,
-      );
+      final parsed = await DocumentParserService.pickAndExtractDocument();
 
-      if (result != null && result.files.single.bytes != null) {
-        final file = result.files.single;
-        final bytes = file.bytes!;
-        final text = _extractTextFromBytes(bytes);
-
+      if (parsed != null) {
         setState(() {
-          _pdfFileName = file.name;
-          _pdfFileBytes = bytes;
-          _pdfFileContent = text.isNotEmpty ? text : 'Lecture Content of ${file.name}';
+          _pdfFileName = parsed.fileName;
+          _pdfFileContent = parsed.content;
         });
 
         if (mounted) {
@@ -108,7 +97,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                 children: [
                   const Icon(CupertinoIcons.checkmark_circle_fill, color: Colors.white, size: 20),
                   const SizedBox(width: 10),
-                  Expanded(child: Text('فایلی $_pdfFileName بە سەرکەوتوویی بارکرا 📄')),
+                  Expanded(child: Text('فایلی $_pdfFileName بە سەرکەوتوویی بارکرا [${parsed.typeDisplayName}] 📄')),
                 ],
               ),
               backgroundColor: ZankoColors.success,
@@ -132,107 +121,7 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
 
   String _sanitizeExtractedText(String input) {
     if (input.trim().isEmpty) return '';
-
-    String cleaned = input.replaceAll(
-      RegExp(r'\b(obj|endobj|stream|endstream|xref|trailer|FlateDecode|Font|CIDFont|FontDescriptor|ProcSet|MediaBox|Type1|WinAnsiEncoding|Identity-H)\b', caseSensitive: false),
-      ' ',
-    );
-
-    cleaned = cleaned.replaceAll(RegExp(r'\s+'), ' ').trim();
-    return cleaned;
-  }
-
-  String _extractTextFromBytes(Uint8List bytes) {
-    try {
-      final PdfDocument document = PdfDocument(inputBytes: bytes);
-      final String extractedText = PdfTextExtractor(document).extractText();
-      document.dispose();
-
-      String cleanText = _sanitizeExtractedText(extractedText);
-      if (cleanText.length > 20) {
-        return cleanText.length > 30000 ? cleanText.substring(0, 30000) : cleanText;
-      }
-    } catch (_) {}
-
-    try {
-      final StringBuffer extractedBuffer = StringBuffer();
-
-      // Scan PDF stream objects and decompress FlateDecode streams using zlib
-      final List<int> streamSeq = [115, 116, 114, 101, 97, 109]; // 'stream'
-      final List<int> endStreamSeq = [101, 110, 100, 115, 116, 114, 101, 97, 109]; // 'endstream'
-
-      int p = 0;
-      while (p < bytes.length - 10) {
-        int streamStart = -1;
-        for (int i = p; i < bytes.length - 6; i++) {
-          if (bytes[i] == streamSeq[0] &&
-              bytes[i + 1] == streamSeq[1] &&
-              bytes[i + 2] == streamSeq[2] &&
-              bytes[i + 3] == streamSeq[3] &&
-              bytes[i + 4] == streamSeq[4] &&
-              bytes[i + 5] == streamSeq[5]) {
-            streamStart = i + 6;
-            break;
-          }
-        }
-        if (streamStart == -1) break;
-
-        if (streamStart < bytes.length && bytes[streamStart] == 13) streamStart++;
-        if (streamStart < bytes.length && bytes[streamStart] == 10) streamStart++;
-
-        int streamEnd = -1;
-        for (int i = streamStart; i < bytes.length - 9; i++) {
-          if (bytes[i] == endStreamSeq[0] &&
-              bytes[i + 1] == endStreamSeq[1] &&
-              bytes[i + 2] == endStreamSeq[2] &&
-              bytes[i + 3] == endStreamSeq[3] &&
-              bytes[i + 4] == endStreamSeq[4] &&
-              bytes[i + 5] == endStreamSeq[5]) {
-            streamEnd = i;
-            break;
-          }
-        }
-        if (streamEnd == -1) break;
-
-        final rawStreamBytes = bytes.sublist(streamStart, streamEnd);
-        p = streamEnd + 9;
-
-        if (rawStreamBytes.length > 5) {
-          String streamStr = "";
-          try {
-            final decompressed = zlib.decode(rawStreamBytes);
-            streamStr = String.fromCharCodes(decompressed);
-          } catch (_) {
-            streamStr = String.fromCharCodes(rawStreamBytes);
-          }
-
-          int startParen = -1;
-          for (int k = 0; k < streamStr.length; k++) {
-            final c = streamStr[k];
-            if (c == '(') {
-              startParen = k + 1;
-            } else if (c == ')' && startParen != -1) {
-              final snippet = streamStr.substring(startParen, k).trim();
-              if (snippet.length > 3 && !snippet.startsWith('/') && !snippet.contains('font')) {
-                extractedBuffer.write('$snippet ');
-              }
-              startParen = -1;
-            }
-          }
-        }
-      }
-
-      String extracted = _sanitizeExtractedText(extractedBuffer.toString());
-      if (extracted.length > 20) {
-        return extracted.length > 8000 ? extracted.substring(0, 8000) : extracted;
-      }
-
-      final maxBytes = bytes.length > 250000 ? bytes.sublist(0, 250000) : bytes;
-      final rawStr = String.fromCharCodes(maxBytes);
-      return _sanitizeExtractedText(rawStr);
-    } catch (_) {
-      return '';
-    }
+    return input.replaceAll(RegExp(r'\s+'), ' ').trim();
   }
 
   // ─── VIP Limit Check ──────────────────────────────────────────────────────
@@ -500,8 +389,8 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
     if (pdfText != null && pdfText.trim().isNotEmpty) {
       pdfSnippets = pdfText
           .split(RegExp(r'[\.\?\!\n;]'))
-          .map((s) => _sanitizeExtractedText(s))
-          .where((s) => s.length > 15 && !_isJunkMetadataLine(s) && RegExp(r'[a-zA-Z\u0600-\u06FF]').hasMatch(s))
+          .map<String>((s) => _sanitizeExtractedText(s))
+          .where((String s) => s.length > 15 && !_isJunkMetadataLine(s) && RegExp(r'[a-zA-Z\u0600-\u06FF]').hasMatch(s))
           .toList();
     }
 

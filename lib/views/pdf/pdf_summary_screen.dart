@@ -1,12 +1,10 @@
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:file_picker/file_picker.dart';
 import '../../services/ai_service.dart';
 import '../../services/language_provider.dart';
 import '../../services/offline_archive_service.dart';
-import 'package:syncfusion_flutter_pdf/pdf.dart';
+import '../../services/document_parser_service.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 class PdfSummaryScreen extends StatefulWidget {
@@ -45,148 +43,20 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
     }
   }
 
-
-
-  bool _isGarbledBinary(String s) {
-    if (s.trim().isEmpty) return true;
-    int garbledCount = 0;
-    for (final rune in s.runes) {
-      final isNormal = (rune >= 32 && rune <= 126) ||
-                       (rune >= 0x0600 && rune <= 0x06FF) ||
-                       (rune >= 0x0750 && rune <= 0x077F) ||
-                       (rune >= 0xFB50 && rune <= 0xFDFF) ||
-                       (rune >= 0xFE70 && rune <= 0xFEFF) ||
-                       rune == 10 || rune == 13 || rune == 9;
-      if (!isNormal) {
-        garbledCount++;
-      }
-    }
-    return (garbledCount / s.length) > 0.04;
-  }
-
-  // Crash-proof helper to safely extract text from PDF binary using Syncfusion PDF
-  String _extractTextFromPdfBytes(Uint8List bytes) {
-    try {
-      final PdfDocument document = PdfDocument(inputBytes: bytes);
-      final String extractedText = PdfTextExtractor(document).extractText();
-      document.dispose();
-      
-      final cleanText = extractedText.trim();
-      if (cleanText.isNotEmpty && !_isGarbledBinary(cleanText)) {
-        return cleanText.length > 8000 ? cleanText.substring(0, 8000) : cleanText;
-      }
-    } catch (_) {}
-
-    try {
-      final maxBytes = bytes.length > 250000 ? bytes.sublist(0, 250000) : bytes;
-      final rawStr = String.fromCharCodes(maxBytes);
-      final StringBuffer buffer = StringBuffer();
-      int start = -1;
-      int charCount = 0;
-      
-      for (int i = 0; i < rawStr.length; i++) {
-        final char = rawStr[i];
-        if (char == '(') {
-          start = i + 1;
-        } else if (char == ')' && start != -1) {
-          final snippet = rawStr.substring(start, i).trim();
-          if (snippet.length > 2 && !snippet.startsWith('/') && !snippet.contains('font')) {
-            buffer.write('$snippet ');
-            charCount += snippet.length;
-            if (charCount > 6000) break;
-          }
-          start = -1;
-        }
-      }
-
-      final extracted = buffer.toString().trim();
-      if (extracted.isNotEmpty && !_isGarbledBinary(extracted)) {
-        return extracted;
-      }
-      
-      final cleanText = rawStr.split('\n').where((l) {
-        final t = l.trim();
-        return !t.startsWith('%') &&
-            !t.contains('obj') &&
-            !t.contains('<<') &&
-            !t.contains('>>') &&
-            !t.contains('/Type') &&
-            !t.contains('endobj') &&
-            !t.contains('/Font') &&
-            t.length > 4;
-      }).join(' ').replaceAll(RegExp(r'\s+'), ' ').trim();
-
-      if (cleanText.isNotEmpty && !_isGarbledBinary(cleanText) && cleanText.length > 20) {
-        return cleanText.length > 4000 ? cleanText.substring(0, 4000) : cleanText;
-      }
-      return '''
-📚 **پۆختەی تێروتەسەلی بەشی دووەم**
-
-📌 **تەوەرەی یەکەم: چەمک و بنەما سەرەکییەکان (Core Concepts & Fundamentals)**
-• ئەم بەشە تیشک دەخاتە سەر پێناسەکردنی چەمکە بنەڕەتییەکان و پێکهاتەی گشتی تیۆرییە زانستییەکان.
-• ڕوونیکردنەوەی میکانیزمی ئیشکردن و پەیوەندی نێوان ڕەگەزە جیاوازەکان لە سیستەمەکەدا.
-• دەستنیشانکردنی یاسا و یاسای لاوەکی بۆ شیکارکردنی کێشە و ئاریشە ئەکادیمییەکان.
-
----
-
-⚡ **تەوەرەی دووەم: شیکاریی زانستی و فۆرمولەکان (Scientific Analysis & Formulas)**
-• پێشکەشکردنی هاوکێشە سەرەکییەکان و ڕێگاکانی جێبەجێکردنیان لە تاقیکردنەوەدا.
-• تیشکخستنە سەر کێشە باوەکان و شێوازی چارەسەرکردنیان بە هەنگاوی لۆژیکی.
-• بەراوردکردنی ڕێبازە جیاوازەکانی توێژینەوە و بەکارهێنانی مۆدێلە کارپێکراوەکان.
-
----
-
-💡 **تەوەرەی سێیەم: ئەنجامگیری و جێبەجێکاریی کرداری (Applications & Conclusions)**
-• هۆشیارکردنەوەی خوێندکار لەسەر خاڵە نادیارەکان و تێگەیشتن لە ئامانجە سەرەکییەکانی چاپتەرەکە.
-• چۆنیەتی ئامادەکاری بۆ تاقیکردنەوەی کۆتایی وەرز بە بەکارهێنانی پرسیارە بنەڕەتییەکان.
-• فۆکەس لەسەر وەرگرتنی بەرزترین نمرە لە ڕێگەی تێگەیشتن لە چەمکەکان بەبێ لەبەربڕینی ڕووت.
-''';
-    } catch (_) {
-      return 'تێگەیشتن لە دەقی فایلی بەستراوە';
-    }
-  }
-
   Future<void> _pickFile() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'txt', 'md'],
-        withData: true,
-      );
+      final parsed = await DocumentParserService.pickAndExtractDocument();
 
-      if (result != null && result.files.isNotEmpty) {
-        final file = result.files.single;
-        
-        Uint8List? bytes = file.bytes;
-        if (bytes == null && file.path != null) {
-          final localFile = File(file.path!);
-          if (await localFile.exists()) {
-            bytes = await localFile.readAsBytes();
-          }
-        }
-        
-        if (bytes != null) {
-          String text = '';
-          if (file.name.toLowerCase().endsWith('.pdf')) {
-            text = _extractTextFromPdfBytes(bytes);
-          } else {
-            final maxBytes = bytes.length > 250000 ? bytes.sublist(0, 250000) : bytes;
-            text = String.fromCharCodes(maxBytes);
-          }
-          
-          final contentToUse = text.trim().isNotEmpty ? text : 'فایلی فێرکاری (${file.name})';
-          
-          setState(() {
-            _selectedFileName = file.name;
-            _selectedFileSize = '${(file.size / (1024 * 1024)).toStringAsFixed(2)} مێگابایت';
-            _selectedFileContent = contentToUse;
-            _selectedFileBytes = bytes;
-            _clearSummary();
-          });
+      if (parsed != null) {
+        setState(() {
+          _selectedFileName = parsed.fileName;
+          _selectedFileSize = parsed.formattedSize;
+          _selectedFileContent = parsed.content;
+          _clearSummary();
+        });
 
-          // Automatically trigger rich academic summary!
-          _generateSummary(contentToUse);
-        }
+        // Automatically trigger rich academic summary!
+        _generateSummary(parsed.content);
       }
     } catch (e) {
       if (mounted) {
