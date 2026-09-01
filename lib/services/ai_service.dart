@@ -135,6 +135,10 @@ class ZankoAiService extends ChangeNotifier implements AiService {
         docRef.snapshots().listen((doc) async {
           if (doc.exists && doc.data() != null) {
             final key = doc.data()!['gemini_api_key'] ?? doc.data()!['apiKey'];
+            final customModel = doc.data()!['gemini_model'] ?? doc.data()!['model'];
+            if (customModel != null && customModel.toString().trim().isNotEmpty) {
+              _lastWorkingModel = customModel.toString().trim();
+            }
             if (key != null && key.toString().trim().isNotEmpty) {
               _apiKey = key.toString().trim();
               notifyListeners();
@@ -204,10 +208,12 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     }
   }
 
-  // High-performance multimodal Gemini models for text and audio understanding
+  // High-performance multimodal Gemini models (Latest Google AI Models)
   static const List<String> _validFastModels = [
     'gemini-2.5-flash',
     'gemini-2.0-flash',
+    'gemini-2.0-flash-thinking-exp',
+    'gemini-2.0-pro-exp',
     'gemini-1.5-flash',
     'gemini-1.5-pro',
   ];
