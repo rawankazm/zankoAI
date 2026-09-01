@@ -61,7 +61,7 @@ dependencies:
   url_launcher: ^6.3.0
   syncfusion_flutter_pdf: ^28.1.33
   syncfusion_flutter_pdfviewer: ^28.1.33
-  record: ^7.1.1
+  record: ^5.2.0
   path_provider: ^2.1.4
   archive: ^4.0.0
   speech_to_text: ^7.4.0
