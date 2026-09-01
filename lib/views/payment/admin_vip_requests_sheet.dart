@@ -82,9 +82,25 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
         'vipApprovedBy': adminEmail,
       }, SetOptions(merge: true));
 
-      // 3. Send instant in-app notification to the user
+      // 3. Send instant private notification ONLY to this specific user
       await FirebaseFirestore.instance.collection('notifications').add({
         'userId': userId,
+        'recipientId': userId,
+        'target': 'user',
+        'title': '🎉 پیرۆزە! هەژمارەکەت بوو بە VIP',
+        'body': 'داواکاری بەشداریکردنی VIPەکەت لەلایەن بەڕێوەبەرەوە پەسەندکرا. ئێستا دەتوانیت لە هەموو تایبەتمەندییە بێسنوورەکانی ZankoAI سوودمەند بیت!',
+        'type': 'vip_approved',
+        'category': 'vip_approved',
+        'isRead': false,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      // Also write directly to user's private subcollection
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('notifications')
+          .add({
         'title': '🎉 پیرۆزە! هەژمارەکەت بوو بە VIP',
         'body': 'داواکاری بەشداریکردنی VIPەکەت لەلایەن بەڕێوەبەرەوە پەسەندکرا. ئێستا دەتوانیت لە هەموو تایبەتمەندییە بێسنوورەکانی ZankoAI سوودمەند بیت!',
         'type': 'vip_approved',
@@ -207,9 +223,12 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
       // 3. Send notification to user
       await FirebaseFirestore.instance.collection('notifications').add({
         'userId': userId,
+        'recipientId': userId,
+        'target': 'user',
         'title': '⚠️ ئاگاداری دەربارەی داواکاری VIP',
         'body': 'داواکاری بەشداریکردنی VIPەکەت پەسەند نەکرا. هۆکار: $reason',
         'type': 'vip_rejected',
+        'category': 'vip_rejected',
         'isRead': false,
         'createdAt': FieldValue.serverTimestamp(),
       });

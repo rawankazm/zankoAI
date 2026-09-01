@@ -291,18 +291,23 @@ class NotificationService {
           final data = doc.data();
           if (data == null) continue;
           final docId = doc.id;
-          final target = (data['target'] ?? data['to'] ?? data['audience'] ?? 'all').toString().trim().toLowerCase();
+          final target = (data['target'] ?? data['to'] ?? data['audience'] ?? '').toString().trim().toLowerCase();
           final docUserId = (data['userId'] ?? data['user_id'] ?? data['recipientId'] ?? '').toString().trim();
           final docEmail = (data['email'] ?? data['userEmail'] ?? '').toString().trim().toLowerCase();
 
-          final isTargetUser = target == '' ||
-              target == 'all' ||
-              target == 'all_students' ||
-              target == 'students' ||
-              target == 'everyone' ||
-              (target == 'vip' && isVip) ||
-              (docUserId.isNotEmpty && docUserId == userId) ||
-              (normalizedEmail != null && normalizedEmail.isNotEmpty && docEmail == normalizedEmail);
+          // If addressed to a specific user, ONLY deliver to that user
+          bool isTargetUser = false;
+          if (docUserId.isNotEmpty) {
+            isTargetUser = (docUserId == userId);
+          } else if (docEmail.isNotEmpty) {
+            isTargetUser = (normalizedEmail != null && normalizedEmail.isNotEmpty && docEmail == normalizedEmail);
+          } else if (target == 'user' || target == 'direct' || target == 'single' || target == 'personal') {
+            isTargetUser = false; // missing recipient id/email, do not broadcast
+          } else if (target == 'vip') {
+            isTargetUser = isVip;
+          } else if (target == '' || target == 'all' || target == 'all_students' || target == 'students' || target == 'everyone') {
+            isTargetUser = true;
+          }
 
           if (!isTargetUser) continue;
 

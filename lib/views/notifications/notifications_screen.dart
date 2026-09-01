@@ -138,18 +138,23 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       for (var doc in snap.docs) {
         if (_deletedDocIds.contains(doc.id)) continue;
         final data = doc.data();
-        final target = (data['target'] ?? data['to'] ?? data['audience'] ?? 'all').toString().trim().toLowerCase();
+        final target = (data['target'] ?? data['to'] ?? data['audience'] ?? '').toString().trim().toLowerCase();
         final docUserId = (data['userId'] ?? data['user_id'] ?? data['recipientId'] ?? '').toString().trim();
         final docEmail = (data['email'] ?? data['userEmail'] ?? '').toString().trim().toLowerCase();
 
-        final isMatch = target == '' ||
-            target == 'all' ||
-            target == 'all_students' ||
-            target == 'students' ||
-            target == 'everyone' ||
-            (target == 'vip' && user.isVip) ||
-            (docUserId.isNotEmpty && docUserId == user.id) ||
-            (userEmail.isNotEmpty && docEmail == userEmail);
+        // If addressed to a specific user, ONLY deliver to that user
+        bool isMatch = false;
+        if (docUserId.isNotEmpty) {
+          isMatch = (docUserId == user.id);
+        } else if (docEmail.isNotEmpty) {
+          isMatch = (userEmail.isNotEmpty && docEmail == userEmail);
+        } else if (target == 'user' || target == 'direct' || target == 'single' || target == 'personal') {
+          isMatch = false; // missing recipient id/email, do not broadcast to all
+        } else if (target == 'vip') {
+          isMatch = user.isVip;
+        } else if (target == '' || target == 'all' || target == 'all_students' || target == 'students' || target == 'everyone') {
+          isMatch = true;
+        }
 
         if (!isMatch) continue;
 
