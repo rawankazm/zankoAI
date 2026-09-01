@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -812,24 +813,46 @@ class ReportPdfGeneratorService {
     }
   }
 
-  /// Exports PDF bytes to a temporary file and triggers the system Share sheet
+  /// Exports PDF bytes to temporary/download file and triggers system Share sheet or opens on Windows
   static Future<void> exportAndSharePdf(AcademicReportModel report) async {
     final bytes = await createPdfBytes(report);
-    final tempDir = await getTemporaryDirectory();
+    Directory? targetDir;
+    if (!kIsWeb && Platform.isWindows) {
+      try {
+        targetDir = await getDownloadsDirectory();
+      } catch (_) {}
+    }
+    targetDir ??= await getTemporaryDirectory();
+
     final cleanFileName = DocxGeneratorService.cleanTopicTitle(report.title)
-        .replaceAll(RegExp(r'[\\/:*?"<>|]'), '_')
-        .replaceAll(' ', '_')
+        .replaceAll(RegExp(r'[\\/:*?"<>|«»“”‘’،,;!?.#%&{}$+=@^~`\(\)\[\]]'), '')
+        .replaceAll(RegExp(r'\s+'), '_')
+        .replaceAll(RegExp(r'_+'), '_')
         .trim();
     final fileName = '${cleanFileName.isEmpty ? 'Academic_Report' : cleanFileName}.pdf';
-    final filePath = '${tempDir.path}/$fileName';
+    final filePath = '${targetDir.path}/$fileName';
 
     final file = File(filePath);
     await file.writeAsBytes(bytes, flush: true);
 
-    await Share.shareXFiles(
-      [XFile(filePath, mimeType: 'application/pdf')],
-      subject: report.title,
-      text: 'فایلی PDF بۆ ڕاپۆرتی: ${report.title}',
-    );
+    // On Windows, auto-open the PDF document in the default PDF viewer / browser
+    if (!kIsWeb && Platform.isWindows) {
+      try {
+        await Process.run('cmd', ['/c', 'start', '""', filePath], runInShell: true);
+      } catch (e) {
+        debugPrint('Windows auto-launch info: $e');
+      }
+    }
+
+    // On Mobile & Desktop, trigger the system Share/Open sheet
+    try {
+      await Share.shareXFiles(
+        [XFile(filePath, mimeType: 'application/pdf')],
+        subject: report.title,
+        text: 'فایلی PDF بۆ ڕاپۆرتی: ${report.title}',
+      );
+    } catch (e) {
+      debugPrint('Share sheet info: $e');
+    }
   }
 }

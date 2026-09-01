@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:archive/archive.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -940,10 +940,17 @@ class DocxGeneratorService {
     return zipEncoder.encode(archive);
   }
 
-  /// Exports DOCX bytes to temporary file and opens Share sheet
+  /// Exports DOCX bytes to temporary/download file and opens Share sheet or default application
   static Future<void> exportAndShareDocx(AcademicReportModel report) async {
     final bytes = await createDocxBytes(report);
-    final tempDir = await getTemporaryDirectory();
+    Directory? targetDir;
+    if (!kIsWeb && Platform.isWindows) {
+      try {
+        targetDir = await getDownloadsDirectory();
+      } catch (_) {}
+    }
+    targetDir ??= await getTemporaryDirectory();
+
     final cleanFileName = cleanTopicTitle(report.title)
         .replaceAll(RegExp(r'[\\/:*?"<>|«»“”‘’،,;!?.#%&{}$+=@^~`\(\)\[\]]'), '')
         .replaceAll(RegExp(r'\s+'), '_')
@@ -953,16 +960,30 @@ class DocxGeneratorService {
         ? cleanFileName.substring(0, 35).replaceAll(RegExp(r'_+$'), '')
         : cleanFileName;
     final fileName = '${truncated.isEmpty ? 'Academic_Report' : truncated}.docx';
-    final filePath = '${tempDir.path}/$fileName';
+    final filePath = '${targetDir.path}/$fileName';
 
     final file = File(filePath);
     await file.writeAsBytes(bytes, flush: true);
 
-    await Share.shareXFiles(
-      [XFile(filePath, mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')],
-      subject: report.title,
-      text: 'فایلی Word بۆ ڕاپۆرتی: ${report.title}',
-    );
+    // On Windows, auto-open the Word document in Microsoft Word
+    if (!kIsWeb && Platform.isWindows) {
+      try {
+        await Process.run('cmd', ['/c', 'start', '""', filePath], runInShell: true);
+      } catch (e) {
+        debugPrint('Windows auto-launch info: $e');
+      }
+    }
+
+    // On Mobile & Desktop, trigger the system Share/Open sheet
+    try {
+      await Share.shareXFiles(
+        [XFile(filePath, mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')],
+        subject: report.title,
+        text: 'فایلی Word بۆ ڕاپۆرتی: ${report.title}',
+      );
+    } catch (e) {
+      debugPrint('Share sheet info: $e');
+    }
   }
 
   static String _escapeXml(String text) {

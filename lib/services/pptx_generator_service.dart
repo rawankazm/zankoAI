@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:archive/archive.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'pptx_template_data.dart';
@@ -622,7 +623,14 @@ class PptxGeneratorService {
       logoBytes: logoBytes,
     );
 
-    final tempDir = await getTemporaryDirectory();
+    Directory? targetDir;
+    if (!kIsWeb && Platform.isWindows) {
+      try {
+        targetDir = await getDownloadsDirectory();
+      } catch (_) {}
+    }
+    targetDir ??= await getTemporaryDirectory();
+
     final cleanFileName = title
         .replaceAll(RegExp(r'[\\/:*?"<>|«»“”‘’،,;!?.#%&{}$+=@^~`\(\)\[\]]'), '')
         .replaceAll(RegExp(r'\s+'), '_')
@@ -632,16 +640,30 @@ class PptxGeneratorService {
         ? cleanFileName.substring(0, 35).replaceAll(RegExp(r'_+$'), '')
         : cleanFileName;
     final fileName = '${truncated.isEmpty ? 'Seminar_Presentation' : truncated}.pptx';
-    final filePath = '${tempDir.path}/$fileName';
+    final filePath = '${targetDir.path}/$fileName';
 
     final file = File(filePath);
     await file.writeAsBytes(bytes, flush: true);
 
-    await Share.shareXFiles(
-      [XFile(filePath, mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation')],
-      subject: title,
-      text: 'فایلی پاوەرپۆینت بۆ سیمیناری: $title',
-    );
+    // On Windows, auto-open the PowerPoint presentation in Microsoft PowerPoint
+    if (!kIsWeb && Platform.isWindows) {
+      try {
+        await Process.run('cmd', ['/c', 'start', '""', filePath], runInShell: true);
+      } catch (e) {
+        debugPrint('Windows auto-launch info: $e');
+      }
+    }
+
+    // On Mobile & Desktop, trigger the system Share/Open sheet
+    try {
+      await Share.shareXFiles(
+        [XFile(filePath, mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation')],
+        subject: title,
+        text: 'فایلی پاوەرپۆینت بۆ سیمیناری: $title',
+      );
+    } catch (e) {
+      debugPrint('Share sheet info: $e');
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────

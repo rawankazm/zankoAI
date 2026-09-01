@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +8,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:uuid/uuid.dart';
 import '../main.dart';
 import '../models/user_model.dart';
 import '../firebase_options.dart';
@@ -166,6 +170,218 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
           _isHandlingBlockedOrDeleted = false;
         }
       });
+    }
+  }
+
+  bool _isHandlingLoggedOutFromAnotherDevice = false;
+
+  void _showLoggedOutFromAnotherDeviceDialog() {
+    if (_isHandlingLoggedOutFromAnotherDevice || _isHandlingBlockedOrDeleted) return;
+    _isHandlingLoggedOutFromAnotherDevice = true;
+
+    void display(BuildContext context) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) {
+          return PopScope(
+            canPop: false,
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: AlertDialog(
+                backgroundColor: const Color(0xFF1E222B),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                title: const Row(
+                  children: [
+                    Icon(CupertinoIcons.device_phone_portrait, color: Color(0xFFF97316), size: 28),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'ئاگاداری چوونەدەرەوە 📱',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                content: const Text(
+                  'ئەم ئەکاونتە لەسەر مۆبایلێکی تر کرایەوە، بۆیە لەسەر ئەم ئامێرە داخرایەوە.\n\nتێبینی: هەر هەژمارێک تەنها لەسەر یەک مۆبایل لە یەک کاتدا ڕێگەی پێدراوە کار بکات بۆ پاراستنی ئەکاونتەکەت و ڕێگریکردن لە هاوبەشکردنی نایاسایی.',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14.5,
+                    height: 1.6,
+                  ),
+                ),
+                actions: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                      rootNavigatorKey.currentState?.pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        (route) => false,
+                      );
+                      _isHandlingLoggedOutFromAnotherDevice = false;
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF97316),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    ),
+                    child: const Text(
+                      'باشە / چوونەدەرەوە',
+                      style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+    final context = rootNavigatorKey.currentContext;
+    if (context != null) {
+      display(context);
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final ctx = rootNavigatorKey.currentContext;
+        if (ctx != null) {
+          display(ctx);
+        } else {
+          _isHandlingLoggedOutFromAnotherDevice = false;
+        }
+      });
+    }
+  }
+
+  static String? _cachedDeviceId;
+
+  /// Returns a persistent unique device identifier
+  static Future<String> getDeviceId() async {
+    if (_cachedDeviceId != null) return _cachedDeviceId!;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      var deviceId = prefs.getString('zanko_device_id');
+      if (deviceId == null || deviceId.isEmpty) {
+        deviceId = const Uuid().v4();
+        await prefs.setString('zanko_device_id', deviceId);
+      }
+      _cachedDeviceId = deviceId;
+      return deviceId;
+    } catch (_) {
+      _cachedDeviceId ??= const Uuid().v4();
+      return _cachedDeviceId!;
+    }
+  }
+
+  /// Retrieves the public IP of the user client
+  static Future<String?> getPublicIp() async {
+    try {
+      final client = HttpClient()..connectionTimeout = const Duration(seconds: 4);
+      final request = await client.getUrl(Uri.parse('https://api.ipify.org?format=json'));
+      final response = await request.close();
+      if (response.statusCode == 200) {
+        final body = await response.transform(utf8.decoder).join();
+        final json = jsonDecode(body);
+        return json['ip'] as String?;
+      }
+    } catch (_) {
+      try {
+        final client = HttpClient()..connectionTimeout = const Duration(seconds: 4);
+        final request = await client.getUrl(Uri.parse('https://icanhazip.com'));
+        final response = await request.close();
+        if (response.statusCode == 200) {
+          final body = await response.transform(utf8.decoder).join();
+          return body.trim();
+        }
+      } catch (_) {}
+    }
+    return null;
+  }
+
+  /// Validates that the user has not logged in from more than 3 distinct IP addresses
+  Future<void> _validateAndTrackIp(String uid, {bool isAdmin = false}) async {
+    if (isAdmin) return; // Admins are exempted
+
+    final currentIp = await getPublicIp();
+    if (currentIp == null || currentIp.isEmpty) return;
+
+    try {
+      final doc = await _firestore.collection('users').doc(uid).get().timeout(const Duration(seconds: 6));
+      if (doc.exists && doc.data() != null) {
+        final data = doc.data()!;
+        final role = data['role'] as String?;
+        if (role == 'admin') return;
+
+        final rawKnownIps = data['knownIps'];
+        List<String> knownIps = [];
+        if (rawKnownIps is List) {
+          knownIps = rawKnownIps.map((e) => e.toString().trim()).where((s) => s.isNotEmpty).toList();
+        }
+
+        if (!knownIps.contains(currentIp)) {
+          if (knownIps.length >= 3) {
+            // Automatically log security alert for Admin Review
+            try {
+              final name = data['name'] as String? ?? 'خوێندکار';
+              final email = data['email'] as String? ?? '';
+              await _firestore.collection('security_alerts').add({
+                'userId': uid,
+                'name': name,
+                'email': email,
+                'type': 'ip_limit_exceeded',
+                'reason': 'تێپەڕاندنی سنووری ٣ ناونیشانی IP جیاواز',
+                'attemptedIp': currentIp,
+                'knownIps': knownIps,
+                'status': 'pending',
+                'createdAt': FieldValue.serverTimestamp(),
+              });
+            } catch (_) {}
+
+            // Already 3 distinct IPs registered!
+            await _auth.signOut().catchError((_) {});
+            throw FirebaseAuthException(
+              code: 'ip-limit-exceeded',
+              message: '⛔ ناتوانیت لە زیاتر لە ٣ ناونیشانی IP جیاواز ئەکاونتەکەت بەکاربهێنیت. ئەمە بۆ پاراستنی ئەکاونت و ڕێگرییە لە هاوبەشکردنی نایاسایی.',
+            );
+          }
+          // Add this new IP
+          await _firestore.collection('users').doc(uid).set({
+            'knownIps': FieldValue.arrayUnion([currentIp]),
+            'lastLoginIp': currentIp,
+          }, SetOptions(merge: true));
+        } else {
+          await _firestore.collection('users').doc(uid).set({
+            'lastLoginIp': currentIp,
+          }, SetOptions(merge: true));
+        }
+      }
+    } on FirebaseAuthException {
+      rethrow;
+    } catch (e) {
+      if (e is FirebaseAuthException) rethrow;
+      debugPrint('IP validation warning: $e');
+    }
+  }
+
+  /// Registers this device as the single active device for this user
+  Future<void> _registerActiveDevice(String uid) async {
+    try {
+      final deviceId = await getDeviceId();
+      final currentIp = await getPublicIp();
+      await _firestore.collection('users').doc(uid).set({
+        'currentDeviceId': deviceId,
+        'lastLoginIp': ?currentIp,
+        if (currentIp != null) 'knownIps': FieldValue.arrayUnion([currentIp]),
+        'lastLoginAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('Register active device error: $e');
     }
   }
 
@@ -342,7 +558,7 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
           );
           notifyListeners();
         }
-        _userDocSub = _firestore.collection('users').doc(firebaseUser.uid).snapshots().listen((doc) {
+        _userDocSub = _firestore.collection('users').doc(firebaseUser.uid).snapshots().listen((doc) async {
           if (!doc.exists || doc.data() == null) {
             // New user or guest user initial document creation
             final realName = _resolveUserName(null, firebaseUser);
@@ -417,6 +633,23 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
               _showAccountBlockedDialog(blockReason);
             }
             return;
+          }
+
+          // 3. Check Single Active Device policy (Kick out if logged in on another device)
+          final serverDeviceId = data['currentDeviceId'] as String?;
+          final localDeviceId = await getDeviceId();
+          if (serverDeviceId != null && serverDeviceId.isNotEmpty && serverDeviceId != localDeviceId) {
+            if (_currentUser != null && !_isHandlingLoggedOutFromAnotherDevice && !_isHandlingBlockedOrDeleted) {
+              await _auth.signOut().catchError((_) {});
+              _currentUser = null;
+              _lastNotifiedVip = null;
+              _lastKnownRole = null;
+              notifyListeners();
+              _showLoggedOutFromAnotherDeviceDialog();
+              return;
+            }
+          } else if (serverDeviceId == null || serverDeviceId.isEmpty) {
+            _registerActiveDevice(firebaseUser.uid);
           }
 
           final roleStr = data['role'] as String? ?? 'student';
@@ -658,6 +891,13 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
 
       if (credential.user != null) {
         final fbUser = credential.user!;
+
+        // Validate IP limit before continuing (Max 3 unique IPs)
+        await _validateAndTrackIp(fbUser.uid, isAdmin: role == UserRole.admin);
+
+        // Register this device as the active device
+        await _registerActiveDevice(fbUser.uid);
+
         final fallbackName = fbUser.displayName ?? email.split('@').first;
         _currentUser = UserModel(
           id: fbUser.uid,
@@ -755,6 +995,9 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
         _currentUser = newUser;
         notifyListeners();
 
+        final deviceId = await getDeviceId();
+        final currentIp = await getPublicIp();
+
         _firestore.collection('users').doc(uid).set({
           'uid': uid,
           'name': name,
@@ -763,6 +1006,9 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
           'universityName': uni,
           'departmentName': dept,
           'cityName': city,
+          'currentDeviceId': deviceId,
+          if (currentIp != null) 'knownIps': [currentIp],
+          'lastLoginIp': ?currentIp,
           'createdAt': FieldValue.serverTimestamp(),
           'lastLoginAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true)).catchError((e) {
@@ -954,6 +1200,20 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
             rawVipStatus == 'active' ||
             resolvedRole == UserRole.admin;
         vipStatus = isVip ? (rawVipStatus == 'none' ? 'approved' : rawVipStatus) : 'none';
+      }
+
+      // Validate IP limit (Max 3 unique IPs) and register single active device
+      try {
+        await _validateAndTrackIp(finalUid, isAdmin: resolvedRole == UserRole.admin);
+        await _registerActiveDevice(finalUid);
+      } catch (e) {
+        if (e is FirebaseAuthException && e.code == 'ip-limit-exceeded') {
+          await _auth.signOut().catchError((_) {});
+          _currentUser = null;
+          notifyListeners();
+          _showAccountBlockedDialog('⛔ ناتوانیت لە زیاتر لە ٣ ناونیشانی IP جیاواز ئەکاونتەکەت بەکاربهێنیت. ئەمە بۆ پاراستنی ئەکاونت و ڕێگرییە لە هاوبەشکردنی نایاسایی.');
+          return;
+        }
       }
 
       // Update Firestore document with real info

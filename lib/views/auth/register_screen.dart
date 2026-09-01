@@ -141,7 +141,9 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
     } catch (e) {
       success = false;
       final errStr = e.toString().toLowerCase();
-      if (errStr.contains('email-already-in-use')) {
+      if (errStr.contains('ip-limit-exceeded') || errStr.contains('٣ ناونیشانی ip') || errStr.contains('ip limit')) {
+        _errorMessage = '⛔ ناتوانیت لە زیاتر لە ٣ ناونیشانی IP جیاواز ئەکاونت دروست بکەیت یان بەکاربهێنیت.';
+      } else if (errStr.contains('email-already-in-use')) {
         _errorMessage = 'ئەم ئیمەیڵە پێشتر تۆمار کراوە. تکایە چوونەژوورەوە بکە.';
       } else if (errStr.contains('weak-password')) {
         _errorMessage = 'وشەی نهێنی زۆر لاوازە (لانی کەم ٦ پیت).';

@@ -918,13 +918,16 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
           ),
           centerTitle: true,
         ),
-        body: SingleChildScrollView(
-          controller: _scrollController,
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 860),
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
               // ── 1. Top Two-Mode Switch (سیمینار ، ڕاپۆرت) ─────────────────
               _buildTwoModeHeader(isDark),
 
@@ -971,8 +974,10 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
           ),
         ),
       ),
-    );
-  }
+    ),
+  ),
+);
+}
 
   // ─── 1. Two-Mode Switcher (سیمینار ، ڕاپۆرت) ─────────────────────────────
   Widget _buildTwoModeHeader(bool isDark) {
