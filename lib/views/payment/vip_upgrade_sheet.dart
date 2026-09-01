@@ -187,12 +187,10 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true)),
         userDoc.set({
-          'isVip': true,
-          'vipGracePeriod': true,
+          'isVip': false,
           'vipStatus': 'pending',
           'requestedPlan': _selectedPlan,
           'vipRequestedAt': FieldValue.serverTimestamp(),
-          'vipExpiresAt': Timestamp.fromDate(DateTime.now().add(const Duration(hours: 48))),
         }, SetOptions(merge: true)),
       ]);
       return true;

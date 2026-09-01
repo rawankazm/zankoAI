@@ -209,7 +209,6 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   @override
   Future<bool> checkAndIncrementDailyLimit({bool isVip = false, bool isPendingVip = false}) async {
     if (isVip) return true;
-    if (isPendingVip) return true; // داواکاری VIP ناردووە — چاوەڕوانی پەسەندکردن دەکات
     try {
       final prefs = await SharedPreferences.getInstance();
       final today = DateTime.now().toIso8601String().substring(0, 10);
