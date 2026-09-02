@@ -9,6 +9,7 @@ import '../../services/ai_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/docx_generator_service.dart';
 import '../../services/pptx_generator_service.dart';
+import '../../services/report_pdf_generator_service.dart';
 import '../../theme.dart';
 import '../payment/vip_upgrade_sheet.dart';
 
@@ -92,6 +93,7 @@ class _SeminarThesisAssistantScreenState
   bool _isLoading = false;
   bool _isExportingPptx = false;
   bool _isExportingDocx = false;
+  bool _isExportingPdf = false;
   bool _showReportAdvancedOptions = false;
 
   String? _generatedResult;
@@ -749,6 +751,29 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
       _showSnackBar('⚠️ Error creating Word file: $e');
     } finally {
       if (mounted) setState(() => _isExportingDocx = false);
+    }
+  }
+
+  // ─── Export PDF (.pdf) ─────────────────────────────────────────────────────
+  Future<void> _exportPdf() async {
+    if (_parsedReport == null) {
+      _showSnackBar(_isEnglish ? 'Please generate the report first' : 'تکایە سەرەتا ڕاپۆرتەکە دروست بکە');
+      return;
+    }
+
+    final allowed = await _checkVipExportLimit('PDF (.pdf)');
+    if (!allowed || !mounted) return;
+
+    setState(() => _isExportingPdf = true);
+    try {
+      await ReportPdfGeneratorService.exportAndSharePdf(_parsedReport!);
+      _showSnackBar(_isEnglish
+          ? '✅ PDF document created and opened successfully'
+          : '✅ فایلی پڕۆفیشناڵی PDF بە سەرکەوتوویی دروستکرا');
+    } catch (e) {
+      _showSnackBar('⚠️ Error creating PDF file: $e');
+    } finally {
+      if (mounted) setState(() => _isExportingPdf = false);
     }
   }
 
@@ -2172,9 +2197,11 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 
                   Padding(
                     padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                    child: Directionality(
+                      textDirection: _isEnglish ? TextDirection.ltr : TextDirection.rtl,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
                         // ─── SLIDE 1 (COVER PAGE): PURE LAYOUT (LOGO, TITLE, STUDENT, SUPERVISOR) ───
                         if (_selectedSlideIndex == 0) ...[
                           // University Logo / Emblem Header
@@ -2259,7 +2286,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 
                           const SizedBox(height: 14),
 
-                          // Author (Student) & Supervisor Double Cards
+                          // Author (Student) & Supervisor Centered Cards
                           Row(
                             children: [
                               Expanded(
@@ -2271,10 +2298,11 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                                     border: Border.all(color: const Color(0xFF0284C7).withValues(alpha: 0.3)),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
                                       Text(
                                         _isEnglish ? '👨‍🎓 Prepared by:' : (_isBadini ? '👨‍🎓 ئامادەکرن ژ لایێ:' : '👨‍🎓 ئامادەکردنی:'),
+                                        textAlign: TextAlign.center,
                                         style: TextStyle(fontFamily: _currentFontFamily, fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF0284C7)),
                                       ),
                                       const SizedBox(height: 4),
@@ -2283,6 +2311,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                                             ? _studentNameController.text.trim()
                                             : (_isEnglish ? 'Student / Team' : 'ناوی قوتابی / تیم'),
                                         maxLines: 2,
+                                        textAlign: TextAlign.center,
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13, fontWeight: FontWeight.bold),
                                       ),
@@ -2300,10 +2329,11 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                                     border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
                                       Text(
                                         _isEnglish ? '👨‍🏫 Supervised by:' : (_isBadini ? '👨‍🏫 سەرپەرشتیار:' : '👨‍🏫 سەرپەرشتیاری:'),
+                                        textAlign: TextAlign.center,
                                         style: TextStyle(fontFamily: _currentFontFamily, fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF10B981)),
                                       ),
                                       const SizedBox(height: 4),
@@ -2312,6 +2342,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                                             ? _supervisorNameController.text.trim()
                                             : (_isEnglish ? 'Supervisor' : 'مامۆستای سەرپەرشتیار'),
                                         maxLines: 2,
+                                        textAlign: TextAlign.center,
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(fontFamily: _currentFontFamily, fontSize: 13, fontWeight: FontWeight.bold),
                                       ),
@@ -2481,6 +2512,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                       ],
                     ),
                   ),
+                ),
                 ],
               ),
             ),
@@ -2679,6 +2711,10 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
         ? _parsedReport!.pages[_selectedReportPageIndex]
         : _parsedReport!.pages.first;
 
+    final isRtlReport = !_isEnglish;
+    final reportDir = isRtlReport ? TextDirection.rtl : TextDirection.ltr;
+    final reportAlign = isRtlReport ? TextAlign.right : TextAlign.left;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -2724,6 +2760,13 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  IconButton(
+                    onPressed: _isExportingPdf ? null : _exportPdf,
+                    icon: _isExportingPdf
+                        ? const SizedBox(width: 18, height: 18, child: CupertinoActivityIndicator())
+                        : const Icon(CupertinoIcons.doc_richtext, color: Color(0xFFDC2626), size: 20),
+                    tooltip: 'PDF (.pdf)',
+                  ),
                   IconButton(
                     onPressed: _isExportingDocx ? null : _exportDocx,
                     icon: _isExportingDocx
@@ -2783,248 +2826,262 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 
           const SizedBox(height: 16),
 
-          // Active Page Content Display
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: isDark ? ZankoColors.darkBackground : const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Page Header / Type Badge
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFC00000), // Crimson Red
-                        borderRadius: BorderRadius.circular(10),
+          // Active Page Content Display (RTL for Kurdish, Badini, Arabic; LTR for English)
+          Directionality(
+            textDirection: reportDir,
+            child: Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: isDark ? ZankoColors.darkBackground : const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Page Header / Type Badge
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFC00000), // Crimson Red
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          _isEnglish
+                              ? 'Page ${currentPage.pageNumber} of ${_parsedReport!.pages.length}'
+                              : 'پەڕەی ${currentPage.pageNumber} لە ${_parsedReport!.pages.length}',
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                        ),
                       ),
-                      child: Text(
-                        _isEnglish
-                            ? 'Page ${currentPage.pageNumber} of ${_parsedReport!.pages.length}'
-                            : 'پەڕەی ${currentPage.pageNumber} لە ${_parsedReport!.pages.length}',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                      Text(
+                        currentPage.pageType.toUpperCase(),
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.grey),
                       ),
-                    ),
-                    Text(
-                      currentPage.pageType.toUpperCase(),
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.grey),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                // Page Title
-                Text(
-                  currentPage.pageTitle,
-                  style: TextStyle(
-                    fontFamily: _currentFontFamily,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ],
                   ),
-                ),
-                const Divider(height: 18),
+                  const SizedBox(height: 12),
 
-                // Page 1: Cover Page
-                if (currentPage.pageType == 'cover') ...[
-                  _buildCoverPageView(isDark),
-                ] else if (currentPage.pageType == 'toc') ...[
-                  // Page 2: Table of Contents
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 20),
-                      child: Text(
-                        currentPage.pageTitle,
-                        style: TextStyle(
-                          fontFamily: _currentFontFamily,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                          color: Colors.black,
+                  // Page Title
+                  Text(
+                    currentPage.pageTitle,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: _currentFontFamily,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                  ),
+                  const Divider(height: 18),
+
+                  // Page 1: Cover Page (All texts are centered)
+                  if (currentPage.pageType == 'cover') ...[
+                    _buildCoverPageView(isDark),
+                  ] else if (currentPage.pageType == 'toc') ...[
+                    // Page 2: Table of Contents
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: Text(
+                          currentPage.pageTitle,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: _currentFontFamily,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                            color: Colors.black,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  ...currentPage.bulletPoints.map((item) => Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    ...currentPage.bulletPoints.map((item) => Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Text('🔹 ', style: TextStyle(color: Colors.black, fontSize: 14)),
+                              Expanded(
+                                child: Text(
+                                  item,
+                                  textAlign: reportAlign,
+                                  textDirection: reportDir,
+                                  style: TextStyle(
+                                    fontFamily: _currentFontFamily,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13.5,
+                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )),
+                  ] else if (currentPage.pageType == 'references') ...[
+                    // Page 8: References (Size 20 Bold)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: Text(
+                          currentPage.pageTitle,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: _currentFontFamily,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                    ),
+                    ...currentPage.bulletPoints.asMap().entries.map((entry) {
+                      final idx = entry.key + 1;
+                      final refText = entry.value;
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
                         ),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('🔹 ', style: TextStyle(color: Colors.black, fontSize: 14)),
+                            Text('$idx. ', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black)),
                             Expanded(
                               child: Text(
-                                item,
+                                refText,
+                                textAlign: reportAlign,
+                                textDirection: reportDir,
                                 style: TextStyle(
                                   fontFamily: _currentFontFamily,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13.5,
-                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  fontSize: 14,
+                                  height: 1.6,
+                                  color: isDark ? Colors.grey[200] : const Color(0xFF1E293B),
                                 ),
                               ),
                             ),
                           ],
                         ),
-                      )),
-                ] else if (currentPage.pageType == 'references') ...[
-                  // Page 8: References (Size 20 Bold)
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 20),
-                      child: Text(
-                        currentPage.pageTitle,
-                        style: TextStyle(
-                          fontFamily: _currentFontFamily,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                  ),
-                  ...currentPage.bulletPoints.asMap().entries.map((entry) {
-                    final idx = entry.key + 1;
-                    final refText = entry.value;
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('$idx. ', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black)),
-                          Expanded(
-                            child: Text(
-                              refText,
-                              style: TextStyle(
-                                fontFamily: _currentFontFamily,
-                                fontSize: 14,
-                                height: 1.6,
-                                color: isDark ? Colors.grey[200] : const Color(0xFF1E293B),
-                              ),
+                      );
+                    }),
+                  ] else ...[
+                    // Content Sections (Size 20 Bold Titles, Size 14 Regular Content)
+                    if (currentPage.sections.isNotEmpty) ...[
+                      ...currentPage.sections.map((sec) => Container(
+                            margin: const EdgeInsets.only(bottom: 20),
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.white.withValues(alpha: 0.02) : Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
                             ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-                ] else ...[
-                  // Content Sections (Size 20 Bold Titles, Size 14 Regular Content)
-                  if (currentPage.sections.isNotEmpty) ...[
-                    ...currentPage.sections.map((sec) => Container(
-                          margin: const EdgeInsets.only(bottom: 20),
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: isDark ? Colors.white.withValues(alpha: 0.02) : Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Text(
-                                '${sec.sectionNumber}. ${sec.title}',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontFamily: _currentFontFamily,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              if (sec.content.isNotEmpty)
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
                                 Text(
-                                  sec.content,
-                                  textAlign: TextAlign.start,
+                                  '${sec.sectionNumber}. ${sec.title}',
+                                  textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontFamily: _currentFontFamily,
-                                    fontSize: 14,
-                                    height: 1.65,
-                                    color: isDark ? Colors.grey[200] : const Color(0xFF1E293B),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                    color: Colors.black,
                                   ),
                                 ),
-                              if (sec.bulletPoints.isNotEmpty) ...[
-                                const SizedBox(height: 10),
-                                ...sec.bulletPoints.map((bullet) => Padding(
-                                      padding: const EdgeInsets.only(bottom: 6),
-                                      child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          const Text('• ', style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
-                                          Expanded(
-                                            child: Text(
-                                              bullet,
-                                              style: TextStyle(
-                                                fontFamily: _currentFontFamily,
-                                                fontSize: 14,
-                                                height: 1.5,
-                                                color: isDark ? Colors.grey[300] : const Color(0xFF334155),
+                                const SizedBox(height: 12),
+                                if (sec.content.isNotEmpty)
+                                  Text(
+                                    sec.content,
+                                    textAlign: reportAlign,
+                                    textDirection: reportDir,
+                                    style: TextStyle(
+                                      fontFamily: _currentFontFamily,
+                                      fontSize: 14,
+                                      height: 1.65,
+                                      color: isDark ? Colors.grey[200] : const Color(0xFF1E293B),
+                                    ),
+                                  ),
+                                if (sec.bulletPoints.isNotEmpty) ...[
+                                  const SizedBox(height: 10),
+                                  ...sec.bulletPoints.map((bullet) => Padding(
+                                        padding: const EdgeInsets.only(bottom: 6),
+                                        child: Row(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text('• ', style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
+                                            Expanded(
+                                              child: Text(
+                                                bullet,
+                                                textAlign: reportAlign,
+                                                textDirection: reportDir,
+                                                style: TextStyle(
+                                                  fontFamily: _currentFontFamily,
+                                                  fontSize: 14,
+                                                  height: 1.5,
+                                                  color: isDark ? Colors.grey[300] : const Color(0xFF334155),
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                    )),
+                                          ],
+                                        ),
+                                      )),
+                                ],
                               ],
-                            ],
-                          ),
-                        )),
+                            ),
+                          )),
 
-                    // Diagram
-                    if (currentPage.imageUrl != null && currentPage.imageUrl!.isNotEmpty) ...[
-                      Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.only(top: 6, bottom: 12),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Column(
-                            children: [
-                              SizedBox(
-                                height: 170,
-                                width: double.infinity,
-                                child: Image.network(
-                                  currentPage.imageUrl!,
-                                  fit: BoxFit.cover,
-                                  loadingBuilder: (ctx, child, progress) => progress == null ? child : const Center(child: CupertinoActivityIndicator()),
-                                  errorBuilder: (ctx, err, stack) => Container(height: 120, color: Colors.grey[900], child: const Center(child: Icon(CupertinoIcons.photo, size: 40, color: Colors.grey))),
+                      // Diagram
+                      if (currentPage.imageUrl != null && currentPage.imageUrl!.isNotEmpty) ...[
+                        Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(top: 6, bottom: 12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Column(
+                              children: [
+                                SizedBox(
+                                  height: 170,
+                                  width: double.infinity,
+                                  child: Image.network(
+                                    currentPage.imageUrl!,
+                                    fit: BoxFit.cover,
+                                    loadingBuilder: (ctx, child, progress) => progress == null ? child : const Center(child: CupertinoActivityIndicator()),
+                                    errorBuilder: (ctx, err, stack) => Container(height: 120, color: Colors.grey[900], child: const Center(child: Icon(CupertinoIcons.photo, size: 40, color: Colors.grey))),
+                                  ),
                                 ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
-                                child: Text(
-                                  _isEnglish
-                                      ? 'Figure (${currentPage.pageNumber - 2}): ${currentPage.pageTitle}'
-                                      : 'شێوەی زانستی (${currentPage.pageNumber - 2}): ${currentPage.pageTitle}',
-                                  style: TextStyle(fontFamily: _currentFontFamily, fontSize: 11.5, fontWeight: FontWeight.bold, color: const Color(0xFFC00000)),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                  color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+                                  child: Text(
+                                    _isEnglish
+                                        ? 'Figure (${currentPage.pageNumber - 2}): ${currentPage.pageTitle}'
+                                        : 'شێوەی زانستی (${currentPage.pageNumber - 2}): ${currentPage.pageTitle}',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(fontFamily: _currentFontFamily, fontSize: 11.5, fontWeight: FontWeight.bold, color: const Color(0xFFC00000)),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ],
                 ],
-              ],
+              ),
             ),
           ),
 
@@ -3299,29 +3356,37 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 
           const SizedBox(height: 50),
 
-          // ── 3. Student & Supervisor Information (Positioned lower down) ──
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          // ── 3. Student & Supervisor Information (هەمووی بە تەواوی لە ناوەڕاستن) ──
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Prepared By (Student)
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      preparedLabel,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: _currentFontFamily,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    if (studentList.isEmpty)
-                      Text(
-                        _parsedReport!.studentName.isNotEmpty ? _parsedReport!.studentName : 'ناوی قوتابی',
+              Text(
+                preparedLabel,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: _currentFontFamily,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 6),
+              if (studentList.isEmpty)
+                Text(
+                  _parsedReport!.studentName.isNotEmpty ? _parsedReport!.studentName : (_isEnglish ? 'Student Name' : 'ناوی قوتابی'),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: _currentFontFamily,
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                )
+              else
+                ...studentList.map((s) => Padding(
+                      padding: const EdgeInsets.only(bottom: 3),
+                      child: Text(
+                        s,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontFamily: _currentFontFamily,
@@ -3329,53 +3394,28 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                           fontWeight: FontWeight.bold,
                           color: Colors.black,
                         ),
-                      )
-                    else
-                      ...studentList.map((s) => Padding(
-                            padding: const EdgeInsets.only(bottom: 3),
-                            child: Text(
-                              s,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontFamily: _currentFontFamily,
-                                fontSize: 14.5,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
-                            ),
-                          )),
-                  ],
+                      ),
+                    )),
+              const SizedBox(height: 24),
+              Text(
+                supervisorLabel,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: _currentFontFamily,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
                 ),
               ),
-              const SizedBox(width: 20),
-
-              // Supervised By (Teacher)
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      supervisorLabel,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: _currentFontFamily,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _parsedReport!.supervisorName.isNotEmpty ? _parsedReport!.supervisorName : 'ناوی مامۆستا',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: _currentFontFamily,
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
+              const SizedBox(height: 6),
+              Text(
+                _parsedReport!.supervisorName.isNotEmpty ? _parsedReport!.supervisorName : (_isEnglish ? 'Supervisor Name' : 'ناوی مامۆستا'),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: _currentFontFamily,
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
                 ),
               ),
             ],

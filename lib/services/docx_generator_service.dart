@@ -1193,12 +1193,12 @@ class DocxGeneratorService {
     </w:p>''');
     }
 
-    // Header Lines (Solid Black)
+    // Header Lines (Solid Black - CENTERED on Page 1)
     for (var hLine in [ministryLine1, ministryLine2, report.universityName, report.departmentName]) {
       if (hLine.trim().isEmpty) continue;
       sb.write('''
     <w:p>
-      <w:pPr>$bidiAttr<w:jc w:val="${isRtl ? 'right' : 'left'}"/><w:spacing w:after="60"/></w:pPr>
+      <w:pPr>$bidiAttr<w:jc w:val="center"/><w:spacing w:after="60"/></w:pPr>
       <w:r>
         <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="24"/><w:szCs w:val="24"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml(hLine)}</w:t>
@@ -1209,7 +1209,7 @@ class DocxGeneratorService {
     // Spacer
     sb.write('<w:p><w:pPr><w:spacing w:before="600"/></w:pPr></w:p>');
 
-    // Main Report Title (Solid Black & Bold, 24pt)
+    // Main Report Title (Solid Black & Bold, 24pt - CENTERED)
     sb.write('''
     <w:p>
       <w:pPr>$bidiAttr<w:jc w:val="center"/><w:spacing w:before="120" w:after="400"/></w:pPr>
@@ -1220,26 +1220,26 @@ class DocxGeneratorService {
     </w:p>''');
 
     // Spacer before Student & Supervisor (Positioned lower down)
-    sb.write('<w:p><w:pPr><w:spacing w:before="1200"/></w:pPr></w:p>');
+    sb.write('<w:p><w:pPr><w:spacing w:before="1000"/></w:pPr></w:p>');
 
-    // Metadata: Prepared by & Supervisor (Solid Black, Size 14)
+    // Metadata: Prepared by & Supervisor (Solid Black, Size 14 - CENTERED on Page 1)
     sb.write('''
     <w:p>
-      <w:pPr>$bidiAttr<w:jc w:val="${isRtl ? 'right' : 'left'}"/><w:spacing w:after="100"/></w:pPr>
+      <w:pPr>$bidiAttr<w:jc w:val="center"/><w:spacing w:after="100"/></w:pPr>
       <w:r>
         <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml('$preparedLabel ${report.studentName}')}</w:t>
       </w:r>
     </w:p>
     <w:p>
-      <w:pPr>$bidiAttr<w:jc w:val="${isRtl ? 'right' : 'left'}"/><w:spacing w:after="160"/></w:pPr>
+      <w:pPr>$bidiAttr<w:jc w:val="center"/><w:spacing w:after="160"/></w:pPr>
       <w:r>
         <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml('$supervisorLabel ${report.supervisorName}')}</w:t>
       </w:r>
     </w:p>''');
 
-    // Academic Year (Solid Black, Size 14)
+    // Academic Year (Solid Black, Size 14 - CENTERED)
     sb.write('''
     <w:p>
       <w:pPr>$bidiAttr<w:jc w:val="center"/><w:spacing w:before="600"/></w:pPr>

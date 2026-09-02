@@ -326,22 +326,18 @@ class ReportPdfGeneratorService {
           titleCardY += 32;
         }
 
-        // ── 3. Prepared by & Supervisor (زانیاریی قوتابی و سەرپەرشتیار لە خوارترەوە) ──
-        final double infoY = pageSize.height - 180;
-        final double colWidth = (pageSize.width - 60) / 2;
-        final double colRightX = isRtl ? (pageSize.width / 2) + 10 : 30;
-        final double colLeftX = isRtl ? 30 : (pageSize.width / 2) + 10;
+        // ── 3. Prepared by & Supervisor (هەموو نووسینەکانی پەڕەی یەکەم بە تەواوی لە ناوەڕاستن) ──
+        double metaY = pageSize.height - 210;
 
-        // Right Box: Prepared by (ئامادەکردنی خوێندکار)
-        double cRightY = infoY;
+        // Prepared by Label & Names (Centered)
         g.drawString(
           _fixText(preparedLabel, isRtl),
           boldBodyFont,
           brush: solidBlack,
-          bounds: Rect.fromLTWH(colRightX, cRightY, colWidth, 18),
-          format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
+          bounds: Rect.fromLTWH(20, metaY, pageSize.width - 40, 18),
+          format: PdfStringFormat(alignment: PdfTextAlignment.center),
         );
-        cRightY += 20;
+        metaY += 22;
 
         final studentList = report.studentName
             .split(RegExp(r'[\n\r,?]+'))
@@ -349,38 +345,37 @@ class ReportPdfGeneratorService {
             .where((s) => s.isNotEmpty)
             .toList();
 
-        for (var st in studentList) {
-          g.drawString(
-            _fixText(st, isRtl),
-            boldBodyFont,
-            brush: solidBlack,
-            bounds: Rect.fromLTWH(colRightX, cRightY, colWidth, 18),
-            format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
-          );
-          cRightY += 18;
-        }
+        final studentNamesCombined = studentList.isNotEmpty ? studentList.join(' ، ') : (isRtl ? 'ناوی قوتابی' : 'Student Name');
+        g.drawString(
+          _fixText(studentNamesCombined, isRtl),
+          boldBodyFont,
+          brush: solidBlack,
+          bounds: Rect.fromLTWH(20, metaY, pageSize.width - 40, 20),
+          format: PdfStringFormat(alignment: PdfTextAlignment.center),
+        );
+        metaY += 30;
 
-        // Left Box: Supervised by (بەسەرپەرشتیی مامۆستا)
-        double cLeftY = infoY;
+        // Supervised by Label & Name (Centered)
         g.drawString(
           _fixText(supervisorLabel, isRtl),
           boldBodyFont,
           brush: solidBlack,
-          bounds: Rect.fromLTWH(colLeftX, cLeftY, colWidth, 18),
-          format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
+          bounds: Rect.fromLTWH(20, metaY, pageSize.width - 40, 18),
+          format: PdfStringFormat(alignment: PdfTextAlignment.center),
         );
-        cLeftY += 20;
+        metaY += 22;
 
+        final supervisorName = report.supervisorName.isNotEmpty ? report.supervisorName : (isRtl ? 'ناوی مامۆستا' : 'Supervisor Name');
         g.drawString(
-          _fixText(report.supervisorName, isRtl),
+          _fixText(supervisorName, isRtl),
           boldBodyFont,
           brush: solidBlack,
-          bounds: Rect.fromLTWH(colLeftX, cLeftY, colWidth, 18),
-          format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
+          bounds: Rect.fromLTWH(20, metaY, pageSize.width - 40, 20),
+          format: PdfStringFormat(alignment: PdfTextAlignment.center),
         );
 
-        // ── 4. Academic Year at Bottom (ساڵی خوێندن) ──
-        final double bottomY = pageSize.height - 35;
+        // ── 4. Academic Year at Bottom (لە ناوەڕاست) ──
+        final double bottomY = pageSize.height - 40;
         final yearDisplay = report.academicYear.isNotEmpty ? report.academicYear : '2025 - 2026';
         final yearText = isRtl ? '$stageLabel $yearDisplay' : 'Academic Year: $yearDisplay';
 
