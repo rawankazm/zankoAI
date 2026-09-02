@@ -95,6 +95,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     _directMsgSub?.cancel();
     _directMsgSub = FirebaseFirestore.instance
         .collection('direct_messages')
+        .where('userId', isEqualTo: user.id)
         .snapshots()
         .listen((snap) {
       _directItems.clear();

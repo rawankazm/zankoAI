@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -40,7 +40,7 @@ class AppVersionService extends ChangeNotifier {
     try {
       _configSub = FirebaseFirestore.instance
           .collection('config')
-          .doc('app_config')
+          .doc('version_config')
           .snapshots()
           .listen((snap) {
         if (snap.exists && snap.data() != null) {
@@ -51,22 +51,50 @@ class AppVersionService extends ChangeNotifier {
           if (info.isUpdateAvailable && info.isForced && onUpdateRequired != null) {
             onUpdateRequired(info);
           }
+        } else {
+          FirebaseFirestore.instance.collection('config').doc('app_config').get().then((fallbackSnap) {
+            if (fallbackSnap.exists && fallbackSnap.data() != null) {
+              final info = _evaluateVersion(fallbackSnap.data()!);
+              _updateInfo = info;
+              notifyListeners();
+              if (info.isUpdateAvailable && info.isForced && onUpdateRequired != null) {
+                onUpdateRequired(info);
+              }
+            }
+          }).catchError((_) {});
         }
       }, onError: (e) {
-        debugPrint('AppVersionService listener error: ');
+        FirebaseFirestore.instance.collection('config').doc('app_config').get().then((fallbackSnap) {
+          if (fallbackSnap.exists && fallbackSnap.data() != null) {
+            final info = _evaluateVersion(fallbackSnap.data()!);
+            _updateInfo = info;
+            notifyListeners();
+            if (info.isUpdateAvailable && info.isForced && onUpdateRequired != null) {
+              onUpdateRequired(info);
+            }
+          }
+        }).catchError((_) {});
       });
     } catch (e) {
-      debugPrint('AppVersionService startListening error: ');
+      debugPrint('AppVersionService startListening error: $e');
     }
   }
 
   Future<AppUpdateInfo> checkForUpdate() async {
     try {
-      final doc = await FirebaseFirestore.instance
+      var doc = await FirebaseFirestore.instance
           .collection('config')
-          .doc('app_config')
+          .doc('version_config')
           .get()
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 4));
+
+      if (!doc.exists || doc.data() == null) {
+        doc = await FirebaseFirestore.instance
+            .collection('config')
+            .doc('app_config')
+            .get()
+            .timeout(const Duration(seconds: 4));
+      }
 
       if (doc.exists && doc.data() != null) {
         final info = _evaluateVersion(doc.data()!);

@@ -19,6 +19,15 @@ class AdBannerWidget extends StatefulWidget {
 
 class _AdBannerWidgetState extends State<AdBannerWidget> {
   bool _dismissed = false;
+  static Stream<QuerySnapshot>? _sharedAdsStream;
+  static Stream<QuerySnapshot> get _adsStream {
+    _sharedAdsStream ??= FirebaseFirestore.instance
+        .collection('ads')
+        .where('isActive', isEqualTo: true)
+        .limit(10)
+        .snapshots();
+    return _sharedAdsStream!;
+  }
 
   Future<void> _openAdUrl(String urlStr) async {
     if (urlStr.trim().isEmpty) return;
@@ -46,10 +55,7 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('ads')
-          .where('isActive', isEqualTo: true)
-          .snapshots(),
+      stream: _adsStream,
       builder: (context, snapshot) {
         if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
           return const SizedBox.shrink();

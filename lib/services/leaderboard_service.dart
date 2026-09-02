@@ -222,7 +222,12 @@ class LeaderboardService extends ChangeNotifier {
     ];
 
     try {
-      final snap = await FirebaseFirestore.instance.collection('users').limit(30).get();
+      QuerySnapshot<Map<String, dynamic>> snap;
+      try {
+        snap = await FirebaseFirestore.instance.collection('leaderboard').orderBy('points', descending: true).limit(30).get();
+      } catch (_) {
+        snap = await FirebaseFirestore.instance.collection('users').limit(30).get();
+      }
       if (snap.docs.isNotEmpty) {
         for (var doc in snap.docs) {
           final d = doc.data();
@@ -294,6 +299,19 @@ class LeaderboardService extends ChangeNotifier {
           isCurrentUser: true,
         ),
       );
+
+      if (currentUser.id.isNotEmpty && !currentUser.isGuest) {
+        FirebaseFirestore.instance.collection('leaderboard').doc(currentUser.id).set({
+          'name': currentUser.name,
+          'departmentName': currentUser.departmentName ?? 'تەکنەلۆجیای زانیاری',
+          'universityName': currentUser.universityName ?? 'زانکۆی سلێمانی',
+          'photoUrl': currentUser.photoUrl,
+          'points': myPts,
+          'streak': _streakDays,
+          'score100': scoreService.totalScore100,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true)).catchError((_) {});
+      }
     }
 
     // Filter by department if specified and not 'all'

@@ -101,17 +101,19 @@ class ZankolineService extends ChangeNotifier {
     try {
       FirebaseFirestore.instance
           .collection('zankoline_departments')
-          .snapshots()
-          .listen((snapshot) {
-        for (var doc in snapshot.docs) {
-          final data = doc.data();
-          final item = ZankolineDepartmentModel.fromJson(data, docId: doc.id);
-          _deptMap[doc.id] = item;
+          .get(const GetOptions(source: Source.serverAndCache))
+          .then((snapshot) {
+        if (snapshot.docs.isNotEmpty) {
+          for (var doc in snapshot.docs) {
+            final data = doc.data();
+            final item = ZankolineDepartmentModel.fromJson(data, docId: doc.id);
+            _deptMap[doc.id] = item;
+          }
+          _departments = _deptMap.values.toList();
+          notifyListeners();
         }
-        _departments = _deptMap.values.toList();
-        notifyListeners();
-      }, onError: (err) {
-        if (kDebugMode) print('Firestore zankoline stream warning: $err');
+      }).catchError((err) {
+        if (kDebugMode) print('Firestore zankoline fetch warning: $err');
       });
     } catch (_) {}
   }

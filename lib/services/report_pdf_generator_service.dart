@@ -39,9 +39,6 @@ class ReportPdfGeneratorService {
         'assets/fonts/NotoSansArabic-Regular.ttf',
         'assets/fonts/DroidKufi-Regular.ttf',
         'assets/fonts/calibri.ttf',
-        'C:/Windows/Fonts/calibri.ttf',
-        'assets/fonts/arial.ttf',
-        'C:/Windows/Fonts/arial.ttf',
       ]);
     }
     if (_cachedNotoBold == null || _cachedNotoBold!.isEmpty) {
@@ -49,22 +46,17 @@ class ReportPdfGeneratorService {
         'assets/fonts/NotoNaskhArabic-Bold.ttf',
         'assets/fonts/NotoSansArabic-Bold.ttf',
         'assets/fonts/calibrib.ttf',
-        'C:/Windows/Fonts/calibrib.ttf',
-        'assets/fonts/arialbd.ttf',
-        'C:/Windows/Fonts/arialbd.ttf',
       ]);
     }
     if (_cachedTimesRegular == null || _cachedTimesRegular!.isEmpty) {
       _cachedTimesRegular = await _loadFontFromPaths([
         'assets/fonts/times.ttf',
-        'C:/Windows/Fonts/times.ttf',
         'assets/fonts/calibri.ttf',
       ]);
     }
     if (_cachedTimesBold == null || _cachedTimesBold!.isEmpty) {
       _cachedTimesBold = await _loadFontFromPaths([
         'assets/fonts/timesbd.ttf',
-        'C:/Windows/Fonts/timesbd.ttf',
         'assets/fonts/calibrib.ttf',
       ]);
     }

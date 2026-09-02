@@ -239,9 +239,10 @@ class NotificationService {
 
     final normalizedEmail = email?.trim().toLowerCase();
 
-    // 1. Direct Messages Listener (Messages sent specifically to this user or email)
+    // 1. Direct Messages Listener (Messages sent specifically to this user)
     _adminDirectSub = FirebaseFirestore.instance
         .collection('direct_messages')
+        .where('userId', isEqualTo: userId)
         .snapshots()
         .listen((snap) async {
       for (var change in snap.docChanges) {

@@ -1089,9 +1089,8 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
       final googleId = googleUser.id;
       final defaultUid = 'google_$googleId';
 
-      final bool isAdminAccount = realEmail.toLowerCase().contains('rawankurdi') ||
-          realEmail.toLowerCase().contains('rawankazim') ||
-          realEmail.toLowerCase().contains('admin') ||
+      final bool isAdminAccount = realEmail.toLowerCase() == 'rawankurdi181@gmail.com' ||
+          realEmail.toLowerCase() == 'rawankazm@gmail.com' ||
           role == UserRole.admin;
       final effectiveRole = isAdminAccount ? UserRole.admin : role;
       final effectiveIsVip = isAdminAccount;
@@ -1181,9 +1180,8 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
         existingDoc = await _firestore.collection('users').doc(finalUid).get();
       } catch (_) {}
 
-      final bool isAdminAccount = realEmail.toLowerCase().contains('rawankurdi') ||
-          realEmail.toLowerCase().contains('rawankazim') ||
-          realEmail.toLowerCase().contains('admin') ||
+      final bool isAdminAccount = realEmail.toLowerCase() == 'rawankurdi181@gmail.com' ||
+          realEmail.toLowerCase() == 'rawankazm@gmail.com' ||
           role == UserRole.admin;
 
       UserRole resolvedRole = isAdminAccount ? UserRole.admin : role;

@@ -1194,6 +1194,7 @@ class DocxGeneratorService {
     final sb = StringBuffer();
     final isRtl = report.languageCode != 'en';
     final bidiAttr = isRtl ? '<w:bidi/>' : '';
+    final rtlAttr = isRtl ? '<w:rtl/>' : '';
     final fontName = isRtl ? 'Calibri' : 'Times New Roman';
 
     sb.write('''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -1284,7 +1285,7 @@ class DocxGeneratorService {
     <w:p>
       <w:pPr>$bidiAttr<w:jc w:val="center"/><w:spacing w:after="60"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="24"/><w:szCs w:val="24"/><w:color w:val="000000"/></w:rPr>
+        <w:rPr>$rtlAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="24"/><w:szCs w:val="24"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml(hLine)}</w:t>
       </w:r>
     </w:p>''');
@@ -1298,7 +1299,7 @@ class DocxGeneratorService {
     <w:p>
       <w:pPr>$bidiAttr<w:jc w:val="center"/><w:spacing w:before="120" w:after="400"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="48"/><w:szCs w:val="48"/><w:color w:val="000000"/></w:rPr>
+        <w:rPr>$rtlAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="48"/><w:szCs w:val="48"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml(cleanTopicTitle(report.title))}</w:t>
       </w:r>
     </w:p>''');
@@ -1311,14 +1312,14 @@ class DocxGeneratorService {
     <w:p>
       <w:pPr>$bidiAttr<w:jc w:val="center"/><w:spacing w:after="100"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
+        <w:rPr>$rtlAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml('$preparedLabel ${report.studentName}')}</w:t>
       </w:r>
     </w:p>
     <w:p>
       <w:pPr>$bidiAttr<w:jc w:val="center"/><w:spacing w:after="160"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
+        <w:rPr>$rtlAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml('$supervisorLabel ${report.supervisorName}')}</w:t>
       </w:r>
     </w:p>''');
@@ -1328,7 +1329,7 @@ class DocxGeneratorService {
     <w:p>
       <w:pPr>$bidiAttr<w:jc w:val="center"/><w:spacing w:before="600"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
+        <w:rPr>$rtlAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml('$academicYearLabel $yearDisplay')}</w:t>
       </w:r>
     </w:p>''');
@@ -1346,7 +1347,7 @@ class DocxGeneratorService {
     <w:p>
       <w:pPr>$bidiAttr<w:jc w:val="center"/><w:spacing w:before="240" w:after="240"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="40"/><w:szCs w:val="40"/><w:color w:val="000000"/></w:rPr>
+        <w:rPr>$rtlAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="40"/><w:szCs w:val="40"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml(page.pageTitle)}</w:t>
       </w:r>
     </w:p>''');
@@ -1363,7 +1364,7 @@ class DocxGeneratorService {
     <w:p>
       <w:pPr>$bidiAttr<w:jc w:val="${isRtl ? 'right' : 'left'}"/><w:spacing w:after="120"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
+        <w:rPr>$rtlAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml(cleanItem)}   . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .   $pageStr</w:t>
       </w:r>
     </w:p>''');
@@ -1374,7 +1375,7 @@ class DocxGeneratorService {
     <w:p>
       <w:pPr>$bidiAttr<w:jc w:val="center"/><w:spacing w:before="240" w:after="240"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="40"/><w:szCs w:val="40"/><w:color w:val="000000"/></w:rPr>
+        <w:rPr>$rtlAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="40"/><w:szCs w:val="40"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml(page.pageTitle)}</w:t>
       </w:r>
     </w:p>''');
@@ -1385,11 +1386,11 @@ class DocxGeneratorService {
     <w:p>
       <w:pPr>$bidiAttr<w:jc w:val="${isRtl ? 'right' : 'both'}"/><w:spacing w:after="180"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
+        <w:rPr>$rtlAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml('[${r + 1}] ')}</w:t>
       </w:r>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
+        <w:rPr>$rtlAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml(ref)}</w:t>
       </w:r>
     </w:p>''');
@@ -1402,7 +1403,7 @@ class DocxGeneratorService {
     <w:p>
       <w:pPr>$bidiAttr<w:jc w:val="center"/><w:spacing w:before="240" w:after="120"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="40"/><w:szCs w:val="40"/><w:color w:val="000000"/></w:rPr>
+        <w:rPr>$rtlAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="40"/><w:szCs w:val="40"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml('${sec.sectionNumber}. ${sec.title}')}</w:t>
       </w:r>
     </w:p>''');
@@ -1415,7 +1416,7 @@ class DocxGeneratorService {
     <w:p>
       <w:pPr>$bidiAttr<w:jc w:val="${isRtl ? 'right' : 'both'}"/><w:spacing w:after="160" w:line="360" w:lineRule="auto"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
+        <w:rPr>$rtlAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml(trimmedP)}</w:t>
       </w:r>
     </w:p>''');
@@ -1427,11 +1428,11 @@ class DocxGeneratorService {
     <w:p>
       <w:pPr>$bidiAttr<w:jc w:val="${isRtl ? 'right' : 'left'}"/><w:spacing w:after="100"/><w:ind w:left="360" w:right="360"/></w:pPr>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
+        <w:rPr>$rtlAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:b/><w:bCs/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
         <w:t>• </w:t>
       </w:r>
       <w:r>
-        <w:rPr>$bidiAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
+        <w:rPr>$rtlAttr<w:rFonts w:ascii="$fontName" w:hAnsi="$fontName" w:cs="$fontName"/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="000000"/></w:rPr>
         <w:t>${_escapeXml(b)}</w:t>
       </w:r>
     </w:p>''');

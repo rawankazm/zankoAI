@@ -180,7 +180,7 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
 
   void _listenToQuizzes() {
     _quizzesSub?.cancel();
-    _quizzesSub = _firestore.collection('quizzes').snapshots().listen((snapshot) {
+    _quizzesSub = _firestore.collection('quizzes').limit(30).snapshots().listen((snapshot) {
       _quizzes.clear();
       for (var doc in snapshot.docs) {
         final data = doc.data();
@@ -273,7 +273,7 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
 
   void _listenToLectures() {
     _lecturesSub?.cancel();
-    _lecturesSub = _firestore.collection('lectures').snapshots().listen((snapshot) {
+    _lecturesSub = _firestore.collection('lectures').limit(30).snapshots().listen((snapshot) {
       _lectures.clear();
       for (var doc in snapshot.docs) {
         final data = doc.data();
@@ -300,6 +300,7 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
     _announcementsSub = _firestore
         .collection('announcements')
         .orderBy('createdAt', descending: true)
+        .limit(30)
         .snapshots()
         .listen((snapshot) {
       _announcements.clear();

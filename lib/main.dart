@@ -26,8 +26,21 @@ import 'package:flutter/foundation.dart';
 
 import 'firebase_options.dart';
 
+import 'dart:async';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Catch unexpected rendering and platform errors gracefully
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('Flutter Error: ${details.exceptionAsString()}');
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('Platform Dispatcher Error: $error');
+    return true;
+  };
+
   try {
     if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp(
@@ -36,13 +49,14 @@ void main() async {
     }
     if (!kIsWeb) {
       FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-      await NotificationService().init();
+      // Initialize notifications asynchronously in background to eliminate splash freeze
+      unawaited(NotificationService().init().catchError((e) {
+        debugPrint('Notification init notice: $e');
+      }));
     } else {
-      try {
-        await NotificationService().init();
-      } catch (e) {
+      unawaited(NotificationService().init().catchError((e) {
         debugPrint('Web notification init notice: $e');
-      }
+      }));
     }
   } catch (e) {
     debugPrint('Firebase core initialization notice: $e');

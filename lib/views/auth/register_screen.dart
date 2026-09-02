@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
 import '../navigation_shell.dart';
@@ -206,6 +207,13 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
     if (!mounted) return;
 
     if (success) {
+      if (_profileImage != null) {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('local_avatar_path', _profileImage!.path);
+        } catch (_) {}
+      }
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const NavigationShell()),

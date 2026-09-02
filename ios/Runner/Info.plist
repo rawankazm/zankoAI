@@ -72,5 +72,10 @@
 	<string>ZankoAI پێویستی بە کامێرا هەیە بۆ وێنەگرتنی پرسیارەکان و شیکارکردنیان بە زیرەکی دەستکرد.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>ZankoAI پێویستی بە دەستگەیشتن بە وێنەخانە هەیە بۆ بارکردنی وێنە و وانەکان.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>

@@ -231,15 +231,9 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     }
   }
 
-  // High-performance multimodal Gemini models (Prioritizing Gemini 3.7 & 3.x series)
+  // High-performance multimodal Gemini models (Official Google Gemini production models)
   static const List<String> _validFastModels = [
-    'gemini-3.7-flash',
-    'gemini-3.7-pro',
-    'gemini-3.0-flash',
-    'gemini-2.5-flash',
     'gemini-2.0-flash',
-    'gemini-2.0-flash-thinking-exp',
-    'gemini-2.0-pro-exp',
     'gemini-1.5-flash',
     'gemini-1.5-pro',
   ];

@@ -529,6 +529,7 @@ class _NotificationBellButton extends StatelessWidget {
               StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('direct_messages')
+                    .where('userId', isEqualTo: user.id)
                     .snapshots(),
                 builder: (context, snapshot) {
                   bool hasUnread = false;

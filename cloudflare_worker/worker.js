@@ -35,7 +35,21 @@ export default {
       );
     }
 
-    // Debug Keys endpoint
+    // Secret Key Authentication (Required for all management and push endpoints)
+    const secretKey = env.API_SECRET || 'zanko_secret_2026';
+    const providedSecret =
+      request.headers.get('X-Secret-Key') ||
+      request.headers.get('Authorization')?.replace('Bearer ', '') ||
+      url.searchParams.get('secret');
+
+    if (!providedSecret || providedSecret !== secretKey) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: Invalid or missing secret key' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Protected Debug Keys endpoint (Only accessible with secret key)
     if (url.pathname === '/debug-keys') {
       const keys = Object.keys(env);
       return new Response(
@@ -47,19 +61,6 @@ export default {
           hasPrivateKey: !!(env.SERVICE_ACCOUNT_PRIVATE_KEY || env.SERVICE_ACCOUNT_PRI || env.PRIVATE_KEY),
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Secret Key Authentication
-    const secretKey = env.API_SECRET || 'zanko_secret_2026';
-    const providedSecret =
-      request.headers.get('X-Secret-Key') ||
-      url.searchParams.get('secret');
-
-    if (providedSecret !== secretKey) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized: Invalid or missing secret key' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -207,6 +208,14 @@ async function sendFcmNotification(env, { title, body, topic, token, data }) {
                 default_vibrate_timings: true,
                 icon: 'ic_launcher',
                 tag: 'zanko_admin_broadcast',
+              },
+            },
+            apns: {
+              payload: {
+                aps: {
+                  sound: 'default',
+                  badge: 1,
+                },
               },
             },
             data: data || {},
