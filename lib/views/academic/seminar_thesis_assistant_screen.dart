@@ -11,6 +11,7 @@ import '../../services/docx_generator_service.dart';
 import '../../services/pptx_generator_service.dart';
 import '../../services/report_pdf_generator_service.dart';
 import '../../data/kurdistan_universities_data.dart';
+import '../../widgets/university_department_picker.dart';
 import '../../theme.dart';
 import '../payment/vip_upgrade_sheet.dart';
 
@@ -110,6 +111,130 @@ class _SeminarThesisAssistantScreenState
   int _selectedReportPageIndex = 0;
 
   final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedPreferencesAndProfile();
+  }
+
+  Future<void> _loadSavedPreferencesAndProfile() async {
+    try {
+      // 1. Auto-fill from user account profile if available
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final user = authService.currentUser;
+
+      if (user != null) {
+        if (user.name.isNotEmpty && !user.isGuest) {
+          _studentNameController.text = user.name;
+        }
+        if (user.universityName != null && user.universityName!.isNotEmpty) {
+          _universityController.text = user.universityName!;
+        }
+        if (user.departmentName != null && user.departmentName!.isNotEmpty) {
+          _reportDeptController.text = user.departmentName!;
+        }
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      if (!mounted) return;
+
+      // 2. Supplement with saved local academic preferences
+      final savedSupervisor = prefs.getString('academic_supervisor_name');
+      if (savedSupervisor != null && savedSupervisor.isNotEmpty) {
+        _supervisorNameController.text = savedSupervisor;
+      }
+
+      final savedUniv = prefs.getString('academic_university_name');
+      if (savedUniv != null && savedUniv.isNotEmpty) {
+        _universityController.text = savedUniv;
+      }
+
+      final savedDept = prefs.getString('academic_department_name');
+      if (savedDept != null && savedDept.isNotEmpty) {
+        _reportDeptController.text = savedDept;
+      }
+
+      final savedYear = prefs.getString('academic_year_session');
+      if (savedYear != null && savedYear.isNotEmpty) {
+        _academicYearController.text = savedYear;
+      }
+
+      // 3. Load default official academic emblem / logo if user hasn't set one
+      if (_universityLogoBytes == null) {
+        _loadDefaultUniversityLogo();
+      }
+
+      if (mounted) setState(() {});
+    } catch (e) {
+      debugPrint('Error loading academic preferences: $e');
+    }
+  }
+
+  Future<void> _loadDefaultUniversityLogo() async {
+    try {
+      final byteData = await rootBundle.load('assets/images/logo.png');
+      if (mounted) {
+        setState(() {
+          _universityLogoBytes = byteData.buffer.asUint8List();
+          _universityLogoName = 'Official Academic Logo';
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveCoverPreferences() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (_supervisorNameController.text.trim().isNotEmpty) {
+        await prefs.setString('academic_supervisor_name', _supervisorNameController.text.trim());
+      }
+      if (_universityController.text.trim().isNotEmpty) {
+        await prefs.setString('academic_university_name', _universityController.text.trim());
+      }
+      if (_reportDeptController.text.trim().isNotEmpty) {
+        await prefs.setString('academic_department_name', _reportDeptController.text.trim());
+      }
+      if (_academicYearController.text.trim().isNotEmpty) {
+        await prefs.setString('academic_year_session', _academicYearController.text.trim());
+      }
+    } catch (e) {
+      debugPrint('Error saving preferences: $e');
+    }
+  }
+
+  Future<void> _openUniversityPicker() async {
+    final chosen = await UniversityDepartmentPicker.showUniversityPicker(
+      context,
+      selectedUniversityName: _universityController.text.trim(),
+    );
+    if (chosen != null && mounted) {
+      setState(() {
+        _universityController.text = _isEnglish
+            ? chosen.nameEn
+            : (_isArabic ? chosen.nameAr : chosen.nameKu);
+        // Automatically suggest first department of this college/university
+        if (chosen.departments.isNotEmpty) {
+          _reportDeptController.text = chosen.departments.first;
+        }
+      });
+      _saveCoverPreferences();
+    }
+  }
+
+  Future<void> _openDepartmentPicker() async {
+    final chosen = await UniversityDepartmentPicker.showDepartmentPicker(
+      context,
+      universityName: _universityController.text.trim(),
+      selectedDepartmentName: _reportDeptController.text.trim(),
+    );
+    if (chosen != null && mounted) {
+      setState(() {
+        _reportDeptController.text = chosen;
+      });
+      _saveCoverPreferences();
+    }
+  }
 
   @override
   void dispose() {
@@ -325,6 +450,8 @@ Format each topic strictly as:
     final canProceed = await _checkVipLimit();
     if (!canProceed || !mounted) return;
 
+    _saveCoverPreferences();
+
     setState(() {
       _activeGeneratedTitle = topicTitle;
       _isLoading = true;
@@ -473,6 +600,8 @@ SLIDE STRUCTURE & FORMAT:
   Future<void> _generateAcademicReport(String reportTitle) async {
     final canProceed = await _checkVipLimit();
     if (!canProceed || !mounted) return;
+
+    _saveCoverPreferences();
 
     if (reportTitle.isEmpty) {
       _showSnackBar(_isEnglish
@@ -1627,16 +1756,49 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(_isEnglish ? 'University:' : (_isArabic ? 'اسم الجامعة:' : 'ناوی زانکۆ:'), style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _isEnglish ? 'University:' : (_isArabic ? 'اسم الجامعة:' : 'ناوی زانکۆ:'),
+                        style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                      InkWell(
+                        onTap: _openUniversityPicker,
+                        borderRadius: BorderRadius.circular(6),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(CupertinoIcons.list_bullet, size: 12, color: themeColor),
+                              const SizedBox(width: 3),
+                              Text(
+                                _isEnglish ? 'Pick' : (_isArabic ? 'اختر' : 'دیاریکردن'),
+                                style: TextStyle(fontFamily: _currentFontFamily, fontSize: 11, fontWeight: FontWeight.bold, color: themeColor),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 4),
                   TextField(
                     controller: _universityController,
+                    onTap: _openUniversityPicker,
                     style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
                     decoration: InputDecoration(
                       hintText: _isEnglish ? 'Erbil Polytechnic...' : (_isArabic ? 'جامعة أربيل التقنية...' : 'زانکۆی سەڵاحەدین...'),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       filled: true,
                       fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      suffixIcon: IconButton(
+                        icon: Icon(CupertinoIcons.chevron_down_circle_fill, color: themeColor, size: 18),
+                        onPressed: _openUniversityPicker,
+                        tooltip: _isEnglish ? 'Select University' : (_isArabic ? 'اختر الجامعة' : 'دیاریکردنی زانکۆ'),
+                      ),
                     ),
                   ),
                 ],
@@ -1647,16 +1809,49 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(_isEnglish ? 'Department:' : (_isArabic ? 'الكلية والقسم:' : 'کۆلێژ و بەش:'), style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _isEnglish ? 'Department:' : (_isArabic ? 'الكلية والقسم:' : 'کۆلێژ و بەش:'),
+                        style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                      InkWell(
+                        onTap: _openDepartmentPicker,
+                        borderRadius: BorderRadius.circular(6),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(CupertinoIcons.list_bullet, size: 12, color: themeColor),
+                              const SizedBox(width: 3),
+                              Text(
+                                _isEnglish ? 'Pick' : (_isArabic ? 'اختر' : 'دیاریکردن'),
+                                style: TextStyle(fontFamily: _currentFontFamily, fontSize: 11, fontWeight: FontWeight.bold, color: themeColor),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 4),
                   TextField(
                     controller: _reportDeptController,
+                    onTap: _openDepartmentPicker,
                     style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
                     decoration: InputDecoration(
-                      hintText: _isEnglish ? 'College of Science...' : (_isArabic ? 'الكلية التقنية - قسم التكنولوجيا...' : 'کۆلێژی زانست...'),
+                      hintText: _isEnglish ? 'College & Department...' : (_isArabic ? 'الكلية والقسم...' : 'کۆلێژی زانست...'),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       filled: true,
                       fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      suffixIcon: IconButton(
+                        icon: Icon(CupertinoIcons.chevron_down_circle_fill, color: themeColor, size: 18),
+                        onPressed: _openDepartmentPicker,
+                        tooltip: _isEnglish ? 'Select Department' : (_isArabic ? 'اختر القسم' : 'دیاریکردنی بەش'),
+                      ),
                     ),
                   ),
                 ],

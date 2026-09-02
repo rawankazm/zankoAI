@@ -116,5 +116,25 @@ void main() {
         'قسم التمريض',
       );
     });
+
+    test('All polytechnic colleges have specialized technical majors', () {
+      final epuEng = KurdistanUniversitiesData.findUniversity('کۆلێژی تەکنیکی ئەندازیاری هەولێر');
+      expect(epuEng, isNotNull);
+      expect(epuEng!.departments.any((d) => d.contains('ئۆتۆمبێل')), isTrue);
+      expect(epuEng.departments.any((d) => d.contains('بیناکاری')), isTrue);
+
+      final epuComp = KurdistanUniversitiesData.findUniversity('کۆلێژی تەکنیکی ئەندازیاری کۆمپیوتەر');
+      expect(epuComp, isNotNull);
+      expect(epuComp!.departments.any((d) => d.contains('ڕۆبۆتیکس') || d.contains('ژیری دەستکرد')), isTrue);
+      expect(epuComp.departments.any((d) => d.contains('سایبەری')), isTrue);
+    });
+
+    test('Common departments list is populated and valid', () {
+      final common = KurdistanUniversitiesData.commonDepartments;
+      expect(common.length, greaterThanOrEqualTo(10));
+      expect(common.any((d) => d.contains('تەکنەلۆجیای زانیاری')), isTrue);
+      expect(common.any((d) => d.contains('پزیشکی')), isTrue);
+      expect(common.any((d) => d.contains('یاسا')), isTrue);
+    });
   });
 }
