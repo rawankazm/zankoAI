@@ -215,5 +215,11 @@ service cloud.firestore {
       allow create: if isAuth() && isNotBlocked();
       allow read, update, delete: if isAdmin();
     }
+
+    // 14. App Configuration (App version, AI dynamic keys, payment numbers)
+    match /config/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
   }
 }

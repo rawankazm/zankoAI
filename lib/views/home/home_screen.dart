@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -268,15 +269,45 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       ),
                                     ],
                                   ),
-                                  child: Center(
-                                    child: Text(
-                                      (userName.isNotEmpty ? userName[0] : 'S').toUpperCase(),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 17,
-                                      ),
-                                    ),
+                                  child: ClipOval(
+                                    child: (user?.photoUrl != null && user!.photoUrl!.isNotEmpty)
+                                        ? (user.photoUrl!.startsWith('http')
+                                            ? Image.network(
+                                                user.photoUrl!,
+                                                width: 42,
+                                                height: 42,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (_, _, _) => Center(
+                                                  child: Text(
+                                                    (userName.isNotEmpty ? userName[0] : 'S').toUpperCase(),
+                                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 17),
+                                                  ),
+                                                ),
+                                              )
+                                            : (user.photoUrl!.startsWith('assets/')
+                                                ? Image.asset(user.photoUrl!, width: 42, height: 42, fit: BoxFit.cover)
+                                                : Image.file(
+                                                    File(user.photoUrl!),
+                                                    width: 42,
+                                                    height: 42,
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder: (_, _, _) => Center(
+                                                      child: Text(
+                                                        (userName.isNotEmpty ? userName[0] : 'S').toUpperCase(),
+                                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 17),
+                                                      ),
+                                                    ),
+                                                  )))
+                                        : Center(
+                                            child: Text(
+                                              (userName.isNotEmpty ? userName[0] : 'S').toUpperCase(),
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 17,
+                                              ),
+                                            ),
+                                          ),
                                   ),
                                 ),
                               ),
@@ -531,11 +562,11 @@ class _NotificationBellButton extends StatelessWidget {
                     .collection('direct_messages')
                     .where('userId', isEqualTo: user.id)
                     .snapshots(),
-                builder: (context, snapshot) {
+                builder: (context, dmSnap) {
                   bool hasUnread = false;
-                  if (snapshot.hasData) {
+                  if (dmSnap.hasData) {
                     final normalizedEmail = user.email.trim().toLowerCase();
-                    hasUnread = snapshot.data!.docs.any((doc) {
+                    hasUnread = dmSnap.data!.docs.any((doc) {
                       final data = doc.data() as Map<String, dynamic>?;
                       if (data == null) return false;
                       final docUserId = (data['userId'] ?? data['user_id'] ?? data['recipientId'] ?? data['studentId'] ?? '').toString().trim();

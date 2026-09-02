@@ -19,6 +19,7 @@ import '../update/force_update_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/university_department_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -296,15 +297,24 @@ class ProfileScreen extends StatelessWidget {
                               ),
                               padding: const EdgeInsets.all(3),
                               child: ClipOval(
-                                child: Image.asset(
-                                  'assets/images/student_avatar_3d.png',
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, _, _) => const Icon(
-                                    CupertinoIcons.person_fill,
-                                    color: Colors.white,
-                                    size: 60,
-                                  ),
-                                ),
+                                child: (user?.photoUrl != null && user!.photoUrl!.isNotEmpty)
+                                    ? (user.photoUrl!.startsWith('http')
+                                        ? Image.network(
+                                            user.photoUrl!,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, _, _) => Image.asset('assets/images/student_avatar_3d.png', fit: BoxFit.cover),
+                                          )
+                                        : (user.photoUrl!.startsWith('assets/')
+                                            ? Image.asset(user.photoUrl!, fit: BoxFit.cover)
+                                            : Image.file(
+                                                File(user.photoUrl!),
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (_, _, _) => Image.asset('assets/images/student_avatar_3d.png', fit: BoxFit.cover),
+                                              )))
+                                    : Image.asset(
+                                        'assets/images/student_avatar_3d.png',
+                                        fit: BoxFit.cover,
+                                      ),
                               ),
                             ),
                             Container(
@@ -609,6 +619,9 @@ class ProfileScreen extends StatelessWidget {
                                 'departmentName': newDept,
                                 'cityName': newCity,
                               });
+                              if (context.mounted) {
+                                await Provider.of<AuthService>(context, listen: false).reloadUser();
+                              }
                             }
 
                             if (context.mounted) {
@@ -1382,6 +1395,13 @@ class ProfileScreen extends StatelessWidget {
                               await FirebaseFirestore.instance.collection('users').doc(user.id).update({
                                 'photoUrl': selectedAvatar,
                               });
+                              try {
+                                final prefs = await SharedPreferences.getInstance();
+                                await prefs.setString('local_avatar_path', selectedAvatar);
+                              } catch (_) {}
+                              if (context.mounted) {
+                                await Provider.of<AuthService>(context, listen: false).reloadUser();
+                              }
                             }
 
                             if (context.mounted) {
@@ -2580,6 +2600,64 @@ class ProfileScreen extends StatelessWidget {
                       }
                     },
                   ),
+                  if (!isGuest) ...[
+                    const Divider(height: 1, indent: 56),
+                    _buildSettingsTile(
+                      context,
+                      icon: CupertinoIcons.trash_fill,
+                      iconColor: const Color(0xFFDC2626),
+                      title: 'سڕینەوەی یەکجاریی هەژمار',
+                      subtitle: 'سڕینەوەی هەموو داتاکان و هەژماری بەکارهێنەر',
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (dialogCtx) => AlertDialog(
+                            backgroundColor: isDark ? ZankoColors.darkCard : Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            title: const Row(
+                              children: [
+                                Icon(CupertinoIcons.exclamationmark_triangle_fill, color: Colors.redAccent, size: 24),
+                                SizedBox(width: 8),
+                                Text(
+                                  'سڕینەوەی هەژمار؟',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                                ),
+                              ],
+                            ),
+                            content: const Text(
+                              'ئایا دڵنیایت لە سڕینەوەی یەکجاریی هەژمارەکەت؟ ئەم کارە هەموو داتاکانت دەسڕێتەوە و ناتوانرێت بگەڕێندرێتەوە.',
+                              style: TextStyle(fontSize: 14, height: 1.5),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(dialogCtx),
+                                child: const Text('پەشیمانبوونەوە'),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.redAccent,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                                onPressed: () async {
+                                  Navigator.pop(dialogCtx);
+                                  await authService.deleteAccount();
+                                  if (context.mounted) {
+                                    Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                      (route) => false,
+                                    );
+                                  }
+                                },
+                                child: const Text('بەڵێ، بیسڕەوە'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ],
               ),
             ),

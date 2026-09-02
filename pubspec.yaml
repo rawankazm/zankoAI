@@ -114,6 +114,11 @@ flutter:
         - asset: assets/fonts/NotoSansArabic-Regular.ttf
         - asset: assets/fonts/NotoSansArabic-Bold.ttf
           weight: 700
+    - family: Noto Sans Arabic
+      fonts:
+        - asset: assets/fonts/NotoSansArabic-Regular.ttf
+        - asset: assets/fonts/NotoSansArabic-Bold.ttf
+          weight: 700
     - family: NotoNaskhArabic
       fonts:
         - asset: assets/fonts/NotoNaskhArabic-Regular.ttf

@@ -1318,10 +1318,50 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
   }
 
   @override
-  void reloadUser() {
-    if (_currentUser != null) {
-      _currentUser = _currentUser!.copyWith(isVip: true);
-      notifyListeners();
+  Future<void> reloadUser() async {
+    final uid = _auth.currentUser?.uid ?? _currentUser?.id;
+    if (uid != null && !uid.startsWith('guest_')) {
+      try {
+        final doc = await _firestore.collection('users').doc(uid).get();
+        if (doc.exists && doc.data() != null) {
+          final data = Map<String, dynamic>.from(doc.data()!);
+          data['id'] = doc.id;
+          _currentUser = UserModel.fromMap(data);
+          notifyListeners();
+        }
+      } catch (e) {
+        if (kDebugMode) print('Error reloading user: $e');
+      }
     }
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    final user = _auth.currentUser;
+    final uid = user?.uid ?? _currentUser?.id;
+
+    if (uid != null && !uid.startsWith('guest_')) {
+      try {
+        await _firestore.collection('users').doc(uid).delete().catchError((_) {});
+      } catch (_) {}
+    }
+
+    try {
+      if (user != null) {
+        await user.delete();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Firebase Auth delete error: $e');
+      await _auth.signOut().catchError((_) {});
+    }
+
+    try {
+      if (!kIsWeb) {
+        await GoogleSignIn().signOut().catchError((_) => null);
+      }
+    } catch (_) {}
+
+    _currentUser = null;
+    notifyListeners();
   }
 }

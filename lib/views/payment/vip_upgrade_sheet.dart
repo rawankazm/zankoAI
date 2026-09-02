@@ -161,38 +161,28 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
 
     try {
       final reqDoc = FirebaseFirestore.instance.collection('vip_requests').doc(user.id);
-      final userDoc = FirebaseFirestore.instance.collection('users').doc(user.id);
-
       final priceStr = _formatPrice(_planPrice);
 
-      await Future.wait([
-        reqDoc.set({
-          'id': user.id,
-          'userId': user.id,
-          'userEmail': user.email,
-          'userName': user.name,
-          'photoUrl': user.photoUrl,
-          'plan': _selectedPlan,
-          'planTitle': _planTitle,
-          'price': _planPrice,
-          'amount': '$priceStr د.ع',
-          'paymentMethod': platform,
-          'transactionId': 'لە چاتی $platform دەنێردرێت 💬',
-          'receiptImageUrl': '',
-          'method': platform.toLowerCase(),
-          'status': 'pending',
-          'notes': 'داواکاری لە ڕێگەی $platform نێردراوە',
-          'requestedAt': FieldValue.serverTimestamp(),
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true)),
-        userDoc.set({
-          'isVip': false,
-          'vipStatus': 'pending',
-          'requestedPlan': _selectedPlan,
-          'vipRequestedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true)),
-      ]);
+      await reqDoc.set({
+        'id': user.id,
+        'userId': user.id,
+        'userEmail': user.email,
+        'userName': user.name,
+        'photoUrl': user.photoUrl,
+        'plan': _selectedPlan,
+        'planTitle': _planTitle,
+        'price': _planPrice,
+        'amount': '$priceStr د.ع',
+        'paymentMethod': platform,
+        'transactionId': 'لە چاتی $platform دەنێردرێت 💬',
+        'receiptImageUrl': '',
+        'method': platform.toLowerCase(),
+        'status': 'pending',
+        'notes': 'داواکاری لە ڕێگەی $platform نێردراوە',
+        'requestedAt': FieldValue.serverTimestamp(),
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
       return true;
     } catch (e) {
       debugPrint('Error creating vip_request: $e');

@@ -146,7 +146,13 @@ class ZankolineService extends ChangeNotifier {
       await loadDepartments();
     }
     return _departments.where((dept) {
-      final isTrackMatch = dept.track.toLowerCase() == track.toLowerCase();
+      final deptTrack = dept.track.toLowerCase().trim();
+      final targetTrack = track.toLowerCase().trim();
+      final isTrackMatch = deptTrack == targetTrack ||
+          deptTrack == 'all' ||
+          deptTrack == 'common' ||
+          deptTrack == 'both' ||
+          deptTrack.isEmpty;
       if (!isTrackMatch) return false;
 
       if (isParallel) {

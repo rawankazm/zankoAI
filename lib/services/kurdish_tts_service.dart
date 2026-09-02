@@ -222,47 +222,6 @@ class KurdishTtsService {
     return null;
   }
 
-  /// Fetch Native Kurdish Audio from Open-Source Neural Models (Hugging Face / Kurdish MMS / FastPitch)
-  Future<Uint8List?> _fetchHuggingFaceKurdishAudio(String text) async {
-    if (_currentLangCode != 'ku' && _currentLangCode != 'ckb') return null;
-
-    final endpoints = [
-      'https://api-inference.huggingface.co/models/facebook/mms-tts-kmr-script_arabic',
-    ];
-
-    final client = HttpClient();
-    client.connectionTimeout = const Duration(seconds: 4);
-
-    for (final endpoint in endpoints) {
-      try {
-        final uri = Uri.parse(endpoint);
-        final request = await client.postUrl(uri);
-        request.headers.set('content-type', 'application/json');
-
-        final body = jsonEncode({'inputs': text});
-        request.add(utf8.encode(body));
-
-        final response = await request.close().timeout(const Duration(seconds: 6));
-        if (response.statusCode == 200) {
-          final builder = BytesBuilder();
-          await for (final byteChunk in response) {
-            builder.add(byteChunk);
-          }
-          final bytes = builder.takeBytes();
-          if (bytes.isNotEmpty) {
-            client.close();
-            return bytes;
-          }
-        }
-      } catch (e) {
-        debugPrint('Hugging Face Kurdish Audio fetch error: $e');
-      }
-    }
-
-    client.close();
-    return null;
-  }
-
   String? _elevenLabsApiKey = 'sk_94dc918798a1f5b4542f7b5e90cca8cf30f73a916ef90519';
   String _elevenLabsVoiceId = 'CwhRBWXzGAHq8TQ4Fs17'; // Roger (ElevenLabs)
 
@@ -405,25 +364,7 @@ class KurdishTtsService {
       debugPrint('ElevenLabs Voice failed, falling back: $e');
     }
 
-    // 2. Try Native Kurdish Open-Source Model (Hugging Face Meta MMS) for Kurdish text
-    if (_currentLangCode == 'ku' || _currentLangCode == 'ckb') {
-      try {
-        final hfBytes = await _fetchHuggingFaceKurdishAudio(chunk);
-        if (hfBytes != null && hfBytes.isNotEmpty) {
-          await _audioPlayer.stop();
-          await _audioPlayer.setPlaybackRate(_playbackSpeed);
-          await _audioPlayer.play(
-            BytesSource(hfBytes),
-            mode: PlayerMode.mediaPlayer,
-          );
-          return;
-        }
-      } catch (e) {
-        debugPrint('Hugging Face Kurdish Voice failed, falling back: $e');
-      }
-    }
-
-    // 3. Try High-Quality Google Cloud Neural Voice with Enhanced Kurdish Phonetics
+    // 2. Try High-Quality Google Cloud Neural Voice with Enhanced Kurdish Phonetics
     try {
       final neuralBytes = await _fetchGoogleCloudNeuralAudio(chunk, apiKey: _customApiKey);
       if (neuralBytes != null && neuralBytes.isNotEmpty) {
