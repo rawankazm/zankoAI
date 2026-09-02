@@ -57,5 +57,64 @@ void main() {
       final fallback = KurdistanUniversitiesData.getDepartmentsFor('Unknown College');
       expect(fallback.isNotEmpty, isTrue);
     });
+
+    test('getLocalizedUniversityName should translate properly across en, ar, ku', () {
+      // English
+      expect(
+        KurdistanUniversitiesData.getLocalizedUniversityName('زانکۆی سەڵاحەدین - هەولێر', 'en'),
+        'Salahaddin University - Erbil',
+      );
+      expect(
+        KurdistanUniversitiesData.getLocalizedUniversityName('کۆلێژی تەکنیکی شەقڵاوە (EPU)', 'en'),
+        'Shaqlawa Technical College',
+      );
+      expect(
+        KurdistanUniversitiesData.getLocalizedUniversityName('زانکۆی سلێمانی', 'en'),
+        'University of Sulaimani',
+      );
+
+      // Arabic
+      expect(
+        KurdistanUniversitiesData.getLocalizedUniversityName('زانکۆی سەڵاحەدین - هەولێر', 'ar'),
+        'جامعة صلاح الدين - أربيل',
+      );
+      expect(
+        KurdistanUniversitiesData.getLocalizedUniversityName('کۆلێژی تەکنیکی شەقڵاوە (EPU)', 'ar'),
+        'الكلية التقنية شقلاوة',
+      );
+
+      // Kurdish
+      final kuUni = KurdistanUniversitiesData.getLocalizedUniversityName('Salahaddin University - Erbil', 'ku');
+      expect(
+        kuUni.contains('سەلاحەدین') || kuUni.contains('سەڵاحەدین'),
+        isTrue,
+      );
+    });
+
+    test('getLocalizedDepartmentName should translate properly across en, ar, ku', () {
+      // English
+      expect(
+        KurdistanUniversitiesData.getLocalizedDepartmentName('کۆلێژی زانست - بەشی تەکنەلۆجیای زانیاری', 'en'),
+        'College of Science - Department of Information Technology',
+      );
+      expect(
+        KurdistanUniversitiesData.getLocalizedDepartmentName('بەشی شیکاری نەخۆشییەکان (Medical Laboratory Technology - MLT)', 'en'),
+        contains('Medical Laboratory Technology'),
+      );
+      expect(
+        KurdistanUniversitiesData.getLocalizedDepartmentName('بەشی پەرستاری', 'en'),
+        'Department of Nursing',
+      );
+
+      // Arabic
+      expect(
+        KurdistanUniversitiesData.getLocalizedDepartmentName('کۆلێژی زانست - بەشی تەکنەلۆجیای زانیاری', 'ar'),
+        'كلية العلوم - قسم تكنولوجيا المعلومات',
+      );
+      expect(
+        KurdistanUniversitiesData.getLocalizedDepartmentName('بەشی پەرستاری', 'ar'),
+        'قسم التمريض',
+      );
+    });
   });
 }

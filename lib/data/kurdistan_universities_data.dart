@@ -1489,4 +1489,302 @@ class KurdistanUniversitiesData {
     }
     return commonDepartments;
   }
+
+  /// Returns the localized university name based on target language code ('en', 'ar', 'ku', 'badini')
+  static String getLocalizedUniversityName(String name, String langCode) {
+    if (name.trim().isEmpty) {
+      if (langCode == 'en') return 'Salahaddin University - Erbil';
+      if (langCode == 'ar') return 'جامعة صلاح الدين - أربيل';
+      return 'زانکۆی سەڵاحەدین - هەولێر';
+    }
+
+    final clean = name.trim();
+    final lower = clean.toLowerCase();
+
+    // 1. Try to match an existing university in database
+    for (final u in universities) {
+      if (u.nameKu.toLowerCase().contains(lower) ||
+          lower.contains(u.nameKu.toLowerCase()) ||
+          u.nameEn.toLowerCase().contains(lower) ||
+          lower.contains(u.nameEn.toLowerCase()) ||
+          u.nameAr.toLowerCase().contains(lower) ||
+          lower.contains(u.nameAr.toLowerCase())) {
+        if (langCode == 'en') return u.nameEn;
+        if (langCode == 'ar') return u.nameAr;
+        return u.nameKu;
+      }
+    }
+
+    // 2. Keyword heuristic matching for major Kurdistan universities
+    if (lower.contains('سەڵاحەدین') || lower.contains('صلاح الدين') || lower.contains('salahaddin')) {
+      if (langCode == 'en') return 'Salahaddin University - Erbil';
+      if (langCode == 'ar') return 'جامعة صلاح الدين - أربيل';
+      return 'زانکۆی سەڵاحەدین - هەولێر';
+    }
+    if (lower.contains('شەقڵاوە') || lower.contains('شقلاوة') || lower.contains('shaqlawa')) {
+      if (langCode == 'en') return 'Shaqlawa Technical College';
+      if (langCode == 'ar') return 'الكلية التقنية شقلاوة';
+      return 'کۆلێژی تەکنیکی شەقڵاوە (EPU)';
+    }
+    if (lower.contains('سلێمانی') || lower.contains('سليمانية') || lower.contains('sulaimani')) {
+      if (langCode == 'en') return 'University of Sulaimani';
+      if (langCode == 'ar') return 'جامعة السليمانية';
+      return 'زانکۆی سلێمانی';
+    }
+    if (lower.contains('دهۆک') || lower.contains('دهوك') || lower.contains('duhok')) {
+      if (langCode == 'en') return 'University of Duhok';
+      if (langCode == 'ar') return 'جامعة دهوك';
+      return 'زانکۆی دهۆک';
+    }
+    if (lower.contains('زاخۆ') || lower.contains('زاخو') || lower.contains('zakho')) {
+      if (langCode == 'en') return 'University of Zakho';
+      if (langCode == 'ar') return 'جامعة زاخو';
+      return 'زانکۆی زاخۆ';
+    }
+    if (lower.contains('کۆیە') || lower.contains('كوية') || lower.contains('koya')) {
+      if (langCode == 'en') return 'Koya University';
+      if (langCode == 'ar') return 'جامعة كوية';
+      return 'زانکۆی کۆیە';
+    }
+    if (lower.contains('هەڵەبجە') || lower.contains('حلبجة') || lower.contains('halabja')) {
+      if (langCode == 'en') return 'University of Halabja';
+      if (langCode == 'ar') return 'جامعة حلبجة';
+      return 'زانکۆی هەڵەبجە';
+    }
+    if (lower.contains('ڕاپەڕین') || lower.contains('رابرين') || lower.contains('raparin')) {
+      if (langCode == 'en') return 'University of Raparin';
+      if (langCode == 'ar') return 'جامعة رابرين';
+      return 'زانکۆی ڕاپەڕین';
+    }
+    if (lower.contains('پۆلیتەکنیکی هەولێر') || lower.contains('erbil polytechnic')) {
+      if (langCode == 'en') return 'Erbil Polytechnic University';
+      if (langCode == 'ar') return 'جامعة أربيل التقنية';
+      return 'زانکۆی پۆلیتەکنیکی هەولێر';
+    }
+    if (lower.contains('پۆلیتەکنیکی سلێمانی') || lower.contains('sulaimani polytechnic')) {
+      if (langCode == 'en') return 'Sulaimani Polytechnic University';
+      if (langCode == 'ar') return 'جامعة السليمانية التقنية';
+      return 'زانکۆی پۆلیتەکنیکی سلێمانی';
+    }
+    if (lower.contains('پۆلیتەکنیکی دهۆک') || lower.contains('duhok polytechnic')) {
+      if (langCode == 'en') return 'Duhok Polytechnic University';
+      if (langCode == 'ar') return 'جامعة دهوك التقنية';
+      return 'زانکۆی پۆلیتەکنیکی دهۆک';
+    }
+    if (lower.contains('پزیشکیی هەولێر') || lower.contains('hawler medical')) {
+      if (langCode == 'en') return 'Hawler Medical University';
+      if (langCode == 'ar') return 'جامعة هولير الطبية';
+      return 'زانکۆی پزیشکیی هەولێر';
+    }
+
+    // Generic prefix translation
+    if (langCode == 'en') {
+      if (clean.startsWith('زانکۆی ')) {
+        return 'University of ${clean.substring(7)}';
+      }
+      if (clean.startsWith('کۆلێژی ')) {
+        return 'College of ${clean.substring(7)}';
+      }
+      if (clean.startsWith('پەیمانگەی ') || clean.startsWith('پەیمانگای ')) {
+        return 'Technical Institute of ${clean.substring(10)}';
+      }
+    } else if (langCode == 'ar') {
+      if (clean.startsWith('زانکۆی ')) {
+        return 'جامعة ${clean.substring(7)}';
+      }
+      if (clean.startsWith('کۆلێژی ')) {
+        return 'كلية ${clean.substring(7)}';
+      }
+      if (clean.startsWith('پەیمانگەی ') || clean.startsWith('پەیمانگای ')) {
+        return 'المعهد التقني ${clean.substring(10)}';
+      }
+    }
+    return clean;
+  }
+
+  /// Returns localized department / college name based on target language code
+  static String getLocalizedDepartmentName(String dept, String langCode) {
+    if (dept.trim().isEmpty) {
+      if (langCode == 'en') {
+        return 'College of Science - Department of Information Technology';
+      }
+      if (langCode == 'ar') {
+        return 'كلية العلوم - قسم تكنولوجيا المعلومات';
+      }
+      return 'کۆلێژی زانست - بەشی تەکنەلۆجیای زانیاری';
+    }
+
+    final clean = dept.trim();
+    final lower = clean.toLowerCase();
+
+    // 1. If English is requested:
+    if (langCode == 'en') {
+      final parenMatch = RegExp(r'\(([^)]+)\)').firstMatch(clean);
+      if (parenMatch != null) {
+        final inside = parenMatch.group(1)!.trim();
+        if (RegExp(r'^[A-Za-z\s&\-,/]+$').hasMatch(inside)) {
+          final deptTitle = inside.contains('Department') || inside.contains('College')
+              ? inside
+              : 'Department of $inside';
+          if (lower.contains('کۆلێژ') || lower.contains('پەیمانگ')) {
+            String collegePart = 'College';
+            if (lower.contains('زانست')) {
+              collegePart = 'College of Science';
+            } else if (lower.contains('ئەندازیاری')) {
+              collegePart = 'College of Engineering';
+            } else if (lower.contains('پزیشکی')) {
+              collegePart = 'College of Medicine';
+            } else if (lower.contains('تەکنیکی')) {
+              collegePart = 'Technical College';
+            }
+            return '$collegePart - $deptTitle';
+          }
+          return deptTitle;
+        }
+      }
+
+      String collegePart = '';
+      if (lower.contains('کۆلێژی زانست') || lower.contains('كلية العلوم')) {
+        collegePart = 'College of Science';
+      } else if (lower.contains('کۆلێژی ئەندازیاری') || lower.contains('كلية الهندسة')) {
+        collegePart = 'College of Engineering';
+      } else if (lower.contains('کۆلێژی پزیشکی') || lower.contains('كلية الطب')) {
+        collegePart = 'College of Medicine';
+      } else if (lower.contains('کۆلێژی پەرستاری') || lower.contains('كلية التمريض')) {
+        collegePart = 'College of Nursing';
+      } else if (lower.contains('کۆلێژی دەرمانسازی') || lower.contains('كلية الصيدلة')) {
+        collegePart = 'College of Pharmacy';
+      } else if (lower.contains('کۆلێژی یاسا') || lower.contains('كلية القانون')) {
+        collegePart = 'College of Law';
+      } else if (lower.contains('کۆلێژی زمان') || lower.contains('كلية اللغات')) {
+        collegePart = 'College of Languages';
+      } else if (lower.contains('کۆلێژی ئاداب') || lower.contains('كلية الآداب')) {
+        collegePart = 'College of Arts';
+      } else if (lower.contains('کۆلێژی پەروەردە') || lower.contains('كلية التربية')) {
+        collegePart = 'College of Education';
+      } else if (lower.contains('کۆلێژی کارگێڕی') || lower.contains('الإدارة والاقتصاد')) {
+        collegePart = 'College of Administration and Economics';
+      } else if (lower.contains('تەکنیکی')) {
+        collegePart = 'Technical College';
+      }
+
+      String deptPart = '';
+      if (lower.contains('تەکنەلۆجیای زانیاری') || lower.contains('it') || lower.contains('تكنولوجيا المعلومات')) {
+        deptPart = 'Department of Information Technology';
+      } else if (lower.contains('زانستی کۆمپیوتەر') || lower.contains('computer science') || lower.contains('علوم الحاسوب')) {
+        deptPart = 'Department of Computer Science';
+      } else if (lower.contains('شیکاری نەخۆشی') || lower.contains('mlt') || lower.contains('تحليلات مرضية') || lower.contains('مختبرات')) {
+        deptPart = 'Department of Medical Laboratory Analysis';
+      } else if (lower.contains('پەرستاری') || lower.contains('nursing') || lower.contains('تمريض')) {
+        deptPart = 'Department of Nursing';
+      } else if (lower.contains('دەرمانسازی') || lower.contains('pharmacy') || lower.contains('صيدلة')) {
+        deptPart = 'Department of Pharmacy';
+      } else if (lower.contains('بیناکاری') || lower.contains('شارستانی') || lower.contains('civil') || lower.contains('مدني')) {
+        deptPart = 'Department of Civil Engineering';
+      } else if (lower.contains('کارەبا') || lower.contains('electrical') || lower.contains('كهرباء')) {
+        deptPart = 'Department of Electrical Engineering';
+      } else if (lower.contains('میکانیک') || lower.contains('mechanical') || lower.contains('ميكانيك')) {
+        deptPart = 'Department of Mechanical Engineering';
+      } else if (lower.contains('نەوت') || lower.contains('petroleum') || lower.contains('نفط')) {
+        deptPart = 'Department of Petroleum Engineering';
+      } else if (lower.contains('کارگێڕی کار') || lower.contains('business') || lower.contains('إدارة أعمال')) {
+        deptPart = 'Department of Business Administration';
+      } else if (lower.contains('ژمێریاری') || lower.contains('accounting') || lower.contains('محاسبة')) {
+        deptPart = 'Department of Accounting';
+      } else if (lower.contains('بایۆلۆجی') || lower.contains('زیندەوەرزانی') || lower.contains('biology') || lower.contains('علوم الحياة')) {
+        deptPart = 'Department of Biology';
+      } else if (lower.contains('کیمیا') || lower.contains('chemistry') || lower.contains('كيمياء')) {
+        deptPart = 'Department of Chemistry';
+      } else if (lower.contains('فیزیا') || lower.contains('physics') || lower.contains('فيزياء')) {
+        deptPart = 'Department of Physics';
+      } else if (lower.contains('ماتماتیک') || lower.contains('بیرکاری') || lower.contains('mathematics') || lower.contains('رياضيات')) {
+        deptPart = 'Department of Mathematics';
+      } else if (lower.contains('یاسا') || lower.contains('law') || lower.contains('قانون')) {
+        deptPart = 'Department of Law';
+      } else if (lower.contains('ئینگلیزی') || lower.contains('english') || lower.contains('إنجليزية')) {
+        deptPart = 'Department of English Language';
+      }
+
+      if (collegePart.isNotEmpty && deptPart.isNotEmpty) {
+        return '$collegePart - $deptPart';
+      } else if (deptPart.isNotEmpty) {
+        return deptPart;
+      } else if (collegePart.isNotEmpty) {
+        return collegePart;
+      }
+      return clean.replaceAll(RegExp(r'[\(\)]'), '');
+    }
+
+    // 2. If Arabic is requested:
+    if (langCode == 'ar') {
+      String collegePart = '';
+      final hasCollege = lower.contains('کۆلێژ') || lower.contains('كلية') || lower.contains('college') || lower.contains('پەیمانگ');
+      if (hasCollege) {
+        if (lower.contains('زانست') || lower.contains('science')) {
+          collegePart = 'كلية العلوم';
+        } else if (lower.contains('ئەندازیاری') || lower.contains('engineering')) {
+          collegePart = 'كلية الهندسة';
+        } else if (lower.contains('پزیشکی') || lower.contains('medicine')) {
+          collegePart = 'كلية الطب';
+        } else if (lower.contains('پەرستاری') || lower.contains('nursing')) {
+          collegePart = 'كلية التمريض';
+        } else if (lower.contains('دەرمانسازی') || lower.contains('pharmacy')) {
+          collegePart = 'كلية الصيدلة';
+        } else if (lower.contains('یاسا') || lower.contains('law')) {
+          collegePart = 'كلية القانون';
+        } else if (lower.contains('کارگێڕی') || lower.contains('business')) {
+          collegePart = 'كلية الإدارة والاقتصاد';
+        } else if (lower.contains('تەکنیکی') || lower.contains('technical')) {
+          collegePart = 'الكلية التقنية';
+        }
+      }
+
+      String deptPart = '';
+      if (lower.contains('تەکنەلۆجیای زانیاری') || lower.contains('it') || lower.contains('information tech')) {
+        deptPart = 'قسم تكنولوجيا المعلومات';
+      } else if (lower.contains('کۆمپیوتەر') || lower.contains('computer')) {
+        deptPart = 'قسم علوم الحاسوب';
+      } else if (lower.contains('شیکاری') || lower.contains('mlt') || lower.contains('laboratory')) {
+        deptPart = 'قسم التحليلات المرضية';
+      } else if (lower.contains('پەرستاری') || lower.contains('nursing')) {
+        deptPart = 'قسم التمريض';
+      } else if (lower.contains('دەرمانسازی') || lower.contains('pharmacy')) {
+        deptPart = 'قسم الصيدلة';
+      } else if (lower.contains('کارگێڕی کار') || lower.contains('business admin')) {
+        deptPart = 'قسم إدارة الأعمال';
+      } else if (lower.contains('ژمێریاری') || lower.contains('accounting')) {
+        deptPart = 'قسم المحاسبة';
+      } else if (lower.contains('شارستانی') || lower.contains('بیناکاری') || lower.contains('civil')) {
+        deptPart = 'قسم الهندسة المدنية';
+      } else if (lower.contains('کارەبا') || lower.contains('electrical')) {
+        deptPart = 'قسم الهندسة الكهربائية';
+      } else if (lower.contains('میکانیک') || lower.contains('mechanical')) {
+        deptPart = 'قسم الهندسة الميكانيكية';
+      } else if (lower.contains('بایۆلۆجی') || lower.contains('biology')) {
+        deptPart = 'قسم علوم الحياة';
+      } else if (lower.contains('کیمیا') || lower.contains('chemistry')) {
+        deptPart = 'قسم الكيمياء';
+      } else if (lower.contains('فیزیا') || lower.contains('physics')) {
+        deptPart = 'قسم الفيزياء';
+      }
+
+      if (collegePart.isNotEmpty && deptPart.isNotEmpty) {
+        return '$collegePart - $deptPart';
+      } else if (deptPart.isNotEmpty) {
+        return deptPart;
+      } else if (collegePart.isNotEmpty) {
+        return collegePart;
+      }
+      return clean;
+    }
+
+    // 3. Kurdish / Badini:
+    if (lower.contains('science') || lower.contains('علوم')) {
+      if (lower.contains('information tech') || lower.contains('it') || lower.contains('تكنولوجيا')) {
+        return 'کۆلێژی زانست - بەشی تەکنەلۆجیای زانیاری';
+      }
+      return 'کۆلێژی زانست';
+    }
+    return clean;
+  }
 }

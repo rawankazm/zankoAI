@@ -10,6 +10,7 @@ import '../../services/auth_service.dart';
 import '../../services/docx_generator_service.dart';
 import '../../services/pptx_generator_service.dart';
 import '../../services/report_pdf_generator_service.dart';
+import '../../data/kurdistan_universities_data.dart';
 import '../../theme.dart';
 import '../payment/vip_upgrade_sheet.dart';
 
@@ -258,7 +259,10 @@ Format each topic strictly as:
     final List<SeminarTopicProposal> list = [];
 
     // Split on ### (with any optional emoji/symbols), ##, or **Topic ...**
-    final blocks = rawText.split(RegExp(r'###\s*[^a-zA-Z0-9\u0600-\u06FF\n\r]*\s*(?:Topic|بابەت|بابەتی|بابەتێ|الموضوع|\d+)\s*[\d+٠-٩\-]*\s*[:\.\-]|(?:\*\*Topic\s*\d+:?\*\*)', caseSensitive: false));
+    final blocks = rawText.split(RegExp(
+      r'###\s*[^a-zA-Z0-9\u0600-\u06FF\n\r]*\s*(?:Topic|بابەت|بابەتی|بابەتێ|الموضوع|موضوع|المحور|محور|المقترح|مقترح|الفكرة|فكرة|العنوان|عنوان|\d+|[٠-٩]+)\s*[\d+٠-٩\-الأولالثانيرابعخامسسابعثامنتاسعاشر]*\s*[:\.\-]|(?:\*\*Topic\s*\d+:?\*\*)',
+      caseSensitive: false,
+    ));
 
     int count = 1;
     for (var b in blocks) {
@@ -273,11 +277,11 @@ Format each topic strictly as:
 
       for (var l in lines) {
         final line = l.trim();
-        if (line.contains('ئینگلیزی') || line.toLowerCase().contains('english') || line.contains('Secondary') || line.contains('العنوان الإنجليزي')) {
+        if (line.contains('ئینگلیزی') || line.toLowerCase().contains('english') || line.contains('Secondary') || line.contains('العنوان الإنجليزي') || line.contains('العنوان الثانوي') || line.contains('الترجمة الإنجليزية')) {
           titleSecondary = line.split(':').sublist(1).join(':').replaceAll('*', '').trim();
-        } else if (line.contains('کورتە') || line.contains('پوختە') || line.contains('بیرۆکە') || line.contains('گرنگی') || line.contains('Summary') || line.contains('الملخص') || line.contains('الأهمية')) {
+        } else if (line.contains('کورتە') || line.contains('پوختە') || line.contains('بیرۆکە') || line.contains('گرنگی') || line.contains('Summary') || line.contains('الملخص') || line.contains('الأهمية') || line.contains('ملخص')) {
           summary = line.split(':').sublist(1).join(':').replaceAll('*', '').trim();
-        } else if (line.contains('پرسیار') || line.contains('Research Question') || line.contains('السؤال')) {
+        } else if (line.contains('پرسیار') || line.contains('Research Question') || line.contains('السؤال') || line.contains('سؤال البحث') || line.contains('الإشكالية')) {
           researchQ = line.split(':').sublist(1).join(':').replaceAll('*', '').trim();
         }
       }
@@ -287,8 +291,8 @@ Format each topic strictly as:
           index: count++,
           titleKurdish: titleMain,
           titleEnglish: titleSecondary.isNotEmpty ? titleSecondary : 'Academic Presentation & Research Report',
-          summary: summary.isNotEmpty ? summary : (_isEnglish ? 'Comprehensive academic investigation.' : (_isBadini ? 'ڤەکۆلین و دووڤچوونەکا زانستی یا سەردەم.' : 'توێژینەوە و لێکۆڵینەوەیەکی زانستیی سەردەمیانە.')),
-          researchQuestion: researchQ.isNotEmpty ? researchQ : (_isEnglish ? 'How does this solve core research challenges?' : (_isBadini ? 'چەوا ئەڤ بابەتە دکاریت ئاریشەیێن زانستی چارەسەر بکەت؟' : 'چۆن ئەم بابەتە دەتوانێت کێشە زانستییەکان چارەسەر بکات؟')),
+          summary: summary.isNotEmpty ? summary : (_isEnglish ? 'Comprehensive academic investigation.' : (_isArabic ? 'دراسة علمية وأكاديمية متعمقة لتحليل المفاهيم والمناهج الحديثة.' : (_isBadini ? 'ڤەکۆلین و دووڤچوونەکا زانستی یا سەردەم.' : 'توێژینەوە و لێکۆڵینەوەیەکی زانستیی سەردەمیانە.'))),
+          researchQuestion: researchQ.isNotEmpty ? researchQ : (_isEnglish ? 'How does this solve core research challenges?' : (_isArabic ? 'كيف تسهم هذه الدراسة في حل الإشكاليات وتطوير المنظومة العلمية؟' : (_isBadini ? 'چەوا ئەڤ بابەتە دکاریت ئاریشەیێن زانستی چارەسەر بکەت؟' : 'چۆن ئەم بابەتە دەتوانێت کێشە زانستییەکان چارەسەر بکات؟'))),
         ));
       }
     }
@@ -332,9 +336,20 @@ Format each topic strictly as:
 
     final String langPrompt;
     if (_isEnglish) {
-      langPrompt = 'CRITICAL MANDATE: Write all 8 slides, slide titles, paragraphs, metrics, and speaker notes 100% strictly in English.';
+      langPrompt = '''
+CRITICAL LANGUAGE MANDATE (100% STRICTLY IN ENGLISH):
+- The ENTIRE presentation MUST be 100% in English. Absolutely NO Kurdish or Arabic words, characters, or phrases are allowed anywhere in the entire output!
+- Translate the presentation topic "$topicTitle" into a prestigious academic English title and use it on Slide 1:
+### 🔹 Slide 1: [Translated Academic English Title]
+- All 8 slides, slide titles, paragraphs, metrics, and speaker notes MUST be strictly in English.
+''';
     } else if (_isArabic) {
-      langPrompt = 'مهم جداً: اكتب الشرائح الـ 8 والعناوين والشروحات والأرقام وملاحظات المتحدث بنسبة ١٠٠٪ باللغة العربية الفصحى الأكاديمية فقط.';
+      langPrompt = '''
+مهم جداً (١٠٠٪ باللغة العربية الفصحى الأكاديمية):
+- اكتب كامل الشرائح والعناوين والملاحظات باللغة العربية الفصحى فقط بدون أي كلمات كردية أو أجنبية.
+- ترجم عنوان الموضوع "$topicTitle" إلى عنوان أكاديمي فصيح واكتبه في الشريحة الأولى:
+### 🔹 Slide 1: [العنوان الأكاديمي المترجم بالعربية]
+''';
     } else if (_isBadini) {
       langPrompt = 'زۆر گرنگە: هەموو ٨ سلایدان، ناڤ و ناونیشان، پاراگراف، ئامار و پەیڤێن پێشکێشکەری ١٠٠٪ ب زمانی کوردی بادینی (بەهدینی پاراو) بنڤێسە.';
     } else {
@@ -382,6 +397,9 @@ SLIDE STRUCTURE & FORMAT:
 ### 🔹 Slide 6: Empirical Findings & Comparative Benchmarks
 ### 🔹 Slide 7: Critical Discussion & Practical Recommendations
 ### 🔹 Slide 8: Scientific Conclusion & APA References
+- **Conclusion & Summary**: Key takeaway
+- **Academic References**: Benchmark citations
+- **Closing Gratitude**: ${_isEnglish ? 'Thank You for Your Attendance' : (_isArabic ? 'شكراً لحضوركم' : (_isBadini ? 'سوپاس بۆ ئامادەبوونا هەوە' : 'سوپاس بۆ ئامادەبوونتان'))}
 ''';
 
     try {
@@ -411,7 +429,39 @@ SLIDE STRUCTURE & FORMAT:
 
   void _processSeminarResponse(String rawText, String title) {
     final slides = PptxGeneratorService.parseSlidesFromText(rawText, defaultTitle: title);
+    String effectiveTitle = title;
+    if (slides.isNotEmpty && slides.first.title.isNotEmpty) {
+      if (_isEnglish && !RegExp(r'[\u0600-\u06FF]').hasMatch(slides.first.title)) {
+        effectiveTitle = slides.first.title;
+      } else if (_isArabic) {
+        effectiveTitle = slides.first.title;
+      }
+    }
+
+    // Ensure the final slide includes the translated "Thank you for your attendance"
+    if (slides.length >= 2) {
+      final lastIdx = slides.length - 1;
+      final lastSlide = slides[lastIdx];
+      final thankYou = PptxGeneratorService.getThankYouMessage(_selectedLanguage.code);
+      final alreadyHasThankYou = lastSlide.bulletPoints.any((b) =>
+          b.contains('سوپاس') ||
+          b.contains('شكراً') ||
+          b.toLowerCase().contains('thank you'));
+      if (!alreadyHasThankYou) {
+        final newBullets = List<String>.from(lastSlide.bulletPoints)..add(thankYou);
+        slides[lastIdx] = SlideModel(
+          title: lastSlide.title,
+          bulletPoints: newBullets,
+          visualPrompt: lastSlide.visualPrompt,
+          speakerNotes: lastSlide.speakerNotes,
+          imageUrl: lastSlide.imageUrl,
+          categoryTag: lastSlide.categoryTag,
+        );
+      }
+    }
+
     setState(() {
+      _activeGeneratedTitle = effectiveTitle;
       _generatedResult = rawText;
       _parsedSlides = slides;
       _selectedSlideIndex = 0;
@@ -444,9 +494,20 @@ SLIDE STRUCTURE & FORMAT:
 
     final String langPrompt;
     if (_isEnglish) {
-      langPrompt = 'CRITICAL MANDATE: Write all 10 numbered sections, Table of Contents, and 6 references 100% strictly in English.';
+      langPrompt = '''
+CRITICAL LANGUAGE MANDATE (100% STRICTLY IN ENGLISH):
+- The ENTIRE 8-page academic report MUST be written 100% strictly in academic English. Absolutely NO Kurdish or Arabic words, characters, or phrases are allowed anywhere in the output!
+- Translate the topic "$reportTitle" into a prestigious academic English title and output it on the very first line:
+### Title: [Full Translated Academic Title in English]
+- Write all 10 numbered sections, Table of Contents, and 6 references 100% strictly in English.
+''';
     } else if (_isArabic) {
-      langPrompt = 'مهم جداً: اكتب كامل المحاور العشرة المرقمة وفهرس المحتويات والمراجع الستة بنسبة ١٠٠٪ باللغة العربية الفصحى الأكاديمية الرصينة الخالية تماماً من الأخطاء النحوية والإملائية.';
+      langPrompt = '''
+مهم جداً (١٠٠٪ باللغة العربية الفصحى الأكاديمية):
+- اكتب كامل التقرير والمحاور العشرة وفهرس المحتويات والمراجع الستة بنسبة ١٠٠٪ باللغة العربية الفصحى الرصينة بدون أي كلمات كردية أو أجنبية.
+- ترجم عنوان التقرير "$reportTitle" إلى عنوان أكاديمي فصيح واكتبه في السطر الأول:
+### Title: [العنوان الأكاديمي المترجم بالعربية]
+''';
     } else if (_isBadini) {
       langPrompt = 'زۆر گرنگە: هەموو ١٠ تەوەرێن سەرەکی، پێڕستا ناڤەڕۆکێ و ٦ ژێدەرێن زانستی ب زمانی کوردیێ بادینی یێ ئەکادیمی و پاراو بنڤێسە. پیتێن (ڕ، ڵ، ۆ، ێ، ە، ڤ) ب دروستی بنڤێسە و ڕستەیان ب شێوازەکێ دەولەمەندێ زانستی دابڕێژە.';
     } else {
@@ -610,19 +671,40 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
   }
 
   void _processReportResponse(String rawText, String title) {
+    String resolvedTitle = title;
+    final titleMatch = RegExp(r'^(?:#+\s*)?(?:Title|ناونیشان|العنوان|بابەت)\s*:\s*(.+)$', multiLine: true, caseSensitive: false).firstMatch(rawText);
+    if (titleMatch != null && titleMatch.group(1)!.trim().isNotEmpty) {
+      resolvedTitle = titleMatch.group(1)!.trim().replaceAll('**', '').replaceAll('"', '');
+    } else if (_isEnglish && RegExp(r'[\u0600-\u06FF]').hasMatch(title)) {
+      final sec1Match = RegExp(r'###\s*1\.\s*(.+)', caseSensitive: false).firstMatch(rawText);
+      if (sec1Match != null && !RegExp(r'[\u0600-\u06FF]').hasMatch(sec1Match.group(1)!)) {
+        resolvedTitle = sec1Match.group(1)!.trim().replaceAll('**', '').replaceAll('"', '');
+      }
+    }
+
+    final effectiveUniv = KurdistanUniversitiesData.getLocalizedUniversityName(
+      _universityController.text.trim(),
+      _selectedLanguage.code,
+    );
+    final effectiveDept = KurdistanUniversitiesData.getLocalizedDepartmentName(
+      _reportDeptController.text.trim(),
+      _selectedLanguage.code,
+    );
+
     final report = DocxGeneratorService.parseReportFromText(
       rawText: rawText,
-      title: title,
+      title: resolvedTitle,
       studentName: _studentNameController.text.trim(),
       supervisorName: _supervisorNameController.text.trim(),
-      universityName: _universityController.text.trim(),
-      departmentName: _reportDeptController.text.trim(),
+      universityName: effectiveUniv,
+      departmentName: effectiveDept,
       academicYear: _academicYearController.text.trim(),
       logoBytes: _universityLogoBytes,
       languageCode: _selectedLanguage.code,
     );
 
     setState(() {
+      _activeGeneratedTitle = resolvedTitle;
       _generatedResult = rawText;
       _parsedReport = report;
       _selectedReportPageIndex = 0;
@@ -796,6 +878,15 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
           ? _topicSearchController.text.trim()
           : (_parsedSlides.isNotEmpty ? _parsedSlides.first.title : 'Seminar Presentation'));
 
+      final effectiveUniv = KurdistanUniversitiesData.getLocalizedUniversityName(
+        _universityController.text.trim(),
+        _selectedLanguage.code,
+      );
+      final effectiveDept = KurdistanUniversitiesData.getLocalizedDepartmentName(
+        _reportDeptController.text.trim(),
+        _selectedLanguage.code,
+      );
+
       await PptxGeneratorService.exportAndSharePptx(
         slides: _parsedSlides,
         rawContent: _generatedResult,
@@ -803,8 +894,8 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
         languageCode: _selectedLanguage.code,
         studentName: _studentNameController.text.trim(),
         supervisorName: _supervisorNameController.text.trim(),
-        university: _universityController.text.trim(),
-        department: _reportDeptController.text.trim(),
+        university: effectiveUniv,
+        department: effectiveDept,
         logoBytes: _universityLogoBytes,
       );
 
@@ -1134,7 +1225,19 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
               final isSel = _selectedLanguage == lang;
               return Expanded(
                 child: GestureDetector(
-                  onTap: () => setState(() => _selectedLanguage = lang),
+                  onTap: () {
+                    setState(() {
+                      _selectedLanguage = lang;
+                      _universityController.text = KurdistanUniversitiesData.getLocalizedUniversityName(
+                        _universityController.text,
+                        lang.code,
+                      );
+                      _reportDeptController.text = KurdistanUniversitiesData.getLocalizedDepartmentName(
+                        _reportDeptController.text,
+                        lang.code,
+                      );
+                    });
+                  },
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     margin: const EdgeInsets.symmetric(horizontal: 3),
@@ -1377,14 +1480,18 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                       isSeminar
                           ? (_isEnglish
                               ? 'Slide 1 Cover & Author Details (Student, Supervisor, University)'
-                              : (_isBadini
-                                  ? 'زانیاریێن بەرگێ سلایدا ١ (ناڤێ قوتابی، سەرپەرشتیار، زانکۆ)'
-                                  : 'زانیارییەکانی بەرگی سلایدی ١ (ناوی قوتابی، مامۆستا، زانکۆ)'))
+                              : (_isArabic
+                                  ? 'بيانات غلاف الشريحة الأولى (الطالب، المشرف، الجامعة)'
+                                  : (_isBadini
+                                      ? 'زانیاریێن بەرگێ سلایدا ١ (ناڤێ قوتابی، سەرپەرشتیار، زانکۆ)'
+                                      : 'زانیارییەکانی بەرگی سلایدی ١ (ناوی قوتابی، مامۆستا، زانکۆ)')))
                           : (_isEnglish
                               ? 'Report Cover & Author Details (Student, Supervisor, University)'
-                              : (_isBadini
-                                  ? 'زانیاریێن بەرگی (ناڤێ قوتابی، سەرپەرشتیار، زانکۆ و لۆگۆ)'
-                                  : 'ڕێکخستنی زانیارییەکانی بەرگ (ناوی قوتابی، مامۆستا، زانکۆ و لۆگۆ)')),
+                              : (_isArabic
+                                  ? 'بيانات غلاف التقرير (الطالب، المشرف، الجامعة والشعار)'
+                                  : (_isBadini
+                                      ? 'زانیاریێن بەرگی (ناڤێ قوتابی، سەرپەرشتیار، زانکۆ و لۆگۆ)'
+                                      : 'ڕێکخستنی زانیارییەکانی بەرگ (ناوی قوتابی، مامۆستا، زانکۆ و لۆگۆ)'))),
                       style: TextStyle(
                         fontFamily: _currentFontFamily,
                         fontSize: 12,
@@ -1420,7 +1527,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                   : const Icon(CupertinoIcons.sparkles, color: Colors.white, size: 18),
               label: Text(
                 _isLoading
-                    ? (_isEnglish ? 'Analyzing and discovering topics...' : (_isBadini ? 'لێگەڕیانا بابەتێن گرێدای...' : 'دۆزینەوەی بابەتە پەیوەندیدارەکان...'))
+                    ? (_isEnglish ? 'Analyzing and discovering topics...' : (_isArabic ? 'جاري تحليل واقتراح الموضوعات...' : (_isBadini ? 'لێگەڕیانا بابەتێن گرێدای...' : 'دۆزینەوەی بابەتە پەیوەندیدارەکان...')))
                     : (_isEnglish
                         ? 'Suggest Related Topics 💡'
                         : (_isArabic
@@ -1447,7 +1554,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                   : () {
                       final q = _topicSearchController.text.trim();
                       if (q.isEmpty) {
-                        _showSnackBar(_isEnglish ? 'Please enter a topic title first' : 'تکایە سەرەتا ناونیشانی بابەت بنووسە');
+                        _showSnackBar(_isEnglish ? 'Please enter a topic title first' : (_isArabic ? 'يرجى إدخال عنوان الموضوع أولاً' : 'تکایە سەرەتا ناونیشانی بابەت بنووسە'));
                         return;
                       }
                       _handleTopicSelection(q);
@@ -1456,7 +1563,9 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
               label: Text(
                 _isEnglish
                     ? 'Or generate directly with this exact title ⚡'
-                    : (_isBadini ? 'یان ڕاستەوخۆ ب ڤێ ناڤونیشانێ چێکە ⚡' : 'یان ڕاستەوخۆ بەم ناونیشانە دروستی بکە ⚡'),
+                    : (_isArabic
+                        ? 'أو أنشئ مباشرة بهذا العنوان ⚡'
+                        : (_isBadini ? 'یان ڕاستەوخۆ ب ڤێ ناڤونیشانێ چێکە ⚡' : 'یان ڕاستەوخۆ بەم ناونیشانە دروستی بکە ⚡')),
                 style: TextStyle(fontFamily: _currentFontFamily, fontSize: 11.5, fontWeight: FontWeight.w600, color: themeColor),
               ),
             ),
@@ -1473,7 +1582,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
       children: [
         // Student Name
         Text(
-          _isEnglish ? 'Student Name(s) / Team:' : (_isBadini ? 'ناڤێ قوتابی یان تیمێ:' : 'ناوی قوتابی یان گرووپ:'),
+          _isEnglish ? 'Student Name(s) / Team:' : (_isArabic ? 'اسم الطالب / فريق العمل:' : (_isBadini ? 'ناڤێ قوتابی یان تیمێ:' : 'ناوی قوتابی یان گرووپ:')),
           style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
@@ -1481,7 +1590,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
           controller: _studentNameController,
           style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12.5),
           decoration: InputDecoration(
-            hintText: _isEnglish ? 'e.g. John Doe, Sarah Smith...' : 'نموونە: ئاراس علی، سارا محمد...',
+            hintText: _isEnglish ? 'e.g. John Doe, Sarah Smith...' : (_isArabic ? 'مثال: أحمد علي، سارة محمد...' : 'نموونە: ئاراس علی، سارا محمد...'),
             hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
             prefixIcon: Icon(CupertinoIcons.person_2_fill, color: themeColor, size: 18),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -1493,7 +1602,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 
         // Supervisor
         Text(
-          _isEnglish ? 'Academic Supervisor:' : (_isBadini ? 'ناڤێ مامۆستایێ سەرپەرشتیار:' : 'ناوی مامۆستای سەرپەرشتیار:'),
+          _isEnglish ? 'Academic Supervisor:' : (_isArabic ? 'الأستاذ المشرف:' : (_isBadini ? 'ناڤێ مامۆستایێ سەرپەرشتیار:' : 'ناوی مامۆستای سەرپەرشتیار:')),
           style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
@@ -1501,7 +1610,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
           controller: _supervisorNameController,
           style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12.5),
           decoration: InputDecoration(
-            hintText: _isEnglish ? 'e.g. Dr. Alan Smith' : 'نموونە: د. نەبەز عومەر / پ.ی.د. ئاراس...',
+            hintText: _isEnglish ? 'e.g. Dr. Alan Smith' : (_isArabic ? 'مثال: أ.د. عمر السامرائي / د. خالد العلي...' : 'نموونە: د. نەبەز عومەر / پ.ی.د. ئاراس...'),
             hintStyle: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
             prefixIcon: Icon(CupertinoIcons.person_badge_plus_fill, color: themeColor, size: 18),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -1518,13 +1627,13 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(_isEnglish ? 'University:' : 'ناوی زانکۆ:', style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold)),
+                  Text(_isEnglish ? 'University:' : (_isArabic ? 'اسم الجامعة:' : 'ناوی زانکۆ:'), style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
                   TextField(
                     controller: _universityController,
                     style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
                     decoration: InputDecoration(
-                      hintText: 'زانکۆی سەڵاحەدین...',
+                      hintText: _isEnglish ? 'Erbil Polytechnic...' : (_isArabic ? 'جامعة أربيل التقنية...' : 'زانکۆی سەڵاحەدین...'),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       filled: true,
                       fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
@@ -1538,13 +1647,13 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(_isEnglish ? 'Department:' : 'کۆلێژ و بەش:', style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold)),
+                  Text(_isEnglish ? 'Department:' : (_isArabic ? 'الكلية والقسم:' : 'کۆلێژ و بەش:'), style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
                   TextField(
                     controller: _reportDeptController,
                     style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
                     decoration: InputDecoration(
-                      hintText: 'کۆلێژی زانست...',
+                      hintText: _isEnglish ? 'College of Science...' : (_isArabic ? 'الكلية التقنية - قسم التكنولوجيا...' : 'کۆلێژی زانست...'),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       filled: true,
                       fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[50],
@@ -1559,7 +1668,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 
         // Academic Year
         Text(
-          _isEnglish ? 'Academic Year / Session:' : (_isBadini ? 'ساڵا خوێندنێ یا ئەکادیمی:' : 'ساڵی خوێندنی ئەکادیمی:'),
+          _isEnglish ? 'Academic Year / Session:' : (_isArabic ? 'العام الدراسي الأكاديمي:' : (_isBadini ? 'ساڵا خوێندنێ یا ئەکادیمی:' : 'ساڵی خوێندنی ئەکادیمی:')),
           style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
@@ -1610,7 +1719,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    _isEnglish ? 'University Logo (Optional)' : 'لۆگۆی زانکۆ بۆ سەر بەرگی ڕاپۆرت',
+                    _isEnglish ? 'University Logo (Optional)' : (_isArabic ? 'شعار الجامعة لغلاف التقرير (اختياري)' : 'لۆگۆی زانکۆ بۆ سەر بەرگی ڕاپۆرت'),
                     style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12),
                   ),
                 ),
@@ -1621,7 +1730,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                     minimumSize: Size.zero,
                     side: BorderSide(color: themeColor),
                   ),
-                  child: Text(_isEnglish ? 'Upload' : 'دیاریکردن', style: TextStyle(fontSize: 11, color: themeColor)),
+                  child: Text(_isEnglish ? 'Upload' : (_isArabic ? 'رفع الشعار' : 'دیاریکردن'), style: TextStyle(fontSize: 11, color: themeColor)),
                 ),
               ],
             ],
@@ -1631,7 +1740,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 
         // Report Writing Style & Volume
         Text(
-          _isEnglish ? 'Writing Style & Depth:' : 'شێوازی نووسین و ئاستی درێژی:',
+          _isEnglish ? 'Writing Style & Depth:' : (_isArabic ? 'أسلوب الصياغة ومستوى التفصيل:' : 'شێوازی نووسین و ئاستی درێژی:'),
           style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 6),
@@ -1655,7 +1764,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                     ),
                   ),
                   child: Text(
-                    _isEnglish ? '📚 Prose' : '📚 پەڕەگرافی ئەکادیمی',
+                    _isEnglish ? '📚 Prose' : (_isArabic ? '📚 نثري متعمق' : '📚 پەڕەگرافی ئەکادیمی'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: _currentFontFamily,
@@ -1686,7 +1795,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                     ),
                   ),
                   child: Text(
-                    _isEnglish ? '⚖️ Balanced' : '⚖️ هاوسەنگ',
+                    _isEnglish ? '⚖️ Balanced' : (_isArabic ? '⚖️ متوازن' : '⚖️ هاوسەنگ'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: _currentFontFamily,
@@ -1717,7 +1826,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                     ),
                   ),
                   child: Text(
-                    _isEnglish ? '📑 Structured' : '📑 خاڵبەندی',
+                    _isEnglish ? '📑 Structured' : (_isArabic ? '📑 محاور ونقاط' : '📑 خاڵبەندی'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: _currentFontFamily,
@@ -1902,7 +2011,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  topic.titleKurdish,
+                  (_isEnglish && topic.titleEnglish.isNotEmpty) ? topic.titleEnglish : topic.titleKurdish,
                   style: TextStyle(
                     fontFamily: _currentFontFamily,
                     fontSize: 15.5,
@@ -1914,7 +2023,21 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
               ),
             ],
           ),
-          if (topic.titleEnglish.isNotEmpty && !_isEnglish) ...[
+          if (_isEnglish && topic.titleKurdish.isNotEmpty) ...[
+            const SizedBox(height: 5),
+            Padding(
+              padding: const EdgeInsets.only(left: 4, right: 4),
+              child: Text(
+                topic.titleKurdish,
+                style: TextStyle(
+                  fontFamily: _currentFontFamily,
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                  color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                ),
+              ),
+            ),
+          ] else if (topic.titleEnglish.isNotEmpty && !_isEnglish) ...[
             const SizedBox(height: 5),
             Padding(
               padding: const EdgeInsets.only(left: 4, right: 4),
@@ -1972,7 +2095,9 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
             width: double.infinity,
             height: 46,
             child: ElevatedButton.icon(
-              onPressed: () => _handleTopicSelection(topic.titleKurdish),
+              onPressed: () => _handleTopicSelection(
+                (_isEnglish && topic.titleEnglish.isNotEmpty) ? topic.titleEnglish : topic.titleKurdish,
+              ),
               icon: Icon(
                 isSeminar ? CupertinoIcons.play_fill : CupertinoIcons.doc_text_fill,
                 color: Colors.white,
@@ -1980,8 +2105,16 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
               ),
               label: Text(
                 isSeminar
-                    ? (_isEnglish ? 'Generate 8 Slides Seminar 🚀' : (_isBadini ? 'چێکرنا سیمینارێ (٨ سلاید) 🚀' : 'دروستکردنی سیمیناری ٨ سلاید 🚀'))
-                    : (_isEnglish ? 'Generate Academic Report 📑' : (_isBadini ? 'چێکرنا ڕاپۆرتا ئەکادیمی 📑' : 'دروستکردنی ڕاپۆرتی ئەکادیمی 📑')),
+                    ? (_isEnglish
+                        ? 'Generate 8 Slides Seminar 🚀'
+                        : (_isArabic
+                            ? 'إنشاء سيمينار من ٨ شرائح 🚀'
+                            : (_isBadini ? 'چێکرنا سیمینارێ (٨ سلاید) 🚀' : 'دروستکردنی سیمیناری ٨ سلاید 🚀')))
+                    : (_isEnglish
+                        ? 'Generate Academic Report 📑'
+                        : (_isArabic
+                            ? 'إنشاء التقرير الأكاديمي 📑'
+                            : (_isBadini ? 'چێکرنا ڕاپۆرتا ئەکادیمی 📑' : 'دروستکردنی ڕاپۆرتی ئەکادیمی 📑'))),
                 style: TextStyle(fontFamily: _currentFontFamily, fontWeight: FontWeight.bold, fontSize: 13.5, color: Colors.white),
               ),
               style: ElevatedButton.styleFrom(
@@ -2228,9 +2361,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                                     border: Border.all(color: const Color(0xFF2563EB).withValues(alpha: 0.3)),
                                   ),
                                   child: Text(
-                                    _universityController.text.trim().isNotEmpty
-                                        ? '🏛️ ${_universityController.text.trim()}'
-                                        : (_isEnglish ? '🏛️ Academic University Presentation' : '🏛️ زانکۆی سەڵاحەدین - هەولێر'),
+                                    '🏛️ ${KurdistanUniversitiesData.getLocalizedUniversityName(_universityController.text.trim(), _selectedLanguage.code)}',
                                     style: TextStyle(
                                       fontFamily: _currentFontFamily,
                                       fontSize: 12,
@@ -2271,7 +2402,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                                 if (_reportDeptController.text.trim().isNotEmpty) ...[
                                   const SizedBox(height: 6),
                                   Text(
-                                    _reportDeptController.text.trim(),
+                                    KurdistanUniversitiesData.getLocalizedDepartmentName(_reportDeptController.text.trim(), _selectedLanguage.code),
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontFamily: _currentFontFamily,
@@ -2301,7 +2432,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                                     crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
                                       Text(
-                                        _isEnglish ? '👨‍🎓 Prepared by:' : (_isBadini ? '👨‍🎓 ئامادەکرن ژ لایێ:' : '👨‍🎓 ئامادەکردنی:'),
+                                        _isEnglish ? '👨‍🎓 Prepared by:' : (_isArabic ? '👨‍🎓 إعداد الطالب:' : (_isBadini ? '👨‍🎓 ئامادەکرن ژ لایێ:' : '👨‍🎓 ئامادەکردنی:')),
                                         textAlign: TextAlign.center,
                                         style: TextStyle(fontFamily: _currentFontFamily, fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF0284C7)),
                                       ),
@@ -2309,7 +2440,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                                       Text(
                                         _studentNameController.text.trim().isNotEmpty
                                             ? _studentNameController.text.trim()
-                                            : (_isEnglish ? 'Student / Team' : 'ناوی قوتابی / تیم'),
+                                            : (_isEnglish ? 'Student / Team' : (_isArabic ? 'اسم الطالب / الفريق' : 'ناوی قوتابی / تیم')),
                                         maxLines: 2,
                                         textAlign: TextAlign.center,
                                         overflow: TextOverflow.ellipsis,
@@ -2332,7 +2463,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                                     crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
                                       Text(
-                                        _isEnglish ? '👨‍🏫 Supervised by:' : (_isBadini ? '👨‍🏫 سەرپەرشتیار:' : '👨‍🏫 سەرپەرشتیاری:'),
+                                        _isEnglish ? '👨‍🏫 Supervised by:' : (_isArabic ? '👨‍🏫 بإشراف الأستاذ:' : (_isBadini ? '👨‍🏫 سەرپەرشتیار:' : '👨‍🏫 سەرپەرشتیاری:')),
                                         textAlign: TextAlign.center,
                                         style: TextStyle(fontFamily: _currentFontFamily, fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF10B981)),
                                       ),
@@ -2340,7 +2471,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                                       Text(
                                         _supervisorNameController.text.trim().isNotEmpty
                                             ? _supervisorNameController.text.trim()
-                                            : (_isEnglish ? 'Supervisor' : 'مامۆستای سەرپەرشتیار'),
+                                            : (_isEnglish ? 'Supervisor' : (_isArabic ? 'الأستاذ المشرف' : 'مامۆستای سەرپەرشتیار')),
                                         maxLines: 2,
                                         textAlign: TextAlign.center,
                                         overflow: TextOverflow.ellipsis,
@@ -2508,6 +2639,49 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                               ),
                             );
                           }),
+                        ],
+                        if (_selectedSlideIndex == _parsedSlides.length - 1) ...[
+                          const SizedBox(height: 16),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: isDark
+                                    ? [const Color(0xFF1E3A8A).withValues(alpha: 0.6), const Color(0xFF1E293B)]
+                                    : [const Color(0xFFEFF6FF), const Color(0xFFDBEAFE)],
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: const Color(0xFF2563EB).withValues(alpha: 0.5),
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF2563EB).withValues(alpha: 0.12),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              children: [
+                                const Text('✨ 🎓 ✨', style: TextStyle(fontSize: 22)),
+                                const SizedBox(height: 8),
+                                Text(
+                                  PptxGeneratorService.getThankYouMessage(_selectedLanguage.code),
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontFamily: _currentFontFamily,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? const Color(0xFF93C5FD) : const Color(0xFF1D4ED8),
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ],
                     ),
@@ -3373,7 +3547,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
               const SizedBox(height: 6),
               if (studentList.isEmpty)
                 Text(
-                  _parsedReport!.studentName.isNotEmpty ? _parsedReport!.studentName : (_isEnglish ? 'Student Name' : 'ناوی قوتابی'),
+                  _parsedReport!.studentName.isNotEmpty ? _parsedReport!.studentName : (_isEnglish ? 'Student Name' : (_isArabic ? 'اسم الطالب' : 'ناوی قوتابی')),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: _currentFontFamily,
@@ -3409,7 +3583,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
               ),
               const SizedBox(height: 6),
               Text(
-                _parsedReport!.supervisorName.isNotEmpty ? _parsedReport!.supervisorName : (_isEnglish ? 'Supervisor Name' : 'ناوی مامۆستا'),
+                _parsedReport!.supervisorName.isNotEmpty ? _parsedReport!.supervisorName : (_isEnglish ? 'Supervisor Name' : (_isArabic ? 'اسم المشرف' : 'ناوی مامۆستا')),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: _currentFontFamily,
@@ -3672,32 +3846,76 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
     final sb = StringBuffer();
     for (int i = 0; i < pool.length; i++) {
       final item = pool[i];
-      final titleStr = _isBadini ? (item['badini'] ?? item['ku']!) : item['ku']!;
+      final titleStr = _localizeTopicTitleForFallback(item, safeDept);
+      final sumStr = _localizeSummaryForFallback(item, safeDept);
+      final qStr = _localizeQuestionForFallback(item, safeDept);
+
       if (_isEnglish) {
         sb.writeln('### 📌 Topic ${i + 1}: ${item['en']}');
         sb.writeln('- **Secondary**: $titleStr');
-        sb.writeln('- **💡 Summary & Significance**: Comprehensive academic investigation evaluating modern paradigms in $safeDept.');
-        sb.writeln('- **❓ Research Question**: How does this framework optimize operational efficiency in $safeDept?');
+        sb.writeln('- **💡 Summary & Significance**: $sumStr');
+        sb.writeln('- **❓ Research Question**: $qStr');
       } else if (_isArabic) {
         sb.writeln('### 📌 الموضوع ${i + 1}: $titleStr');
         sb.writeln('- **العنوان الإنجليزي**: ${item['en']}');
-        sb.writeln('- **💡 الملخص والأهمية**: ${item['sum']}');
-        sb.writeln('- **❓ السؤال البحثي**: ${item['q']}');
+        sb.writeln('- **💡 الملخص والأهمية**: $sumStr');
+        sb.writeln('- **❓ السؤال البحثي**: $qStr');
       } else if (_isBadini) {
         sb.writeln('### 📌 بابەتێ ${i + 1}: $titleStr');
         sb.writeln('- **ئینگلیزی**: ${item['en']}');
-        sb.writeln('- **💡 پوختەیا بیرۆکەیێ و گرنگی**: ${item['sum']}');
-        sb.writeln('- **❓ پرسیارا سەرەکییا ڤەکۆلینێ**: ${item['q']}');
+        sb.writeln('- **💡 پوختەیا بیرۆکەیێ و گرنگی**: $sumStr');
+        sb.writeln('- **❓ پرسیارا سەرەکییا ڤەکۆلینێ**: $qStr');
       } else {
         sb.writeln('### 📌 بابەتی ${i + 1}: $titleStr');
         sb.writeln('- **ئینگلیزی**: ${item['en']}');
-        sb.writeln('- **💡 کورتەی بیرۆکە و گرنگی**: ${item['sum']}');
-        sb.writeln('- **❓ پرسیاری سەرەکی توێژینەوە**: ${item['q']}');
+        sb.writeln('- **💡 کورتەی بیرۆکە و گرنگی**: $sumStr');
+        sb.writeln('- **❓ پرسیاری سەرەکی توێژینەوە**: $qStr');
       }
       sb.writeln();
     }
 
     return sb.toString();
+  }
+
+  String _localizeTopicTitleForFallback(Map<String, String> item, String dept) {
+    if (_isEnglish) return item['en'] ?? 'Academic Research & Seminar Topic';
+    if (_isArabic) {
+      if (item['ar'] != null) return item['ar']!;
+      final en = item['en'] ?? '';
+      if (en.contains('Nanotechnology Applications')) return 'تطبيقات تكنولوجيا النانو في تشخيص وعلاج الأورام';
+      if (en.contains('Artificial Intelligence in Medical')) return 'دور الذكاء الاصطناعي في تحليل الصور الطبية وتطبيقات الأشعة';
+      if (en.contains('Bacterial Resistance')) return 'المقاومة البكتيرية للمضادات الحيوية والبدائل العلاجية الحديثة';
+      if (en.contains('Gut Microbiome')) return 'تأثير الميكروبيوم المعوي على الجهاز العصبي والأمراض السلوكية';
+      if (en.contains('Personalized Genomics')) return 'علم الجينوم الشخصي والعلاجات الموجهة في الأمراض الوراثية';
+      if (en.contains('Advanced Biomaterials')) return 'المواد الحيوية المتقدمة في هندسة الأنسجة وزراعة الأعضاء';
+      if (en.contains('Historical Documentation')) return 'التحليل التوثيقي والمصادر التاريخية في $dept';
+      if (en.contains('Socio-Political Evolutions')) return 'التحولات السياسية والاجتماعية في العصر الحديث لـ $dept';
+      if (en.contains('Geostrategic Significance')) return 'الأهمية الجيوستراتيجية والسياسات الإقليمية لـ $dept';
+      if (en.contains('Archaeological Heritage')) return 'التراث الأثري والحضارات القديمة لـ $dept';
+      if (en.contains('Contemporary Historiographical')) return 'المناهج التاريخية المعاصرة وتطور دراسات $dept';
+      if (en.contains('Diplomatic Relations')) return 'العلاقات الدبلوماسية والتوازنات الدولية في تاريخ $dept';
+      if (en.contains('Theoretical Foundations')) return 'الأسس النظرية والأطر المنهجية المتقدمة في $dept';
+      if (en.contains('Practical Methodologies')) return 'المناهج التطبيقية والتقنيات المعاصرة في $dept';
+      if (en.contains('Critical Challenges')) return 'التحديات الراهنة والحلول التقنية المبتكرة في $dept';
+      if (en.contains('Comparative Paradigm')) return 'الدراسات المقارنة ومعايير الجودة والأداء في $dept';
+      if (en.contains('Future Horizons')) return 'الآفاق المستقبلية والابتكارات القادمة في $dept';
+      if (en.contains('Socio-Economic')) return 'الأبعاد الاقتصادية والاجتماعية والأخلاقية في $dept';
+      return 'الدراسة الأكاديمية المتقدمة والتحليل المنهجي في $dept';
+    }
+    if (_isBadini) return item['badini'] ?? item['ku']!;
+    return item['ku']!;
+  }
+
+  String _localizeSummaryForFallback(Map<String, String> item, String dept) {
+    if (_isEnglish) return 'Comprehensive academic investigation evaluating modern paradigms in $dept.';
+    if (_isArabic) return 'دراسة علمية وأكاديمية متعمقة لتحليل المفاهيم والمناهج الحديثة في $dept.';
+    return item['sum'] ?? 'توێژینەوە و شیکاریی ئەکادیمی.';
+  }
+
+  String _localizeQuestionForFallback(Map<String, String> item, String dept) {
+    if (_isEnglish) return 'How does this framework optimize operational efficiency in $dept?';
+    if (_isArabic) return 'كيف تسهم هذه الدراسة في حل الإشكاليات وتطوير المنظومة الأكاديمية؟';
+    return item['q'] ?? 'پرسیاری سەرەکیی لێکۆڵینەوە چییە؟';
   }
 
   List<SeminarTopicProposal> _getFallbackTopicProposals(String dept) {
@@ -3846,13 +4064,15 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
     final List<SeminarTopicProposal> result = [];
     for (int i = 0; i < pool.length; i++) {
       final item = pool[i];
-      final titleStr = _isBadini ? (item['badini'] ?? item['ku']!) : item['ku']!;
+      final titleStr = _localizeTopicTitleForFallback(item, safeDept);
+      final sumStr = _localizeSummaryForFallback(item, safeDept);
+      final qStr = _localizeQuestionForFallback(item, safeDept);
       result.add(SeminarTopicProposal(
         index: i + 1,
         titleKurdish: titleStr,
         titleEnglish: item['en'] ?? 'Academic Research & Seminar Topic',
-        summary: item['sum'] ?? 'توێژینەوە و شیکاریی ئەکادیمی.',
-        researchQuestion: item['q'] ?? 'پرسیاری سەرەکیی لێکۆڵینەوە چییە؟',
+        summary: sumStr,
+        researchQuestion: qStr,
       ));
     }
     return result;
@@ -3917,7 +4137,77 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 - **Final Conclusions**: Demonstrating that structured automated frameworks deliver superior empirical outcomes.
 - **Academic References**: Smith, J. A., & Davis, R. M. (2024). Modern Methodologies in Applied Academic Research. Academic Press.
 - **Global Standards**: World Educational Research Association (2025). Global Standards for Academic Excellence. WERA.
+- **Closing Gratitude**: Thank You for Your Attendance
 - 🎙️ **Speaker Guidance**: "Thank you sincerely for your attention. I warmly welcome your questions and critical discussions."
+''';
+    }
+
+    if (_isArabic) {
+      return '''
+# 📊 عرض تقديمي: "$title" (PowerPoint Presentation)
+### 🔹 الشريحة 1: $title
+- **المفهوم والأبعاد الأكاديمية**: دراسة علمية متعمقة في الأبعاد التأسيسية والتطبيقية لموضوع $title.
+- **الأطروحة المركزية**: دمج المناهج المتقدمة والتحليل الإحصائي لتعزيز الكفاءة البحثية بنسبة تتجاوز ٨٥٪.
+- **القيمة العلمية في الجامعات**: سد الفجوات المعرفية وتوفير نموذج معياري معتمد للتميز والارتقاء الأكاديمي.
+- **الأهداف العامة للسيمينار**: تقديم حلول علمية مثبتة ومبتكرة للتحديات المعاصرة في بيئات التعليم العالي.
+- 🖼️ **التركيز البصري: تصميم أكاديمي متناسق يوضح محاور $title**
+- 🎙️ **ملاحظات وتوجيهات المتحدث: "صباح الخير الأساتذة الأفاضل والزملاء الأعزاء، يسعدني أن أقدم لكم اليوم هذا العرض العلمي الأكاديمي الشامل حول ($title)."**
+
+### 🔹 الشريحة 2: الأسس النظرية والتطور التاريخي
+- **المراحل التطورية**: تحليل النقلات النوعية التاريخية والمراحل التراكمية في الأدبيات والدراسات السابقة.
+- **الأطر المفاهيمية الرائدة**: تصنيف النماذج الأكاديمية الكبرى التي تدعم هذه الدراسة المنهجية.
+- **التحول التكنولوجي**: تحول أكثر من ٧٨٪ من الجامعات العالمية الرائدة نحو النظم والتحليلات المتطورة.
+- **الآليات التأسيسية**: دراسة الخصائص الهيكلية والوظيفية الحاكمة لأداء وتفاعل المنظومة الأكاديمية.
+- 🖼️ **التركيز البصري: مخطط زمني تاريخي يبين مراحل تطور النظريات**
+- 🎙️ **ملاحظات وتوجيهات المتحدث: "كما نلاحظ في المخطط المفاهيمي، شهد هذا المجال تحولات جذرية انعكست إيجاباً على جودة المخرجات الأكاديمية."**
+
+### 🔹 الشريحة 3: إشكالية البحث والتحديات القائمة
+- **القيود التقليدية**: تحديد المعوقات الناتجة عن الاعتماد على المناهج الكلاسيكية والإجراءات اليدوية.
+- **استنزاف الموارد والوقت**: ارتفاع كلفة العمليات والجهد المستغرق بنسبة تتجاوز ٤٥٪ في البيئات التقليدية.
+- **فجوات البيانات والدقة**: التباين الإحصائي والأخطاء العشوائية الناجمة عن محدودية أدوات القياس القديمة.
+- **الضرورة الأكاديمية**: الحاجة الملحة إلى بناء وتطبيق إطار عمل حديث، آمن، ومؤتمت بالكامل.
+- 🖼️ **التركيز البصري: رسم بياني مقارن يوضح الاختناقات والتحديات المنهجية**
+- 🎙️ **ملاحظات وتوجيهات المتحدث: "ينبع الدافع الأساسي لهذا البحث من الرغبة الحقيقية في معالجة هذه التحديات الهيكلية الملموسة."**
+
+### 🔹 الشريحة 4: الأهداف الاستراتيجية والفرضيات
+- **الهدف الرئيسي**: تطوير نموذج علمي متكامل يحقق مستويات دقة استيعابية تتجاوز ٩٥٪.
+- **تعظيم الكفاءة**: تقليص الوقت المستغرق في إنجاز المهام الأكاديمية المعقدة بنسبة تزيد عن ٤٠٪.
+- **الفرضيات العلمية**: صياغة واختبار فرضيات تجريبية دقيقة لقياس الاستقرار وقابلية التوسع الميداني.
+- **المعايير الدولية**: مواءمة مؤشرات الأداء مع معايير ضمان الجودة والاعتماد الأكاديمي العالمية.
+- 🖼️ **التركيز البصري: مصفوفة الأهداف الاستراتيجية ومؤشرات الإنجاز**
+- 🎙️ **ملاحظات وتوجيهات المتحدث: "نركز في أهدافنا الاستراتيجية على تقديم حلول عملية قابلة للقياس والتطبيق المباشر."**
+
+### 🔹 الشريحة 5: المنهجية وإطار العمل التطبيقي
+- **البروتوكول التجريبي**: اعتماد منهجية علمية متعددة المراحل تجمع بين التحليل الكمي والاستقصاء الميداني.
+- **بنية المنظومة**: تصميم معماري متكامل يضمن دقة البيانات، وسرعة المعالجة، وقابلية إعادة الإنتاج.
+- **المعايير والقياسات**: توظيف مؤشرات إحصائية معيارية متقدمة لضبط الدقة ومعدلات التباين.
+- **التحقق التجريبي**: إجراء اختبارات قياسية متكررة تحت شروط ومحددات بحثية منضبطة.
+- 🖼️ **التركيز البصري: مخطط تدفق العمليات (Workflow Diagram)**
+- 🎙️ **ملاحظات وتوجيهات المتحدث: "تمت هندسة المنهجية الحالية وفق أعلى معايير الدقة الرياضية والموثوقية العلمية."**
+
+### 🔹 الشريحة 6: النتائج والتحليل المقارن
+- **طفرة الأداء**: تسجيل تحسن استثنائي بنسبة ٨٧.٦٪ في معدل الإنجاز مقارنة بالطرق السابقة.
+- **تقليص الأخطاء**: انخفاض ملحوظ في معدلات الخطأ المنهجي لتبقى بنسبة أقل من ٢.٨٪.
+- **الدلالة الإحصائية**: إثبات النتائج بفارق ذي دلالة إحصائية عالية (p < 0.001) عبر جميع العينات.
+- **التفوق المعياري**: تفوق الأنموذج المقترح بوضوح على الأنظمة التقليدية في السرعة والدقة والاستدامة.
+- 🖼️ **التركيز البصري: رسوم بيانية توضح معدلات التحسن وانخفاض الأخطاء**
+- 🎙️ **ملاحظات وتوجيهات المتحدث: "تثبت البيانات التجريبية تفوقاً حاسماً للإطار المقترح على كافة المستويات والمعايير."**
+
+### 🔹 الشريحة 7: المناقشة والتوصيات الاستراتيجية
+- **الآثار الأكاديمية**: إثراء المكتبة العلمية بأدلة تجريبية ومفاهيم حديثة قابلة للاستشهاد الأكاديمي.
+- **خريطة طريق للتطبيق**: وضع خطة مرحلية واضحة لتطبيق الإطار في الكليات والأقسام العلمية.
+- **الحوكمة والمعايير الأخلاقية**: صياغة سياسات صارمة لحماية البيانات وأخلاقيات البحث الأكاديمي.
+- **الآفاق البحثية المستقبلية**: تحديد مسارات واعدة للباحثين لإجراء دراسات طولية وتطويرات إضافية.
+- 🖼️ **التركيز البصري: خريطة طريق استراتيجية لتنفيذ التوصيات الأكاديمية**
+- 🎙️ **ملاحظات وتوجيهات المتحدث: "نوصي المؤسسات الأكاديمية بتبني هذه المراحل التدريجية لضمان أفضل انتقال سلس للتقنية."**
+
+### 🔹 الشريحة 8: الخاتمة وقائمة المراجع العلمية
+- **الخلاصة والمساهمات**: نجاح إثبات فاعلية الإطار المقترح في تقديم حلول نوعية لموضوع $title.
+- **الاستنتاج النهائي**: المنظومات المؤتمتة والمبنية على أسس علمية تحقق نتائج أكاديمية استثنائية ومستدامة.
+- **المراجع الأكاديمية**: السامرائي، أحمد ومحمود، خالد (٢٠٢٤). مناهج البحث العلمي المعاصر. دار الفكر الجامعي.
+- **المعايير الدولية**: منظمة اليونسكو للتعليم العالي (٢٠٢٥). المعايير العالمية لجودة الأبحاث الجامعية.
+- **شكراً لحضوركم**
+- 🎙️ **ملاحظات وتوجيهات المتحدث: "نشكركم جزيل الشكر على حسن استماعكم وحضوركم الكريم، ويسعدنا الآن تلقي أسئلتكم وملاحظاتكم القيمة."**
 ''';
     }
 
@@ -3979,6 +4269,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 - **پەیامی کۆتایی**: ئەم توێژینەوەیە هەنگاوێکی کردارییە بۆ بەرزکردنەوەی ئاستی زانستی و پێشخستنی بوارەکە.
 - **سەرچاوە سەرەکییەکان**: Smith, J. A., & Davis, R. M. (2024). Modern Methodologies in Applied Academic Research. Academic Press.
 - **ڕێکخراوە جیهانییەکان**: World Educational Research Association (2025). Global Standards for Academic Excellence. WERA.
+- **سوپاسگوزاری و پێزانین**: ${PptxGeneratorService.getThankYouMessage(_selectedLanguage.code)}
 - 🎙️ **تێبینی و ڕێنمایی پێشکەشکار**: "${isBad ? 'سوپاس بۆ گوهداریا هەوە، نوکە دەرگەهـ ڤەکرییە بۆ پرسیارێن هەوە.' : 'سوپاس بۆ گوێگرتنتان، ئێستا بە خۆشحاڵییەوە دەرگا واڵایە بۆ پرسیار و سەرنجەکانتان.'}"
 ''';
   }
@@ -3986,11 +4277,21 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
   // ─── Fallback Academic Report (8 Pages Standard) ───────────────────────────
   String _generateFallback12PageReportText(String title) {
     final lang = _selectedLanguage.code;
-    final sections = DocxGeneratorService.getDefaultSections(title, lang);
-    final refs = DocxGeneratorService.getDefaultReferences(title, lang);
+    String effectiveTitle = title;
+    if (lang == 'en' && RegExp(r'[\u0600-\u06FF]').hasMatch(title)) {
+      effectiveTitle = 'Advanced Academic Research & Systematic Analysis';
+    } else if (lang == 'ar') {
+      if (title.contains('کۆلێژ') || title.contains('بەشی') || title.contains('زانکۆ') || title.contains('ڕاپۆرت') || title.contains('سیمینار') || !RegExp(r'[\u0600-\u06FF]').hasMatch(title)) {
+        effectiveTitle = 'الدراسة الأكاديمية المتقدمة والتحليل المنهجي';
+      }
+    }
+    final sections = DocxGeneratorService.getDefaultSections(effectiveTitle, lang);
+    final refs = DocxGeneratorService.getDefaultReferences(effectiveTitle, lang);
 
     final sb = StringBuffer();
-    sb.writeln('### Table of Contents');
+    sb.writeln('### Title: $effectiveTitle');
+    sb.writeln();
+    sb.writeln(lang == 'ar' ? '### فهرس المحتويات' : (lang == 'en' ? '### Table of Contents' : '### پێڕستی ناوەڕۆک'));
     for (var s in sections) {
       sb.writeln('${s.sectionNumber}. ${s.title}');
     }
@@ -4008,7 +4309,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
       sb.writeln();
     }
 
-    sb.writeln('### References');
+    sb.writeln(lang == 'ar' ? '### المراجع والمصادر' : (lang == 'en' ? '### References' : '### سەرچاوەکان'));
     for (int i = 0; i < refs.length; i++) {
       sb.writeln('${i + 1}. ${refs[i]}');
     }

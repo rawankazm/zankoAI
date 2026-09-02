@@ -75,7 +75,7 @@ class DocxGeneratorService {
     var clean = title.trim();
     // 1. Strip full prefixes like "ڕاپۆرت دەربارەی", "تەوەری ١: ", "بەشی ١: ", "Section 1: ", etc.
     clean = clean.replaceAll(
-      RegExp(r'^(?:ڕاپۆرت لەبارەی|ڕاپۆرت دەربارەی|ڕاپۆرتی|ڕاپۆرت|تەوەری|تەوەر|بەشی|بەش|بابەتی|بابەت|Report on|Report about|Report|Section|Chapter|Part|Topic)\s*[\d+٠-٩\-]*\s*[:\.\-]\s*', caseSensitive: false),
+      RegExp(r'^(?:ڕاپۆرت لەبارەی|ڕاپۆرت دەربارەی|ڕاپۆرتی|ڕاپۆرت|تەوەری|تەوەر|بەشی|بەش|بابەتی|بابەت|تقرير عن|تقرير حول|تقرير في|تقرير|المحور|المبحث|الفصل|موضوع|عنوان التقرير|عنوان|Report on|Report about|Report|Section|Chapter|Part|Topic)\s*[\d+٠-٩\-]*\s*[:\.\-]\s*', caseSensitive: false),
       '',
     ).trim();
 
@@ -86,6 +86,50 @@ class DocxGeneratorService {
     ).trim();
 
     return clean.isNotEmpty ? clean : title.trim();
+  }
+
+  static int? parseSectionNumber(String raw) {
+    final clean = raw.trim().toLowerCase();
+    // Numeric digits (Western & Eastern Arabic numerals)
+    final standardNumStr = clean
+        .replaceAll('٠', '0')
+        .replaceAll('١', '1')
+        .replaceAll('٢', '2')
+        .replaceAll('٣', '3')
+        .replaceAll('٤', '4')
+        .replaceAll('٥', '5')
+        .replaceAll('٦', '6')
+        .replaceAll('٧', '7')
+        .replaceAll('٨', '8')
+        .replaceAll('٩', '9');
+    final num = int.tryParse(RegExp(r'\d+').firstMatch(standardNumStr)?.group(0) ?? '');
+    if (num != null && num >= 1 && num <= 20) return num;
+
+    // Arabic ordinal words (masculine and feminine)
+    if (clean.contains('عاشر') || clean.contains('عاشراً')) return 10;
+    if (clean.contains('تاسع') || clean.contains('تاسعاً')) return 9;
+    if (clean.contains('ثامن') || clean.contains('ثامناً')) return 8;
+    if (clean.contains('سابع') || clean.contains('سابعاً')) return 7;
+    if (clean.contains('سادس') || clean.contains('سادساً')) return 6;
+    if (clean.contains('خامس') || clean.contains('خامساً')) return 5;
+    if (clean.contains('رابع') || clean.contains('رابعاً')) return 4;
+    if (clean.contains('ثالث') || clean.contains('ثالثاً')) return 3;
+    if (clean.contains('ثاني') || clean.contains('ثانياً')) return 2;
+    if (clean.contains('أول') || clean.contains('اول') || clean.contains('أولاً') || clean.contains('اولاً')) return 1;
+
+    // Kurdish ordinal words
+    if (clean.contains('دەهەم') || clean.contains('دەیەم')) return 10;
+    if (clean.contains('نۆیەم') || clean.contains('نۆهەم')) return 9;
+    if (clean.contains('هەشتەم')) return 8;
+    if (clean.contains('حەوتەم')) return 7;
+    if (clean.contains('شەشەم')) return 6;
+    if (clean.contains('پێنجەم')) return 5;
+    if (clean.contains('چوارەم')) return 4;
+    if (clean.contains('سێیەم')) return 3;
+    if (clean.contains('دووەم')) return 2;
+    if (clean.contains('یەکەم')) return 1;
+
+    return null;
   }
 
   /// Fetches image bytes safely from a URL with timeout
@@ -422,7 +466,12 @@ class DocxGeneratorService {
     Uint8List? logoBytes,
     String languageCode = 'ku',
   }) {
-    final effectiveTitle = cleanTopicTitle(title);
+    var detectedTitle = title;
+    final titleMatch = RegExp(r'^(?:#+\s*)?(?:Title|ناونیشان|العنوان|عنوان التقرير|تقرير عن|تقرير حول|تقرير في|تقرير|بابەت)\s*:\s*(.+)$', multiLine: true, caseSensitive: false).firstMatch(rawText);
+    if (titleMatch != null && titleMatch.group(1)!.trim().isNotEmpty) {
+      detectedTitle = titleMatch.group(1)!.trim().replaceAll('**', '').replaceAll('"', '');
+    }
+    final effectiveTitle = cleanTopicTitle(detectedTitle);
     final cleanYear = academicYear.isNotEmpty ? academicYear : '2024 - 2025';
     final isRtl = languageCode != 'en';
 
@@ -436,6 +485,7 @@ class DocxGeneratorService {
     StringBuffer currentSecContent = StringBuffer();
     List<String> currentSecBullets = [];
     bool isParsingReferences = false;
+    bool inTableOfContents = false;
 
     void saveCurrentSection() {
       if (currentSecNum > 0 && currentSecTitle.isNotEmpty) {
@@ -455,10 +505,21 @@ class DocxGeneratorService {
       final trimmed = line.trim();
       if (trimmed.isEmpty) continue;
 
+      // Detect Table of Contents block
+      final lower = trimmed.toLowerCase();
+      if (trimmed.startsWith('#') || trimmed.startsWith('**')) {
+        if (lower.contains('table of contents') || trimmed.contains('پێڕست') || trimmed.contains('فهرس')) {
+          saveCurrentSection();
+          inTableOfContents = true;
+          continue;
+        }
+      }
+
       // Detect References Header
-      if (RegExp(r'^(?:#+\s*)?(?:References|سەرچاوەکان|سەرچاوە زانستییەکان|المراجع|المصادر)', caseSensitive: false).hasMatch(trimmed)) {
+      if (RegExp(r'^(?:#+\s*)?(?:References|سەرچاوەکان|سەرچاوە زانستییەکان|المراجع|المصادر|المراجع والمصادر)', caseSensitive: false).hasMatch(trimmed)) {
         saveCurrentSection();
         isParsingReferences = true;
+        inTableOfContents = false;
         continue;
       }
 
@@ -471,40 +532,50 @@ class DocxGeneratorService {
         continue;
       }
 
-      // Robust Section Header Detection
+      // Detect Section Header with word or numeral numbering
+      int? detectedSecNum;
+      String? detectedSecTitle;
+
       final secMatch = RegExp(
-        r'^(?:#+\s*)?(?:(?:بەشی|بەش|تەوەری|تەوەر|تەوەرەی|Section|Chapter|Part|بابەتی|بابەت|المحور|الفصل)\s*)?[\(\[\{]?(\d+|[٠-٩]+)[\)\]\}]?[\.\:\-\s]+(.+)$',
+        r'^(?:#+\s*)?(?:(?:بەشی|بەش|تەوەری|تەوەر|تەوەرەی|Section|Chapter|Part|بابەتی|بابەت|المحور|المبحث|الفصل|القسم)\s*)?[\(\[\{]?([٠-٩\d]+|الأولى?|الأول|الثاني[ة]?|الثالث[ة]?|الرابع[ة]?|الخامس[ة]?|السادس[ة]?|السابع[ة]?|الثامن[ة]?|التاسع[ة]?|العاشر[ة]?|أولاً|اولاً|ثانياً|ثالثاً|رابعاً|خامساً|سادساً|سابعاً|ثامناً|تاسعاً|عاشراً|یەکەم|دووەم|سێیەم|چوارەم|پێنجەم|شەشەم|حەوتەم|هەشتەم|نۆیەم|دەیەم)[\)\]\}]?[\.\:\-\s]+(.+)$',
         caseSensitive: false,
       ).firstMatch(trimmed);
 
       if (secMatch != null) {
-        final rawNumStr = secMatch.group(1) ?? '1';
-        final standardNumStr = rawNumStr
-            .replaceAll('٠', '0')
-            .replaceAll('١', '1')
-            .replaceAll('٢', '2')
-            .replaceAll('٣', '3')
-            .replaceAll('٤', '4')
-            .replaceAll('٥', '5')
-            .replaceAll('٦', '6')
-            .replaceAll('٧', '7')
-            .replaceAll('٨', '8')
-            .replaceAll('٩', '9');
-        final num = int.tryParse(standardNumStr) ?? (parsedSections.length + 1);
-
-        // Avoid Table of Contents header match
-        final lower = trimmed.toLowerCase();
-        if (!lower.contains('table of contents') && !trimmed.contains('پێڕست') && !trimmed.contains('فهرس')) {
-          saveCurrentSection();
-          currentSecNum = num;
-          currentSecTitle = secMatch.group(2)!.replaceAll('**', '').replaceAll('*', '').trim();
-          continue;
+        final rawNum = secMatch.group(1) ?? '';
+        final parsed = parseSectionNumber(rawNum);
+        if (parsed != null) {
+          detectedSecNum = parsed;
+          detectedSecTitle = secMatch.group(2)!.replaceAll('**', '').replaceAll('*', '').trim();
         }
+      } else if (RegExp(r'^#{2,4}\s*(\d+|[٠-٩]+)[\.:\-]\s+(.+)$').hasMatch(trimmed)) {
+        final m = RegExp(r'^#{2,4}\s*(\d+|[٠-٩]+)[\.:\-]\s+(.+)$').firstMatch(trimmed)!;
+        detectedSecNum = parseSectionNumber(m.group(1)!);
+        detectedSecTitle = m.group(2)!.replaceAll('**', '').replaceAll('*', '').trim();
+      }
+
+      if (detectedSecNum != null) {
+        if (inTableOfContents) {
+          if (trimmed.startsWith('#')) {
+            inTableOfContents = false;
+          } else {
+            continue;
+          }
+        }
+
+        saveCurrentSection();
+        currentSecNum = detectedSecNum;
+        currentSecTitle = detectedSecTitle ?? (languageCode == 'ar' ? 'المحور $detectedSecNum' : 'Section $detectedSecNum');
+        continue;
+      }
+
+      if (inTableOfContents) {
+        continue;
       }
 
       if (currentSecNum > 0) {
-        if (trimmed.startsWith('-') || trimmed.startsWith('*') || trimmed.startsWith('•') || RegExp(r'^\d+\.\s+').hasMatch(trimmed)) {
-          final bullet = trimmed.replaceAll(RegExp(r'^[-*• \d+.]\s*'), '').replaceAll('**', '').trim();
+        if (trimmed.startsWith('-') || trimmed.startsWith('*') || trimmed.startsWith('•') || RegExp(r'^\d+\.\s+').hasMatch(trimmed) || RegExp(r'^[٠-٩]+\.\s+').hasMatch(trimmed)) {
+          final bullet = trimmed.replaceAll(RegExp(r'^[-*• \d+٠-٩.]\s*'), '').replaceAll('**', '').trim();
           if (bullet.isNotEmpty) currentSecBullets.add(bullet);
         } else {
           currentSecContent.writeln(trimmed.replaceAll('**', '').replaceAll('*', ''));
@@ -519,13 +590,16 @@ class DocxGeneratorService {
     final List<ReportSectionItem> finalSections = [];
 
     for (int i = 1; i <= 10; i++) {
-      final existing = parsedSections.firstWhere(
-        (s) => s.sectionNumber == i,
-        orElse: () => (i <= parsedSections.length ? parsedSections[i - 1] : defaultSections[i - 1]),
-      );
+      final matchingWithContent = parsedSections.where((s) => s.sectionNumber == i && s.content.trim().length > 30).toList();
+      final existing = matchingWithContent.isNotEmpty
+          ? matchingWithContent.last
+          : parsedSections.firstWhere(
+              (s) => s.sectionNumber == i,
+              orElse: () => (i <= parsedSections.length ? parsedSections[i - 1] : defaultSections[i - 1]),
+            );
 
       final def = defaultSections[i - 1];
-      final content = existing.content.length > 40 ? existing.content : def.content;
+      final content = existing.content.length > 30 ? existing.content : def.content;
       final bullets = existing.bulletPoints.isNotEmpty ? existing.bulletPoints : def.bulletPoints;
       final secTitle = existing.title.isNotEmpty ? existing.title : def.title;
 
@@ -539,7 +613,7 @@ class DocxGeneratorService {
 
     // References list
     final defaultRefs = getDefaultReferences(effectiveTitle, languageCode);
-    final List<String> finalReferences = parsedReferences.length >= 4 ? parsedReferences : defaultRefs;
+    final List<String> finalReferences = parsedReferences.length >= 2 ? parsedReferences : defaultRefs;
 
     // ── Build Exactly 8 Pages matching Academic Standard with Images on Pages 3-7 ──
     final List<ReportPageModel> pages = [];
@@ -567,7 +641,9 @@ class DocxGeneratorService {
       pageType: 'content',
       sections: [finalSections[0], finalSections[1]],
       imageUrl: getReportPageImageUrl(effectiveTitle, 1),
-      figureCaption: isRtl ? 'شێوەی زانستی (١): ${finalSections[0].title}' : 'Figure (1): ${finalSections[0].title}',
+      figureCaption: isRtl
+          ? (languageCode == 'ar' ? 'الشكل العلمي (١): ${finalSections[0].title}' : 'شێوەی زانستی (١): ${finalSections[0].title}')
+          : 'Figure (1): ${finalSections[0].title}',
     ));
 
     // Page 4: Sections 3 & 4 + Diagram 2
@@ -577,7 +653,9 @@ class DocxGeneratorService {
       pageType: 'content',
       sections: [finalSections[2], finalSections[3]],
       imageUrl: getReportPageImageUrl(effectiveTitle, 2),
-      figureCaption: isRtl ? 'شێوەی زانستی (٢): ${finalSections[2].title}' : 'Figure (2): ${finalSections[2].title}',
+      figureCaption: isRtl
+          ? (languageCode == 'ar' ? 'الشكل العلمي (٢): ${finalSections[2].title}' : 'شێوەی زانستی (٢): ${finalSections[2].title}')
+          : 'Figure (2): ${finalSections[2].title}',
     ));
 
     // Page 5: Sections 5 & 6 + Diagram 3
@@ -587,7 +665,9 @@ class DocxGeneratorService {
       pageType: 'content',
       sections: [finalSections[4], finalSections[5]],
       imageUrl: getReportPageImageUrl(effectiveTitle, 3),
-      figureCaption: isRtl ? 'شێوەی زانستی (٣): ${finalSections[4].title}' : 'Figure (3): ${finalSections[4].title}',
+      figureCaption: isRtl
+          ? (languageCode == 'ar' ? 'الشكل العلمي (٣): ${finalSections[4].title}' : 'شێوەی زانستی (٣): ${finalSections[4].title}')
+          : 'Figure (3): ${finalSections[4].title}',
     ));
 
     // Page 6: Sections 7 & 8 + Diagram 4
@@ -597,7 +677,9 @@ class DocxGeneratorService {
       pageType: 'content',
       sections: [finalSections[6], finalSections[7]],
       imageUrl: getReportPageImageUrl(effectiveTitle, 4),
-      figureCaption: isRtl ? 'شێوەی زانستی (٤): ${finalSections[6].title}' : 'Figure (4): ${finalSections[6].title}',
+      figureCaption: isRtl
+          ? (languageCode == 'ar' ? 'الشكل العلمي (٤): ${finalSections[6].title}' : 'شێوەی زانستی (٤): ${finalSections[6].title}')
+          : 'Figure (4): ${finalSections[6].title}',
     ));
 
     // Page 7: Sections 9 & 10 + Diagram 5
@@ -607,7 +689,9 @@ class DocxGeneratorService {
       pageType: 'content',
       sections: [finalSections[8], finalSections[9]],
       imageUrl: getReportPageImageUrl(effectiveTitle, 5),
-      figureCaption: isRtl ? 'شێوەی زانستی (٥): ${finalSections[8].title}' : 'Figure (5): ${finalSections[8].title}',
+      figureCaption: isRtl
+          ? (languageCode == 'ar' ? 'الشكل العلمي (٥): ${finalSections[8].title}' : 'شێوەی زانستی (٥): ${finalSections[8].title}')
+          : 'Figure (5): ${finalSections[8].title}',
     ));
 
     // Page 8: References
@@ -620,10 +704,10 @@ class DocxGeneratorService {
 
     return AcademicReportModel(
       title: effectiveTitle,
-      studentName: studentName.trim().isNotEmpty ? studentName.trim() : (isRtl ? 'ناوی قوتابی' : 'Student Name'),
-      supervisorName: supervisorName.trim().isNotEmpty ? supervisorName.trim() : (isRtl ? 'ناوی سەرپەرشتیار' : 'Supervisor Name'),
-      universityName: universityName.trim().isNotEmpty ? universityName.trim() : (isRtl ? 'زانکۆی پۆلیتەکنیکی هەولێر' : 'Erbil Polytechnic University'),
-      departmentName: departmentName.trim().isNotEmpty ? departmentName.trim() : (isRtl ? 'کۆلێژی تەکنیکی - بەشی ئەندازیاری و زانست' : 'Faculty of Engineering & Science'),
+      studentName: studentName.trim().isNotEmpty ? studentName.trim() : (languageCode == 'ar' ? 'اسم الطالب' : (isRtl ? 'ناوی قوتابی' : 'Student Name')),
+      supervisorName: supervisorName.trim().isNotEmpty ? supervisorName.trim() : (languageCode == 'ar' ? 'اسم المشرف' : (isRtl ? 'ناوی سەرپەرشتیار' : 'Supervisor Name')),
+      universityName: universityName.trim().isNotEmpty ? universityName.trim() : (languageCode == 'ar' ? 'جامعة أربيل التقنية' : (isRtl ? 'زانکۆی پۆلیتەکنیکی هەولێر' : 'Erbil Polytechnic University')),
+      departmentName: departmentName.trim().isNotEmpty ? departmentName.trim() : (languageCode == 'ar' ? 'الكلية التقنية - قسم الهندسة والعلوم' : (isRtl ? 'کۆلێژی تەکنیکی - بەشی ئەندازیاری و زانست' : 'Faculty of Engineering & Science')),
       academicYear: cleanYear,
       logoBytes: logoBytes,
       pages: pages,

@@ -25,6 +25,18 @@ class SlideModel {
 }
 
 class PptxGeneratorService {
+  /// Returns translated "Thank you for your attendance" for seminar final slide
+  static String getThankYouMessage(String langCode) {
+    if (langCode == 'en') {
+      return 'Thank You for Your Attendance';
+    } else if (langCode == 'ar') {
+      return 'شكراً لحضوركم';
+    } else if (langCode == 'ku_badini' || langCode == 'badini') {
+      return 'سوپاس بۆ ئامادەبوونا هەوە';
+    }
+    return 'سوپاس بۆ ئامادەبوونتان';
+  }
+
   /// Gets a distinct curated high-quality image URL for each slide based on topic and slide index
   static String getSlideSpecificImageUrl(String topic, int slideIndex) {
     final t = topic.toLowerCase();
@@ -298,18 +310,18 @@ class PptxGeneratorService {
       if (trimmed.isEmpty) continue;
 
       // Skip top-level document headers like "# 💡 بابەتی سیمینار" or "# Presentation Title"
-      if (trimmed.startsWith('# ') && !RegExp(r'(سلاید|سلايد|Slide|الشريحة)', caseSensitive: false).hasMatch(trimmed)) {
+      if (trimmed.startsWith('# ') && !RegExp(r'(سلاید|سلايد|Slide|الشريحة|شريحة)', caseSensitive: false).hasMatch(trimmed)) {
         continue;
       }
 
-      // Detect explicit slide headers e.g. "### 🔹 سلایدی ١: ناساندن", "### Slide 1: Title", "1️⃣ سلایدی یەکەم:", "## Slide 1", "**سلایدی ١: ...**", "### 1. Title"
+      // Detect explicit slide headers e.g. "### 🔹 سلایدی ١: ناساندن", "### Slide 1: Title", "1️⃣ سلایدی یەکەم:", "## Slide 1", "**سلایدی ١: ...**", "### 1. Title", "### ١. العنوان"
       final isExplicitSlideKeyword = RegExp(
-        r'^(#{1,4}\s*)?(🔹|🔸|▪️|▫️|🔻|\d+️⃣)?\s*(\*\*)?(سلایدی|سلاید|سڵایدی|سڵاید|سلايد|سلايدي|Slide|الشريحة|شريحة|تەوەری|تەوەرەی|المحور)\s*(\d+|[٠-٩]+|[١-٩]+|یەکەم|دووەم|سێیەم|چوارەم|پێنجەم|شەشەم|حەوتەم|هەشتەم|الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن)?\s*[:\-–\.]?\s*',
+        r'^(#{1,4}\s*)?(🔹|🔸|▪️|▫️|🔻|\d+️⃣)?\s*(\*\*)?(سلایدی|سلاید|سڵایدی|سڵاید|سلايد|سلايدي|Slide|الشريحة|شريحة|تەوەری|تەوەرەی|المحور|المبحث)\s*(?:رقم\s*)?[\(\[\{]?(\d+|[٠-٩]+|[١-٩]+|یەکەم|دووەم|سێیەم|چوارەم|پێنجەم|شەشەم|حەوتەم|هەشتەم|الأولى?|الأول|الثاني[ة]?|الثالث[ة]?|الرابع[ة]?|الخامس[ة]?|السادس[ة]?|السابع[ة]?|الثامن[ة]?)?[\)\]\}]?\s*[:\-–\.]?\s*',
         caseSensitive: false,
-      ).hasMatch(trimmed) || RegExp(r'^#{2,3}\s+\d+[\.:\-]\s+', caseSensitive: false).hasMatch(trimmed);
+      ).hasMatch(trimmed) || RegExp(r'^#{2,3}\s*[\(\[\{]?(\d+|[٠-٩]+)[\)\]\}]?[\.:\-]\s+', caseSensitive: false).hasMatch(trimmed);
 
       final isMarkdownSlideHeading = RegExp(r'^#{2,3}\s+', caseSensitive: false).hasMatch(trimmed) &&
-          (trimmed.contains('سلاید') || trimmed.contains('سڵاید') || trimmed.contains('Slide') || trimmed.contains('سلايد') || trimmed.contains('الشريحة') || trimmed.contains('🔹') || trimmed.contains('🔸') || RegExp(r'\b(Slide\s*\d+)\b', caseSensitive: false).hasMatch(trimmed));
+          (trimmed.contains('سلاید') || trimmed.contains('سڵاید') || trimmed.contains('Slide') || trimmed.contains('سلايد') || trimmed.contains('الشريحة') || trimmed.contains('شريحة') || trimmed.contains('المحور') || trimmed.contains('المبحث') || trimmed.contains('🔹') || trimmed.contains('🔸') || RegExp(r'\b(Slide\s*\d+)\b', caseSensitive: false).hasMatch(trimmed) || RegExp(r'^#{2,3}\s*(\d+|[٠-٩]+)[\.:\-]\s+', caseSensitive: false).hasMatch(trimmed));
 
       final isSlideHeader = isExplicitSlideKeyword || isMarkdownSlideHeading;
 
@@ -323,8 +335,8 @@ class PptxGeneratorService {
         String cleanTitle = trimmed
             .replaceAll(RegExp(r'^#+\s*'), '')
             .replaceAll(RegExp(r'^(🔹|🔸|▪️|▫️|🔻|\d+️⃣)\s*'), '')
-            .replaceAll(RegExp(r'^(سلایدی|سلاید|سڵایدی|سڵاید|سلايد|سلايدي|Slide|الشريحة|شريحة|تەوەری|تەوەرەی|المحور)\s*(\d+|[٠-٩]+|[١-٩]+|یەکەم|دووەم|سێیەم|چوارەم|پێنجەم|شەشەم|حەوتەم|هەشتەم|الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن)?[:\-–\.]?\s*', caseSensitive: false), '')
-            .replaceAll(RegExp(r'^\d+[\.:\-]\s*'), '')
+            .replaceAll(RegExp(r'^(سلایدی|سلاید|سڵایدی|سڵاید|سلايد|سلايدي|Slide|الشريحة|شريحة|تەوەری|تەوەرەی|المحور|المبحث)\s*(?:رقم\s*)?[\(\[\{]?(\d+|[٠-٩]+|[١-٩]+|یەکەم|دووەم|سێیەم|چوارەم|پێنجەم|شەشەم|حەوتەم|هەشتەم|الأولى?|الأول|الثاني[ة]?|الثالث[ة]?|الرابع[ة]?|الخامس[ة]?|السادس[ة]?|السابع[ة]?|الثامن[ة]?)?[\)\]\}]?[:\-–\.]?\s*', caseSensitive: false), '')
+            .replaceAll(RegExp(r'^[\(\[\{]?(\d+|[٠-٩]+)[\)\]\}]?[\.:\-]\s*'), '')
             .replaceAll('**', '')
             .replaceAll('*', '')
             .trim();
@@ -334,7 +346,7 @@ class PptxGeneratorService {
       }
 
       // Detect slide title explicit line
-      if (trimmed.startsWith('- **ناونیشان') || trimmed.startsWith('- **ناونیشانی سەرەکی**:') || trimmed.startsWith('- **Title**:') || trimmed.startsWith('- **العنوان**:')) {
+      if (trimmed.startsWith('- **ناونیشان') || trimmed.startsWith('- **ناونیشانی سەرەکی**:') || trimmed.startsWith('- **Title**:') || trimmed.startsWith('- **العنوان**:') || trimmed.startsWith('- **عنوان الشريحة**:')) {
         final titleVal = trimmed.split(':').sublist(1).join(':').replaceAll('**', '').replaceAll('*', '').trim();
         if (titleVal.isNotEmpty) {
           currentTitle = titleVal;
@@ -343,12 +355,13 @@ class PptxGeneratorService {
       }
 
       // Detect Visual / Diagram / Image suggestion
-      if (trimmed.contains('🖼️') || trimmed.contains('وێنە') || trimmed.contains('دایەگرام') || trimmed.contains('Diagram') || trimmed.contains('Visual') || trimmed.contains('صورة') || trimmed.contains('مخطط')) {
+      if (trimmed.contains('🖼️') || trimmed.contains('وێنە') || trimmed.contains('دایەگرام') || trimmed.contains('Diagram') || trimmed.contains('Visual') || trimmed.contains('صورة') || trimmed.contains('مخطط') || trimmed.contains('التركيز البصري')) {
         final visualVal = trimmed
             .replaceAll(RegExp(r'^[-*]\s*'), '')
             .replaceAll(RegExp(r'.*وێنە.*?:', caseSensitive: false), '')
             .replaceAll(RegExp(r'.*Visual.*?:', caseSensitive: false), '')
             .replaceAll(RegExp(r'.*صورة.*?:', caseSensitive: false), '')
+            .replaceAll(RegExp(r'.*التركيز البصري.*?:', caseSensitive: false), '')
             .replaceAll('🖼️', '')
             .replaceAll('**', '')
             .trim();
@@ -359,12 +372,14 @@ class PptxGeneratorService {
       }
 
       // Detect speaker notes
-      if (trimmed.contains('تێبینی پێشکەشکار') || trimmed.contains('Speaker Note') || trimmed.contains('ملاحظات المتحدث') || trimmed.contains('🎙️')) {
+      if (trimmed.contains('تێبینی پێشکەشکار') || trimmed.contains('Speaker Note') || trimmed.contains('ملاحظات المتحدث') || trimmed.contains('توجيهات المتحدث') || trimmed.contains('ملاحظات الإلقاء') || trimmed.contains('🎙️')) {
         final noteVal = trimmed
             .replaceAll(RegExp(r'^[-*]\s*'), '')
             .replaceAll(RegExp(r'.*تێبینی پێشکەشکار.*?:', caseSensitive: false), '')
             .replaceAll(RegExp(r'.*Speaker Note.*?:', caseSensitive: false), '')
             .replaceAll(RegExp(r'.*ملاحظات المتحدث.*?:', caseSensitive: false), '')
+            .replaceAll(RegExp(r'.*توجيهات المتحدث.*?:', caseSensitive: false), '')
+            .replaceAll(RegExp(r'.*ملاحظات الإلقاء.*?:', caseSensitive: false), '')
             .replaceAll('🎙️', '')
             .replaceAll('"', '')
             .replaceAll('**', '')
@@ -376,10 +391,10 @@ class PptxGeneratorService {
       }
 
       // Detect bullet points & sentences
-      if (trimmed.startsWith('-') || trimmed.startsWith('*') || trimmed.startsWith('•') || RegExp(r'^\d+\.').hasMatch(trimmed)) {
+      if (trimmed.startsWith('-') || trimmed.startsWith('*') || trimmed.startsWith('•') || RegExp(r'^\d+\.').hasMatch(trimmed) || RegExp(r'^[٠-٩]+\.').hasMatch(trimmed)) {
         final bulletText = trimmed
             .replaceAll(RegExp(r'^[-*•]\s*'), '')
-            .replaceAll(RegExp(r'^\d+\.\s*'), '')
+            .replaceAll(RegExp(r'^[\d+٠-٩]+\.\s*'), '')
             .replaceAll('**', '')
             .replaceAll('*', '')
             .trim();
@@ -1119,6 +1134,18 @@ class PptxGeneratorService {
         buffer.write('            <a:r>\n');
         buffer.write('              <a:rPr lang="$langAttr" sz="1600"><a:solidFill><a:srgbClr val="1E293B"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
         buffer.write('              <a:t>${_escapeXml(displayBullet)}</a:t>\n');
+        buffer.write('            </a:r>\n');
+        buffer.write('          </a:p>\n');
+      }
+
+      // Final Slide Gratitude Banner (بەس لە سیمینارەکان لە کۆتا پەڕ)
+      if (slideIndex == totalSlides) {
+        final thankYou = getThankYouMessage(languageCode);
+        buffer.write('          <a:p>\n');
+        buffer.write('            <a:pPr algn="ctr" $rtlAttr><a:spcBef><a:spcPts val="1200"/></a:spcBef></a:pPr>\n');
+        buffer.write('            <a:r>\n');
+        buffer.write('              <a:rPr lang="$langAttr" sz="2000" b="1"><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
+        buffer.write('              <a:t>✨ ${_escapeXml(thankYou)} ✨</a:t>\n');
         buffer.write('            </a:r>\n');
         buffer.write('          </a:p>\n');
       }

@@ -161,4 +161,12 @@ void main() {
     expect(slides[3].title.contains('ئامانجەکان'), true);
     expect(slides[4].title.contains('Methodology'), true);
   });
+
+  test('Seminar final slide Thank You message translates across all languages', () {
+    expect(PptxGeneratorService.getThankYouMessage('ku'), 'سوپاس بۆ ئامادەبوونتان');
+    expect(PptxGeneratorService.getThankYouMessage('ku_badini'), 'سوپاس بۆ ئامادەبوونا هەوە');
+    expect(PptxGeneratorService.getThankYouMessage('badini'), 'سوپاس بۆ ئامادەبوونا هەوە');
+    expect(PptxGeneratorService.getThankYouMessage('ar'), 'شكراً لحضوركم');
+    expect(PptxGeneratorService.getThankYouMessage('en'), 'Thank You for Your Attendance');
+  });
 }

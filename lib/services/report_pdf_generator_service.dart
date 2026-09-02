@@ -707,7 +707,7 @@ class ReportPdfGeneratorService {
           final firstSecTitle = sections.isNotEmpty ? sections.first.title : cleanMainTitle;
 
           final captionText = isRtl
-              ? (report.languageCode == 'ar' ? 'الشكل العلمي ($figNumKurdish): شیکاریی پڕۆسەی $firstSecTitle' : 'شێوەی زانستی ($figNumKurdish): شیکاری و دایەگرامی $firstSecTitle')
+              ? (report.languageCode == 'ar' ? 'الشكل العلمي ($figNumKurdish): التحليل المنهجي لـ $firstSecTitle' : 'شێوەی زانستی ($figNumKurdish): شیکاری و دایەگرامی $firstSecTitle')
               : 'Figure ($figureNum): Architectural and operational workflow of $firstSecTitle';
 
           g.drawString(
