@@ -7,6 +7,7 @@ import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
 import '../navigation_shell.dart';
 import '../../models/user_model.dart';
+import '../../widgets/university_department_picker.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -94,6 +95,47 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
           const SnackBar(content: Text('نەتوانرا وێنەکە دیاریبکرێت.')),
         );
       }
+    }
+  }
+
+  Future<void> _selectUniversity() async {
+    final result = await UniversityDepartmentPicker.showUniversityPicker(
+      context,
+      selectedUniversityName: _universityController.text.trim(),
+      preferredCityKey: _selectedCityKey,
+    );
+    if (result != null) {
+      setState(() {
+        _universityController.text = result.nameKu;
+        if (_kurdishCities.contains(result.cityKey)) {
+          _selectedCityKey = result.cityKey;
+        }
+        _departmentController.clear();
+      });
+
+      // Seamless cascading flow: Automatically open department picker
+      if (mounted) {
+        Future.delayed(const Duration(milliseconds: 250), () {
+          if (mounted) _selectDepartment();
+        });
+      }
+    }
+  }
+
+  Future<void> _selectDepartment() async {
+    final currentUni = _universityController.text.trim().isNotEmpty
+        ? _universityController.text.trim()
+        : 'گشت زانکۆکان';
+
+    final result = await UniversityDepartmentPicker.showDepartmentPicker(
+      context,
+      universityName: currentUni,
+      selectedDepartmentName: _departmentController.text.trim(),
+    );
+    if (result != null) {
+      setState(() {
+        _departmentController.text = result;
+      });
     }
   }
 
@@ -330,38 +372,73 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                             ),
                             const SizedBox(height: 14),
 
-                            // University / College Input
+                            // University / College Selector
                             TextFormField(
                               controller: _universityController,
-                              textInputAction: TextInputAction.next,
+                              readOnly: true,
+                              onTap: _selectUniversity,
                               decoration: InputDecoration(
                                 labelText: t('select_university'),
-                                hintText: 'نموونە: زانکۆی سلێمانی',
+                                hintText: 'کلیک بکە بۆ هەڵبژاردنی زانکۆ...',
                                 prefixIcon: const Icon(Icons.school_outlined),
+                                suffixIcon: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (_universityController.text.isNotEmpty)
+                                      IconButton(
+                                        icon: const Icon(Icons.clear, size: 18),
+                                        onPressed: () {
+                                          setState(() {
+                                            _universityController.clear();
+                                            _departmentController.clear();
+                                          });
+                                        },
+                                      ),
+                                    const Icon(Icons.arrow_drop_down_rounded, size: 28),
+                                    const SizedBox(width: 8),
+                                  ],
+                                ),
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                               ),
                               validator: (val) {
                                 if (val == null || val.trim().isEmpty) {
-                                  return 'تکایە زانکۆ یان کۆلێژ بنووسە';
+                                  return 'تکایە زانکۆ یان پەیمانگە دیاریبکە';
                                 }
                                 return null;
                               },
                             ),
                             const SizedBox(height: 14),
 
-                            // Department / Major Input
+                            // Department / Major Selector
                             TextFormField(
                               controller: _departmentController,
-                              textInputAction: TextInputAction.next,
+                              readOnly: true,
+                              onTap: _selectDepartment,
                               decoration: InputDecoration(
                                 labelText: t('select_department'),
-                                hintText: 'نموونە: تەکنەلۆجیای زانیاری',
+                                hintText: _universityController.text.isEmpty
+                                    ? 'سەرەتا زانکۆ دیاریبکە یان کلیک بکە...'
+                                    : 'کلیک بکە بۆ دیاریکردنی بەشی زانستی...',
                                 prefixIcon: const Icon(Icons.account_tree_outlined),
+                                suffixIcon: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (_departmentController.text.isNotEmpty)
+                                      IconButton(
+                                        icon: const Icon(Icons.clear, size: 18),
+                                        onPressed: () {
+                                          setState(() => _departmentController.clear());
+                                        },
+                                      ),
+                                    const Icon(Icons.arrow_drop_down_rounded, size: 28),
+                                    const SizedBox(width: 8),
+                                  ],
+                                ),
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                               ),
                               validator: (val) {
                                 if (val == null || val.trim().isEmpty) {
-                                  return 'تکایە بەش یان پسپۆڕی بنووسە';
+                                  return 'تکایە بەش یان پسپۆڕی دیاریبکە';
                                 }
                                 return null;
                               },

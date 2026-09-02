@@ -14,14 +14,11 @@ import '../../services/theme_provider.dart';
 import '../../services/score_service.dart';
 import '../auth/login_screen.dart';
 import '../payment/vip_upgrade_sheet.dart';
-import '../admin/admin_security_sheet.dart';
-import '../payment/admin_vip_requests_sheet.dart';
-import '../payment/admin_payment_config_sheet.dart';
-import '../../models/user_model.dart';
 import '../../services/app_version_service.dart';
 import '../update/force_update_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../widgets/university_department_picker.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -478,13 +475,31 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 14),
 
-                    // University
+                    // University Selector
                     TextField(
                       controller: uniCtrl,
+                      readOnly: true,
+                      onTap: () async {
+                        final chosenUni = await UniversityDepartmentPicker.showUniversityPicker(
+                          context,
+                          selectedUniversityName: uniCtrl.text.trim(),
+                        );
+                        if (chosenUni != null) {
+                          setModalState(() {
+                            uniCtrl.text = chosenUni.nameKu;
+                            if (cityCtrl.text.isEmpty || cityCtrl.text.trim() == 'کوردستان') {
+                              cityCtrl.text = chosenUni.cityNameKu;
+                            }
+                            deptCtrl.clear();
+                          });
+                        }
+                      },
                       style: TextStyle(color: isDark ? Colors.white : ZankoColors.textPrimary, fontSize: 14),
                       decoration: InputDecoration(
-                        labelText: '🏛 زانکۆ',
+                        labelText: '🏛 زانکۆ / پەیمانگە',
                         labelStyle: TextStyle(color: ZankoColors.primary),
+                        hintText: 'کلیک بکە بۆ دیاریکردنی زانکۆ...',
+                        suffixIcon: const Icon(Icons.arrow_drop_down_rounded, size: 28),
                         filled: true,
                         fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[100],
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
@@ -492,13 +507,29 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 14),
 
-                    // Faculty/Dept
+                    // Faculty/Dept Selector
                     TextField(
                       controller: deptCtrl,
+                      readOnly: true,
+                      onTap: () async {
+                        final currentUni = uniCtrl.text.trim().isNotEmpty ? uniCtrl.text.trim() : 'گشت زانکۆکان';
+                        final chosenDept = await UniversityDepartmentPicker.showDepartmentPicker(
+                          context,
+                          universityName: currentUni,
+                          selectedDepartmentName: deptCtrl.text.trim(),
+                        );
+                        if (chosenDept != null) {
+                          setModalState(() {
+                            deptCtrl.text = chosenDept;
+                          });
+                        }
+                      },
                       style: TextStyle(color: isDark ? Colors.white : ZankoColors.textPrimary, fontSize: 14),
                       decoration: InputDecoration(
-                        labelText: '🎓 فاکەڵتی و پسپۆڕی / بەش',
+                        labelText: '🎓 بەشی زانستی / پسپۆڕی',
                         labelStyle: TextStyle(color: ZankoColors.primary),
+                        hintText: 'کلیک بکە بۆ دیاریکردنی بەش...',
+                        suffixIcon: const Icon(Icons.arrow_drop_down_rounded, size: 28),
                         filled: true,
                         fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[100],
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
@@ -1809,10 +1840,6 @@ class ProfileScreen extends StatelessWidget {
 
     final user = authService.currentUser;
     final isGuest = user == null || user.isGuest;
-    final bool isAdmin = user?.role == UserRole.admin ||
-        user?.email.toLowerCase().contains('admin') == true ||
-        user?.email.toLowerCase().contains('rawankurdi') == true ||
-        user?.email.toLowerCase().contains('rawankazim') == true;
     final userName = user?.name ?? t('student_role');
     final userEmail = user?.email ?? 'aras@zanko.edu';
     final uniName = user?.universityName ?? 'Zanko University';
@@ -2422,136 +2449,7 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // ─── ADMIN MANAGEMENT CONTROLS (Only visible to Admin) ───
-            if (isAdmin) ...[
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.admin_panel_settings_rounded, color: Colors.amber, size: 18),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'ئامرازەکانی بەڕێوەبەر (Admin Panel) 👑',
-                    style: TextStyle(
-                      fontSize: 15.5,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.amber,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              AppCard(
-                padding: EdgeInsets.zero,
-                child: Column(
-                  children: [
-                    // 1. Security & IP Ban Management
-                    StreamBuilder<QuerySnapshot>(
-                      stream: FirebaseFirestore.instance
-                          .collection('security_alerts')
-                          .where('status', isEqualTo: 'pending')
-                          .snapshots(),
-                      builder: (context, snapshot) {
-                        final alertCount = snapshot.data?.docs.length ?? 0;
-                        return _buildSettingsTile(
-                          context,
-                          icon: Icons.shield_rounded,
-                          iconColor: Colors.redAccent,
-                          title: 'داواکارییەکانی ئاسایش و بلۆککردنی IP 🛡️',
-                          subtitle: alertCount > 0
-                              ? '$alertCount داواکاری نوێی سەرپێچی هەیە'
-                              : 'بەڕێوەبردنی سەرپێچییەکانی ٣ IP و بلۆککردن',
-                          trailing: alertCount > 0
-                              ? Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.redAccent,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    '$alertCount نوێ',
-                                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
-                                  ),
-                                )
-                              : null,
-                          onTap: () => AdminSecuritySheet.show(context),
-                        );
-                      },
-                    ),
-                    const Divider(height: 1, indent: 56),
 
-                    // 2. VIP Requests Management
-                    StreamBuilder<QuerySnapshot>(
-                      stream: FirebaseFirestore.instance
-                          .collection('vip_requests')
-                          .where('status', isEqualTo: 'pending')
-                          .snapshots(),
-                      builder: (context, snapshot) {
-                        final vipCount = snapshot.data?.docs.length ?? 0;
-                        return _buildSettingsTile(
-                          context,
-                          icon: Icons.workspace_premium_rounded,
-                          iconColor: Colors.amber,
-                          title: 'داواکارییەکانی بەشداریکردنی VIP 👑',
-                          subtitle: vipCount > 0
-                              ? '$vipCount داواکاری چاوەڕوانکراو هەیە'
-                              : 'پەسەندکردن و بەڕێوەبردنی داواکارییەکانی VIP',
-                          trailing: vipCount > 0
-                              ? Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.amber,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    '$vipCount داواکاری',
-                                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black),
-                                  ),
-                                )
-                              : null,
-                          onTap: () => AdminVipRequestsSheet.show(context),
-                        );
-                      },
-                    ),
-                    const Divider(height: 1, indent: 56),
-
-                    // 3. Payment & Pricing Config
-                    _buildSettingsTile(
-                      context,
-                      icon: Icons.payments_rounded,
-                      iconColor: const Color(0xFF10B981),
-                      title: 'ڕێکخستنی نرخ و ژمارەی پارەدان 💳',
-                      subtitle: 'نوێکردنەوەی ژمارەی FastPay, ZainCash, FIB و نرخی پلانەکان',
-                      onTap: () => AdminPaymentConfigSheet.show(context),
-                    ),
-                    const Divider(height: 1, indent: 56),
-
-                    // 4. Admin Web Dashboard
-                    _buildSettingsTile(
-                      context,
-                      icon: Icons.open_in_browser_rounded,
-                      iconColor: const Color(0xFF007AFF),
-                      title: 'وێبسایتی ئەدمین (Web Dashboard) 🌐',
-                      subtitle: 'کردنەوەی پانێڵی تەواوی ئەدمین لە وێبدا',
-                      onTap: () async {
-                        final uri = Uri.parse('https://zanko-admin.vercel.app/');
-                        try {
-                          await launchUrl(uri, mode: LaunchMode.externalApplication);
-                        } catch (_) {
-                          await launchUrl(uri);
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-            ],
 
             // Apple Settings Grouped List
             Text(
