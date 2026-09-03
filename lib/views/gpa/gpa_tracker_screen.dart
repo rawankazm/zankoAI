@@ -145,7 +145,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                         fontSize: 19,
                         fontWeight: FontWeight.bold,
                         color: isDark ? Colors.white : ZankoColors.textPrimary,
-                        fontFamily: 'Noto Sans Arabic',
+                        fontFamily: 'DroidKufi',
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -154,7 +154,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                       style: TextStyle(
                         fontSize: 12,
                         color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
-                        fontFamily: 'Noto Sans Arabic',
+                        fontFamily: 'DroidKufi',
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -222,7 +222,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                           const Expanded(
                             child: Text(
                               'کۆی گشتی وانەکە (لەسەر ١٠٠):',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'Noto Sans Arabic'),
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'DroidKufi'),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -281,7 +281,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                         },
                         child: Text(
                           isEditing ? 'نوێکردنەوەی نمرە' : 'خەزنکردنی وانە',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'Noto Sans Arabic'),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'DroidKufi'),
                         ),
                       ),
                     ),
@@ -317,7 +317,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
       child: Scaffold(
         backgroundColor: isDark ? const Color(0xFF11141A) : const Color(0xFFF8F9FE),
         appBar: AppBar(
-          title: const Text('نمرە و ئەنجامی وانەکان', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Noto Sans Arabic')),
+          title: const Text('نمرە و ئەنجامی وانەکان', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'DroidKufi')),
           centerTitle: true,
           actions: [
             IconButton(
@@ -339,19 +339,33 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [ZankoColors.darkCardSecondary, const Color(0xFF312E81), const Color(0xFF4338CA)],
+                          colors: isDark
+                              ? [
+                                  const Color(0xFF0F172A),
+                                  ZankoColors.darkCardSecondary,
+                                  const Color(0xFF064E3B).withValues(alpha: 0.5),
+                                ]
+                              : [
+                                  Colors.white,
+                                  const Color(0xFFF0FDF4),
+                                ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(28),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF4338CA).withValues(alpha: 0.35),
+                            color: ZankoColors.primary.withValues(alpha: 0.18),
                             blurRadius: 20,
-                            offset: const Offset(0, 10),
+                            offset: const Offset(0, 8),
                           ),
                         ],
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1.5),
+                        border: Border.all(
+                          color: isDark
+                              ? ZankoColors.primary.withValues(alpha: 0.3)
+                              : ZankoColors.primary.withValues(alpha: 0.25),
+                          width: 1.5,
+                        ),
                       ),
                       child: Column(
                         children: [
@@ -364,7 +378,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white70,
-                                  fontFamily: 'Noto Sans Arabic',
+                                  fontFamily: 'DroidKufi',
                                 ),
                               ),
                               Container(
@@ -375,7 +389,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                                 ),
                                 child: Text(
                                   statusBadge,
-                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'Noto Sans Arabic'),
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'DroidKufi'),
                                 ),
                               ),
                             ],
@@ -471,7 +485,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
-                                  fontFamily: 'Noto Sans Arabic',
+                                  fontFamily: 'DroidKufi',
                                 ),
                               ),
                             ),
@@ -490,7 +504,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                         fontSize: 17,
                         fontWeight: FontWeight.bold,
                         color: isDark ? Colors.white : ZankoColors.textPrimary,
-                        fontFamily: 'Noto Sans Arabic',
+                        fontFamily: 'DroidKufi',
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -501,7 +515,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                           padding: const EdgeInsets.all(30),
                           child: Text(
                             'هیچ وانەیەک زیادت نەکردووە، بەتنەکە لەسەرەوە دابگرە',
-                            style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontFamily: 'Noto Sans Arabic'),
+                            style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontFamily: 'DroidKufi'),
                           ),
                         ),
                       )
@@ -544,7 +558,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                                         fontSize: 15,
                                         fontWeight: FontWeight.bold,
                                         color: isDark ? Colors.white : ZankoColors.textPrimary,
-                                        fontFamily: 'Noto Sans Arabic',
+                                        fontFamily: 'DroidKufi',
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -553,7 +567,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                                       style: TextStyle(
                                         fontSize: 11,
                                         color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
-                                        fontFamily: 'Noto Sans Arabic',
+                                        fontFamily: 'DroidKufi',
                                       ),
                                     ),
                                   ],
@@ -572,7 +586,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                                   ),
                                   const Text(
                                     '/ 100 نمرە',
-                                    style: TextStyle(fontSize: 10, color: Colors.grey, fontFamily: 'Noto Sans Arabic'),
+                                    style: TextStyle(fontSize: 10, color: Colors.grey, fontFamily: 'DroidKufi'),
                                   ),
                                 ],
                               ),
@@ -596,7 +610,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                                       children: [
                                         Icon(Icons.edit, size: 18),
                                         SizedBox(width: 8),
-                                        Text('دەستکاری', style: TextStyle(fontSize: 13, fontFamily: 'Noto Sans Arabic')),
+                                        Text('دەستکاری', style: TextStyle(fontSize: 13, fontFamily: 'DroidKufi')),
                                       ],
                                     ),
                                   ),
@@ -606,7 +620,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                                       children: [
                                         Icon(Icons.delete, size: 18, color: Colors.redAccent),
                                         SizedBox(width: 8),
-                                        Text('سڕینەوە', style: TextStyle(fontSize: 13, color: Colors.redAccent, fontFamily: 'Noto Sans Arabic')),
+                                        Text('سڕینەوە', style: TextStyle(fontSize: 13, color: Colors.redAccent, fontFamily: 'DroidKufi')),
                                       ],
                                     ),
                                   ),
@@ -629,7 +643,7 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 10, color: Colors.white60, fontFamily: 'Noto Sans Arabic'),
+          style: const TextStyle(fontSize: 10, color: Colors.white60, fontFamily: 'DroidKufi'),
         ),
         const SizedBox(height: 2),
         Text(

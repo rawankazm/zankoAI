@@ -1,10 +1,10 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter/services.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
 import '../../widgets/ad_banner_widget.dart';
@@ -98,7 +98,7 @@ class ProfileScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: Icon(
                             starIndex <= rating ? CupertinoIcons.star_fill : CupertinoIcons.star,
-                            color: const Color(0xFFFFD700),
+                            color: ZankoColors.primary,
                             size: 32,
                           ),
                         ),
@@ -306,11 +306,17 @@ class ProfileScreen extends StatelessWidget {
                                           )
                                         : (user.photoUrl!.startsWith('assets/')
                                             ? Image.asset(user.photoUrl!, fit: BoxFit.cover)
-                                            : Image.file(
-                                                File(user.photoUrl!),
-                                                fit: BoxFit.cover,
-                                                errorBuilder: (_, _, _) => Image.asset('assets/images/student_avatar_3d.png', fit: BoxFit.cover),
-                                              )))
+                                            : (kIsWeb
+                                                ? Image.network(
+                                                    user.photoUrl!,
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder: (_, _, _) => Image.asset('assets/images/student_avatar_3d.png', fit: BoxFit.cover),
+                                                  )
+                                                : Image.file(
+                                                    File(user.photoUrl!),
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder: (_, _, _) => Image.asset('assets/images/student_avatar_3d.png', fit: BoxFit.cover),
+                                                  ))))
                                     : Image.asset(
                                         'assets/images/student_avatar_3d.png',
                                         fit: BoxFit.cover,
@@ -567,18 +573,18 @@ class ProfileScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: isDark ? ZankoColors.darkBackground : Colors.grey[100],
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+                        border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.4)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Row(
+                          Row(
                             children: [
-                              Icon(CupertinoIcons.lock_fill, color: Colors.amber, size: 16),
-                              SizedBox(width: 8),
+                              Icon(CupertinoIcons.lock_fill, color: ZankoColors.primary, size: 16),
+                              const SizedBox(width: 8),
                               Text(
                                 'زانیارییە فەرمییە نەگۆڕەکان (تەنها ئەدمین):',
-                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amber),
+                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: ZankoColors.primary),
                               ),
                             ],
                           ),
@@ -1250,7 +1256,9 @@ class ProfileScreen extends StatelessWidget {
                                     ? Image.network(selectedAvatar, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(Icons.person, size: 55))
                                     : (selectedAvatar.startsWith('assets/')
                                         ? Image.asset(selectedAvatar, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(Icons.person, size: 55))
-                                        : Image.file(File(selectedAvatar), fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(Icons.person, size: 55))),
+                                        : (kIsWeb
+                                            ? Image.network(selectedAvatar, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(Icons.person, size: 55))
+                                            : Image.file(File(selectedAvatar), fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(Icons.person, size: 55)))),
                               ),
                             ),
                             Positioned(
@@ -1621,234 +1629,6 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  void _showThemePaletteModal(BuildContext context, ThemeProvider themeProvider, bool isVip) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: Container(
-            decoration: BoxDecoration(
-              color: isDark ? ZankoColors.darkCard : Colors.white,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-              border: Border.all(
-                color: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFEFEFF7),
-              ),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.grey[700] : Colors.grey[300],
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Row(
-                  children: [
-                    const Text('🎨', style: TextStyle(fontSize: 24)),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'ڕەنگ و ڕووکاری ئەپ (Theme Palette)',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: isDark ? Colors.white : ZankoColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'ڕەنگی دڵخوازی خۆت هەڵبژێرە بۆ گۆڕینی ڕووکاری ئەپەکە',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                ...ThemeProvider.availableThemes.map((theme) {
-                  final isSelected = themeProvider.activeTheme == theme.type;
-                  return _buildThemeOption(
-                    context,
-                    theme: theme,
-                    isSelected: isSelected,
-                    isVip: isVip,
-                    isDark: isDark,
-                    onTap: () {
-                      if (theme.isVipOnly && !isVip) {
-                        Navigator.pop(context);
-                        VipUpgradeSheet.show(context);
-                      } else {
-                        themeProvider.setAppTheme(theme.type);
-                        HapticFeedback.selectionClick();
-                        Navigator.pop(context);
-                      }
-                    },
-                  );
-                }),
-                const SizedBox(height: 16),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildThemeOption(
-    BuildContext context, {
-    required ThemePaletteInfo theme,
-    required bool isSelected,
-    required bool isVip,
-    required bool isDark,
-    required VoidCallback onTap,
-  }) {
-    final isLockedForUser = theme.isVipOnly && !isVip;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? theme.primaryColor.withValues(alpha: isDark ? 0.2 : 0.1)
-                : (isDark ? ZankoColors.darkCardSecondary : const Color(0xFFF8F9FD)),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: isSelected
-                  ? theme.primaryColor
-                  : (isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE5E7EB)),
-              width: isSelected ? 2 : 1,
-            ),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: theme.primaryColor.withValues(alpha: 0.25),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ]
-                : [],
-          ),
-          child: Row(
-            children: [
-              // Color preview circle
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [theme.primaryColor, theme.accentColor],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.primaryColor.withValues(alpha: 0.4),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    theme.icon,
-                    style: const TextStyle(fontSize: 18),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            theme.name,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                              color: isDark ? Colors.white : ZankoColors.textPrimary,
-                            ),
-                          ),
-                        ),
-                        if (theme.isVipOnly) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Text(
-                              '👑 VIP',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      theme.englishName,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (isSelected)
-                Icon(
-                  CupertinoIcons.checkmark_circle_fill,
-                  color: theme.primaryColor,
-                  size: 22,
-                )
-              else if (isLockedForUser)
-                const Icon(
-                  CupertinoIcons.lock_fill,
-                  color: Color(0xFFFFD700),
-                  size: 18,
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1986,14 +1766,14 @@ class ProfileScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(26),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF6366F1).withValues(alpha: 0.35),
+                      color: ZankoColors.primary.withValues(alpha: 0.25),
                       blurRadius: 24,
                       spreadRadius: -2,
-                      offset: const Offset(0, 12),
+                      offset: const Offset(0, 10),
                     ),
                     BoxShadow(
-                      color: const Color(0xFF4F46E5).withValues(alpha: 0.2),
-                      blurRadius: 10,
+                      color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                      blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
                   ],
@@ -2005,13 +1785,12 @@ class ProfileScreen extends StatelessWidget {
                       // Dark Metallic Mesh Gradient Background
                       Container(
                         height: 215,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              const Color(0xFF0F172A),
-                              ZankoColors.darkCardSecondary,
-                              const Color(0xFF312E81),
-                              const Color(0xFF4338CA),
+                              Color(0xFF0F172A),
+                              Color(0xFF1E293B),
+                              Color(0xFF064E3B),
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -2030,8 +1809,8 @@ class ProfileScreen extends StatelessWidget {
                             shape: BoxShape.circle,
                             gradient: RadialGradient(
                               colors: [
-                                const Color(0xFF818CF8).withValues(alpha: 0.4),
-                                const Color(0xFF818CF8).withValues(alpha: 0.0),
+                                ZankoColors.primary.withValues(alpha: 0.25),
+                                ZankoColors.primary.withValues(alpha: 0.0),
                               ],
                             ),
                           ),
@@ -2047,8 +1826,8 @@ class ProfileScreen extends StatelessWidget {
                             shape: BoxShape.circle,
                             gradient: RadialGradient(
                               colors: [
-                                ZankoColors.accent.withValues(alpha: 0.35),
-                                ZankoColors.accent.withValues(alpha: 0.0),
+                                ZankoColors.primary.withValues(alpha: 0.25),
+                                ZankoColors.primary.withValues(alpha: 0.0),
                               ],
                             ),
                           ),
@@ -2160,11 +1939,11 @@ class ProfileScreen extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     gradient: const LinearGradient(
-                                      colors: [Color(0xFF818CF8), Color(0xFFF472B6)],
+                                      colors: [Color(0xFF10B981), Color(0xFF059669)],
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.35),
+                                        color: const Color(0xFF10B981).withValues(alpha: 0.35),
                                         blurRadius: 10,
                                         offset: const Offset(0, 4),
                                       ),
@@ -2176,7 +1955,9 @@ class ProfileScreen extends StatelessWidget {
                                             ? Image.network(user.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36))
                                             : (user.photoUrl!.startsWith('assets/')
                                                 ? Image.asset(user.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36))
-                                                : Image.file(File(user.photoUrl!), fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36))))
+                                                : (kIsWeb
+                                                    ? Image.network(user.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36))
+                                                    : Image.file(File(user.photoUrl!), fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36)))))
                                         : Image.asset(
                                             'assets/images/student_avatar_3d.png',
                                             fit: BoxFit.cover,
@@ -2216,14 +1997,15 @@ class ProfileScreen extends StatelessWidget {
                                         decoration: BoxDecoration(
                                           color: Colors.white.withValues(alpha: 0.12),
                                           borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.4)),
                                         ),
-                                        child: Text(
+                                        child: const Text(
                                           'ID: 2024-ZK-8842',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 11,
                                             fontWeight: FontWeight.w800,
                                             letterSpacing: 0.8,
-                                            color: Color(0xFFA5B4FC),
+                                            color: Color(0xFFA7F3D0),
                                           ),
                                         ),
                                       ),
@@ -2237,15 +2019,15 @@ class ProfileScreen extends StatelessWidget {
                                   height: 30,
                                   decoration: BoxDecoration(
                                     gradient: const LinearGradient(
-                                      colors: [Color(0xFFFCD34D), Color(0xFFF59E0B)],
+                                      colors: [Color(0xFF10B981), Color(0xFF059669)],
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                     ),
                                     borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: Colors.amber.shade200, width: 1),
+                                    border: Border.all(color: const Color(0xFF34D399), width: 1),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.amber.withValues(alpha: 0.3),
+                                        color: const Color(0xFF10B981).withValues(alpha: 0.35),
                                         blurRadius: 6,
                                       ),
                                     ],
@@ -2254,7 +2036,7 @@ class ProfileScreen extends StatelessWidget {
                                     child: Icon(
                                       Icons.nfc_rounded,
                                       size: 20,
-                                      color: Color(0xFF78350F),
+                                      color: Colors.white,
                                     ),
                                   ),
                                 ),
@@ -2312,23 +2094,30 @@ class ProfileScreen extends StatelessWidget {
 
             // ─── VIP Membership Status & Upgrade Banner ───
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: user?.isVip == true
-                      ? [const Color(0xFF1E1500), const Color(0xFF352600), const Color(0xFF4A3600)]
-                      : [const Color(0xFF1C1300), const Color(0xFF2E2002), const Color(0xFF3F2B02)],
+                  colors: isDark
+                      ? [
+                          const Color(0xFF0F172A),
+                          ZankoColors.darkCardSecondary,
+                          const Color(0xFF064E3B).withValues(alpha: 0.5),
+                        ]
+                      : [
+                          Colors.white,
+                          const Color(0xFFF0FDF4),
+                        ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: const Color(0xFFFFD700).withValues(alpha: user?.isVip == true ? 0.6 : 0.45),
+                  color: ZankoColors.primary.withValues(alpha: user?.isVip == true ? 0.6 : 0.4),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFFD700).withValues(alpha: 0.18),
+                    color: ZankoColors.primary.withValues(alpha: 0.15),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),
@@ -2339,10 +2128,10 @@ class ProfileScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFD700).withValues(alpha: 0.2),
+                      color: ZankoColors.primary.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: const Text('👑', style: TextStyle(fontSize: 24)),
+                    child: Text('👑', style: TextStyle(fontSize: 24, color: ZankoColors.primary)),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -2351,14 +2140,14 @@ class ProfileScreen extends StatelessWidget {
                       children: [
                         Text(
                           user?.isVip == true ? 'ئەندامی نایابی VIP (چالاککراوە 👑)' : 'بەشداربوونی نایابی VIP',
-                          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5, color: Color(0xFFFFD700)),
+                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5, color: ZankoColors.primary),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           user?.isVip == true
                               ? 'داگرتنی Word و PPTX + تاقیکردنەوە و چاتی بێسنوور'
                               : 'سێمینار و ڕاپۆرت بە وۆرد + پێشبینی تاقیکردنەوە',
-                          style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.85)),
+                          style: TextStyle(fontSize: 11, color: isDark ? Colors.white.withValues(alpha: 0.85) : ZankoColors.textSecondary),
                         ),
                       ],
                     ),
@@ -2367,8 +2156,8 @@ class ProfileScreen extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () => VipUpgradeSheet.show(context),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFD700),
-                      foregroundColor: const Color(0xFF2C1F00),
+                      backgroundColor: ZankoColors.primary,
+                      foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
@@ -2495,34 +2284,6 @@ class ProfileScreen extends StatelessWidget {
                       activeTrackColor: themeProvider.primaryColor,
                       onChanged: (val) => themeProvider.toggleTheme(val),
                     ),
-                  ),
-                  const Divider(height: 1, indent: 56),
-                  _buildSettingsTile(
-                    context,
-                    icon: CupertinoIcons.paintbrush_fill,
-                    iconColor: themeProvider.primaryColor,
-                    title: 'ڕەنگ و ڕووکاری ئەپ 🎨',
-                    subtitle: themeProvider.currentPalette.name,
-                    trailing: Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [themeProvider.primaryColor, themeProvider.accentColor],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 1.5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: themeProvider.primaryColor.withValues(alpha: 0.4),
-                            blurRadius: 6,
-                          ),
-                        ],
-                      ),
-                    ),
-                    onTap: () => _showThemePaletteModal(context, themeProvider, user?.isVip ?? false),
                   ),
                   const Divider(height: 1, indent: 56),
                   _buildSettingsTile(

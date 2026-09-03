@@ -208,7 +208,7 @@ $deptsSummary
 
   String _buildLocalKurdishAdvisorSummary(double studentMark, String trackName, List<ZankolineDepartmentModel> matchedDepts, {bool isParallel = false}) {
     final buffer = StringBuffer();
-    final systemLabel = isParallel ? 'سیستەمی پاڕاڵێڵ (%40 داشکاندنی فەرمی)' : 'خوێندنی گشتی (بەخۆڕایی)';
+    final systemLabel = isParallel ? 'سیستەمی پاڕاڵێڵ (%45 داشکاندنی فەرمی)' : 'خوێندنی گشتی (بەخۆڕایی)';
     final topDepts = matchedDepts.take(3).map((d) => d.college).join('، ');
 
     buffer.writeln('بەپێی تێکڕای نمرەکەت (%$studentMark) لە لقی $trackName لە ($systemLabel)، نمرەکەت هەلێکی زۆر باش دەبەخشێت بۆ وەرگرتن لە زانکۆکانی هەرێمی کوردستان.');
@@ -217,7 +217,7 @@ $deptsSummary
     buffer.writeln('💡 ڕێنمایی ڕاوێژکار:');
     if (isParallel) {
       buffer.writeln('• بەکارهێنانی پاڕاڵێڵ ڕێگەت پێدەدات لە بەشە بەرزەکان (بە نمرەی کەمتر) وەربگیرێیت.');
-      buffer.writeln('• وەزارەتی خوێندنی باڵا %40 داشکاندنی فەرمی بۆ تێچووی ساڵانەی پاڕاڵێڵ دەستنیشان کردووە.');
+      buffer.writeln('• وەزارەتی خوێندنی باڵا %45 داشکاندنی فەرمی بۆ تێچووی ساڵانەی پاڕاڵێڵ دەستنیشان کردووە.');
     } else {
       buffer.writeln('• بەپێی ئارەزووی خۆت و نزیکی شارەکەت، بەشەکان لە پێشینەی ٥٠ بەشەکەی زانکۆلاین بڕێزێنە.');
     }

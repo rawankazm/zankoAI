@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -8,6 +9,42 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Cleanly repairs UTF-8 mojibake (e.g. "ðŸŽ‰ Ù¾ÛŒØ±Û†Ø²Û•!" -> "🎉 پیرۆزە!")
+String fixNotificationEncoding(dynamic raw) {
+  if (raw == null) return '';
+  final input = raw.toString();
+  if (input.isEmpty) return input;
+
+  // Check if string contains typical UTF-8 bytes misread as Latin-1 / Windows-1252
+  if (input.contains('Ù') || input.contains('Ø') || input.contains('Û') || input.contains('ð') || input.contains('Ã')) {
+    const cp1252Map = <int, int>{
+      0x20AC: 0x80, 0x201A: 0x82, 0x0192: 0x83, 0x201E: 0x84,
+      0x2026: 0x85, 0x2020: 0x86, 0x2021: 0x87, 0x02C6: 0x88,
+      0x2030: 0x89, 0x0160: 0x8A, 0x2039: 0x8B, 0x0152: 0x8C,
+      0x017D: 0x8E, 0x2018: 0x91, 0x2019: 0x92, 0x201C: 0x93,
+      0x201D: 0x94, 0x2022: 0x95, 0x2013: 0x96, 0x2014: 0x97,
+      0x02DC: 0x98, 0x2122: 0x99, 0x0161: 0x9A, 0x203A: 0x9B,
+      0x0153: 0x9C, 0x017E: 0x9E, 0x0178: 0x9F,
+    };
+
+    try {
+      final bytes = <int>[];
+      for (final codeUnit in input.codeUnits) {
+        if (codeUnit <= 0xFF) {
+          bytes.add(codeUnit);
+        } else if (cp1252Map.containsKey(codeUnit)) {
+          bytes.add(cp1252Map[codeUnit]!);
+        } else {
+          return input;
+        }
+      }
+      final decoded = utf8.decode(bytes, allowMalformed: false);
+      if (decoded.isNotEmpty) return decoded;
+    } catch (_) {}
+  }
+  return input;
+}
+
 /// Top-level background handler for FCM messages when app is killed or in background.
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -15,8 +52,8 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // If the message already contains a notification payload, Android system FCM handles displaying it automatically.
   // Only display manually if it was a data-only payload.
   if (message.notification == null) {
-    final title = message.data['title'] ?? 'ZankoAI';
-    final body = message.data['body'] ?? message.data['message'] ?? '';
+    final title = fixNotificationEncoding(message.data['title'] ?? 'ZankoAI');
+    final body = fixNotificationEncoding(message.data['body'] ?? message.data['message'] ?? '');
 
     if (title.isNotEmpty || body.isNotEmpty) {
       final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
@@ -29,7 +66,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
         playSound: true,
         enableVibration: true,
         icon: '@mipmap/ic_launcher',
-        color: Color(0xFF007AFF),
+        color: Color(0xFF10B981),
       );
       const notificationDetails = NotificationDetails(android: androidDetails);
       await flutterLocalNotificationsPlugin.show(
@@ -116,11 +153,7 @@ class NotificationService {
       _fcmToken = await _fcm.getToken();
       debugPrint('Device FCM Token: $_fcmToken');
 
-      // 4. Listen for Token refreshes
-      _fcm.onTokenRefresh.listen((newToken) {
-        _fcmToken = newToken;
-        debugPrint('FCM Token Refreshed: $newToken');
-      });
+      // 4. (Token refresh handled by listener below — see step 9)
 
       // 5. Subscribe to default broadcast topics
       await _fcm.subscribeToTopic('all_students');
@@ -133,8 +166,8 @@ class NotificationService {
         if (notification != null) {
           showInstantNotification(
             id: message.hashCode,
-            title: notification.title ?? 'ZankoAI',
-            body: notification.body ?? '',
+            title: fixNotificationEncoding(notification.title ?? 'ZankoAI'),
+            body: fixNotificationEncoding(notification.body ?? ''),
           );
         }
       });
@@ -264,14 +297,14 @@ class NotificationService {
           final isRecent = DateTime.now().difference(time).inMinutes < 60;
 
           if (!isRead && !_seenDocIds.contains(docId)) {
-            final title = data['title'] ?? data['header'] ?? data['subject'] ?? '✉️ پەیام لە ئەدمینەوە';
-            final body = data['message'] ?? data['body'] ?? data['content'] ?? data['text'] ?? '';
+            final title = fixNotificationEncoding(data['title'] ?? data['header'] ?? data['subject'] ?? '✉️ پەیام لە ئەدمینەوە');
+            final body = fixNotificationEncoding(data['message'] ?? data['body'] ?? data['content'] ?? data['text'] ?? '');
 
-            if (isRecent && (body.toString().trim().isNotEmpty || title.toString().trim().isNotEmpty)) {
+            if (isRecent && (body.trim().isNotEmpty || title.trim().isNotEmpty)) {
               await showInstantNotification(
                 id: docId.hashCode,
-                title: title.toString(),
-                body: body.toString(),
+                title: title,
+                body: body,
               );
             }
             _seenDocIds.add(docId);
@@ -281,9 +314,11 @@ class NotificationService {
       }
     });
 
-    // 2. Broadcast & Announcements Notifications Listener
+    // 2. Broadcast & Announcements Notifications Listener (Limited to 10 most recent to prevent N+1 read costs)
     _adminBroadcastSub = FirebaseFirestore.instance
         .collection('notifications')
+        .orderBy('createdAt', descending: true)
+        .limit(10)
         .snapshots()
         .listen((snap) async {
       for (var change in snap.docChanges) {
@@ -316,14 +351,14 @@ class NotificationService {
           final isRecent = DateTime.now().difference(time).inMinutes < 60;
 
           if (!_seenDocIds.contains(docId)) {
-            final title = data['title'] ?? data['header'] ?? data['subject'] ?? '🔔 ئاگاداری لە ZankoAI';
-            final body = data['body'] ?? data['message'] ?? data['content'] ?? data['text'] ?? '';
+            final title = fixNotificationEncoding(data['title'] ?? data['header'] ?? data['subject'] ?? '🔔 ئاگاداری لە ZankoAI');
+            final body = fixNotificationEncoding(data['body'] ?? data['message'] ?? data['content'] ?? data['text'] ?? '');
 
-            if (isRecent && (body.toString().trim().isNotEmpty || title.toString().trim().isNotEmpty)) {
+            if (isRecent && (body.trim().isNotEmpty || title.trim().isNotEmpty)) {
               await showInstantNotification(
                 id: docId.hashCode,
-                title: title.toString(),
-                body: body.toString(),
+                title: title,
+                body: body,
               );
             }
             _seenDocIds.add(docId);
@@ -344,16 +379,19 @@ class NotificationService {
     required String title,
     required String body,
   }) async {
+    final cleanTitle = fixNotificationEncoding(title);
+    final cleanBody = fixNotificationEncoding(body);
+
     final now = DateTime.now();
-    if (_lastShownTitle == title &&
-        _lastShownBody == body &&
+    if (_lastShownTitle == cleanTitle &&
+        _lastShownBody == cleanBody &&
         _lastShownTime != null &&
         now.difference(_lastShownTime!).inSeconds < 4) {
-      debugPrint('Debounced duplicate notification: $title');
+      debugPrint('Debounced duplicate notification: $cleanTitle');
       return;
     }
-    _lastShownTitle = title;
-    _lastShownBody = body;
+    _lastShownTitle = cleanTitle;
+    _lastShownBody = cleanBody;
     _lastShownTime = now;
 
     await init();
@@ -369,7 +407,7 @@ class NotificationService {
       enableLights: true,
       tag: 'zanko_admin_broadcast',
       icon: '@mipmap/ic_launcher',
-      color: Color(0xFF007AFF),
+      color: Color(0xFF10B981),
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -380,8 +418,8 @@ class NotificationService {
 
     await _plugin.show(
       id,
-      title,
-      body,
+      cleanTitle,
+      cleanBody,
       const NotificationDetails(android: androidDetails, iOS: iosDetails),
     );
   }

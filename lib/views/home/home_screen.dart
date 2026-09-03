@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -286,18 +287,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                               )
                                             : (user.photoUrl!.startsWith('assets/')
                                                 ? Image.asset(user.photoUrl!, width: 42, height: 42, fit: BoxFit.cover)
-                                                : Image.file(
-                                                    File(user.photoUrl!),
-                                                    width: 42,
-                                                    height: 42,
-                                                    fit: BoxFit.cover,
-                                                    errorBuilder: (_, _, _) => Center(
-                                                      child: Text(
-                                                        (userName.isNotEmpty ? userName[0] : 'S').toUpperCase(),
-                                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 17),
-                                                      ),
-                                                    ),
-                                                  )))
+                                                : (kIsWeb
+                                                    ? Image.network(
+                                                        user.photoUrl!,
+                                                        width: 42,
+                                                        height: 42,
+                                                        fit: BoxFit.cover,
+                                                        errorBuilder: (_, _, _) => Center(
+                                                          child: Text(
+                                                            (userName.isNotEmpty ? userName[0] : 'S').toUpperCase(),
+                                                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 17),
+                                                          ),
+                                                        ),
+                                                      )
+                                                    : Image.file(
+                                                        File(user.photoUrl!),
+                                                        width: 42,
+                                                        height: 42,
+                                                        fit: BoxFit.cover,
+                                                        errorBuilder: (_, _, _) => Center(
+                                                          child: Text(
+                                                            (userName.isNotEmpty ? userName[0] : 'S').toUpperCase(),
+                                                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 17),
+                                                          ),
+                                                        ),
+                                                      ))))
                                         : Center(
                                             child: Text(
                                               (userName.isNotEmpty ? userName[0] : 'S').toUpperCase(),
@@ -1798,7 +1812,7 @@ class _DynamicIslandPillState extends State<_DynamicIslandPill> {
     if (_stateIndex == 0) {
       text = '${widget.greeting} ${widget.userName} • کاتی سەرکەوتنە ✨';
       icon = CupertinoIcons.sparkles;
-      accentColor = const Color(0xFFFFD700);
+      accentColor = ZankoColors.primary;
     } else if (_stateIndex == 1) {
       text = 'فۆکەسی خوێندن • دەستپێکردنی خولی ٢٥ خولەکی 🍅';
       icon = CupertinoIcons.timer;
@@ -2054,19 +2068,19 @@ class _DailyStreakFlameCardState extends State<_DailyStreakFlameCard>
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFD700).withValues(alpha: 0.2),
+                          color: ZankoColors.primary.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
-                            color: const Color(0xFFFFD700).withValues(alpha: 0.5),
+                            color: ZankoColors.primary.withValues(alpha: 0.5),
                             width: 0.8,
                           ),
                         ),
                         child: Text(
                           '+$_streakXp XP',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFFFFB800),
+                            color: ZankoColors.primary,
                           ),
                         ),
                       ),
@@ -2233,26 +2247,30 @@ class _VipPromoCard extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF1E1602), Color(0xFF2C2003)],
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF0F172A),
+              ZankoColors.darkCardSecondary,
+              const Color(0xFF064E3B).withValues(alpha: 0.5),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.35)),
+          border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.35)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+                color: ZankoColors.primary.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
-              child: const Text('👑', style: TextStyle(fontSize: 20)),
+              child: Text('👑', style: TextStyle(fontSize: 20, color: ZankoColors.primary)),
             ),
             const SizedBox(width: 12),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -2260,12 +2278,12 @@ class _VipPromoCard extends StatelessWidget {
                     'ئەندامی نایابی VIP 🌟',
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
-                      color: Color(0xFFFFD700),
+                      color: ZankoColors.primary,
                       fontSize: 13.5,
                     ),
                   ),
-                  SizedBox(height: 2),
-                  Text(
+                  const SizedBox(height: 2),
+                  const Text(
                     'هەموو تایبەتمەندییە ئەکادیمییەکان بە بێسنوور بۆت کراوەیە',
                     style: TextStyle(
                       fontSize: 11,
@@ -2286,16 +2304,20 @@ class _VipPromoCard extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF1C1300), Color(0xFF2E2002), Color(0xFF422E04)],
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF0F172A),
+              ZankoColors.darkCardSecondary,
+              const Color(0xFF064E3B).withValues(alpha: 0.4),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.5), width: 1.5),
+          border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.5), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFFD700).withValues(alpha: 0.18),
+              color: ZankoColors.primary.withValues(alpha: 0.18),
               blurRadius: 16,
               offset: const Offset(0, 5),
             ),
@@ -2309,13 +2331,13 @@ class _VipPromoCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFD700).withValues(alpha: 0.2),
+                    color: ZankoColors.primary.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: const Text('👑', style: TextStyle(fontSize: 22)),
                 ),
                 const SizedBox(width: 10),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -2324,11 +2346,11 @@ class _VipPromoCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w900,
-                          color: Color(0xFFFFD700),
+                          color: ZankoColors.primary,
                         ),
                       ),
-                      SizedBox(height: 2),
-                      Text(
+                      const SizedBox(height: 2),
+                      const Text(
                         'ڕاپۆرت و سێمینار، پێشبینی تاقیکردنەوە، چاتی بێسنوور',
                         style: TextStyle(fontSize: 11, color: Colors.white70),
                       ),
@@ -2338,7 +2360,7 @@ class _VipPromoCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFD700),
+                    color: ZankoColors.primary,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Text(
@@ -2346,7 +2368,7 @@ class _VipPromoCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w900,
-                      color: Color(0xFF2C1F00),
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -2358,13 +2380,13 @@ class _VipPromoCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Flexible(
+                Flexible(
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(CupertinoIcons.checkmark_seal_fill, color: Color(0xFFFFD700), size: 13),
-                      SizedBox(width: 3),
-                      Flexible(
+                      Icon(CupertinoIcons.checkmark_seal_fill, color: ZankoColors.primary, size: 13),
+                      const SizedBox(width: 3),
+                      const Flexible(
                         child: Text(
                           'Word و PPTX',
                           style: TextStyle(fontSize: 10, color: Colors.white),
@@ -2375,13 +2397,13 @@ class _VipPromoCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 4),
-                const Flexible(
+                Flexible(
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(CupertinoIcons.checkmark_seal_fill, color: Color(0xFFFFD700), size: 13),
-                      SizedBox(width: 3),
-                      Flexible(
+                      Icon(CupertinoIcons.checkmark_seal_fill, color: ZankoColors.primary, size: 13),
+                      const SizedBox(width: 3),
+                      const Flexible(
                         child: Text(
                           'پێشبینی فاینەڵ',
                           style: TextStyle(fontSize: 10, color: Colors.white),

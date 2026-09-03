@@ -851,7 +851,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 Expanded(
                   child: _buildAttachmentOption(
                     icon: CupertinoIcons.camera_fill,
-                    color: Colors.amberAccent,
+                    color: ZankoColors.primary,
                     label: 'کامێرای هاوکێشە',
                     onTap: () {
                       Navigator.pop(ctx);
@@ -863,7 +863,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 Expanded(
                   child: _buildAttachmentOption(
                     icon: CupertinoIcons.photo,
-                    color: Colors.purpleAccent,
+                    color: ZankoColors.primary,
                     label: 'وێنەی گەلەری',
                     onTap: () {
                       Navigator.pop(ctx);
@@ -875,7 +875,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 Expanded(
                   child: _buildAttachmentOption(
                     icon: CupertinoIcons.doc_text_fill,
-                    color: Colors.blueAccent,
+                    color: ZankoColors.primary,
                     label: 'فایلی PDF/وانە',
                     onTap: () {
                       Navigator.pop(ctx);
@@ -1084,8 +1084,8 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                       Container(
                         width: 7,
                         height: 7,
-                        decoration: BoxDecoration(
-                          color: isVip ? const Color(0xFFFFD700) : const Color(0xFF10B981),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF10B981),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -1094,7 +1094,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                         isVip ? 'VIP 👑 (نامەی بێسنوور)' : 'ڕژێمی ئاسایی',
                         style: TextStyle(
                           fontSize: 11,
-                          color: isVip ? const Color(0xFFFFD700) : Colors.white60,
+                          color: isVip ? const Color(0xFF10B981) : Colors.white60,
                           fontWeight: isVip ? FontWeight.bold : FontWeight.normal,
                         ),
                       ),
@@ -1111,7 +1111,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                     margin: const EdgeInsets.only(right: 6),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFFB8860B), Color(0xFFFFD700)],
+                        colors: [Color(0xFF10B981), Color(0xFF059669)],
                       ),
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -1125,7 +1125,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w900,
-                            color: Color(0xFF2C1F00),
+                            color: Colors.white,
                           ),
                         ),
                       ],
@@ -1341,7 +1341,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                       ],
                     )
                   : BoxDecoration(
-                      color: isLimitMsg ? const Color(0xFF2C2003) : const Color(0xFF1E222A),
+                      color: isLimitMsg ? const Color(0xFF064E3B).withValues(alpha: 0.6) : const Color(0xFF1E222A),
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(18),
                         topRight: Radius.circular(18),
@@ -1350,7 +1350,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                       ),
                       border: Border.all(
                         color: isLimitMsg
-                            ? const Color(0xFFFFD700).withValues(alpha: 0.5)
+                            ? ZankoColors.primary.withValues(alpha: 0.5)
                             : Colors.white.withValues(alpha: 0.08),
                         width: 1,
                       ),
@@ -1461,7 +1461,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                           style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFB8860B),
+                          backgroundColor: ZankoColors.primary,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1501,7 +1501,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                   _buildBubbleAction(
                     icon: CupertinoIcons.bookmark,
                     label: 'تێبینی',
-                    color: Colors.amberAccent,
+                    color: ZankoColors.primary,
                     onTap: () => _saveAsNote(content),
                   ),
 
@@ -1531,7 +1531,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                   _buildBubbleAction(
                     icon: CupertinoIcons.sparkles,
                     label: 'ڕوونکردنەوەی زیاتر',
-                    color: Colors.cyanAccent,
+                    color: ZankoColors.primary,
                     onTap: () {
                       _sendMessage('تکایە بە شێوازێکی قووڵتر و بە نموونەی زیاتر ئەم بابەتە شی بکەرەوە.');
                     },
@@ -1872,6 +1872,8 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                       color: Colors.white,
                                     ),
                                     decoration: InputDecoration(
+                                      filled: false,
+                                      fillColor: Colors.transparent,
                                       hintText: lang.translate('type_message'),
                                       hintStyle: const TextStyle(
                                         fontSize: 14,

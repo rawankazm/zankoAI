@@ -434,8 +434,10 @@ class PptxGeneratorService {
 
   /// Downloads image bytes from URL with fallback to generated valid PNG bytes
   static Future<List<int>> _fetchOrGenerateImageBytes(String url) async {
+    if (kIsWeb) return _getFallbackImageBytes();
+    HttpClient? client;
     try {
-      final client = HttpClient();
+      client = HttpClient();
       client.connectionTimeout = const Duration(seconds: 4);
       final uri = Uri.parse(url);
       final request = await client.getUrl(uri);
@@ -444,7 +446,10 @@ class PptxGeneratorService {
         final bytes = await response.fold<List<int>>([], (prev, element) => prev..addAll(element));
         if (bytes.isNotEmpty) return bytes;
       }
-    } catch (_) {}
+    } catch (_) {
+    } finally {
+      client?.close();
+    }
     return _getFallbackImageBytes();
   }
 

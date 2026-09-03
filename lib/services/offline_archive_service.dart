@@ -89,14 +89,18 @@ class OfflineArchiveService extends ChangeNotifier {
       fileSizeKB: (jsonEncode(payload).length / 1024).ceil().clamp(2, 500),
     );
 
-    await loadOfflineItems();
+    if (_cachedItems.isEmpty) {
+      await loadOfflineItems();
+    }
     _cachedItems.insert(0, newItem);
     await _persist();
     notifyListeners();
   }
 
   Future<void> deleteOfflineItem(String id) async {
-    await loadOfflineItems();
+    if (_cachedItems.isEmpty) {
+      await loadOfflineItems();
+    }
     _cachedItems.removeWhere((item) => item.id == id);
     await _persist();
     notifyListeners();

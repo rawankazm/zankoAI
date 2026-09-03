@@ -159,19 +159,33 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [const Color(0xFF0F172A), ZankoColors.darkCardSecondary, const Color(0xFF4338CA)],
+                  colors: isDark
+                      ? [
+                          const Color(0xFF0F172A),
+                          ZankoColors.darkCardSecondary,
+                          const Color(0xFF064E3B).withValues(alpha: 0.5),
+                        ]
+                      : [
+                          Colors.white,
+                          const Color(0xFFF0FDF4),
+                        ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(26),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF4338CA).withValues(alpha: 0.35),
+                    color: ZankoColors.primary.withValues(alpha: 0.18),
                     blurRadius: 20,
-                    offset: const Offset(0, 10),
+                    offset: const Offset(0, 8),
                   ),
                 ],
-                border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
+                border: Border.all(
+                  color: isDark
+                      ? ZankoColors.primary.withValues(alpha: 0.3)
+                      : ZankoColors.primary.withValues(alpha: 0.25),
+                  width: 1.5,
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,10 +195,10 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
+                          color: ZankoColors.primary.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.school_rounded, color: Colors.white, size: 28),
+                        child: Icon(Icons.school_rounded, color: ZankoColors.primary, size: 28),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -193,10 +207,10 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                           children: [
                             Text(
                               t('zankoline'),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w900,
-                                color: Colors.white,
+                                color: isDark ? Colors.white : ZankoColors.textPrimary,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -204,7 +218,7 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                               t('zankoline_subtitle'),
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.white.withValues(alpha: 0.8),
+                                color: isDark ? Colors.white70 : ZankoColors.textSecondary,
                               ),
                             ),
                           ],
@@ -216,10 +230,11 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                   ElevatedButton.icon(
                     onPressed: _openZankolinePortal,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: ZankoColors.darkCardSecondary,
+                      backgroundColor: ZankoColors.primary,
+                      foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       minimumSize: const Size(double.infinity, 44),
+                      elevation: 0,
                     ),
                     icon: const Icon(Icons.open_in_browser_rounded, size: 18),
                     label: Text(

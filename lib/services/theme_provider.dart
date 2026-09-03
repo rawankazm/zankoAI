@@ -32,16 +32,16 @@ class ThemePaletteInfo {
 
 class ThemeProvider extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.dark;
-  AppThemeType _activeTheme = AppThemeType.sunsetAmber;
+  AppThemeType _activeTheme = AppThemeType.emeraldForest;
 
   static const List<ThemePaletteInfo> availableThemes = [
     ThemePaletteInfo(
-      type: AppThemeType.sunsetAmber,
-      name: 'Sunset Amber (بنەڕەتی)',
-      englishName: 'Sunset Amber',
-      primaryColor: Color(0xFFF97316),
-      accentColor: Color(0xFFF43F5E),
-      icon: '🌅',
+      type: AppThemeType.emeraldForest,
+      name: 'Emerald Slate (#0F172A & #10B981)',
+      englishName: 'Emerald Slate Dual-Tone',
+      primaryColor: Color(0xFF10B981),
+      accentColor: Color(0xFF10B981),
+      icon: '💎',
     ),
     ThemePaletteInfo(
       type: AppThemeType.royalBlue,

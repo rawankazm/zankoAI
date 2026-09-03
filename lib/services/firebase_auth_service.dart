@@ -279,10 +279,12 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
     }
   }
 
-  /// Retrieves the public IP of the user client
+  /// Retrieves the public IP of the user client safely
   static Future<String?> getPublicIp() async {
+    if (kIsWeb) return null;
+    HttpClient? client;
     try {
-      final client = HttpClient()..connectionTimeout = const Duration(seconds: 4);
+      client = HttpClient()..connectionTimeout = const Duration(seconds: 4);
       final request = await client.getUrl(Uri.parse('https://api.ipify.org?format=json'));
       final response = await request.close();
       if (response.statusCode == 200) {
@@ -292,7 +294,8 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
       }
     } catch (_) {
       try {
-        final client = HttpClient()..connectionTimeout = const Duration(seconds: 4);
+        client?.close();
+        client = HttpClient()..connectionTimeout = const Duration(seconds: 4);
         final request = await client.getUrl(Uri.parse('https://icanhazip.com'));
         final response = await request.close();
         if (response.statusCode == 200) {
@@ -300,6 +303,8 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
           return body.trim();
         }
       } catch (_) {}
+    } finally {
+      client?.close();
     }
     return null;
   }
@@ -1342,8 +1347,10 @@ class FirebaseAuthService extends ChangeNotifier implements AuthService {
 
     if (uid != null && !uid.startsWith('guest_')) {
       try {
-        await _firestore.collection('users').doc(uid).delete().catchError((_) {});
-      } catch (_) {}
+        await _firestore.collection('users').doc(uid).delete();
+      } catch (e) {
+        if (kDebugMode) print('deleteAccount: Firestore user doc deletion failed for $uid — $e');
+      }
     }
 
     try {

@@ -117,14 +117,14 @@ class _QuizScreenState extends State<QuizScreen> {
     
     if (course.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('تکایە ناوی وانە بنووسە', style: TextStyle(fontFamily: 'Noto Sans Arabic'))),
+        SnackBar(content: Text('تکایە ناوی وانە بنووسە', style: TextStyle(fontFamily: 'DroidKufi'))),
       );
       return;
     }
 
     if (topic.isEmpty && _quizFileContent == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('تکایە بابەت یان فایلێک دیاری بکە', style: TextStyle(fontFamily: 'Noto Sans Arabic'))),
+        SnackBar(content: Text('تکایە بابەت یان فایلێک دیاری بکە', style: TextStyle(fontFamily: 'DroidKufi'))),
       );
       return;
     }
@@ -168,7 +168,7 @@ class _QuizScreenState extends State<QuizScreen> {
       });
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('هەڵەیەک ڕوویدا لە دروستکردنی کویز: $e', style: const TextStyle(fontFamily: 'Noto Sans Arabic'))),
+        SnackBar(content: Text('هەڵەیەک ڕوویدا لە دروستکردنی کویز: $e', style: const TextStyle(fontFamily: 'DroidKufi'))),
       );
     }
   }
@@ -233,7 +233,7 @@ class _QuizScreenState extends State<QuizScreen> {
       builder: (context) {
         final text = buffer.toString();
         return AlertDialog(
-          title: const Text('تاقیکردنەوەی ئامادەکراو بۆ چاپ', style: TextStyle(fontFamily: 'Noto Sans Arabic', fontSize: 16)),
+          title: const Text('تاقیکردنەوەی ئامادەکراو بۆ چاپ', style: TextStyle(fontFamily: 'DroidKufi', fontSize: 16)),
           content: SizedBox(
             width: double.maxFinite,
             child: SingleChildScrollView(
@@ -245,15 +245,15 @@ class _QuizScreenState extends State<QuizScreen> {
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: text));
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('کۆپیکرا بۆ Clipboard!', style: TextStyle(fontFamily: 'Noto Sans Arabic'))),
+                  SnackBar(content: Text('کۆپیکرا بۆ Clipboard!', style: TextStyle(fontFamily: 'DroidKufi'))),
                 );
                 Navigator.pop(context);
               },
-              child: const Text('کۆپیکردن', style: TextStyle(fontFamily: 'Noto Sans Arabic')),
+              child: const Text('کۆپیکردن', style: TextStyle(fontFamily: 'DroidKufi')),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('داخستن', style: TextStyle(fontFamily: 'Noto Sans Arabic')),
+              child: const Text('داخستن', style: TextStyle(fontFamily: 'DroidKufi')),
             ),
           ],
         );
@@ -303,12 +303,12 @@ class _QuizScreenState extends State<QuizScreen> {
                       children: [
                         Text(
                           Provider.of<LanguageProvider>(context, listen: false).translate('generate_quiz_title'),
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'Noto Sans Arabic'),
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'DroidKufi'),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           Provider.of<LanguageProvider>(context, listen: false).translate('generate_quiz_desc'),
-                          style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontFamily: 'Noto Sans Arabic'),
+                          style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontFamily: 'DroidKufi'),
                         ),
                         const SizedBox(height: 20),
                         // Course Selection Dropdown
@@ -435,7 +435,7 @@ class _QuizScreenState extends State<QuizScreen> {
                   Provider.of<LanguageProvider>(context, listen: false).translate('previous_quizzes'),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'Noto Sans Arabic',
+                    fontFamily: 'DroidKufi',
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -443,7 +443,7 @@ class _QuizScreenState extends State<QuizScreen> {
                   const Center(
                     child: Padding(
                       padding: EdgeInsets.all(16.0),
-                      child: Text('هیچ کویزێکی پێشوو نییە', style: TextStyle(fontFamily: 'Noto Sans Arabic')),
+                      child: Text('هیچ کویزێکی پێشوو نییە', style: TextStyle(fontFamily: 'DroidKufi')),
                     ),
                   )
                 else
@@ -455,8 +455,8 @@ class _QuizScreenState extends State<QuizScreen> {
                           backgroundColor: Colors.blueAccent,
                           child: Icon(Icons.assignment, color: Colors.white),
                         ),
-                        title: Text(quiz.title, style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Noto Sans Arabic', fontSize: 13)),
-                        subtitle: Text(quiz.courseName, style: const TextStyle(fontFamily: 'Noto Sans Arabic', fontSize: 11)),
+                        title: Text(quiz.title, style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'DroidKufi', fontSize: 13)),
+                        subtitle: Text(quiz.courseName, style: const TextStyle(fontFamily: 'DroidKufi', fontSize: 11)),
                         trailing: const Icon(Icons.play_arrow, color: Colors.green),
                         onTap: () {
                           setState(() {
@@ -487,7 +487,7 @@ class _QuizScreenState extends State<QuizScreen> {
                         const SizedBox(height: 16),
                         Text(
                           Provider.of<LanguageProvider>(context, listen: false).translate('generating_quiz_wait'),
-                          style: const TextStyle(fontFamily: 'Noto Sans Arabic'),
+                          style: const TextStyle(fontFamily: 'DroidKufi'),
                         ),
                       ],
                     ),
@@ -502,7 +502,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     Expanded(
                       child: Text(
                         _activeQuiz!.title,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'Noto Sans Arabic'),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'DroidKufi'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -510,7 +510,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     const SizedBox(width: 8),
                     Text(
                       '${Provider.of<LanguageProvider>(context, listen: false).translate('question_progress')} ${_currentQuestionIndex + 1} / ${_activeQuiz!.questions.length}',
-                      style: const TextStyle(fontSize: 12, fontFamily: 'Noto Sans Arabic'),
+                      style: const TextStyle(fontSize: 12, fontFamily: 'DroidKufi'),
                     ),
                   ],
                 ),
@@ -530,7 +530,7 @@ class _QuizScreenState extends State<QuizScreen> {
                       children: [
                         Text(
                           _activeQuiz!.questions[_currentQuestionIndex].questionText,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Noto Sans Arabic'),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'DroidKufi'),
                         ),
                         const SizedBox(height: 20),
                         
@@ -596,7 +596,7 @@ class _QuizScreenState extends State<QuizScreen> {
                         const SizedBox(height: 16),
                         Text(
                           Provider.of<LanguageProvider>(context, listen: false).translate('quiz_completed'),
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Noto Sans Arabic'),
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'DroidKufi'),
                         ),
                         const SizedBox(height: 8),
                         Builder(
@@ -632,7 +632,7 @@ class _QuizScreenState extends State<QuizScreen> {
                               ? Provider.of<LanguageProvider>(context, listen: false).translate('score_perfect')
                               : Provider.of<LanguageProvider>(context, listen: false).translate('score_good'),
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontFamily: 'Noto Sans Arabic', color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
+                          style: TextStyle(fontFamily: 'DroidKufi', color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
                         ),
                         const SizedBox(height: 24),
                         Row(
@@ -696,7 +696,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     _userAnswers[questionIndex] = 'ڕاستە';
                   });
                 },
-                title: const Text('ڕاستە / True', style: TextStyle(fontFamily: 'Noto Sans Arabic', fontWeight: FontWeight.w600)),
+                title: const Text('ڕاستە / True', style: TextStyle(fontFamily: 'DroidKufi', fontWeight: FontWeight.w600)),
                 leading: Icon(
                   _userAnswers[questionIndex] == 'ڕاستە' ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
                   color: _userAnswers[questionIndex] == 'ڕاستە' ? Colors.green : Colors.grey,
@@ -720,7 +720,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     _userAnswers[questionIndex] = 'هەڵەیە';
                   });
                 },
-                title: const Text('هەڵەیە / False', style: TextStyle(fontFamily: 'Noto Sans Arabic', fontWeight: FontWeight.w600)),
+                title: const Text('هەڵەیە / False', style: TextStyle(fontFamily: 'DroidKufi', fontWeight: FontWeight.w600)),
                 leading: Icon(
                   _userAnswers[questionIndex] == 'هەڵەیە' ? Icons.cancel_rounded : Icons.radio_button_unchecked_rounded,
                   color: _userAnswers[questionIndex] == 'هەڵەیە' ? Colors.red : Colors.grey,
@@ -753,7 +753,7 @@ class _QuizScreenState extends State<QuizScreen> {
                       _userAnswers[questionIndex] = opt;
                     });
                   },
-                  title: Text(opt, style: TextStyle(fontFamily: 'Noto Sans Arabic', fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+                  title: Text(opt, style: TextStyle(fontFamily: 'DroidKufi', fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
                   leading: Icon(
                     isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
                     color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey,

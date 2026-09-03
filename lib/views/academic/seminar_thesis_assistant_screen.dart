@@ -882,18 +882,18 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+                  color: ZankoColors.primary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.4)),
+                  border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.4)),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Text('💡', style: TextStyle(fontSize: 16)),
-                    SizedBox(width: 8),
+                    const Text('💡', style: TextStyle(fontSize: 16)),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'داگرتنی ڕاستەوخۆ بە فۆرماتی Word و PowerPoint ئامادەکراو بۆ پێشکەشکردن!',
-                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFFB8860B)),
+                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: ZankoColors.primary),
                       ),
                     ),
                   ],
@@ -1421,16 +1421,20 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF1E1500), Color(0xFF2C2000)],
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF0F172A),
+              ZankoColors.darkCardSecondary,
+              const Color(0xFF064E3B).withValues(alpha: 0.4),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.45)),
+          border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.45)),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+              color: ZankoColors.primary.withValues(alpha: 0.15),
               blurRadius: 14,
               offset: const Offset(0, 4),
             ),
@@ -1441,22 +1445,22 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+                color: ZankoColors.primary.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
-              child: const Text('👑', style: TextStyle(fontSize: 20)),
+              child: Text('👑', style: TextStyle(fontSize: 20, color: ZankoColors.primary)),
             ),
             const SizedBox(width: 10),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'داگرتنی بێسنووری Word و PowerPoint (VIP)',
-                    style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold, fontSize: 13),
+                    style: TextStyle(color: ZankoColors.primary, fontWeight: FontWeight.bold, fontSize: 13),
                   ),
-                  SizedBox(height: 2),
-                  Text(
+                  const SizedBox(height: 2),
+                  const Text(
                     'بە ٥,٠٠٠ د.ع هەموو سێمینار و ڕاپۆرتەکانت لەبری مەکتەبە لێرە دابگرە!',
                     style: TextStyle(color: Colors.white70, fontSize: 10.5),
                   ),
@@ -1466,12 +1470,12 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFD700),
+                color: ZankoColors.primary,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Text(
                 'VIP ⚡',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Color(0xFF2C2000)),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.white),
               ),
             ),
           ],
@@ -2893,14 +2897,14 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withValues(alpha: 0.08),
+                  color: ZankoColors.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                  border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(CupertinoIcons.lightbulb_fill, color: Colors.amber, size: 20),
+                    Icon(CupertinoIcons.lightbulb_fill, color: ZankoColors.primary, size: 20),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -2910,7 +2914,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                             _isEnglish
                                 ? '💡 Presenter Advice & Delivery Tips:'
                                 : (_isArabic ? '💡 نصائح وإرشادات للمتحدث أثناء العرض:' : '💡 ئامۆژگاری و ڕێنمایی بۆ پێشکەشکار:'),
-                            style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12.5, fontWeight: FontWeight.bold, color: Colors.amber[800]),
+                            style: TextStyle(fontFamily: _currentFontFamily, fontSize: 12.5, fontWeight: FontWeight.bold, color: ZankoColors.primary),
                           ),
                           const SizedBox(height: 5),
                           Text(

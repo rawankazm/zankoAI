@@ -42,18 +42,33 @@ service cloud.firestore {
         isAdmin() || (
           request.auth.uid == userId &&
           (!('role' in request.resource.data) || request.resource.data.role != 'admin') &&
-          (!('isVip' in request.resource.data) || request.resource.data.isVip == false)
+          (!('isVip' in request.resource.data) || request.resource.data.isVip == false) &&
+          (!('vipExpiresAt' in request.resource.data)) &&
+          (!('vipStatus' in request.resource.data) || request.resource.data.vipStatus != 'active') &&
+          (!('isBlocked' in request.resource.data) || request.resource.data.isBlocked == false) &&
+          (!('status' in request.resource.data) || request.resource.data.status != 'blocked')
         )
       );
 
       allow update: if isAuth() && isNotBlocked() && (
         isAdmin() || (
           request.auth.uid == userId &&
-          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'isVip', 'vipStatus'])
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+            'role', 
+            'isVip', 
+            'vipStatus', 
+            'vipExpiresAt', 
+            'vipPlan', 
+            'vipApprovedAt', 
+            'vipApprovedBy', 
+            'isBlocked', 
+            'status', 
+            'ipWhitelist'
+          ])
         )
       );
 
-      allow delete: if isAdmin();
+      allow delete: if isAuth() && (request.auth.uid == userId || isAdmin());
 
       match /notifications/{notifId} {
         allow read: if isAuth() && isNotBlocked() && (request.auth.uid == userId || isAdmin());
@@ -61,7 +76,7 @@ service cloud.firestore {
       }
     }
 
-    // 2. VIP Requests
+    // 2. VIP Requests (Students can create or renew their pending request)
     match /vip_requests/{id} {
       allow read: if isAuth() && isNotBlocked() && (
         request.auth.uid == id ||
@@ -72,10 +87,16 @@ service cloud.firestore {
         request.auth.uid == id ||
         request.resource.data.userId == request.auth.uid
       );
-      allow update, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        isAuth() && isNotBlocked() &&
+        (request.auth.uid == id || resource.data.userId == request.auth.uid) &&
+        request.resource.data.status == 'pending' &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['reviewedAt', 'reviewedBy', 'expiresAt', 'vipExpiresAt'])
+      );
+      allow delete: if isAdmin();
     }
 
-    // 3. Config (Version config is public; sensitive configs are admin-writable & auth-readable)
+    // 3. Config (Version and payment info are public; app_config with sensitive AI keys requires authenticated active user)
     match /config/version_config {
       allow read: if true;
       allow write: if isAdmin();
@@ -99,7 +120,7 @@ service cloud.firestore {
 
     // 5. Notifications & Broadcasts (Only admin can broadcast to all users)
     match /notifications/{id} {
-      allow read: if true;
+      allow read: if isAuth();
       allow create, write: if isAdmin();
     }
 
@@ -125,25 +146,29 @@ service cloud.firestore {
 
     // 6. Security Alerts (Device limit & IP tracking alerts)
     match /security_alerts/{id} {
+      allow create: if (isAuth() && isNotBlocked()) || (
+        request.resource.data.type == 'ip_limit_appeal' &&
+        request.resource.data.email is string
+      );
+      allow read, update, delete: if isAdmin();
+    }
+
+    // 7. User Feedback & Bug Reports
+    match /user_feedback/{id} {
       allow create: if isAuth() && isNotBlocked();
       allow read, update, delete: if isAdmin();
     }
 
-    // 7. User Feedback
-    match /user_feedback/{id} {
-      allow create: if isAuth() || true;
-      allow read, write: if isAdmin();
-    }
-
     match /feedback/{id} {
-      allow create: if isAuth() || true;
-      allow read, write: if isAdmin();
+      allow create: if isAuth() && isNotBlocked();
+      allow read, update, delete: if isAdmin();
     }
 
     // 8. Public Leaderboard / Ranks
     match /leaderboard/{userId} {
       allow read: if true;
-      allow write: if isAuth() && isNotBlocked() && (request.auth.uid == userId || isAdmin());
+      allow write: if isAuth() && isNotBlocked() && (request.auth.uid == userId || isAdmin()) &&
+        (!('points' in request.resource.data) || (request.resource.data.points is int && request.resource.data.points >= 0 && request.resource.data.points <= 200000));
     }
 
     // 9. ZankoLine Departments & Universities
@@ -205,19 +230,26 @@ service cloud.firestore {
     }
 
     match /enrollments/{id} {
-      allow read: if isAuth() && isNotBlocked() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow read: if isAuth() && isNotBlocked() && (
+        resource.data.userId == request.auth.uid || 
+        (resource.data.teacherId != null && resource.data.teacherId == request.auth.uid) ||
+        isAdmin()
+      );
       allow create: if isAuth() && isNotBlocked() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAuth() && isNotBlocked() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow update, delete: if isAuth() && isNotBlocked() && (
+        resource.data.userId == request.auth.uid || 
+        (resource.data.teacherId != null && resource.data.teacherId == request.auth.uid) ||
+        isAdmin()
+      );
     }
 
-    // 13. User Feedback & Bug Reports
-    match /user_feedback/{id} {
-      allow create: if isAuth() && isNotBlocked();
-      allow read, update, delete: if isAdmin();
+    // 13. Reports & Analytics (Admin Only)
+    match /reports/{id} {
+      allow read, write: if isAdmin();
     }
 
-    // 14. App Configuration (App version, AI dynamic keys, payment numbers)
-    match /config/{id} {
+    // 14. Advertisements & Banners (Publicly readable, admin writable)
+    match /ads/{id} {
       allow read: if true;
       allow write: if isAdmin();
     }

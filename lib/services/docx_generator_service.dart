@@ -134,9 +134,11 @@ class DocxGeneratorService {
 
   /// Fetches image bytes safely from a URL with timeout
   static Future<Uint8List?> fetchImageBytes(String url) async {
+    if (kIsWeb) return null;
+    HttpClient? client;
     try {
       final uri = Uri.parse(url);
-      final client = HttpClient();
+      client = HttpClient();
       client.connectionTimeout = const Duration(seconds: 5);
       final request = await client.getUrl(uri);
       final response = await request.close();
@@ -146,7 +148,10 @@ class DocxGeneratorService {
           return Uint8List.fromList(bytes);
         }
       }
-    } catch (_) {}
+    } catch (_) {
+    } finally {
+      client?.close();
+    }
     return null;
   }
 

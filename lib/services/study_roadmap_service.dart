@@ -126,25 +126,34 @@ class StudyRoadmapService extends ChangeNotifier {
   }
 
   Future<void> saveRoadmap(StudyRoadmapModel roadmap) async {
-    await loadRoadmaps();
+    if (_roadmaps.isEmpty) {
+      await loadRoadmaps();
+    }
     _roadmaps.insert(0, roadmap);
     await _persist();
     notifyListeners();
   }
 
   Future<void> toggleTaskCompleted(String roadmapId, String taskId) async {
-    await loadRoadmaps();
+    if (_roadmaps.isEmpty) {
+      await loadRoadmaps();
+    }
     final roadmapIdx = _roadmaps.indexWhere((r) => r.id == roadmapId);
     if (roadmapIdx != -1) {
-      final task = _roadmaps[roadmapIdx].tasks.firstWhere((t) => t.id == taskId);
-      task.isCompleted = !task.isCompleted;
-      await _persist();
-      notifyListeners();
+      final taskIdx = _roadmaps[roadmapIdx].tasks.indexWhere((t) => t.id == taskId);
+      if (taskIdx != -1) {
+        final task = _roadmaps[roadmapIdx].tasks[taskIdx];
+        task.isCompleted = !task.isCompleted;
+        await _persist();
+        notifyListeners();
+      }
     }
   }
 
   Future<void> deleteRoadmap(String roadmapId) async {
-    await loadRoadmaps();
+    if (_roadmaps.isEmpty) {
+      await loadRoadmaps();
+    }
     _roadmaps.removeWhere((r) => r.id == roadmapId);
     await _persist();
     notifyListeners();

@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import '../theme.dart';
 
 /// A gorgeous animated VIP badge widget with shimmer, glow, and particle effects.
 /// Place it anywhere on top of an avatar or next to a username.
@@ -151,13 +150,13 @@ class _VipBadgeState extends State<VipBadge>
                     borderRadius: BorderRadius.circular(100),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFFFD700)
+                        color: const Color(0xFF10B981)
                             .withValues(alpha: 0.55 * _glowAnim.value),
                         blurRadius: 16,
                         spreadRadius: 2,
                       ),
                       BoxShadow(
-                        color: const Color(0xFFFFA500)
+                        color: const Color(0xFF059669)
                             .withValues(alpha: 0.3 * _glowAnim.value),
                         blurRadius: 28,
                         spreadRadius: 4,
@@ -177,11 +176,11 @@ class _VipBadgeState extends State<VipBadge>
                     borderRadius: BorderRadius.circular(100),
                     gradient: const LinearGradient(
                       colors: [
-                        Color(0xFFB8860B), // dark golden rod
-                        Color(0xFFFFD700), // gold
-                        Color(0xFFFFF176), // pale gold highlight
-                        Color(0xFFFFD700), // gold
-                        Color(0xFFDAA520), // goldenrod
+                        Color(0xFF047857),
+                        Color(0xFF10B981),
+                        Color(0xFF34D399),
+                        Color(0xFF10B981),
+                        Color(0xFF059669),
                       ],
                       stops: [0.0, 0.25, 0.5, 0.75, 1.0],
                       begin: Alignment.topLeft,
@@ -271,11 +270,11 @@ class _VipBadgeState extends State<VipBadge>
               width: size,
               height: size,
               decoration: const BoxDecoration(
-                color: Color(0xFFFFF9C4),
+                color: Color(0xFFA7F3D0),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Color(0xFFFFD700),
+                    color: Color(0xFF10B981),
                     blurRadius: 4,
                     spreadRadius: 1,
                   ),
@@ -372,29 +371,14 @@ class _VipMembershipCardState extends State<VipMembershipCard>
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(24),
-              boxShadow: widget.isVip
-                  ? [
-                      BoxShadow(
-                        color: const Color(0xFFFFD700).withValues(alpha: 0.35),
-                        blurRadius: 24,
-                        spreadRadius: -2,
-                        offset: const Offset(0, 8),
-                      ),
-                      BoxShadow(
-                        color: const Color(0xFFFFA500).withValues(alpha: 0.2),
-                        blurRadius: 40,
-                        spreadRadius: 0,
-                        offset: const Offset(0, 16),
-                      ),
-                    ]
-                  : [
-                      BoxShadow(
-                        color: ZankoColors.primary.withValues(alpha: 0.25),
-                        blurRadius: 20,
-                        spreadRadius: -2,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.25),
+                  blurRadius: 24,
+                  spreadRadius: -2,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(24),
@@ -403,28 +387,18 @@ class _VipMembershipCardState extends State<VipMembershipCard>
                   // ── Background gradient ──
                   Container(
                     padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      gradient: widget.isVip
-                          ? const LinearGradient(
-                              colors: [
-                                Color(0xFF1A1200),
-                                Color(0xFF2C1F00),
-                                Color(0xFF3D2B00),
-                                Color(0xFF1A1200),
-                              ],
-                              stops: [0.0, 0.35, 0.65, 1.0],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            )
-                          : const LinearGradient(
-                              colors: [
-                                Color(0xFF0F0C29),
-                                Color(0xFF1A1050),
-                                Color(0xFF2D1B7A),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Color(0xFF0F172A),
+                          Color(0xFF1E293B),
+                          Color(0xFF064E3B),
+                          Color(0xFF0F172A),
+                        ],
+                        stops: [0.0, 0.35, 0.65, 1.0],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                     ),
                   ),
 
@@ -438,17 +412,10 @@ class _VipMembershipCardState extends State<VipMembershipCard>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
-                          colors: widget.isVip
-                              ? [
-                                  const Color(0xFFFFD700)
-                                      .withValues(alpha: 0.25),
-                                  Colors.transparent,
-                                ]
-                              : [
-                                  const Color(0xFF818CF8)
-                                      .withValues(alpha: 0.3),
-                                  Colors.transparent,
-                                ],
+                          colors: [
+                            const Color(0xFF10B981).withValues(alpha: 0.25),
+                            Colors.transparent,
+                          ],
                         ),
                       ),
                     ),
@@ -462,17 +429,10 @@ class _VipMembershipCardState extends State<VipMembershipCard>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
-                          colors: widget.isVip
-                              ? [
-                                  const Color(0xFFFFA500)
-                                      .withValues(alpha: 0.2),
-                                  Colors.transparent,
-                                ]
-                              : [
-                                  ZankoColors.accent
-                                      .withValues(alpha: 0.2),
-                                  Colors.transparent,
-                                ],
+                          colors: [
+                            const Color(0xFF10B981).withValues(alpha: 0.2),
+                            Colors.transparent,
+                          ],
                         ),
                       ),
                     ),
@@ -485,16 +445,14 @@ class _VipMembershipCardState extends State<VipMembershipCard>
                     ),
                   ),
 
-                  // ── Gold border ──
+                  // ── Border ──
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: widget.isVip
-                              ? const Color(0xFFFFD700).withValues(alpha: 0.45)
-                              : Colors.white.withValues(alpha: 0.12),
-                          width: widget.isVip ? 1.5 : 1,
+                          color: const Color(0xFF10B981).withValues(alpha: 0.45),
+                          width: 1.5,
                         ),
                       ),
                     ),
@@ -534,7 +492,7 @@ class _VipMembershipCardState extends State<VipMembershipCard>
                       const Text(
                         'VIP MEMBER',
                         style: TextStyle(
-                          color: Color(0xFFFFD700),
+                          color: Color(0xFF10B981),
                           fontSize: 18,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 1.5,
@@ -600,7 +558,7 @@ class _VipMembershipCardState extends State<VipMembershipCard>
         ),
 
         const SizedBox(height: 16),
-        const Divider(color: Color(0x33FFD700), height: 1),
+        const Divider(color: Color(0x3310B981), height: 1),
         const SizedBox(height: 14),
 
         // Feature pills
@@ -627,14 +585,14 @@ class _VipMembershipCardState extends State<VipMembershipCard>
           height: 54,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+              colors: [Color(0xFF10B981), Color(0xFF059669)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFFFD700).withValues(alpha: 0.4),
+                color: const Color(0xFF10B981).withValues(alpha: 0.4),
                 blurRadius: 14,
                 spreadRadius: 2,
               ),
@@ -677,7 +635,7 @@ class _VipMembershipCardState extends State<VipMembershipCard>
               const Text(
                 '٥,٠٠٠ دیناری عێراقی / مانگانە',
                 style: TextStyle(
-                  color: Color(0xFFFFD700),
+                  color: Color(0xFF10B981),
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                 ),
@@ -690,14 +648,14 @@ class _VipMembershipCardState extends State<VipMembershipCard>
         Container(
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+              colors: [Color(0xFF10B981), Color(0xFF059669)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(14),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFFFD700).withValues(alpha: 0.4),
+                color: const Color(0xFF10B981).withValues(alpha: 0.4),
                 blurRadius: 10,
                 spreadRadius: 1,
                 offset: const Offset(0, 4),
@@ -715,7 +673,7 @@ class _VipMembershipCardState extends State<VipMembershipCard>
                   'چالاک\nبکە',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Color(0xFF3D2000),
+                    color: Colors.white,
                     fontSize: 11,
                     fontWeight: FontWeight.w900,
                     height: 1.3,
@@ -733,16 +691,16 @@ class _VipMembershipCardState extends State<VipMembershipCard>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFD700).withValues(alpha: 0.12),
+        color: const Color(0xFF10B981).withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: const Color(0xFFFFD700).withValues(alpha: 0.3),
+          color: const Color(0xFF10B981).withValues(alpha: 0.3),
         ),
       ),
       child: Text(
         label,
         style: const TextStyle(
-          color: Color(0xFFFFD700),
+          color: Color(0xFF10B981),
           fontSize: 11,
           fontWeight: FontWeight.w600,
         ),

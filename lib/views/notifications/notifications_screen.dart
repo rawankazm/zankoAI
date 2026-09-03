@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/language_provider.dart';
 import '../../services/auth_service.dart';
+import '../../services/notification_service.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
 
@@ -110,8 +111,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
         if (!isMatch) continue;
 
-        final title = data['title'] ?? data['header'] ?? data['subject'] ?? '✉️ پەیام لە ئەدمینەوە';
-        final body = data['message'] ?? data['body'] ?? data['content'] ?? data['text'] ?? '';
+        final title = fixNotificationEncoding(data['title'] ?? data['header'] ?? data['subject'] ?? '✉️ پەیام لە ئەدمینەوە');
+        final body = fixNotificationEncoding(data['message'] ?? data['body'] ?? data['content'] ?? data['text'] ?? '');
         final time = _parseTimestamp(data['createdAt'] ?? data['timestamp'] ?? data['date']);
         final isRead = data['isRead'] == true || _readDocIds.contains(doc.id);
 
@@ -159,8 +160,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
         if (!isMatch) continue;
 
-        final title = data['title'] ?? data['header'] ?? data['subject'] ?? '🔔 ئاگادارکردنەوە';
-        final body = data['body'] ?? data['message'] ?? data['content'] ?? data['text'] ?? '';
+        final title = fixNotificationEncoding(data['title'] ?? data['header'] ?? data['subject'] ?? '🔔 ئاگادارکردنەوە');
+        final body = fixNotificationEncoding(data['body'] ?? data['message'] ?? data['content'] ?? data['text'] ?? '');
         final time = _parseTimestamp(data['createdAt'] ?? data['timestamp'] ?? data['date']);
         final rawCat = (data['category'] ?? data['type'] ?? 'Announcement').toString().toLowerCase();
 

@@ -19,6 +19,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   int _selectedTabIndex = 0; // 0 = All Departments, 1 = By Department
   String? _selectedDepartment;
   List<String> _departmentList = [];
+  Future<List<StudentRankModel>>? _leaderboardFuture;
 
   @override
   void initState() {
@@ -28,16 +29,33 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     });
   }
 
+  void _refreshLeaderboard({int? tab, String? dept}) {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final scoreService = Provider.of<ScoreService>(context, listen: false);
+    final targetTab = tab ?? _selectedTabIndex;
+    final targetDept = dept ?? _selectedDepartment;
+
+    setState(() {
+      _selectedTabIndex = targetTab;
+      if (dept != null) _selectedDepartment = dept;
+      _leaderboardFuture = LeaderboardService.instance.getLeaderboard(
+        currentUser: authService.currentUser,
+        scoreService: scoreService,
+        selectedDepartment: targetTab == 1 ? targetDept : null,
+      );
+    });
+  }
+
   Future<void> _loadDepartments() async {
     final authService = Provider.of<AuthService>(context, listen: false);
     final currentUser = authService.currentUser;
     final depts = await LeaderboardService.instance.getRegisteredDepartments(currentUser: currentUser);
 
     if (mounted) {
-      setState(() {
-        _departmentList = depts;
-        _selectedDepartment = currentUser?.departmentName ?? (depts.isNotEmpty ? depts.first : 'ئەندازیاری سیستەمی زانیاری');
-      });
+      final initialDept = currentUser?.departmentName ?? (depts.isNotEmpty ? depts.first : 'ئەندازیاری سیستەمی زانیاری');
+      _departmentList = depts;
+      _selectedDepartment = initialDept;
+      _refreshLeaderboard(dept: initialDept);
     }
   }
 
@@ -45,11 +63,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final langProvider = Provider.of<LanguageProvider>(context);
-    final authService = Provider.of<AuthService>(context);
     final scoreService = Provider.of<ScoreService>(context);
     final leaderboardService = LeaderboardService.instance;
 
-    final currentUser = authService.currentUser;
     final badges = leaderboardService.getBadges(scoreService);
 
     return Scaffold(
@@ -69,11 +85,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       ),
       body: SafeArea(
         child: FutureBuilder<List<StudentRankModel>>(
-          future: leaderboardService.getLeaderboard(
-            currentUser: currentUser,
-            scoreService: scoreService,
-            selectedDepartment: _selectedTabIndex == 1 ? _selectedDepartment : null,
-          ),
+          future: _leaderboardFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CupertinoActivityIndicator());
@@ -261,7 +273,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     children: [
                       Expanded(
                         child: GestureDetector(
-                          onTap: () => setState(() => _selectedTabIndex = 0),
+                          onTap: () {
+                            if (_selectedTabIndex != 0) {
+                              _refreshLeaderboard(tab: 0);
+                            }
+                          },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.symmetric(vertical: 10),
@@ -286,7 +302,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       ),
                       Expanded(
                         child: GestureDetector(
-                          onTap: () => setState(() => _selectedTabIndex = 1),
+                          onTap: () {
+                            if (_selectedTabIndex != 1) {
+                              _refreshLeaderboard(tab: 1);
+                            }
+                          },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.symmetric(vertical: 10),
@@ -327,7 +347,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                         final dept = _departmentList[index];
                         final isSelected = dept == _selectedDepartment;
                         return GestureDetector(
-                          onTap: () => setState(() => _selectedDepartment = dept),
+                          onTap: () {
+                            if (_selectedDepartment != dept) {
+                              _refreshLeaderboard(dept: dept);
+                            }
+                          },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),

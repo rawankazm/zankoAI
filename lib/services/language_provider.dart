@@ -32,14 +32,13 @@ class LanguageProvider extends ChangeNotifier {
   }
 
   /// Returns the appropriate font family for the current language.
-  /// Kurdish (Sorani & Badini) uses DroidKufi, Arabic uses Noto Sans Arabic, English uses default (Inter via GoogleFonts).
+  /// Kurdish (Sorani & Badini) and Arabic use DroidKufi (فۆنتی کوفی), English uses default Plus Jakarta Sans.
   String? get fontFamily {
     switch (_currentLanguage) {
       case AppLanguage.kurdish:
       case AppLanguage.kurdishBadini:
-        return 'DroidKufi';
       case AppLanguage.arabic:
-        return 'Noto Sans Arabic';
+        return 'DroidKufi';
       case AppLanguage.english:
         return null;
     }

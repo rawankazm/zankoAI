@@ -1180,7 +1180,7 @@ class _AnimatedNavTile extends StatelessWidget {
               AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 200),
                 style: TextStyle(
-                  fontFamily: 'NotoSansArabic',
+                  fontFamily: 'DroidKufi',
                   fontSize: isSelected ? 10.5 : 10.0,
                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
                   color: isSelected

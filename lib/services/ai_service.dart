@@ -15,6 +15,7 @@ abstract class AiService extends ChangeNotifier {
   String? get apiKey;
   set apiKey(String? key);
   bool get hasRealApiKey;
+  int get freeMessageLimit;
 
   Future<bool> checkAndIncrementDailyLimit({bool isVip = false, bool isPendingVip = false});
   Future<String> askTeacher(String userPrompt, List<Map<String, String>> chatHistory, {bool isVip = false, bool isPendingVip = false});
@@ -111,6 +112,10 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   String? _apiKey;
   List<String> _keyPool = [];
   final Map<String, DateTime> _keyCooldowns = {};
+  int _freeMessageLimit = 10;
+
+  @override
+  int get freeMessageLimit => _freeMessageLimit;
 
   void _markKeyCooldown(String key) {
     _keyCooldowns[key] = DateTime.now().add(const Duration(seconds: 45));
@@ -153,6 +158,11 @@ class ZankoAiService extends ChangeNotifier implements AiService {
             final key = doc.data()!['gemini_api_key'] ?? doc.data()!['apiKey'];
             final customModel = doc.data()!['gemini_model'] ?? doc.data()!['model'];
             final rawKeys = doc.data()!['gemini_api_keys'] ?? doc.data()!['api_keys'];
+            final rawLimit = doc.data()!['freeMessageLimit'] ?? doc.data()!['free_message_limit'];
+
+            if (rawLimit is num && rawLimit > 0) {
+              _freeMessageLimit = rawLimit.toInt();
+            }
             
             if (rawKeys is List) {
               _keyPool = rawKeys.map((e) => e.toString().trim()).where((s) => s.isNotEmpty).toList();
@@ -219,7 +229,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
         count = 0;
       }
 
-      if (count >= 10) {
+      if (count >= _freeMessageLimit) {
         return false;
       }
 

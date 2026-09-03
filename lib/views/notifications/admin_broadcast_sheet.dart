@@ -35,7 +35,7 @@ class _AdminBroadcastSheetState extends State<AdminBroadcastSheet> {
   Future<void> _loadSavedSettings() async {
     final prefs = await SharedPreferences.getInstance();
     final url = prefs.getString('cf_worker_url') ?? 'https://zankoai.rawankurdi181.workers.dev';
-    final secret = prefs.getString('cf_worker_secret') ?? 'zanko_secret_2026';
+    final secret = prefs.getString('cf_worker_secret') ?? '';
     if (mounted) {
       setState(() {
         _workerUrlController.text = url;
@@ -95,16 +95,23 @@ class _AdminBroadcastSheetState extends State<AdminBroadcastSheet> {
         final topic = _selectedTarget == 'vip' ? 'vip_students' : 'all_students';
 
         final client = HttpClient();
-        final req = await client.postUrl(targetUri);
-        req.headers.set('Content-Type', 'application/json; charset=UTF-8');
-        req.headers.set('X-Secret-Key', _secretController.text.trim());
-        req.write(jsonEncode({
-          'title': title,
-          'body': body,
-          'topic': topic,
-        }));
-        await req.close();
-        client.close();
+        try {
+          final req = await client.postUrl(targetUri);
+          req.headers.set('Content-Type', 'application/json; charset=UTF-8');
+          req.headers.set('X-Secret-Key', _secretController.text.trim());
+          req.add(utf8.encode(jsonEncode({
+            'title': title,
+            'body': body,
+            'topic': topic,
+          })));
+          final resp = await req.close();
+          final respBody = await resp.transform(utf8.decoder).join();
+          if (resp.statusCode != 200) {
+            throw Exception('سێرڤەر وەڵامی دایەوە بە (${resp.statusCode}): $respBody');
+          }
+        } finally {
+          client.close();
+        }
       }
 
       HapticFeedback.heavyImpact();

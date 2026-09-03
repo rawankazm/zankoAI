@@ -8,9 +8,13 @@ service firebase.storage {
     }
 
     function isAdmin() {
-      return isAuth() && request.auth.token.email != null && (
-        request.auth.token.email.lower() == 'rawankurdi181@gmail.com' ||
-        request.auth.token.email.lower() == 'rawankazm@gmail.com'
+      return isAuth() && (
+        (request.auth.token.email != null && (
+          request.auth.token.email.lower() == 'rawankurdi181@gmail.com' ||
+          request.auth.token.email.lower() == 'rawankazm@gmail.com'
+        )) ||
+        request.auth.token.role == 'admin' ||
+        request.auth.token.admin == true
       );
     }
 
@@ -22,12 +26,13 @@ service firebase.storage {
         request.resource.contentType.matches('image/.*');
     }
 
-    // VIP Payment Proof Receipts: Only owner and admin can view; max 10MB
+    // VIP Payment Proof Receipts: Only owner and admin can view; max 10MB (images & PDFs only)
     match /vip_receipts/{userId}/{fileName} {
       allow read: if isAuth() && (request.auth.uid == userId || isAdmin());
       allow write: if isAuth() && request.auth.uid == userId &&
-        request.resource.size < 10 * 1024 * 1024;
-      allow delete: if isAdmin();
+        request.resource.size < 10 * 1024 * 1024 &&
+        (request.resource.contentType.matches('image/.*') || request.resource.contentType == 'application/pdf');
+      allow delete: if isAuth() && (request.auth.uid == userId || isAdmin());
     }
 
     // Academic Lecture Notes & PDFs: Publicly readable, only admin can upload/delete

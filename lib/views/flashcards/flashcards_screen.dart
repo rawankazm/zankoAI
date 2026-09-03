@@ -43,7 +43,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
         SnackBar(
           content: Text(
             Provider.of<LanguageProvider>(context, listen: false).translate('snackbar_enter_topic'),
-            style: const TextStyle(fontFamily: 'Noto Sans Arabic'),
+            style: const TextStyle(fontFamily: 'DroidKufi'),
           ),
           backgroundColor: Colors.orange,
         ),
@@ -426,10 +426,10 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                         title: 'پێشەوە • پرسیار',
                         badgeIcon: CupertinoIcons.question_circle_fill,
                         gradientColors: isDark
-                            ? [ZankoColors.darkCardSecondary, const Color(0xFF312E81)]
-                            : [const Color(0xFFEEF2FF), const Color(0xFFE0E7FF)],
-                        borderColor: const Color(0xFF6366F1),
-                        textColor: isDark ? Colors.white : ZankoColors.darkCardSecondary,
+                            ? [const Color(0xFF0F172A), ZankoColors.darkCardSecondary]
+                            : [Colors.white, const Color(0xFFF8FAFC)],
+                        borderColor: ZankoColors.primary,
+                        textColor: isDark ? Colors.white : ZankoColors.textPrimary,
                         tip: 'کلیک بکە بۆ گۆڕینی لای کارتەکە 🔄',
                       ),
                       back: _buildCardFace(

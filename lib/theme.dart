@@ -4,14 +4,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'services/theme_provider.dart';
 
 class ZankoColors {
-  static Color _primary = const Color(0xFFF97316);
-  static Color _accent = const Color(0xFFF43F5E);
-  static Color _background = const Color(0xFFFFF7ED);
-  static Color _darkBackground = const Color(0xFF140C0C);
-  static Color _darkCard = const Color(0xFF221415);
-  static Color _darkCardSecondary = const Color(0xFF2D1B1D);
-  static Color _gradientStart = const Color(0xFFF97316);
-  static Color _gradientEnd = const Color(0xFFE11D48);
+  static Color _primary = const Color(0xFF10B981);
+  static Color _accent = const Color(0xFF10B981);
+  static Color _background = const Color(0xFFF8FAFC);
+  static Color _darkBackground = const Color(0xFF0F172A);
+  static Color _darkCard = const Color(0xFF1E293B);
+  static Color _darkCardSecondary = const Color(0xFF243044);
+  static Color _gradientStart = const Color(0xFF10B981);
+  static Color _gradientEnd = const Color(0xFF10B981);
 
   static Color get primary => _primary;
   static Color get accent => _accent;
@@ -23,14 +23,14 @@ class ZankoColors {
   static Color get gradientEnd => _gradientEnd;
 
   static const Color card = Color(0xFFFFFFFF);
-  static const Color textPrimary = Color(0xFF1C1917);
-  static const Color textSecondary = Color(0xFF78716C);
+  static const Color textPrimary = Color(0xFF0F172A);
+  static const Color textSecondary = Color(0xFF64748B);
   static const Color success = Color(0xFF10B981);
-  static const Color warning = Color(0xFFF59E0B);
+  static const Color warning = Color(0xFF10B981);
   static const Color error = Color(0xFFEF4444);
 
-  static const Color darkTextPrimary = Color(0xFFFFF1F2);
-  static const Color darkTextSecondary = Color(0xFFFDA4AF);
+  static const Color darkTextPrimary = Color(0xFFF8FAFC);
+  static const Color darkTextSecondary = Color(0xFF94A3B8);
 
   static void updatePalette(ThemeColorsData colors) {
     _primary = colors.primary;
@@ -111,8 +111,7 @@ class ZankoShadows {
   ];
 }
 
-/// Returns a TextStyle that uses [languageFontFamily] as primary font
-/// and Plus Jakarta Sans as the Latin fallback.
+/// Returns a TextStyle that uses [languageFontFamily] as primary font (defaults to DroidKufi).
 TextStyle _ts({
   required double size,
   required FontWeight weight,
@@ -120,19 +119,9 @@ TextStyle _ts({
   String? languageFontFamily,
   double? letterSpacing,
 }) {
-  if (languageFontFamily != null) {
-    // Kurdish / Arabic: use native font, PJS as fallback for Latin chars
-    return TextStyle(
-      fontFamily: languageFontFamily,
-      fontFamilyFallback: ['Plus Jakarta Sans'],
-      fontSize: size,
-      fontWeight: weight,
-      color: color,
-      letterSpacing: letterSpacing,
-    );
-  }
-  // English: use Plus Jakarta Sans
-  return GoogleFonts.plusJakartaSans(
+  return TextStyle(
+    fontFamily: languageFontFamily ?? 'DroidKufi',
+    fontFamilyFallback: const ['DroidKufi', 'Plus Jakarta Sans'],
     fontSize: size,
     fontWeight: weight,
     color: color,
@@ -182,57 +171,18 @@ class ZankoTheme {
           darkTextSecondary: Color(0xFF94A3B8),
           gradientColors: [Color(0xFF2563EB), Color(0xFF0284C7)],
         );
-      case AppThemeType.emeraldForest:
+      default:
         return const ThemeColorsData(
           primary: Color(0xFF10B981),
-          accent: Color(0xFF34D399),
-          background: Color(0xFFF0FDF4),
+          accent: Color(0xFF10B981),
+          background: Color(0xFFF8FAFC),
           card: Color(0xFFFFFFFF),
-          darkBackground: Color(0xFF071B12),
-          darkCard: Color(0xFF10281D),
-          darkCardSecondary: Color(0xFF1A382A),
-          darkTextPrimary: Color(0xFFF0FDF4),
-          darkTextSecondary: Color(0xFFA7F3D0),
-          gradientColors: [Color(0xFF10B981), Color(0xFF059669)],
-        );
-      case AppThemeType.deepPurple:
-        return const ThemeColorsData(
-          primary: Color(0xFF8B5CF6),
-          accent: Color(0xFFEC4899),
-          background: Color(0xFFFAF5FF),
-          card: Color(0xFFFFFFFF),
-          darkBackground: Color(0xFF100B20),
-          darkCard: Color(0xFF1C1335),
-          darkCardSecondary: Color(0xFF271B48),
-          darkTextPrimary: Color(0xFFFAF5FF),
-          darkTextSecondary: Color(0xFFDDD6FE),
-          gradientColors: [Color(0xFF8B5CF6), Color(0xFFD946EF)],
-        );
-      case AppThemeType.midnightGold:
-        return const ThemeColorsData(
-          primary: Color(0xFFFFD700),
-          accent: Color(0xFFF59E0B),
-          background: Color(0xFFFFFBEB),
-          card: Color(0xFFFFFFFF),
-          darkBackground: Color(0xFF141006),
-          darkCard: Color(0xFF231C0B),
-          darkCardSecondary: Color(0xFF332912),
-          darkTextPrimary: Color(0xFFFEF3C7),
-          darkTextSecondary: Color(0xFFFDE68A),
-          gradientColors: [Color(0xFFFFD700), Color(0xFFD97706)],
-        );
-      case AppThemeType.sunsetAmber:
-        return const ThemeColorsData(
-          primary: Color(0xFFF97316),
-          accent: Color(0xFFF43F5E),
-          background: Color(0xFFFFF7ED),
-          card: Color(0xFFFFFFFF),
-          darkBackground: Color(0xFF140C0C),
-          darkCard: Color(0xFF221415),
-          darkCardSecondary: Color(0xFF2D1B1D),
-          darkTextPrimary: Color(0xFFFFF1F2),
-          darkTextSecondary: Color(0xFFFDA4AF),
-          gradientColors: [Color(0xFFF97316), Color(0xFFE11D48)],
+          darkBackground: Color(0xFF0F172A),
+          darkCard: Color(0xFF1E293B),
+          darkCardSecondary: Color(0xFF243044),
+          darkTextPrimary: Color(0xFFF8FAFC),
+          darkTextSecondary: Color(0xFF94A3B8),
+          gradientColors: [Color(0xFF10B981), Color(0xFF10B981)],
         );
     }
   }
@@ -247,7 +197,7 @@ class ZankoTheme {
     final base = ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      fontFamily: languageFontFamily ?? GoogleFonts.plusJakartaSans().fontFamily,
+      fontFamily: languageFontFamily ?? 'DroidKufi',
       colorScheme: ColorScheme(
         brightness: Brightness.light,
         primary: colors.primary,
@@ -323,7 +273,7 @@ class ZankoTheme {
     final base = ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      fontFamily: languageFontFamily ?? GoogleFonts.plusJakartaSans().fontFamily,
+      fontFamily: languageFontFamily ?? 'DroidKufi',
       colorScheme: ColorScheme(
         brightness: Brightness.dark,
         primary: colors.primary,

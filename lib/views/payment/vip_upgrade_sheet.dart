@@ -35,15 +35,19 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
   String _fibNumber = 'FIB-ZANKO-9090';
   String _fastPayNumber = '0750 789 9090';
 
+  int _price1Month = 5000;
+  int _price3Months = 12000;
+  int _price9Months = 40000;
+
   int get _planPrice {
     switch (_selectedPlan) {
       case '3_months':
-        return 12000;
+        return _price3Months;
       case '9_months':
-        return 40000;
+        return _price9Months;
       case '1_month':
       default:
-        return 5000;
+        return _price1Month;
     }
   }
 
@@ -97,6 +101,15 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
         if (fastpay != null && fastpay.toString().trim().isNotEmpty) {
           _fastPayNumber = fastpay.toString().trim();
         }
+
+        final p1 = data['monthlyVipPrice'] ?? data['price_1_month'] ?? data['price1Month'];
+        if (p1 is num && p1 > 0) _price1Month = p1.toInt();
+
+        final p3 = data['semesterVipPrice'] ?? data['price_3_months'] ?? data['price3Months'];
+        if (p3 is num && p3 > 0) _price3Months = p3.toInt();
+
+        final p9 = data['annualVipPrice'] ?? data['price_9_months'] ?? data['price9Months'];
+        if (p9 is num && p9 > 0) _price9Months = p9.toInt();
       });
     }
 
@@ -109,6 +122,14 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
     }).catchError((e) {
       debugPrint('payment_config initial get warning: $e');
     });
+
+    FirebaseFirestore.instance
+        .collection('config')
+        .doc('app_config')
+        .get()
+        .then((doc) {
+      if (doc.exists) parseData(doc.data());
+    }).catchError((_) {});
 
     FirebaseFirestore.instance
         .collection('config')
@@ -399,18 +420,27 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF1A1200), Color(0xFF2C1F00), Color(0xFF3D2B00)],
+                  gradient: LinearGradient(
+                    colors: isDark
+                        ? [
+                            const Color(0xFF0F172A),
+                            ZankoColors.darkCardSecondary,
+                            const Color(0xFF064E3B).withValues(alpha: 0.5),
+                          ]
+                        : [
+                            Colors.white,
+                            const Color(0xFFF0FDF4),
+                          ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(22),
                   border: Border.all(
-                    color: const Color(0xFFFFD700).withValues(alpha: 0.45),
+                    color: ZankoColors.primary.withValues(alpha: 0.45),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFFFD700).withValues(alpha: 0.2),
+                      color: ZankoColors.primary.withValues(alpha: 0.2),
                       blurRadius: 18,
                       offset: const Offset(0, 6),
                     ),
@@ -421,18 +451,18 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+                        color: ZankoColors.primary.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
-                      child: const Text('👑', style: TextStyle(fontSize: 32)),
+                      child: Text('👑', style: TextStyle(fontSize: 32, color: ZankoColors.primary)),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       isVip ? 'ئەندامی نایابی VIP (چالاکە 👑)' : 'بەشداریکردنی نایابی VIP',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w900,
-                        color: Color(0xFFFFD700),
+                        color: ZankoColors.primary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -851,19 +881,19 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFFFFD700).withValues(alpha: 0.12)
+              ? ZankoColors.primary.withValues(alpha: 0.12)
               : (isDark ? ZankoColors.darkCardSecondary : Colors.grey[50]),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFFFFD700)
+                ? ZankoColors.primary
                 : (isDark ? Colors.white12 : Colors.grey[200]!),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+                    color: ZankoColors.primary.withValues(alpha: 0.15),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -985,10 +1015,10 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+              color: ZankoColors.primary.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: const Color(0xFFB8860B), size: 18),
+            child: Icon(icon, color: ZankoColors.primary, size: 18),
           ),
           const SizedBox(width: 12),
           Expanded(

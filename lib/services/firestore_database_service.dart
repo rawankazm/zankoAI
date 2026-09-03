@@ -325,7 +325,21 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
 
   void _listenToEnrollmentRequests() {
     _enrollmentsSub?.cancel();
-    _enrollmentsSub = _firestore.collection('enrollments').snapshots().listen((snapshot) {
+    final uid = _userId;
+    if (uid == null) {
+      _enrollmentRequests.clear();
+      notifyListeners();
+      return;
+    }
+
+    final email = _auth.currentUser?.email?.trim().toLowerCase();
+    final bool isAdminEmail = email == 'rawankurdi181@gmail.com' || email == 'rawankazm@gmail.com';
+
+    final query = isAdminEmail
+        ? _firestore.collection('enrollments')
+        : _firestore.collection('enrollments').where('userId', isEqualTo: uid);
+
+    _enrollmentsSub = query.snapshots().listen((snapshot) {
       _enrollmentRequests.clear();
       for (var doc in snapshot.docs) {
         final data = doc.data();

@@ -284,6 +284,14 @@ class _LoginScreenState extends State<LoginScreen>
                                 }
                               } catch (e) {
                                 setSheetState(() => isSubmitting = false);
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('❌ ناردن سەرکەوتوو نەبوو: ${e.toString()}'),
+                                      backgroundColor: Colors.redAccent,
+                                    ),
+                                  );
+                                }
                               }
                             },
                       style: ElevatedButton.styleFrom(

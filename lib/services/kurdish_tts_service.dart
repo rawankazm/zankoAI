@@ -170,59 +170,69 @@ class KurdishTtsService {
 
   /// Fetch HD Neural AI Voice audio (Wavenet) from Google Cloud TTS API
   Future<Uint8List?> _fetchGoogleCloudNeuralAudio(String text, {String? apiKey}) async {
+    if (kIsWeb) return null;
+
     final keysToTry = <String>[
       if (apiKey != null && apiKey.trim().isNotEmpty) apiKey.trim(),
       if (_customApiKey != null && _customApiKey!.trim().isNotEmpty) _customApiKey!.trim(),
-      utf8.decode(base64.decode('QVEuQWI4Uk42SW1VVWJtcVByRUEtd0dTN0FDc0ZCQ3Q5UnhFbTRwV05oOElGck5ZckJoQlE=')),
     ];
 
-    final client = HttpClient();
-    client.connectionTimeout = const Duration(seconds: 5);
+    if (keysToTry.isEmpty) return null;
 
-    for (final key in keysToTry) {
-      if (key.trim().isEmpty) continue;
-      try {
-        final uri = Uri.parse('https://texttospeech.googleapis.com/v1/text:synthesize?key=$key');
-        final request = await client.postUrl(uri);
-        request.headers.set('content-type', 'application/json');
+    HttpClient? client;
+    try {
+      client = HttpClient();
+      client.connectionTimeout = const Duration(seconds: 5);
 
-        final isEn = _currentLangCode == 'en';
-        final bodyMap = {
-          'input': {'text': text},
-          'voice': {
-            'languageCode': isEn ? 'en-US' : 'ar-XA',
-            'name': isEn ? 'en-US-Neural2-D' : 'ar-XA-Wavenet-B',
-            'ssmlGender': 'MALE'
-          },
-          'audioConfig': {
-            'audioEncoding': 'MP3',
-            'speakingRate': (0.92 * _playbackSpeed).clamp(0.5, 2.0),
-            'pitch': -0.5
+      for (final key in keysToTry) {
+        if (key.trim().isEmpty) continue;
+        try {
+          final uri = Uri.parse('https://texttospeech.googleapis.com/v1/text:synthesize?key=$key');
+          final request = await client.postUrl(uri);
+          request.headers.set('content-type', 'application/json');
+
+          final isEn = _currentLangCode == 'en';
+          final bodyMap = {
+            'input': {'text': text},
+            'voice': {
+              'languageCode': isEn ? 'en-US' : 'ar-XA',
+              'name': isEn ? 'en-US-Neural2-D' : 'ar-XA-Wavenet-B',
+              'ssmlGender': 'MALE'
+            },
+            'audioConfig': {
+              'audioEncoding': 'MP3',
+              'speakingRate': (0.92 * _playbackSpeed).clamp(0.5, 2.0),
+              'pitch': -0.5
+            }
+          };
+
+          request.add(utf8.encode(jsonEncode(bodyMap)));
+          final response = await request.close().timeout(const Duration(seconds: 6));
+          final respStr = await response.transform(utf8.decoder).join();
+
+          if (response.statusCode == 200) {
+            final data = jsonDecode(respStr);
+            final audioContent = data['audioContent'] as String?;
+            if (audioContent != null && audioContent.isNotEmpty) {
+              return base64Decode(audioContent);
+            }
           }
-        };
-
-        request.add(utf8.encode(jsonEncode(bodyMap)));
-        final response = await request.close().timeout(const Duration(seconds: 6));
-        final respStr = await response.transform(utf8.decoder).join();
-
-        if (response.statusCode == 200) {
-          final data = jsonDecode(respStr);
-          final audioContent = data['audioContent'] as String?;
-          if (audioContent != null && audioContent.isNotEmpty) {
-            client.close();
-            return base64Decode(audioContent);
-          }
+        } catch (e) {
+          debugPrint('Google Cloud Wavenet Neural TTS attempt error: $e');
         }
-      } catch (e) {
-        debugPrint('Google Cloud Wavenet Neural TTS attempt error: $e');
       }
+    } catch (e) {
+      debugPrint('Google Cloud Neural TTS client error: $e');
+    } finally {
+      client?.close();
     }
 
-    client.close();
     return null;
   }
 
-  String? _elevenLabsApiKey = 'sk_94dc918798a1f5b4542f7b5e90cca8cf30f73a916ef90519';
+  static const String _defaultElevenLabsKey = String.fromEnvironment('ELEVEN_LABS_API_KEY', defaultValue: '');
+
+  String? _elevenLabsApiKey;
   String _elevenLabsVoiceId = 'CwhRBWXzGAHq8TQ4Fs17'; // Roger (ElevenLabs)
 
   /// Configure custom ElevenLabs credentials & voice
@@ -237,13 +247,15 @@ class KurdishTtsService {
 
   /// Fetch ultra-realistic studio voice audio from ElevenLabs (Eleven Multilingual v2)
   Future<Uint8List?> _fetchElevenLabsAudio(String text, {String? apiKey, String? voiceId}) async {
+    if (kIsWeb) return null;
+
     final key = (apiKey != null && apiKey.trim().isNotEmpty)
         ? apiKey.trim()
         : (_elevenLabsApiKey != null && _elevenLabsApiKey!.trim().isNotEmpty)
             ? _elevenLabsApiKey!.trim()
-            : null;
+            : _defaultElevenLabsKey;
 
-    if (key == null || key.isEmpty) return null;
+    if (key.isEmpty) return null;
 
     final targetVoice = (voiceId != null && voiceId.trim().isNotEmpty)
         ? voiceId.trim()
@@ -280,7 +292,6 @@ class KurdishTtsService {
         }
         final bytes = builder.takeBytes();
         if (bytes.isNotEmpty) {
-          client.close();
           return bytes;
         }
       } else {
@@ -289,9 +300,10 @@ class KurdishTtsService {
       }
     } catch (e) {
       debugPrint('ElevenLabs audio fetch error: $e');
+    } finally {
+      client.close();
     }
 
-    client.close();
     return null;
   }
 

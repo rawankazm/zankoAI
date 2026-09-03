@@ -49,9 +49,9 @@ class LeaderboardService extends ChangeNotifier {
   static final LeaderboardService instance = LeaderboardService._();
   LeaderboardService._();
 
-  final int _streakDays = 3;
-
-  int get streakDays => _streakDays;
+  /// Returns streak for current user via ScoreService (device-local).
+  int get currentUserStreak => ScoreService.instance.streakCount;
+  int get streakDays => currentUserStreak;
 
   int calculatePoints({
     required int studyMinutes,
@@ -73,8 +73,8 @@ class LeaderboardService extends ChangeNotifier {
         title: '🔥 بەردەوامی ٣ ڕۆژ',
         description: 'بۆ ۳ ڕۆژ لەسەر یەک بەردەوام بە لەسەر خوێندن',
         icon: '🔥',
-        isUnlocked: _streakDays >= 3,
-        progress: (_streakDays / 3).clamp(0.0, 1.0),
+        isUnlocked: currentUserStreak >= 3,
+        progress: (currentUserStreak / 3).clamp(0.0, 1.0),
       ),
       BadgeModel(
         id: 'quiz_master',
@@ -119,10 +119,17 @@ class LeaderboardService extends ChangeNotifier {
       depts.add(currentUser.departmentName!.trim());
     }
 
-    // 2. Fetch registered student departments from Firestore
+    // 2. Fetch registered student departments from Firestore (departments & leaderboard)
     try {
-      final snap = await FirebaseFirestore.instance.collection('users').limit(50).get();
-      for (var doc in snap.docs) {
+      final deptSnap = await FirebaseFirestore.instance.collection('departments').limit(50).get();
+      for (var doc in deptSnap.docs) {
+        final name = doc.data()['name'] as String?;
+        if (name != null && name.trim().isNotEmpty) {
+          depts.add(name.trim());
+        }
+      }
+      final lbSnap = await FirebaseFirestore.instance.collection('leaderboard').limit(50).get();
+      for (var doc in lbSnap.docs) {
         final dept = doc.data()['departmentName'] as String?;
         if (dept != null && dept.trim().isNotEmpty) {
           depts.add(dept.trim());
@@ -226,7 +233,7 @@ class LeaderboardService extends ChangeNotifier {
       try {
         snap = await FirebaseFirestore.instance.collection('leaderboard').orderBy('points', descending: true).limit(30).get();
       } catch (_) {
-        snap = await FirebaseFirestore.instance.collection('users').limit(30).get();
+        snap = await FirebaseFirestore.instance.collection('leaderboard').limit(30).get();
       }
       if (snap.docs.isNotEmpty) {
         for (var doc in snap.docs) {
@@ -243,16 +250,27 @@ class LeaderboardService extends ChangeNotifier {
 
           if (isMe) {
             sc100 = scoreService.totalScore100;
+            strk = currentUserStreak;
             pts = calculatePoints(
               studyMinutes: scoreService.todayStudyMinutes,
               totalQuestions: scoreService.totalQuestionsAnswered,
               score100: sc100,
-              streak: _streakDays,
+              streak: strk,
             );
-            strk = _streakDays;
           } else {
-            pts = (d['gpa'] != null ? (d['gpa'] * 300).toInt() : 800);
-            sc100 = 82;
+            // Use actual Firestore score fields when available
+            sc100 = (d['score100'] as num?)?.toInt() ?? (d['gpa'] != null ? ((d['gpa'] as num).toDouble() * 25).round().clamp(0, 100) : 60);
+            strk = (d['studyStreak'] as num?)?.toInt() ?? 1;
+            final totalQ = (d['totalQuestionsAnswered'] as num?)?.toInt() ?? 0;
+            final studyMins = (d['todayStudyMinutes'] as num?)?.toInt() ?? 0;
+            pts = calculatePoints(
+              studyMinutes: studyMins,
+              totalQuestions: totalQ,
+              score100: sc100,
+              streak: strk,
+            );
+            // Minimum floor so new users with no data still appear
+            if (pts == 0) pts = 100;
           }
 
           list.add(
@@ -283,7 +301,7 @@ class LeaderboardService extends ChangeNotifier {
         studyMinutes: scoreService.todayStudyMinutes,
         totalQuestions: scoreService.totalQuestionsAnswered,
         score100: scoreService.totalScore100,
-        streak: _streakDays,
+        streak: currentUserStreak,
       );
 
       list.add(
@@ -294,7 +312,7 @@ class LeaderboardService extends ChangeNotifier {
           universityName: currentUser.universityName ?? 'زانکۆی سلێمانی',
           photoUrl: currentUser.photoUrl,
           points: myPts,
-          streak: _streakDays,
+          streak: currentUserStreak,
           score100: scoreService.totalScore100,
           isCurrentUser: true,
         ),
@@ -307,8 +325,11 @@ class LeaderboardService extends ChangeNotifier {
           'universityName': currentUser.universityName ?? 'زانکۆی سلێمانی',
           'photoUrl': currentUser.photoUrl,
           'points': myPts,
-          'streak': _streakDays,
+          'streak': currentUserStreak,
           'score100': scoreService.totalScore100,
+          'studyStreak': currentUserStreak,
+          'totalQuestionsAnswered': scoreService.totalQuestionsAnswered,
+          'todayStudyMinutes': scoreService.todayStudyMinutes,
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true)).catchError((_) {});
       }
