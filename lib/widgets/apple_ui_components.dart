@@ -1097,8 +1097,134 @@ class CourseCard extends StatelessWidget {
   }
 }
 
-// ─── Floating Glass Bottom Navigation Bar with Micro-Interactions ────────────
-class GlassBottomNavigation extends StatelessWidget {
+// ─── Cute AI Robot Chatbot Icon (Exact Mascot Vector) ────────────────────────
+class CuteAiBotIcon extends StatelessWidget {
+  final double size;
+  final Color color;
+  final double strokeWidth;
+
+  const CuteAiBotIcon({
+    super.key,
+    this.size = 26,
+    this.color = Colors.white,
+    this.strokeWidth = 2.2,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(
+        painter: _CuteAiBotPainter(
+          color: color,
+          strokeWidth: strokeWidth,
+        ),
+      ),
+    );
+  }
+}
+
+class _CuteAiBotPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+
+  _CuteAiBotPainter({required this.color, required this.strokeWidth});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final s = size.width / 100.0;
+    final sy = size.height / 100.0;
+
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    // 1. Two Antennas on top with circular caps
+    // Left antenna
+    canvas.drawLine(Offset(38 * s, 26 * sy), Offset(38 * s, 17 * sy), paint);
+    canvas.drawCircle(Offset(38 * s, 12.5 * sy), 4.2 * s, paint);
+
+    // Right antenna
+    canvas.drawLine(Offset(62 * s, 26 * sy), Offset(62 * s, 17 * sy), paint);
+    canvas.drawCircle(Offset(62 * s, 12.5 * sy), 4.2 * s, paint);
+
+    // 2. Ears (Left and Right rounded side tabs)
+    final leftEar = Path()
+      ..moveTo(21 * s, 44 * sy)
+      ..lineTo(16 * s, 44 * sy)
+      ..arcToPoint(Offset(12 * s, 48 * sy), radius: Radius.circular(4 * s))
+      ..lineTo(12 * s, 54 * sy)
+      ..arcToPoint(Offset(16 * s, 58 * sy), radius: Radius.circular(4 * s))
+      ..lineTo(21 * s, 58 * sy);
+    canvas.drawPath(leftEar, paint);
+
+    final rightEar = Path()
+      ..moveTo(79 * s, 44 * sy)
+      ..lineTo(84 * s, 44 * sy)
+      ..arcToPoint(Offset(88 * s, 48 * sy), radius: Radius.circular(4 * s))
+      ..lineTo(88 * s, 54 * sy)
+      ..arcToPoint(Offset(84 * s, 58 * sy), radius: Radius.circular(4 * s))
+      ..lineTo(79 * s, 58 * sy);
+    canvas.drawPath(rightEar, paint);
+
+    // 3. Head + Speech Bubble Tail
+    final headPath = Path()
+      ..moveTo(35 * s, 26 * sy)
+      ..lineTo(65 * s, 26 * sy)
+      ..arcToPoint(Offset(79 * s, 40 * sy), radius: Radius.circular(14 * s))
+      ..lineTo(79 * s, 62 * sy)
+      ..arcToPoint(Offset(65 * s, 76 * sy), radius: Radius.circular(14 * s))
+      ..lineTo(44 * s, 76 * sy)
+      ..lineTo(44 * s, 92 * sy)
+      ..lineTo(29 * s, 76 * sy)
+      ..arcToPoint(Offset(21 * s, 68 * sy), radius: Radius.circular(10 * s))
+      ..lineTo(21 * s, 40 * sy)
+      ..arcToPoint(Offset(35 * s, 26 * sy), radius: Radius.circular(14 * s))
+      ..close();
+    canvas.drawPath(headPath, paint);
+
+    // 4. Smiling Eyes (Happy closed eye curves)
+    final eyePaint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth * 1.3
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final leftEye = Path()
+      ..moveTo(36 * s, 47 * sy)
+      ..quadraticBezierTo(42.5 * s, 39 * sy, 49 * s, 47 * sy);
+    canvas.drawPath(leftEye, eyePaint);
+
+    final rightEye = Path()
+      ..moveTo(51 * s, 47 * sy)
+      ..quadraticBezierTo(57.5 * s, 39 * sy, 64 * s, 47 * sy);
+    canvas.drawPath(rightEye, eyePaint);
+
+    // 5. Smiling Mouth
+    final mouthPaint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth * 1.15
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final mouth = Path()
+      ..moveTo(38 * s, 60.5 * sy)
+      ..quadraticBezierTo(50 * s, 67.5 * sy, 62 * s, 60.5 * sy);
+    canvas.drawPath(mouth, mouthPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _CuteAiBotPainter oldDelegate) {
+    return oldDelegate.color != color || oldDelegate.strokeWidth != strokeWidth;
+  }
+}
+
+// ─── Curved Notch Bottom Navigation Bar (Fluid Cutout & Floating Circle) ────
+class GlassBottomNavigation extends StatefulWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
 
@@ -1109,581 +1235,408 @@ class GlassBottomNavigation extends StatelessWidget {
   });
 
   @override
+  State<GlassBottomNavigation> createState() => _GlassBottomNavigationState();
+}
+
+class _GlassBottomNavigationState extends State<GlassBottomNavigation>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _positionAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    );
+    _positionAnimation = Tween<double>(
+      begin: widget.currentIndex.toDouble(),
+      end: widget.currentIndex.toDouble(),
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOutCubic,
+    ));
+  }
+
+  @override
+  void didUpdateWidget(covariant GlassBottomNavigation oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.currentIndex != oldWidget.currentIndex) {
+      final start = _positionAnimation.value;
+      final end = widget.currentIndex.toDouble();
+      _positionAnimation = Tween<double>(
+        begin: start,
+        end: end,
+      ).animate(CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOutCubic,
+      ));
+      _controller.forward(from: 0.0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
     final langProvider = Provider.of<LanguageProvider>(context);
 
+    final barColor = isDark ? ZankoColors.darkCard : ZankoColors.card;
+    final borderColor = isDark ? ZankoColors.darkBorder : ZankoColors.border;
+    final inactiveColor = isDark ? ZankoColors.darkTextSecondary : ZankoColors.textSecondary;
+
+    const double barHeight = 64.0;
+    const double barTop = 20.0;
+    const double scoopDepth = 28.0;
+    const double scoopWidth = 66.0;
+    const double circleSize = 46.0;
+    const double circleCenterY = 22.0;
+    const double horizontalInset = 16.0;
+
     return Container(
-      margin: const EdgeInsets.only(left: 18, right: 18, bottom: 20),
-      height: 72,
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF171B23) : Colors.white,
-        borderRadius: BorderRadius.circular(36),
-        border: Border.all(
-          color: isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2),
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _AnimatedNavTile(
-            index: 0,
-            isSelected: currentIndex == 0,
-            label: langProvider.translate('nav_home'),
-            onTap: () => onTap(0),
-            iconBuilder: (isSelected) => _AnimatedHomeIcon(isSelected: isSelected),
-          ),
-          _AnimatedNavTile(
-            index: 1,
-            isSelected: currentIndex == 1,
-            label: langProvider.translate('nav_courses'),
-            onTap: () => onTap(1),
-            iconBuilder: (isSelected) => _AnimatedCoursesIcon(isSelected: isSelected),
-          ),
-          _AnimatedCenterAiButton(
-            isSelected: currentIndex == 2,
-            onTap: () {
-              HapticFeedback.mediumImpact();
-              onTap(2);
-            },
-          ),
-          _AnimatedNavTile(
-            index: 3,
-            isSelected: currentIndex == 3,
-            label: langProvider.translate('zankoline'),
-            onTap: () => onTap(3),
-            iconBuilder: (isSelected) => _AnimatedZankolineIcon(isSelected: isSelected),
-          ),
-          _AnimatedNavTile(
-            index: 4,
-            isSelected: currentIndex == 4,
-            label: langProvider.translate('nav_profile'),
-            onTap: () => onTap(4),
-            iconBuilder: (isSelected) => _AnimatedProfileIcon(isSelected: isSelected),
-          ),
-        ],
-      ),
-    );
-  }
-}
+      margin: const EdgeInsets.only(left: 14, right: 14, bottom: 16),
+      height: barHeight + barTop,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final totalWidth = constraints.maxWidth;
+          final availableWidth = totalWidth - (2 * horizontalInset);
+          final tabWidth = availableWidth / 5.0;
 
-// ─── Animated Nav Tile Wrapper ───────────────────────────────────────────────
-class _AnimatedNavTile extends StatelessWidget {
-  final int index;
-  final bool isSelected;
-  final String label;
-  final VoidCallback onTap;
-  final Widget Function(bool isSelected) iconBuilder;
+          double getTabCenterX(double pos) {
+            if (isRtl) {
+              return totalWidth - horizontalInset - tabWidth * (pos + 0.5);
+            }
+            return horizontalInset + tabWidth * (pos + 0.5);
+          }
 
-  const _AnimatedNavTile({
-    required this.index,
-    required this.isSelected,
-    required this.label,
-    required this.onTap,
-    required this.iconBuilder,
-  });
+          return AnimatedBuilder(
+            animation: _positionAnimation,
+            builder: (context, child) {
+              final currentPos = _positionAnimation.value;
+              final activeX = getTabCenterX(currentPos);
 
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // 1. Organic Curved Notch Background
+                  Positioned.fill(
+                    child: CustomPaint(
+                      painter: _CurvedNotchPainter(
+                        activeX: activeX,
+                        backgroundColor: barColor,
+                        borderColor: borderColor,
+                        barTop: barTop,
+                        scoopWidth: scoopWidth,
+                        scoopDepth: scoopDepth,
+                        cornerRadius: 26.0,
+                      ),
+                    ),
+                  ),
 
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          HapticFeedback.lightImpact();
-          onTap();
-        },
-        behavior: HitTestBehavior.opaque,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? (isDark
-                    ? ZankoColors.primary.withValues(alpha: 0.18)
-                    : ZankoColors.primary.withValues(alpha: 0.10))
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(22),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              iconBuilder(isSelected),
-              const SizedBox(height: 3),
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 200),
-                style: TextStyle(
-                  fontFamily: 'DroidKufi',
-                  fontSize: isSelected ? 10.5 : 10.0,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
-                  color: isSelected
-                      ? ZankoColors.primary
-                      : (isDark ? Colors.grey[400]! : ZankoColors.textSecondary),
-                ),
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              const SizedBox(height: 2),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeOutCubic,
-                height: 3,
-                width: isSelected ? 12 : 0,
-                decoration: BoxDecoration(
-                  color: isSelected ? ZankoColors.primary : Colors.transparent,
-                  borderRadius: BorderRadius.circular(2),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: ZankoColors.primary.withValues(alpha: 0.6),
-                            blurRadius: 4,
-                            offset: const Offset(0, 1),
+                  // 2. Tab Navigation Items (fixed columns with fading icons & highlighting text)
+                  Positioned(
+                    left: horizontalInset,
+                    right: horizontalInset,
+                    top: barTop,
+                    bottom: 0,
+                    child: Row(
+                      children: List.generate(5, (index) {
+                        final tabIndex = index;
+                        final dist = (currentPos - tabIndex).abs();
+                        final activeRatio = (1.0 - dist.clamp(0.0, 1.0));
+                        final inactiveOpacity = dist.clamp(0.0, 1.0);
+
+                        final labelColor = Color.lerp(
+                          inactiveColor,
+                          ZankoColors.primary,
+                          activeRatio,
+                        )!;
+
+                        final fontWeight = activeRatio > 0.55
+                            ? FontWeight.w800
+                            : FontWeight.w500;
+
+                        return Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              widget.onTap(tabIndex);
+                            },
+                            behavior: HitTestBehavior.opaque,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                SizedBox(
+                                  height: 24,
+                                  child: Center(
+                                    child: Opacity(
+                                      opacity: inactiveOpacity,
+                                      child: _buildNavIcon(
+                                        tabIndex,
+                                        isSelected: false,
+                                        isDark: isDark,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 5),
+                                Text(
+                                  _getNavLabel(tabIndex, langProvider),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontFamily: 'DroidKufi',
+                                    fontSize: 10.5,
+                                    fontWeight: fontWeight,
+                                    color: labelColor,
+                                  ),
+                                ),
+                                const SizedBox(height: 9),
+                              ],
+                            ),
                           ),
-                        ]
-                      : const [],
-                ),
-              ),
-            ],
-          ),
-        ),
+                        );
+                      }),
+                    ),
+                  ),
+
+                  // 3. Gliding Elevated Floating Circle with Active Icon
+                  Positioned(
+                    left: activeX - (circleSize / 2.0),
+                    top: circleCenterY - (circleSize / 2.0),
+                    width: circleSize,
+                    height: circleSize,
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        widget.onTap(widget.currentIndex);
+                      },
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: isDark ? 0.30 : 0.45),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: ZankoColors.primary.withValues(
+                                alpha: isDark ? 0.50 : 0.38,
+                              ),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                            BoxShadow(
+                              color: Colors.black.withValues(
+                                alpha: isDark ? 0.30 : 0.10,
+                              ),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 200),
+                            transitionBuilder: (child, anim) => ScaleTransition(
+                              scale: anim,
+                              child: FadeTransition(opacity: anim, child: child),
+                            ),
+                            child: KeyedSubtree(
+                              key: ValueKey<int>(widget.currentIndex),
+                              child: _buildNavIcon(
+                                widget.currentIndex,
+                                isSelected: true,
+                                isDark: isDark,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+        },
       ),
     );
   }
-}
 
-// ─── 1. Home Animated Icon (Wiggle & Bounce) ─────────────────────────────────
-class _AnimatedHomeIcon extends StatefulWidget {
-  final bool isSelected;
-  const _AnimatedHomeIcon({required this.isSelected});
+  Widget _buildNavIcon(int index, {required bool isSelected, required bool isDark}) {
+    final color = isSelected
+        ? Colors.white
+        : (isDark ? ZankoColors.darkTextSecondary : ZankoColors.textSecondary);
 
-  @override
-  State<_AnimatedHomeIcon> createState() => _AnimatedHomeIconState();
-}
-
-class _AnimatedHomeIconState extends State<_AnimatedHomeIcon>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _wiggleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 480),
-    );
-
-    _scaleAnimation = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.0, end: 1.25)
-            .chain(CurveTween(curve: Curves.easeOutBack)),
-        weight: 45,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.25, end: 1.0)
-            .chain(CurveTween(curve: Curves.elasticOut)),
-        weight: 55,
-      ),
-    ]).animate(_controller);
-
-    _wiggleAnimation = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 0.0, end: -0.15)
-            .chain(CurveTween(curve: Curves.easeOut)),
-        weight: 20,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: -0.15, end: 0.13)
-            .chain(CurveTween(curve: Curves.easeInOut)),
-        weight: 30,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 0.13, end: -0.06)
-            .chain(CurveTween(curve: Curves.easeInOut)),
-        weight: 25,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: -0.06, end: 0.0)
-            .chain(CurveTween(curve: Curves.easeOut)),
-        weight: 25,
-      ),
-    ]).animate(_controller);
-
-    if (widget.isSelected) {
-      _controller.forward();
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant _AnimatedHomeIcon oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isSelected && !oldWidget.isSelected) {
-      _controller.forward(from: 0.0);
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final color = widget.isSelected
-        ? ZankoColors.primary
-        : (isDark ? Colors.grey[400]! : ZankoColors.textSecondary);
-
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _scaleAnimation.value,
-          child: Transform.rotate(
-            angle: _wiggleAnimation.value,
-            child: HugeIcon(
-              icon: HugeIcons.strokeRoundedHome01,
-              color: color,
-              size: 23,
-            ),
-          ),
+    switch (index) {
+      case 0:
+        return HugeIcon(
+          icon: HugeIcons.strokeRoundedHome01,
+          color: color,
+          size: isSelected ? 24 : 22,
         );
-      },
-    );
-  }
-}
-
-// ─── 2. Courses Animated Icon (3D Page Flip & Bounce) ───────────────────────
-class _AnimatedCoursesIcon extends StatefulWidget {
-  final bool isSelected;
-  const _AnimatedCoursesIcon({required this.isSelected});
-
-  @override
-  State<_AnimatedCoursesIcon> createState() => _AnimatedCoursesIconState();
-}
-
-class _AnimatedCoursesIconState extends State<_AnimatedCoursesIcon>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _flipAnimation;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 520),
-    );
-
-    _flipAnimation = Tween<double>(begin: 0.0, end: math.pi * 2).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
-    );
-
-    _scaleAnimation = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.0, end: 1.28)
-            .chain(CurveTween(curve: Curves.easeOutBack)),
-        weight: 45,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.28, end: 1.0)
-            .chain(CurveTween(curve: Curves.elasticOut)),
-        weight: 55,
-      ),
-    ]).animate(_controller);
-
-    if (widget.isSelected) {
-      _controller.forward();
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant _AnimatedCoursesIcon oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isSelected && !oldWidget.isSelected) {
-      _controller.forward(from: 0.0);
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final color = widget.isSelected
-        ? ZankoColors.primary
-        : (isDark ? Colors.grey[400]! : ZankoColors.textSecondary);
-
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        final transform = Matrix4.identity()
-          ..setEntry(3, 2, 0.002)
-          ..rotateY(_flipAnimation.value);
-
-        return Transform.scale(
-          scale: _scaleAnimation.value,
-          child: Transform(
-            alignment: Alignment.center,
-            transform: transform,
-            child: HugeIcon(
-              icon: HugeIcons.strokeRoundedBook02,
-              color: color,
-              size: 23,
-            ),
-          ),
+      case 1:
+        return HugeIcon(
+          icon: HugeIcons.strokeRoundedBook02,
+          color: color,
+          size: isSelected ? 24 : 22,
         );
-      },
-    );
+      case 2:
+        return CuteAiBotIcon(
+          size: isSelected ? 25 : 22,
+          color: color,
+          strokeWidth: isSelected ? 2.2 : 1.9,
+        );
+      case 3:
+        return HugeIcon(
+          icon: HugeIcons.strokeRoundedMortarboard02,
+          color: color,
+          size: isSelected ? 24 : 22,
+        );
+      case 4:
+      default:
+        return HugeIcon(
+          icon: HugeIcons.strokeRoundedUser,
+          color: color,
+          size: isSelected ? 24 : 22,
+        );
+    }
+  }
+
+  String _getNavLabel(int index, LanguageProvider langProvider) {
+    switch (index) {
+      case 0:
+        return langProvider.translate('nav_home');
+      case 1:
+        return langProvider.translate('nav_courses');
+      case 2:
+        return langProvider.translate('nav_ai_teacher');
+      case 3:
+        return langProvider.translate('zankoline');
+      case 4:
+      default:
+        return langProvider.translate('nav_profile');
+    }
   }
 }
 
-// ─── 3. Center AI Button (Elevated Primary Blue Circle with Sparkles) ───────
-class _AnimatedCenterAiButton extends StatelessWidget {
-  final bool isSelected;
-  final VoidCallback onTap;
+// ─── Curved Notch Custom Painter (Organic Fluid Scoop) ──────────────────────
+class _CurvedNotchPainter extends CustomPainter {
+  final double activeX;
+  final Color backgroundColor;
+  final Color borderColor;
+  final double scoopWidth;
+  final double scoopDepth;
+  final double barTop;
+  final double cornerRadius;
 
-  const _AnimatedCenterAiButton({
-    required this.isSelected,
-    required this.onTap,
+  _CurvedNotchPainter({
+    required this.activeX,
+    required this.backgroundColor,
+    required this.borderColor,
+    this.scoopWidth = 66.0,
+    this.scoopDepth = 28.0,
+    this.barTop = 20.0,
+    this.cornerRadius = 26.0,
   });
 
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.mediumImpact();
-        onTap();
-      },
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: 52,
-        height: 52,
-        decoration: BoxDecoration(
-          color: const Color(0xFF035EC2),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF035EC2).withValues(alpha: 0.35),
-              blurRadius: 14,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: const Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              HugeIcon(
-                icon: HugeIcons.strokeRoundedAiMagic,
-                color: Colors.white,
-                size: 20,
-              ),
-              SizedBox(height: 2),
-              Text(
-                'AI Tutor',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 9,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.2,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final r = cornerRadius;
+    final halfScoop = scoopWidth / 2.0;
 
-// ─── 4. Zankoline Animated Icon (Cap Toss & School Icon) ─────────────────────
-class _AnimatedZankolineIcon extends StatefulWidget {
-  final bool isSelected;
-  const _AnimatedZankolineIcon({required this.isSelected});
+    final path = Path();
+    path.moveTo(r, barTop);
 
-  @override
-  State<_AnimatedZankolineIcon> createState() => _AnimatedZankolineIconState();
-}
+    final x0 = activeX - halfScoop;
+    final x4 = activeX + halfScoop;
 
-class _AnimatedZankolineIconState extends State<_AnimatedZankolineIcon>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
+    final startX = math.max(r, x0);
+    final endX = math.min(w - r, x4);
 
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-
-    _scaleAnimation = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.0, end: 1.25)
-            .chain(CurveTween(curve: Curves.easeOutBack)),
-        weight: 50,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.25, end: 1.0)
-            .chain(CurveTween(curve: Curves.elasticOut)),
-        weight: 50,
-      ),
-    ]).animate(_controller);
-
-    if (widget.isSelected) {
-      _controller.forward();
+    if (startX > r) {
+      path.lineTo(startX, barTop);
     }
-  }
 
-  @override
-  void didUpdateWidget(covariant _AnimatedZankolineIcon oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isSelected && !oldWidget.isSelected) {
-      _controller.forward(from: 0.0);
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final color = widget.isSelected
-        ? const Color(0xFF035EC2)
-        : (isDark ? Colors.grey[400]! : ZankoColors.textSecondary);
-
-    return ScaleTransition(
-      scale: _scaleAnimation,
-      child: HugeIcon(
-        icon: HugeIcons.strokeRoundedMortarboard02,
-        color: color,
-        size: 24,
-      ),
+    // Smooth organic S-curve scoop dipping down and back up
+    path.cubicTo(
+      activeX - (activeX - startX) * 0.50, barTop,
+      activeX - (activeX - startX) * 0.50, barTop + scoopDepth,
+      activeX, barTop + scoopDepth,
     );
+    path.cubicTo(
+      activeX + (endX - activeX) * 0.50, barTop + scoopDepth,
+      activeX + (endX - activeX) * 0.50, barTop,
+      endX, barTop,
+    );
+
+    if (endX < w - r) {
+      path.lineTo(w - r, barTop);
+    }
+
+    // Top-right rounded corner
+    path.arcToPoint(Offset(w, barTop + r), radius: Radius.circular(r));
+    // Right vertical edge
+    path.lineTo(w, h - r);
+    // Bottom-right rounded corner
+    path.arcToPoint(Offset(w - r, h), radius: Radius.circular(r));
+    // Bottom edge
+    path.lineTo(r, h);
+    // Bottom-left rounded corner
+    path.arcToPoint(Offset(0, h - r), radius: Radius.circular(r));
+    // Left vertical edge
+    path.lineTo(0, barTop + r);
+    // Top-left rounded corner
+    path.arcToPoint(Offset(r, barTop), radius: Radius.circular(r));
+    path.close();
+
+    // 1. Ambient drop shadow
+    canvas.drawShadow(
+      path,
+      Colors.black.withValues(alpha: 0.12),
+      14,
+      true,
+    );
+
+    // 2. Fill background
+    final fillPaint = Paint()
+      ..color = backgroundColor
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(path, fillPaint);
+
+    // 3. Border stroke
+    final borderPaint = Paint()
+      ..color = borderColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+    canvas.drawPath(path, borderPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _CurvedNotchPainter oldDelegate) {
+    return oldDelegate.activeX != activeX ||
+        oldDelegate.backgroundColor != backgroundColor ||
+        oldDelegate.borderColor != borderColor;
   }
 }
 
-// ─── 5. Profile Animated Icon (Spring Pop & Float) ──────────────────────────
-class _AnimatedProfileIcon extends StatefulWidget {
-  final bool isSelected;
-  const _AnimatedProfileIcon({required this.isSelected});
-
-  @override
-  State<_AnimatedProfileIcon> createState() => _AnimatedProfileIconState();
-}
-
-class _AnimatedProfileIconState extends State<_AnimatedProfileIcon>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _floatAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 480),
-    );
-
-    _scaleAnimation = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.0, end: 1.30)
-            .chain(CurveTween(curve: Curves.easeOutBack)),
-        weight: 40,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.30, end: 1.0)
-            .chain(CurveTween(curve: Curves.elasticOut)),
-        weight: 60,
-      ),
-    ]).animate(_controller);
-
-    _floatAnimation = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 0.0, end: -4.0)
-            .chain(CurveTween(curve: Curves.easeOut)),
-        weight: 40,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: -4.0, end: 0.0)
-            .chain(CurveTween(curve: Curves.easeIn)),
-        weight: 60,
-      ),
-    ]).animate(_controller);
-
-    if (widget.isSelected) {
-      _controller.forward();
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant _AnimatedProfileIcon oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isSelected && !oldWidget.isSelected) {
-      _controller.forward(from: 0.0);
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final color = widget.isSelected
-        ? ZankoColors.primary
-        : (isDark ? Colors.grey[400]! : ZankoColors.textSecondary);
-
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(0, _floatAnimation.value),
-          child: Transform.scale(
-            scale: _scaleAnimation.value,
-            child: HugeIcon(
-              icon: HugeIcons.strokeRoundedUser,
-              color: color,
-              size: 23,
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
 
 // ─── Glass Button Widget ───────────────────────────────────────────────────
 class GlassButton extends StatelessWidget {

@@ -14,6 +14,7 @@ import '../../theme.dart';
 import '../../services/score_service.dart';
 import '../ai_teacher/ai_teacher_chat_screen.dart';
 import '../payment/vip_upgrade_sheet.dart';
+import '../../widgets/apple_ui_components.dart';
 
 class AiExamGeneratorScreen extends StatefulWidget {
   final String? initialCourse;
@@ -31,6 +32,7 @@ class AiExamGeneratorScreen extends StatefulWidget {
 
 class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
   // Config state
+  int _setupStep = 0; // 0: Source (PDF / Topic), 1: Settings & Launch
   String _inputMode = 'pdf'; // 'pdf' or 'topic'
   final TextEditingController _courseController = TextEditingController();
   final TextEditingController _topicController = TextEditingController();
@@ -605,48 +607,62 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
     return Directionality(
       textDirection: langProvider.textDirection,
       child: PopScope(
-        canPop: _activeExam == null || _examCompleted,
+        canPop: (_activeExam == null || _examCompleted) && _setupStep == 0,
         onPopInvokedWithResult: (didPop, result) {
-          if (!didPop && _activeExam != null && !_examCompleted) {
+          if (didPop) return;
+          if (_activeExam != null && !_examCompleted) {
             _showExitConfirmDialog(context, isDark);
+          } else if (_setupStep == 1) {
+            setState(() => _setupStep = 0);
           }
         },
         child: Scaffold(
           backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
           appBar: AppBar(
-            backgroundColor: (isDark ? ZankoColors.darkBackground : ZankoColors.background).withValues(alpha: 0.95),
+            backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(CupertinoIcons.back),
+              icon: Icon(
+                CupertinoIcons.back,
+                color: isDark ? Colors.white : const Color(0xFF1F2937),
+              ),
               onPressed: () {
                 if (_activeExam != null && !_examCompleted) {
                   _showExitConfirmDialog(context, isDark);
+                } else if (_setupStep == 1) {
+                  setState(() => _setupStep = 0);
                 } else {
                   Navigator.pop(context);
                 }
               },
             ),
-            title: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: ZankoColors.primary.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(CupertinoIcons.sparkles, color: ZankoColors.primary, size: 18),
+            title: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: ZankoColors.primary.withValues(alpha: isDark ? 0.20 : 0.10),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: ZankoColors.primary.withValues(alpha: 0.25),
+                  width: 1,
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  langProvider.translate('create_exam'),
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    color: isDark ? Colors.white : ZankoColors.textPrimary,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CuteAiBotIcon(size: 19, color: ZankoColors.primary, strokeWidth: 2),
+                  const SizedBox(width: 8),
+                  Text(
+                    langProvider.currentLanguage == AppLanguage.english
+                        ? 'AI Exam Studio'
+                        : (langProvider.currentLanguage == AppLanguage.arabic ? 'اختبار ذكي' : 'تاقیکردنەوەی زیرەک'),
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w800,
+                      color: isDark ? Colors.white : const Color(0xFF151821),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             centerTitle: true,
           ),
@@ -692,492 +708,1391 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
   // ═══════════════════════════════════════════════════════════════════════════
   // 1. CONFIG STATE (سازدانی تاقیکردنەوە لەسەر PDF)
   // ═══════════════════════════════════════════════════════════════════════════
-  Widget _buildConfigState(bool isDark, LanguageProvider langProvider) {
-    final bool hasPdf = _pdfFileName != null && _pdfFileContent != null;
-
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Banner
-          Container(
-            padding: const EdgeInsets.all(22),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [ZankoColors.primary, ZankoColors.accent],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: ZankoColors.primary.withValues(alpha: 0.35),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Row(
+  void _proceedToStep2() {
+    if (_inputMode == 'pdf') {
+      if (_pdfFileContent == null || _pdfFileName == null) {
+        HapticFeedback.heavyImpact();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
               children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Icon(CupertinoIcons.doc_text_search, color: Colors.white, size: 26),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'دروستکردنی تاقیکردنەوە لە فایلی PDF 🎯',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'سەرەتا فایلی PDFی وانەکەت بنێرە، AI دەستبەجێ پرسیار لەسەر دەقی فایلەکەت ئامادە دەکات.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white70,
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                Icon(CupertinoIcons.exclamationmark_triangle_fill, color: Colors.white, size: 20),
+                SizedBox(width: 10),
+                Expanded(child: Text('تکایە سەرەتا فایلی PDF هەڵبژێرە لە مۆبایلەکەت 📄')),
               ],
             ),
+            backgroundColor: Colors.orange.shade800,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           ),
-          const SizedBox(height: 16),
-
-          if (!(Provider.of<AuthService>(context, listen: false).currentUser?.isVip ?? false)) ...[
-            GestureDetector(
-              onTap: () => VipUpgradeSheet.show(context),
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      const Color(0xFF0F172A),
-                      ZankoColors.darkCardSecondary,
-                      const Color(0xFF064E3B).withValues(alpha: 0.4),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.45)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: ZankoColors.primary.withValues(alpha: 0.12),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: ZankoColors.primary.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text('👑', style: TextStyle(fontSize: 20, color: ZankoColors.primary)),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'تاقیکردنەوەی بێسنووری فاینەڵ (VIP)',
-                            style: TextStyle(color: ZankoColors.primary, fontWeight: FontWeight.bold, fontSize: 13),
-                          ),
-                          const SizedBox(height: 2),
-                          const Text(
-                            'تا ٢٠ پرسیاری ئاڵۆز لەسەر هەموو مەلزەمەکانت بەبێ سنوور دروستبکە',
-                            style: TextStyle(color: Colors.white70, fontSize: 10.5),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: ZankoColors.primary,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Text(
-                        'VIP ⚡',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+        );
+        _pickPdfFile();
+        return;
+      }
+    } else {
+      if (_courseController.text.trim().isEmpty) {
+        HapticFeedback.heavyImpact();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(CupertinoIcons.exclamationmark_triangle_fill, color: Colors.white, size: 20),
+                SizedBox(width: 10),
+                Expanded(child: Text('تکایە ناوی وانە یان کۆرس بنووسە ✍️')),
+              ],
             ),
-            const SizedBox(height: 16),
-          ],
-
-          // 1. STEP 1: Source Selection (PDF or Topic)
-          _buildLabel('١. سەرچاوەی تاقیکردنەوە (Source)', isDark),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              _buildPillChoice('📄 لە فایلی PDF', 'pdf', _inputMode == 'pdf', isDark, () {
-                setState(() => _inputMode = 'pdf');
-              }),
-              const SizedBox(width: 8),
-              _buildPillChoice('✍️ نووسینی وانە و بابەت', 'topic', _inputMode == 'topic', isDark, () {
-                setState(() => _inputMode = 'topic');
-              }),
-            ],
+            backgroundColor: Colors.orange.shade800,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           ),
-          const SizedBox(height: 14),
+        );
+        return;
+      }
+    }
+    HapticFeedback.mediumImpact();
+    setState(() => _setupStep = 1);
+  }
 
-          if (_inputMode == 'pdf') ...[
-            GestureDetector(
-              onTap: _pickPdfFile,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: hasPdf
-                      ? (isDark ? ZankoColors.darkCard : const Color(0xFFF0FDF4))
-                      : (isDark ? ZankoColors.darkCard : Colors.white),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: hasPdf
-                        ? ZankoColors.success
-                        : (isDark ? ZankoColors.primary.withValues(alpha: 0.5) : ZankoColors.primary),
-                    width: hasPdf ? 2.0 : 1.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (hasPdf ? ZankoColors.success : ZankoColors.primary).withValues(alpha: isDark ? 0.15 : 0.08),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: (hasPdf ? ZankoColors.success : ZankoColors.primary).withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        hasPdf ? CupertinoIcons.doc_checkmark_fill : CupertinoIcons.cloud_upload_fill,
-                        color: hasPdf ? ZankoColors.success : ZankoColors.primary,
-                        size: 28,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            hasPdf ? _pdfFileName! : 'کلیک لێرە بکە بۆ هەڵبژاردن و بارکردنی فایلی PDF',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: hasPdf
-                                  ? (isDark ? Colors.white : ZankoColors.textPrimary)
-                                  : (isDark ? Colors.grey[300] : ZankoColors.primary),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            hasPdf
-                                ? 'فایلی PDF بە سەرکەوتوویی ئامادەکرا ✅ (دەقەکە شیکارکرا)'
-                                : 'تکایە فایلی PDFی وانەکەت هەڵبژێرە لە مۆبایلەکەت',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: hasPdf ? FontWeight.w600 : FontWeight.normal,
-                              color: hasPdf
-                                  ? ZankoColors.success
-                                  : (isDark ? Colors.grey[500] : ZankoColors.textSecondary),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (hasPdf)
-                      IconButton(
-                        icon: const Icon(CupertinoIcons.xmark_circle_fill, color: Colors.grey, size: 22),
-                        onPressed: () => setState(() {
-                          _pdfFileName = null;
-                          _pdfFileContent = null;
-                        }),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ] else ...[
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDark ? ZankoColors.darkCard : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFEFEFF7),
-                ),
-              ),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _courseController,
-                    decoration: InputDecoration(
-                      labelText: 'ناوی وانە / کۆرس',
-                      hintText: 'نموونە: Operating Systems، فیزیا، یاسا...',
-                      prefixIcon: Icon(CupertinoIcons.book_fill, color: ZankoColors.primary),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _topicController,
-                    decoration: InputDecoration(
-                      labelText: 'بابەتی دیاریکراو (ئارەزوومەندانە)',
-                      hintText: 'نموونە: Memory Management، هاوکێشەکان...',
-                      prefixIcon: Icon(CupertinoIcons.tag_fill, color: ZankoColors.primary),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          const SizedBox(height: 24),
-
-          // 2. Difficulty Level
-          _buildLabel('٢. ئاستی زەحمەتی (Difficulty)', isDark),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              _buildPillChoice('ئاسان 🟢', 'Easy', _selectedDifficulty == 'Easy', isDark, () {
-                setState(() => _selectedDifficulty = 'Easy');
-              }),
-              const SizedBox(width: 8),
-              _buildPillChoice('ناوەند 🟡', 'Medium', _selectedDifficulty == 'Medium', isDark, () {
-                setState(() => _selectedDifficulty = 'Medium');
-              }),
-              const SizedBox(width: 8),
-              _buildPillChoice('سەخت 🔥', 'Hard', _selectedDifficulty == 'Hard', isDark, () {
-                setState(() => _selectedDifficulty = 'Hard');
-              }),
-            ],
+  Widget _buildStepIndicator(bool isDark) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF141923) : Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: isDark ? const Color(0xFF232B3B) : const Color(0xFFE5EBF4),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
           ),
-          const SizedBox(height: 20),
-
-          // 3. Question Type
-          _buildLabel('٣. جۆری پرسیارەکان (Question Type)', isDark),
-          const SizedBox(height: 8),
+        ],
+      ),
+      child: Column(
+        children: [
           Row(
             children: [
-              _buildPillChoice('تێکەڵ 🎯', 'Mixed', _selectedQuestionType == 'Mixed', isDark, () {
-                setState(() => _selectedQuestionType = 'Mixed');
-              }),
-              const SizedBox(width: 8),
-              _buildPillChoice('فرەبژاردە 📋', 'MCQ', _selectedQuestionType == 'MCQ', isDark, () {
-                setState(() => _selectedQuestionType = 'MCQ');
-              }),
-              const SizedBox(width: 8),
-              _buildPillChoice('ڕاست/هەڵە ⚖️', 'TrueFalse', _selectedQuestionType == 'TrueFalse', isDark, () {
-                setState(() => _selectedQuestionType = 'TrueFalse');
-              }),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // 4. Question Count & Duration
-          Row(
-            children: [
+              // Step 1: Source
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildLabel('ژمارەی پرسیار', isDark),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: isDark ? ZankoColors.darkCard : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFEFEFF7),
-                        ),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<int>(
-                          value: _questionCount,
-                          isExpanded: true,
-                          dropdownColor: isDark ? ZankoColors.darkCard : Colors.white,
-                          items: const [
-                            DropdownMenuItem(value: 5, child: Text('٥ پرسیار (ئاسایی)')),
-                            DropdownMenuItem(value: 10, child: Text('١٠ پرسیار 👑 VIP')),
-                            DropdownMenuItem(value: 15, child: Text('١٥ پرسیار 👑 VIP')),
-                            DropdownMenuItem(value: 20, child: Text('٢٠ پرسیار 👑 VIP')),
-                          ],
-                          onChanged: (val) {
-                            if (val != null) {
-                              final isVip = Provider.of<AuthService>(context, listen: false).currentUser?.isVip ?? false;
-                              if (val > 5 && !isVip) {
-                                _showVipExamDialog('هەڵبژاردنی $val پرسیار تایبەتە بە ئەندامانی VIP 👑');
-                              } else {
-                                setState(() => _questionCount = val);
-                              }
-                            }
-                          },
-                        ),
-                      ),
+                child: GestureDetector(
+                  onTap: () {
+                    if (_setupStep > 0) {
+                      HapticFeedback.selectionClick();
+                      setState(() => _setupStep = 0);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: _setupStep == 0
+                          ? ZankoColors.primary.withValues(alpha: isDark ? 0.20 : 0.10)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                  ],
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 26,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            gradient: _setupStep == 0
+                                ? LinearGradient(
+                                    colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
+                                  )
+                                : null,
+                            color: _setupStep > 0
+                                ? const Color(0xFF10B981)
+                                : (_setupStep == 0 ? null : (isDark ? Colors.white12 : const Color(0xFFE2E8F0))),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: _setupStep > 0
+                                ? const Icon(Icons.check, size: 15, color: Colors.white)
+                                : Text(
+                                    '١',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: _setupStep == 0 ? Colors.white : (isDark ? Colors.white38 : const Color(0xFF94A3B8)),
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'مەلزەمە',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: _setupStep == 0 ? FontWeight.w800 : FontWeight.w600,
+                                  color: _setupStep == 0
+                                      ? (isDark ? Colors.white : const Color(0xFF111827))
+                                      : (isDark ? Colors.white54 : const Color(0xFF6B7280)),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                _pdfFileName != null ? 'فایل ئامادەیە' : 'دیاریکردن',
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  color: _pdfFileName != null
+                                      ? const Color(0xFF10B981)
+                                      : (_setupStep == 0 ? ZankoColors.primary : (isDark ? Colors.white38 : const Color(0xFF9CA3AF))),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(width: 16),
+
+              const SizedBox(width: 8),
+
+              // Step 2: Settings
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildLabel('کاتی تاقیکردنەوە', isDark),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: isDark ? ZankoColors.darkCard : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFEFEFF7),
-                        ),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<int>(
-                          value: _durationMinutes,
-                          isExpanded: true,
-                          dropdownColor: isDark ? ZankoColors.darkCard : Colors.white,
-                          items: [5, 10, 15, 30]
-                              .map((m) => DropdownMenuItem(
-                                    value: m,
-                                    child: Text('$m خولەک'),
-                                  ))
-                              .toList(),
-                          onChanged: (val) => setState(() => _durationMinutes = val ?? 15),
-                        ),
-                      ),
+                child: GestureDetector(
+                  onTap: _proceedToStep2,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: _setupStep == 1
+                          ? ZankoColors.primary.withValues(alpha: isDark ? 0.20 : 0.10)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                  ],
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 26,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            gradient: _setupStep == 1
+                                ? LinearGradient(
+                                    colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
+                                  )
+                                : null,
+                            color: _setupStep == 1 ? null : (isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              '٢',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: _setupStep == 1 ? Colors.white : (isDark ? Colors.white38 : const Color(0xFF94A3B8)),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'ڕێکخستن',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: _setupStep == 1 ? FontWeight.w800 : FontWeight.w600,
+                                  color: _setupStep == 1
+                                      ? (isDark ? Colors.white : const Color(0xFF111827))
+                                      : (isDark ? Colors.white54 : const Color(0xFF6B7280)),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                'ئاست و دەستپێک',
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  color: _setupStep == 1 ? ZankoColors.primary : (isDark ? Colors.white38 : const Color(0xFF9CA3AF)),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 32),
 
-          // Submit Button
-          SizedBox(
-            width: double.infinity,
-            height: 58,
-            child: ElevatedButton(
-              onPressed: _generateAndStartExam,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: ZankoColors.primary,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                elevation: 6,
-                shadowColor: ZankoColors.primary.withValues(alpha: 0.4),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(CupertinoIcons.sparkles, color: Colors.white, size: 22),
-                  SizedBox(width: 10),
-                  Text(
-                    '🚀 دەستپێکردنی تاقیکردنەوە بە AI',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+          const SizedBox(height: 10),
+
+          // Animated Linear Indicator Track
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: Container(
+              height: 4,
+              width: double.infinity,
+              color: isDark ? const Color(0xFF222B3D) : const Color(0xFFE2E8F0),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: AnimatedFractionallySizedBox(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutCubic,
+                  widthFactor: _setupStep == 0 ? 0.5 : 1.0,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
+                      ),
+                      borderRadius: BorderRadius.circular(4),
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 24),
         ],
       ),
     );
   }
 
-  Widget _buildLabel(String text, bool isDark) {
-    return Text(
-      text,
-      style: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w700,
-        color: isDark ? Colors.white : ZankoColors.textPrimary,
+  Widget _buildConfigState(bool isDark, LanguageProvider langProvider) {
+    final bool hasPdf = _pdfFileName != null && _pdfFileContent != null;
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Step 1 vs Step 2 Onboarding Indicator
+          _buildStepIndicator(isDark),
+
+          // Render Selected Page (Page 1 or Page 2) with smooth animation
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0.04, 0),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
+              );
+            },
+            child: _setupStep == 0
+                ? KeyedSubtree(
+                    key: const ValueKey<int>(0),
+                    child: _buildPage1Source(isDark, hasPdf),
+                  )
+                : KeyedSubtree(
+                    key: const ValueKey<int>(1),
+                    child: _buildPage2Settings(isDark, hasPdf),
+                  ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildPillChoice(String label, String value, bool isSelected, bool isDark, VoidCallback onTap) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PAGE 1: SOURCE SELECTION (PDF OR TOPIC)
+  // ═══════════════════════════════════════════════════════════════════════════
+  Widget _buildPage1Source(bool isDark, bool hasPdf) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Title & Description
+        Text(
+          'سەرچاوەی مەلزەمەکەت دیاریبکە',
+          style: TextStyle(
+            fontSize: 16.5,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.3,
+            color: isDark ? Colors.white : const Color(0xFF111827),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'فایلی PDF ی وانەکە باربکە یان ناوی کۆرس بنووسە بۆ دروستکردنی پرسیار',
+          style: TextStyle(
+            fontSize: 12.5,
+            color: isDark ? ZankoColors.darkTextSecondary : const Color(0xFF6B7280),
+            height: 1.35,
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Segmented Tabs
+        Container(
+          padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: isSelected
-                ? ZankoColors.primary
-                : (isDark ? ZankoColors.darkCard : Colors.white),
-            borderRadius: BorderRadius.circular(14),
+            color: isDark ? const Color(0xFF161B26) : const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: isSelected
-                  ? ZankoColors.primary
-                  : (isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFEFEFF7)),
+              color: isDark ? const Color(0xFF262E3E) : const Color(0xFFE2E8F0),
+              width: 1,
             ),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: ZankoColors.primary.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildSegmentButton(
+                  icon: CupertinoIcons.doc_fill,
+                  label: 'فایلی PDF',
+                  isSelected: _inputMode == 'pdf',
+                  isDark: isDark,
+                  onTap: () => setState(() => _inputMode = 'pdf'),
+                ),
+              ),
+              Expanded(
+                child: _buildSegmentButton(
+                  icon: CupertinoIcons.pencil_outline,
+                  label: 'نووسینی بابەت',
+                  isSelected: _inputMode == 'topic',
+                  isDark: isDark,
+                  onTap: () => setState(() => _inputMode = 'topic'),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        if (_inputMode == 'pdf') ...[
+          GestureDetector(
+            onTap: _pickPdfFile,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: hasPdf
+                    ? (isDark ? const Color(0xFF0C2419) : const Color(0xFFF0FDF4))
+                    : (isDark ? const Color(0xFF161B26) : Colors.white),
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(
+                  color: hasPdf
+                      ? const Color(0xFF10B981)
+                      : (isDark ? ZankoColors.primary.withValues(alpha: 0.35) : const Color(0xFFD6E4F7)),
+                  width: hasPdf ? 1.8 : 1.4,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: (hasPdf ? const Color(0xFF10B981) : ZankoColors.primary)
+                        .withValues(alpha: isDark ? 0.15 : 0.05),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: hasPdf
+                  ? Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF10B981).withValues(alpha: isDark ? 0.25 : 0.15),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              CupertinoIcons.checkmark_seal_fill,
+                              color: Color(0xFF10B981),
+                              size: 26,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _pdfFileName!,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : const Color(0xFF111827),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 3),
+                              const Text(
+                                'مەلزەمەکە شیکارکرا و ئامادەیە ✅',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  color: Color(0xFF10B981),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(CupertinoIcons.xmark_circle_fill, color: Colors.grey, size: 22),
+                          onPressed: () => setState(() {
+                            _pdfFileName = null;
+                            _pdfFileContent = null;
+                          }),
+                        ),
+                      ],
+                    )
+                  : Column(
+                      children: [
+                        Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: ZankoColors.primary.withValues(alpha: isDark ? 0.20 : 0.10),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Icon(
+                              CupertinoIcons.cloud_upload_fill,
+                              color: ZankoColors.primary,
+                              size: 28,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'کلیک لێرە بکە بۆ بارکردنی مەلزەمە',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : const Color(0xFF111827),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'پشتیوانی هەموو جۆرە مەلزەمەیەکی PDF لە مۆبایلەکەت',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: isDark ? ZankoColors.darkTextSecondary : ZankoColors.textSecondary,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 14),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 6,
+                          alignment: WrapAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF1E2638) : const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(CupertinoIcons.doc_text_fill, size: 12, color: ZankoColors.primary),
+                                  const SizedBox(width: 5),
+                                  const Text('فایلی PDF', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF1E2638) : const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text('⚡', style: TextStyle(fontSize: 11)),
+                                  SizedBox(width: 4),
+                                  Text('شیکاری AI', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                  ]
-                : [],
+            ),
+          ),
+        ] else ...[
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF161B26) : Colors.white,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: isDark ? const Color(0xFF262E3E) : const Color(0xFFE2E8F0),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: _courseController,
+                  decoration: InputDecoration(
+                    labelText: 'ناوی وانە / کۆرس',
+                    hintText: 'نموونە: سیستمەکان، فیزیا، یاسا، پزیشکی...',
+                    prefixIcon: Icon(CupertinoIcons.book_fill, color: ZankoColors.primary),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: isDark ? const Color(0xFF2C3446) : const Color(0xFFE2E7F0),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: isDark ? const Color(0xFF2C3446) : const Color(0xFFE2E7F0),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: ZankoColors.primary, width: 1.5),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _topicController,
+                  decoration: InputDecoration(
+                    labelText: 'بابەتی دیاریکراو (ئارەزوومەندانە)',
+                    hintText: 'نموونە: بەشی یەکەم، هاوکێشەکان...',
+                    prefixIcon: Icon(CupertinoIcons.tag_fill, color: ZankoColors.primary),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: isDark ? const Color(0xFF2C3446) : const Color(0xFFE2E7F0),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: isDark ? const Color(0xFF2C3446) : const Color(0xFFE2E7F0),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: ZankoColors.primary, width: 1.5),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'پێشنیاری خێرا:',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    'کۆمپیوتەر 💻',
+                    'ئینگلیزی 🇬🇧',
+                    'پزیشکی 🩺',
+                    'یاسا ⚖️',
+                    'ئابووری 📊',
+                  ].map((subject) {
+                    return GestureDetector(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        setState(() {
+                          _courseController.text = subject.split(' ').first;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E2638) : const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isDark ? const Color(0xFF2E384D) : const Color(0xFFE2E8F0),
+                          ),
+                        ),
+                        child: Text(
+                          subject,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white70 : const Color(0xFF374151),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+        ],
+
+        const SizedBox(height: 16),
+
+        // 2 Benefit Cards below upload to elevate UX
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF141923) : const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF202736) : const Color(0xFFE2E8F0),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('🎯 هاوشێوەی فاینەڵ', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 2),
+                    Text(
+                      'پرسیاری وورد لەسەر مەلزەمە',
+                      style: TextStyle(fontSize: 10.5, color: isDark ? Colors.white54 : const Color(0xFF6B7280)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF141923) : const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF202736) : const Color(0xFFE2E8F0),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('⏱️ خولەکی کاتدار', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 2),
+                    Text(
+                      'خەمڵاندنی نمرە و ئاست',
+                      style: TextStyle(fontSize: 10.5, color: isDark ? Colors.white54 : const Color(0xFF6B7280)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 24),
+
+        // Step 1 Continue Button
+        SizedBox(
+          width: double.infinity,
+          height: 56,
+          child: ElevatedButton(
+            onPressed: _proceedToStep2,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ZankoColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              elevation: 6,
+              shadowColor: ZankoColors.primary.withValues(alpha: 0.45),
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'بەردەوامبە بۆ دیاریکردنی پرسیارەکان',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+                SizedBox(width: 8),
+                Icon(CupertinoIcons.arrow_left, size: 18),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  // PAGE 2: EXAM SETTINGS (DIFFICULTY, TYPE, COUNT, DURATION & LAUNCH)
+  // ═══════════════════════════════════════════════════════════════════════════
+  Widget _buildPage2Settings(bool isDark, bool hasPdf) {
+    final sourceTitle = _inputMode == 'pdf'
+        ? (_pdfFileName ?? 'فایلی PDF')
+        : (_courseController.text.trim().isNotEmpty
+            ? _courseController.text.trim()
+            : 'وانەی دیاریکراو');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Selected Source Summary Card
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF161B26) : const Color(0xFFF0F6FD),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: ZankoColors.primary.withValues(alpha: isDark ? 0.30 : 0.25),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: ZankoColors.primary.withValues(alpha: isDark ? 0.25 : 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  _inputMode == 'pdf' ? CupertinoIcons.doc_fill : CupertinoIcons.book_fill,
+                  color: ZankoColors.primary,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'سەرچاوەی هەڵبژێردراو:',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark ? ZankoColors.darkTextSecondary : ZankoColors.textSecondary,
+                      ),
+                    ),
+                    Text(
+                      sourceTitle,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : const Color(0xFF151821),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _setupStep = 0);
+                },
+                icon: const Icon(CupertinoIcons.pencil, size: 14),
+                label: const Text('گۆڕین', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                style: TextButton.styleFrom(
+                  foregroundColor: ZankoColors.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 18),
+
+        // 1. Difficulty Level
+        _buildSectionHeader('١', 'ئاستی زەحمەتی (Difficulty)', isDark),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _buildDifficultyCard(
+                title: 'ئاسان',
+                emoji: '🟢',
+                sub: 'سەرەتایی',
+                color: const Color(0xFF10B981),
+                isSelected: _selectedDifficulty == 'Easy',
+                isDark: isDark,
+                onTap: () => setState(() => _selectedDifficulty = 'Easy'),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildDifficultyCard(
+                title: 'ناوەند',
+                emoji: '🟡',
+                sub: 'هاوسەنگ',
+                color: const Color(0xFFF59E0B),
+                isSelected: _selectedDifficulty == 'Medium',
+                isDark: isDark,
+                onTap: () => setState(() => _selectedDifficulty = 'Medium'),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildDifficultyCard(
+                title: 'سەخت',
+                emoji: '🔥',
+                sub: 'فاینەڵ',
+                color: const Color(0xFFEF4444),
+                isSelected: _selectedDifficulty == 'Hard',
+                isDark: isDark,
+                onTap: () => setState(() => _selectedDifficulty = 'Hard'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+
+        // 2. Question Type
+        _buildSectionHeader('٢', 'جۆری پرسیارەکان (Question Type)', isDark),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _buildTypeCard(
+                title: 'تێکەڵ',
+                emoji: '🎯',
+                typeKey: 'Mixed',
+                isSelected: _selectedQuestionType == 'Mixed',
+                isDark: isDark,
+                onTap: () => setState(() => _selectedQuestionType = 'Mixed'),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildTypeCard(
+                title: 'فرەبژاردە',
+                emoji: '📋',
+                typeKey: 'MCQ',
+                isSelected: _selectedQuestionType == 'MCQ',
+                isDark: isDark,
+                onTap: () => setState(() => _selectedQuestionType = 'MCQ'),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildTypeCard(
+                title: 'ڕاست/هەڵە',
+                emoji: '⚖️',
+                typeKey: 'TrueFalse',
+                isSelected: _selectedQuestionType == 'TrueFalse',
+                isDark: isDark,
+                onTap: () => setState(() => _selectedQuestionType = 'TrueFalse'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+
+        // 3. Question Count & Duration
+        _buildSectionHeader('٣', 'ژمارەی پرسیار و ماوەی تاقیکردنەوە', isDark),
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? ZankoColors.darkCard : Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: isDark ? ZankoColors.darkBorder : const Color(0xFFE5EBF4),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'ژمارەی پرسیار',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : const Color(0xFF1E2430),
+                    ),
+                  ),
+                  Text(
+                    '$_questionCount پرسیار',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.bold,
+                      color: ZankoColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [5, 10, 15, 20].map((count) {
+                  final isSelected = _questionCount == count;
+                  final isVipCount = count > 5;
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      child: GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          final isVip = Provider.of<AuthService>(context, listen: false).currentUser?.isVip ?? false;
+                          if (isVipCount && !isVip) {
+                            _showVipExamDialog('هەڵبژاردنی $count پرسیار تایبەتە بە ئەندامانی VIP 👑');
+                          } else {
+                            setState(() => _questionCount = count);
+                          }
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            gradient: isSelected
+                                ? LinearGradient(
+                                    colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
+                                  )
+                                : null,
+                            color: isSelected
+                                ? null
+                                : (isDark ? const Color(0xFF1A1F2B) : const Color(0xFFF1F4F9)),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: isSelected
+                                  ? ZankoColors.primary
+                                  : (isDark ? const Color(0xFF2B3342) : const Color(0xFFE2E7F0)),
+                              width: 1.1,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              isVipCount ? '$count 👑' : '$count',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                color: isSelected
+                                    ? Colors.white
+                                    : (isDark ? Colors.white70 : const Color(0xFF374151)),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+                ),
+                const SizedBox(height: 16),
+                const Divider(height: 1),
+                const SizedBox(height: 14),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'ماوەی تاقیکردنەوە',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : const Color(0xFF1E2430),
+                      ),
+                    ),
+                    Text(
+                      '$_durationMinutes خولەک',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.bold,
+                        color: ZankoColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [5, 10, 15, 30].map((mins) {
+                    final isSelected = _durationMinutes == mins;
+                    return Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 3),
+                        child: GestureDetector(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            setState(() => _durationMinutes = mins);
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              gradient: isSelected
+                                  ? LinearGradient(
+                                      colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
+                                    )
+                                  : null,
+                              color: isSelected
+                                  ? null
+                                  : (isDark ? const Color(0xFF1A1F2B) : const Color(0xFFF1F4F9)),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: isSelected
+                                    ? ZankoColors.primary
+                                    : (isDark ? const Color(0xFF2B3342) : const Color(0xFFE2E7F0)),
+                                width: 1.1,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '$mins خولەک',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : (isDark ? Colors.white70 : const Color(0xFF374151)),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 28),
+
+        // Action Buttons Row: Back + Launch
+        Row(
+          children: [
+            OutlinedButton(
+              onPressed: () {
+                HapticFeedback.selectionClick();
+                setState(() => _setupStep = 0);
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: isDark ? Colors.white70 : const Color(0xFF374151),
+                side: BorderSide(
+                  color: isDark ? const Color(0xFF2E384D) : const Color(0xFFD1D5DB),
+                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(CupertinoIcons.arrow_right, size: 16),
+                  SizedBox(width: 6),
+                  Text('گەڕانەوە', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: SizedBox(
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () {
+                    HapticFeedback.mediumImpact();
+                    _generateAndStartExam();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ZankoColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    elevation: 6,
+                    shadowColor: ZankoColors.primary.withValues(alpha: 0.45),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CuteAiBotIcon(size: 20, color: Colors.white, strokeWidth: 2),
+                      SizedBox(width: 8),
+                      Text(
+                        'دەستپێکردنی تاقیکردنەوە 🚀',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  Widget _buildSectionHeader(String number, String title, bool isDark) {
+    return Row(
+      children: [
+        Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: ZankoColors.primary.withValues(alpha: isDark ? 0.22 : 0.12),
+            shape: BoxShape.circle,
           ),
           child: Center(
             child: Text(
-              label,
+              number,
               style: TextStyle(
                 fontSize: 12,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                color: isSelected ? Colors.white : (isDark ? Colors.grey[300] : ZankoColors.textPrimary),
+                fontWeight: FontWeight.w900,
+                color: ZankoColors.primary,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 14.5,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.2,
+            color: isDark ? Colors.white : const Color(0xFF151821),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSegmentButton({
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 11),
+        decoration: BoxDecoration(
+          gradient: isSelected
+              ? LinearGradient(
+                  colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
+                )
+              : null,
+          color: isSelected ? null : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: ZankoColors.primary.withValues(alpha: 0.35),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: isSelected
+                  ? Colors.white
+                  : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+            ),
+            const SizedBox(width: 7),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                color: isSelected
+                    ? Colors.white
+                    : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDifficultyCard({
+    required String title,
+    required String emoji,
+    required String sub,
+    required Color color,
+    required bool isSelected,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? color.withValues(alpha: isDark ? 0.22 : 0.12)
+              : (isDark ? ZankoColors.darkCard : Colors.white),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected
+                ? color
+                : (isDark ? ZankoColors.darkBorder : const Color(0xFFE2E7F0)),
+            width: isSelected ? 1.5 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+        ),
+        child: Column(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 20)),
+            const SizedBox(height: 6),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                color: isSelected
+                    ? (isDark ? Colors.white : color)
+                    : (isDark ? Colors.white70 : const Color(0xFF1E2430)),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              sub,
+              style: TextStyle(
+                fontSize: 10.5,
+                color: isDark ? ZankoColors.darkTextSecondary : ZankoColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTypeCard({
+    required String title,
+    required String emoji,
+    required String typeKey,
+    required bool isSelected,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          gradient: isSelected
+              ? LinearGradient(
+                  colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
+                )
+              : null,
+          color: isSelected
+              ? null
+              : (isDark ? ZankoColors.darkCard : Colors.white),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected
+                ? ZankoColors.primary
+                : (isDark ? ZankoColors.darkBorder : const Color(0xFFE2E7F0)),
+            width: isSelected ? 1.5 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: ZankoColors.primary.withValues(alpha: 0.35),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+        ),
+        child: Column(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 20)),
+            const SizedBox(height: 6),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                color: isSelected
+                    ? Colors.white
+                    : (isDark ? Colors.white70 : const Color(0xFF1E2430)),
+              ),
+            ),
+          ],
         ),
       ),
     );

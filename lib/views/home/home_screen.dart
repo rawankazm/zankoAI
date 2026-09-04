@@ -460,56 +460,62 @@ class _HomeQuickToolsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context);
-    final primary = const Color(0xFF035EC2);
-    final accent  = const Color(0xFF1A7FFF);
 
     final tools = [
       {
         'title': lang.translate('voice_tutor'),
+        'subtitle': lang.translate('voice_tutor_sub'),
         'icon': HugeIcons.strokeRoundedMic01,
-        'gradient': [primary, accent],
+        'gradient': [const Color(0xFF035EC2), const Color(0xFF1E88E5)],
         'onTap': () => Navigator.push(context, CupertinoPageRoute(builder: (_) => const KurdishVoiceTutorScreen())),
       },
       {
         'title': lang.translate('pdf_chat'),
+        'subtitle': lang.translate('pdf_chat_sub'),
         'icon': HugeIcons.strokeRoundedFile02,
-        'gradient': [const Color(0xFF0A3D8F), primary],
+        'gradient': [const Color(0xFF4F46E5), const Color(0xFF7C3AED)],
         'onTap': () => Navigator.push(context, CupertinoPageRoute(builder: (_) => const PdfChatScreen())),
       },
       {
         'title': lang.translate('nav_gpa'),
+        'subtitle': lang.translate('gpa_sub'),
         'icon': HugeIcons.strokeRoundedAnalytics01,
-        'gradient': [const Color(0xFFB8963E), const Color(0xFFE4D27D)],
+        'gradient': [const Color(0xFFD97706), const Color(0xFFF59E0B)],
         'onTap': () => Navigator.push(context, CupertinoPageRoute(builder: (_) => const GpaTrackerScreen())),
       },
       {
         'title': lang.translate('nav_quiz'),
+        'subtitle': lang.translate('quiz_sub'),
         'icon': HugeIcons.strokeRoundedFlash,
-        'gradient': [primary, const Color(0xFF2E8BFF)],
+        'gradient': [const Color(0xFF0284C7), const Color(0xFF38BDF8)],
         'onTap': () => Navigator.push(context, CupertinoPageRoute(builder: (_) => const AiExamGeneratorScreen())),
       },
       {
         'title': lang.translate('flashcards'),
+        'subtitle': lang.translate('flashcards_sub'),
         'icon': HugeIcons.strokeRoundedLayers01,
-        'gradient': [const Color(0xFF0050AA), primary],
+        'gradient': [const Color(0xFF059669), const Color(0xFF10B981)],
         'onTap': () => Navigator.push(context, CupertinoPageRoute(builder: (_) => const FlashcardsScreen())),
       },
       {
         'title': lang.translate('pomodoro_focus'),
+        'subtitle': lang.translate('pomodoro_sub'),
         'icon': HugeIcons.strokeRoundedClock01,
-        'gradient': [const Color(0xFFB8963E), const Color(0xFFD4AF37)],
+        'gradient': [const Color(0xFFEA580C), const Color(0xFFFB923C)],
         'onTap': () => Navigator.push(context, CupertinoPageRoute(builder: (_) => const PomodoroTimerScreen())),
       },
       {
         'title': lang.translate('academic_dictionary'),
+        'subtitle': lang.translate('academic_dictionary_sub'),
         'icon': HugeIcons.strokeRoundedBook02,
-        'gradient': [primary, accent],
+        'gradient': [const Color(0xFF0D9488), const Color(0xFF14B8A6)],
         'onTap': () => Navigator.push(context, CupertinoPageRoute(builder: (_) => const AcademicDictionaryScreen())),
       },
       {
         'title': lang.translate('seminar_thesis_assistant'),
+        'subtitle': lang.translate('seminar_thesis_sub'),
         'icon': HugeIcons.strokeRoundedNoteEdit,
-        'gradient': [const Color(0xFF0A3D8F), const Color(0xFF1565C0)],
+        'gradient': [const Color(0xFF2563EB), const Color(0xFF60A5FA)],
         'onTap': () => Navigator.push(context, CupertinoPageRoute(builder: (_) => const SeminarThesisAssistantScreen())),
       },
     ];
@@ -517,92 +523,191 @@ class _HomeQuickToolsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section header
+        // Section Header
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              lang.translate('quick_ai_tools'),
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.3,
-                color: isDark ? Colors.white : const Color(0xFF17191F),
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  lang.translate('quick_ai_tools'),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3,
+                    color: isDark ? Colors.white : const Color(0xFF17191F),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  lang.translate('all_ai_tools_subtitle'),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? ZankoColors.darkTextSecondary : ZankoColors.textSecondary,
+                  ),
+                ),
+              ],
             ),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [primary, accent]),
+                color: ZankoColors.primary.withValues(alpha: isDark ? 0.20 : 0.10),
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: ZankoColors.primary.withValues(alpha: 0.25),
+                  width: 1,
+                ),
               ),
-              child: const HugeIcon(
-                icon: HugeIcons.strokeRoundedFlash,
-                color: Colors.white,
-                size: 13,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedFlash,
+                    color: ZankoColors.primary,
+                    size: 13,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${tools.length}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: ZankoColors.primary,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
         const SizedBox(height: 14),
 
-        // Tool grid
+        // 2 Tools per Row (Large Modern Cards)
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
-            mainAxisSpacing: 16,
+            crossAxisCount: 2,
+            mainAxisSpacing: 12,
             crossAxisSpacing: 12,
-            childAspectRatio: 0.76,
+            childAspectRatio: 1.15,
           ),
           itemCount: tools.length,
           itemBuilder: (context, i) {
             final t = tools[i];
             final grad = t['gradient'] as List<Color>;
-            return GestureDetector(
-              onTap: t['onTap'] as VoidCallback,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 58,
-                    height: 58,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: isDark
-                            ? grad.map((c) => c.withValues(alpha: 0.85)).toList()
-                            : grad,
+            final title = t['title'] as String;
+            final subtitle = t['subtitle'] as String;
+
+            return Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  (t['onTap'] as VoidCallback)();
+                },
+                borderRadius: BorderRadius.circular(22),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: isDark ? ZankoColors.darkCard : Colors.white,
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(
+                      color: isDark ? ZankoColors.darkBorder : const Color(0xFFE5EBF4),
+                      width: 1.2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
                       ),
-                      borderRadius: BorderRadius.circular(18),
-                      boxShadow: [
-                        BoxShadow(
-                          color: grad.first.withValues(alpha: 0.35),
-                          blurRadius: 14,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: appIcon(t['icon'], color: Colors.white, size: 24),
-                    ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    t['title'] as String,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      height: 1.2,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : const Color(0xFF17191F),
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Top row: Gradient icon & subtle indicator
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: isDark
+                                    ? grad.map((c) => c.withValues(alpha: 0.90)).toList()
+                                    : grad,
+                              ),
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: grad.first.withValues(alpha: 0.35),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: appIcon(t['icon'], color: Colors.white, size: 22),
+                            ),
+                          ),
+                          Container(
+                            width: 26,
+                            height: 26,
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF1E2430) : const Color(0xFFF1F4F9),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: HugeIcon(
+                                icon: HugeIcons.strokeRoundedArrowRight01,
+                                color: isDark ? Colors.white38 : const Color(0xFF9CA3AF),
+                                size: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // Text Info (Title & Subtitle)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.2,
+                              color: isDark ? Colors.white : const Color(0xFF151821),
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            subtitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              height: 1.25,
+                              color: isDark ? ZankoColors.darkTextSecondary : ZankoColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             );
           },

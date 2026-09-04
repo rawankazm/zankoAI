@@ -1008,6 +1008,56 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
 
 
 
+  void _confirmClearChat() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF171B23) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const HugeIcon(icon: HugeIcons.strokeRoundedDelete02, color: Colors.redAccent, size: 22),
+            const SizedBox(width: 8),
+            Text(
+              'پاککردنەوەی گفتوگۆ',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : const Color(0xFF17191F),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'دڵنیایت لە پاککردنەوەی هەموو پەیامەکان و دەستپێکردنەوە لەسەرەتاوە؟',
+          style: TextStyle(
+            fontSize: 13.5,
+            color: isDark ? ZankoColors.darkTextSecondary : ZankoColors.textSecondary,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('پاشگەزبوونەوە', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              clearChatHistory();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('سڕینەوە'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildHeader(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final canPop = Navigator.canPop(context);
@@ -1017,19 +1067,26 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
 
     return Container(
       padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 8,
-        bottom: 10,
+        top: MediaQuery.of(context).padding.top + 6,
+        bottom: 12,
         left: 16,
         right: 16,
       ),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF171B23) : Colors.white,
+        color: isDark ? ZankoColors.darkCard : Colors.white,
         border: Border(
           bottom: BorderSide(
-            color: isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2),
+            color: isDark ? ZankoColors.darkBorder : ZankoColors.border,
             width: 1,
           ),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -1039,107 +1096,163 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 _buildNeumorphicButton(
                   icon: HugeIcons.strokeRoundedArrowLeft01,
                   onTap: () => Navigator.pop(context),
-                  iconColor: const Color(0xFF035EC2),
+                  iconColor: ZankoColors.primary,
                 ),
                 const SizedBox(width: 10),
               ],
 
-              // Teacher Avatar
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFF035EC2).withValues(alpha: 0.3), width: 1.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF035EC2).withValues(alpha: 0.15),
-                      blurRadius: 8,
-                    ),
-                  ],
-                ),
-                child: CircleAvatar(
-                  radius: 19,
-                  backgroundColor: isDark ? const Color(0xFF2A2E37) : const Color(0xFFE2EDFB),
-                  child: ClipOval(
-                    child: Image.asset(
-                      'assets/images/robot.png',
-                      width: 28,
-                      height: 28,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => const HugeIcon(
-                        icon: HugeIcons.strokeRoundedAiMagic,
-                        color: Color(0xFF035EC2),
-                        size: 22,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+              // Teacher Avatar with cute mascot & pulse
+              Stack(
+                clipBehavior: Clip.none,
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        lang.translate('ai_tutor'),
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.2,
-                          color: isDark ? Colors.white : const Color(0xFF17191F),
-                        ),
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE2EDFB),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFF035EC2).withValues(alpha: 0.3), width: 0.8),
-                        ),
-                        child: const Text(
-                          '⚡ Gemini 3.7 Flash',
-                          style: TextStyle(fontSize: 10, color: Color(0xFF035EC2), fontWeight: FontWeight.bold),
-                        ),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.35),
+                        width: 1.5,
                       ),
-                    ],
+                      boxShadow: [
+                        BoxShadow(
+                          color: ZankoColors.primary.withValues(alpha: 0.35),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: CuteAiBotIcon(
+                        size: 24,
+                        color: Colors.white,
+                        strokeWidth: 2.1,
+                      ),
+                    ),
                   ),
-                  Row(
-                    children: [
-                      Container(
-                        width: 7,
-                        height: 7,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF10B981),
-                          shape: BoxShape.circle,
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isDark ? ZankoColors.darkCard : Colors.white,
+                          width: 2,
                         ),
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        isVip ? 'VIP 👑 (نامەی بێسنوور)' : 'ڕژێمی ئاسایی',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: isVip ? const Color(0xFF10B981) : Colors.white60,
-                          fontWeight: isVip ? FontWeight.bold : FontWeight.normal,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
-              const Spacer(),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            lang.translate('ai_tutor'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.2,
+                              color: isDark ? Colors.white : const Color(0xFF17191F),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: ZankoColors.primary.withValues(alpha: isDark ? 0.20 : 0.12),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: ZankoColors.primary.withValues(alpha: 0.3),
+                              width: 0.8,
+                            ),
+                          ),
+                          child: Text(
+                            '⚡ Gemini 3.7',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: ZankoColors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF10B981),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          isVip ? 'VIP 👑 (نامەی بێسنوور)' : 'ئامادەیە بۆ وەڵامدانەوە',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isVip
+                                ? const Color(0xFF10B981)
+                                : (isDark ? ZankoColors.darkTextSecondary : ZankoColors.textSecondary),
+                            fontWeight: isVip ? FontWeight.bold : FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Clear History Action
+              IconButton(
+                icon: HugeIcon(
+                  icon: HugeIcons.strokeRoundedDelete02,
+                  color: isDark ? ZankoColors.darkTextSecondary : ZankoColors.textSecondary,
+                  size: 20,
+                ),
+                tooltip: 'پاککردنەوەی گفتوگۆ',
+                onPressed: _confirmClearChat,
+              ),
+
+              // VIP Upgrade Button
               if (!isVip)
                 GestureDetector(
                   onTap: () => VipUpgradeSheet.show(context),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                    margin: const EdgeInsets.only(right: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFF10B981), Color(0xFF059669)],
+                        colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
                       ),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
@@ -1160,11 +1273,11 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
 
-          // Teaching Mode Horizontal Selector
+          // Teaching Mode Horizontal Carousel
           SizedBox(
-            height: 34,
+            height: 36,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: _modes.length,
@@ -1172,32 +1285,39 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 final isSelected = _selectedModeIndex == index;
                 final mode = _modes[index];
                 return Padding(
-                  padding: const EdgeInsets.only(right: 6),
+                  padding: const EdgeInsets.only(right: 8),
                   child: GestureDetector(
                     onTap: () {
                       HapticFeedback.selectionClick();
                       setState(() => _selectedModeIndex = index);
                     },
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                       decoration: BoxDecoration(
+                        gradient: isSelected
+                            ? LinearGradient(
+                                colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                            : null,
                         color: isSelected
-                            ? const Color(0xFF035EC2)
-                            : (isDark ? const Color(0xFF1E222A) : const Color(0xFFF4F6F9)),
-                        borderRadius: BorderRadius.circular(18),
+                            ? null
+                            : (isDark ? const Color(0xFF1E232F) : const Color(0xFFF1F4F9)),
+                        borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: isSelected
-                              ? const Color(0xFF035EC2)
-                              : (isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2)),
+                              ? ZankoColors.primary
+                              : (isDark ? const Color(0xFF2C3446) : const Color(0xFFE2E7F0)),
                           width: 1,
                         ),
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
-                                  color: const Color(0xFF035EC2).withValues(alpha: 0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
+                                  color: ZankoColors.primary.withValues(alpha: 0.35),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
                                 )
                               ]
                             : null,
@@ -1207,10 +1327,10 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                           mode['title'],
                           style: TextStyle(
                             fontSize: 12,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                             color: isSelected
                                 ? Colors.white
-                                : (isDark ? Colors.white70 : const Color(0xFF4B5563)),
+                                : (isDark ? const Color(0xFFD1D5DB) : const Color(0xFF4B5563)),
                           ),
                         ),
                       ),
@@ -1225,16 +1345,248 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     );
   }
 
+  Widget _buildWelcomeHero(BuildContext context, bool isDark, LanguageProvider lang) {
+    return Container(
+      margin: const EdgeInsets.only(top: 10, bottom: 20),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [
+                  const Color(0xFF181C26),
+                  const Color(0xFF12151D),
+                ]
+              : [
+                  Colors.white,
+                  const Color(0xFFF3F7FD),
+                ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDark
+              ? ZankoColors.primary.withValues(alpha: 0.25)
+              : const Color(0xFFE2EDFB),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: ZankoColors.primary.withValues(alpha: isDark ? 0.15 : 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 68,
+            height: 68,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: ZankoColors.primary.withValues(alpha: 0.45),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: const Center(
+              child: CuteAiBotIcon(
+                size: 38,
+                color: Colors.white,
+                strokeWidth: 2.2,
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'سڵاو! من مامۆستای تایبەتی AI تۆم 🧑‍🏫',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: isDark ? Colors.white : const Color(0xFF141720),
+              letterSpacing: -0.3,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'پرسیار لە هەر وانە و هاوکێشەیەک بکە، دەنگ تۆمار بکە، یان وێنەی پرسیار و مەلزەمەکانت هاوپێچ بکە.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12.5,
+              height: 1.5,
+              color: isDark ? ZankoColors.darkTextSecondary : ZankoColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // 4 Quick Feature Cards Grid
+          Row(
+            children: [
+              Expanded(
+                child: _buildHeroQuickCard(
+                  icon: HugeIcons.strokeRoundedAnalytics01,
+                  title: 'شیکاری هاوکێشە',
+                  subtitle: 'فیزیا و ماتماتیک',
+                  isDark: isDark,
+                  onTap: () {
+                    setState(() => _selectedModeIndex = 1);
+                    _pickAndSolveImage(source: ImageSource.camera);
+                  },
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildHeroQuickCard(
+                  icon: HugeIcons.strokeRoundedBook02,
+                  title: 'پوختەی مەلزەمە',
+                  subtitle: 'دەرکێشانی گرنگترین',
+                  isDark: isDark,
+                  onTap: () {
+                    setState(() => _selectedModeIndex = 4);
+                    _pickAndSolvePdf();
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _buildHeroQuickCard(
+                  icon: HugeIcons.strokeRoundedSourceCode,
+                  title: 'کۆد و IT',
+                  subtitle: 'شیکاری و هەڵەکان',
+                  isDark: isDark,
+                  onTap: () {
+                    setState(() => _selectedModeIndex = 2);
+                    _sendMessage('تکایە ئەم چەمکەی کۆدە بە نموونەوە شی بکەرەوە:');
+                  },
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildHeroQuickCard(
+                  icon: HugeIcons.strokeRoundedFlash,
+                  title: 'پێشبینی فاینەڵ',
+                  subtitle: 'کویزی تاقیکردنەوە',
+                  isDark: isDark,
+                  onTap: () {
+                    setState(() => _selectedModeIndex = 5);
+                    _sendMessage('٥ پرسیاری گرنگ و چاوەڕوانکراوی تاقیکردنەوە پێشبینی بکە');
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeroQuickCard({
+    required dynamic icon,
+    required String title,
+    required String subtitle,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1D222E) : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark ? const Color(0xFF2B3342) : const Color(0xFFE5ECF6),
+              width: 1.1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: ZankoColors.primary.withValues(alpha: isDark ? 0.20 : 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: appIcon(icon, color: ZankoColors.primary, size: 18),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : const Color(0xFF17191F),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isDark ? ZankoColors.darkTextSecondary : ZankoColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildDateHeader() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(top: 4, bottom: 12),
       child: Center(
-        child: Text(
-          'ئەمڕۆ / Today',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: Colors.white.withValues(alpha: 0.4),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1B202B) : const Color(0xFFEFF3F9),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            'ئەمڕۆ / Today',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: isDark ? Colors.white54 : const Color(0xFF6B7280),
+            ),
           ),
         ),
       ),
@@ -1308,25 +1660,35 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     required dynamic icon,
     required String label,
     required VoidCallback onTap,
-    Color color = Colors.white70,
+    Color? color,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final effectiveColor = color ?? (isDark ? Colors.white70 : const Color(0xFF4B5563));
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
         decoration: BoxDecoration(
-          color: const Color(0xFF1B1E26),
+          color: isDark ? const Color(0xFF1E232F) : const Color(0xFFF1F4F9),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+          border: Border.all(
+            color: isDark ? const Color(0xFF2B3342) : const Color(0xFFE2E8F0),
+            width: 1,
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            appIcon(icon, size: 13, color: color),
+            appIcon(icon, size: 13, color: effectiveColor),
             const SizedBox(width: 4),
             Text(
               label,
-              style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontSize: 11,
+                color: effectiveColor,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -1344,240 +1706,276 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     final imageName = msg['imageName'];
     final modeTag = msg['modeTag'];
 
-    return Align(
-      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.88,
-        ),
-        child: Column(
-          crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-          children: [
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Assistant Avatar Icon
+          if (!isUser) ...[
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: isUser
-                  ? BoxDecoration(
-                      color: const Color(0xFF035EC2),
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(20),
-                        topRight: Radius.circular(20),
-                        bottomLeft: Radius.circular(20),
-                        bottomRight: Radius.circular(5),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF035EC2).withValues(alpha: 0.25),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    )
-                  : BoxDecoration(
-                      color: isLimitMsg
-                          ? (isDark ? const Color(0xFF1E293B) : const Color(0xFFF0F6FD))
-                          : (isDark ? const Color(0xFF171B23) : Colors.white),
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(20),
-                        topRight: Radius.circular(20),
-                        bottomLeft: Radius.circular(5),
-                        bottomRight: Radius.circular(20),
-                      ),
-                      border: Border.all(
-                        color: isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2),
-                        width: 1.2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
+              width: 32,
+              height: 32,
+              margin: const EdgeInsets.only(top: 2, right: 8),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: ZankoColors.primary.withValues(alpha: 0.25),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Center(
+                child: CuteAiBotIcon(
+                  size: 18,
+                  color: Colors.white,
+                  strokeWidth: 2.0,
+                ),
+              ),
+            ),
+          ],
+
+          Flexible(
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.82,
+              ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                 children: [
-                  // If user sent an image, show interactive thumbnail
-                  if (imageBase64 != null && imageBase64.isNotEmpty) ...[
-                    GestureDetector(
-                      onTap: () => _showFullScreenImage(imageBase64, imageName ?? 'وێنە'),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          constraints: const BoxConstraints(maxHeight: 220, minWidth: 180),
-                          color: Colors.black.withValues(alpha: 0.25),
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Image.memory(
-                                base64Decode(imageBase64),
-                                fit: BoxFit.cover,
-                                width: double.infinity,
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: isUser
+                        ? BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(20),
+                              topRight: Radius.circular(20),
+                              bottomLeft: Radius.circular(20),
+                              bottomRight: Radius.circular(4),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: ZankoColors.primary.withValues(alpha: isDark ? 0.40 : 0.25),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
                               ),
-                              Positioned(
-                                bottom: 6,
-                                right: 6,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.7),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      HugeIcon(icon: HugeIcons.strokeRoundedMaximize01, size: 12, color: Colors.white),
-                                      SizedBox(width: 4),
-                                      Text('گەورەکردن', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                                    ],
-                                  ),
-                                ),
+                            ],
+                          )
+                        : BoxDecoration(
+                            color: isLimitMsg
+                                ? (isDark ? const Color(0xFF1E293B) : const Color(0xFFF0F6FD))
+                                : (isDark ? const Color(0xFF161A24) : Colors.white),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(20),
+                              topRight: Radius.circular(20),
+                              bottomLeft: Radius.circular(4),
+                              bottomRight: Radius.circular(20),
+                            ),
+                            border: Border.all(
+                              color: isDark ? const Color(0xFF262C38) : const Color(0xFFE5EBF4),
+                              width: 1.1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
                               ),
                             ],
                           ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (imageBase64 != null && imageBase64.isNotEmpty) ...[
+                          GestureDetector(
+                            onTap: () => _showFullScreenImage(imageBase64, imageName ?? 'وێنە'),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(14),
+                              child: Container(
+                                constraints: const BoxConstraints(maxHeight: 220, minWidth: 180),
+                                color: Colors.black.withValues(alpha: 0.25),
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    Image.memory(
+                                      base64Decode(imageBase64),
+                                      fit: BoxFit.cover,
+                                      width: double.infinity,
+                                    ),
+                                    Positioned(
+                                      bottom: 6,
+                                      right: 6,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withValues(alpha: 0.7),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            HugeIcon(icon: HugeIcons.strokeRoundedMaximize01, size: 12, color: Colors.white),
+                                            SizedBox(width: 4),
+                                            Text('گەورەکردن', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
 
-                  if (modeTag != null && modeTag.isNotEmpty) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                      margin: const EdgeInsets.only(bottom: 5),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        modeTag,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
+                        if (modeTag != null && modeTag.isNotEmpty) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            margin: const EdgeInsets.only(bottom: 6),
+                            decoration: BoxDecoration(
+                              color: ZankoColors.primary.withValues(alpha: isUser ? 0.25 : 0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              modeTag,
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.bold,
+                                color: isUser ? Colors.white : ZankoColors.primary,
+                              ),
+                            ),
+                          ),
+                        ],
 
-                  if (content.isNotEmpty)
-                    Text(
-                      content,
-                      style: TextStyle(
-                        fontSize: 14.5,
-                        height: 1.45,
-                        fontWeight: FontWeight.w400,
-                        color: isUser
-                            ? Colors.white
-                            : (isDark ? Colors.white : const Color(0xFF17191F)),
-                      ),
-                    ),
-                  const SizedBox(height: 6),
-                  Align(
-                    alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Text(
-                      time,
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        color: isUser
-                            ? Colors.white.withValues(alpha: 0.75)
-                            : (isDark ? Colors.white38 : const Color(0xFFA6ACB8)),
-                      ),
+                        if (content.isNotEmpty)
+                          Text(
+                            content,
+                            style: TextStyle(
+                              fontSize: 14.5,
+                              height: 1.5,
+                              fontWeight: isUser ? FontWeight.w500 : FontWeight.w400,
+                              color: isUser
+                                  ? Colors.white
+                                  : (isDark ? Colors.white : const Color(0xFF141720)),
+                            ),
+                          ),
+                        const SizedBox(height: 6),
+                        Align(
+                          alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                          child: Text(
+                            time,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: isUser
+                                  ? Colors.white.withValues(alpha: 0.75)
+                                  : (isDark ? Colors.white38 : const Color(0xFFA6ACB8)),
+                            ),
+                          ),
+                        ),
+
+                        if (isLimitMsg) ...[
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () => VipUpgradeSheet.show(context),
+                              icon: const Text('👑', style: TextStyle(fontSize: 15)),
+                              label: const Text(
+                                'بەرزکردنەوە بۆ VIP — پەیامی بێسنوور',
+                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: ZankoColors.primary,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                  if (isLimitMsg) ...[
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () => VipUpgradeSheet.show(context),
-                        icon: const Text('👑', style: TextStyle(fontSize: 15)),
-                        label: const Text(
-                          'بەرزکردنەوە بۆ VIP — پەیامی بێسنوور',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+
+                  // Action Toolbar for Assistant Messages
+                  if (!isUser && !isLimitMsg && content.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        _buildBubbleAction(
+                          icon: HugeIcons.strokeRoundedCopy01,
+                          label: 'کۆپی',
+                          onTap: () {
+                            Clipboard.setData(ClipboardData(text: content));
+                            HapticFeedback.lightImpact();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('دەقی وەڵامەکە کۆپی کرا! 📋'),
+                                backgroundColor: Colors.blueGrey,
+                                duration: Duration(seconds: 1),
+                              ),
+                            );
+                          },
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: ZankoColors.primary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          padding: const EdgeInsets.symmetric(vertical: 8),
+                        _buildBubbleAction(
+                          icon: HugeIcons.strokeRoundedBookmark02,
+                          label: 'تێبینی',
+                          color: ZankoColors.primary,
+                          onTap: () => _saveAsNote(content),
                         ),
-                      ),
+                        _buildBubbleAction(
+                          icon: isSpeaking ? HugeIcons.strokeRoundedVolumeHigh : HugeIcons.strokeRoundedVolumeLow,
+                          label: isSpeaking ? 'وەستان' : 'دەنگ',
+                          color: isSpeaking ? const Color(0xFF10B981) : (isDark ? Colors.white70 : const Color(0xFF4B5563)),
+                          onTap: () async {
+                            if (isSpeaking) {
+                              await KurdishTtsService().stop();
+                              if (mounted) setState(() => _currentlySpeakingMsg = null);
+                            } else {
+                              if (mounted) setState(() => _currentlySpeakingMsg = content);
+                              final lang = Provider.of<LanguageProvider>(context, listen: false);
+                              String langCode = 'ku';
+                              if (lang.currentLanguage == AppLanguage.arabic) {
+                                langCode = 'ar';
+                              } else if (lang.currentLanguage == AppLanguage.english) {
+                                langCode = 'en';
+                              }
+                              await KurdishTtsService().speak(content, languageCode: langCode);
+                            }
+                          },
+                        ),
+                        _buildBubbleAction(
+                          icon: HugeIcons.strokeRoundedAiMagic,
+                          label: 'ڕوونکردنەوەی زیاتر',
+                          color: ZankoColors.primary,
+                          onTap: () {
+                            _sendMessage('تکایە بە شێوازێکی قووڵتر و بە نموونەی زیاتر ئەم بابەتە شی بکەرەوە.');
+                          },
+                        ),
+                      ],
                     ),
                   ],
                 ],
               ),
             ),
-
-            // Action Toolbar for Assistant Messages (Copy, Save Note, TTS, Deeper Explanation)
-            if (!isUser && !isLimitMsg && content.isNotEmpty) ...[
-              const SizedBox(height: 5),
-              Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: [
-                  // 1. Copy
-                  _buildBubbleAction(
-                    icon: HugeIcons.strokeRoundedCopy01,
-                    label: 'کۆپی',
-                    onTap: () {
-                      Clipboard.setData(ClipboardData(text: content));
-                      HapticFeedback.lightImpact();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('دەقی وەڵامەکە کۆپی کرا! 📋'),
-                          backgroundColor: Colors.blueGrey,
-                          duration: Duration(seconds: 1),
-                        ),
-                      );
-                    },
-                  ),
-
-                  // 2. Save to Notes
-                  _buildBubbleAction(
-                    icon: HugeIcons.strokeRoundedBookmark02,
-                    label: 'تێبینی',
-                    color: ZankoColors.primary,
-                    onTap: () => _saveAsNote(content),
-                  ),
-
-                  // 3. Read Aloud (TTS)
-                  _buildBubbleAction(
-                    icon: isSpeaking ? HugeIcons.strokeRoundedVolumeHigh : HugeIcons.strokeRoundedVolumeLow,
-                    label: isSpeaking ? 'وەستان' : 'دەنگ',
-                    color: isSpeaking ? ZankoColors.primary : Colors.white70,
-                    onTap: () async {
-                      if (isSpeaking) {
-                        await KurdishTtsService().stop();
-                        if (mounted) setState(() => _currentlySpeakingMsg = null);
-                      } else {
-                        if (mounted) setState(() => _currentlySpeakingMsg = content);
-                        final lang = Provider.of<LanguageProvider>(context, listen: false);
-                        String langCode = 'ku';
-                        if (lang.currentLanguage == AppLanguage.arabic) {
-                          langCode = 'ar';
-                        } else if (lang.currentLanguage == AppLanguage.english) {
-                          langCode = 'en';
-                        }
-                        await KurdishTtsService().speak(content, languageCode: langCode);
-                      }
-                    },
-                  ),
-                  // 4. Explain More
-                  _buildBubbleAction(
-                    icon: HugeIcons.strokeRoundedAiMagic,
-                    label: 'ڕوونکردنەوەی زیاتر',
-                    color: ZankoColors.primary,
-                    onTap: () {
-                      _sendMessage('تکایە بە شێوازێکی قووڵتر و بە نموونەی زیاتر ئەم بابەتە شی بکەرەوە.');
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -1598,12 +1996,14 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
             // Custom Header with Mode Selector
             _buildHeader(context),
 
-            // Messages List
+            // Messages List with Hero State
             Expanded(
               child: ListView(
                 controller: _scrollController,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 children: [
+                  if (_messages.length <= 1)
+                    _buildWelcomeHero(context, isDark, lang),
                   _buildDateHeader(),
                   ..._messages.map((msg) {
                     final isUser = msg['role'] == 'user';
@@ -1617,30 +2017,51 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF171B23) : Colors.white,
-                            borderRadius: BorderRadius.circular(16),
+                            color: isDark ? const Color(0xFF161A24) : Colors.white,
+                            borderRadius: BorderRadius.circular(18),
                             border: Border.all(
-                              color: isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2),
+                              color: isDark ? const Color(0xFF262C38) : const Color(0xFFE2E8F2),
                             ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              SizedBox(
-                                width: 14,
-                                height: 14,
+                              Container(
+                                width: 22,
+                                height: 22,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
+                                  ),
+                                ),
+                                child: const Center(
+                                  child: CuteAiBotIcon(size: 13, color: Colors.white, strokeWidth: 2),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              const SizedBox(
+                                width: 13,
+                                height: 13,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF035EC2)),
                                 ),
                               ),
-                              SizedBox(width: 10),
+                              const SizedBox(width: 8),
                               Text(
-                                'مامۆستا ZankoAI وەڵامت دەداتەوە... ⚡',
+                                'مامۆستا وەڵامت دەداتەوە... ⚡',
                                 style: TextStyle(
                                   fontSize: 12.5,
-                                  color: Color(0xFF035EC2),
-                                  fontWeight: FontWeight.w600,
+                                  color: ZankoColors.primary,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ],
@@ -1654,34 +2075,57 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
 
             // Mode-specific suggestions pills
             SizedBox(
-              height: 36,
+              height: 38,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
                 itemCount: suggestions.length,
                 itemBuilder: (context, index) {
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
-                    child: ActionChip(
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      backgroundColor: isDark ? const Color(0xFF171B23) : Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                        side: BorderSide(
-                          color: isDark ? const Color(0xFF262C36) : const Color(0xFFE2EDFB),
-                          width: 1,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _sendMessage(suggestions[index]),
+                        borderRadius: BorderRadius.circular(20),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1B202B) : Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isDark ? const Color(0xFF2B3342) : const Color(0xFFE2EBF6),
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              HugeIcon(
+                                icon: HugeIcons.strokeRoundedSparkles,
+                                color: ZankoColors.primary,
+                                size: 13,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                suggestions[index],
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? Colors.white : const Color(0xFF1E2430),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      label: Text(
-                        suggestions[index],
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF035EC2),
-                        ),
-                      ),
-                      onPressed: () => _sendMessage(suggestions[index]),
                     ),
                   );
                 },
@@ -1718,10 +2162,10 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 ),
               ),
 
-            // Math Quick Camera Solve Banner (when in Math & Formula mode)
+            // Math Quick Camera Solve Banner
             if (_selectedModeIndex == 1)
               Container(
-                margin: const EdgeInsets.only(left: 16, right: 16, top: 4, bottom: 2),
+                margin: const EdgeInsets.only(left: 14, right: 14, top: 4, bottom: 2),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: ZankoColors.primary.withValues(alpha: 0.12),
@@ -1734,11 +2178,11 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                   children: [
                     HugeIcon(icon: HugeIcons.strokeRoundedAnalytics01, color: ZankoColors.primary, size: 20),
                     const SizedBox(width: 8),
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'شیکاری هەنگاو بە هەنگاو: وێنەی هاوکێشە یان یاساکە بگرە 📐',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: isDark ? Colors.white : const Color(0xFF17191F),
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1756,12 +2200,12 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            HugeIcon(icon: HugeIcons.strokeRoundedCamera01, color: Colors.black, size: 14),
+                            HugeIcon(icon: HugeIcons.strokeRoundedCamera01, color: Colors.white, size: 14),
                             SizedBox(width: 4),
                             Text(
                               'کامێرا',
                               style: TextStyle(
-                                color: Colors.black,
+                                color: Colors.white,
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -1774,37 +2218,41 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 ),
               ),
 
-            // Quick Math Symbols Toolbar (when in Math Mode or toggled)
+            // Quick Math Symbols Toolbar
             if (_selectedModeIndex == 1 || _showMathToolbar)
               _buildMathSymbolBar(),
 
             const SizedBox(height: 4),
 
-            // Bottom Input Bar
+            // Bottom Input Bar & Dock
             Padding(
-              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16, top: 4),
+              padding: const EdgeInsets.only(left: 14, right: 14, bottom: 14, top: 4),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  // Main Input Container
                   Expanded(
                     child: Container(
-                      height: 52,
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      constraints: const BoxConstraints(minHeight: 52, maxHeight: 130),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF171B23) : Colors.white,
-                        borderRadius: BorderRadius.circular(30),
+                        color: isDark ? const Color(0xFF161A24) : Colors.white,
+                        borderRadius: BorderRadius.circular(28),
                         border: Border.all(
                           color: _isRecording
                               ? Colors.redAccent.withValues(alpha: 0.6)
-                              : (isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2)),
+                              : (hasText
+                                  ? ZankoColors.primary.withValues(alpha: 0.45)
+                                  : (isDark ? const Color(0xFF262C38) : const Color(0xFFE2E7F0))),
                           width: _isRecording ? 1.5 : 1.2,
                         ),
                         boxShadow: [
                           BoxShadow(
                             color: _isRecording
                                 ? Colors.redAccent.withValues(alpha: 0.2)
-                                : Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-                            blurRadius: 16,
+                                : (hasText
+                                    ? ZankoColors.primary.withValues(alpha: 0.12)
+                                    : Colors.black.withValues(alpha: isDark ? 0.25 : 0.05)),
+                            blurRadius: 14,
                             offset: const Offset(0, 4),
                           ),
                         ],
@@ -1855,28 +2303,35 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                               ],
                             )
                           : Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                // Emoji Button
-                                IconButton(
-                                  icon: const HugeIcon(
-                                    icon: HugeIcons.strokeRoundedSmile,
-                                    color: Color(0xFF035EC2),
-                                    size: 22,
-                                  ),
-                                  onPressed: _showEmojiPicker,
-                                ),
-                                // Math Toolbar Toggle Button
                                 IconButton(
                                   icon: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: ZankoColors.primary.withValues(alpha: isDark ? 0.20 : 0.10),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: HugeIcon(
+                                      icon: HugeIcons.strokeRoundedAdd01,
+                                      color: ZankoColors.primary,
+                                      size: 18,
+                                    ),
+                                  ),
+                                  tooltip: 'هاوپێچکردنی فایل یان وێنە',
+                                  onPressed: _showAttachmentOptions,
+                                ),
+                                IconButton(
+                                  icon: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                                     decoration: BoxDecoration(
                                       color: (_selectedModeIndex == 1 || _showMathToolbar)
-                                          ? const Color(0xFF035EC2).withValues(alpha: 0.15)
+                                          ? ZankoColors.primary.withValues(alpha: 0.20)
                                           : Colors.transparent,
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
                                         color: (_selectedModeIndex == 1 || _showMathToolbar)
-                                            ? const Color(0xFF035EC2)
+                                            ? ZankoColors.primary
                                             : (isDark ? Colors.white24 : const Color(0xFFD1D5DB)),
                                         width: 1,
                                       ),
@@ -1887,7 +2342,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                         fontSize: 11,
                                         fontWeight: FontWeight.bold,
                                         color: (_selectedModeIndex == 1 || _showMathToolbar)
-                                            ? const Color(0xFF035EC2)
+                                            ? ZankoColors.primary
                                             : (isDark ? const Color(0xFF8E95A3) : const Color(0xFF6B7280)),
                                       ),
                                     ),
@@ -1899,10 +2354,19 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                     });
                                   },
                                 ),
-                                // TextField
+                                IconButton(
+                                  icon: HugeIcon(
+                                    icon: HugeIcons.strokeRoundedSmile,
+                                    color: isDark ? const Color(0xFF9EABB8) : const Color(0xFF6B7280),
+                                    size: 20,
+                                  ),
+                                  onPressed: _showEmojiPicker,
+                                ),
                                 Expanded(
                                   child: TextField(
                                     controller: _controller,
+                                    maxLines: 4,
+                                    minLines: 1,
                                     onChanged: (_) => setState(() {}),
                                     onSubmitted: _sendMessage,
                                     style: TextStyle(
@@ -1920,28 +2384,17 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                       border: InputBorder.none,
                                       enabledBorder: InputBorder.none,
                                       focusedBorder: InputBorder.none,
-                                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
                                     ),
                                   ),
-                                ),
-                                // Attachment Icon (PDF / Image / Notes)
-                                IconButton(
-                                  icon: const HugeIcon(
-                                    icon: HugeIcons.strokeRoundedAttachment01,
-                                    color: Color(0xFF035EC2),
-                                    size: 20,
-                                  ),
-                                  tooltip: 'هاوپێچکردنی فایل یان وێنە',
-                                  onPressed: _showAttachmentOptions,
                                 ),
                               ],
                             ),
                     ),
                   ),
 
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
 
-                  // Action Button (Mic / Stop & Transcribe / Send)
                   GestureDetector(
                     onTap: () {
                       if (hasText) {
@@ -1957,13 +2410,22 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                       width: 50,
                       height: 50,
                       decoration: BoxDecoration(
-                        color: _isRecording
-                            ? const Color(0xFFE11D48)
-                            : (_isTranscribingVoice ? const Color(0xFF4A148C) : const Color(0xFF035EC2)),
+                        gradient: LinearGradient(
+                          colors: _isRecording
+                              ? [const Color(0xFFEF4444), const Color(0xFFDC2626)]
+                              : (_isTranscribingVoice
+                                  ? [const Color(0xFF8B5CF6), const Color(0xFF6D28D9)]
+                                  : [ZankoColors.gradientStart, ZankoColors.gradientEnd]),
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: (_isRecording ? const Color(0xFFE11D48) : const Color(0xFF035EC2)).withValues(alpha: 0.35),
+                            color: (_isRecording
+                                    ? Colors.redAccent
+                                    : (_isTranscribingVoice ? Colors.purpleAccent : ZankoColors.primary))
+                                .withValues(alpha: 0.40),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -1973,12 +2435,14 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                           ? const Center(
                               child: CupertinoActivityIndicator(color: Colors.white),
                             )
-                          : HugeIcon(
-                              icon: hasText
-                                  ? HugeIcons.strokeRoundedArrowUp01
-                                  : (_isRecording ? HugeIcons.strokeRoundedCheckmarkCircle02 : HugeIcons.strokeRoundedMic01),
-                              color: Colors.white,
-                              size: 22,
+                          : Center(
+                              child: HugeIcon(
+                                icon: hasText
+                                    ? HugeIcons.strokeRoundedArrowUp01
+                                    : (_isRecording ? HugeIcons.strokeRoundedCheckmarkCircle02 : HugeIcons.strokeRoundedMic01),
+                                color: Colors.white,
+                                size: 22,
+                              ),
                             ),
                     ),
                   ),
@@ -1992,9 +2456,10 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   }
 
   Widget _buildMathSymbolBar() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       height: 38,
-      margin: const EdgeInsets.only(top: 6, bottom: 2),
+      margin: const EdgeInsets.only(top: 4, bottom: 2),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -2011,10 +2476,10 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E222A),
+                    color: isDark ? const Color(0xFF1B202B) : const Color(0xFFF3F6FB),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: ZankoColors.primary.withValues(alpha: 0.35),
+                      color: ZankoColors.primary.withValues(alpha: isDark ? 0.35 : 0.25),
                       width: 1,
                     ),
                   ),

@@ -539,8 +539,19 @@ class LanguageProvider extends ChangeNotifier {
     'explain': {'ku': 'ڕوونکردنەوە', 'badini': 'ڕوونکردن', 'ar': 'شرح', 'en': 'Explain'},
     'summarize': {'ku': 'کورتکردنەوە', 'badini': 'کورتکرن', 'ar': 'تلخيص', 'en': 'Summarize'},
     'voice_tutor': {'ku': 'تۆماری دەنگی', 'badini': 'تۆمارا دەنگی', 'ar': 'تسجيل المحاضرات', 'en': 'Voice Record'},
-
+    'voice_tutor_sub': {'ku': 'تۆمار و پوختەی دەنگی وانە', 'badini': 'تۆمار و کورتیا دەنگی یا وانێ', 'ar': 'تسجيل وتلخيص المحاضرات', 'en': 'Record & summarize audio'},
     'pdf_chat': {'ku': 'چاتی PDF', 'badini': 'چات ب PDF', 'ar': 'محادثة PDF', 'en': 'PDF Chat'},
+    'pdf_chat_sub': {'ku': 'گفتوگۆ لەگەڵ مەلزەمە و فایل', 'badini': 'چات دگەل مەلزەمە و پەڕان', 'ar': 'محادثة وتلخيص الملفات', 'en': 'Chat with study files'},
+    'gpa_sub': {'ku': 'کۆنمرە و پێشبینی پلە', 'badini': 'کۆنمرە و پێشبینیا پلێ', 'ar': 'حساب وتوقع المعدل', 'en': 'Calculate & forecast'},
+    'quiz_sub': {'ku': 'کویزی زیرەک و تاقیکردنەوە', 'badini': 'کویزا زیرەک و تاقیکرن', 'ar': 'اختبارات وامتحانات ذكية', 'en': 'Smart quiz & practice'},
+    'flashcards': {'ku': 'فلاش کارت', 'badini': 'فلاش کارت', 'ar': 'البطاقات التعليمية', 'en': 'Flashcards'},
+    'flashcards_sub': {'ku': 'پێداچوونەوە و بەهێزکردنی یادگە', 'badini': 'دووبارەکرن و بهێزکرنا بیرێ', 'ar': 'مراجعة وتثبيت المعلومات', 'en': 'Spaced repetition revision'},
+    'pomodoro_focus': {'ku': 'فۆکەس و کات', 'badini': 'فۆکەس و دەم', 'ar': 'مؤقت التركيز', 'en': 'Pomodoro Focus'},
+    'pomodoro_sub': {'ku': 'بەڕێوەبردنی کات و خوێندن', 'badini': 'ڕێڤەبرنا دەمی و خواندنێ', 'ar': 'تنظيم الوقت والتركيز', 'en': 'Study timer & intervals'},
+    'academic_dictionary': {'ku': 'فەرهەنگی ئەکادیمی', 'badini': 'فەرهەنگا ئەکادیمی', 'ar': 'القاموس الأكاديمي', 'en': 'Academic Dictionary'},
+    'academic_dictionary_sub': {'ku': 'زاراوە و پێناسەی زانستی', 'badini': 'زاراوە و پێناسێن زانستی', 'ar': 'مصطلحات وتعريفات علمية', 'en': 'Terms & definitions'},
+    'seminar_thesis_assistant': {'ku': 'تێز و سیمینار', 'badini': 'تێز و سیمینار', 'ar': 'مساعد البحوث', 'en': 'Seminar & Thesis'},
+    'seminar_thesis_sub': {'ku': 'پلانی سیمینار، تێز و سلاید', 'badini': 'پلان دانان بۆ سیمینار و تێزان', 'ar': 'إعداد البحوث والسلايدات', 'en': 'Research outline & slides'},
 
     // Cards
     'current_gpa': {'ku': 'کۆنمرەی گشتی (GPA)', 'badini': 'کۆنمرەیا گشتی (GPA)', 'ar': 'المعدل التراكمي', 'en': 'Current GPA'},
