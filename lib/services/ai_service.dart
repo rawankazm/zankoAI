@@ -517,7 +517,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     }
 
     // 1. Computer Science & Software / Flutter
-    if (qLower.contains('flutter') || qLower.contains('فلاتەر') || qLower.contains('فلاتر') || qLower.contains('widget') || qLower.contains('state')) {
+    if (qLower.contains('flutter') || qLower.contains('فلاتەر') || qLower.contains('فلاتر') || qLower.contains('widget') || qLower.contains('state management') || qLower.contains('statefulwidget') || qLower.contains('statelesswidget')) {
       if (isEnglish) {
         return """
 # 💻 Introduction to Flutter Framework

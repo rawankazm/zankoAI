@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import '../../services/document_parser_service.dart';
 import '../../services/language_provider.dart';
@@ -30,7 +31,7 @@ class CourseDetailScreen extends StatefulWidget {
   final String courseTitle;
   final String courseSubtitle;
   final double progress;
-  final IconData icon;
+  final dynamic icon;
   final Color themeColor;
   final DateTime? midtermDate;
   final DateTime? finalDate;
@@ -203,38 +204,42 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             SnackBar(
               content: Text('Uploaded "$fileName" to ${widget.courseTitle}'),
               backgroundColor: ZankoColors.success,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
           );
         }
       }
     } catch (e) {
-      // Fallback: Add mock PDF lecture if picker is cancelled or unsupported on web
       _showAddPdfModal();
     }
   }
 
   void _showAddPdfModal() {
     final titleController = TextEditingController();
+    final lang = Provider.of<LanguageProvider>(context, listen: false);
+
     showCupertinoDialog(
       context: context,
       builder: (context) {
         return CupertinoAlertDialog(
-          title: Text('${Provider.of<LanguageProvider>(context, listen: false).translate('add_pdf')} ${widget.courseTitle}'),
+          title: Text('${lang.translate('add_pdf')} - ${widget.courseTitle}'),
           content: Padding(
             padding: const EdgeInsets.only(top: 12.0),
             child: CupertinoTextField(
               controller: titleController,
               placeholder: 'Enter Lecture Title (e.g. Chapter 3 Notes)',
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             ),
           ),
           actions: [
             CupertinoDialogAction(
-              child: Text(Provider.of<LanguageProvider>(context, listen: false).translate('cancel')),
+              child: Text(lang.translate('cancel')),
               onPressed: () => Navigator.pop(context),
             ),
             CupertinoDialogAction(
               isDefaultAction: true,
-              child: Text(Provider.of<LanguageProvider>(context, listen: false).translate('add_pdf')),
+              child: Text(lang.translate('add_pdf')),
               onPressed: () {
                 final text = titleController.text.trim();
                 if (text.isNotEmpty) {
@@ -274,6 +279,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     required ValueChanged<DateTime?> onSaved,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final lang = Provider.of<LanguageProvider>(context, listen: false);
     final now = DateTime.now();
     final todayStart = DateTime(now.year, now.month, now.day);
 
@@ -289,16 +295,26 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         return StatefulBuilder(
           builder: (context, setModalState) {
             final targetDate = todayStart.add(Duration(days: daysOffset));
-            final formattedTarget = '${targetDate.year}/${targetDate.month.toString().padLeft(2, '0')}/${targetDate.day.toString().padLeft(2, '0')}';
+            final formattedTarget =
+                '${targetDate.year}/${targetDate.month.toString().padLeft(2, '0')}/${targetDate.day.toString().padLeft(2, '0')}';
 
             return Container(
               padding: EdgeInsets.only(
-                top: 20, left: 20, right: 20,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                top: 16,
+                left: 20,
+                right: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 28,
               ),
               decoration: BoxDecoration(
                 color: isDark ? ZankoColors.darkCard : Colors.white,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 20,
+                    offset: const Offset(0, -6),
+                  ),
+                ],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -306,44 +322,63 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 children: [
                   Center(
                     child: Container(
-                      width: 40, height: 4,
+                      width: 44,
+                      height: 5,
                       decoration: BoxDecoration(
-                        color: Colors.grey[400],
+                        color: isDark ? Colors.white24 : Colors.grey[300],
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 18),
                   Row(
                     children: [
-                      Icon(CupertinoIcons.timer, color: accentColor, size: 22),
-                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: accentColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedClock01,
+                          color: accentColor,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
                       Text(
-                        'دیاریکردنی ماوەی $examTitle',
+                        '${lang.translate('set_exam_date')}: $examTitle',
                         style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
                           color: isDark ? Colors.white : ZankoColors.textPrimary,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 18),
 
-                  // Days Counter & Live Preview
+                  // Counter Container
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-                      color: isDark ? ZankoColors.darkBackground : Colors.grey[100],
-                      borderRadius: BorderRadius.circular(18),
+                      color: isDark ? ZankoColors.darkBackground : const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
+                      ),
                     ),
                     child: Column(
                       children: [
-                        const Text(
-                          'ماوەی ماوە بە ڕۆژ (Countdown in Days):',
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey),
+                        Text(
+                          lang.translate('days_left'),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                          ),
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 12),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -351,50 +386,76 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                               onPressed: daysOffset > 0
                                   ? () => setModalState(() => daysOffset--)
                                   : null,
-                              icon: const Icon(CupertinoIcons.minus_circle, size: 32),
+                              icon: const HugeIcon(
+                                icon: HugeIcons.strokeRoundedMinusSignCircle,
+                                size: 34,
+                              ),
                               color: accentColor,
                             ),
+                            const SizedBox(width: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                               decoration: BoxDecoration(
-                                color: accentColor.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(14),
+                                color: accentColor.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: accentColor.withValues(alpha: 0.3),
+                                ),
                               ),
                               child: Text(
-                                '$daysOffset ڕۆژ',
+                                '$daysOffset',
                                 style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w900,
                                   color: accentColor,
                                 ),
                               ),
                             ),
+                            const SizedBox(width: 8),
                             IconButton(
                               onPressed: () => setModalState(() => daysOffset++),
-                              icon: const Icon(CupertinoIcons.add_circled_solid, size: 32),
+                              icon: const HugeIcon(
+                                icon: HugeIcons.strokeRoundedAddCircleHalfDot,
+                                size: 34,
+                              ),
                               color: accentColor,
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'ڕێکەوتی تاقیکردنەوە: $formattedTarget',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : ZankoColors.textPrimary,
-                          ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            HugeIcon(
+                              icon: HugeIcons.strokeRoundedCalendar01,
+                              size: 15,
+                              color: accentColor,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              formattedTarget,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: isDark ? Colors.white : ZankoColors.textPrimary,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 16),
 
                   // Quick Presets
-                  const Text(
-                    'دیاریکردنی خێرا (Quick Presets):',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+                  Text(
+                    lang.translate('quick_presets'),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Wrap(
@@ -403,13 +464,22 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     children: [3, 7, 10, 14, 21, 30, 45].map((presetDays) {
                       final isSelected = daysOffset == presetDays;
                       return ChoiceChip(
-                        label: Text('+$presetDays ڕۆژ'),
+                        label: Text('+$presetDays'),
                         selected: isSelected,
                         selectedColor: accentColor.withValues(alpha: 0.25),
+                        backgroundColor: isDark ? Colors.white10 : Colors.grey[100],
                         labelStyle: TextStyle(
                           fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: isSelected ? accentColor : (isDark ? Colors.white : Colors.black87),
+                          fontWeight: FontWeight.w800,
+                          color: isSelected
+                              ? accentColor
+                              : (isDark ? Colors.white70 : Colors.black87),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: isSelected ? accentColor : Colors.transparent,
+                          ),
                         ),
                         onSelected: (selected) {
                           if (selected) {
@@ -424,7 +494,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
                   const SizedBox(height: 14),
 
-                  // Custom Calendar DatePicker Button
+                  // Pick from calendar button
                   OutlinedButton.icon(
                     onPressed: () async {
                       final picked = await showDatePicker(
@@ -440,17 +510,32 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                         });
                       }
                     },
-                    icon: const Icon(CupertinoIcons.calendar, size: 18),
-                    label: const Text('هەڵبژاردنی لە ڕۆژژمێرەوە (Calendar)'),
+                    icon: HugeIcon(
+                      icon: HugeIcons.strokeRoundedCalendar01,
+                      size: 18,
+                      color: isDark ? Colors.white70 : ZankoColors.textPrimary,
+                    ),
+                    label: Text(
+                      lang.translate('pick_from_calendar'),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? Colors.white70 : ZankoColors.textPrimary,
+                      ),
+                    ),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 44),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      side: BorderSide(
+                        color: isDark ? Colors.white24 : const Color(0xFFCBD5E1),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 18),
 
-                  // Save / Clear Buttons
+                  // Actions
                   Row(
                     children: [
                       if (currentDate != null)
@@ -463,9 +548,17 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                             style: OutlinedButton.styleFrom(
                               side: const BorderSide(color: Colors.redAccent),
                               minimumSize: const Size(0, 48),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
                             ),
-                            child: const Text('سڕینەوە', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                            child: Text(
+                              lang.translate('delete'),
+                              style: const TextStyle(
+                                color: Colors.redAccent,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
                       if (currentDate != null) const SizedBox(width: 12),
@@ -480,11 +573,18 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: accentColor,
                             minimumSize: const Size(0, 48),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
-                          child: const Text(
-                            'پاشەکەوتکردن',
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                          child: Text(
+                            lang.translate('save'),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -503,38 +603,40 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     required BuildContext context,
     required String title,
     required DateTime? date,
-    required IconData icon,
+    required dynamic icon,
     required Color accentColor,
     required bool isDark,
     required VoidCallback onPickDate,
   }) {
+    final lang = Provider.of<LanguageProvider>(context);
     final now = DateTime.now();
     final todayStart = DateTime(now.year, now.month, now.day);
 
-    String statusText = 'دیاری نەکراوە';
-    String dateFormatted = 'دیاری نەکراوە';
-    Color badgeBg = isDark ? Colors.grey.shade800 : Colors.grey.shade200;
-    Color badgeFg = Colors.grey;
+    String statusText = lang.translate('not_set');
+    String dateFormatted = lang.translate('not_set');
+    Color badgeBg = isDark ? Colors.white10 : Colors.grey.shade100;
+    Color badgeFg = isDark ? Colors.grey[400]! : Colors.grey.shade600;
 
     if (date != null) {
-      dateFormatted = '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}';
+      dateFormatted =
+          '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}';
       final targetStart = DateTime(date.year, date.month, date.day);
       final diff = targetStart.difference(todayStart).inDays;
 
       if (diff < 0) {
-        statusText = 'تەواوبوو';
-        badgeBg = isDark ? Colors.grey.shade800 : Colors.grey.shade200;
+        statusText = lang.translate('exam_ended');
+        badgeBg = isDark ? Colors.white10 : Colors.grey.shade200;
         badgeFg = Colors.grey;
       } else if (diff == 0) {
-        statusText = 'ئەمڕۆیە! ⚠️';
-        badgeBg = const Color(0xFFFF3B30).withValues(alpha: 0.18);
+        statusText = lang.translate('today_exam');
+        badgeBg = const Color(0xFFFF3B30).withValues(alpha: 0.15);
         badgeFg = const Color(0xFFFF3B30);
       } else if (diff <= 3) {
-        statusText = '$diff ڕۆژی ماوە 🔥';
-        badgeBg = const Color(0xFFFF9500).withValues(alpha: 0.18);
+        statusText = '$diff ${lang.translate('days_left')} 🔥';
+        badgeBg = const Color(0xFFFF9500).withValues(alpha: 0.15);
         badgeFg = const Color(0xFFFF9500);
       } else {
-        statusText = '$diff ڕۆژی ماوە';
+        statusText = '$diff ${lang.translate('days_left')}';
         badgeBg = accentColor.withValues(alpha: 0.15);
         badgeFg = accentColor;
       }
@@ -543,13 +645,20 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     return GestureDetector(
       onTap: onPickDate,
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: isDark ? ZankoColors.darkCard : Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF0F0F6),
+            color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF1F5F9),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -557,12 +666,12 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(6),
+                  padding: const EdgeInsets.all(7),
                   decoration: BoxDecoration(
                     color: accentColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(icon, size: 16, color: accentColor),
+                  child: appIcon(icon, size: 16, color: accentColor),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -570,18 +679,17 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     title,
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w800,
                       color: isDark ? Colors.white : ZankoColors.textPrimary,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  child: Icon(
-                    CupertinoIcons.pencil_circle_fill,
-                    size: 20,
-                    color: accentColor,
-                  ),
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedPencilEdit02,
+                  size: 16,
+                  color: accentColor,
                 ),
               ],
             ),
@@ -590,13 +698,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               dateFormatted,
               style: TextStyle(
                 fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.grey[300] : ZankoColors.textSecondary,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: badgeBg,
                 borderRadius: BorderRadius.circular(8),
@@ -605,7 +713,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 statusText,
                 style: TextStyle(
                   fontSize: 11,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
                   color: badgeFg,
                 ),
               ),
@@ -616,11 +724,79 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
+  Widget _buildAiToolCard({
+    required BuildContext context,
+    required String title,
+    required String subtitle,
+    required dynamic icon,
+    required Color color,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isDark ? ZankoColors.darkCard : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF1F5F9),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: appIcon(icon, size: 18, color: color),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? Colors.white : ZankoColors.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 3),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: ZankoColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final langProvider = Provider.of<LanguageProvider>(context);
-    String t(String key) => langProvider.translate(key);
+    final lang = Provider.of<LanguageProvider>(context);
+    final isRtl = lang.isRtl;
 
     return Scaffold(
       backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
@@ -628,32 +804,79 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            // Top Bar
+            // Top App Bar
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 child: Row(
                   children: [
                     GlassButton(
                       onTap: () => Navigator.pop(context),
-                      child: Icon(
-                        CupertinoIcons.back,
+                      child: HugeIcon(
+                        icon: isRtl
+                            ? HugeIcons.strokeRoundedArrowRight01
+                            : HugeIcons.strokeRoundedArrowLeft01,
                         size: 20,
                         color: isDark ? Colors.white : ZankoColors.textPrimary,
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Text(
-                        widget.courseTitle,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.3,
-                          color: isDark ? Colors.white : ZankoColors.textPrimary,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            lang.translate('course_details'),
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: widget.themeColor,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            widget.courseTitle,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.3,
+                              color: isDark ? Colors.white : ZankoColors.textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Quick Action: AI Tutor Chat
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                            builder: (context) => AiTeacherChatScreen(
+                              initialPrompt:
+                                  'سڵاو! من خوێندکارم و دەمەوێت لە بابەتی (${widget.courseTitle}) یارمەتیم بدەیت و بەشێوازێکی سادە و زانستی بۆم ڕوون بکەیتەوە.',
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: widget.themeColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: widget.themeColor.withValues(alpha: 0.25),
+                          ),
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedAiBrain01,
+                          color: widget.themeColor,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ],
@@ -661,13 +884,40 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               ),
             ),
 
-            // Hero Card Banner
+            // Modern Hero Card
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                child: AppCard(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                child: Container(
                   padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: isDark
+                          ? [
+                              widget.themeColor.withValues(alpha: 0.25),
+                              ZankoColors.darkCard,
+                            ]
+                          : [
+                              widget.themeColor.withValues(alpha: 0.12),
+                              Colors.white,
+                            ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: widget.themeColor.withValues(alpha: isDark ? 0.3 : 0.2),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: widget.themeColor.withValues(alpha: 0.08),
+                        blurRadius: 18,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
@@ -678,18 +928,27 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                               gradient: LinearGradient(
                                 colors: [
                                   widget.themeColor,
-                                  widget.themeColor.withValues(alpha: 0.7),
+                                  widget.themeColor.withValues(alpha: 0.75),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(18),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: widget.themeColor.withValues(alpha: 0.3),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
-                            child: Icon(
-                              widget.icon,
-                              color: Colors.white,
-                              size: 28,
+                            child: Center(
+                              child: appIcon(
+                                widget.icon,
+                                color: Colors.white,
+                                size: 26,
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: 14),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -698,7 +957,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                   widget.courseTitle,
                                   style: TextStyle(
                                     fontSize: 18,
-                                    fontWeight: FontWeight.w800,
+                                    fontWeight: FontWeight.w900,
                                     color: isDark ? Colors.white : ZankoColors.textPrimary,
                                   ),
                                 ),
@@ -707,6 +966,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                   widget.courseSubtitle,
                                   style: TextStyle(
                                     fontSize: 13,
+                                    fontWeight: FontWeight.w600,
                                     color: ZankoColors.textSecondary,
                                   ),
                                 ),
@@ -715,34 +975,79 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 18),
 
-                      // Progress Bar
+                      // Metric Badges
                       Row(
                         children: [
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(6),
-                              child: LinearProgressIndicator(
-                                value: widget.progress,
-                                minHeight: 8,
-                                backgroundColor: isDark
-                                    ? Colors.white.withValues(alpha: 0.08)
-                                    : const Color(0xFFEFEFF7),
-                                valueColor: AlwaysStoppedAnimation<Color>(widget.themeColor),
-                              ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: widget.themeColor.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                HugeIcon(
+                                  icon: HugeIcons.strokeRoundedFile02,
+                                  size: 13,
+                                  color: widget.themeColor,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${_pdfLectures.length} ${lang.translate('lectures_count')}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                    color: widget.themeColor,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Text(
-                            '${(widget.progress * 100).toInt()}% Done',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: widget.themeColor,
-                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: ZankoColors.success.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                HugeIcon(
+                                  icon: HugeIcons.strokeRoundedCheckmarkCircle02,
+                                  size: 13,
+                                  color: ZankoColors.success,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${(widget.progress * 100).toInt()}% ${lang.translate('course_progress')}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                    color: ZankoColors.success,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Progress Bar
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: LinearProgressIndicator(
+                          value: widget.progress,
+                          minHeight: 8,
+                          backgroundColor: isDark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : const Color(0xFFE2E8F0),
+                          valueColor: AlwaysStoppedAnimation<Color>(widget.themeColor),
+                        ),
                       ),
                     ],
                   ),
@@ -750,22 +1055,28 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               ),
             ),
 
+            const SliverToBoxAdapter(child: SizedBox(height: 14)),
+
             // Exam Countdown Section
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(CupertinoIcons.timer, size: 18, color: ZankoColors.primary),
-                        const SizedBox(width: 6),
+                        HugeIcon(
+                          icon: HugeIcons.strokeRoundedClock01,
+                          size: 18,
+                          color: ZankoColors.primary,
+                        ),
+                        const SizedBox(width: 8),
                         Text(
-                          'ژێرمێژووی تاقیکردنەوەکان (Exam Countdown)',
+                          lang.translate('exam_countdown_title'),
                           style: TextStyle(
                             fontSize: 15,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w800,
                             color: isDark ? Colors.white : ZankoColors.textPrimary,
                           ),
                         ),
@@ -777,17 +1088,17 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                         Expanded(
                           child: _buildExamDetailTile(
                             context: context,
-                            title: 'تاقیکردنەوەی میدترم',
+                            title: lang.translate('midterm_exam'),
                             date: _midtermDate,
-                            icon: CupertinoIcons.timer,
-                            accentColor: const Color(0xFF007AFF),
+                            icon: HugeIcons.strokeRoundedClock01,
+                            accentColor: const Color(0xFF0284C7),
                             isDark: isDark,
                             onPickDate: () {
                               _showExamDateEditModal(
                                 context: context,
-                                examTitle: 'تاقیکردنەوەی میدترم',
+                                examTitle: lang.translate('midterm_exam'),
                                 currentDate: _midtermDate,
-                                accentColor: const Color(0xFF007AFF),
+                                accentColor: const Color(0xFF0284C7),
                                 onSaved: (newDate) {
                                   setState(() {
                                     _midtermDate = newDate;
@@ -798,19 +1109,19 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                             },
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: _buildExamDetailTile(
                             context: context,
-                            title: 'تاقیکردنەوەی فایناڵ',
+                            title: lang.translate('final_exam'),
                             date: _finalDate,
-                            icon: CupertinoIcons.flag_fill,
+                            icon: HugeIcons.strokeRoundedFlag01,
                             accentColor: const Color(0xFFAF52DE),
                             isDark: isDark,
                             onPickDate: () {
                               _showExamDateEditModal(
                                 context: context,
-                                examTitle: 'تاقیکردنەوەی فایناڵ',
+                                examTitle: lang.translate('final_exam'),
                                 currentDate: _finalDate,
                                 accentColor: const Color(0xFFAF52DE),
                                 onSaved: (newDate) {
@@ -830,68 +1141,164 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            const SliverToBoxAdapter(child: SizedBox(height: 18)),
 
-            // PDF Lectures Header & Add Button
+            // AI Study Superpowers Section
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        HugeIcon(
+                          icon: HugeIcons.strokeRoundedAiMagic,
+                          size: 18,
+                          color: const Color(0xFFAF52DE),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          lang.translate('ai_study_tools'),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: isDark ? Colors.white : ZankoColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        _buildAiToolCard(
+                          context: context,
+                          title: lang.translate('ai_explain_course'),
+                          subtitle: 'وانەبێژی AI',
+                          icon: HugeIcons.strokeRoundedTeacher,
+                          color: ZankoColors.primary,
+                          isDark: isDark,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              CupertinoPageRoute(
+                                builder: (context) => AiTeacherChatScreen(
+                                  initialPrompt:
+                                      'تکایە بە شێوازێکی زانستی و ڕوون سەرجەم چەمکە سەرەکییەکانی وانەی (${widget.courseTitle})م بۆ شیبکەرەوە بە کوردی.',
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        _buildAiToolCard(
+                          context: context,
+                          title: lang.translate('generate_quiz_btn'),
+                          subtitle: 'تاقیکردنەوە',
+                          icon: HugeIcons.strokeRoundedNote01,
+                          color: ZankoColors.success,
+                          isDark: isDark,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              CupertinoPageRoute(
+                                builder: (context) => AiTeacherChatScreen(
+                                  initialPrompt:
+                                      'تکایە ٥ پرسیاری هەڵبژاردن (Multiple Choice Quiz) لەسەر وانەی (${widget.courseTitle}) دابنێ لەگەڵ وەڵامە راستەکان و ڕوونکردنەوەی کورت بە کوردی.',
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        _buildAiToolCard(
+                          context: context,
+                          title: lang.translate('key_concepts_btn'),
+                          subtitle: 'کورتەی یاسا',
+                          icon: HugeIcons.strokeRoundedSparkles,
+                          color: const Color(0xFFF59E0B),
+                          isDark: isDark,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              CupertinoPageRoute(
+                                builder: (context) => AiTeacherChatScreen(
+                                  initialPrompt:
+                                      'گرنگترین فۆرمولا، یاسا و پێناسە سەرەکییەکانی وانەی (${widget.courseTitle}) لە شێوازی پوختەی کورت بە خاڵ بۆم ڕیزبکە.',
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+            // Lectures & PDF Documents Header
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          const Icon(
-                            CupertinoIcons.doc_fill,
-                            color: Color(0xFFFF3B30),
-                            size: 18,
+                    Row(
+                      children: [
+                        const HugeIcon(
+                          icon: HugeIcons.strokeRoundedFile02,
+                          color: Color(0xFFFF3B30),
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${lang.translate('lecture_materials')} (${_pdfLectures.length})',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                            color: isDark ? Colors.white : ZankoColors.textPrimary,
                           ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              'سڵاید و فایلی PDF (${_pdfLectures.length})',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.3,
-                                color: isDark ? Colors.white : ZankoColors.textPrimary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
                     GestureDetector(
                       onTap: _uploadPdfLecture,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              widget.themeColor,
-                              widget.themeColor.withValues(alpha: 0.85),
+                              ZankoColors.primary,
+                              ZankoColors.primary.withValues(alpha: 0.8),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: ZankoColors.primary.withValues(alpha: 0.25),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              CupertinoIcons.cloud_upload_fill,
+                            const HugeIcon(
+                              icon: HugeIcons.strokeRoundedCloudUpload,
                               color: Colors.white,
-                              size: 13,
+                              size: 15,
                             ),
-                            SizedBox(width: 4),
+                            const SizedBox(width: 6),
                             Text(
-                              '+ ئاپڵۆد',
-                              style: TextStyle(
+                              '+ ${lang.translate('upload_lecture_btn')}',
+                              style: const TextStyle(
                                 fontSize: 12,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w800,
                                 color: Colors.white,
                               ),
                             ),
@@ -901,51 +1308,83 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     ),
                   ],
                 ),
-
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 14)),
+            const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
-            // PDF Lectures List
+            // Lectures List / Empty State
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: _pdfLectures.isEmpty
                     ? Container(
                         padding: const EdgeInsets.all(32),
                         decoration: BoxDecoration(
                           color: isDark ? ZankoColors.darkCard : Colors.white,
-                          borderRadius: BorderRadius.circular(ZankoRadius.card),
+                          borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: isDark
                                 ? Colors.white.withValues(alpha: 0.08)
-                                : const Color(0xFFEFEFF5),
+                                : const Color(0xFFE2E8F0),
                           ),
                         ),
                         child: Column(
                           children: [
-                            const Icon(
-                              CupertinoIcons.doc_on_clipboard_fill,
-                              size: 48,
-                              color: ZankoColors.textSecondary,
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFF3B30).withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const HugeIcon(
+                                icon: HugeIcons.strokeRoundedFile02,
+                                size: 40,
+                                color: Color(0xFFFF3B30),
+                              ),
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 14),
                             Text(
-                              t('no_pdf_uploaded'),
+                              lang.translate('no_pdf_uploaded'),
                               style: TextStyle(
                                 fontSize: 15,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w800,
                                 color: isDark ? Colors.white : ZankoColors.textPrimary,
                               ),
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              t('upload_pdf_desc'),
+                              lang.translate('upload_pdf_desc'),
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: ZankoColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              onPressed: _uploadPdfLecture,
+                              icon: const HugeIcon(
+                                icon: HugeIcons.strokeRoundedCloudUpload,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                              label: Text(
+                                lang.translate('upload_lecture_btn'),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: ZankoColors.primary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
                               ),
                             ),
                           ],
@@ -955,13 +1394,33 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                         children: _pdfLectures.map((pdf) {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12),
-                            child: AppCard(
+                            child: Container(
                               padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: isDark ? ZankoColors.darkCard : Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isDark
+                                      ? Colors.white.withValues(alpha: 0.08)
+                                      : const Color(0xFFF1F5F9),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: isDark
+                                        ? Colors.black26
+                                        : Colors.black.withValues(alpha: 0.02),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
                               child: Column(
                                 children: [
                                   GestureDetector(
                                     onTap: () {
-                                      final realContent = SamplePdfService().getSampleLectureText(pdf.fileName, widget.courseTitle);
+                                      final realContent = SamplePdfService()
+                                          .getSampleLectureText(
+                                              pdf.fileName, widget.courseTitle);
                                       Navigator.push(
                                         context,
                                         CupertinoPageRoute(
@@ -974,30 +1433,34 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                     },
                                     child: Row(
                                       children: [
-                                        // PDF Red Icon
+                                        // PDF Squircle Icon
                                         Container(
                                           width: 44,
                                           height: 44,
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFFFF3B30).withValues(alpha: 0.1),
+                                            color: const Color(0xFFFF3B30)
+                                                .withValues(alpha: 0.12),
                                             borderRadius: BorderRadius.circular(14),
                                           ),
-                                          child: const Icon(
-                                            CupertinoIcons.doc_text_fill,
-                                            color: Color(0xFFFF3B30),
-                                            size: 22,
+                                          child: const Center(
+                                            child: HugeIcon(
+                                              icon: HugeIcons.strokeRoundedFile02,
+                                              color: Color(0xFFFF3B30),
+                                              size: 22,
+                                            ),
                                           ),
                                         ),
-                                        const SizedBox(width: 14),
+                                        const SizedBox(width: 12),
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 pdf.title,
                                                 style: TextStyle(
                                                   fontSize: 14,
-                                                  fontWeight: FontWeight.w700,
+                                                  fontWeight: FontWeight.w800,
                                                   color: isDark
                                                       ? Colors.white
                                                       : ZankoColors.textPrimary,
@@ -1010,18 +1473,28 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                                 children: [
                                                   Text(
                                                     pdf.size,
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      fontWeight: FontWeight.w600,
-                                                      color: ZankoColors.primary,
+                                                    style: const TextStyle(
+                                                      fontSize: 11,
+                                                      fontWeight: FontWeight.w700,
+                                                      color: Color(0xFFFF3B30),
                                                     ),
                                                   ),
-                                                  const SizedBox(width: 8),
+                                                  const SizedBox(width: 6),
+                                                  Text(
+                                                    '•',
+                                                    style: TextStyle(
+                                                      color: isDark
+                                                          ? Colors.grey[500]
+                                                          : Colors.grey[400],
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 6),
                                                   Expanded(
                                                     child: Text(
-                                                      '• ${t(pdf.dateAdded)}',
+                                                      lang.translate(pdf.dateAdded),
                                                       style: TextStyle(
-                                                        fontSize: 12,
+                                                        fontSize: 11,
+                                                        fontWeight: FontWeight.w600,
                                                         color: ZankoColors.textSecondary,
                                                       ),
                                                       maxLines: 1,
@@ -1033,10 +1506,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                             ],
                                           ),
                                         ),
-                                        // Delete button
+                                        // Delete Button
                                         IconButton(
-                                          icon: const Icon(
-                                            CupertinoIcons.trash,
+                                          icon: const HugeIcon(
+                                            icon: HugeIcons.strokeRoundedDelete02,
                                             size: 18,
                                             color: Colors.redAccent,
                                           ),
@@ -1046,13 +1519,15 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 12),
-                                  // Action Buttons
+                                  // Quick Action Pills
                                   Row(
                                     children: [
                                       Expanded(
                                         child: GestureDetector(
                                           onTap: () {
-                                            final realContent = SamplePdfService().getSampleLectureText(pdf.fileName, widget.courseTitle);
+                                            final realContent = SamplePdfService()
+                                                .getSampleLectureText(
+                                                    pdf.fileName, widget.courseTitle);
                                             Navigator.push(
                                               context,
                                               CupertinoPageRoute(
@@ -1064,25 +1539,29 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                             );
                                           },
                                           child: Container(
-                                            padding: const EdgeInsets.symmetric(vertical: 8),
+                                            padding:
+                                                const EdgeInsets.symmetric(vertical: 8),
                                             decoration: BoxDecoration(
-                                              color: ZankoColors.primary.withValues(alpha: 0.08),
+                                              color: ZankoColors.primary
+                                                  .withValues(alpha: 0.1),
                                               borderRadius: BorderRadius.circular(12),
                                             ),
                                             child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
                                               children: [
-                                                Icon(
-                                                  CupertinoIcons.chat_bubble_2_fill,
+                                                HugeIcon(
+                                                  icon: HugeIcons
+                                                      .strokeRoundedChatting01,
                                                   size: 14,
                                                   color: ZankoColors.primary,
                                                 ),
                                                 const SizedBox(width: 6),
                                                 Text(
-                                                  t('chat_with_ai'),
+                                                  lang.translate('chat_with_lecture'),
                                                   style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w700,
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w800,
                                                     color: ZankoColors.primary,
                                                   ),
                                                 ),
@@ -1091,42 +1570,49 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                           ),
                                         ),
                                       ),
-                                      const SizedBox(width: 10),
+                                      const SizedBox(width: 8),
                                       Expanded(
                                         child: GestureDetector(
                                           onTap: () {
-                                            final realContent = SamplePdfService().getSampleLectureText(pdf.fileName, widget.courseTitle);
+                                            final realContent = SamplePdfService()
+                                                .getSampleLectureText(
+                                                    pdf.fileName, widget.courseTitle);
                                             Navigator.push(
                                               context,
                                               CupertinoPageRoute(
-                                                builder: (context) => AiTeacherChatScreen(
+                                                builder: (context) =>
+                                                    AiTeacherChatScreen(
                                                   initialPrompt:
-                                                      'تکایە ئەم فایلی وانەیە (${pdf.title}) کورت بکەرەوە و خاڵە گرنگەکانی شیکار بکە:\n\n$realContent',
+                                                      'تکایە ئەم فایلی وانەیە (${pdf.title}) بەشێوەیەکی پوخت کورت بکەرەوە و خاڵە هەرە گرنگەکانی شیکار بکە:\n\n$realContent',
                                                 ),
                                               ),
                                             );
                                           },
                                           child: Container(
-                                            padding: const EdgeInsets.symmetric(vertical: 8),
+                                            padding:
+                                                const EdgeInsets.symmetric(vertical: 8),
                                             decoration: BoxDecoration(
-                                              color: const Color(0xFFAF52DE).withValues(alpha: 0.08),
+                                              color: const Color(0xFFAF52DE)
+                                                  .withValues(alpha: 0.1),
                                               borderRadius: BorderRadius.circular(12),
                                             ),
                                             child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
                                               children: [
-                                                const Icon(
-                                                  CupertinoIcons.sparkles,
+                                                const HugeIcon(
+                                                  icon: HugeIcons
+                                                      .strokeRoundedAiMagic,
                                                   size: 14,
                                                   color: Color(0xFFAF52DE),
                                                 ),
                                                 const SizedBox(width: 6),
                                                 Text(
-                                                  t('ai_summary'),
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: const Color(0xFFAF52DE),
+                                                  lang.translate('summarize_lecture'),
+                                                  style: const TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: Color(0xFFAF52DE),
                                                   ),
                                                 ),
                                               ],
@@ -1145,7 +1631,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 40)),
+            const SliverToBoxAdapter(child: SizedBox(height: 36)),
           ],
         ),
       ),

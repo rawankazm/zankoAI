@@ -105,7 +105,7 @@ class ZankoApp extends StatelessWidget {
         ),
         ChangeNotifierProxyProvider<AiService, ZankolineService>(
           create: (context) => ZankolineService(Provider.of<AiService>(context, listen: false)),
-          update: (context, aiService, previous) => previous ?? ZankolineService(aiService),
+          update: (context, aiService, previous) => (previous ?? ZankolineService(aiService))..updateAiService(aiService),
         ),
       ],
       child: Consumer2<LanguageProvider, ThemeProvider>(

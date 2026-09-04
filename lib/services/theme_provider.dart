@@ -31,50 +31,17 @@ class ThemePaletteInfo {
 }
 
 class ThemeProvider extends ChangeNotifier {
-  ThemeMode _themeMode = ThemeMode.dark;
-  AppThemeType _activeTheme = AppThemeType.emeraldForest;
+  ThemeMode _themeMode = ThemeMode.light;
+  AppThemeType _activeTheme = AppThemeType.royalBlue;
 
   static const List<ThemePaletteInfo> availableThemes = [
     ThemePaletteInfo(
-      type: AppThemeType.emeraldForest,
-      name: 'Emerald Slate (#0F172A & #10B981)',
-      englishName: 'Emerald Slate Dual-Tone',
-      primaryColor: Color(0xFF10B981),
-      accentColor: Color(0xFF10B981),
-      icon: '💎',
-    ),
-    ThemePaletteInfo(
       type: AppThemeType.royalBlue,
-      name: 'Royal Blue (زانکۆیی)',
-      englishName: 'Royal Blue',
-      primaryColor: Color(0xFF2563EB),
-      accentColor: Color(0xFF38BDF8),
+      name: 'Academic Blue & Gold (زانکۆیی)',
+      englishName: 'Academic Blue & Gold',
+      primaryColor: Color(0xFF035EC2),
+      accentColor: Color(0xFFE4D27D),
       icon: '🎓',
-    ),
-    ThemePaletteInfo(
-      type: AppThemeType.emeraldForest,
-      name: 'Emerald Green (سەوز)',
-      englishName: 'Emerald Green',
-      primaryColor: Color(0xFF10B981),
-      accentColor: Color(0xFF34D399),
-      icon: '🌿',
-    ),
-    ThemePaletteInfo(
-      type: AppThemeType.deepPurple,
-      name: 'Cyber Purple (مۆری مۆدێرن)',
-      englishName: 'Cyber Purple',
-      primaryColor: Color(0xFF8B5CF6),
-      accentColor: Color(0xFFEC4899),
-      icon: '🔮',
-    ),
-    ThemePaletteInfo(
-      type: AppThemeType.midnightGold,
-      name: 'Midnight Gold (شاهانەی VIP)',
-      englishName: 'Midnight Gold',
-      primaryColor: Color(0xFFFFD700),
-      accentColor: Color(0xFFF59E0B),
-      isVipOnly: true,
-      icon: '👑',
     ),
   ];
 

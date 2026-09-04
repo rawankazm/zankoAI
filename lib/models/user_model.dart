@@ -18,7 +18,14 @@ class UserModel {
   final String? photoUrl;
   final String vipStatus; // 'none' | 'pending' | 'active' | 'rejected' | 'expired'
 
-  bool get isGuest => id.startsWith('guest_user') || email == 'guest@zanko.edu';
+  bool get isGuest =>
+      id.startsWith('guest_') ||
+      email.startsWith('guest_') ||
+      email == 'guest@zanko.edu' ||
+      name == 'مێوان' ||
+      name == 'مێڤان' ||
+      name == 'زائر' ||
+      name.toLowerCase() == 'guest';
   bool get isPendingVip => vipStatus == 'pending';
 
   UserModel({

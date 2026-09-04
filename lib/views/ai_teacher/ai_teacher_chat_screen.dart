@@ -17,6 +17,8 @@ import '../../services/document_parser_service.dart';
 import '../../services/kurdish_tts_service.dart';
 import '../../models/note_model.dart';
 import '../../theme.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../../widgets/apple_ui_components.dart';
 import '../payment/vip_upgrade_sheet.dart';
 
 
@@ -515,8 +517,8 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                             color: ZankoColors.primary.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(
-                            isMathMode ? CupertinoIcons.function : CupertinoIcons.photo_fill_on_rectangle_fill,
+                          child: HugeIcon(
+                            icon: isMathMode ? HugeIcons.strokeRoundedAnalytics01 : HugeIcons.strokeRoundedImage01,
                             color: ZankoColors.primary,
                             size: 20,
                           ),
@@ -547,7 +549,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(CupertinoIcons.xmark_circle_fill, color: Colors.white38),
+                          icon: const HugeIcon(icon: HugeIcons.strokeRoundedCancelCircle, color: Colors.white38, size: 22),
                           onPressed: () => Navigator.pop(sheetCtx),
                         ),
                       ],
@@ -664,7 +666,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                               _controller.clear();
                               _processAndSendImage(bytes, imageName, note);
                             },
-                            icon: const Icon(CupertinoIcons.paperplane_fill, size: 17, color: Colors.black),
+                            icon: const HugeIcon(icon: HugeIcons.strokeRoundedSent, size: 17, color: Colors.black),
                             label: const Text(
                               'ناردن بۆ مامۆستا 🚀',
                               style: TextStyle(
@@ -850,7 +852,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
               children: [
                 Expanded(
                   child: _buildAttachmentOption(
-                    icon: CupertinoIcons.camera_fill,
+                    icon: HugeIcons.strokeRoundedCamera01,
                     color: ZankoColors.primary,
                     label: 'کامێرای هاوکێشە',
                     onTap: () {
@@ -862,7 +864,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: _buildAttachmentOption(
-                    icon: CupertinoIcons.photo,
+                    icon: HugeIcons.strokeRoundedImage01,
                     color: ZankoColors.primary,
                     label: 'وێنەی گەلەری',
                     onTap: () {
@@ -874,7 +876,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: _buildAttachmentOption(
-                    icon: CupertinoIcons.doc_text_fill,
+                    icon: HugeIcons.strokeRoundedFile02,
                     color: ZankoColors.primary,
                     label: 'فایلی PDF/وانە',
                     onTap: () {
@@ -893,7 +895,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   }
 
   Widget _buildAttachmentOption({
-    required IconData icon,
+    required dynamic icon,
     required Color color,
     required String label,
     required VoidCallback onTap,
@@ -911,7 +913,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 26),
+            appIcon(icon, color: color, size: 26),
             const SizedBox(height: 8),
             Text(
               label,
@@ -961,7 +963,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   }
 
   Widget _buildNeumorphicButton({
-    required IconData icon,
+    required dynamic icon,
     required VoidCallback onTap,
     Color? iconColor,
     double size = 44.0,
@@ -993,10 +995,12 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
             ),
           ],
         ),
-        child: Icon(
-          icon,
-          color: effectiveColor,
-          size: 20,
+        child: Center(
+          child: appIcon(
+            icon,
+            color: effectiveColor,
+            size: 20,
+          ),
         ),
       ),
     );
@@ -1005,6 +1009,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
 
 
   Widget _buildHeader(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final canPop = Navigator.canPop(context);
     final lang = Provider.of<LanguageProvider>(context);
     final authService = Provider.of<AuthService>(context);
@@ -1017,16 +1022,24 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
         left: 16,
         right: 16,
       ),
-      color: const Color(0xFF15181E),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF171B23) : Colors.white,
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2),
+            width: 1,
+          ),
+        ),
+      ),
       child: Column(
         children: [
           Row(
             children: [
               if (canPop) ...[
                 _buildNeumorphicButton(
-                  icon: CupertinoIcons.arrow_left,
+                  icon: HugeIcons.strokeRoundedArrowLeft01,
                   onTap: () => Navigator.pop(context),
-                  iconColor: ZankoColors.primary,
+                  iconColor: const Color(0xFF035EC2),
                 ),
                 const SizedBox(width: 10),
               ],
@@ -1035,18 +1048,30 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
               Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.4), width: 1.5),
+                  border: Border.all(color: const Color(0xFF035EC2).withValues(alpha: 0.3), width: 1.5),
                   boxShadow: [
                     BoxShadow(
-                      color: ZankoColors.primary.withValues(alpha: 0.25),
+                      color: const Color(0xFF035EC2).withValues(alpha: 0.15),
                       blurRadius: 8,
                     ),
                   ],
                 ),
                 child: CircleAvatar(
                   radius: 19,
-                  backgroundColor: const Color(0xFF2A2E37),
-                  child: Icon(Icons.psychology_rounded, color: ZankoColors.primary, size: 22),
+                  backgroundColor: isDark ? const Color(0xFF2A2E37) : const Color(0xFFE2EDFB),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/robot.png',
+                      width: 28,
+                      height: 28,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => const HugeIcon(
+                        icon: HugeIcons.strokeRoundedAiMagic,
+                        color: Color(0xFF035EC2),
+                        size: 22,
+                      ),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -1058,23 +1083,24 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                     children: [
                       Text(
                         lang.translate('ai_tutor'),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
-                          color: Colors.white,
+                          letterSpacing: -0.2,
+                          color: isDark ? Colors.white : const Color(0xFF17191F),
                         ),
                       ),
                       const SizedBox(width: 6),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.2),
+                          color: const Color(0xFFE2EDFB),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: Colors.green.withValues(alpha: 0.4), width: 0.8),
+                          border: Border.all(color: const Color(0xFF035EC2).withValues(alpha: 0.3), width: 0.8),
                         ),
                         child: const Text(
                           '⚡ Gemini 3.7 Flash',
-                          style: TextStyle(fontSize: 10, color: Colors.greenAccent, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 10, color: Color(0xFF035EC2), fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
@@ -1156,16 +1182,20 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                       duration: const Duration(milliseconds: 180),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: isSelected ? ZankoColors.primary : const Color(0xFF1E222A),
+                        color: isSelected
+                            ? const Color(0xFF035EC2)
+                            : (isDark ? const Color(0xFF1E222A) : const Color(0xFFF4F6F9)),
                         borderRadius: BorderRadius.circular(18),
                         border: Border.all(
-                          color: isSelected ? ZankoColors.primary : Colors.white.withValues(alpha: 0.08),
+                          color: isSelected
+                              ? const Color(0xFF035EC2)
+                              : (isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2)),
                           width: 1,
                         ),
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
-                                  color: ZankoColors.primary.withValues(alpha: 0.4),
+                                  color: const Color(0xFF035EC2).withValues(alpha: 0.3),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 )
@@ -1178,7 +1208,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                            color: isSelected ? Colors.white : Colors.white70,
+                            color: isSelected
+                                ? Colors.white
+                                : (isDark ? Colors.white70 : const Color(0xFF4B5563)),
                           ),
                         ),
                       ),
@@ -1273,7 +1305,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   }
 
   Widget _buildBubbleAction({
-    required IconData icon,
+    required dynamic icon,
     required String label,
     required VoidCallback onTap,
     Color color = Colors.white70,
@@ -1290,7 +1322,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 13, color: color),
+            appIcon(icon, size: 13, color: color),
             const SizedBox(width: 4),
             Text(
               label,
@@ -1303,6 +1335,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   }
 
   Widget _buildMessageBubble(Map<String, String> msg, bool isUser) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final content = msg['content'] ?? '';
     final time = msg['time'] ?? _formatTime();
     final isSpeaking = _currentlySpeakingMsg == content;
@@ -1325,40 +1358,40 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: isUser
                   ? BoxDecoration(
-                      color: ZankoColors.primary,
+                      color: const Color(0xFF035EC2),
                       borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(18),
-                        topRight: Radius.circular(18),
-                        bottomLeft: Radius.circular(18),
-                        bottomRight: Radius.circular(4),
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                        bottomLeft: Radius.circular(20),
+                        bottomRight: Radius.circular(5),
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: ZankoColors.primary.withValues(alpha: 0.35),
+                          color: const Color(0xFF035EC2).withValues(alpha: 0.25),
                           blurRadius: 10,
-                          offset: const Offset(0, 4),
+                          offset: const Offset(0, 3),
                         ),
                       ],
                     )
                   : BoxDecoration(
-                      color: isLimitMsg ? const Color(0xFF064E3B).withValues(alpha: 0.6) : const Color(0xFF1E222A),
+                      color: isLimitMsg
+                          ? (isDark ? const Color(0xFF1E293B) : const Color(0xFFF0F6FD))
+                          : (isDark ? const Color(0xFF171B23) : Colors.white),
                       borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(18),
-                        topRight: Radius.circular(18),
-                        bottomLeft: Radius.circular(4),
-                        bottomRight: Radius.circular(18),
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                        bottomLeft: Radius.circular(5),
+                        bottomRight: Radius.circular(20),
                       ),
                       border: Border.all(
-                        color: isLimitMsg
-                            ? ZankoColors.primary.withValues(alpha: 0.5)
-                            : Colors.white.withValues(alpha: 0.08),
-                        width: 1,
+                        color: isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2),
+                        width: 1.2,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.4),
+                          color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
                           blurRadius: 10,
-                          offset: const Offset(2, 4),
+                          offset: const Offset(0, 3),
                         ),
                       ],
                     ),
@@ -1394,7 +1427,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                   child: const Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(CupertinoIcons.viewfinder, size: 12, color: Colors.white),
+                                      HugeIcon(icon: HugeIcons.strokeRoundedMaximize01, size: 12, color: Colors.white),
                                       SizedBox(width: 4),
                                       Text('گەورەکردن', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                                     ],
@@ -1431,11 +1464,13 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                   if (content.isNotEmpty)
                     Text(
                       content,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14.5,
                         height: 1.45,
                         fontWeight: FontWeight.w400,
-                        color: Colors.white,
+                        color: isUser
+                            ? Colors.white
+                            : (isDark ? Colors.white : const Color(0xFF17191F)),
                       ),
                     ),
                   const SizedBox(height: 6),
@@ -1445,7 +1480,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                       time,
                       style: TextStyle(
                         fontSize: 10.5,
-                        color: isUser ? Colors.white.withValues(alpha: 0.7) : Colors.white38,
+                        color: isUser
+                            ? Colors.white.withValues(alpha: 0.75)
+                            : (isDark ? Colors.white38 : const Color(0xFFA6ACB8)),
                       ),
                     ),
                   ),
@@ -1482,7 +1519,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 children: [
                   // 1. Copy
                   _buildBubbleAction(
-                    icon: CupertinoIcons.doc_on_doc,
+                    icon: HugeIcons.strokeRoundedCopy01,
                     label: 'کۆپی',
                     onTap: () {
                       Clipboard.setData(ClipboardData(text: content));
@@ -1499,7 +1536,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
 
                   // 2. Save to Notes
                   _buildBubbleAction(
-                    icon: CupertinoIcons.bookmark,
+                    icon: HugeIcons.strokeRoundedBookmark02,
                     label: 'تێبینی',
                     color: ZankoColors.primary,
                     onTap: () => _saveAsNote(content),
@@ -1507,7 +1544,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
 
                   // 3. Read Aloud (TTS)
                   _buildBubbleAction(
-                    icon: isSpeaking ? CupertinoIcons.speaker_3_fill : CupertinoIcons.speaker_2,
+                    icon: isSpeaking ? HugeIcons.strokeRoundedVolumeHigh : HugeIcons.strokeRoundedVolumeLow,
                     label: isSpeaking ? 'وەستان' : 'دەنگ',
                     color: isSpeaking ? ZankoColors.primary : Colors.white70,
                     onTap: () async {
@@ -1529,7 +1566,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                   ),
                   // 4. Explain More
                   _buildBubbleAction(
-                    icon: CupertinoIcons.sparkles,
+                    icon: HugeIcons.strokeRoundedAiMagic,
                     label: 'ڕوونکردنەوەی زیاتر',
                     color: ZankoColors.primary,
                     onTap: () {
@@ -1547,12 +1584,13 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final lang = Provider.of<LanguageProvider>(context);
     final hasText = _controller.text.trim().isNotEmpty;
     final suggestions = _currentSuggestions;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF15181E),
+      backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
       body: SafeArea(
         top: false,
         child: Column(
@@ -1579,13 +1617,13 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1E222A),
+                            color: isDark ? const Color(0xFF171B23) : Colors.white,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.06),
+                              color: isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2),
                             ),
                           ),
-                          child: Row(
+                          child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               SizedBox(
@@ -1593,16 +1631,16 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                 height: 14,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(ZankoColors.primary),
+                                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF035EC2)),
                                 ),
                               ),
-                              const SizedBox(width: 10),
-                              const Text(
+                              SizedBox(width: 10),
+                              Text(
                                 'مامۆستا ZankoAI وەڵامت دەداتەوە... ⚡',
                                 style: TextStyle(
                                   fontSize: 12.5,
-                                  color: Colors.white70,
-                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF035EC2),
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
@@ -1627,20 +1665,20 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                     child: ActionChip(
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(horizontal: 10),
-                      backgroundColor: const Color(0xFF1E222A),
+                      backgroundColor: isDark ? const Color(0xFF171B23) : Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18),
                         side: BorderSide(
-                          color: ZankoColors.primary.withValues(alpha: 0.6),
+                          color: isDark ? const Color(0xFF262C36) : const Color(0xFFE2EDFB),
                           width: 1,
                         ),
                       ),
                       label: Text(
                         suggestions[index],
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: ZankoColors.primary,
+                          color: Color(0xFF035EC2),
                         ),
                       ),
                       onPressed: () => _sendMessage(suggestions[index]),
@@ -1694,7 +1732,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 ),
                 child: Row(
                   children: [
-                    Icon(CupertinoIcons.function, color: ZankoColors.primary, size: 20),
+                    HugeIcon(icon: HugeIcons.strokeRoundedAnalytics01, color: ZankoColors.primary, size: 20),
                     const SizedBox(width: 8),
                     const Expanded(
                       child: Text(
@@ -1718,7 +1756,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(CupertinoIcons.camera_fill, color: Colors.black, size: 14),
+                            HugeIcon(icon: HugeIcons.strokeRoundedCamera01, color: Colors.black, size: 14),
                             SizedBox(width: 4),
                             Text(
                               'کامێرا',
@@ -1753,21 +1791,21 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                       height: 52,
                       padding: const EdgeInsets.symmetric(horizontal: 6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1B1E26),
+                        color: isDark ? const Color(0xFF171B23) : Colors.white,
                         borderRadius: BorderRadius.circular(30),
                         border: Border.all(
                           color: _isRecording
                               ? Colors.redAccent.withValues(alpha: 0.6)
-                              : Colors.white.withValues(alpha: 0.08),
-                          width: _isRecording ? 1.5 : 1,
+                              : (isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2)),
+                          width: _isRecording ? 1.5 : 1.2,
                         ),
                         boxShadow: [
                           BoxShadow(
                             color: _isRecording
                                 ? Colors.redAccent.withValues(alpha: 0.2)
-                                : Colors.black.withValues(alpha: 0.5),
+                                : Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
                             blurRadius: 16,
-                            offset: const Offset(0, 6),
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
@@ -1775,8 +1813,8 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                           ? Row(
                               children: [
                                 IconButton(
-                                  icon: const Icon(
-                                    CupertinoIcons.trash,
+                                  icon: const HugeIcon(
+                                    icon: HugeIcons.strokeRoundedDelete02,
                                     color: Colors.redAccent,
                                     size: 22,
                                   ),
@@ -1802,11 +1840,11 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 12),
-                                const Expanded(
+                                Expanded(
                                   child: Text(
                                     'دەنگ تۆمار دەکرێت... قسە بکە 🎙️',
                                     style: TextStyle(
-                                      color: Colors.white70,
+                                      color: isDark ? Colors.white70 : const Color(0xFF4B5563),
                                       fontSize: 12.5,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -1820,9 +1858,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                               children: [
                                 // Emoji Button
                                 IconButton(
-                                  icon: Icon(
-                                    CupertinoIcons.smiley,
-                                    color: ZankoColors.primary,
+                                  icon: const HugeIcon(
+                                    icon: HugeIcons.strokeRoundedSmile,
+                                    color: Color(0xFF035EC2),
                                     size: 22,
                                   ),
                                   onPressed: _showEmojiPicker,
@@ -1833,13 +1871,13 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
                                       color: (_selectedModeIndex == 1 || _showMathToolbar)
-                                          ? ZankoColors.primary.withValues(alpha: 0.25)
+                                          ? const Color(0xFF035EC2).withValues(alpha: 0.15)
                                           : Colors.transparent,
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
                                         color: (_selectedModeIndex == 1 || _showMathToolbar)
-                                            ? ZankoColors.primary
-                                            : Colors.white24,
+                                            ? const Color(0xFF035EC2)
+                                            : (isDark ? Colors.white24 : const Color(0xFFD1D5DB)),
                                         width: 1,
                                       ),
                                     ),
@@ -1849,8 +1887,8 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                         fontSize: 11,
                                         fontWeight: FontWeight.bold,
                                         color: (_selectedModeIndex == 1 || _showMathToolbar)
-                                            ? ZankoColors.primary
-                                            : const Color(0xFF8E95A3),
+                                            ? const Color(0xFF035EC2)
+                                            : (isDark ? const Color(0xFF8E95A3) : const Color(0xFF6B7280)),
                                       ),
                                     ),
                                   ),
@@ -1867,17 +1905,17 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                     controller: _controller,
                                     onChanged: (_) => setState(() {}),
                                     onSubmitted: _sendMessage,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 15,
-                                      color: Colors.white,
+                                      color: isDark ? Colors.white : const Color(0xFF17191F),
                                     ),
                                     decoration: InputDecoration(
                                       filled: false,
                                       fillColor: Colors.transparent,
                                       hintText: lang.translate('type_message'),
-                                      hintStyle: const TextStyle(
+                                      hintStyle: TextStyle(
                                         fontSize: 14,
-                                        color: Color(0xFF6C717B),
+                                        color: isDark ? const Color(0xFFA6ACB8) : const Color(0xFF9CA3AF),
                                       ),
                                       border: InputBorder.none,
                                       enabledBorder: InputBorder.none,
@@ -1888,9 +1926,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                 ),
                                 // Attachment Icon (PDF / Image / Notes)
                                 IconButton(
-                                  icon: Icon(
-                                    CupertinoIcons.paperclip,
-                                    color: ZankoColors.primary,
+                                  icon: const HugeIcon(
+                                    icon: HugeIcons.strokeRoundedAttachment01,
+                                    color: Color(0xFF035EC2),
                                     size: 20,
                                   ),
                                   tooltip: 'هاوپێچکردنی فایل یان وێنە',
@@ -1903,7 +1941,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
 
                   const SizedBox(width: 10),
 
-                  // Glowing Action Button (Mic / Stop & Transcribe / Send)
+                  // Action Button (Mic / Stop & Transcribe / Send)
                   GestureDetector(
                     onTap: () {
                       if (hasText) {
@@ -1921,12 +1959,12 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                       decoration: BoxDecoration(
                         color: _isRecording
                             ? const Color(0xFFE11D48)
-                            : (_isTranscribingVoice ? const Color(0xFF4A148C) : ZankoColors.primary),
+                            : (_isTranscribingVoice ? const Color(0xFF4A148C) : const Color(0xFF035EC2)),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: (_isRecording ? const Color(0xFFE11D48) : ZankoColors.primary).withValues(alpha: 0.6),
-                            blurRadius: 16,
+                            color: (_isRecording ? const Color(0xFFE11D48) : const Color(0xFF035EC2)).withValues(alpha: 0.35),
+                            blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
                         ],
@@ -1935,10 +1973,10 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                           ? const Center(
                               child: CupertinoActivityIndicator(color: Colors.white),
                             )
-                          : Icon(
-                              hasText
-                                  ? CupertinoIcons.arrow_up
-                                  : (_isRecording ? CupertinoIcons.checkmark_alt : CupertinoIcons.mic_fill),
+                          : HugeIcon(
+                              icon: hasText
+                                  ? HugeIcons.strokeRoundedArrowUp01
+                                  : (_isRecording ? HugeIcons.strokeRoundedCheckmarkCircle02 : HugeIcons.strokeRoundedMic01),
                               color: Colors.white,
                               size: 22,
                             ),
@@ -2022,7 +2060,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 top: 8,
                 right: 8,
                 child: IconButton(
-                  icon: const Icon(CupertinoIcons.xmark_circle_fill, color: Colors.white70, size: 32),
+                  icon: const HugeIcon(icon: HugeIcons.strokeRoundedCancelCircle, color: Colors.white70, size: 32),
                   onPressed: () => Navigator.pop(ctx),
                 ),
               ),

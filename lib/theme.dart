@@ -4,14 +4,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'services/theme_provider.dart';
 
 class ZankoColors {
-  static Color _primary = const Color(0xFF10B981);
-  static Color _accent = const Color(0xFF10B981);
-  static Color _background = const Color(0xFFF8FAFC);
-  static Color _darkBackground = const Color(0xFF0F172A);
-  static Color _darkCard = const Color(0xFF1E293B);
-  static Color _darkCardSecondary = const Color(0xFF243044);
-  static Color _gradientStart = const Color(0xFF10B981);
-  static Color _gradientEnd = const Color(0xFF10B981);
+  static Color _primary = const Color(0xFF035EC2);
+  static Color _accent = const Color(0xFFE4D27D);
+  static Color _background = const Color(0xFFFAFAFB);
+  static Color _darkBackground = const Color(0xFF0E1117);
+  static Color _darkCard = const Color(0xFF171B23);
+  static Color _darkCardSecondary = const Color(0xFF1D222C);
+  static Color _gradientStart = const Color(0xFF035EC2);
+  static Color _gradientEnd = const Color(0xFF024A9B);
 
   static Color get primary => _primary;
   static Color get accent => _accent;
@@ -22,15 +22,22 @@ class ZankoColors {
   static Color get gradientStart => _gradientStart;
   static Color get gradientEnd => _gradientEnd;
 
+  static const Color primaryBlue = Color(0xFF035EC2);
+  static const Color secondaryGold = Color(0xFFE4D27D);
+
   static const Color card = Color(0xFFFFFFFF);
-  static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF64748B);
-  static const Color success = Color(0xFF10B981);
-  static const Color warning = Color(0xFF10B981);
+  static const Color textPrimary = Color(0xFF17191F);
+  static const Color textSecondary = Color(0xFF6B7280);
+  static const Color border = Color(0xFFECEEF2);
+  static const Color disabled = Color(0xFFB8BDC7);
+
+  static const Color success = Color(0xFF035EC2);
+  static const Color warning = Color(0xFFE4D27D);
   static const Color error = Color(0xFFEF4444);
 
-  static const Color darkTextPrimary = Color(0xFFF8FAFC);
-  static const Color darkTextSecondary = Color(0xFF94A3B8);
+  static const Color darkTextPrimary = Color(0xFFF7F8FA);
+  static const Color darkTextSecondary = Color(0xFFA6ACB8);
+  static const Color darkBorder = Color(0xFF262C36);
 
   static void updatePalette(ThemeColorsData colors) {
     _primary = colors.primary;
@@ -65,48 +72,55 @@ class ZankoGradients {
 }
 
 class ZankoRadius {
-  static const double card = 28.0;
-  static const double button = 22.0;
-  static const double input = 24.0;
-  static const double floatingButton = 32.0;
-  static const double smallIcon = 18.0;
+  static const double small = 12.0;
+  static const double medium = 16.0;
+  static const double large = 20.0;
+  static const double hero = 24.0;
+  static const double card = 20.0;
+  static const double button = 16.0;
+  static const double input = 16.0;
+  static const double floatingButton = 28.0;
+  static const double smallIcon = 12.0;
 }
 
 class ZankoShadows {
   static List<BoxShadow> get card => [
     BoxShadow(
-      color: ZankoColors.primary.withValues(alpha: 0.08),
+      color: Colors.black.withValues(alpha: 0.04),
       blurRadius: 24,
-      offset: const Offset(0, 8),
+      offset: const Offset(0, 6),
     ),
+  ];
+
+  static List<BoxShadow> get soft => [
     BoxShadow(
       color: Colors.black.withValues(alpha: 0.03),
-      blurRadius: 8,
-      offset: const Offset(0, 2),
+      blurRadius: 16,
+      offset: const Offset(0, 4),
     ),
   ];
 
   static List<BoxShadow> get floating => [
     BoxShadow(
-      color: ZankoColors.primary.withValues(alpha: 0.15),
-      blurRadius: 32,
-      offset: const Offset(0, 12),
+      color: Colors.black.withValues(alpha: 0.06),
+      blurRadius: 28,
+      offset: const Offset(0, 8),
     ),
   ];
 
   static List<BoxShadow> get glow => [
     BoxShadow(
-      color: ZankoColors.primary.withValues(alpha: 0.4),
-      blurRadius: 20,
-      spreadRadius: 2,
+      color: ZankoColors.primary.withValues(alpha: 0.25),
+      blurRadius: 16,
+      spreadRadius: 1,
     ),
   ];
 
   static List<BoxShadow> get gradientButton => [
     BoxShadow(
-      color: ZankoColors.primary.withValues(alpha: 0.35),
-      blurRadius: 18,
-      offset: const Offset(0, 8),
+      color: ZankoColors.primary.withValues(alpha: 0.25),
+      blurRadius: 16,
+      offset: const Offset(0, 6),
     ),
   ];
 }
@@ -157,34 +171,18 @@ class ThemeColorsData {
 
 class ZankoTheme {
   static ThemeColorsData getColors(AppThemeType type) {
-    switch (type) {
-      case AppThemeType.royalBlue:
-        return const ThemeColorsData(
-          primary: Color(0xFF2563EB),
-          accent: Color(0xFF38BDF8),
-          background: Color(0xFFF0F7FF),
-          card: Color(0xFFFFFFFF),
-          darkBackground: Color(0xFF0B1120),
-          darkCard: Color(0xFF151E33),
-          darkCardSecondary: Color(0xFF1E293B),
-          darkTextPrimary: Color(0xFFF8FAFC),
-          darkTextSecondary: Color(0xFF94A3B8),
-          gradientColors: [Color(0xFF2563EB), Color(0xFF0284C7)],
-        );
-      default:
-        return const ThemeColorsData(
-          primary: Color(0xFF10B981),
-          accent: Color(0xFF10B981),
-          background: Color(0xFFF8FAFC),
-          card: Color(0xFFFFFFFF),
-          darkBackground: Color(0xFF0F172A),
-          darkCard: Color(0xFF1E293B),
-          darkCardSecondary: Color(0xFF243044),
-          darkTextPrimary: Color(0xFFF8FAFC),
-          darkTextSecondary: Color(0xFF94A3B8),
-          gradientColors: [Color(0xFF10B981), Color(0xFF10B981)],
-        );
-    }
+    return const ThemeColorsData(
+      primary: Color(0xFF035EC2),
+      accent: Color(0xFFE4D27D),
+      background: Color(0xFFFAFAFB),
+      card: Color(0xFFFFFFFF),
+      darkBackground: Color(0xFF0E1117),
+      darkCard: Color(0xFF171B23),
+      darkCardSecondary: Color(0xFF1D222C),
+      darkTextPrimary: Color(0xFFF7F8FA),
+      darkTextSecondary: Color(0xFFA6ACB8),
+      gradientColors: [Color(0xFF035EC2), Color(0xFF024A9B)],
+    );
   }
 
   static ThemeData getLightTheme(AppThemeType type, {String? languageFontFamily}) {

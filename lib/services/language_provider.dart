@@ -31,6 +31,8 @@ class LanguageProvider extends ChangeNotifier {
         : TextDirection.rtl;
   }
 
+  bool get isRtl => _currentLanguage != AppLanguage.english;
+
   /// Returns the appropriate font family for the current language.
   /// Kurdish (Sorani & Badini) and Arabic use DroidKufi (فۆنتی کوفی), English uses default Plus Jakarta Sans.
   String? get fontFamily {
@@ -93,6 +95,9 @@ class LanguageProvider extends ChangeNotifier {
     'has_account': {'ku': 'هەژمارت هەیە؟ چوونەژوورەوە', 'badini': 'هەژمارا تە هەیە؟ چوونا ژوورێ', 'ar': 'لديك حساب؟ تسجيل الدخول', 'en': 'Have an account? Log In'},
     'no_account': {'ku': 'هەژمارت نییە؟ دروستکردنی هەژمار', 'badini': 'هەژمارا تە نینە؟ چێکرنا هەژمارێ', 'ar': 'ليس لديك حساب؟ إنشاء حساب', 'en': 'No account? Register'},
     'guest_login': {'ku': 'بەردەوامبوون وەک مێوان', 'badini': 'بەردەوامبوون وەک مێڤان', 'ar': 'المتابعة كزائر', 'en': 'Continue as Guest'},
+    'guest': {'ku': 'مێوان', 'badini': 'مێڤان', 'ar': 'زائر', 'en': 'Guest'},
+    'guest_account': {'ku': 'هەژماری مێوان', 'badini': 'هەژمارا مێڤان', 'ar': 'حساب زائر', 'en': 'Guest Account'},
+    'edit_profile': {'ku': 'دەستکاریکردنی پڕۆفایل', 'badini': 'دەستکاریکرنا پرۆفایلی', 'ar': 'تعديل الملف الشخصي', 'en': 'Edit Profile'},
     'skip_guest': {'ku': 'تێپەڕاندن (مێوان)', 'badini': 'دەربازکرن (مێڤان)', 'ar': 'تخطي (زائر)', 'en': 'Skip (Guest)'},
     'full_name': {'ku': 'ناوی تەواو', 'badini': 'ناڤێ تەمام', 'ar': 'الاسم الكامل', 'en': 'Full Name'},
     'full_name_hint': {'ku': 'نموونە: ئاراس ئەحمەد', 'badini': 'نموونە: ئاراس ئەحمەد', 'ar': 'مثال: أراس أحمد', 'en': 'e.g. Aras Ahmed'},
@@ -205,29 +210,35 @@ class LanguageProvider extends ChangeNotifier {
       'ar': 'معدل الصف 12 الإعدادي',
       'en': '12th Grade Average Mark'
     },
+    'zankoline_avg_desc': {
+      'ku': 'دیاریکردنی بەشە شایستەکان بەپێی نمرەکەت',
+      'badini': 'دیاریکرنا پشکێن شایستە ب دووڤ نمرەیا تە',
+      'ar': 'حساب الكليات والتخصصات المتاحة حسب معدلك',
+      'en': 'Calculate eligible departments by mark'
+    },
     'zankoline_track_scientific': {
-      'ku': 'زانستی (Scientific)',
-      'badini': 'زانستی (Scientific)',
-      'ar': 'علمي (Scientific)',
+      'ku': 'پۆلی زانستی',
+      'badini': 'پۆلا زانستی',
+      'ar': 'الفرع العلمي',
       'en': 'Scientific Track'
     },
     'zankoline_track_literary': {
-      'ku': 'وێژەیی (Literary)',
-      'badini': 'وێژەیی (Literary)',
-      'ar': 'أدبي (Literary)',
+      'ku': 'پۆلی وێژەیی',
+      'badini': 'پۆلا وێژەیی',
+      'ar': 'الفرع الأدبي',
       'en': 'Literary Track'
     },
     'zankoline_mode_general': {
-      'ku': 'خوێندنی گشتی (بەخۆڕایی)',
-      'badini': 'خوێندنا گشتی (بێبەرامبەر)',
-      'ar': 'التعليم العام (مجاني)',
-      'en': 'General Admission (Free)'
+      'ku': 'خوێندنی گشتی',
+      'badini': 'خوێندنا گشتی',
+      'ar': 'القبول العام',
+      'en': 'General'
     },
     'zankoline_mode_parallel': {
-      'ku': 'سیستەمی پاڕاڵێڵ (تێچوو)',
-      'badini': 'سیستەمێ پاڕاڵێڵ (تێچوو)',
-      'ar': 'النظام الموازي (مدفوع)',
-      'en': 'Parallel Admission (Tuition)'
+      'ku': 'پاڕاڵێڵ',
+      'badini': 'پاڕاڵێڵ',
+      'ar': 'الموازي',
+      'en': 'Parallel'
     },
     'zankoline_input_hint': {
       'ku': 'تێکڕای نمرەکەت داخڵ بکە (%):',
@@ -246,6 +257,48 @@ class LanguageProvider extends ChangeNotifier {
       'badini': 'دیتنا پشکان (سیستەمێ پاڕاڵێڵ)',
       'ar': 'البحث عن التخصصات (النظام الموازي)',
       'en': 'Find Departments (Parallel Admission)'
+    },
+    'zankoline_find_btn': {
+      'ku': 'دۆزینەوەی بەشەکان',
+      'badini': 'دیتنا پشکان',
+      'ar': 'البحث عن الأقسام',
+      'en': 'Find Departments'
+    },
+    'zankoline_ai_advice_btn': {
+      'ku': 'ڕاوێژی ژیری دەستکرد',
+      'badini': 'ڕاوێژا زیرەکیا دەستکرد',
+      'ar': 'استشارة AI',
+      'en': 'AI Advice'
+    },
+    'departments': {
+      'ku': 'بەشەکان',
+      'badini': 'پشکەکان',
+      'ar': 'الأقسام',
+      'en': 'Departments'
+    },
+    'view_departments': {
+      'ku': 'بینینی بەشە شایستەکان',
+      'badini': 'دیتنا پشکێن شایستە',
+      'ar': 'عرض الأقسام المتاحة',
+      'en': 'View Eligible Departments'
+    },
+    'regenerate_advice': {
+      'ku': 'نوێکردنەوەی ڕاوێژ',
+      'badini': 'نویکرنا ڕاوێژێ',
+      'ar': 'تحديث الاستشارة',
+      'en': 'Regenerate Advice'
+    },
+    'ai_analyzing': {
+      'ku': 'ڕاوێژکاری زیرەک سەرقاڵی شیکردنەوەی هەلەکانە...',
+      'badini': 'ڕاوێژکارێ زیرەک مژویلی شیکارکرنا دەرفەتانە...',
+      'ar': 'المستشار الذكي يحلل الفرص المتاحة لمعدلك...',
+      'en': 'AI Advisor is analyzing opportunities for your grade...'
+    },
+    'zankoai_student_role': {
+      'ku': 'قوتابی ZankoAI',
+      'badini': 'قوتابیێ ZankoAI',
+      'ar': 'طالب ZankoAI',
+      'en': 'ZankoAI Student',
     },
     'zankoline_ai_advisor_title': {
       'ku': 'ڕاوێژکاری زیرەکی زانکۆلاین (AI Advisor)',
@@ -278,6 +331,48 @@ class LanguageProvider extends ChangeNotifier {
       'badini': '(پشتی %40 داشکاندنێ)',
       'ar': '(بعد خصم 40%)',
       'en': '(40% Discount Applied)'
+    },
+    'enter_valid_mark': {
+      'ku': 'تکایە نمرەیەکی دروست داخڵ بکە (لە نێوان 0 بۆ 100)',
+      'badini': 'تکایە نمرەکا دروست داخڵ بکە (دناڤبەرا 0 تا 100)',
+      'ar': 'يرجى إدخال معدل صحيح (بين 0 و 100)',
+      'en': 'Please enter a valid mark (between 0 and 100)',
+    },
+    'no_departments_found': {
+      'ku': 'هیچ بەشێک نەدۆزرایەوە بۆ ئەم نمرەیە',
+      'badini': 'چ پشک نەهاتنە دیتن بۆ ڤێ نمرەیێ',
+      'ar': 'لم يتم العثور على تخصصات لهذا المعدل',
+      'en': 'No departments found for this mark',
+    },
+    'try_another_mark_or_parallel': {
+      'ku': 'تکایە نمرەیەکی تر تاقی بکەرەوە یان دۆخی پاڕاڵێڵ چالاک بکە',
+      'badini': 'تکایە نمرەکا دی تاقی بکە یان سیستەمێ پاڕاڵێڵ کارا بکە',
+      'ar': 'يرجى تجربة معدل آخر أو تفعيل النظام الموازي',
+      'en': 'Please try another mark or switch to Parallel admission mode',
+    },
+    'min_mark_label': {
+      'ku': 'نمرەی وەرگرتن',
+      'badini': 'نمرەیا وەرگرتنێ',
+      'ar': 'معدل القبول',
+      'en': 'Admission Cutoff',
+    },
+    'parallel_label': {
+      'ku': 'پاڕاڵێڵ',
+      'badini': 'پاڕاڵێڵ',
+      'ar': 'موازي',
+      'en': 'Parallel',
+    },
+    'general_label': {
+      'ku': 'گشتی',
+      'badini': 'گشتی',
+      'ar': 'عام',
+      'en': 'General',
+    },
+    'krg_admissions_tag': {
+      'ku': 'KRG Admissions • زانکۆلاین',
+      'badini': 'KRG Admissions • زانکۆلاین',
+      'ar': 'القبول المركزي لجامعات إقليم كوردستان',
+      'en': 'KRG Higher Education Admissions',
     },
 
     // Bottom Navigation
@@ -315,6 +410,7 @@ class LanguageProvider extends ChangeNotifier {
     'back_to_quiz_home': {'ku': 'دووبارەکردنەوەی کویز', 'badini': 'دووبارەکرنا کویزی', 'ar': 'إعادة الاختبار', 'en': 'Retake Quiz'},
     'nav_pdf_chat': {'ku': 'پەڕەی PDF', 'badini': 'پەڕا PDF', 'ar': 'ملف PDF', 'en': 'PDF Chat'},
 
+    'nav_progress': {'ku': 'پێشکەوتن', 'badini': 'پێشکەفتن', 'ar': 'التقدم', 'en': 'Progress'},
     'nav_profile': {'ku': 'پڕۆفایل', 'badini': 'پرۆفایل', 'ar': 'الملف', 'en': 'Profile'},
 
     // Home / Dashboard Header & Search
@@ -335,11 +431,109 @@ class LanguageProvider extends ChangeNotifier {
     },
     'enter_api_key': {'ku': 'تۆمارکردنی کلیلی Gemini API', 'badini': 'تۆمارکرنا کلیلا Gemini API', 'ar': 'إدخال مفتاح Gemini API', 'en': 'Enter Gemini API Key'},
     'schedule_title': {'ku': 'خشتەی وانەکان', 'badini': 'خشتەیێ وانان', 'ar': 'جدول المحاضرات', 'en': 'Lesson Schedule'},
+    'add_lecture': {'ku': 'زیادکردنی وانە', 'badini': 'زێدەکرنا وانێ', 'ar': 'إضافة محاضرة', 'en': 'Add Lecture'},
+    'edit_lecture': {'ku': 'دەستکاریکردنی وانە', 'badini': 'دەستکاریکرنا وانێ', 'ar': 'تعديل المحاضرة', 'en': 'Edit Lecture'},
+    'update_lecture': {'ku': 'نوێکردنەوەی وانە', 'badini': 'نویکرنا وانێ', 'ar': 'تحديث المحاضرة', 'en': 'Update Lecture'},
+    'lecture_name': {'ku': 'ناوی وانە', 'badini': 'ناڤێ وانێ', 'ar': 'اسم المحاضرة', 'en': 'Lecture / Subject Name'},
+    'lecture_name_hint': {'ku': 'بۆ نموونە: داتابەیس، بیرکاری، تۆڕەکان...', 'badini': 'بۆ نموونە: داتابەیس، بیرکاری، تۆڕ...', 'ar': 'مثال: قواعد البيانات، الرياضيات، الشبكات...', 'en': 'e.g. Database, Mathematics, Networks...'},
+    'lecture_time': {'ku': 'کاتی وانە', 'badini': 'دەمێ وانێ', 'ar': 'وقت المحاضرة', 'en': 'Lecture Time'},
+    'lecture_location': {'ku': 'شوێنی وانە (هۆڵ یان تاقیگە)', 'badini': 'جهێ وانێ (هۆل یان تاقیگەهـ)', 'ar': 'مكان المحاضرة (قاعة أو مختبر)', 'en': 'Location (Hall / Lab)'},
+    'lecture_location_hint': {'ku': 'بۆ نموونە: هۆڵی ٣، تاقیگەی ٥...', 'badini': 'بۆ نموونە: هۆلا ٣، تاقیگەها ٥...', 'ar': 'مثال: قاعة 3، مختبر 5...', 'en': 'e.g. Hall 3, Lab 5...'},
+    'lecture_teacher': {'ku': 'ناوی مامۆستا', 'badini': 'ناڤێ مامۆستای', 'ar': 'اسم الأستاذ', 'en': 'Instructor / Teacher'},
+    'lecture_teacher_hint': {'ku': 'ناوی مامۆستای وانەکە...', 'badini': 'ناڤێ مامۆستایێ وانێ...', 'ar': 'اسم أستاذ المادة...', 'en': 'Instructor name...'},
+    'lecture_save_success': {'ku': 'وانەکە بەسەرکەوتوویی تۆمار کرا', 'badini': 'وانە ب سەرکەفتیانە هاتە تۆمارکرن', 'ar': 'تم حفظ المحاضرة بنجاح', 'en': 'Lecture saved successfully'},
+    'lecture_delete_success': {'ku': 'وانەکە بە سەرکەوتوویی سڕایەوە', 'badini': 'وانە ب سەرکەفتیانە هاتە ژێبرن', 'ar': 'تم حذف المحاضرة بنجاح', 'en': 'Lecture deleted successfully'},
+    'delete_lecture_title': {'ku': 'سڕینەوەی وانە', 'badini': 'ژێبرنا وانێ', 'ar': 'حذف المحاضرة', 'en': 'Delete Lecture'},
+    'delete_lecture_confirm': {'ku': 'ئایا دڵنیایت لە سڕینەوەی ئەم وانەیە لە خشتەکەتدا؟', 'badini': 'ئەرێ تو پشتڕاستی ژ ژێبرنا ڤێ وانێ ژ خشتەیێ خۆ؟', 'ar': 'هل أنت متأكد من حذف هذه المحاضرة من جدولك؟', 'en': 'Are you sure you want to delete this lecture from your schedule?'},
+    'today': {'ku': 'ئەمڕۆ', 'badini': 'ئەڤرۆ', 'ar': 'اليوم', 'en': 'Today'},
+    'day_off_title': {'ku': 'پشووە و هیچ وانەیەکت نییە 🎉', 'badini': 'بێهنڤەدانە و چ وانە نینن 🎉', 'ar': 'عطلة ولا توجد أي محاضرات اليوم 🎉', 'en': 'No lectures today! Enjoy your break 🎉'},
+    'day_off_sub': {'ku': 'کاتێکی گونجاوە بۆ پشوودان یان پێداچوونەوە بە وانەکانتدا ✨', 'badini': 'دەمەکێ باشە بۆ بێهنڤەدانێ یان زڤڕاندنا وانان ✨', 'ar': 'وقت رائع للاسترخاء أو مراجعة الدروس السابقة ✨', 'en': 'Great time to relax or review your study materials ✨'},
+    'lectures_today_count': {'ku': 'وانەت هەیە بۆ ئەمڕۆ 📚', 'badini': 'وانە هەنە بۆ ئەڤرۆ 📚', 'ar': 'محاضرات مجدولة لديك اليوم 📚', 'en': 'lectures scheduled for today 📚'},
+    'no_lectures_day': {'ku': 'هیچ وانەیەک بۆ ئەم ڕۆژە نییە', 'badini': 'چ وانە بۆ ڤێ ڕۆژێ نینن', 'ar': 'لا توجد محاضرات لهذا اليوم', 'en': 'No lectures for this day'},
+    'no_lectures_for_day': {'ku': 'هیچ وانەیەک تۆمار نەکراوە بۆ', 'badini': 'چ وانە نەهاتینە تۆمارکرن بۆ', 'ar': 'لا توجد محاضرات مسجلة ليوم', 'en': 'No lectures scheduled for'},
+    'tap_to_add_lecture_desc': {'ku': 'کلیک لە دوگمەی خوارەوە بکە بۆ زیادکردنی وانە و کاتەکان', 'badini': 'کلیت بکە ل دوکما خوارێ بۆ زێدەکرنا وانە و دەمان', 'ar': 'اضغط على الزر أدناه لإضافة المحاضرات والأوقات', 'en': 'Tap the button below to add your lectures and times'},
+    'schedule_view_daily': {'ku': 'بینینی ڕۆژانە', 'badini': 'دیتنا ڕۆژانە', 'ar': 'عرض يومي', 'en': 'Daily View'},
+    'schedule_view_weekly': {'ku': 'بینینی هەفتانە', 'badini': 'دیتنا حەفتیانە', 'ar': 'عرض أسبوعي', 'en': 'Weekly View'},
+    'select_day': {'ku': 'ڕۆژی وانە', 'badini': 'ڕۆژا وانێ', 'ar': 'يوم المحاضرة', 'en': 'Lecture Day'},
+    'quick_time_slots': {'ku': 'کاتە باوەکان', 'badini': 'دەمێن بەربڵاڤ', 'ar': 'أوقات شائعة', 'en': 'Common Time Slots'},
+    'custom_time': {'ku': 'دیاریکردنی کات', 'badini': 'دەستنیشانکرنا دەمی', 'ar': 'تحديد الوقت', 'en': 'Pick Custom Time'},
+    'not_specified': {'ku': 'دیارینەکراوە', 'badini': 'نەهاتیە دیارکرن', 'ar': 'غير محدد', 'en': 'Not specified'},
+    'default_teacher': {'ku': 'مامۆستای وانە', 'badini': 'مامۆستایێ وانێ', 'ar': 'أستاذ المادة', 'en': 'Instructor'},
+    'all_week': {'ku': 'تەواوی هەفتە', 'badini': 'هەمی حەفتی', 'ar': 'كامل الأسبوع', 'en': 'Full Week'},
+    'search_lectures': {'ku': 'گەڕان لە وانەکان، مامۆستا یان هۆڵ...', 'badini': 'لێگەڕیان د واناندا، مامۆستا یان هۆل...', 'ar': 'البحث في المحاضرات، الأساتذة أو القاعات...', 'en': 'Search courses, teachers, or halls...'},
+    'ongoing_now': {'ku': 'ئێستا بەردەوامە', 'badini': 'نوکە بەردەوامە', 'ar': 'جارية الآن', 'en': 'Ongoing Now'},
+    'upcoming_next': {'ku': 'وانەی داهاتوو', 'badini': 'وانا بهێت', 'ar': 'المحاضرة القادمة', 'en': 'Upcoming Next'},
     'ai_tutor_subtitle': {
-      'ku': 'هاوکاری تایبەتی فێربوونت.\nپرسیار بکە، فێربە و گەشە بکە.',
-      'badini': 'هاریکارێ تایبەتیێ فێربوونا تە.\nپرسیار بکە، فێر ببە و گەشە بکە.',
-      'ar': 'مساعدك الشخصي للتعلم.\nاسأل، تعلم وتطور.',
-      'en': 'Your personal learning assistant.\nAsk, learn and grow together.'
+      'ku': 'هەموو پرسیارێک بکە، ڕوونکردنەوەی ڕوون وەربگرە و باشتر فێربە لەگەڵ AI.',
+      'badini': 'هەمی پرسیارەکێ بکە، ڕوونکردنا ڕوون وەربگرە و چێتر فێرببە دگەل AI.',
+      'ar': 'اسأل أي شيء، احصل على شروحات واضحة وتعلم بشكل أفضل مع الذكاء الاصطناعي.',
+      'en': 'Ask anything, get clear explanations and learn better with AI.'
+    },
+    'ai_tutor_hero_title': {
+      'ku': 'یارمەتیدەری زیرەکی\nخوێندنی تایبەتیت',
+      'badini': 'هاریکارێ زیرەکێ\nخوێندنا تە یا تایبەت',
+      'ar': 'مساعدك الشخصي\nللتعلم الذكي',
+      'en': 'Your personal\nlearning assistant'
+    },
+    'ready_to_continue': {
+      'ku': 'ئامادەیت بۆ بەردەوامبوون لە خوێندن؟',
+      'badini': 'ئامادەی بۆ بەردەوامبوونێ د خوێندنێ دا؟',
+      'ar': 'هل أنت مستعد لمتابعة تعلمك؟',
+      'en': 'Ready to continue your learning?'
+    },
+    'today_progress': {
+      'ku': 'پێشکەوتنی ئەمڕۆ',
+      'badini': 'پێشکەفتنا ئەڤرۆ',
+      'ar': 'تقدم اليوم',
+      'en': "Today's progress"
+    },
+    'upcoming_tasks': {
+      'ku': 'ئەرکەکانی داهاتوو',
+      'badini': 'ئەرکێن بهێت',
+      'ar': 'المهام القادمة',
+      'en': 'Upcoming tasks'
+    },
+    'view_details': {
+      'ku': 'بینینی وردەکاری',
+      'badini': 'دیتنا هویرکاریان',
+      'ar': 'عرض التفاصيل',
+      'en': 'View details'
+    },
+    'lessons_completed': {
+      'ku': 'وانە تەواوکراوەکان',
+      'badini': 'وانێن تەمامکری',
+      'ar': 'الدروس المكتملة',
+      'en': 'Lessons completed'
+    },
+    'study_time_today': {
+      'ku': 'کاتی خوێندنی ئەمڕۆ',
+      'badini': 'دەمێ خوێندنا ئەڤرۆ',
+      'ar': 'وقت الدراسة اليوم',
+      'en': 'Study time Today'
+    },
+    'day_streak': {
+      'ku': 'ڕۆژ بەردەوامی',
+      'badini': 'ڕۆژێن بەردەوام',
+      'ar': 'أيام متتالية',
+      'en': 'Day streak'
+    },
+    'see_all': {
+      'ku': 'هەمووی ببینە',
+      'badini': 'هەمیێ ببینە',
+      'ar': 'عرض الكل',
+      'en': 'See all'
+    },
+    'high_priority': {
+      'ku': 'گرنگیی باڵا',
+      'badini': 'گرنگیا بلند',
+      'ar': 'أولوية عالية',
+      'en': 'High Priority'
+    },
+    'medium_priority': {
+      'ku': 'گرنگیی مامناوەند',
+      'badini': 'گرنگیا ناڤین',
+      'ar': 'أولوية متوسطة',
+      'en': 'Medium'
     },
     'start_learning': {'ku': 'دەستپێکردنی فێربوون', 'badini': 'دەستپێکرنا فێربوونێ', 'ar': 'ابدأ التعلم', 'en': 'Start Learning'},
     'explain': {'ku': 'ڕوونکردنەوە', 'badini': 'ڕوونکردن', 'ar': 'شرح', 'en': 'Explain'},
@@ -353,8 +547,8 @@ class LanguageProvider extends ChangeNotifier {
     'excellent': {'ku': 'زۆر باشە', 'badini': 'گەلەک باشە', 'ar': 'ممتاز', 'en': 'Excellent'},
     'continue_learning': {'ku': 'بەردەوامبوون لە خوێندن', 'badini': 'بەردەوامبوون ل سەر خوێندنێ', 'ar': 'متابعة التعلم', 'en': 'Continue Learning'},
     'continue': {'ku': 'بەردەوامبە', 'badini': 'بەردەوامبە', 'ar': 'متابعة', 'en': 'Continue'},
-    'see_all': {'ku': 'بینینی هەمووی', 'badini': 'دیتنا هەموویان', 'ar': 'عرض الكل', 'en': 'See all'},
     'quick_ai_tools': {'ku': 'ئامرازە خێراکانی AI', 'badini': 'ئامرازێن خێرا یێن AI', 'ar': 'أدوات الذكاء الاصطناعي', 'en': 'Quick AI Tools'},
+    'all_ai_tools_subtitle': {'ku': 'هەموو ئامرازەکان لێرەن', 'badini': 'هەموو ئامرازێن لێرین', 'ar': 'جميع الأدوات في متناول يدك', 'en': 'All your AI tools in one place'},
     'recommended_courses': {'ku': 'وانە پێشنیارکراوەکان', 'badini': 'وانێن پێشنیارکری', 'ar': 'المواد المقترحة', 'en': 'Recommended Courses'},
 
     // Settings & Profile
@@ -400,8 +594,18 @@ class LanguageProvider extends ChangeNotifier {
     'about_zanko': {'ku': 'دەربارەی ZankoAI', 'badini': 'دەربارەی ZankoAI', 'ar': 'عن ZankoAI', 'en': 'About ZankoAI'},
 
     // Courses & Lessons
-    'all_courses': {'ku': 'سەرجەم وانەکان', 'badini': 'هەموو وانە', 'ar': 'جميع المواد', 'en': 'All Courses'},
+    'all_courses': {'ku': 'وانەکانم', 'badini': 'وانێت من', 'ar': 'موادي الدراسية', 'en': 'My Courses'},
     'search_courses': {'ku': 'گەڕان لە وانەکاندا...', 'badini': 'لێگەڕیان د وانان دا...', 'ar': 'البحث في المواد...', 'en': 'Search courses...'},
+    'search_course_hint': {'ku': 'گەڕان لە وانەکاندا...', 'badini': 'گەڕیان د واناندا...', 'ar': 'البحث في المواد الدراسية...', 'en': 'Search courses...'},
+    'filter_in_progress': {'ku': 'لە خوێندندایە', 'badini': 'د خواندنێدایە', 'ar': 'قيد الدراسة', 'en': 'In Progress'},
+    'filter_completed': {'ku': 'تەواوکراو', 'badini': 'تەمامکری', 'ar': 'مكتملة', 'en': 'Completed'},
+    'add_new_course': {'ku': 'زیادکردنی وانە', 'badini': 'زێدەکرنا وانێ', 'ar': 'إضافة مادة', 'en': 'Add Course'},
+    'no_courses_found': {'ku': 'هیچ وانەیەک نەدۆزرایەوە', 'badini': 'چ وانە نەهاتنە دیتن', 'ar': 'لم يتم العثور على مواد', 'en': 'No courses found'},
+    'upcoming_exams': {'ku': 'تاقیکردنەوەکان', 'badini': 'ئەزموون', 'ar': 'الامتحانات', 'en': 'Upcoming Exams'},
+    'course_progress': {'ku': 'تێکڕای پێشکەوتن', 'badini': 'تێکڕایێ پێشکەفتنێ', 'ar': 'معدل الإنجاز', 'en': 'Avg Progress'},
+    'active_courses_count': {'ku': 'وانە چالاکەکان', 'badini': 'وانێت چالاک', 'ar': 'المواد النشطة', 'en': 'Active Courses'},
+    'continue_studying': {'ku': 'بەردەوامبە لە خوێندن', 'badini': 'بەردەوامبە د خواندنێدا', 'ar': 'متابعة الدراسة', 'en': 'Continue Studying'},
+    'resume_learning': {'ku': 'دەستپێکردنەوە', 'badini': 'دەستپێکرنەڤە', 'ar': 'استئناف', 'en': 'Resume'},
     'lessons': {'ku': 'وانە', 'badini': 'وانە', 'ar': 'دروس', 'en': 'Lessons'},
 
     // Quiz Maker
@@ -733,6 +937,85 @@ class LanguageProvider extends ChangeNotifier {
     'student_analytics': {'ku': 'ئاماری گشتی قوتابیان', 'badini': 'ئامارا گشتی یا قوتابیان', 'ar': 'تحليلات الطلاب العامة', 'en': 'Overall Student Analytics'},
     'teacher_stats_lectures': {'ku': 'وانە بارکراوەکان', 'badini': 'وانێن بارکری', 'ar': 'المحاضرات المرفوعة', 'en': 'Lectures Uploaded'},
     'teacher_stats_announcements': {'ku': 'ئاگادارییەکان', 'badini': 'ئاگاداری', 'ar': 'الإعلانات', 'en': 'Announcements'},
+
+    // Profile & Settings
+    'vip_banner_title_guest': {'ku': 'بەشداربوونی نایابی VIP', 'badini': 'پشکداریا نایاب یا VIP', 'ar': 'اشتراك VIP المميز', 'en': 'VIP Premium Membership'},
+    'vip_banner_title_active': {'ku': 'ئەندامی نایابی VIP (چالاککراوە 👑)', 'badini': 'ئەندامێ نایاب یێ VIP (چالاککریە 👑)', 'ar': 'عضو VIP المميز (مفعّل 👑)', 'en': 'VIP Member (Active 👑)'},
+    'vip_banner_desc_guest': {'ku': 'سێمینار و ڕاپۆرت بە وۆرد + پێشبینی تاقیکردنەوە', 'badini': 'سێمینار و ڕاپۆرت ب وۆرد + پێشبینیا تاقیکرنێ', 'ar': 'تصدير Word و PPTX + توقعات الامتحانات', 'en': 'Word & PPTX exports + Quiz predictions'},
+    'vip_banner_desc_active': {'ku': 'داگرتنی Word و PPTX + تاقیکردنەوە و چاتی بێسنوور', 'badini': 'داگرتنا Word و PPTX + چاتێ بێ سنوور', 'ar': 'تحميل Word و PPTX + محادثات واختبارات غير محدودة', 'en': 'Word & PPTX downloads + Unlimited chat'},
+    'vip_upgrade_btn': {'ku': 'بوون بە VIP ⚡', 'badini': 'بوون ب VIP ⚡', 'ar': 'ترقية VIP ⚡', 'en': 'Get VIP ⚡'},
+    'vip_renew_btn': {'ku': 'نوێکردنەوە', 'badini': 'نویکرن', 'ar': 'تجديد', 'en': 'Renew'},
+    'support_and_info': {'ku': 'پشتگیری و زانیاری', 'badini': 'پشتگیری و پێزانین', 'ar': 'الدعم والمعلومات', 'en': 'Support & Information'},
+    'feedback_suggestions': {'ku': 'ڕا و پێشنیارەکان', 'badini': 'ڕا و پێشنیار', 'ar': 'الآراء والمقترحات', 'en': 'Feedback & Suggestions'},
+    'feedback_subtitle': {'ku': 'ناردنی داواکاری و پێشنیار بۆ گەشەپێدەران', 'badini': 'هنارتنا داخازی و پێشنیاران بۆ گەشەپێدەران', 'ar': 'إرسال الطلبات والملاحظات للمطورين', 'en': 'Send requests & feedback to developers'},
+    'account': {'ku': 'هەژمار', 'badini': 'هەژمار', 'ar': 'الحساب', 'en': 'Account'},
+    'delete_account': {'ku': 'سڕینەوەی یەکجاریی هەژمار', 'badini': 'ژێبرنا ئێکجاری یا هەژمارێ', 'ar': 'حذف الحساب نهائياً', 'en': 'Delete Account'},
+    'delete_account_desc': {'ku': 'سڕینەوەی هەموو داتاکان و هەژماری بەکارهێنەر', 'badini': 'ژێبرنا هەمی داتایان و هەژمارێ', 'ar': 'حذف جميع البيانات والحساب بشكل دائم', 'en': 'Permanently remove all data and account'},
+    'delete_account_confirm_title': {'ku': 'سڕینەوەی هەژمار؟', 'badini': 'ژێبرنا هەژمارێ؟', 'ar': 'حذف الحساب؟', 'en': 'Delete Account?'},
+    'delete_account_confirm_desc': {'ku': 'ئایا دڵنیایت لە سڕینەوەی یەکجاریی هەژمارەکەت؟ ئەم کارە هەموو داتاکانت دەسڕێتەوە و ناتوانرێت بگەڕێندرێتەوە.', 'badini': 'ئەرێ تو پشتڕاستی ژ ژێبرنا ئێکجاری یا هەژمارا خۆ؟ ئەڤ چەندە دێ هەمی داتایێن تە ژێبەت و ناهێنە ڤەگەڕاندن.', 'ar': 'هل أنت متأكد من رغبتك في حذف حسابك نهائياً؟ سيتم مسح جميع بياناتك ولا يمكن استرجاعها.', 'en': 'Are you sure you want to delete your account? All your data will be permanently erased.'},
+    'yes_delete': {'ku': 'بەڵێ، بیسڕەوە', 'badini': 'بەلێ، بژێبە', 'ar': 'نعم، احذف', 'en': 'Yes, Delete'},
+    'developed_by': {'ku': 'گەشەی پێدراوە لەلایەن تیمی birdev', 'badini': 'هاتیە گەشەپێدان ژ لایێ تیمی birdev', 'ar': 'تم التطوير بواسطة فريق birdev', 'en': 'Developed by birdev team'},
+    'all_rights_reserved': {'ku': 'سەرجەم مافەکانی پارێزراوە', 'badini': 'هەمی ماف پاراستینە', 'ar': 'جميع الحقوق محفوظة', 'en': 'All rights reserved'},
+    'feedback_dialog_desc': {'ku': 'پێشنیار یان ڕای خۆت بنووسە بۆ بەرزکردنەوەی کوالێتی ZankoAI', 'badini': 'پێشنیار یان ڕایا خۆ بنڤیسە بۆ بلندکرنا کوالێتیا ZankoAI', 'ar': 'اكتب اقتراحاتك أو ملاحظاتك لتحسين ZankoAI', 'en': 'Write your suggestions or feedback to improve ZankoAI'},
+    'feedback_input_hint': {'ku': 'ڕا و پێشنیارەکەت بنووسە...', 'badini': 'ڕا و پێشنیارا خۆ بنڤیسە...', 'ar': 'اكتب ملاحظاتك واقتراحاتك هنا...', 'en': 'Write your feedback here...'},
+    'feedback_input_empty': {'ku': 'تکایە پێشنیارەکەت بنووسە', 'badini': 'تکایە پێشنیارا خۆ بنڤیسە', 'ar': 'يرجى كتابة اقتراحك', 'en': 'Please enter your feedback'},
+    'feedback_sent_success': {'ku': 'پێشنیارەکەت بە سەرکەوتووی گەیشتە تیمی birdev! ✅', 'badini': 'پێشنیارا تە ب سەرکەفتیانە گەهشتە تیمی birdev! ✅', 'ar': 'تم إرسال اقتراحك بنجاح إلى فريق birdev! ✅', 'en': 'Your feedback was sent successfully to birdev team! ✅'},
+    'feedback_type_feature': {'ku': '✨ داواکاری تایبەتمەندی', 'badini': '✨ داخازیا تایبەتمەندیێ', 'ar': '✨ طلب ميزة', 'en': '✨ Feature Request'},
+    'feedback_type_bug': {'ku': '🐞 کێشەی تەکنیکی', 'badini': '🐞 کێشەیا تەکنیکی', 'ar': '🐞 خطأ تقني', 'en': '🐞 Technical Issue'},
+    'feedback_type_content': {'ku': '📚 ناوەڕۆکی زانکۆ', 'badini': '📚 ناڤەرۆکا زانکۆیێ', 'ar': '📚 محتوى جامعي', 'en': '📚 University Content'},
+    'feedback_type_other': {'ku': '💬 ڕای گشتی', 'badini': '💬 ڕایا گشتی', 'ar': '💬 رأي عام', 'en': '💬 General Feedback'},
+    'notification_settings': {'ku': 'ڕێکخستنی ئاگادارییەکان', 'badini': 'ڕێکخستنا ئاگادارییان', 'ar': 'إعدادات الإشعارات', 'en': 'Notification Settings'},
+    'exam_alerts': {'ku': 'ئاگادارکردنەوەی تاقیکردنەوەکان', 'badini': 'ئاگادارکرنا تاقیکرنان', 'ar': 'تنبيهات الامتحانات', 'en': 'Exam Alerts'},
+    'exam_alerts_desc': {'ku': 'ناردنی بیرخەرەوەی ژێرمێژووی تاقیکردنەوەی میدترم و فایناڵ', 'badini': 'هنارتنا بیرئینانێ بۆ تاقیکرنێن میدتێرم و فاینال', 'ar': 'تذكيرات بمواعيد امتحانات الميدترم والنهائي', 'en': 'Reminders for midterms and final exams'},
+    'study_streak_reminder': {'ku': 'بیرخەرەوەی بەردەوامیی خوێندن', 'badini': 'بیرئینانا بەردەوامیا خوێندنێ', 'ar': 'تذكير استمرار المذاكرة', 'en': 'Study Streak Reminder'},
+    'study_streak_desc': {'ku': 'ناردنی بیرخەرەوە بۆ پاراستنی زنجیرەی ڕۆژانەی دراسەکردن', 'badini': 'هنارتنا بیرئینانێ بۆ پاراستنا زنجیرا ڕۆژانە یا دراسەکرنێ', 'ar': 'تذكير يومي للحفاظ على سلسلة الدراسة اليومية', 'en': 'Daily reminders to maintain your study streak'},
+    'campus_news': {'ku': 'هەواڵ و نوێکارییەکانی زانکۆ', 'badini': 'نووچە و نویکاریێن زانکۆیێ', 'ar': 'أخبار وتحديثات الجامعة', 'en': 'Campus & University News'},
+    'campus_news_desc': {'ku': 'ئاگادارکردنەوە لە زانکۆلاین و هەواڵە گرنگەکان', 'badini': 'ئاگاداری ژ زانکۆلاین و نووچەیێن گرنگ', 'ar': 'تنبيهات حول زانكولاين والأخبار الهامة', 'en': 'Important announcements and updates'},
+    'vip_alerts': {'ku': 'ئاگادارکردنەوەی بەشداربوونی VIP', 'badini': 'ئاگادارکرنا پشکداریا VIP', 'ar': 'تنبيهات اشتراك VIP', 'en': 'VIP Subscription Alerts'},
+    'vip_alerts_desc': {'ku': 'بیرخەرەوەی ماوەی بەسەرچوونی هەژماری VIP', 'badini': 'بیرئینانا دەمێ ب سەرڤەچوونا هەژمارا VIP', 'ar': 'تذكير بقرب انتهاء صلاحية اشتراك VIP', 'en': 'Reminders before VIP subscription expires'},
+    'notifications_saved': {'ku': 'ڕێکخستنەکانی ئاگاداری بە سەرکەوتوویی پاشەکەوت کران 🔔', 'badini': 'ڕێکخستنێن ئاگاداریێ ب سەرکەفتیانە هاتنە پاراستن 🔔', 'ar': 'تم حفظ إعدادات الإشعارات بنجاح 🔔', 'en': 'Notification settings saved successfully 🔔'},
+    'clear_cache': {'ku': 'سڕینەوەی کاشی ئۆفلاین (Clear Cache)', 'badini': 'ژێبرنا کاشا ئۆفلاین', 'ar': 'مسح الذاكرة المؤقتة (Clear Cache)', 'en': 'Clear Offline Cache'},
+    'clear_cache_desc': {'ku': 'سڕینەوەی فایلی کاتی و پاککردنەوەی فەزای مۆبایلەکەت', 'badini': 'ژێبرنا فایلێن دەمکی و بەتاڵکرنا جهێ مۆبایلێ', 'ar': 'حذف الملفات المؤقتة وتفريغ مساحة الجهاز', 'en': 'Remove temporary files and free up storage'},
+    'cache_cleared_success': {'ku': 'کاشی ئۆفلاینی ئەپەکە بە سەرکەوتوویی پاککرایەوە 🧹', 'badini': 'کاشا ئۆفلاین یا ئەپێ ب سەرکەفتیانە هاتە پاقژکرن 🧹', 'ar': 'تم مسح الذاكرة المؤقتة للتطبيق بنجاح 🧹', 'en': 'App offline cache cleared successfully 🧹'},
+    'understood': {'ku': 'پەسەندە و تێگەیشتم', 'badini': 'یا دروستە و تێگەهشتم', 'ar': 'موافق ومفهوم', 'en': 'Understood'},
+    'check_updates': {'ku': 'پشکنین بۆ ئەپدەیت', 'badini': 'پشکنین بۆ نویکرنێ', 'ar': 'التحقق من التحديثات', 'en': 'Check for Updates'},
+    'you_have_latest_version': {'ku': '🎉 تۆ نوێترین وەشانی ZankoAI بەکاردەهێنیت', 'badini': '🎉 تو نووترین وەشانا ZankoAI بکار دئینی', 'ar': '🎉 أنت تستخدم أحدث إصدار من ZankoAI', 'en': '🎉 You are using the latest version of ZankoAI'},
+    'university_not_set': {'ku': 'زانکۆ دیاری نەکراوە', 'badini': 'زانکۆ نەهاتیە دیاریکرن', 'ar': 'لم يتم تحديد الجامعة', 'en': 'University Not Set'},
+    'edit_profile_desc': {'ku': 'ناوی تەواو، زانکۆ، بەش و شاری نیشتەجێبوون نوێ بکەرەوە', 'badini': 'ناڤێ تەمام، زانکۆ، پشک و باژێرێ خۆ نووبکە', 'ar': 'تحديث الاسم الكامل، الجامعة، القسم والمدينة', 'en': 'Update your name, university, department and city'},
+    'please_enter_full_name': {'ku': 'تکایە ناوی تەواو بنووسە', 'badini': 'تکایە ناڤێ تەمام بنڤیسە', 'ar': 'يرجى إدخال الاسم الكامل', 'en': 'Please enter your full name'},
+    'profile_updated_success': {'ku': '✅ زانیارییەکان بە سەرکەوتوویی نوێکرانەوە!', 'badini': '✅ پێزانین ب سەرکەفتیانە هاتنە نویکرن!', 'ar': '✅ تم تحديث المعلومات بنجاح!', 'en': '✅ Profile updated successfully!'},
+    'save_profile_data': {'ku': '💾 پاشەکەوتکردنی زانیاری', 'badini': '💾 پاراستنا پێزانینان', 'ar': '💾 حفظ البيانات', 'en': '💾 Save Profile Information'},
+    'change_profile_photo': {'ku': 'گۆڕینی وێنەی پڕۆفایل', 'badini': 'گوهۆڕینا وێنەیێ پرۆفایلی', 'ar': 'تغيير صورة الملف الشخصي', 'en': 'Change Profile Picture'},
+    'choose_avatar_or_url': {'ku': 'وێنەیەک لە ئاڤاتارەکان هەڵبژێرە یان لینکی وێنەکەت بنووسە', 'badini': 'وێنەکێ ژ ئاڤاتاران هەلبژێرە یان وێنێ خۆ دانە', 'ar': 'اختر صورة رمزية أو أدخل رابط صورتك', 'en': 'Choose an avatar or enter an image link'},
+    'phone_gallery': {'ku': 'گالێری مۆبایل', 'badini': 'گالێریا مۆبایلێ', 'ar': 'معرض الصور', 'en': 'Photo Gallery'},
+    'camera_photo': {'ku': 'وێنەی کامێرا', 'badini': 'وێنێ کامیرایێ', 'ar': 'الكاميرا', 'en': 'Take Photo'},
+    'suggested_avatars': {'ku': 'ئاڤاتارە پێشنیازکراوەکان:', 'badini': 'ئاڤاتارێن پێشنیازکری:', 'ar': 'الصور الرمزية المقترحة:', 'en': 'Suggested Avatars:'},
+    'custom_image_url': {'ku': 'لینکی وێنەی تایبەت (URL)', 'badini': 'لینکێ وێنەیێ تایبەت (URL)', 'ar': 'رابط الصورة المخصصة (URL)', 'en': 'Custom Image URL'},
+    'avatar_updated_success': {'ku': '✅ وێنەی پڕۆفایل بە سەرکەوتوویی جێگیرکرا!', 'badini': '✅ وێنەیێ پرۆفایلی ب سەرکەفتیانە هاتە دانان!', 'ar': '✅ تم تحديث صورة الملف الشخصي بنجاح!', 'en': 'Profile picture updated successfully! ✅'},
+    'save_avatar': {'ku': '💾 جێگیرکردنی وێنەی پڕۆفایل', 'badini': '💾 دانانا وێنەیێ پرۆفایلی', 'ar': '💾 حفظ صورة الملف الشخصي', 'en': '💾 Save Profile Picture'},
+    'course_details': {'ku': 'وردەکاری وانە', 'badini': 'هویرکاریێن وانەیێ', 'ar': 'تفاصيل المادة', 'en': 'Course Details'},
+    'set_exam_date': {'ku': 'دیاریکردنی کاتی تاقیکردنەوە', 'badini': 'دەستنیشانکرنا دەمێ تاقیکرنێ', 'ar': 'تحديد موعد الامتحان', 'en': 'Set Exam Date'},
+    'ai_study_tools': {'ku': 'ئامرازە زیرەکەکانی دراسەکردن', 'badini': 'ئامرازێن زیرەک بۆ دراسەکرنێ', 'ar': 'أدوات الدراسة بالذكاء الاصطناعي', 'en': 'AI Study Tools'},
+    'ai_explain_course': {'ku': 'ڕوونکردنەوەی گشتی وانە', 'badini': 'شلوڤەکرنا گشتی یا وانەیێ', 'ar': 'شرح شامل للمادة', 'en': 'Comprehensive Explanation'},
+    'course_quiz_fast': {'ku': 'تاقیکردنەوەی خێرا (Quiz)', 'badini': 'تاقیکرنا بلەز (Quiz)', 'ar': 'اختبار سريع', 'en': 'Quick Quiz'},
+    'key_concepts_btn': {'ku': 'خاڵ و یاسا گرنگەکان', 'badini': 'پۆینت و یاسایێن گرنگ', 'ar': 'أهم المفاهيم والقوانين', 'en': 'Key Concepts & Formulas'},
+    'lecture_materials': {'ku': 'سڵاید و فایلی وانەکان', 'badini': 'فایل و سلایدێن وانەیان', 'ar': 'ملفات وسلايدات المحاضرات', 'en': 'Lecture Materials & PDFs'},
+    'upload_lecture_btn': {'ku': 'بارکردنی PDF', 'badini': 'بارکرنا فایلا PDF', 'ar': 'رفع محاضرة', 'en': 'Upload PDF'},
+    'chat_with_lecture': {'ku': 'پرسیار و گفتوگۆ', 'badini': 'پسیار و دانوستاندن', 'ar': 'محادثة وسؤال', 'en': 'Chat & Ask'},
+    'summarize_lecture': {'ku': 'کورتەی فەوری', 'badini': 'کورتیا بلەز', 'ar': 'تلخيص فوري', 'en': 'Quick Summary'},
+    'lectures_count': {'ku': 'فایلی وانە', 'badini': 'فایلێن وانەیێ', 'ar': 'ملفات المحاضرة', 'en': 'Lectures'},
+    'quick_presets': {'ku': 'دیاریکردنی خێرا (ڕۆژ)', 'badini': 'دەستنیشانکرنا بلەز (ڕۆژ)', 'ar': 'تحديد سريع (أيام)', 'en': 'Quick Presets (Days)'},
+    'pick_from_calendar': {'ku': 'هەڵبژاردن لە ڕۆژژمێرەوە', 'badini': 'هەلبژارتن ژ ڕۆژژمێرێ', 'ar': 'اختيار من التقويم', 'en': 'Pick from Calendar'},
+    'change_document': {'ku': 'گۆڕینی فایل', 'badini': 'گوهۆڕینا فایلێ', 'ar': 'تغيير الملف', 'en': 'Change File'},
+    'view_document_text': {'ku': 'بینینی دەقی فایل', 'badini': 'دیتنا دەقێ فایلێ', 'ar': 'عرض نص الملف', 'en': 'View Extracted Text'},
+    'document_preview': {'ku': 'پێشبینینی ناوەڕۆکی دۆکیومێنت', 'badini': 'پێشبینیا ناڤەرۆکا دۆکیۆمێنتێ', 'ar': 'معاينة محتوى المستند', 'en': 'Document Content Preview'},
+    'ask_pdf_hint': {'ku': 'پرسیارێک دەربارەی ئەم فایلە بنووسە...', 'badini': 'پسیارەکێ ل سەر ڤێ فایلێ بنڤیسە...', 'ar': 'اسأل سؤالاً حول هذا المستند...', 'en': 'Ask a question about this document...'},
+    'summarize_doc': {'ku': 'کورتەی سەرەکی 📝', 'badini': 'کورتیا سەرەکی 📝', 'ar': 'الملخص الرئيسي 📝', 'en': 'Key Summary 📝'},
+    'key_exam_questions': {'ku': 'پرسیارە گرنگەکان ❓', 'badini': 'پسیارێن گرنگ ❓', 'ar': 'أسئلة هامة ❓', 'en': 'Exam Questions ❓'},
+    'key_formulas': {'ku': 'یاسا و چەمکەکان 📐', 'badini': 'یاسا و چەمک 📐', 'ar': 'القوانين والمفاهيم 📐', 'en': 'Key Formulas 📐'},
+    'quick_quiz_doc': {'ku': 'تاقیکردنەوەی خێرا ⚡', 'badini': 'تاقیکرنا بلەز ⚡', 'ar': 'اختبار سريع ⚡', 'en': 'Quick Quiz ⚡'},
+    'copy_response': {'ku': 'کۆپیکردن', 'badini': 'کۆپیکرن', 'ar': 'نسخ', 'en': 'Copy'},
+    'response_copied': {'ku': 'وەڵامەکە کۆپی کرا! 📋', 'badini': 'بەرسڤ هاتە کۆپیکرن! 📋', 'ar': 'تم نسخ الإجابة! 📋', 'en': 'Answer copied! 📋'},
   };
 }
 

@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/note_model.dart';
 import '../models/schedule_model.dart';
 import '../models/quiz_model.dart';
@@ -99,9 +101,35 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
     _coursesSub?.cancel();
   }
 
+  Future<void> _loadLocalSchedule() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getStringList('local_user_schedule');
+      if (saved != null && saved.isNotEmpty) {
+        final loaded = saved.map((s) => ScheduleModel.fromMap(jsonDecode(s) as Map<String, dynamic>)).toList();
+        _schedule.clear();
+        _schedule.addAll(loaded);
+        notifyListeners();
+      }
+    } catch (e) {
+      if (kDebugMode) print('Error loading local schedule: $e');
+    }
+  }
+
+  Future<void> _saveLocalSchedule() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final data = _schedule.map((s) => jsonEncode(s.toMap())).toList();
+      await prefs.setStringList('local_user_schedule', data);
+    } catch (e) {
+      if (kDebugMode) print('Error saving local schedule: $e');
+    }
+  }
+
   @override
   Future<void> loadData() async {
     try {
+      await _loadLocalSchedule();
       _listenToNotes();
       _listenToSchedule();
       _listenToQuizzes();
@@ -152,8 +180,7 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
     _scheduleSub?.cancel();
     final uid = _userId;
     if (uid == null) {
-      _schedule.clear();
-      notifyListeners();
+      // Keep local in-memory schedule for guests rather than clearing
       return;
     }
 
@@ -162,19 +189,22 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
         .where('userId', isEqualTo: uid)
         .snapshots()
         .listen((snapshot) {
-      _schedule.clear();
-      for (var doc in snapshot.docs) {
-        final data = doc.data();
-        _schedule.add(ScheduleModel(
-          id: doc.id,
-          courseName: data['courseName'] ?? '',
-          time: data['time'] ?? '',
-          location: data['location'] ?? '',
-          dayName: data['dayName'] ?? 'شەممە',
-          teacherName: data['teacherName'],
-        ));
+      if (snapshot.docs.isNotEmpty) {
+        _schedule.clear();
+        for (var doc in snapshot.docs) {
+          final data = doc.data();
+          _schedule.add(ScheduleModel(
+            id: doc.id,
+            courseName: data['courseName'] ?? '',
+            time: data['time'] ?? '',
+            location: data['location'] ?? '',
+            dayName: data['dayName'] ?? 'شەممە',
+            teacherName: data['teacherName'] ?? '',
+          ));
+        }
+        _saveLocalSchedule();
+        notifyListeners();
       }
-      notifyListeners();
     }, onError: (_) {});
   }
 
@@ -423,19 +453,42 @@ class FirestoreDatabaseService extends ChangeNotifier implements DatabaseService
 
   @override
   Future<void> addScheduleItem(ScheduleModel item) async {
-    await _firestore.collection('schedule').doc(item.id).set({
-      'courseName': item.courseName,
-      'time': item.time,
-      'location': item.location,
-      'dayName': item.dayName,
-      'teacherName': item.teacherName,
-      'userId': _userId,
-    });
+    _schedule.removeWhere((i) => i.id == item.id);
+    _schedule.add(item);
+    notifyListeners();
+    await _saveLocalSchedule();
+
+    final uid = _userId;
+    if (uid != null) {
+      try {
+        await _firestore.collection('schedule').doc(item.id).set({
+          'courseName': item.courseName,
+          'time': item.time,
+          'location': item.location,
+          'dayName': item.dayName,
+          'teacherName': item.teacherName,
+          'userId': uid,
+        });
+      } catch (e) {
+        if (kDebugMode) print('Firestore addScheduleItem error: $e');
+      }
+    }
   }
 
   @override
   Future<void> deleteScheduleItem(String itemId) async {
-    await _firestore.collection('schedule').doc(itemId).delete();
+    _schedule.removeWhere((item) => item.id == itemId);
+    notifyListeners();
+    await _saveLocalSchedule();
+
+    final uid = _userId;
+    if (uid != null) {
+      try {
+        await _firestore.collection('schedule').doc(itemId).delete();
+      } catch (e) {
+        if (kDebugMode) print('Firestore deleteScheduleItem error: $e');
+      }
+    }
   }
 
   @override

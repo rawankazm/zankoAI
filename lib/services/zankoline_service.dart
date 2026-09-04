@@ -68,10 +68,21 @@ class ZankolineDepartmentModel {
 
   int get discountedParallelFeeIqd => (parallelFeeIqd * 0.55).round();
 
-  String get formattedParallelFee {
+  String formattedParallelFeeLocalized({bool isEnglish = false}) {
     final discountedMillions = discountedParallelFeeIqd / 1000000.0;
 
-    String formatVal(double val) {
+    if (isEnglish) {
+      String formatValEn(double val) {
+        if (val >= 1) {
+          return val % 1 == 0 ? '${val.toStringAsFixed(0)}M' : '${val.toStringAsFixed(2)}M';
+        }
+        final thousands = (val * 1000).round();
+        return '${thousands}K';
+      }
+      return '${formatValEn(discountedMillions)} IQD (after 45% discount)';
+    }
+
+    String formatValKu(double val) {
       if (val >= 1) {
         return val % 1 == 0 ? '${val.toStringAsFixed(0)} ملیۆن' : '${val.toStringAsFixed(2)} ملیۆن';
       }
@@ -79,19 +90,25 @@ class ZankolineDepartmentModel {
       return '$thousands هەزار';
     }
 
-    return '${formatVal(discountedMillions)} دینار (دوای %45 داشکاندن)';
+    return '${formatValKu(discountedMillions)} دینار (دوای %45 داشکاندن)';
   }
+
+  String get formattedParallelFee => formattedParallelFeeLocalized();
 }
 
 class ZankolineService extends ChangeNotifier {
-  final AiService _aiService;
+  AiService? _aiService;
   List<ZankolineDepartmentModel> _departments = [];
   bool _isLoading = false;
   final Map<String, ZankolineDepartmentModel> _deptMap = {};
 
-  ZankolineService(this._aiService) {
+  ZankolineService([AiService? aiService]) : _aiService = aiService {
     loadDepartments();
     _listenToFirestoreDepartments();
+  }
+
+  void updateAiService(AiService? aiService) {
+    _aiService = aiService;
   }
 
   bool get isLoading => _isLoading;
@@ -156,54 +173,90 @@ class ZankolineService extends ChangeNotifier {
       if (!isTrackMatch) return false;
 
       if (isParallel) {
-        // Parallel mode specifically targets departments that require Parallel to unlock
-        // (i.e., student's mark qualifies for Parallel: mark >= parallelMinMark,
-        // BUT the General cutoff is above or near student's mark: dept.minMark >= mark - 1.0).
         final isParallelEligible = mark >= dept.parallelMinMark;
         final isTargetUpgrade = dept.minMark >= (mark - 1.0);
         return isParallelEligible && isTargetUpgrade;
       } else {
-        // General free public mode requires student mark >= General cutoff
         return mark >= dept.minMark;
       }
     }).toList()
       ..sort((a, b) => b.minMark.compareTo(a.minMark));
   }
 
-  Future<String> askZankolineAiAdvisor(double studentMark, String track, List<ZankolineDepartmentModel> matchedDepts, {bool isParallel = false}) async {
-    final trackName = track == 'scientific' ? 'زانستی' : 'وێژەیی';
-    final systemModeName = isParallel ? 'پاڕاڵێڵ (تێکڕای کەمکراوە)' : 'خوێندنی گشتی / بەخۆڕایی';
+  Future<String> askZankolineAiAdvisor(
+    double studentMark,
+    String track,
+    List<ZankolineDepartmentModel> matchedDepts, {
+    bool isParallel = false,
+    bool isEnglish = false,
+  }) async {
+    final trackName = isEnglish
+        ? (track == 'scientific' ? 'Scientific' : 'Literary')
+        : (track == 'scientific' ? 'زانستی' : 'وێژەیی');
+    final systemModeName = isEnglish
+        ? (isParallel ? 'Parallel Admission (45% Tuition Discount)' : 'General Admission (Free Tuition)')
+        : (isParallel ? 'پاڕاڵێڵ (%45 داشکاندنی فەرمی)' : 'خوێندنی گشتی (بەخۆڕایی)');
 
     if (matchedDepts.isEmpty) {
-      return 'بەپێی تێکڕای نمرەکەت (%$studentMark) لە لقی $trackName لە سیستەمی $systemModeName، هیچ بەشێک نەدۆزرایەوە.';
-    }
-
-    final deptsSummary = matchedDepts.map((d) {
-      final minCutoff = isParallel ? d.parallelMinMark : d.minMark;
-      return '• ${d.university} - ${d.college}\n  - نمرەی پاڕاڵێڵ/گشتی: %$minCutoff\n  - شار: ${d.city}\n  - وەسف: ${d.description}';
-    }).join('\n\n');
-
-    final prompt = '''
-تۆ ڕاوێژکاری فەرمی زیرەکی زانکۆلاینیت (ZankoLine AI Advisor) بۆ زانکۆکانی هەرێمی کوردستان.
-تێکڕای نمرەی قوتابی: %$studentMark (لقی: $trackName) - سیستەم: $systemModeName.
-
-ئەمەش کۆمەڵەی بەشەکانن کە لەگەڵ نمرەکەی گونجاون:
-$deptsSummary
-
-تکایە وەڵامەکەت بە شێوازێکی پڕۆفێشناڵ و ڕوون بە کوردی (سۆرانی) بەم جۆرە بنووسە:
-١. دەستپێک: "بەپێی تێکڕای نمرەکەت (%$studentMark) لە سیستەمی $systemModeName، ئەم بەشانە لە زانکۆکان دەتوانیت لێیان وەربگیرێیت:"
-٢. لیستی بەشەکان لەگەڵ شیکاری کورت و ئامۆژگاری بۆ پاڕاڵێڵ.
-''';
-
-    try {
-      final res = await _aiService.askTeacher(prompt, [], isVip: true);
-      if (res.contains('API Key Required') || res.contains('تکایە API Key')) {
-        return _buildLocalKurdishAdvisorSummary(studentMark, trackName, matchedDepts, isParallel: isParallel);
+      if (isEnglish) {
+        return 'Based on your grade ($studentMark%) in the $trackName track under $systemModeName, no matching departments were found in the current cutoff database.';
       }
-      return res;
-    } catch (_) {
-      return _buildLocalKurdishAdvisorSummary(studentMark, trackName, matchedDepts, isParallel: isParallel);
+      return 'بەپێی تێکڕای نمرەکەت (%$studentMark) لە لقی $trackName لە سیستەمی $systemModeName، هیچ بەشێک نەدۆزرایەوە لە تۆماری ئێستادا.';
     }
+
+    // Call real generative AI through AiService if connected
+    if (_aiService != null) {
+      try {
+        final topDeptsList = matchedDepts
+            .take(6)
+            .map((d) => '${d.college} (${d.university})')
+            .join(isEnglish ? ', ' : '، ');
+
+        final prompt = isEnglish
+            ? 'Act as an expert Kurdistan University admission advisor (Zankoline). '
+              'A 12th-grade student with score $studentMark% in $trackName track is exploring options in $systemModeName. '
+              'They qualify for ${matchedDepts.length} departments. Key matches: $topDeptsList. '
+              'Provide 3-4 concise, highly practical academic bullet points in clean English advising their application strategy, competition, and priority choices.'
+            : 'تۆ ڕاوێژکاری ئەکادیمی ژیری دەستکردی زانکۆلاینیت. '
+              'قوتابییەکی پۆلی ١٢ بە تێکڕای %$studentMark لە لقی $trackName داواکاری پێشکەش دەکات لە سیستەمی $systemModeName. '
+              'بۆ ${matchedDepts.length} بەش شایستەیە. لە دیارترینیان: $topDeptsList. '
+              'بە زمانی کوردی (سۆرانی)، ٣ بۆ ٤ خاڵی زۆر بەسوود و کرداری و دڵسۆزانە پێشکەش بکە بۆ چۆنیەتی پڕکردنەوەی فۆڕمی زانکۆلاین و هەڵسەنگاندنی شایستەیی بەشەکان. کورت و ڕوون بێت.';
+
+        final response = await _aiService!.askTeacher(prompt, []);
+        if (response.trim().isNotEmpty &&
+            !response.toLowerCase().contains('error') &&
+            !response.toLowerCase().contains('failed')) {
+          return response.trim();
+        }
+      } catch (e) {
+        if (kDebugMode) print('Zankoline real AI query warning: $e');
+      }
+    }
+
+    if (isEnglish) {
+      return _buildLocalEnglishAdvisorSummary(studentMark, trackName, matchedDepts, isParallel: isParallel);
+    }
+    return _buildLocalKurdishAdvisorSummary(studentMark, trackName, matchedDepts, isParallel: isParallel);
+  }
+
+  String _buildLocalEnglishAdvisorSummary(double studentMark, String trackName, List<ZankolineDepartmentModel> matchedDepts, {bool isParallel = false}) {
+    final buffer = StringBuffer();
+    final systemLabel = isParallel ? 'Parallel Admission (45% Official Ministry Discount)' : 'General Admission (Free Tuition)';
+    final topDepts = matchedDepts.take(3).map((d) => d.college).join(', ');
+
+    buffer.writeln('Based on your grade ($studentMark%) in the $trackName track under ($systemLabel), you have competitive qualification chances across Kurdistan universities.');
+    buffer.writeln('A total of ${matchedDepts.length} matching departments were found. Notable options: $topDepts.\n');
+
+    buffer.writeln('💡 Advisor Guidance:');
+    if (isParallel) {
+      buffer.writeln('• Parallel admission allows admission into high-demand colleges with lower minimum cutoff scores.');
+      buffer.writeln('• The KRG Ministry of Higher Education applies an official 45% discount on all annual parallel tuition fees.');
+    } else {
+      buffer.writeln('• Prioritize departments in your ZankoLine top 50 choices based on your academic interests and city location.');
+    }
+    buffer.writeln('• Explore the full list of matching departments below.');
+
+    return buffer.toString();
   }
 
   String _buildLocalKurdishAdvisorSummary(double studentMark, String trackName, List<ZankolineDepartmentModel> matchedDepts, {bool isParallel = false}) {

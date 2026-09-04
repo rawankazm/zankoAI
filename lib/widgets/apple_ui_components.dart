@@ -1,11 +1,25 @@
 import 'dart:math' as math;
 import 'dart:ui';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import '../services/language_provider.dart';
 import '../theme.dart';
+
+/// Renders either a HugeIcon or traditional IconData seamlessly
+Widget appIcon(dynamic icon, {Color? color, double size = 20}) {
+  if (icon is List<List<dynamic>>) {
+    return HugeIcon(icon: icon, color: color, size: size);
+  }
+  if (icon is IconData) {
+    return Icon(icon, color: color, size: size);
+  }
+  if (icon is Widget) {
+    return icon;
+  }
+  return const SizedBox.shrink();
+}
 
 // ─── AppCard Widget ─────────────────────────────────────────────────────────
 class AppCard extends StatelessWidget {
@@ -140,7 +154,7 @@ class _AnimatedScaleButtonState extends State<AnimatedScaleButton>
 // ─── Gradient Button Component ──────────────────────────────────────────────
 class GradientButton extends StatelessWidget {
   final String text;
-  final IconData? icon;
+  final dynamic icon;
   final VoidCallback onTap;
   final double height;
   final double borderRadius;
@@ -183,7 +197,7 @@ class GradientButton extends StatelessWidget {
               ),
               if (icon != null) ...[
                 const SizedBox(width: 8),
-                Icon(icon, color: Colors.white, size: 20),
+                appIcon(icon, color: Colors.white, size: 20),
               ],
             ],
           ),
@@ -276,8 +290,8 @@ class AppleSearchBar extends StatelessWidget {
       child: Center(
         child: Row(
           children: [
-            Icon(
-              CupertinoIcons.sparkles,
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedAiMagic,
               color: ZankoColors.primary,
               size: 20,
             ),
@@ -324,8 +338,8 @@ class AppleSearchBar extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: ZankoShadows.glow,
                 ),
-                child: const Icon(
-                  CupertinoIcons.arrow_up,
+                child: const HugeIcon(
+                  icon: HugeIcons.strokeRoundedArrowUp01,
                   color: Colors.white,
                   size: 20,
                 ),
@@ -462,12 +476,22 @@ class _AIHeroCardState extends State<AIHeroCard>
   int _quoteIndex = 0;
   bool _showBubble = false;
 
-  final List<String> _aiQuotes = [
-    'سڵاو! من ئامادەم بۆ شیکارکردنی هەر بابەتێکی زانکۆ 🚀',
-    'پرسیارێکم لێبکە یاخود دەقی بابەتەکەت دابنێ بۆ کورتکردنەوە! 💡',
-    'ئامادەیت بۆ دەستپێکردنی کۆرسی نوێ و بەرزکردنەوەی نمرەکانت؟ ✨',
-    'دەتوانیت لەگەڵم بە دەنگ قسە بکەیت لە بەشی Voice Tutor! 🎙️',
-  ];
+  List<String> _getAiQuotes(bool isEnglish) {
+    if (isEnglish) {
+      return const [
+        'Hi! I am ready to assist with any university topic 🚀',
+        'Ask me a question or paste your lecture to summarize! 💡',
+        'Ready to start a new course and boost your grades? ✨',
+        'You can speak with me using Voice Tutor! 🎙️',
+      ];
+    }
+    return const [
+      'سڵاو! من ئامادەم بۆ شیکارکردنی هەر بابەتێکی زانکۆ 🚀',
+      'پرسیارێکم لێبکە یاخود دەقی بابەتەکەت دابنێ بۆ کورتکردنەوە! 💡',
+      'ئامادەیت بۆ دەستپێکردنی کۆرسی نوێ و بەرزکردنەوەی نمرەکانت؟ ✨',
+      'دەتوانیت لەگەڵم بە دەنگ قسە بکەیت لە بەشی Voice Tutor! 🎙️',
+    ];
+  }
 
   @override
   void initState() {
@@ -512,7 +536,7 @@ class _AIHeroCardState extends State<AIHeroCard>
     _punchController.forward(from: 0.0);
     setState(() {
       _showBubble = true;
-      _quoteIndex = (_quoteIndex + 1) % _aiQuotes.length;
+      _quoteIndex++;
     });
   }
 
@@ -521,9 +545,29 @@ class _AIHeroCardState extends State<AIHeroCard>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final langProvider = Provider.of<LanguageProvider>(context);
 
-    return AppCard(
-      padding: const EdgeInsets.all(20),
-      color: isDark ? ZankoColors.darkCard : Colors.white,
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 16, 10, 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [const Color(0xFF131B2A), const Color(0xFF171B23)]
+              : [const Color(0xFFF0F6FD), const Color(0xFFFFFFFF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDark ? const Color(0xFF262C36) : const Color(0xFFE2EDFB),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF035EC2).withValues(alpha: isDark ? 0.2 : 0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -533,40 +577,43 @@ class _AIHeroCardState extends State<AIHeroCard>
               onTap: () => setState(() => _showBubble = false),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
-                margin: const EdgeInsets.only(bottom: 14),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      ZankoColors.primary.withValues(alpha: isDark ? 0.25 : 0.12),
-                      ZankoColors.accent.withValues(alpha: isDark ? 0.20 : 0.08),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: ZankoColors.primary.withValues(alpha: 0.35),
+                    color: const Color(0xFF035EC2).withValues(alpha: 0.3),
                     width: 1,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      CupertinoIcons.chat_bubble_2_fill,
-                      color: ZankoColors.accent,
-                      size: 18,
+                    const HugeIcon(
+                      icon: HugeIcons.strokeRoundedAiMagic,
+                      color: Color(0xFFE4D27D),
+                      size: 16,
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        _aiQuotes[_quoteIndex],
+                        _getAiQuotes(langProvider.currentLanguage == AppLanguage.english)[
+                            _quoteIndex % _getAiQuotes(langProvider.currentLanguage == AppLanguage.english).length],
                         style: TextStyle(
-                          fontSize: 12.5,
+                          fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: isDark ? Colors.white : ZankoColors.textPrimary,
                         ),
                       ),
                     ),
-                    const Icon(CupertinoIcons.xmark, size: 14, color: Colors.grey),
+                    const HugeIcon(icon: HugeIcons.strokeRoundedCancel01, size: 12, color: Colors.grey),
                   ],
                 ),
               ),
@@ -575,6 +622,73 @@ class _AIHeroCardState extends State<AIHeroCard>
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      langProvider.translate('ai_tutor_hero_title'),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                        color: isDark ? Colors.white : const Color(0xFF17191F),
+                        height: 1.25,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      langProvider.translate('ai_tutor_subtitle'),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        color: isDark ? const Color(0xFFA6ACB8) : const Color(0xFF6B7280),
+                        height: 1.35,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 14),
+                    GestureDetector(
+                      onTap: widget.onStartLearning,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF035EC2),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF035EC2).withValues(alpha: 0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${langProvider.translate('nav_ai_teacher')} ✨',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            const HugeIcon(
+                              icon: HugeIcons.strokeRoundedArrowRight01,
+                              size: 14,
+                              color: Colors.white,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 4),
               // Interactive 3D Floating Robot
               GestureDetector(
                 onTap: _onRobotTap,
@@ -585,88 +699,24 @@ class _AIHeroCardState extends State<AIHeroCard>
                       offset: Offset(0, _floatAnimation.value),
                       child: Transform.scale(
                         scale: _punchScale.value,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            // Glowing background aura
-                            Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: ZankoColors.primary.withValues(alpha: isDark ? 0.35 : 0.2),
-                                    blurRadius: 20,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(
-                              width: 92,
-                              height: 92,
-                              child: Image.asset(
-                                'assets/images/ai_robot_3d.png',
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Icon(
-                                    CupertinoIcons.sparkles,
-                                    size: 48,
-                                    color: ZankoColors.primary,
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
+                        child: SizedBox(
+                          width: 175,
+                          height: 175,
+                          child: Image.asset(
+                            'assets/images/robot.png',
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                                return const HugeIcon(
+                                  icon: HugeIcons.strokeRoundedAiMagic,
+                                  size: 72,
+                                  color: Color(0xFF035EC2),
+                                );
+                            },
+                          ),
                         ),
                       ),
                     );
                   },
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          CupertinoIcons.sparkles,
-                          color: ZankoColors.accent,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          langProvider.translate('ai_tutor'),
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.4,
-                            color: isDark ? Colors.white : ZankoColors.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      langProvider.translate('ai_tutor_subtitle'),
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
-                        color: isDark ? Colors.grey[300] : ZankoColors.textSecondary,
-                        height: 1.35,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    GradientButton(
-                      text: langProvider.translate('start_learning'),
-                      icon: CupertinoIcons.arrow_right,
-                      height: 42,
-                      onTap: widget.onStartLearning,
-                    ),
-                  ],
                 ),
               ),
             ],
@@ -679,7 +729,7 @@ class _AIHeroCardState extends State<AIHeroCard>
 
 // ─── Quick Action Grid Item Card ───────────────────────────────────────────
 class QuickActionCard extends StatelessWidget {
-  final IconData icon;
+  final dynamic icon;
   final String title;
   final Color iconColor;
   final Color bgColor;
@@ -709,7 +759,7 @@ class QuickActionCard extends StatelessWidget {
               color: isDark ? bgColor.withValues(alpha: 0.2) : bgColor,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(icon, color: iconColor, size: 20),
+            child: Center(child: appIcon(icon, color: iconColor, size: 20)),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -730,7 +780,7 @@ class QuickActionCard extends StatelessWidget {
 
 // ─── Statistic Pill Card ────────────────────────────────────────────────────
 class StatisticCard extends StatelessWidget {
-  final IconData icon;
+  final dynamic icon;
   final String value;
   final String label;
   final Color color;
@@ -759,7 +809,7 @@ class StatisticCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 20),
+            appIcon(icon, color: color, size: 20),
             const SizedBox(height: 4),
             Text(
               value,
@@ -790,7 +840,7 @@ class CourseCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final double progress; // 0.0 to 1.0
-  final IconData icon;
+  final dynamic icon;
   final Color gradientStart;
   final Color gradientEnd;
   final VoidCallback onTap;
@@ -818,7 +868,7 @@ class CourseCard extends StatelessWidget {
     required BuildContext context,
     required String label,
     required DateTime? examDate,
-    required IconData icon,
+    required dynamic icon,
     required Color defaultColor,
     required bool isDark,
   }) {
@@ -833,20 +883,23 @@ class CourseCard extends StatelessWidget {
     Color badgeColor;
     Color textColor;
 
+    final langProvider = Provider.of<LanguageProvider>(context, listen: false);
+    final daysLeftText = langProvider.translate('days_left');
+
     if (diffDays < 0) {
-      text = 'تەواوبوو';
+      text = langProvider.translate('exam_completed');
       badgeColor = isDark ? Colors.grey.shade800 : Colors.grey.shade200;
       textColor = Colors.grey;
     } else if (diffDays == 0) {
-      text = 'ئەمڕۆیە! ⚠️';
+      text = '${langProvider.translate('today_exam')} ⚠️';
       badgeColor = const Color(0xFFFF3B30).withValues(alpha: 0.15);
       textColor = const Color(0xFFFF3B30);
     } else if (diffDays <= 3) {
-      text = '$diffDays ڕۆژی ماوە 🔥';
+      text = '$diffDays $daysLeftText 🔥';
       badgeColor = const Color(0xFFFF9500).withValues(alpha: 0.15);
       textColor = const Color(0xFFFF9500);
     } else {
-      text = '$diffDays ڕۆژی ماوە';
+      text = '$diffDays $daysLeftText';
       badgeColor = defaultColor.withValues(alpha: 0.12);
       textColor = defaultColor;
     }
@@ -861,7 +914,7 @@ class CourseCard extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: textColor),
+          appIcon(icon, size: 12, color: textColor),
           const SizedBox(width: 4),
           Text(
             '$label: ',
@@ -898,15 +951,13 @@ class CourseCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [gradientStart, gradientEnd],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
+                  color: isDark ? const Color(0xFF035EC2).withValues(alpha: 0.2) : const Color(0xFFE2EDFB),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(icon, color: Colors.white, size: 24),
+                child: Center(child: appIcon(icon, color: const Color(0xFF035EC2), size: 22)),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -938,8 +989,8 @@ class CourseCard extends StatelessWidget {
               ),
               if (onEdit != null || onDelete != null)
                 PopupMenuButton<String>(
-                  icon: Icon(
-                    CupertinoIcons.ellipsis_vertical,
+                  icon: HugeIcon(
+                    icon: HugeIcons.strokeRoundedMoreVertical,
                     color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
                     size: 18,
                   ),
@@ -953,20 +1004,20 @@ class CourseCard extends StatelessWidget {
                         value: 'edit',
                         child: Row(
                           children: [
-                            Icon(CupertinoIcons.pencil, size: 16, color: ZankoColors.primary),
+                            HugeIcon(icon: HugeIcons.strokeRoundedPencilEdit02, size: 16, color: ZankoColors.primary),
                             const SizedBox(width: 8),
-                            const Text('دەستکاریکردنی وانە', style: TextStyle(fontSize: 13)),
+                            Text(Provider.of<LanguageProvider>(context, listen: false).translate('edit_course'), style: const TextStyle(fontSize: 13)),
                           ],
                         ),
                       ),
                     if (onDelete != null)
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'delete',
                         child: Row(
                           children: [
-                            Icon(CupertinoIcons.trash, size: 16, color: Colors.redAccent),
-                            SizedBox(width: 8),
-                            Text('سڕینەوەی وانە', style: TextStyle(fontSize: 13, color: Colors.redAccent)),
+                            const HugeIcon(icon: HugeIcons.strokeRoundedDelete02, size: 16, color: Colors.redAccent),
+                            const SizedBox(width: 8),
+                            Text(Provider.of<LanguageProvider>(context, listen: false).translate('delete_course'), style: const TextStyle(fontSize: 13, color: Colors.redAccent)),
                           ],
                         ),
                       ),
@@ -980,22 +1031,29 @@ class CourseCard extends StatelessWidget {
             children: [
               Expanded(
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: progress,
                     minHeight: 6,
-                    backgroundColor: isDark ? Colors.white.withValues(alpha: 0.12) : const Color(0xFFEFEFF7),
-                    valueColor: AlwaysStoppedAnimation<Color>(gradientStart),
+                    backgroundColor: isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF035EC2)),
                   ),
                 ),
               ),
               const SizedBox(width: 10),
-              Text(
-                '${(progress * 100).toInt()}%',
-                style: TextStyle(
-          fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.grey[300]! : ZankoColors.textSecondary,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF035EC2).withValues(alpha: 0.2) : const Color(0xFFE2EDFB),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '${(progress * 100).toInt()}%',
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF035EC2),
+                  ),
                 ),
               ),
             ],
@@ -1015,18 +1073,18 @@ class CourseCard extends StatelessWidget {
                 if (midtermDate != null)
                   _buildExamBadge(
                     context: context,
-                    label: 'میدترم',
+                    label: Provider.of<LanguageProvider>(context, listen: false).translate('midterm_exam'),
                     examDate: midtermDate,
-                    icon: CupertinoIcons.timer,
+                    icon: HugeIcons.strokeRoundedClock01,
                     defaultColor: const Color(0xFF007AFF),
                     isDark: isDark,
                   ),
                 if (finalDate != null)
                   _buildExamBadge(
                     context: context,
-                    label: 'فایناڵ',
+                    label: Provider.of<LanguageProvider>(context, listen: false).translate('final_exam'),
                     examDate: finalDate,
-                    icon: CupertinoIcons.flag_fill,
+                    icon: HugeIcons.strokeRoundedFlag01,
                     defaultColor: const Color(0xFFAF52DE),
                     isDark: isDark,
                   ),
@@ -1056,77 +1114,63 @@ class GlassBottomNavigation extends StatelessWidget {
     final langProvider = Provider.of<LanguageProvider>(context);
 
     return Container(
-      margin: const EdgeInsets.only(left: 20, right: 20, bottom: 24),
-      height: 74,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(38),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? ZankoColors.darkCard.withValues(alpha: 0.90)
-                  : Colors.white.withValues(alpha: 0.85),
-              borderRadius: BorderRadius.circular(38),
-              border: Border.all(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.16)
-                    : Colors.white.withValues(alpha: 0.9),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: isDark
-                      ? Colors.black.withValues(alpha: 0.55)
-                      : ZankoColors.primary.withValues(alpha: 0.12),
-                  blurRadius: 32,
-                  offset: const Offset(0, 12),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _AnimatedNavTile(
-                  index: 0,
-                  isSelected: currentIndex == 0,
-                  label: langProvider.translate('nav_home'),
-                  onTap: () => onTap(0),
-                  iconBuilder: (isSelected) => _AnimatedHomeIcon(isSelected: isSelected),
-                ),
-                _AnimatedNavTile(
-                  index: 1,
-                  isSelected: currentIndex == 1,
-                  label: langProvider.translate('nav_courses'),
-                  onTap: () => onTap(1),
-                  iconBuilder: (isSelected) => _AnimatedCoursesIcon(isSelected: isSelected),
-                ),
-                _AnimatedCenterAiButton(
-                  isSelected: currentIndex == 2,
-                  onTap: () {
-                    HapticFeedback.mediumImpact();
-                    onTap(2);
-                  },
-                ),
-                _AnimatedNavTile(
-                  index: 3,
-                  isSelected: currentIndex == 3,
-                  label: langProvider.translate('zankoline'),
-                  onTap: () => onTap(3),
-                  iconBuilder: (isSelected) => _AnimatedZankolineIcon(isSelected: isSelected),
-                ),
-                _AnimatedNavTile(
-                  index: 4,
-                  isSelected: currentIndex == 4,
-                  label: langProvider.translate('nav_profile'),
-                  onTap: () => onTap(4),
-                  iconBuilder: (isSelected) => _AnimatedProfileIcon(isSelected: isSelected),
-                ),
-              ],
-            ),
-          ),
+      margin: const EdgeInsets.only(left: 18, right: 18, bottom: 20),
+      height: 72,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF171B23) : Colors.white,
+        borderRadius: BorderRadius.circular(36),
+        border: Border.all(
+          color: isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2),
+          width: 1.2,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _AnimatedNavTile(
+            index: 0,
+            isSelected: currentIndex == 0,
+            label: langProvider.translate('nav_home'),
+            onTap: () => onTap(0),
+            iconBuilder: (isSelected) => _AnimatedHomeIcon(isSelected: isSelected),
+          ),
+          _AnimatedNavTile(
+            index: 1,
+            isSelected: currentIndex == 1,
+            label: langProvider.translate('nav_courses'),
+            onTap: () => onTap(1),
+            iconBuilder: (isSelected) => _AnimatedCoursesIcon(isSelected: isSelected),
+          ),
+          _AnimatedCenterAiButton(
+            isSelected: currentIndex == 2,
+            onTap: () {
+              HapticFeedback.mediumImpact();
+              onTap(2);
+            },
+          ),
+          _AnimatedNavTile(
+            index: 3,
+            isSelected: currentIndex == 3,
+            label: langProvider.translate('zankoline'),
+            onTap: () => onTap(3),
+            iconBuilder: (isSelected) => _AnimatedZankolineIcon(isSelected: isSelected),
+          ),
+          _AnimatedNavTile(
+            index: 4,
+            isSelected: currentIndex == 4,
+            label: langProvider.translate('nav_profile'),
+            onTap: () => onTap(4),
+            iconBuilder: (isSelected) => _AnimatedProfileIcon(isSelected: isSelected),
+          ),
+        ],
       ),
     );
   }
@@ -1197,7 +1241,7 @@ class _AnimatedNavTile extends StatelessWidget {
               const SizedBox(height: 2),
               AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
-                curve: Curves.easeOutBack,
+                curve: Curves.easeOutCubic,
                 height: 3,
                 width: isSelected ? 12 : 0,
                 decoration: BoxDecoration(
@@ -1211,7 +1255,7 @@ class _AnimatedNavTile extends StatelessWidget {
                             offset: const Offset(0, 1),
                           ),
                         ]
-                      : [],
+                      : const [],
                 ),
               ),
             ],
@@ -1314,8 +1358,8 @@ class _AnimatedHomeIconState extends State<_AnimatedHomeIcon>
           scale: _scaleAnimation.value,
           child: Transform.rotate(
             angle: _wiggleAnimation.value,
-            child: Icon(
-              widget.isSelected ? CupertinoIcons.house_fill : CupertinoIcons.house,
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedHome01,
               color: color,
               size: 23,
             ),
@@ -1404,8 +1448,8 @@ class _AnimatedCoursesIconState extends State<_AnimatedCoursesIcon>
           child: Transform(
             alignment: Alignment.center,
             transform: transform,
-            child: Icon(
-              widget.isSelected ? CupertinoIcons.book_fill : CupertinoIcons.book,
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedBook02,
               color: color,
               size: 23,
             ),
@@ -1416,8 +1460,8 @@ class _AnimatedCoursesIconState extends State<_AnimatedCoursesIcon>
   }
 }
 
-// ─── 3. Center AI Button (Breathing Glow, Orbit Ring & Tap Punch) ───────────
-class _AnimatedCenterAiButton extends StatefulWidget {
+// ─── 3. Center AI Button (Elevated Primary Blue Circle with Sparkles) ───────
+class _AnimatedCenterAiButton extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
@@ -1427,170 +1471,55 @@ class _AnimatedCenterAiButton extends StatefulWidget {
   });
 
   @override
-  State<_AnimatedCenterAiButton> createState() => _AnimatedCenterAiButtonState();
-}
-
-class _AnimatedCenterAiButtonState extends State<_AnimatedCenterAiButton>
-    with TickerProviderStateMixin {
-  late AnimationController _pulseController;
-  late AnimationController _rotateController;
-  late AnimationController _tapController;
-  late Animation<double> _pulseScale;
-  late Animation<double> _tapScale;
-
-  @override
-  void initState() {
-    super.initState();
-    // Continuous breathing pulse
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2200),
-    )..repeat(reverse: true);
-
-    _pulseScale = Tween<double>(begin: 1.0, end: 1.07).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOutSine),
-    );
-
-    // Continuous 360 rotation for outer aura
-    _rotateController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 5000),
-    )..repeat();
-
-    // Tap punch & spring
-    _tapController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 350),
-    );
-
-    _tapScale = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.0, end: 0.88)
-            .chain(CurveTween(curve: Curves.easeInCubic)),
-        weight: 30,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 0.88, end: 1.15)
-            .chain(CurveTween(curve: Curves.easeOutBack)),
-        weight: 40,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.15, end: 1.0)
-            .chain(CurveTween(curve: Curves.elasticOut)),
-        weight: 30,
-      ),
-    ]).animate(_tapController);
-  }
-
-  @override
-  void didUpdateWidget(covariant _AnimatedCenterAiButton oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isSelected && !oldWidget.isSelected) {
-      _tapController.forward(from: 0.0);
-    }
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    _rotateController.dispose();
-    _tapController.dispose();
-    super.dispose();
-  }
-
-  void _handleTap() {
-    _tapController.forward(from: 0.0);
-    widget.onTap();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: _handleTap,
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        onTap();
+      },
       behavior: HitTestBehavior.opaque,
-      child: AnimatedBuilder(
-        animation: Listenable.merge([_pulseController, _rotateController, _tapController]),
-        builder: (context, child) {
-          final currentScale = _pulseScale.value * _tapScale.value;
-          final rotation = _rotateController.value * 2 * math.pi;
-
-          return Transform.scale(
-            scale: currentScale,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // Outer rotating gradient aura ring
-                Transform.rotate(
-                  angle: rotation,
-                  child: Container(
-                    width: 58,
-                    height: 58,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: SweepGradient(
-                        colors: [
-                          ZankoColors.primary.withValues(alpha: 0.0),
-                          ZankoColors.primary.withValues(alpha: 0.6),
-                          ZankoColors.accent.withValues(alpha: 0.9),
-                          ZankoColors.primary.withValues(alpha: 0.0),
-                        ],
-                        stops: const [0.0, 0.45, 0.7, 1.0],
-                      ),
-                    ),
-                  ),
-                ),
-                // Inner button container with glass gradient and shadows
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [ZankoColors.primary, ZankoColors.accent],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: widget.isSelected
-                          ? Colors.white
-                          : Colors.white.withValues(alpha: 0.85),
-                      width: widget.isSelected ? 2.5 : 1.8,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: ZankoColors.primary.withValues(alpha: widget.isSelected ? 0.65 : 0.45),
-                        blurRadius: widget.isSelected ? 18 : 12,
-                        offset: const Offset(0, 4),
-                      ),
-                      if (widget.isSelected)
-                        BoxShadow(
-                          color: ZankoColors.accent.withValues(alpha: 0.5),
-                          blurRadius: 24,
-                          spreadRadius: 2,
-                        ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Transform.rotate(
-                      angle: -rotation * 0.5,
-                      child: const Icon(
-                        CupertinoIcons.sparkles,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+      child: Container(
+        width: 52,
+        height: 52,
+        decoration: BoxDecoration(
+          color: const Color(0xFF035EC2),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF035EC2).withValues(alpha: 0.35),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
             ),
-          );
-        },
+          ],
+        ),
+        child: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              HugeIcon(
+                icon: HugeIcons.strokeRoundedAiMagic,
+                color: Colors.white,
+                size: 20,
+              ),
+              SizedBox(height: 2),
+              Text(
+                'AI Tutor',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.2,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
-// ─── 4. Zankoline Animated Icon (Cap Toss & Tilt Jump) ───────────────────────
+// ─── 4. Zankoline Animated Icon (Cap Toss & School Icon) ─────────────────────
 class _AnimatedZankolineIcon extends StatefulWidget {
   final bool isSelected;
   const _AnimatedZankolineIcon({required this.isSelected});
@@ -1602,45 +1531,26 @@ class _AnimatedZankolineIcon extends StatefulWidget {
 class _AnimatedZankolineIconState extends State<_AnimatedZankolineIcon>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _jumpAnimation;
-  late Animation<double> _tiltAnimation;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 300),
     );
 
-    _jumpAnimation = TweenSequence<double>([
+    _scaleAnimation = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween<double>(begin: 0.0, end: -7.0)
-            .chain(CurveTween(curve: Curves.easeOutQuad)),
-        weight: 45,
+        tween: Tween<double>(begin: 1.0, end: 1.25)
+            .chain(CurveTween(curve: Curves.easeOutBack)),
+        weight: 50,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: -7.0, end: 0.0)
-            .chain(CurveTween(curve: Curves.bounceOut)),
-        weight: 55,
-      ),
-    ]).animate(_controller);
-
-    _tiltAnimation = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 0.0, end: -0.26)
-            .chain(CurveTween(curve: Curves.easeOut)),
-        weight: 35,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: -0.26, end: 0.16)
-            .chain(CurveTween(curve: Curves.easeInOut)),
-        weight: 35,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 0.16, end: 0.0)
-            .chain(CurveTween(curve: Curves.easeOut)),
-        weight: 30,
+        tween: Tween<double>(begin: 1.25, end: 1.0)
+            .chain(CurveTween(curve: Curves.elasticOut)),
+        weight: 50,
       ),
     ]).animate(_controller);
 
@@ -1667,24 +1577,16 @@ class _AnimatedZankolineIconState extends State<_AnimatedZankolineIcon>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final color = widget.isSelected
-        ? ZankoColors.primary
+        ? const Color(0xFF035EC2)
         : (isDark ? Colors.grey[400]! : ZankoColors.textSecondary);
 
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(0, _jumpAnimation.value),
-          child: Transform.rotate(
-            angle: _tiltAnimation.value,
-            child: Icon(
-              widget.isSelected ? Icons.school_rounded : Icons.school_outlined,
-              color: color,
-              size: 24,
-            ),
-          ),
-        );
-      },
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: HugeIcon(
+        icon: HugeIcons.strokeRoundedMortarboard02,
+        color: color,
+        size: 24,
+      ),
     );
   }
 }
@@ -1771,8 +1673,8 @@ class _AnimatedProfileIconState extends State<_AnimatedProfileIcon>
           offset: Offset(0, _floatAnimation.value),
           child: Transform.scale(
             scale: _scaleAnimation.value,
-            child: Icon(
-              widget.isSelected ? CupertinoIcons.person_fill : CupertinoIcons.person,
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedUser,
               color: color,
               size: 23,
             ),

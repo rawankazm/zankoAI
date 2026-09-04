@@ -6,12 +6,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../theme.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../widgets/apple_ui_components.dart';
 import '../../widgets/ad_banner_widget.dart';
 import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
 import '../../services/theme_provider.dart';
-import '../../services/score_service.dart';
 import '../auth/login_screen.dart';
 import '../payment/vip_upgrade_sheet.dart';
 import '../../services/app_version_service.dart';
@@ -20,6 +20,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/university_department_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../data/kurdistan_universities_data.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -27,11 +28,17 @@ class ProfileScreen extends StatelessWidget {
   void _showFeedbackModal(BuildContext context, dynamic user) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textController = TextEditingController();
+    final langProvider = Provider.of<LanguageProvider>(context, listen: false);
+    String t(String k) => langProvider.translate(k);
+    final types = [
+      t('feedback_type_feature'),
+      t('feedback_type_bug'),
+      t('feedback_type_content'),
+      t('feedback_type_other'),
+    ];
+    String feedbackType = types.first;
     int rating = 5;
-    String feedbackType = 'پێشنیار';
     bool isSubmitting = false;
-
-    final types = ['پێشنیار', 'کێشەی تەکنیکی', 'داواکاری فێچەر', 'سوپاسگوزاری'];
 
     showModalBottomSheet(
       context: context,
@@ -71,7 +78,7 @@ class ProfileScreen extends StatelessWidget {
                       Icon(CupertinoIcons.chat_bubble_text_fill, color: ZankoColors.primary, size: 24),
                       const SizedBox(width: 10),
                       Text(
-                        'ڕا و پێشنیارەکان',
+                        t('feedback_suggestions'),
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
@@ -82,7 +89,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'پێشنیار یان ڕای خۆت بنووسە بۆ بەرزکردنەوەی کوالێتی ZankoAI',
+                    t('feedback_dialog_desc'),
                     style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : ZankoColors.textSecondary),
                   ),
                   const SizedBox(height: 20),
@@ -140,7 +147,7 @@ class ProfileScreen extends StatelessWidget {
                     maxLines: 4,
                     style: TextStyle(color: isDark ? Colors.white : ZankoColors.textPrimary, fontSize: 14),
                     decoration: InputDecoration(
-                      hintText: 'ڕا و پێشنیارەکەت بنووسە...',
+                      hintText: t('feedback_input_hint'),
                       hintStyle: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[400]),
                       filled: true,
                       fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[100],
@@ -161,7 +168,7 @@ class ProfileScreen extends StatelessWidget {
                         final msg = textController.text.trim();
                         if (msg.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('تکایە پێشنیارەکەت بنووسە')),
+                            SnackBar(content: Text(t('feedback_input_empty'))),
                           );
                           return;
                         }
@@ -182,9 +189,9 @@ class ProfileScreen extends StatelessWidget {
                           if (context.mounted) {
                             Navigator.pop(context);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('✅ پێشنیارەکەت بە سەرکەوتووی گەیشتە تیمی birdev!'),
-                                backgroundColor: Color(0xFF10B981),
+                              SnackBar(
+                                content: Text(t('feedback_sent_success')),
+                                backgroundColor: const Color(0xFF10B981),
                               ),
                             );
                           }
@@ -198,9 +205,9 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       child: isSubmitting
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              '📤 ناردنی پێشنیار',
-                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                          : Text(
+                              t('send_feedback'),
+                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
                             ),
                     ),
                   ),
@@ -297,7 +304,9 @@ class ProfileScreen extends StatelessWidget {
                               ),
                               padding: const EdgeInsets.all(3),
                               child: ClipOval(
-                                child: (user?.photoUrl != null && user!.photoUrl!.isNotEmpty)
+                                child: (user?.photoUrl != null &&
+                                        user!.photoUrl!.isNotEmpty &&
+                                        !user.photoUrl!.contains('student_avatar_3d.png'))
                                     ? (user.photoUrl!.startsWith('http')
                                         ? Image.network(
                                             user.photoUrl!,
@@ -380,7 +389,7 @@ class ProfileScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
-                        icon: const Icon(CupertinoIcons.pencil, color: Colors.white, size: 18),
+                        icon: const HugeIcon(icon: HugeIcons.strokeRoundedPencilEdit02, color: Colors.white, size: 18),
                         label: const Text(
                           'دەستکاریکردنی زانیاری',
                           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13),
@@ -419,6 +428,8 @@ class ProfileScreen extends StatelessWidget {
 
   void _showEditProfileModal(BuildContext context, dynamic user, String name, String uniName, String deptName) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final langProvider = Provider.of<LanguageProvider>(context, listen: false);
+    String t(String k) => langProvider.translate(k);
     final nameCtrl = TextEditingController(text: name);
     final uniCtrl  = TextEditingController(text: uniName);
     final deptCtrl = TextEditingController(text: deptName);
@@ -434,7 +445,9 @@ class ProfileScreen extends StatelessWidget {
           builder: (context, setModalState) {
             return Container(
               padding: EdgeInsets.only(
-                top: 24, left: 20, right: 20,
+                top: 24,
+                left: 20,
+                right: 20,
                 bottom: MediaQuery.of(context).viewInsets.bottom + 24,
               ),
               decoration: BoxDecoration(
@@ -448,7 +461,8 @@ class ProfileScreen extends StatelessWidget {
                   children: [
                     Center(
                       child: Container(
-                        width: 40, height: 5,
+                        width: 40,
+                        height: 5,
                         decoration: BoxDecoration(
                           color: isDark ? Colors.grey[700] : Colors.grey[300],
                           borderRadius: BorderRadius.circular(10),
@@ -461,7 +475,7 @@ class ProfileScreen extends StatelessWidget {
                         Icon(CupertinoIcons.pencil_circle_fill, color: ZankoColors.primary, size: 26),
                         const SizedBox(width: 10),
                         Text(
-                          'دەستکاریکردنی زانیارییەکان',
+                          t('edit_profile'),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
@@ -472,7 +486,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'ناوی تەواو، زانکۆ، بەش و شاری نیشتەجێبوون نوێ بکەرەوە',
+                      t('edit_profile_desc'),
                       style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : ZankoColors.textSecondary),
                     ),
                     const SizedBox(height: 20),
@@ -482,7 +496,7 @@ class ProfileScreen extends StatelessWidget {
                       controller: nameCtrl,
                       style: TextStyle(color: isDark ? Colors.white : ZankoColors.textPrimary, fontSize: 14),
                       decoration: InputDecoration(
-                        labelText: '👤 ناوی تەواو',
+                        labelText: t('full_name'),
                         labelStyle: TextStyle(color: ZankoColors.primary),
                         filled: true,
                         fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[100],
@@ -512,9 +526,9 @@ class ProfileScreen extends StatelessWidget {
                       },
                       style: TextStyle(color: isDark ? Colors.white : ZankoColors.textPrimary, fontSize: 14),
                       decoration: InputDecoration(
-                        labelText: '🏛 زانکۆ / پەیمانگە',
+                        labelText: t('select_university'),
                         labelStyle: TextStyle(color: ZankoColors.primary),
-                        hintText: 'کلیک بکە بۆ دیاریکردنی زانکۆ...',
+                        hintText: '...',
                         suffixIcon: const Icon(Icons.arrow_drop_down_rounded, size: 28),
                         filled: true,
                         fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[100],
@@ -542,9 +556,9 @@ class ProfileScreen extends StatelessWidget {
                       },
                       style: TextStyle(color: isDark ? Colors.white : ZankoColors.textPrimary, fontSize: 14),
                       decoration: InputDecoration(
-                        labelText: '🎓 بەشی زانستی / پسپۆڕی',
+                        labelText: t('select_department'),
                         labelStyle: TextStyle(color: ZankoColors.primary),
-                        hintText: 'کلیک بکە بۆ دیاریکردنی بەش...',
+                        hintText: '...',
                         suffixIcon: const Icon(Icons.arrow_drop_down_rounded, size: 28),
                         filled: true,
                         fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[100],
@@ -558,37 +572,37 @@ class ProfileScreen extends StatelessWidget {
                       controller: cityCtrl,
                       style: TextStyle(color: isDark ? Colors.white : ZankoColors.textPrimary, fontSize: 14),
                       decoration: InputDecoration(
-                        labelText: '📍 شاری نیشتەجێبوون',
+                        labelText: t('select_city'),
                         labelStyle: TextStyle(color: ZankoColors.primary),
                         filled: true,
                         fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[100],
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
 
-                    // 🔒 Locked Read-Only Fields Section
+                    // Read-only info row
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: isDark ? ZankoColors.darkBackground : Colors.grey[100],
+                        color: isDark ? ZankoColors.darkBackground : Colors.blue.shade50.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.4)),
+                        border: Border.all(
+                          color: isDark ? Colors.white10 : Colors.blue.shade100,
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Icon(CupertinoIcons.lock_fill, color: ZankoColors.primary, size: 16),
-                              const SizedBox(width: 8),
-                              Text(
-                                'زانیارییە فەرمییە نەگۆڕەکان (تەنها ئەدمین):',
-                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: ZankoColors.primary),
-                              ),
-                            ],
+                          Text(
+                            'زانیارییە فەرمییە نەگۆڕەکان (تەنها ئەدمین):',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.grey[400] : ZankoColors.primary,
+                            ),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 8),
                           _buildLockedDetailRow('🔒 تێکڕای گشتی نمرە:', '${user?.gpa ?? 0} / 100', isDark),
                           _buildLockedDetailRow('🔒 کرێدیتی تەواوبوو:', '96 / 120 ECTS', isDark),
                           _buildLockedDetailRow('🔒 بارودۆخی کامپس:', 'Active • Good Standing 🟢', isDark),
@@ -600,7 +614,7 @@ class ProfileScreen extends StatelessWidget {
                     // Save Button
                     SizedBox(
                       width: double.infinity,
-                      height: 48,
+                      height: 50,
                       child: ElevatedButton(
                         onPressed: isSaving ? null : () async {
                           final newName = nameCtrl.text.trim();
@@ -610,7 +624,7 @@ class ProfileScreen extends StatelessWidget {
 
                           if (newName.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('تکایە ناوی تەواو بنووسە')),
+                              SnackBar(content: Text(t('please_enter_full_name'))),
                             );
                             return;
                           }
@@ -633,9 +647,9 @@ class ProfileScreen extends StatelessWidget {
                             if (context.mounted) {
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('✅ زانیارییەکان بە سەرکەوتوویی نوێکرانەوە!'),
-                                  backgroundColor: Color(0xFF10B981),
+                                SnackBar(
+                                  content: Text(t('profile_updated_success')),
+                                  backgroundColor: const Color(0xFF10B981),
                                 ),
                               );
                             }
@@ -649,9 +663,9 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         child: isSaving
                             ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text(
-                                '💾 پاشەکەوتکردنی زانیاری',
-                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                            : Text(
+                                t('save_profile_data'),
+                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
                               ),
                       ),
                     ),
@@ -688,6 +702,8 @@ class ProfileScreen extends StatelessWidget {
 
   void _showNotificationsModal(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final langProvider = Provider.of<LanguageProvider>(context, listen: false);
+    String t(String k) => langProvider.translate(k);
     bool dailyExamAlert = true;
     bool studyReminder = true;
     bool campusNews = true;
@@ -722,10 +738,10 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                   Row(
                     children: [
-                      const Icon(CupertinoIcons.bell_fill, color: Color(0xFFFF9F0A), size: 24),
+                      Icon(CupertinoIcons.bell_fill, color: ZankoColors.primary, size: 24),
                       const SizedBox(width: 10),
                       Text(
-                        'ڕێکخستنی ئاگادارییەکان',
+                        t('notification_settings'),
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
@@ -737,32 +753,32 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                   SwitchListTile(
                     activeThumbColor: ZankoColors.primary,
-                    title: const Text('ئاگادارکردنەوەی تاقیکردنەوەکان', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                    subtitle: const Text('ناردنی بیرخەرەوەی ژێرمێژووی تاقیکردنەوەی میدترم و فایناڵ', style: TextStyle(fontSize: 12)),
+                    title: Text(t('exam_alerts'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    subtitle: Text(t('exam_alerts_desc'), style: const TextStyle(fontSize: 12)),
                     value: dailyExamAlert,
                     onChanged: (val) => setModalState(() => dailyExamAlert = val),
                   ),
                   const Divider(),
                   SwitchListTile(
                     activeThumbColor: ZankoColors.primary,
-                    title: const Text('بیرخەرەوەی بەردەوامیی خوێندن', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                    subtitle: const Text('ناردنی بیرخەرەوە بۆ پاراستنی زنجیرەی ڕۆژانەی دراسەکردن', style: TextStyle(fontSize: 12)),
+                    title: Text(t('study_streak_reminder'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    subtitle: Text(t('study_streak_desc'), style: const TextStyle(fontSize: 12)),
                     value: studyReminder,
                     onChanged: (val) => setModalState(() => studyReminder = val),
                   ),
                   const Divider(),
                   SwitchListTile(
                     activeThumbColor: ZankoColors.primary,
-                    title: const Text('هەواڵ و نوێکارییەکانی زانکۆ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                    subtitle: const Text('ئاگادارکردنەوە لە زانکۆلاین و هەواڵە گرنگەکان', style: TextStyle(fontSize: 12)),
+                    title: Text(t('campus_news'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    subtitle: Text(t('campus_news_desc'), style: const TextStyle(fontSize: 12)),
                     value: campusNews,
                     onChanged: (val) => setModalState(() => campusNews = val),
                   ),
                   const Divider(),
                   SwitchListTile(
                     activeThumbColor: ZankoColors.primary,
-                    title: const Text('ئاگادارکردنەوەی بەشداربوونی VIP', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                    subtitle: const Text('بیرخەرەوەی ماوەی بەسەرچوونی هەژماری VIP', style: TextStyle(fontSize: 12)),
+                    title: Text(t('vip_alerts'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    subtitle: Text(t('vip_alerts_desc'), style: const TextStyle(fontSize: 12)),
                     value: vipAlerts,
                     onChanged: (val) => setModalState(() => vipAlerts = val),
                   ),
@@ -774,8 +790,8 @@ class ProfileScreen extends StatelessWidget {
                       onPressed: () {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('ڕێکخستنەکانی ئاگاداری بە سەرکەوتوویی پاشەکەوت کران 🔔'),
+                          SnackBar(
+                            content: Text(t('notifications_saved')),
                             backgroundColor: ZankoColors.success,
                           ),
                         );
@@ -784,7 +800,7 @@ class ProfileScreen extends StatelessWidget {
                         backgroundColor: ZankoColors.primary,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
-                      child: const Text('پاشەکەوتکردن', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                      child: Text(t('save'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
                     ),
                   ),
                 ],
@@ -854,7 +870,7 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(CupertinoIcons.xmark_circle_fill, color: Colors.grey),
+                      icon: const HugeIcon(icon: HugeIcons.strokeRoundedCancelCircle, color: Colors.grey, size: 22),
                       onPressed: () => Navigator.pop(ctx),
                     ),
                   ],
@@ -937,18 +953,23 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 20),
                         const Divider(),
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: const Icon(CupertinoIcons.trash_fill, color: ZankoColors.error),
-                          title: const Text('سڕینەوەی کاشی ئۆفلاین (Clear Cache)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-                          subtitle: const Text('سڕینەوەی فایلی کاتی و پاککردنەوەی فەزای مۆبایلەکەت', style: TextStyle(fontSize: 11.5)),
-                          onTap: () {
-                            Navigator.pop(ctx);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('کاشی ئۆفلاینی ئەپەکە بە سەرکەوتوویی پاککرایەوە 🧹'),
-                                backgroundColor: ZankoColors.success,
-                              ),
+                        Builder(
+                          builder: (tileCtx) {
+                            final lp = Provider.of<LanguageProvider>(tileCtx, listen: false);
+                            return ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: const Icon(CupertinoIcons.trash_fill, color: ZankoColors.error),
+                              title: Text(lp.translate('clear_cache'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+                              subtitle: Text(lp.translate('clear_cache_desc'), style: const TextStyle(fontSize: 11.5)),
+                              onTap: () {
+                                Navigator.pop(ctx);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(lp.translate('cache_cleared_success')),
+                                    backgroundColor: ZankoColors.success,
+                                  ),
+                                );
+                              },
                             );
                           },
                         ),
@@ -958,14 +979,19 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: ZankoColors.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  ),
-                  child: const Text('پەسەندە و تێگەیشتم', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                Builder(
+                  builder: (btnCtx) {
+                    final lp = Provider.of<LanguageProvider>(btnCtx, listen: false);
+                    return ElevatedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: ZankoColors.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: Text(lp.translate('understood'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    );
+                  },
                 ),
               ],
             ),
@@ -1065,15 +1091,16 @@ class ProfileScreen extends StatelessWidget {
                           ),
                         );
                       } else {
+                        final lp = Provider.of<LanguageProvider>(context, listen: false);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Row(
                               children: [
-                                const Icon(CupertinoIcons.checkmark_seal_fill, color: Colors.white, size: 20),
+                                const HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkBadge01, color: Colors.white, size: 20),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
-                                    '🎉 تۆ نوێترین وەشانی ZankoAI بەکاردەهێنیت (v${AppVersionService.currentAppVersion})',
+                                    '${lp.translate('you_have_latest_version')} (v${AppVersionService.currentAppVersion})',
                                     style: const TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                 ),
@@ -1087,13 +1114,18 @@ class ProfileScreen extends StatelessWidget {
                       }
                     }
                   },
-                  icon: const Icon(CupertinoIcons.arrow_2_circlepath, size: 18, color: Colors.white),
-                  label: const Text(
-                    'پشکنین بۆ ئەپدەیت (Check Updates)',
-                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                  icon: const HugeIcon(icon: HugeIcons.strokeRoundedRefresh, size: 18, color: Colors.white),
+                  label: Builder(
+                    builder: (btnCtx) {
+                      final lp = Provider.of<LanguageProvider>(btnCtx, listen: false);
+                      return Text(
+                        lp.translate('check_updates'),
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                      );
+                    },
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF007AFF),
+                    backgroundColor: ZankoColors.primary,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                 ),
@@ -1133,19 +1165,24 @@ class ProfileScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 height: 48,
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  ),
-                  child: Text(
-                    'داخستن',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : ZankoColors.textPrimary,
-                    ),
-                  ),
+                child: Builder(
+                  builder: (closeCtx) {
+                    final lp = Provider.of<LanguageProvider>(closeCtx, listen: false);
+                    return OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: Text(
+                        lp.translate('close'),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : ZankoColors.textPrimary,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
@@ -1157,6 +1194,8 @@ class ProfileScreen extends StatelessWidget {
 
   void _showPhotoChooserModal(BuildContext context, dynamic user) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final langProvider = Provider.of<LanguageProvider>(context, listen: false);
+    String t(String k) => langProvider.translate(k);
     final urlCtrl = TextEditingController(text: user?.photoUrl ?? '');
     String selectedAvatar = user?.photoUrl ?? 'assets/images/student_avatar_3d.png';
     bool isSaving = false;
@@ -1206,7 +1245,7 @@ class ProfileScreen extends StatelessWidget {
                         Icon(CupertinoIcons.camera_fill, color: ZankoColors.primary, size: 26),
                         const SizedBox(width: 10),
                         Text(
-                          'گۆڕینی وێنەی پڕۆفایل',
+                          t('change_profile_photo'),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
@@ -1217,7 +1256,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'وێنەیەک لە ئاڤاتارەکان هەڵبژێرە یان لینکی وێنەکەت بنووسە',
+                      t('choose_avatar_or_url'),
                       style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : ZankoColors.textSecondary),
                     ),
                     const SizedBox(height: 20),
@@ -1294,8 +1333,8 @@ class ProfileScreen extends StatelessWidget {
                                 });
                               }
                             },
-                            icon: const Icon(CupertinoIcons.photo, size: 18),
-                            label: const Text('گالێری مۆبایل', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            icon: const HugeIcon(icon: HugeIcons.strokeRoundedImage01, size: 18, color: Colors.white),
+                            label: Text(t('phone_gallery'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: ZankoColors.primary,
                               foregroundColor: Colors.white,
@@ -1317,8 +1356,8 @@ class ProfileScreen extends StatelessWidget {
                                 });
                               }
                             },
-                            icon: const Icon(CupertinoIcons.camera, size: 18),
-                            label: const Text('وێنەی کامێرا', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            icon: HugeIcon(icon: HugeIcons.strokeRoundedCamera01, size: 18, color: isDark ? Colors.white : ZankoColors.textPrimary),
+                            label: Text(t('camera_photo'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: isDark ? Colors.white : ZankoColors.textPrimary,
                               side: BorderSide(color: isDark ? Colors.white30 : Colors.grey[300]!, width: 1.5),
@@ -1333,7 +1372,7 @@ class ProfileScreen extends StatelessWidget {
 
                     // Preset Avatars Grid
                     Text(
-                      'ئاڤاتارە پێشنیازکراوەکان:',
+                      t('suggested_avatars'),
                       style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? Colors.white : ZankoColors.textPrimary),
                     ),
                     const SizedBox(height: 10),
@@ -1379,7 +1418,7 @@ class ProfileScreen extends StatelessWidget {
                       },
                       style: TextStyle(color: isDark ? Colors.white : ZankoColors.textPrimary, fontSize: 13),
                       decoration: InputDecoration(
-                        labelText: 'لینکی وێنەی تایبەت (URL)',
+                        labelText: t('custom_image_url'),
                         labelStyle: TextStyle(color: ZankoColors.primary),
                         hintText: 'https://...',
                         filled: true,
@@ -1415,9 +1454,9 @@ class ProfileScreen extends StatelessWidget {
                             if (context.mounted) {
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('✅ وێنەی پڕۆفایل بە سەرکەوتوویی جێگیرکرا!'),
-                                  backgroundColor: Color(0xFF10B981),
+                                SnackBar(
+                                  content: Text(t('avatar_updated_success')),
+                                  backgroundColor: const Color(0xFF10B981),
                                 ),
                               );
                             }
@@ -1431,9 +1470,9 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         child: isSaving
                             ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text(
-                                '💾 جێگیرکردنی وێنەی پڕۆفایل',
-                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                            : Text(
+                                t('save_avatar'),
+                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
                               ),
                       ),
                     ),
@@ -1635,519 +1674,509 @@ class ProfileScreen extends StatelessWidget {
     final authService = Provider.of<AuthService>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
     final langProvider = Provider.of<LanguageProvider>(context);
-    final scoreService = Provider.of<ScoreService>(context);
     String t(String key) => langProvider.translate(key);
 
     final user = authService.currentUser;
-    final isGuest = user == null || user.isGuest;
-    final userName = user?.name ?? t('student_role');
-    final userEmail = user?.email ?? 'aras@zanko.edu';
-    final uniName = user?.universityName ?? 'Zanko University';
-    final deptName = user?.departmentName ?? 'Computer Science & AI';
+    final isGuest = user == null ||
+        user.isGuest ||
+        user.name == 'مێوان' ||
+        user.name == 'مێڤان' ||
+        user.name == 'زائر' ||
+        user.name.trim().toLowerCase() == 'guest';
+    final userName = isGuest ? t('guest') : user.name;
+    final userEmail = isGuest ? 'guest@zanko.edu' : user.email;
+    final uniName = isGuest
+        ? t('university_not_set')
+        : ((user.universityName != null && user.universityName!.trim().isNotEmpty)
+            ? KurdistanUniversitiesData.getLocalizedUniversityName(user.universityName!, langProvider.languageCode)
+            : t('university_not_set'));
+    final deptName = isGuest
+        ? t('zankoai_student_role')
+        : ((user.departmentName != null && user.departmentName!.trim().isNotEmpty)
+            ? KurdistanUniversitiesData.getLocalizedDepartmentName(user.departmentName!, langProvider.languageCode)
+            : t('zankoai_student_role'));
 
     return Scaffold(
       backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
       appBar: AppBar(
         backgroundColor: (isDark ? ZankoColors.darkBackground : ZankoColors.background).withValues(alpha: 0.9),
         elevation: 0,
+        centerTitle: false,
         title: Text(
           t('settings_profile'),
           style: TextStyle(
-            fontSize: 20,
+            fontSize: 22,
             fontWeight: FontWeight.w800,
             letterSpacing: -0.4,
             color: isDark ? Colors.white : ZankoColors.textPrimary,
           ),
         ),
-        centerTitle: false,
-      ),
-      body: SafeArea(
-        child: ListView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          children: [
-            // ─── Aqarat-Style Guest Account Callout Banner ───
-            if (isGuest) ...[
-              Container(
-                margin: const EdgeInsets.only(bottom: 18),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      ZankoColors.primary.withValues(alpha: 0.15),
-                      const Color(0xFF818CF8).withValues(alpha: 0.08),
-                    ],
+        actions: [
+          if (!isGuest)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: GestureDetector(
+                onTap: () => _showEditProfileModal(context, user, userName, uniName, deptName),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: ZankoColors.primary.withValues(alpha: isDark ? 0.2 : 0.1),
+                    shape: BoxShape.circle,
                   ),
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.35)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: ZankoColors.primary.withValues(alpha: 0.1),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: ZankoColors.primary.withValues(alpha: 0.2),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.person_add_alt_1_rounded, color: ZankoColors.primary, size: 24),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                t('guest_banner_title'),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  color: isDark ? Colors.white : ZankoColors.textPrimary,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                t('guest_banner_sub'),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 44,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const LoginScreen()),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: ZankoColors.primary,
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        icon: const Icon(Icons.login_rounded, size: 18, color: Colors.white),
-                        label: Text(
-                          t('login_or_register'),
-                          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-
-
-
-            // ─── University Digital ID Card ──────────────────────────────────
-
-            // ─── High-End Futuristic Digital Student ID Card ───
-            GestureDetector(
-              onTap: () => _showUniversityIdModal(context, user, userName, userEmail, uniName, deptName),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(26),
-                  boxShadow: [
-                    BoxShadow(
-                      color: ZankoColors.primary.withValues(alpha: 0.25),
-                      blurRadius: 24,
-                      spreadRadius: -2,
-                      offset: const Offset(0, 10),
-                    ),
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(26),
-                  child: Stack(
-                    children: [
-                      // Dark Metallic Mesh Gradient Background
-                      Container(
-                        height: 215,
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Color(0xFF0F172A),
-                              Color(0xFF1E293B),
-                              Color(0xFF064E3B),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                      ),
-
-                      // Holographic Glow Wave Overlay
-                      Positioned(
-                        top: -50,
-                        right: -50,
-                        child: Container(
-                          width: 180,
-                          height: 180,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: RadialGradient(
-                              colors: [
-                                ZankoColors.primary.withValues(alpha: 0.25),
-                                ZankoColors.primary.withValues(alpha: 0.0),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: -40,
-                        left: -40,
-                        child: Container(
-                          width: 160,
-                          height: 160,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: RadialGradient(
-                              colors: [
-                                ZankoColors.primary.withValues(alpha: 0.25),
-                                ZankoColors.primary.withValues(alpha: 0.0),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Glass Border Overlay
-                      Container(
-                        height: 215,
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(26),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.25),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // ─── Header: University Name & Status Pill ───
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(7),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withValues(alpha: 0.15),
-                                          shape: BoxShape.circle,
-                                          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-                                        ),
-                                        child: const Icon(
-                                          Icons.school_rounded,
-                                          color: Colors.white,
-                                          size: 16,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: Text(
-                                          uniName.toUpperCase(),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w900,
-                                            letterSpacing: 1.1,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-
-                                // Smart Digital ID Badge
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.3),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: const Color(0xFF34D399).withValues(alpha: 0.5)),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 7,
-                                        height: 7,
-                                        decoration: const BoxDecoration(
-                                          color: Color(0xFF34D399),
-                                          shape: BoxShape.circle,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Color(0xFF34D399),
-                                              blurRadius: 6,
-                                              spreadRadius: 1,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 7),
-                                      Text(
-                                        t('digital_id'),
-                                        style: const TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w800,
-                                          letterSpacing: 0.6,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            // ─── Main Body: Avatar + Details ───
-                            Row(
-                              children: [
-                                Container(
-                                  width: 66,
-                                  height: 66,
-                                  padding: const EdgeInsets.all(2.5),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: const LinearGradient(
-                                      colors: [Color(0xFF10B981), Color(0xFF059669)],
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(0xFF10B981).withValues(alpha: 0.35),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: ClipOval(
-                                    child: (user?.photoUrl != null && user!.photoUrl!.isNotEmpty)
-                                        ? (user.photoUrl!.startsWith('http')
-                                            ? Image.network(user.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36))
-                                            : (user.photoUrl!.startsWith('assets/')
-                                                ? Image.asset(user.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36))
-                                                : (kIsWeb
-                                                    ? Image.network(user.photoUrl!, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36))
-                                                    : Image.file(File(user.photoUrl!), fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36)))))
-                                        : Image.asset(
-                                            'assets/images/student_avatar_3d.png',
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (_, _, _) => const Icon(CupertinoIcons.person_fill, color: Colors.white, size: 36),
-                                          ),
-                                  ),
-                                ),
-                                const SizedBox(width: 14),
-
-                                // Student Details & ID Tag
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        userName,
-                                        style: const TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w900,
-                                          color: Colors.white,
-                                          letterSpacing: -0.3,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        deptName,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                          color: Colors.white.withValues(alpha: 0.8),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      // ID Pill Tag
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withValues(alpha: 0.12),
-                                          borderRadius: BorderRadius.circular(8),
-                                          border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.4)),
-                                        ),
-                                        child: const Text(
-                                          'ID: 2024-ZK-8842',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w800,
-                                            letterSpacing: 0.8,
-                                            color: Color(0xFFA7F3D0),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                // Metallic NFC Smart Chip Icon
-                                Container(
-                                  width: 40,
-                                  height: 30,
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [Color(0xFF10B981), Color(0xFF059669)],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: const Color(0xFF34D399), width: 1),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(0xFF10B981).withValues(alpha: 0.35),
-                                        blurRadius: 6,
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Center(
-                                    child: Icon(
-                                      Icons.nfc_rounded,
-                                      size: 20,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            // ─── Footer: Frosted Glass Bar with QR & Validity ───
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 16),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        t('tap_for_campus_qr'),
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w700,
-                                          color: Colors.white.withValues(alpha: 0.95),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Text(
-                                    t('valid_until'),
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 0.5,
-                                      color: Colors.white.withValues(alpha: 0.7),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  child: Icon(
+                    CupertinoIcons.pencil,
+                    size: 18,
+                    color: ZankoColors.primary,
                   ),
                 ),
               ),
             ),
-
-
-            const SizedBox(height: 18),
-
-            // ─── VIP Membership Status & Upgrade Banner ───
+        ],
+      ),
+      body: SafeArea(
+        child: ListView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          children: [
+            // ─── 1. Modern Hero Identity Card (App Color Gradient) ───
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: isDark
                       ? [
-                          const Color(0xFF0F172A),
-                          ZankoColors.darkCardSecondary,
-                          const Color(0xFF064E3B).withValues(alpha: 0.5),
+                          const Color(0xFF0F2038),
+                          ZankoColors.primary.withValues(alpha: 0.75),
                         ]
                       : [
-                          Colors.white,
-                          const Color(0xFFF0FDF4),
+                          ZankoColors.primary,
+                          const Color(0xFF024A9B),
                         ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(26),
                 border: Border.all(
-                  color: ZankoColors.primary.withValues(alpha: user?.isVip == true ? 0.6 : 0.4),
-                  width: 1.5,
+                  color: isDark
+                      ? ZankoColors.primary.withValues(alpha: 0.4)
+                      : const Color(0xFF388BF2),
+                  width: 1.2,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: ZankoColors.primary.withValues(alpha: 0.15),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
+                    color: ZankoColors.primary.withValues(alpha: isDark ? 0.25 : 0.3),
+                    blurRadius: 22,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(26),
+                child: Stack(
+                  children: [
+                    // Ambient light ring 1
+                    Positioned(
+                      top: -40,
+                      right: -30,
+                      child: Container(
+                        width: 160,
+                        height: 160,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.08),
+                        ),
+                      ),
+                    ),
+                    // Ambient light ring 2
+                    Positioned(
+                      bottom: -50,
+                      left: -20,
+                      child: Container(
+                        width: 130,
+                        height: 130,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.05),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // Avatar with camera tap
+                              GestureDetector(
+                                onTap: () => _showPhotoChooserModal(context, user),
+                                child: Stack(
+                                  children: [
+                                    Container(
+                                      width: 72,
+                                      height: 72,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Colors.white.withValues(alpha: 0.85),
+                                          width: 2.5,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(alpha: 0.2),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: ClipOval(
+                                        child: (user != null &&
+                                                user.photoUrl != null &&
+                                                user.photoUrl!.isNotEmpty)
+                                            ? (user.photoUrl!.startsWith('http')
+                                                ? Image.network(user.photoUrl!,
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder: (ctx, err, stack) => Image.asset(
+                                                        'assets/images/student_avatar_3d.png',
+                                                        fit: BoxFit.cover))
+                                                : (user.photoUrl!.startsWith('assets/')
+                                                    ? Image.asset(user.photoUrl!,
+                                                        fit: BoxFit.cover,
+                                                        errorBuilder: (ctx, err, stack) => Image.asset(
+                                                            'assets/images/student_avatar_3d.png',
+                                                            fit: BoxFit.cover))
+                                                    : (kIsWeb
+                                                        ? Image.network(user.photoUrl!,
+                                                            fit: BoxFit.cover,
+                                                            errorBuilder: (ctx, err, stack) => Image.asset(
+                                                                'assets/images/student_avatar_3d.png',
+                                                                fit: BoxFit.cover))
+                                                        : Image.file(File(user.photoUrl!),
+                                                            fit: BoxFit.cover,
+                                                            errorBuilder: (ctx, err, stack) => Image.asset(
+                                                                'assets/images/student_avatar_3d.png',
+                                                                fit: BoxFit.cover)))))
+                                            : Image.asset(
+                                                'assets/images/student_avatar_3d.png',
+                                                fit: BoxFit.cover,
+                                              ),
+                                      ),
+                                    ),
+                                    Positioned(
+                                      bottom: 0,
+                                      right: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(5),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black26,
+                                              blurRadius: 4,
+                                            ),
+                                          ],
+                                        ),
+                                        child: Icon(
+                                          Icons.camera_alt_rounded,
+                                          size: 13,
+                                          color: ZankoColors.primary,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            userName,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w800,
+                                              color: Colors.white,
+                                              letterSpacing: -0.4,
+                                            ),
+                                          ),
+                                        ),
+                                        if (!isGuest && user.isVip) ...[
+                                          const SizedBox(width: 6),
+                                          const Text('👑', style: TextStyle(fontSize: 16)),
+                                        ],
+                                      ],
+                                    ),
+                                    const SizedBox(height: 5),
+                                    // Status Badge Pill
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 9, vertical: 3.5),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.18),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: Colors.white.withValues(alpha: 0.25),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            isGuest
+                                                ? Icons.person_outline_rounded
+                                                : Icons.verified_user_rounded,
+                                            size: 12,
+                                            color: Colors.white,
+                                          ),
+                                          const SizedBox(width: 5),
+                                          Text(
+                                            isGuest
+                                                ? t('guest_account')
+                                                : (user.isVip
+                                                    ? 'VIP Member'
+                                                    : t('zankoai_student_role')),
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w700,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 7),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.school_rounded,
+                                          size: 13,
+                                          color: Colors.white.withValues(alpha: 0.8),
+                                        ),
+                                        const SizedBox(width: 5),
+                                        Expanded(
+                                          child: Text(
+                                            uniName,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                              color: Colors.white.withValues(alpha: 0.9),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          // Card bottom bar with actions
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.16),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.12),
+                              ),
+                            ),
+                            child: isGuest
+                                ? Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          t('guest_banner_title'),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white.withValues(alpha: 0.95),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (_) => const LoginScreen()),
+                                          );
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 14, vertical: 7),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(10),
+                                            boxShadow: const [
+                                              BoxShadow(
+                                                color: Colors.black12,
+                                                blurRadius: 6,
+                                              ),
+                                            ],
+                                          ),
+                                          child: Text(
+                                            t('login'),
+                                            style: TextStyle(
+                                              fontSize: 11.5,
+                                              fontWeight: FontWeight.w800,
+                                              color: ZankoColors.primary,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Row(
+                                    children: [
+                                      Expanded(
+                                        child: GestureDetector(
+                                          onTap: () => _showUniversityIdModal(
+                                              context,
+                                              user,
+                                              userName,
+                                              userEmail,
+                                              uniName,
+                                              deptName),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              const Icon(Icons.qr_code_rounded,
+                                                  size: 16, color: Colors.white),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                t('digital_id'),
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      Container(
+                                        width: 1,
+                                        height: 16,
+                                        color: Colors.white.withValues(alpha: 0.2),
+                                      ),
+                                      Expanded(
+                                        child: GestureDetector(
+                                          onTap: () => _showEditProfileModal(
+                                              context,
+                                              user,
+                                              userName,
+                                              uniName,
+                                              deptName),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              const Icon(Icons.edit_outlined,
+                                                  size: 15, color: Colors.white),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                t('edit_profile'),
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // ─── 2. VIP Membership Status Banner ───
+            Container(
+              margin: const EdgeInsets.only(top: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: isDark ? ZankoColors.darkCard : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: ZankoColors.primary
+                      .withValues(alpha: user?.isVip == true ? 0.6 : 0.25),
+                  width: 1.3,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: ZankoColors.primary
+                        .withValues(alpha: isDark ? 0.15 : 0.05),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
-                      color: ZankoColors.primary.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
+                      color: ZankoColors.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Text('👑', style: TextStyle(fontSize: 24, color: ZankoColors.primary)),
+                    child: Center(
+                      child: Icon(
+                        CupertinoIcons.sparkles,
+                        color: ZankoColors.primary,
+                        size: 22,
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          user?.isVip == true ? 'ئەندامی نایابی VIP (چالاککراوە 👑)' : 'بەشداربوونی نایابی VIP',
-                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5, color: ZankoColors.primary),
+                          user?.isVip == true
+                              ? t('vip_banner_title_active')
+                              : t('vip_banner_title_guest'),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                            color: isDark ? Colors.white : ZankoColors.primary,
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           user?.isVip == true
-                              ? 'داگرتنی Word و PPTX + تاقیکردنەوە و چاتی بێسنوور'
-                              : 'سێمینار و ڕاپۆرت بە وۆرد + پێشبینی تاقیکردنەوە',
-                          style: TextStyle(fontSize: 11, color: isDark ? Colors.white.withValues(alpha: 0.85) : ZankoColors.textSecondary),
+                              ? t('vip_banner_desc_active')
+                              : t('vip_banner_desc_guest'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: isDark
+                                ? const Color(0xFFA6ACB8)
+                                : ZankoColors.textSecondary,
+                          ),
                         ),
                       ],
                     ),
@@ -2158,269 +2187,203 @@ class ProfileScreen extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: ZankoColors.primary,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 9),
                     ),
                     child: Text(
-                      user?.isVip == true ? 'نوێکردنەوە' : 'بوون بە VIP ⚡',
-                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 11.5),
+                      user?.isVip == true ? t('vip_renew_btn') : t('vip_upgrade_btn'),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w800, fontSize: 11.5),
                     ),
                   ),
                 ],
               ),
             ),
-
 
 
             const SizedBox(height: 16),
             const AdBannerWidget(screenName: 'profile'),
-            const SizedBox(height: 24),
 
-            // Learning Achievements & Stats
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // ─── 3. Preferences Group ───
+            _buildSettingsGroup(
+              context,
+              title: langProvider.translate('preferences'),
               children: [
-                Text(
-                  langProvider.translate('learning_stats'),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white : ZankoColors.textPrimary,
+                _buildSettingsTile(
+                  context,
+                  icon: HugeIcons.strokeRoundedMoon02,
+                  iconColor: ZankoColors.primary,
+                  title: langProvider.translate('dark_mode'),
+                  trailing: CupertinoSwitch(
+                    value: themeProvider.isDarkMode,
+                    activeTrackColor: ZankoColors.primary,
+                    onChanged: (val) => themeProvider.toggleTheme(val),
                   ),
                 ),
-                GestureDetector(
-                  onTap: () async {
-                    await scoreService.resetScores();
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(langProvider.translate('reset_stats')),
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
-                    }
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          CupertinoIcons.arrow_counterclockwise,
-                          size: 14,
-                          color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          langProvider.translate('reset_stats'),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                const Divider(height: 1, indent: 56),
+                _buildSettingsTile(
+                  context,
+                  icon: HugeIcons.strokeRoundedGlobe,
+                  iconColor: ZankoColors.primary,
+                  title: langProvider.translate('app_language'),
+                  subtitle: langProvider.currentLanguage == AppLanguage.english
+                      ? 'English'
+                      : (langProvider.currentLanguage == AppLanguage.kurdish
+                          ? 'کوردی (سۆرانی)'
+                          : (langProvider.currentLanguage == AppLanguage.kurdishBadini
+                              ? 'کوردی (بادینی)'
+                              : 'العربية')),
+                  onTap: () => _showLanguagePickerModal(context, langProvider),
+                ),
+                const Divider(height: 1, indent: 56),
+                _buildSettingsTile(
+                  context,
+                  icon: HugeIcons.strokeRoundedNotification01,
+                  iconColor: ZankoColors.primary,
+                  title: langProvider.translate('notifications'),
+                  subtitle: langProvider.translate('daily_reminders'),
+                  onTap: () => _showNotificationsModal(context),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            AppCard(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  StatisticCard(
-                    icon: CupertinoIcons.clock,
-                    value: scoreService.todayStudyMinutes >= 60
-                        ? '${scoreService.todayStudyMinutes ~/ 60}h'
-                        : '${scoreService.todayStudyMinutes}m',
-                    label: langProvider.translate('study_time'),
-                    color: const Color(0xFFFF9F0A),
-                  ),
-                  const SizedBox(width: 8),
-                  StatisticCard(
-                    icon: CupertinoIcons.checkmark_seal,
-                    value: '${scoreService.totalQuestionsAnswered}',
-                    label: langProvider.translate('quizzes'),
-                    color: const Color(0xFF34C759),
-                  ),
-                  const SizedBox(width: 8),
-                  StatisticCard(
-                    icon: CupertinoIcons.star,
-                    value: '${scoreService.totalScore100}',
-                    label: langProvider.translate('gpa'),
-                    color: const Color(0xFF6C5CE7),
-                  ),
-                ],
-              ),
+
+            // ─── 4. Support & Feedback Group ───
+            _buildSettingsGroup(
+              context,
+              title: langProvider.translate('support_and_info'),
+              children: [
+                _buildSettingsTile(
+                  context,
+                  icon: HugeIcons.strokeRoundedChatting01,
+                  iconColor: ZankoColors.primary,
+                  title: langProvider.translate('feedback_suggestions'),
+                  subtitle: langProvider.translate('feedback_subtitle'),
+                  onTap: () => _showFeedbackModal(context, user),
+                ),
+                const Divider(height: 1, indent: 56),
+                _buildSettingsTile(
+                  context,
+                  icon: HugeIcons.strokeRoundedLockPassword,
+                  iconColor: ZankoColors.primary,
+                  title: langProvider.translate('privacy_security'),
+                  onTap: () => _showPrivacySecurityModal(context),
+                ),
+                const Divider(height: 1, indent: 56),
+                _buildSettingsTile(
+                  context,
+                  icon: HugeIcons.strokeRoundedInformationCircle,
+                  iconColor: ZankoColors.primary,
+                  title: langProvider.translate('about_zanko'),
+                  subtitle: langProvider.translate('version'),
+                  onTap: () => _showAboutZankoModal(context),
+                ),
+              ],
             ),
 
-            const SizedBox(height: 24),
-
-
-
-            // Apple Settings Grouped List
-            Text(
-              langProvider.translate('preferences'),
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : ZankoColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            AppCard(
-              padding: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  _buildSettingsTile(
-                    context,
-                    icon: CupertinoIcons.moon_fill,
-                    iconColor: const Color(0xFFAF52DE),
-                    title: langProvider.translate('dark_mode'),
-                    trailing: CupertinoSwitch(
-                      value: themeProvider.isDarkMode,
-                      activeTrackColor: themeProvider.primaryColor,
-                      onChanged: (val) => themeProvider.toggleTheme(val),
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 56),
-                  _buildSettingsTile(
-                    context,
-                    icon: CupertinoIcons.globe,
-                    iconColor: const Color(0xFF007AFF),
-                    title: langProvider.translate('app_language'),
-                    subtitle: langProvider.currentLanguage == AppLanguage.english
-                        ? 'English'
-                        : (langProvider.currentLanguage == AppLanguage.kurdish
-                            ? 'کوردی (سۆرانی)'
-                            : (langProvider.currentLanguage == AppLanguage.kurdishBadini
-                                ? 'کوردی (بادینی)'
-                                : 'العربية')),
-                    onTap: () => _showLanguagePickerModal(context, langProvider),
-                  ),
-                  const Divider(height: 1, indent: 56),
-                  _buildSettingsTile(
-                    context,
-                    icon: CupertinoIcons.bell_fill,
-                    iconColor: const Color(0xFFFF9F0A),
-                    title: langProvider.translate('notifications'),
-                    subtitle: langProvider.translate('daily_reminders'),
-                    onTap: () => _showNotificationsModal(context),
-                  ),
-                  const Divider(height: 1, indent: 56),
-                  _buildSettingsTile(
-                    context,
-                    icon: CupertinoIcons.chat_bubble_text_fill,
-                    iconColor: const Color(0xFF10B981),
-                    title: '💬 ڕا و پێشنیارەکان',
-                    subtitle: 'ناردنی داواکاری و پێشنیار بۆ تیمی birdev',
-                    onTap: () => _showFeedbackModal(context, user),
-                  ),
-                  const Divider(height: 1, indent: 56),
-                  _buildSettingsTile(
-                    context,
-                    icon: CupertinoIcons.lock_fill,
-                    iconColor: const Color(0xFF34C759),
-                    title: langProvider.translate('privacy_security'),
-                    onTap: () => _showPrivacySecurityModal(context),
-                  ),
-
-                  const Divider(height: 1, indent: 56),
-                  _buildSettingsTile(
-                    context,
-                    icon: CupertinoIcons.info_circle_fill,
-                    iconColor: ZankoColors.primary,
-                    title: langProvider.translate('about_zanko'),
-                    subtitle: langProvider.translate('version'),
-                    onTap: () => _showAboutZankoModal(context),
-                  ),
-                  const Divider(height: 1, indent: 56),
-                  _buildSettingsTile(
-                    context,
-                    icon: isGuest ? CupertinoIcons.person_crop_circle_badge_plus : CupertinoIcons.arrow_right_square_fill,
-                    iconColor: isGuest ? const Color(0xFF6C5CE7) : const Color(0xFFE11D48),
-                    title: isGuest ? t('login_or_register') : t('logout'),
-                    subtitle: isGuest ? t('login_register_desc') : t('logout_desc'),
-                    onTap: () async {
-                      if (isGuest) {
-                        Navigator.push(
+            // ─── 5. Account Actions Group ───
+            _buildSettingsGroup(
+              context,
+              title: langProvider.translate('account'),
+              children: [
+                _buildSettingsTile(
+                  context,
+                  icon: isGuest
+                      ? HugeIcons.strokeRoundedLogin01
+                      : HugeIcons.strokeRoundedLogout01,
+                  iconColor: isGuest
+                      ? ZankoColors.primary
+                      : const Color(0xFFE11D48),
+                  title: isGuest ? t('login_or_register') : t('logout'),
+                  subtitle: isGuest ? t('login_register_desc') : t('logout_desc'),
+                  isDestructive: !isGuest,
+                  onTap: () async {
+                    if (isGuest) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      );
+                    } else {
+                      await authService.logout();
+                      if (context.mounted) {
+                        Navigator.pushAndRemoveUntil(
                           context,
                           MaterialPageRoute(builder: (_) => const LoginScreen()),
+                          (route) => false,
                         );
-                      } else {
-                        await authService.logout();
-                        if (context.mounted) {
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(builder: (_) => const LoginScreen()),
-                            (route) => false,
-                          );
-                        }
                       }
-                    },
-                  ),
-                  if (!isGuest) ...[
-                    const Divider(height: 1, indent: 56),
-                    _buildSettingsTile(
-                      context,
-                      icon: CupertinoIcons.trash_fill,
-                      iconColor: const Color(0xFFDC2626),
-                      title: 'سڕینەوەی یەکجاریی هەژمار',
-                      subtitle: 'سڕینەوەی هەموو داتاکان و هەژماری بەکارهێنەر',
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (dialogCtx) => AlertDialog(
-                            backgroundColor: isDark ? ZankoColors.darkCard : Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                            title: const Row(
-                              children: [
-                                Icon(CupertinoIcons.exclamationmark_triangle_fill, color: Colors.redAccent, size: 24),
-                                SizedBox(width: 8),
-                                Text(
-                                  'سڕینەوەی هەژمار؟',
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
-                                ),
-                              ],
-                            ),
-                            content: const Text(
-                              'ئایا دڵنیایت لە سڕینەوەی یەکجاریی هەژمارەکەت؟ ئەم کارە هەموو داتاکانت دەسڕێتەوە و ناتوانرێت بگەڕێندرێتەوە.',
-                              style: TextStyle(fontSize: 14, height: 1.5),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(dialogCtx),
-                                child: const Text('پەشیمانبوونەوە'),
-                              ),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.redAccent,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                ),
-                                onPressed: () async {
-                                  Navigator.pop(dialogCtx);
-                                  await authService.deleteAccount();
-                                  if (context.mounted) {
-                                    Navigator.pushAndRemoveUntil(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const LoginScreen()),
-                                      (route) => false,
-                                    );
-                                  }
-                                },
-                                child: const Text('بەڵێ، بیسڕەوە'),
+                    }
+                  },
+                ),
+                if (!isGuest) ...[
+                  const Divider(height: 1, indent: 56),
+                  _buildSettingsTile(
+                    context,
+                    icon: HugeIcons.strokeRoundedDelete02,
+                    iconColor: const Color(0xFFDC2626),
+                    title: t('delete_account'),
+                    subtitle: t('delete_account_desc'),
+                    isDestructive: true,
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (dialogCtx) => AlertDialog(
+                          backgroundColor: isDark ? ZankoColors.darkCard : Colors.white,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20)),
+                          title: Row(
+                            children: [
+                              const HugeIcon(
+                                  icon: HugeIcons.strokeRoundedAlert02,
+                                  color: Colors.redAccent,
+                                  size: 24),
+                              const SizedBox(width: 8),
+                              Text(
+                                t('delete_account_confirm_title'),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 17),
                               ),
                             ],
                           ),
-                        );
-                      },
-                    ),
-                  ],
+                          content: Text(
+                            t('delete_account_confirm_desc'),
+                            style: const TextStyle(fontSize: 14, height: 1.5),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(dialogCtx),
+                              child: Text(t('cancel')),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.redAccent,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                              ),
+                              onPressed: () async {
+                                Navigator.pop(dialogCtx);
+                                await authService.deleteAccount();
+                                if (context.mounted) {
+                                  Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (_) => const LoginScreen()),
+                                    (route) => false,
+                                  );
+                                }
+                              },
+                              child: Text(t('yes_delete')),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                 ],
-              ),
+              ],
             ),
 
             const SizedBox(height: 24),
@@ -2436,28 +2399,31 @@ class ProfileScreen extends StatelessWidget {
                   }
                 },
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(CupertinoIcons.sparkles, size: 14, color: ZankoColors.primary),
+                          Icon(CupertinoIcons.sparkles,
+                              size: 14, color: ZankoColors.primary),
                           const SizedBox(width: 6),
                           Text(
-                            'گەشەی پێدراوە لەلایەن تیمی birdev',
+                            t('developed_by'),
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.grey[300] : Colors.grey[800],
+                              color:
+                                  isDark ? Colors.grey[300] : Colors.grey[800],
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'سەرجەم مافەکانی پارێزراوە © ${DateTime.now().year}',
+                        '${t('all_rights_reserved')} © ${DateTime.now().year}',
                         style: TextStyle(
                           fontSize: 11.5,
                           color: isDark ? Colors.grey[500] : Colors.grey[600],
@@ -2476,34 +2442,86 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildSettingsGroup(
+    BuildContext context, {
+    required String title,
+    required List<Widget> children,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 6, right: 6, bottom: 8, top: 18),
+          child: Text(
+            title.toUpperCase(),
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.8,
+              color: isDark ? const Color(0xFF8B949E) : const Color(0xFF6B7280),
+            ),
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: isDark ? ZankoColors.darkCard : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isDark ? const Color(0xFF262C36) : const Color(0xFFE2EDFB),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Column(
+              children: children,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildSettingsTile(
     BuildContext context, {
-    required IconData icon,
+    required dynamic icon,
     required Color iconColor,
     required String title,
     String? subtitle,
     Widget? trailing,
     VoidCallback? onTap,
+    bool isDestructive = false,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return ListTile(
       onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       leading: Container(
-        width: 34,
-        height: 34,
+        width: 36,
+        height: 36,
         decoration: BoxDecoration(
-          color: iconColor.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(10),
+          color: iconColor.withValues(alpha: isDark ? 0.2 : 0.12),
+          borderRadius: BorderRadius.circular(11),
         ),
-        child: Icon(icon, color: iconColor, size: 18),
+        child: Center(child: appIcon(icon, color: iconColor, size: 18)),
       ),
       title: Text(
         title,
         style: TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w600,
-          color: isDark ? Colors.white : ZankoColors.textPrimary,
+          color: isDestructive
+              ? const Color(0xFFE11D48)
+              : (isDark ? Colors.white : ZankoColors.textPrimary),
         ),
       ),
       subtitle: subtitle != null
@@ -2511,15 +2529,15 @@ class ProfileScreen extends StatelessWidget {
               subtitle,
               style: TextStyle(
                 fontSize: 12,
-                color: ZankoColors.textSecondary,
+                color: isDark ? const Color(0xFFA6ACB8) : ZankoColors.textSecondary,
               ),
             )
           : null,
       trailing: trailing ??
-          const Icon(
+          Icon(
             CupertinoIcons.chevron_forward,
             size: 16,
-            color: ZankoColors.textSecondary,
+            color: isDark ? Colors.white30 : Colors.black26,
           ),
     );
   }
