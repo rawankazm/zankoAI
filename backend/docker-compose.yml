@@ -1,38 +1,76 @@
 version: '3.8'
 
 services:
-  api:
-    build: .
+  # ─── 1. Public Nginx Reverse Proxy (Front-facing) ───
+  nginx:
+    image: nginx:alpine
+    container_name: zanko_nginx
+    restart: unless-stopped
     ports:
-      - "4000:4000"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+    networks:
+      - zanko_network
+
+  # ─── 2. Internal Node.js API (Not directly exposed to internet) ───
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zanko_api
+    restart: unless-stopped
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - PORT=4000
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET}
     depends_on:
       - redis
-    volumes:
-      - ./src:/app/src
+    networks:
+      - zanko_network
 
+  # ─── 3. Background BullMQ Queue Worker ───
   worker:
-    build: .
-    command: ["npm", "run", "worker"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zanko_worker
+    restart: unless-stopped
+    command: ["npm", "run", "start:worker"]
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
     depends_on:
       - redis
-    volumes:
-      - ./src:/app/src
+    networks:
+      - zanko_network
 
+  # ─── 4. Redis Cache & Queue Storage ───
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    container_name: zanko_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
+    networks:
+      - zanko_network
 
 volumes:
   redis_data:
+    driver: local
+
+networks:
+  zanko_network:
+    driver: bridge

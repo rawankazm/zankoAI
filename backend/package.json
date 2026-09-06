@@ -1,14 +1,15 @@
 {
   "name": "zanko-backend",
   "version": "1.0.0",
-  "description": "ZankoAI Trusted Backend Layer on DigitalOcean - Express, TypeScript, Redis, BullMQ, AI Gateway, Iraqi Payments",
+  "description": "ZankoAI Production Backend Layer on DigitalOcean - Express, TypeScript, Redis, BullMQ, Supabase",
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "worker": "tsx watch src/worker.ts",
+    "worker": "tsx watch src/workers/index.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "start:worker": "node dist/worker.js",
+    "start:worker": "node dist/workers/index.js",
+    "test": "tsx tests/run_all_tests.ts",
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {
@@ -34,10 +35,12 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.5.4",
     "@types/pdf-parse": "^1.1.4",
+    "@types/supertest": "^6.0.2",
+    "supertest": "^7.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.5.4"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   }
 }

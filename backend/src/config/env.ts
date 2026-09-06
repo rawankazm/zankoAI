@@ -4,35 +4,63 @@ import { z } from 'zod';
 dotenv.config();
 
 const envSchema = z.object({
-  PORT: z.string().default('4000').transform((val) => parseInt(val, 10)),
+  PORT: z
+    .string()
+    .default('4000')
+    .transform((val) => parseInt(val, 10)),
   NODE_ENV: z.enum(['development', 'staging', 'production', 'test']).default('development'),
-  API_PREFIX: z.string().default('/api/v1'),
+  API_PREFIX: z.string().default('/api'),
   CORS_ORIGIN: z.string().default('*'),
 
-  // Supabase
-  SUPABASE_URL: z.string().url(),
-  SUPABASE_ANON_KEY: z.string().min(1),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
-  SUPABASE_JWT_SECRET: z.string().min(1),
+  // Supabase Credentials (Strictly Server-Side)
+  SUPABASE_URL: z.string().url().default('https://placeholder.supabase.co'),
+  SUPABASE_ANON_KEY: z.string().min(1).default('placeholder-anon-key'),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).default('placeholder-service-role-key'),
+  SUPABASE_JWT_SECRET: z.string().default('placeholder-jwt-secret'),
 
-  // Redis
+  // Redis Configuration
   REDIS_HOST: z.string().default('127.0.0.1'),
-  REDIS_PORT: z.string().default('6379').transform((val) => parseInt(val, 10)),
+  REDIS_PORT: z
+    .string()
+    .default('6379')
+    .transform((val) => parseInt(val, 10)),
   REDIS_PASSWORD: z.string().optional(),
-  REDIS_TLS: z.string().default('false').transform((val) => val === 'true'),
+  REDIS_TLS: z
+    .string()
+    .default('false')
+    .transform((val) => val === 'true'),
 
-  // External AI APIs
+  // Rate Limiting Config
+  RATE_LIMIT_WINDOW_MS: z
+    .string()
+    .default('60000')
+    .transform((val) => parseInt(val, 10)),
+  RATE_LIMIT_MAX_REQUESTS: z
+    .string()
+    .default('100')
+    .transform((val) => parseInt(val, 10)),
+
+  // Future AI API Keys (placeholders)
   GEMINI_API_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
-  DEEPSEEK_API_KEY: z.string().optional(),
 
-  // Payments
+  // Future Payment Gateways (placeholders)
   FIB_CLIENT_ID: z.string().optional(),
   FIB_CLIENT_SECRET: z.string().optional(),
-  FIB_BASE_URL: z.string().default('https://api.fib.iq'),
   FASTPAY_MERCHANT_ID: z.string().optional(),
-  FASTPAY_PASSWORD: z.string().optional(),
 });
 
-export const env = envSchema.parse(process.env);
+export type Env = z.infer<typeof envSchema>;
+
+export const validateEnv = (): Env => {
+  const parsed = envSchema.safeParse(process.env);
+  if (!parsed.success) {
+    console.error('❌ Environment configuration validation failed:');
+    console.error(parsed.error.format());
+    process.exit(1);
+  }
+  return parsed.data;
+};
+
+export const env = validateEnv();
