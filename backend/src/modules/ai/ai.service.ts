@@ -26,13 +26,12 @@ export class AiGatewayService {
    * System Prompt for ZankoAI - Specialized in Kurdish (Sorani & Badini) & Arabic Academic Instruction
    */
   private getSystemInstruction(): string {
-    return `You are ZankoAI (مامۆستای ژیری زانکۆ), the premier academic tutor for university students in the Kurdistan Region and Iraq.
-Languages supported: Kurdish (Sorani and Badini dialects), Arabic, and English.
-Guidelines:
-1. Always respond in the exact language or dialect requested by the student. If Kurdish, use standard Sorani or Badini terminology.
-2. Structure academic answers clearly: Concept Explanation, Academic Example, Key Takeaways, and Bulleted Summary.
-3. Be encouraging, patient, rigorous, and cite standard textbook references when applicable.
-4. When formatting equations or formulas, use clear Markdown or LaTeX notation.`;
+    return `You are ZankoAI (مامۆستای ژیری زانکۆ), the academic tutor for university students.
+CRITICAL INSTRUCTIONS:
+1. GREETING: If the user says a greeting (such as "سڵاو", "سلاو", "hello", "hi", "مرحبا"), respond ONLY with: "سڵاو! چۆن دەتوانم یارمەتیت بدەم؟"
+2. NO PREAMBLE / NO FLUFF: Answer the user's question directly and immediately. Do NOT write unnecessary introductions, conversational filler, polite intros, or redundant disclaimers.
+3. CONCISE & PRECISE: Keep answers focused, academic, and directly address what was asked without unnecessary extra text.
+4. LANGUAGE: Always reply in the exact language/dialect of the prompt (Kurdish Sorani, Kurdish Badini, Arabic, or English).`;
   }
 
   /**
@@ -57,7 +56,7 @@ Guidelines:
         ];
 
         const result = await this.geminiClient.models.generateContent({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-3.8-flash',
           contents,
           config: {
             systemInstruction: this.getSystemInstruction(),
@@ -66,9 +65,9 @@ Guidelines:
         });
 
         const reply = result.text || '';
-        await this.logAiUsage(userId, 'chat', 'gemini-2.5-flash', Date.now() - startTime);
+        await this.logAiUsage(userId, 'chat', 'gemini-3.8-flash', Date.now() - startTime);
 
-        return { response: reply, provider: 'google', model: 'gemini-2.5-flash' };
+        return { response: reply, provider: 'google', model: 'gemini-3.8-flash' };
       } catch (err: any) {
         logger.warn('Primary AI (Gemini) failed, attempting failover to OpenAI...', { error: err.message });
       }
@@ -179,6 +178,35 @@ Respond ONLY with valid JSON in the following format:
       return JSON.parse(cleanJson);
     } catch {
       throw new Error('Failed to parse AI-generated quiz structure.');
+    }
+  }
+
+  /**
+   * Generate Flashcards with AI
+   */
+  async generateFlashcards(
+    userId: string,
+    topic: string,
+    courseName?: string,
+    cardCount: number = 5
+  ): Promise<Array<{ front: string; back: string }>> {
+    const prompt = `ئەم تێبینییە یان بابەتەی خوارەوە بە وردی بخوێنەوە و ${cardCount} فلاشکاردی خوێندنەوەی پرۆفێشناڵ و پوخت دروست بکە بە زمانی کوردی (سۆرانی) یان بە زمانی دەقەکە.
+بابەت: "${topic}" ${courseName ? `کۆرس: "${courseName}"` : ''}
+تەنها و تەنها وەک JSON لەم فۆرماتەی خوارەوە بنووسە:
+[
+  { "front": "پرسیار یان زاراوە", "back": "ڕوونکردنەوە یان وەڵام" }
+]`;
+
+    const { response } = await this.chatWithTeacher(userId, prompt);
+    try {
+      let cleanJson = response.replace(/```json/g, '').replace(/```/g, '').trim();
+      const match = cleanJson.match(/\[\s*\{[\s\S]*\}\s*\]/);
+      if (match) {
+        cleanJson = match[0];
+      }
+      return JSON.parse(cleanJson);
+    } catch {
+      throw new Error('Failed to parse AI-generated flashcards structure.');
     }
   }
 

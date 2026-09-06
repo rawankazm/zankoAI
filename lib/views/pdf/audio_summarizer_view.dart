@@ -22,8 +22,26 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
   final TextEditingController _transcriptController = TextEditingController();
   String? _recordedFilePath;
 
+  static const List<String> allowedAudioExtensions = [
+    'mp3',
+    'm4a',
+    'wav',
+    'aac',
+    'ogg',
+    'opus',
+    'flac',
+    'amr',
+    'wma',
+    '3gp',
+    'm4b',
+    'alac',
+    'webm',
+  ];
+
   bool _isRecording = false;
   bool _isLoading = false;
+  bool _isSummarizing = false;
+  String _summarizedNotes = '';
   String _audioFileName = '';
   int _recordDurationSeconds = 0;
   String _selectedLocaleId = 'ku';
@@ -125,7 +143,7 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
       setState(() {
         _transcriptController.text = transcript.isNotEmpty
             ? transcript
-            : "نەتوانرا دەنگەکە بە تەواوی بناسرێتەوە. تکایە دڵنیابە لە پەیوەندی ئینتەرنێت و کلیلی Gemini API.";
+            : "نەتوانرا دەنگەکە بە تەواوی بناسرێتەوە. تکایە دڵنیابە دەنگەکە ڕوونە و دووبارە تاقی بکەرەوە.";
       });
     } catch (_) {
       setState(() {
@@ -143,12 +161,43 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
   Future<void> _pickAudioFile() async {
     try {
       final result = await FilePicker.platform.pickFiles(
-        type: FileType.audio,
+        type: FileType.custom,
+        allowedExtensions: allowedAudioExtensions,
         withData: true,
       );
 
       if (result != null && result.files.isNotEmpty) {
         final file = result.files.single;
+        final fileName = file.name;
+        final dotIndex = fileName.lastIndexOf('.');
+        final ext = dotIndex != -1 ? fileName.substring(dotIndex + 1).toLowerCase() : '';
+
+        // Strict extension validation: explicitly block PDFs and any non-audio files
+        if (!allowedAudioExtensions.contains(ext)) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Row(
+                  children: [
+                    Icon(Icons.warning_amber_rounded, color: Colors.white),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'تکایە تەنها فایلی تۆمارکراوی دەنگ هەڵبژێرە (وەک MP3, M4A, WAV, AAC, OGG...) نەک PDF یان فایلی تر!',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: Colors.red.shade700,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            );
+          }
+          return;
+        }
+
         Uint8List? bytes = file.bytes;
         if (bytes == null && file.path != null) {
           try {
@@ -159,26 +208,41 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
           } catch (_) {}
         }
 
+        if (bytes == null || bytes.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('فایلەکە بەتاڵە یان نەتوانرا بخوێندرێتەوە.')),
+            );
+          }
+          return;
+        }
+
         if (!mounted) return;
         final aiService = Provider.of<AiService>(context, listen: false);
         setState(() {
           _audioFileName = file.name;
           _isLoading = true;
+          _summarizedNotes = '';
           _transcriptController.clear();
         });
 
         String mime = 'audio/mp4';
-        final ext = file.name.toLowerCase();
-        if (ext.endsWith('.wav')) {
+        if (ext == 'wav') {
           mime = 'audio/wav';
-        } else if (ext.endsWith('.mp3')) {
-          mime = 'audio/mp3';
-        } else if (ext.endsWith('.aac')) {
+        } else if (ext == 'mp3') {
+          mime = 'audio/mpeg';
+        } else if (ext == 'aac') {
           mime = 'audio/aac';
-        } else if (ext.endsWith('.ogg')) {
+        } else if (ext == 'ogg' || ext == 'opus') {
           mime = 'audio/ogg';
-        } else if (ext.endsWith('.flac')) {
+        } else if (ext == 'flac') {
           mime = 'audio/flac';
+        } else if (ext == 'amr') {
+          mime = 'audio/amr';
+        } else if (ext == '3gp') {
+          mime = 'audio/3gpp';
+        } else if (ext == 'webm') {
+          mime = 'audio/webm';
         }
 
         final transcript = await aiService.transcribeAudio(
@@ -207,15 +271,48 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
     }
   }
 
+  Future<void> _generateSummary() async {
+    final text = _transcriptController.text.trim();
+    if (text.isEmpty) return;
+
+    setState(() {
+      _isSummarizing = true;
+    });
+
+    try {
+      final aiService = Provider.of<AiService>(context, listen: false);
+      final summary = await aiService.summarizeAudio(
+        _audioFileName.isNotEmpty ? _audioFileName : 'تۆماری دەنگ',
+        text,
+      );
+      if (mounted) {
+        setState(() {
+          _summarizedNotes = summary;
+          _isSummarizing = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSummarizing = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('هەڵە لە دروستکردنی پوختە: $e')),
+        );
+      }
+    }
+  }
+
   String _formatDuration(int seconds) {
     final m = (seconds ~/ 60).toString().padLeft(2, '0');
     final s = (seconds % 60).toString().padLeft(2, '0');
     return '$m:$s';
   }
 
-  void _copyText() {
-    if (_transcriptController.text.trim().isEmpty) return;
-    Clipboard.setData(ClipboardData(text: _transcriptController.text.trim()));
+  void _copyText([String? customText]) {
+    final textToCopy = customText ?? _transcriptController.text.trim();
+    if (textToCopy.isEmpty) return;
+    Clipboard.setData(ClipboardData(text: textToCopy));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Row(
@@ -230,9 +327,10 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
     );
   }
 
-  void _shareText() {
-    if (_transcriptController.text.trim().isEmpty) return;
-    Share.share(_transcriptController.text.trim(), subject: 'دەقی وەرگێڕدراوی دەنگ - ZankoAI');
+  void _shareText([String? customText]) {
+    final textToShare = customText ?? _transcriptController.text.trim();
+    if (textToShare.isEmpty) return;
+    Share.share(textToShare, subject: 'دەقی وەرگێڕدراوی دەنگ - ZankoAI');
   }
 
   void _clearText() {
@@ -240,6 +338,7 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
       _transcriptController.clear();
       _audioFileName = '';
       _recordDurationSeconds = 0;
+      _summarizedNotes = '';
     });
   }
 
@@ -571,11 +670,87 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                               ),
                             ],
                           ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.maxFinite,
+                            child: ElevatedButton.icon(
+                              onPressed: _isSummarizing ? null : _generateSummary,
+                              icon: _isSummarizing
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                    )
+                                  : const Icon(Icons.auto_awesome_rounded, size: 18),
+                              label: Text(
+                                _isSummarizing ? 'خەریکی پوختەکردنی وانەکەیە...' : lang.translate('audio_summarizer_summary_btn'),
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                backgroundColor: const Color(0xFF7C3AED),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            ),
+                          ),
                         ],
                       ],
                     ),
                   ),
                 ),
+                if (_summarizedNotes.isNotEmpty) ...[
+                  const SizedBox(height: 18),
+                  Card(
+                    elevation: 3,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    color: theme.brightness == Brightness.dark
+                        ? const Color(0xFF1E1B4B)
+                        : const Color(0xFFF5F3FF),
+                    child: Padding(
+                      padding: const EdgeInsets.all(18.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Row(
+                                children: [
+                                  Icon(Icons.auto_awesome_rounded, color: Color(0xFF7C3AED), size: 22),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'پوختەی سەرەکی وانە (AI Summary) 🎙️',
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.copy_rounded, size: 18),
+                                    tooltip: 'لەبەرگرتنەوەی پوختە',
+                                    onPressed: () => _copyText(_summarizedNotes),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.share_rounded, size: 18),
+                                    tooltip: 'هاوبەشکردنی پوختە',
+                                    onPressed: () => _shareText(_summarizedNotes),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const Divider(height: 20),
+                          SelectableText(
+                            _summarizedNotes,
+                            style: const TextStyle(fontSize: 14, height: 1.8),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ],
           ),

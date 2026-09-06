@@ -179,6 +179,24 @@ const main = async () => {
   await import('./security.test.js').catch(async () => {
     await import('./security.test.ts' as any);
   });
+
+  // Run Supabase Storage Security Suite
+  console.log('📦 Launching Supabase Storage Security Suite...\n');
+  await import('./storage.test.js').catch(async () => {
+    await import('./storage.test.ts' as any);
+  });
+
+  // Run Plan Limits and Usage System Suite
+  console.log('💎 Launching Plan Limits & Usage System Suite...\n');
+  await import('./usage_limits.test.js').catch(async () => {
+    await import('./usage_limits.test.ts' as any);
+  });
+
+  // Run MAU Analytics & Supabase Cost Control Suite
+  console.log('📊 Launching MAU Analytics & Cost Control Suite...\n');
+  await import('./mau_analytics.test.js').catch(async () => {
+    await import('./mau_analytics.test.ts' as any);
+  });
 };
 
 main().catch((err) => {

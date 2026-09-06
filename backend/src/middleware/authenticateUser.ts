@@ -6,6 +6,7 @@ import { UnauthorizedError, ForbiddenError } from '../utils/apiError.js';
 import { UserProfile } from '../types/user.types.js';
 import { SecurityLogger } from '../utils/securityLogger.js';
 import { logger } from '../config/logger.js';
+import { ActivityTrackerService } from '../services/activity_tracker.service.js';
 
 export const authenticateUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -138,6 +139,9 @@ export const authenticateUser = async (req: Request, res: Response, next: NextFu
     };
     req.profile = profile;
     req.token = token;
+
+    // Track active presence asynchronously (Deduplicated via Redis, max 1 write/user/day)
+    ActivityTrackerService.trackUser(user.id, profile.role, profile.plan);
 
     next();
   } catch (error) {

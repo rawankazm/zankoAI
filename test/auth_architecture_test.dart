@@ -215,7 +215,7 @@ class _FakeAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<UserModel?> fetchUserProfile(String userId, [String? fallbackEmail]) async {
+  Future<UserModel?> fetchUserProfile(String userId, [String? fallbackEmail, User? providedUser]) async {
     return _testUser;
   }
 

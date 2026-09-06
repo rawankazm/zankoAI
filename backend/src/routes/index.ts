@@ -9,6 +9,8 @@ import { personalRoutes } from './personal.routes.js';
 import { userRoutes } from './user.routes.js';
 import { paymentRoutes } from '../modules/payments/payment.routes.js';
 import { aiRoutes } from '../modules/ai/ai.routes.js';
+import { storageRoutes } from './storage.routes.js';
+import { usageRoutes } from './usage.routes.js';
 
 const apiRouter = Router();
 
@@ -38,4 +40,11 @@ apiRouter.use('/payments', paymentRoutes);
 // 8. AI Services with Server-Enforced Quotas & Rate Limits (/api/ai)
 apiRouter.use('/ai', aiRoutes);
 
+// 9. Secure Supabase Storage (/api/storage)
+apiRouter.use('/storage', storageRoutes);
+
+// 10. Centralized Usage Limits & Quotas (/api/usage)
+apiRouter.use('/usage', usageRoutes);
+
 export { apiRouter };
+

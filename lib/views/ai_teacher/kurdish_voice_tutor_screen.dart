@@ -2,11 +2,15 @@ import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:file_picker/file_picker.dart';
 import '../../services/ai_service.dart';
 import '../../services/document_parser_service.dart';
 import '../../services/kurdish_tts_service.dart';
 import '../../services/language_provider.dart';
 import '../../theme.dart';
+import '../pdf/audio_summarizer_view.dart';
 
 class KurdishVoiceTutorScreen extends StatefulWidget {
   final String? initialFileName;
@@ -228,6 +232,173 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
     }
   }
 
+  Future<void> _showUploadChoiceSheet() async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isDark ? ZankoColors.darkCard : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 50,
+              height: 5,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white24 : Colors.grey[300],
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              'هەڵبژاردنی فایلی وانە 🎙️',
+              style: TextStyle(
+                fontSize: 16.5,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : ZankoColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // 1. Audio recording file
+            ListTile(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              tileColor: ZankoColors.primary.withValues(alpha: 0.1),
+              leading: Icon(Icons.audio_file_rounded, color: ZankoColors.primary, size: 28),
+              title: const Text('بارکردنی فایلی تۆماری دەنگ (Audio)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              subtitle: const Text('فایلی دەنگی مامۆستا (MP3, M4A, WAV...)', style: TextStyle(fontSize: 11.5, color: Colors.grey)),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickAndProcessAudio();
+              },
+            ),
+            const SizedBox(height: 10),
+            // 2. Live Recording
+            ListTile(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              tileColor: Colors.deepPurple.withValues(alpha: 0.1),
+              leading: const Icon(Icons.mic_rounded, color: Colors.deepPurple, size: 28),
+              title: const Text('تۆمارکردنی ڕاستەوخۆی دەنگ (Live Voice)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              subtitle: const Text('تۆمارکردنی وانەی مامۆستا بە مایکرۆفۆن', style: TextStyle(fontSize: 11.5, color: Colors.grey)),
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(context, CupertinoPageRoute(builder: (_) => const AudioSummarizerView()));
+              },
+            ),
+            const SizedBox(height: 10),
+            // 3. Document / PDF
+            ListTile(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              tileColor: ZankoColors.accent.withValues(alpha: 0.1),
+              leading: Icon(Icons.description_rounded, color: ZankoColors.accent, size: 28),
+              title: const Text('مەلزەمەی وانە (PDF, Word, PPTX)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              subtitle: const Text('شیکردنەوەی مەلزەمەی نووسراو بە دەنگی کوردی', style: TextStyle(fontSize: 11.5, color: Colors.grey)),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickAndProcessPdf();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickAndProcessAudio() async {
+    const allowedAudio = ['mp3', 'm4a', 'wav', 'aac', 'ogg', 'opus', 'flac', 'amr', 'wma', '3gp', 'm4b', 'alac'];
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: allowedAudio,
+        withData: true,
+      );
+
+      if (result == null || result.files.isEmpty) return;
+
+      final file = result.files.single;
+      final fileName = file.name;
+      final dotIndex = fileName.lastIndexOf('.');
+      final ext = dotIndex != -1 ? fileName.substring(dotIndex + 1).toLowerCase() : '';
+
+      if (!allowedAudio.contains(ext)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('تکایە تەنها فایلی تۆمارکراوی دەنگ هەڵبژێرە (وەک MP3, M4A, WAV)، نەک PDF یان فایلی تر!'),
+              backgroundColor: Colors.red.shade700,
+            ),
+          );
+        }
+        return;
+      }
+
+      Uint8List? bytes = file.bytes;
+      if (bytes == null && file.path != null) {
+        try {
+          final localFile = File(file.path!);
+          if (await localFile.exists()) {
+            bytes = await localFile.readAsBytes();
+          }
+        } catch (_) {}
+      }
+
+      if (bytes == null || bytes.isEmpty) return;
+
+      setState(() {
+        _isLoading = true;
+        _pdfFileName = fileName;
+      });
+
+      String mime = 'audio/mp4';
+      if (ext == 'wav') {
+        mime = 'audio/wav';
+      } else if (ext == 'mp3') {
+        mime = 'audio/mpeg';
+      } else if (ext == 'aac') {
+        mime = 'audio/aac';
+      } else if (ext == 'ogg' || ext == 'opus') {
+        mime = 'audio/ogg';
+      } else if (ext == 'flac') {
+        mime = 'audio/flac';
+      }
+
+      if (!mounted) return;
+      final aiService = Provider.of<AiService>(context, listen: false);
+      final transcript = await aiService.transcribeAudio(
+        bytes,
+        fileName,
+        mimeType: mime,
+      );
+
+      if (transcript.trim().isEmpty) {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('نەتوانرا دەنگی ئەم فایلە بناسرێتەوە، تکایە دڵنیابە لە ڕوونی دەنگەکە.')),
+          );
+        }
+        return;
+      }
+
+      _lastContent = transcript;
+      if (mounted) {
+        setState(() => _isLoading = false);
+        _promptLanguageAndGenerate(fileName, transcript);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('هەڵە لە خوێندنەوەی دەنگ: $e')),
+        );
+      }
+    }
+  }
+
   Future<void> _pickAndProcessPdf() async {
     final parsed = await DocumentParserService.pickAndExtractDocument();
 
@@ -393,7 +564,7 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
               children: [
                 // ── Upload Header Card ──────────────────────────────────────
                 GestureDetector(
-                  onTap: _pickAndProcessPdf,
+                  onTap: _showUploadChoiceSheet,
                   child: Container(
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
@@ -419,7 +590,7 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                             color: Colors.white.withValues(alpha: 0.2),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(CupertinoIcons.doc_text_fill, color: Colors.white, size: 26),
+                          child: const Icon(CupertinoIcons.waveform_circle_fill, color: Colors.white, size: 26),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
@@ -427,7 +598,7 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                _pdfFileName ?? 'هەڵبژاردنی مەلزەمەی ئینگلیزی (PDF)',
+                                _pdfFileName ?? 'هەڵبژاردنی فایلی تۆماری دەنگ یان مەلزەمە',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -438,7 +609,7 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                               ),
                               const SizedBox(height: 4),
                               const Text(
-                                'کلیک بکە بۆ شیکردنەوەی دەنگی بە زمانی کوردی 🎙️',
+                                'دەنگ یان PDF هەڵبژێرە بۆ شیکردنەوەی دەنگی 🎙️',
                                 style: TextStyle(color: Colors.white70, fontSize: 12),
                               ),
                             ],

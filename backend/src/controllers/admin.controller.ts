@@ -27,4 +27,24 @@ export class AdminController {
     const stats = await AdminService.getSystemStats();
     return ResponseFormatter.success(res, stats);
   }
+
+  static async listPlanLimits(req: Request, res: Response): Promise<Response> {
+    const { UsageService } = await import('../services/usage.service.js');
+    const limits = await UsageService.listPlanLimits();
+    return ResponseFormatter.success(res, limits, 'Plan limits retrieved successfully');
+  }
+
+  static async updatePlanLimit(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+    const { UsageService } = await import('../services/usage.service.js');
+    const updated = await UsageService.updatePlanLimit(id, req.body);
+    return ResponseFormatter.success(res, updated, 'Plan limit updated successfully');
+  }
+
+  static async createPlanLimit(req: Request, res: Response): Promise<Response> {
+    const { UsageService } = await import('../services/usage.service.js');
+    const created = await UsageService.createPlanLimit(req.body);
+    return ResponseFormatter.created(res, created, 'Plan limit created successfully');
+  }
 }
+

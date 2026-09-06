@@ -835,13 +835,14 @@ class LanguageProvider extends ChangeNotifier {
     'mind_map_empty': {'ku': 'نەخشەیەکی بینراو دروست بکە بۆ تێگەیشتن لە چەمکەکان.', 'badini': 'نەخشەیەکا دیتنێ چێبکە بۆ تێگەهشتنا چەمکان.', 'ar': 'أنشئ خريطة بصرية لربط موضوعات دراستك.', 'en': 'Generate a visual map to connect study topics.'},
     'mind_map_no_desc': {'ku': 'هیچ ڕوونکردنەوەیەک نییە.', 'badini': 'چ ڕوونکردن نینە.', 'ar': 'لا يوجد وصف.', 'en': 'No description available.'},
 
-    // Audio to Text (گۆڕینی دەنگ بۆ نووسین)
-    'audio_summarizer_title': {'ku': 'گۆڕینی دەنگ بۆ نووسین', 'badini': 'گوهۆڕینا دەنگی بۆ دەقی', 'ar': 'تحويل الصوت إلى نص', 'en': 'Audio to Text'},
-    'audio_summarizer_info': {'ku': 'دەنگەکەت تۆمار بکە یان فایلێکی دەنگی باربکە تاوەکو ڕاستەوخۆ دەنگەکە بکرێتە دەق و نووسین.', 'badini': 'دەنگێ خۆ تۆماربکە یان فایلەکێ دەنگی باربکە دا ب بیتە دەق.', 'ar': 'سجل صوتك أو ارفع ملفاً صوتياً لتحويله مباشرة إلى نص مكتوب.', 'en': 'Record your voice or upload an audio file to convert it directly to text.'},
-    'audio_summarizer_upload_btn': {'ku': 'بارکردنی فایلی دەنگی', 'badini': 'بارکرنا فایلا دەنگی', 'ar': 'تحميل ملف صوتي', 'en': 'Upload Audio File'},
+    // Audio to Text & Summarizer (تۆمارکردنی دەنگ و کورتکردنەوە)
+    'audio_summarizer_title': {'ku': 'تۆمارکردنی دەنگ و کورتکردنەوە', 'badini': 'تۆمارکرنا دەنگی و کورتکرن', 'ar': 'تسجيل الصوت وتلخيصه', 'en': 'Voice Record & Summarize'},
+    'audio_summarizer_info': {'ku': 'دەنگی وانەکەت تۆمار بکە یان فایلی تۆمارکراوی دەنگ (Audio) باربکە تاوەکو AI بیکاتە نووسین و پوختەی سەرەکی وانە.', 'badini': 'دەنگێ خۆ تۆماربکە یان فایلا دەنگی باربکە دا ب بیتە دەق و کورتکرنا وانێ.', 'ar': 'سجل صوتك أو ارفع تسجيلاً صوتياً لتحويله إلى نص وتلخيصه بالذكاء الاصطناعي.', 'en': 'Record lecture voice or upload an audio recording file to convert it to text and notes.'},
+    'audio_summarizer_upload_btn': {'ku': 'بارکردنی فایلی تۆماری دەنگ (MP3, M4A, WAV...)', 'badini': 'بارکرنا فایلا دەنگی (MP3, M4A, WAV...)', 'ar': 'تحميل تسجيل صوتي (MP3, M4A, WAV...)', 'en': 'Upload Voice Recording (MP3, M4A, WAV...)'},
     'audio_summarizer_result_label': {'ku': 'دەقی وەرگێڕدراوی دەنگەکە', 'badini': 'دەقێ دەنگی', 'ar': 'النص المفرغ من الصوت', 'en': 'Transcribed Text'},
     'audio_summarizer_loading': {'ku': 'خەریکی گۆڕینی دەنگەکەیە بۆ نووسین...', 'badini': 'خەریکی گوهۆڕینا دەنگی یە بۆ دەقی...', 'ar': 'جاري تحويل الصوت إلى نص مكتوب...', 'en': 'Converting audio to text...'},
     'audio_summarizer_tap_record': {'ku': 'کلیک بکە بۆ دەستپێکردنی تۆمارکردن', 'badini': 'کلیت بکە بۆ دەستپێکرنا تۆمارکرنێ', 'ar': 'اضغط لبدء التسجيل', 'en': 'Tap to start recording'},
+    'audio_summarizer_summary_btn': {'ku': 'پوختەکردنی وانە بە ژیری دەستکرد 🧠', 'badini': 'کورتکرنا وانێ ب ژیرییا دەستکرد 🧠', 'ar': 'تلخيص المحاضرة بالذكاء الاصطناعي 🧠', 'en': 'Generate AI Lecture Summary 🧠'},
 
     // Stats Screen
     'stats_title': {'ku': 'ئاماری خوێندن و دەستکەوتەکانم', 'badini': 'ئامارێن خوێندنێ و دەستکەفتێن من', 'ar': 'إحصائيات الدراسة والإنجازات', 'en': 'Study Statistics & Achievements'},

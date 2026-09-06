@@ -10,7 +10,7 @@ import '../../services/score_service.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
 import '../ai_teacher/ai_teacher_chat_screen.dart';
-import '../ai_teacher/kurdish_voice_tutor_screen.dart';
+import '../pdf/audio_summarizer_view.dart';
 import '../academic/seminar_thesis_assistant_screen.dart';
 import '../academic/academic_dictionary_screen.dart';
 import '../flashcards/flashcards_screen.dart';
@@ -260,7 +260,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                               if (action == 'Voice Tutor') {
                                 Navigator.push(
                                   context,
-                                  CupertinoPageRoute(builder: (_) => const KurdishVoiceTutorScreen()),
+                                  CupertinoPageRoute(builder: (_) => const AudioSummarizerView()),
                                 );
                               } else if (action == 'PDF Chat') {
                                 Navigator.push(
@@ -458,7 +458,7 @@ class _HomeQuickToolsSection extends StatelessWidget {
         'subtitle': lang.translate('voice_tutor_sub'),
         'icon': HugeIcons.strokeRoundedMic01,
         'gradient': [const Color(0xFF035EC2), const Color(0xFF1E88E5)],
-        'onTap': () => Navigator.push(context, CupertinoPageRoute(builder: (_) => const KurdishVoiceTutorScreen())),
+        'onTap': () => Navigator.push(context, CupertinoPageRoute(builder: (_) => const AudioSummarizerView())),
       },
       {
         'title': lang.translate('pdf_chat'),
