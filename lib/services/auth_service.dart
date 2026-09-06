@@ -31,6 +31,14 @@ abstract class AuthService extends ChangeNotifier {
   Future<void> loginAsGuest();
   Future<void> logout();
   Future<void> reloadUser();
+  Future<bool> updateProfile({
+    required String fullName,
+    String? cityName,
+    String? universityName,
+    String? departmentName,
+    String? bio,
+    String? avatarUrl,
+  });
   Future<void> deleteAccount();
   Future<bool> refreshSession();
 }

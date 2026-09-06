@@ -371,11 +371,17 @@ class SupabaseAuthRepository implements AuthRepository {
         return UserModel.fromMap(res);
       }
 
-      // Fallback user model
-      final email = fallbackEmail ?? _supabase.auth.currentUser?.email ?? 'user@zanko.edu';
+      // Fallback user model - check auth metadata before falling back to email prefix
+      final authUser = _supabase.auth.currentUser;
+      final email = fallbackEmail ?? authUser?.email ?? 'user@zanko.edu';
+      final metaName = authUser?.userMetadata?['full_name']?.toString() ??
+          authUser?.userMetadata?['name']?.toString();
+      final effectiveName = (metaName != null && metaName.trim().isNotEmpty)
+          ? metaName.trim()
+          : email.split('@').first;
       return UserModel(
         id: userId,
-        name: email.split('@').first,
+        name: effectiveName,
         email: email,
         role: UserRole.student,
         isVip: false,

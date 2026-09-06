@@ -621,6 +621,8 @@ class ProfileScreen extends StatelessWidget {
                         onPressed: isSaving ? null : () async {
                           final newName = nameCtrl.text.trim();
                           final newCity = cityCtrl.text.trim();
+                          final newUni = uniCtrl.text.trim();
+                          final newDept = deptCtrl.text.trim();
 
                           if (newName.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -632,15 +634,13 @@ class ProfileScreen extends StatelessWidget {
                           setModalState(() => isSaving = true);
 
                           try {
-                            if (user != null && user.id != null) {
-                              await Supabase.instance.client.from('profiles').update({
-                                'full_name': newName,
-                                'city_name': newCity,
-                              }).eq('id', user.id);
-                              if (context.mounted) {
-                                await Provider.of<AuthService>(context, listen: false).reloadUser();
-                              }
-                            }
+                            final authService = Provider.of<AuthService>(context, listen: false);
+                            await authService.updateProfile(
+                              fullName: newName,
+                              cityName: newCity,
+                              universityName: newUni,
+                              departmentName: newDept,
+                            );
 
                             if (context.mounted) {
                               Navigator.pop(context);
@@ -652,7 +652,16 @@ class ProfileScreen extends StatelessWidget {
                               );
                             }
                           } catch (e) {
+                            debugPrint('Error saving profile: $e');
                             setModalState(() => isSaving = false);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('هەڵە لە پاشەکەوتکردن: ${e.toString().replaceAll('Exception: ', '')}'),
+                                  backgroundColor: Colors.redAccent,
+                                ),
+                              );
+                            }
                           }
                         },
                         style: ElevatedButton.styleFrom(
@@ -1436,18 +1445,16 @@ class ProfileScreen extends StatelessWidget {
                           setModalState(() => isSaving = true);
 
                           try {
-                            if (user != null && user.id != null) {
-                              await Supabase.instance.client.from('profiles').update({
-                                'avatar_url': selectedAvatar,
-                              }).eq('id', user.id);
-                              try {
-                                final prefs = await SharedPreferences.getInstance();
-                                await prefs.setString('local_avatar_path', selectedAvatar);
-                              } catch (_) {}
-                              if (context.mounted) {
-                                await Provider.of<AuthService>(context, listen: false).reloadUser();
-                              }
-                            }
+                            final authService = Provider.of<AuthService>(context, listen: false);
+                            await authService.updateProfile(
+                              fullName: user?.name ?? 'Student',
+                              avatarUrl: selectedAvatar,
+                            );
+
+                            try {
+                              final prefs = await SharedPreferences.getInstance();
+                              await prefs.setString('local_avatar_path', selectedAvatar);
+                            } catch (_) {}
 
                             if (context.mounted) {
                               Navigator.pop(context);
@@ -1459,7 +1466,16 @@ class ProfileScreen extends StatelessWidget {
                               );
                             }
                           } catch (e) {
+                            debugPrint('Error saving avatar: $e');
                             setModalState(() => isSaving = false);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('هەڵە لە نوێکردنەوەی وێنە: ${e.toString().replaceAll('Exception: ', '')}'),
+                                  backgroundColor: Colors.redAccent,
+                                ),
+                              );
+                            }
                           }
                         },
                         style: ElevatedButton.styleFrom(
@@ -1981,7 +1997,7 @@ class ProfileScreen extends StatelessWidget {
                           // Card bottom bar with actions
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 10),
+                                horizontal: 10, vertical: 8),
                             decoration: BoxDecoration(
                               color: Colors.black.withValues(alpha: 0.16),
                               borderRadius: BorderRadius.circular(16),
@@ -2053,14 +2069,18 @@ class ProfileScreen extends StatelessWidget {
                                             mainAxisAlignment: MainAxisAlignment.center,
                                             children: [
                                               const Icon(Icons.qr_code_rounded,
-                                                  size: 16, color: Colors.white),
-                                              const SizedBox(width: 6),
-                                              Text(
-                                                t('digital_id'),
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: Colors.white,
+                                                  size: 15, color: Colors.white),
+                                              const SizedBox(width: 4),
+                                              Flexible(
+                                                child: Text(
+                                                  t('digital_id'),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                    fontSize: 11.5,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: Colors.white,
+                                                  ),
                                                 ),
                                               ),
                                             ],
@@ -2084,14 +2104,18 @@ class ProfileScreen extends StatelessWidget {
                                             mainAxisAlignment: MainAxisAlignment.center,
                                             children: [
                                               const Icon(Icons.edit_outlined,
-                                                  size: 15, color: Colors.white),
-                                              const SizedBox(width: 6),
-                                              Text(
-                                                t('edit_profile'),
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: Colors.white,
+                                                  size: 14, color: Colors.white),
+                                              const SizedBox(width: 4),
+                                              Flexible(
+                                                child: Text(
+                                                  t('edit_profile'),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                    fontSize: 11.5,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: Colors.white,
+                                                  ),
                                                 ),
                                               ),
                                             ],
