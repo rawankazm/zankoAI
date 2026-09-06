@@ -3,6 +3,48 @@ import { env } from './env.js';
 
 const { combine, timestamp, printf, colorize, json, errors } = winston.format;
 
+// Sensitive keys pattern to redact from all log outputs
+const SENSITIVE_KEY_REGEX = /^(password|pass|token|access_token|refresh_token|authorization|auth_token|cookie|secret|jwt_secret|api_key|apikey|gemini_api_key|openai_api_key|anthropic_api_key|service_role_key|anon_key|client_secret|cvv|card_number|credit_card)$/i;
+
+// Recursively sanitize objects and arrays
+export function redactSensitiveData(obj: any, depth = 0): any {
+  if (depth > 6 || obj === null || obj === undefined) return obj;
+
+  if (typeof obj === 'string') {
+    // Redact Bearer tokens in raw strings
+    return obj
+      .replace(/Bearer\s+[A-Za-z0-9-_=.]+/gi, 'Bearer [REDACTED]')
+      .replace(/(AIzaSy[A-Za-z0-9-_]{20,})/gi, '[REDACTED_API_KEY]');
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map((item) => redactSensitiveData(item, depth + 1));
+  }
+
+  if (typeof obj === 'object') {
+    const redacted: Record<string, any> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (SENSITIVE_KEY_REGEX.test(key)) {
+        redacted[key] = '[REDACTED]';
+      } else if (typeof value === 'object' && value !== null) {
+        redacted[key] = redactSensitiveData(value, depth + 1);
+      } else if (typeof value === 'string') {
+        redacted[key] = redactSensitiveData(value, depth + 1);
+      } else {
+        redacted[key] = value;
+      }
+    }
+    return redacted;
+  }
+
+  return obj;
+}
+
+// Winston format for redaction
+const redactFormat = winston.format((info) => {
+  return redactSensitiveData(info) as winston.Logform.TransformableInfo;
+});
+
 const devFormat = printf(({ level, message, timestamp, stack, ...meta }) => {
   const metaString = Object.keys(meta).length ? JSON.stringify(meta, null, 2) : '';
   return `[${timestamp}] ${level}: ${stack || message} ${metaString}`;
@@ -11,6 +53,7 @@ const devFormat = printf(({ level, message, timestamp, stack, ...meta }) => {
 export const logger = winston.createLogger({
   level: env.NODE_ENV === 'production' ? 'info' : 'debug',
   format: combine(
+    redactFormat(),
     timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     errors({ stack: true }),
     env.NODE_ENV === 'production' ? json() : combine(colorize(), devFormat)

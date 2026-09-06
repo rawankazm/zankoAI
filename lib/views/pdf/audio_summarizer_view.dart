@@ -243,74 +243,12 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
     });
   }
 
-  void _showApiKeyDialog(BuildContext context) {
-    final aiService = Provider.of<AiService>(context, listen: false);
-    final textController = TextEditingController(text: aiService.apiKey ?? '');
-
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Row(
-            children: [
-              Icon(Icons.vpn_key_rounded, color: Colors.purple),
-              SizedBox(width: 8),
-              Text('کلیلی Gemini API', style: TextStyle(fontSize: 16)),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'کلیلی فەرمی Gemini API لێرە دابنێ بۆ وەرگێڕانی خێرای دەنگ بۆ نووسین بە Gemini 3.7 Flash:',
-                style: TextStyle(fontSize: 12.5),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: textController,
-                decoration: InputDecoration(
-                  hintText: 'AQ.Ab8... یان AIzaSy...',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  prefixIcon: const Icon(Icons.key),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('داخستن'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final newKey = textController.text.trim();
-                aiService.apiKey = newKey;
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('کلیلی API بە سەرکەوتوویی نوێکرایەوە! 🎉')),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('پاشەکەوتکردن'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context);
     String t(String key) => lang.translate(key);
     final theme = Theme.of(context);
     final langProvider = Provider.of<LanguageProvider>(context);
-    final aiService = Provider.of<AiService>(context);
 
     final String title = t('audio_summarizer_title');
     final String infoText = t('audio_summarizer_info');
@@ -326,16 +264,6 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(title),
-          actions: [
-            IconButton(
-              icon: Icon(
-                aiService.hasRealApiKey ? Icons.vpn_key_rounded : Icons.key_off_rounded,
-                color: aiService.hasRealApiKey ? Colors.green : Colors.amber,
-              ),
-              tooltip: 'Gemini API Key',
-              onPressed: () => _showApiKeyDialog(context),
-            ),
-          ],
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),

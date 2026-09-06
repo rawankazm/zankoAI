@@ -56,4 +56,39 @@ export class ProfileRepository {
     if (error || !data) return { users: [], total: 0 };
     return { users: data as UserProfile[], total: count || 0 };
   }
+
+  static async listWithQuery(query: any): Promise<{ items: UserProfile[]; total: number }> {
+    let req = supabaseAdmin.from('profiles').select('*', { count: 'exact' });
+
+    if (query.search) {
+      req = req.or(`full_name.ilike.%${query.search}%,email.ilike.%${query.search}%`);
+    }
+
+    if (query.filters?.role) {
+      req = req.eq('role', query.filters.role);
+    }
+    if (query.filters?.status) {
+      req = req.eq('status', query.filters.status);
+    }
+    if (query.filters?.university_id) {
+      req = req.eq('university_id', query.filters.university_id);
+    }
+
+    req = req
+      .order(query.sortField, { ascending: query.sortAsc })
+      .range(query.offset, query.offset + query.limit - 1);
+
+    const { data, count, error } = await req;
+    if (error) throw error;
+    return { items: (data || []) as UserProfile[], total: count || 0 };
+  }
+
+  static async delete(id: string): Promise<boolean> {
+    const { error } = await supabaseAdmin
+      .from('profiles')
+      .update({ status: 'deleted', updated_at: new Date().toISOString() })
+      .eq('id', id);
+
+    return !error;
+  }
 }

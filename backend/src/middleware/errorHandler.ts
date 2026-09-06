@@ -10,34 +10,74 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ): void => {
+  const isProduction = env.NODE_ENV === 'production';
+
+  // 1. Known Operational AppErrors
   if (err instanceof AppError) {
     if (err.statusCode >= 500) {
       logger.error(`[AppError ${err.statusCode}] ${err.message}`, {
         url: req.originalUrl,
         method: req.method,
+        code: err.code,
         stack: err.stack,
       });
-    } else {
-      logger.warn(`[AppError ${err.statusCode}] ${err.message}`, {
-        url: req.originalUrl,
-        method: req.method,
-        details: err.details,
-      });
+
+      // In production, mask internal 500 messages
+      const clientMessage = isProduction ? 'An unexpected server error occurred' : err.message;
+      const clientDetails = isProduction ? undefined : err.details;
+      ResponseFormatter.error(res, clientMessage, err.statusCode, err.code, clientDetails);
+      return;
     }
+
+    // 4xx Client Errors (Validation, NotFound, Unauthorized, Forbidden, etc.)
+    logger.warn(`[ClientError ${err.statusCode}] ${err.message}`, {
+      url: req.originalUrl,
+      method: req.method,
+      code: err.code,
+      details: err.details,
+    });
 
     ResponseFormatter.error(res, err.message, err.statusCode, err.code, err.details);
     return;
   }
 
-  // Handle unexpected system errors
-  logger.error(`[UnhandledError] ${err.message}`, {
+  // 2. Syntax / JSON Parsing Errors from Express body-parser
+  if (err.name === 'SyntaxError' && 'body' in err) {
+    logger.warn(`[MalformedJson] Malformed JSON payload received on ${req.method} ${req.originalUrl}`);
+    ResponseFormatter.error(res, 'Malformed JSON payload in request body', 400, 'BAD_REQUEST');
+    return;
+  }
+
+  // 3. Payload Too Large Error (413)
+  if ((err as any).type === 'entity.too.large' || (err as any).status === 413) {
+    logger.warn(`[PayloadTooLarge] Request entity exceeded size limit on ${req.method} ${req.originalUrl}`);
+    ResponseFormatter.error(
+      res,
+      'Request payload exceeds maximum allowed size (2MB limit)',
+      413,
+      'PAYLOAD_TOO_LARGE'
+    );
+    return;
+  }
+
+  // 4. CORS Policy Errors
+  if (err.message && err.message.startsWith('CORS policy violation')) {
+    logger.warn(`[CorsBlocked] ${err.message}`);
+    ResponseFormatter.error(res, err.message, 403, 'CORS_FORBIDDEN');
+    return;
+  }
+
+  // 5. Unexpected Internal System Errors (Never leak internal details or stacks in production)
+  logger.error(`[UnhandledSystemError] ${err.message}`, {
     url: req.originalUrl,
     method: req.method,
     stack: err.stack,
   });
 
-  const message = env.NODE_ENV === 'production' ? 'Internal server error' : err.message;
-  const details = env.NODE_ENV === 'production' ? undefined : err.stack;
+  const message = isProduction ? 'Internal server error' : err.message;
+  const details = isProduction ? undefined : { stack: err.stack };
 
   ResponseFormatter.error(res, message, 500, 'INTERNAL_SERVER_ERROR', details);
 };
+
+export default errorHandler;

@@ -2,33 +2,69 @@ import { Request, Response, NextFunction } from 'express';
 import { redis } from '../config/redis.js';
 import { env } from '../config/env.js';
 import { RateLimitError } from '../utils/apiError.js';
+import { SecurityLogger } from '../utils/securityLogger.js';
 import { logger } from '../config/logger.js';
 
-// Fallback in-memory map if Redis is not yet connected
+// Fallback in-memory map if Redis is not reachable
 const inMemoryStore = new Map<string, { count: number; resetTime: number }>();
 
-export const rateLimiter = (
-  windowMs = env.RATE_LIMIT_WINDOW_MS,
-  maxRequests = env.RATE_LIMIT_MAX_REQUESTS
-) => {
+export interface RateLimiterOptions {
+  windowMs?: number;
+  maxRequests?: number;
+  keyPrefix?: string;
+  skipFailedRequests?: boolean;
+}
+
+/**
+ * General Sliding Window Rate Limiter
+ */
+export const rateLimiter = (options?: RateLimiterOptions | number, maxReqs?: number) => {
+  let windowMs = env.RATE_LIMIT_WINDOW_MS;
+  let maxRequests = env.RATE_LIMIT_MAX_REQUESTS;
+  let keyPrefix = 'ratelimit:global';
+
+  if (typeof options === 'number') {
+    windowMs = options;
+    if (maxReqs) maxRequests = maxReqs;
+  } else if (options) {
+    if (options.windowMs) windowMs = options.windowMs;
+    if (options.maxRequests) maxRequests = options.maxRequests;
+    if (options.keyPrefix) keyPrefix = options.keyPrefix;
+  }
+
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     // Unique identifier: user ID if authenticated, else client IP
-    const identifier = req.user?.id || req.ip || req.socket.remoteAddress || 'anonymous';
-    const key = `ratelimit:${identifier}`;
+    const clientIp =
+      (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+      req.socket.remoteAddress ||
+      req.ip ||
+      'anonymous';
+    const identifier = req.user?.id ? `user:${req.user.id}` : `ip:${clientIp}`;
+    const key = `${keyPrefix}:${identifier}`;
 
     try {
-      // Attempt Redis rate limit
       const current = await redis.incr(key);
       if (current === 1) {
         await redis.pexpire(key, windowMs);
       }
 
       const ttl = await redis.pttl(key);
+      const remaining = Math.max(0, maxRequests - current);
+      const resetTime = Date.now() + Math.max(0, ttl);
+
       res.setHeader('X-RateLimit-Limit', maxRequests.toString());
-      res.setHeader('X-RateLimit-Remaining', Math.max(0, maxRequests - current).toString());
-      res.setHeader('X-RateLimit-Reset', (Date.now() + ttl).toString());
+      res.setHeader('X-RateLimit-Remaining', remaining.toString());
+      res.setHeader('X-RateLimit-Reset', resetTime.toString());
 
       if (current > maxRequests) {
+        res.setHeader('Retry-After', Math.ceil(Math.max(1, ttl) / 1000).toString());
+
+        SecurityLogger.fromRequest(req, 'RATE_LIMIT_EXCEEDED', 'WARN', 'BLOCKED', {
+          keyPrefix,
+          maxRequests,
+          currentRequests: current,
+        });
+
         throw new RateLimitError();
       }
 
@@ -38,17 +74,23 @@ export const rateLimiter = (
         return next(error);
       }
 
-      // Memory fallback if Redis operation failed
+      // In-Memory Fallback if Redis is unavailable
       const now = Date.now();
-      const record = inMemoryStore.get(identifier);
+      const record = inMemoryStore.get(key);
 
       if (!record || now > record.resetTime) {
-        inMemoryStore.set(identifier, { count: 1, resetTime: now + windowMs });
+        inMemoryStore.set(key, { count: 1, resetTime: now + windowMs });
         return next();
       }
 
       record.count += 1;
+      const remaining = Math.max(0, maxRequests - record.count);
+      res.setHeader('X-RateLimit-Limit', maxRequests.toString());
+      res.setHeader('X-RateLimit-Remaining', remaining.toString());
+      res.setHeader('X-RateLimit-Reset', record.resetTime.toString());
+
       if (record.count > maxRequests) {
+        res.setHeader('Retry-After', Math.ceil((record.resetTime - now) / 1000).toString());
         return next(new RateLimitError());
       }
 
@@ -56,3 +98,67 @@ export const rateLimiter = (
     }
   };
 };
+
+/**
+ * Dedicated Brute-Force Protection Limiter for Authentication and Sensitive Actions
+ */
+export const bruteForceLimiter = (options: {
+  windowMs?: number;
+  maxAttempts?: number;
+  keyPrefix?: string;
+} = {}) => {
+  const windowMs = options.windowMs || 15 * 60 * 1000; // 15 minutes default
+  const maxAttempts = options.maxAttempts || 5;       // 5 attempts default
+  const keyPrefix = options.keyPrefix || 'bruteforce:auth';
+
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const clientIp =
+      (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+      req.socket.remoteAddress ||
+      req.ip ||
+      'anonymous';
+
+    // Account specific identifier if email / identifier provided in body
+    const targetAccount = typeof req.body?.email === 'string'
+      ? req.body.email.trim().toLowerCase()
+      : 'global';
+
+    const key = `${keyPrefix}:${clientIp}:${targetAccount}`;
+
+    try {
+      const attempts = await redis.incr(key);
+      if (attempts === 1) {
+        await redis.pexpire(key, windowMs);
+      }
+
+      const ttl = await redis.pttl(key);
+
+      if (attempts > maxAttempts) {
+        const retrySeconds = Math.ceil(Math.max(1, ttl) / 1000);
+        res.setHeader('Retry-After', retrySeconds.toString());
+
+        SecurityLogger.fromRequest(req, 'BRUTE_FORCE_BLOCKED', 'CRITICAL', 'BLOCKED', {
+          targetAccount,
+          clientIp,
+          attempts,
+          lockoutSeconds: retrySeconds,
+        });
+
+        return next(
+          new RateLimitError(
+            `Too many failed attempts. Account or IP temporarily locked. Please try again in ${retrySeconds} seconds.`
+          )
+        );
+      }
+
+      next();
+    } catch (err: any) {
+      if (err instanceof RateLimitError) return next(err);
+      logger.warn('Brute force limiter Redis fallback:', err.message);
+      next();
+    }
+  };
+};
+
+// Backwards compatibility alias
+export default rateLimiter;

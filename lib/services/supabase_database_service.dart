@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/note_model.dart';
 import '../models/schedule_model.dart';
@@ -60,10 +62,64 @@ class SupabaseDatabaseService extends ChangeNotifier implements DatabaseService 
 
   SupabaseDatabaseService() {
     loadData();
+    _listenToAuthChanges();
+  }
+
+  void _listenToAuthChanges() {
+    _supabase.auth.onAuthStateChange.listen((data) {
+      final event = data.event;
+      if (event == AuthChangeEvent.signedIn || event == AuthChangeEvent.tokenRefreshed) {
+        loadData();
+      } else if (event == AuthChangeEvent.signedOut) {
+        _notes.clear();
+        _schedule.clear();
+        _quizzes.clear();
+        _flashcards.clear();
+        _reminders.clear();
+        _completedPomodoros = 0;
+        _quizzesTaken = 0;
+        _flashcardsFlipped = 0;
+        notifyListeners();
+      }
+    });
+  }
+
+  static const String _flashcardsCacheKey = 'zanko_cached_flashcards';
+
+  Future<void> _saveFlashcardsToLocal() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final data = _flashcards.map((c) => c.toMap()).toList();
+      await prefs.setString(_flashcardsCacheKey, jsonEncode(data));
+    } catch (e) {
+      debugPrint('Error saving flashcards to local cache: $e');
+    }
+  }
+
+  Future<void> _loadFlashcardsFromLocal() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_flashcardsCacheKey);
+      if (raw != null && raw.isNotEmpty) {
+        final List<dynamic> decoded = jsonDecode(raw);
+        _flashcards.clear();
+        for (final item in decoded) {
+          if (item is Map<String, dynamic>) {
+            _flashcards.add(FlashcardModel.fromMap(item));
+          }
+        }
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error loading flashcards from local cache: $e');
+    }
   }
 
   @override
   Future<void> loadData() async {
+    // Always load cached flashcards first so user immediately sees cards
+    await _loadFlashcardsFromLocal();
+
     final uid = _userId;
     if (uid == null) return;
 
@@ -109,21 +165,32 @@ class SupabaseDatabaseService extends ChangeNotifier implements DatabaseService 
         );
       }
 
-      // 3. Fetch Flashcards
-      final flashData = await _supabase
-          .from('flashcards')
-          .select()
-          .order('created_at', ascending: false);
+      // 3. Fetch Flashcards (Supports front_text / front, back_text / back)
+      try {
+        final flashData = await _supabase
+            .from('flashcards')
+            .select()
+            .order('created_at', ascending: false);
 
-      _flashcards.clear();
-      for (final item in flashData) {
-        _flashcards.add(
-          FlashcardModel(
-            id: item['id'].toString(),
-            front: item['front'] ?? '',
-            back: item['back'] ?? '',
-          ),
-        );
+        if (flashData.isNotEmpty) {
+          _flashcards.clear();
+          for (final item in flashData) {
+            final f = (item['front_text'] ?? item['front'] ?? '').toString();
+            final b = (item['back_text'] ?? item['back'] ?? '').toString();
+            if (f.isNotEmpty || b.isNotEmpty) {
+              _flashcards.add(
+                FlashcardModel(
+                  id: item['id'].toString(),
+                  front: f,
+                  back: b,
+                ),
+              );
+            }
+          }
+          await _saveFlashcardsToLocal();
+        }
+      } catch (e) {
+        debugPrint('Notice loading remote flashcards: $e');
       }
 
       notifyListeners();
@@ -200,15 +267,39 @@ class SupabaseDatabaseService extends ChangeNotifier implements DatabaseService 
 
   @override
   Future<void> addFlashcard(FlashcardModel card) async {
-    _flashcards.add(card);
+    final uid = _userId;
+    _flashcards.insert(0, card);
     _flashcardsFlipped++;
     notifyListeners();
+    _saveFlashcardsToLocal();
+
+    if (uid != null) {
+      _supabase.from('flashcards').insert({
+        'creator_id': uid,
+        'front_text': card.front,
+        'back_text': card.back,
+        'deck_name': 'General',
+        'is_public': true,
+      }).catchError((e) {
+        debugPrint('Background Supabase insert flashcard error: $e');
+        return null;
+      });
+    }
   }
 
   @override
   Future<void> clearFlashcards() async {
+    final uid = _userId;
     _flashcards.clear();
     notifyListeners();
+    _saveFlashcardsToLocal();
+
+    if (uid != null) {
+      _supabase.from('flashcards').delete().eq('creator_id', uid).catchError((e) {
+        debugPrint('Background Supabase clear flashcards error: $e');
+        return null;
+      });
+    }
   }
 
   @override

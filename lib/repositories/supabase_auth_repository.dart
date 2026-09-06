@@ -44,7 +44,7 @@ class SupabaseAuthRepository implements AuthRepository {
         case AuthChangeEvent.tokenRefreshed:
         case AuthChangeEvent.userUpdated:
           if (session != null) {
-            final profile = await fetchUserProfile(session.user.id, session.user.email);
+            final profile = await fetchUserProfile(session.user.id, session.user.email, session.user);
             if (profile != null) {
               _authStateController.add(Authenticated(user: profile, session: session));
             }
@@ -64,7 +64,7 @@ class SupabaseAuthRepository implements AuthRepository {
         case AuthChangeEvent.mfaChallengeVerified:
         case AuthChangeEvent.initialSession:
           if (session != null) {
-            final profile = await fetchUserProfile(session.user.id, session.user.email);
+            final profile = await fetchUserProfile(session.user.id, session.user.email, session.user);
             if (profile != null) {
               _authStateController.add(Authenticated(user: profile, session: session));
             }
@@ -179,9 +179,14 @@ class SupabaseAuthRepository implements AuthRepository {
 
       final user = response.user;
       if (user != null) {
-        final displayName = googleUser.displayName ?? user.userMetadata?['full_name'];
+        final existingMetaName = user.userMetadata?['full_name']?.toString() ??
+            user.userMetadata?['name']?.toString();
         final avatarUrl = googleUser.photoUrl ?? user.userMetadata?['avatar_url'];
-        if (displayName != null && displayName.isNotEmpty) {
+        // Only adopt Google display name if user has never set a custom name
+        if ((existingMetaName == null || existingMetaName.trim().isEmpty) &&
+            googleUser.displayName != null &&
+            googleUser.displayName!.trim().isNotEmpty) {
+          final displayName = googleUser.displayName!.trim();
           try {
             await _supabase.from('profiles').update({
               'full_name': displayName,
@@ -254,14 +259,18 @@ class SupabaseAuthRepository implements AuthRepository {
 
       final user = response.user;
       if (user != null && effectiveName.isNotEmpty && effectiveName != 'Apple User') {
-        try {
-          await _supabase.from('profiles').update({
-            'full_name': effectiveName,
-          }).eq('id', user.id);
-          await _supabase.auth.updateUser(
-            UserAttributes(data: {'full_name': effectiveName}),
-          );
-        } catch (_) {}
+        final existingMetaName = user.userMetadata?['full_name']?.toString() ??
+            user.userMetadata?['name']?.toString();
+        if (existingMetaName == null || existingMetaName.trim().isEmpty) {
+          try {
+            await _supabase.from('profiles').update({
+              'full_name': effectiveName,
+            }).eq('id', user.id);
+            await _supabase.auth.updateUser(
+              UserAttributes(data: {'full_name': effectiveName}),
+            );
+          } catch (_) {}
+        }
       }
 
       return response;
@@ -359,31 +368,123 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<UserModel?> fetchUserProfile(String userId, [String? fallbackEmail]) async {
+  Future<UserModel?> fetchUserProfile(String userId, [String? fallbackEmail, User? providedUser]) async {
     try {
+      final authUser = providedUser ?? _supabase.auth.currentUser;
+      final meta = authUser?.userMetadata;
+      final metaName = meta?['full_name']?.toString() ?? meta?['name']?.toString();
+      final metaUni = meta?['university_name']?.toString();
+      final metaDept = meta?['department_name']?.toString();
+      final metaCity = meta?['city_name']?.toString();
+      final metaAvatar = meta?['avatar_url']?.toString();
+
+      final email = fallbackEmail ?? authUser?.email ?? 'user@zanko.edu';
+      final cleanEmail = email.trim().toLowerCase();
+
+      // Read local cache for immediate fallback / offline persistence
+      String? localName, localUni, localDept, localCity, localAvatar;
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        localName = prefs.getString('zanko_user_name_$userId') ??
+            (cleanEmail.isNotEmpty ? prefs.getString('zanko_user_name_$cleanEmail') : null) ??
+            prefs.getString('zanko_active_user_name');
+        localUni = prefs.getString('zanko_user_uni_$userId') ??
+            (cleanEmail.isNotEmpty ? prefs.getString('zanko_user_uni_$cleanEmail') : null) ??
+            prefs.getString('zanko_active_user_uni');
+        localDept = prefs.getString('zanko_user_dept_$userId') ??
+            (cleanEmail.isNotEmpty ? prefs.getString('zanko_user_dept_$cleanEmail') : null) ??
+            prefs.getString('zanko_active_user_dept');
+        localCity = prefs.getString('zanko_user_city_$userId') ??
+            (cleanEmail.isNotEmpty ? prefs.getString('zanko_user_city_$cleanEmail') : null) ??
+            prefs.getString('zanko_active_user_city');
+        localAvatar = prefs.getString('zanko_user_avatar_$userId') ??
+            (cleanEmail.isNotEmpty ? prefs.getString('zanko_user_avatar_$cleanEmail') : null) ??
+            prefs.getString('zanko_active_user_avatar');
+      } catch (_) {}
+
       final res = await _supabase
           .from('profiles')
           .select()
           .eq('id', userId)
           .maybeSingle();
 
-      if (res != null) {
-        return UserModel.fromMap(res);
+      // Priority for resolved user full name:
+      // 1. Explicit local modification on this device (user explicitly edited profile here)
+      // 2. Auth user metadata (from Supabase Auth server)
+      // 3. Database public.profiles record
+      // 4. Email prefix fallback
+      final String effectiveName;
+      if (localName != null && localName.trim().isNotEmpty) {
+        effectiveName = localName.trim();
+        // Keep server metadata in sync if local edit is fresher
+        if (metaName != effectiveName) {
+          try {
+            _supabase.auth.updateUser(UserAttributes(data: {'full_name': effectiveName})).ignore();
+            _supabase.from('profiles').update({'full_name': effectiveName}).eq('id', userId).then((_) {}).catchError((_) {});
+          } catch (_) {}
+        }
+      } else if (metaName != null && metaName.trim().isNotEmpty) {
+        effectiveName = metaName.trim();
+      } else if (res != null && res['full_name'] != null && res['full_name'].toString().trim().isNotEmpty) {
+        effectiveName = res['full_name'].toString().trim();
+      } else {
+        effectiveName = email.split('@').first;
       }
 
-      // Fallback user model - check auth metadata before falling back to email prefix
-      final authUser = _supabase.auth.currentUser;
-      final email = fallbackEmail ?? authUser?.email ?? 'user@zanko.edu';
-      final metaName = authUser?.userMetadata?['full_name']?.toString() ??
-          authUser?.userMetadata?['name']?.toString();
-      final effectiveName = (metaName != null && metaName.trim().isNotEmpty)
-          ? metaName.trim()
-          : email.split('@').first;
+      final effectiveUni = (localUni != null && localUni.trim().isNotEmpty)
+          ? localUni.trim()
+          : ((metaUni != null && metaUni.trim().isNotEmpty)
+              ? metaUni.trim()
+              : (res != null ? res['university_name']?.toString() : null));
+
+      final effectiveDept = (localDept != null && localDept.trim().isNotEmpty)
+          ? localDept.trim()
+          : ((metaDept != null && metaDept.trim().isNotEmpty)
+              ? metaDept.trim()
+              : (res != null ? res['department_name']?.toString() : null));
+
+      final effectiveCity = (localCity != null && localCity.trim().isNotEmpty)
+          ? localCity.trim()
+          : ((metaCity != null && metaCity.trim().isNotEmpty)
+              ? metaCity.trim()
+              : (res != null ? res['city_name']?.toString() : null));
+
+      final effectiveAvatar = (localAvatar != null && localAvatar.trim().isNotEmpty)
+          ? localAvatar.trim()
+          : (metaAvatar ?? (res != null ? res['avatar_url']?.toString() : null));
+
+      if (res != null) {
+        final dbModel = UserModel.fromMap(res);
+
+        // Auto-heal DB profile if out of sync with user's verified name
+        if (effectiveName.isNotEmpty && res['full_name'] != effectiveName) {
+          _supabase
+              .from('profiles')
+              .update({'full_name': effectiveName})
+              .eq('id', userId)
+              .then((_) {})
+              .catchError((_) {});
+        }
+
+        return dbModel.copyWith(
+          name: effectiveName,
+          universityName: effectiveUni ?? dbModel.universityName,
+          departmentName: effectiveDept ?? dbModel.departmentName,
+          cityName: effectiveCity ?? dbModel.cityName,
+          photoUrl: dbModel.photoUrl ?? effectiveAvatar,
+        );
+      }
+
+      // Fallback user model
       return UserModel(
         id: userId,
         name: effectiveName,
         email: email,
         role: UserRole.student,
+        universityName: effectiveUni,
+        departmentName: effectiveDept,
+        cityName: effectiveCity,
+        photoUrl: effectiveAvatar,
         isVip: false,
         vipStatus: 'none',
       );

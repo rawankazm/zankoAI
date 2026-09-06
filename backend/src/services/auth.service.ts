@@ -12,8 +12,20 @@ export class AuthService {
   }
 
   static async updateProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {
-    // Disallow modifying privileged fields via normal update
-    const { role, plan, status, id, ...safeUpdates } = updates as any;
+    // Zero-trust: Disallow modifying privileged fields via normal user update
+    const {
+      role,
+      plan,
+      status,
+      id,
+      is_vip,
+      vip_status,
+      vip_expires_at,
+      score,
+      rank_title,
+      created_at,
+      ...safeUpdates
+    } = updates as any;
 
     const updated = await ProfileRepository.update(userId, safeUpdates);
     if (!updated) {

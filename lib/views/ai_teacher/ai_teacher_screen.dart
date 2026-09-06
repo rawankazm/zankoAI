@@ -195,80 +195,9 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
     super.dispose();
   }
 
-  void _showApiKeyDialog(BuildContext context) {
-    final aiService = Provider.of<AiService>(context, listen: false);
-    final textController = TextEditingController(text: aiService.apiKey ?? '');
-    final theme = Theme.of(context);
-
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Row(
-            children: [
-              Icon(Icons.vpn_key_rounded, color: Colors.purple),
-              SizedBox(width: 8),
-              Text('کلیلی Gemini API', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'بۆ ناسینەوەی دەنگ، شیکارکردنی وێنە و بەکارهێنانی مۆدێلی نوێی Gemini 3.7 Flash، تکایە کلیلی فەرمی خۆت (کە بە AIzaSy دەست پێدەکات) لێرە دابنێ:',
-                  style: TextStyle(fontSize: 13, height: 1.5),
-                ),
-                const SizedBox(height: 14),
-                TextField(
-                  controller: textController,
-                  decoration: InputDecoration(
-                    hintText: 'AIzaSy...',
-                    labelText: 'Gemini API Key',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    prefixIcon: const Icon(Icons.key),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  '💡 دەتوانیت بەخۆڕایی لە aistudio.google.com کلیل دروست بکەیت.',
-                  style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('داخستن'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final newKey = textController.text.trim();
-                aiService.apiKey = newKey;
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('کلیلی API بە سەرکەوتوویی نوێکرایەوە! 🎉')),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('پاشەکەوتکردن'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final aiService = Provider.of<AiService>(context);
     final langProvider = Provider.of<LanguageProvider>(context);
     String t(String key) => langProvider.translate(key);
 
@@ -300,14 +229,6 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
           ),
           actions: [
             IconButton(
-              icon: Icon(
-                aiService.hasRealApiKey ? Icons.vpn_key_rounded : Icons.key_off_rounded,
-                color: aiService.hasRealApiKey ? Colors.green : Colors.amber,
-              ),
-              tooltip: 'Gemini API Key',
-              onPressed: () => _showApiKeyDialog(context),
-            ),
-            IconButton(
               icon: Icon(_isTtsEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded),
               tooltip: t('tts_tooltip'),
               onPressed: () {
@@ -328,34 +249,6 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
         ),
         body: Column(
           children: [
-            // Status bar indicating model mode (Real Gemini vs Mock)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: aiService.hasRealApiKey 
-                  ? Colors.green.shade900.withValues(alpha: 0.2) 
-                  : Colors.amber.shade900.withValues(alpha: 0.2),
-              child: Row(
-                children: [
-                  Icon(
-                    aiService.hasRealApiKey ? Icons.check_circle : Icons.warning_amber_rounded,
-                    size: 16,
-                    color: aiService.hasRealApiKey ? Colors.green : Colors.amber,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      aiService.hasRealApiKey ? t('gemini_active') : t('mock_active'),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: aiService.hasRealApiKey ? Colors.green.shade300 : Colors.amber.shade300,
-                        ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
             // Messages list
             Expanded(
               child: ListView.builder(

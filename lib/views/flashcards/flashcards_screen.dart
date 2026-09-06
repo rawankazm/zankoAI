@@ -18,6 +18,7 @@ class FlashcardsScreen extends StatefulWidget {
 
 class _FlashcardsScreenState extends State<FlashcardsScreen> {
   final TextEditingController _topicController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   bool _isGenerating = false;
   int _currentIndex = 0;
   final Set<int> _learnedCardIndices = {};
@@ -31,12 +32,29 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final db = Provider.of<DatabaseService>(context, listen: false);
+      if (db.flashcards.isNotEmpty && mounted) {
+        setState(() {
+          _localCards = List.from(db.flashcards);
+        });
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _topicController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
   Future<void> _generateCards([String? predefinedTopic]) async {
+    // Dismiss keyboard immediately so user can see generated cards
+    FocusScope.of(context).unfocus();
+
     final topic = predefinedTopic ?? _topicController.text.trim();
     if (topic.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -73,9 +91,33 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
         _currentIndex = 0;
         _learnedCardIndices.clear();
       });
-      await dbService.clearFlashcards();
-      for (var card in cards) {
-        await dbService.addFlashcard(card);
+
+      // Update database asynchronously without blocking
+      dbService.clearFlashcards().then((_) {
+        for (var card in cards) {
+          dbService.addFlashcard(card);
+        }
+      });
+
+      // Smoothly scroll down to make the flashcards visible
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            180.0,
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✅ ${cards.length} فلاشکارد بە سەرکەوتوویی دروستکران!'),
+            backgroundColor: const Color(0xFF10B981),
+            duration: const Duration(seconds: 2),
+          ),
+        );
       }
     } catch (e) {
       final fallbackCards = _generateFallbackCards(topic);
@@ -85,9 +127,31 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
         _currentIndex = 0;
         _learnedCardIndices.clear();
       });
-      await dbService.clearFlashcards();
-      for (var card in fallbackCards) {
-        await dbService.addFlashcard(card);
+
+      dbService.clearFlashcards().then((_) {
+        for (var card in fallbackCards) {
+          dbService.addFlashcard(card);
+        }
+      });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            180.0,
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✅ ${fallbackCards.length} فلاشکارد بە سەرکەوتوویی ئامادەکران!'),
+            backgroundColor: const Color(0xFF10B981),
+            duration: const Duration(seconds: 2),
+          ),
+        );
       }
     }
   }
@@ -134,6 +198,129 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
     );
   }
 
+  void _showAddCardModal(BuildContext context) {
+    final frontCtrl = TextEditingController();
+    final backCtrl = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dbService = Provider.of<DatabaseService>(context, listen: false);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(ctx).viewInsets.bottom,
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: isDark ? ZankoColors.darkCard : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    '➕ زیادکردنی فلاشکاردی نوێ',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    icon: const Icon(CupertinoIcons.xmark_circle_fill),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: frontCtrl,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  labelText: 'ڕووی پێشەوە (پرسیار یان دەستەواژە)',
+                  hintText: 'نموونە: چەمکی داتابەیس چییە؟',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: backCtrl,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  labelText: 'ڕووی دواوە (وەڵام یان شیکار)',
+                  hintText: 'نموونە: بریتییە لە کۆمەڵە زانیارییەکی ڕێکخراو...',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: ZankoColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () {
+                  final f = frontCtrl.text.trim();
+                  final b = backCtrl.text.trim();
+                  if (f.isEmpty || b.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('تکایە هەردوو ڕووی فلاشکاردەکە بنووسە (پرسیار و وەڵام)'),
+                        backgroundColor: Colors.orange,
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                    return;
+                  }
+                  Navigator.pop(ctx);
+                  FocusScope.of(context).unfocus();
+
+                  final newCard = FlashcardModel(
+                    id: 'fc_${DateTime.now().millisecondsSinceEpoch}',
+                    front: f,
+                    back: b,
+                  );
+
+                  dbService.addFlashcard(newCard);
+                  setState(() {
+                    _localCards.insert(0, newCard);
+                    _currentIndex = 0;
+                  });
+
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (_scrollController.hasClients) {
+                      _scrollController.animateTo(
+                        180.0,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOut,
+                      );
+                    }
+                  });
+
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('✅ فلاشکاردەکە بە سەرکەوتوویی پاشەکەوت کرا!'),
+                        backgroundColor: Color(0xFF10B981),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                },
+                child: const Text('پاشەکەوتکردن', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final langProvider = Provider.of<LanguageProvider>(context);
@@ -161,6 +348,11 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
           ),
           centerTitle: true,
           actions: [
+            IconButton(
+              icon: Icon(CupertinoIcons.plus_circle_fill, color: ZankoColors.primary),
+              tooltip: 'زیادکردنی فلاشکارد',
+              onPressed: () => _showAddCardModal(context),
+            ),
             IconButton(
               icon: Icon(CupertinoIcons.qrcode_viewfinder, color: ZankoColors.primary),
               tooltip: t('scan_qr_deck'),
@@ -194,6 +386,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
         ),
         body: SafeArea(
           child: SingleChildScrollView(
+            controller: _scrollController,
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
             child: Column(
@@ -358,6 +551,20 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        ElevatedButton.icon(
+                          onPressed: () => _showAddCardModal(context),
+                          icon: const Icon(CupertinoIcons.plus_circle_fill, size: 18, color: Colors.white),
+                          label: const Text(
+                            'فلاشکاردێک بە دەستی خۆت بنووسە',
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: ZankoColors.primary,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                           ),
                         ),
                       ],

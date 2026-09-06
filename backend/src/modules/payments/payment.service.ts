@@ -138,9 +138,9 @@ export class PaymentService {
       })
       .eq('id', voucher.id);
 
-    // 3. Activate VIP status for user
+    // 3. Activate VIP status for user in profiles
     await supabaseAdmin
-      .from('users')
+      .from('profiles')
       .update({
         is_vip: true,
         vip_status: 'active',
@@ -187,7 +187,7 @@ export class PaymentService {
           .eq('id', tx.id);
 
         await supabaseAdmin
-          .from('users')
+          .from('profiles')
           .update({
             is_vip: true,
             vip_status: 'active',

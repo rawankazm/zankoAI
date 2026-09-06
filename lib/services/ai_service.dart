@@ -103,9 +103,13 @@ abstract class AiService extends ChangeNotifier {
 }
 
 class ZankoAiService extends ChangeNotifier implements AiService {
+  static bool _isValidApiKey(String? key) =>
+      key != null && key.trim().startsWith('AIzaSy') && key.trim().length >= 25;
+
   static const String _defaultApiKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
-  static String get _fallbackWorkingKey =>
-      utf8.decode(base64.decode('QVEuQWI4Uk42S0ZjVEN2REVQbkplbC1aU0xyMEFGSlJFcENmRC1lRnA4cXh2Nk4zcTZFZUE='));
+  // Developer configured key (managed internally, hidden from app users):
+  static const String _embeddedApiKey = '';
+
   String? _apiKey;
   final List<String> _keyPool = [];
   final Map<String, DateTime> _keyCooldowns = {};
@@ -129,9 +133,10 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   }
 
   ZankoAiService() {
-    _apiKey = _fallbackWorkingKey;
-    if (_defaultApiKey.trim().isNotEmpty) {
+    if (_isValidApiKey(_defaultApiKey)) {
       _apiKey = _defaultApiKey.trim();
+    } else if (_isValidApiKey(_embeddedApiKey)) {
+      _apiKey = _embeddedApiKey.trim();
     }
     _loadApiKey();
   }
@@ -139,20 +144,15 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   Future<void> _loadApiKey() async {
     final prefs = await SharedPreferences.getInstance();
     final savedKey = prefs.getString('gemini_api_key');
-    if (savedKey != null && savedKey.trim().isNotEmpty) {
-      _apiKey = savedKey.trim();
-    } else if (_defaultApiKey.trim().isNotEmpty) {
+    if (_isValidApiKey(savedKey)) {
+      _apiKey = savedKey!.trim();
+    } else if (_isValidApiKey(_defaultApiKey)) {
       _apiKey = _defaultApiKey.trim();
+    } else if (_isValidApiKey(_embeddedApiKey)) {
+      _apiKey = _embeddedApiKey.trim();
     } else {
-      _apiKey = _fallbackWorkingKey;
+      _apiKey = null;
     }
-
-    // Config is securely managed via DigitalOcean backend API and Redis
-
-    if (_apiKey == null || _apiKey!.trim().isEmpty) {
-      _apiKey = _fallbackWorkingKey;
-    }
-
     notifyListeners();
   }
 
@@ -174,10 +174,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   }
 
   @override
-  bool get hasRealApiKey =>
-      _apiKey != null &&
-      (_apiKey!.trim().startsWith('AIzaSy') || _apiKey!.trim().startsWith('AQ.')) &&
-      _apiKey!.trim().length >= 25;
+  bool get hasRealApiKey => _isValidApiKey(_apiKey);
   bool get hasApiKey => hasRealApiKey;
 
   @override
@@ -304,25 +301,21 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   }
 
   List<String> _getActiveKeys() {
-    final keys = <String>[
-      if (_lastWorkingKey != null && _lastWorkingKey!.trim().isNotEmpty && !_isKeyInCooldown(_lastWorkingKey!))
-        _lastWorkingKey!.trim(),
-      ..._keyPool.where((k) => k.isNotEmpty && !_isKeyInCooldown(k) && k != _lastWorkingKey),
-      if (_apiKey != null && _apiKey!.trim().isNotEmpty && !_isKeyInCooldown(_apiKey!) && !_keyPool.contains(_apiKey) && _apiKey != _lastWorkingKey)
+    final candidateKeys = <String>[
+      if (_lastWorkingKey != null && _isValidApiKey(_lastWorkingKey)) _lastWorkingKey!.trim(),
+      ..._keyPool.where((k) => _isValidApiKey(k) && k != _lastWorkingKey),
+      if (_apiKey != null && _isValidApiKey(_apiKey) && !_keyPool.contains(_apiKey) && _apiKey != _lastWorkingKey)
         _apiKey!.trim(),
-      if (_defaultApiKey.trim().isNotEmpty && !_isKeyInCooldown(_defaultApiKey) && _defaultApiKey != _apiKey && _defaultApiKey != _lastWorkingKey)
+      if (_defaultApiKey.trim().isNotEmpty && _isValidApiKey(_defaultApiKey) && _defaultApiKey != _apiKey && _defaultApiKey != _lastWorkingKey)
         _defaultApiKey.trim(),
-      if (_fallbackWorkingKey.trim().isNotEmpty && !_isKeyInCooldown(_fallbackWorkingKey) && _fallbackWorkingKey != _apiKey && _fallbackWorkingKey != _lastWorkingKey)
-        _fallbackWorkingKey.trim(),
+      if (_embeddedApiKey.trim().isNotEmpty && _isValidApiKey(_embeddedApiKey) && _embeddedApiKey != _apiKey && _embeddedApiKey != _lastWorkingKey)
+        _embeddedApiKey.trim(),
     ];
-    if (keys.isEmpty) {
+
+    final keys = candidateKeys.where((k) => !_isKeyInCooldown(k)).toList();
+    if (keys.isEmpty && candidateKeys.isNotEmpty) {
       _keyCooldowns.clear();
-      return [
-        ..._keyPool,
-        if (_apiKey != null && _apiKey!.isNotEmpty) _apiKey!,
-        if (_defaultApiKey.isNotEmpty) _defaultApiKey,
-        _fallbackWorkingKey,
-      ];
+      return candidateKeys;
     }
     return keys;
   }
@@ -703,12 +696,10 @@ class StudentCard extends StatelessWidget {
           }
         } else if (response.statusCode == 429) {
           client.close();
-          return "⚠️ **سنووری بەکارهێنانی ڕۆژانەی ئەم کلیلەی گووگڵ (٢٠ داواکاری) تەواو بووە** (Google 429 Quota Exceeded).\n\n"
-                 "تکایە کلیلێکی نوێ لە ڕێگەی دوگمەی 🔑 ی سەرەوە دابنێ تا ڕاستەوخۆ دەنگەکان وەربگێڕێت.";
+          return "⚠️ **سنووری کاتیی داواکارییەکانی سێرڤەر تەواو بووە**. تکایە کەمێکی تر هەوڵ بدەرەوە.";
         } else if (response.statusCode == 403) {
           client.close();
-          return "⚠️ **گووگڵ ڕێگری لەم کلیلە کردووە (403 Permission Denied)**.\n\n"
-                 "تکایە کلیلێکی نوێ لە ئەکاونتێکی تری گووگڵ لە aistudio.google.com دروست بکە.";
+          return "⚠️ **سێرڤەری زیرەکی دەستکرد لە کاردایە بەڵام ڕێگەپێدان ڕەتکرایەوە**. تکایە دواتر هەوڵ بدەرەوە.";
         }
       } catch (_) {}
     }
@@ -729,10 +720,10 @@ class StudentCard extends StatelessWidget {
 
   Future<String> _callGeminiMultimodal(Uint8List mediaBytes, String prompt, {String mimeType = 'image/jpeg'}) async {
     final keysToTry = <String>[
-      if (_lastWorkingKey != null && _lastWorkingKey!.trim().isNotEmpty) _lastWorkingKey!.trim(),
-      if (_apiKey != null && _apiKey!.trim().isNotEmpty && _apiKey != _lastWorkingKey) _apiKey!.trim(),
-      if (_defaultApiKey.trim().isNotEmpty && _defaultApiKey != _apiKey && _defaultApiKey != _lastWorkingKey) _defaultApiKey.trim(),
-      if (_fallbackWorkingKey.trim().isNotEmpty && _fallbackWorkingKey != _apiKey && _fallbackWorkingKey != _lastWorkingKey) _fallbackWorkingKey.trim(),
+      if (_lastWorkingKey != null && _isValidApiKey(_lastWorkingKey)) _lastWorkingKey!.trim(),
+      if (_apiKey != null && _isValidApiKey(_apiKey) && _apiKey != _lastWorkingKey) _apiKey!.trim(),
+      if (_defaultApiKey.trim().isNotEmpty && _isValidApiKey(_defaultApiKey) && _defaultApiKey != _apiKey && _defaultApiKey != _lastWorkingKey) _defaultApiKey.trim(),
+      if (_embeddedApiKey.trim().isNotEmpty && _isValidApiKey(_embeddedApiKey) && _embeddedApiKey != _apiKey && _embeddedApiKey != _lastWorkingKey) _embeddedApiKey.trim(),
     ];
 
     final isAudio = mimeType.startsWith('audio');
@@ -823,7 +814,7 @@ class StudentCard extends StatelessWidget {
     }
 
     return "⚠️ **نەتوانرا وێنەکە لە سێرڤەری زیرەکی دەستکرد شیکار بکرێت**\n\n"
-           "تکایە دڵنیابە کلیلی کارای Gemini API (کە بە AIzaSy دەست پێدەکات) لە ئەدمین پەنێڵ لە بەشی Settings یان لە دوگمەی 🔑 ی سەرەوە دانراوە.";
+           "تکایە دڵنیابە لە پەیوەندی ئینتەرنێتەکەت و دووبارە هەوڵ بدەرەوە.";
   }
 
   @override
@@ -1394,10 +1385,307 @@ $pdfContext
         "💡 *پێشنیاری مامۆستای AI:* ئەم بابەتە زۆر گرنگە بۆ تاقیکردنەوەی کۆتایی، باشترە خشتەی پێداچوونەوەی بۆ دابنێیت.";
   }
 
+  List<FlashcardModel>? _parseCustomTextToFlashcards(String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return null;
+
+    final lines = trimmed
+        .split(RegExp(r'[\r\n]+'))
+        .map((l) => l.trim())
+        .where((l) => l.isNotEmpty)
+        .toList();
+    final cards = <FlashcardModel>[];
+
+    // 1. Check if lines are paired as question / answer (e.g. پرسیار: / وەڵام:)
+    final qPrefix = RegExp(r'^(?:پرسیار|س|Q|q)[\s\:\.\-]*', caseSensitive: false);
+    final aPrefix = RegExp(r'^(?:وەڵام|ج|A|a)[\s\:\.\-]*', caseSensitive: false);
+    bool hasQAPair = false;
+    for (int i = 0; i < lines.length - 1; i += 2) {
+      if (qPrefix.hasMatch(lines[i]) && aPrefix.hasMatch(lines[i + 1])) {
+        hasQAPair = true;
+        break;
+      }
+    }
+
+    if (hasQAPair && lines.length >= 2) {
+      for (int i = 0; i < lines.length - 1; i += 2) {
+        final q = lines[i].replaceFirst(qPrefix, '').trim();
+        final a = lines[i + 1].replaceFirst(aPrefix, '').trim();
+        if (q.isNotEmpty && a.isNotEmpty) {
+          cards.add(FlashcardModel(
+            id: 'fc_${Random().nextInt(100000)}_${DateTime.now().millisecondsSinceEpoch}',
+            front: q,
+            back: a,
+          ));
+        }
+      }
+      if (cards.isNotEmpty) return cards;
+    }
+
+    // 2. Check if lines have delimiters like ':', '؛', '-', '=', '->', '=>'
+    final delimiterRegex = RegExp(r'[:؛\-=]|->|=>');
+    int matchCount = 0;
+    for (final line in lines) {
+      if (delimiterRegex.hasMatch(line)) matchCount++;
+    }
+
+    if (matchCount >= 1 && (matchCount >= lines.length / 2 || lines.length == 1)) {
+      for (final line in lines) {
+        final match = delimiterRegex.firstMatch(line);
+        if (match != null) {
+          final front = line.substring(0, match.start).replaceAll(RegExp(r'^\d+[\.\)\-]\s*'), '').trim();
+          final back = line.substring(match.end).trim();
+          if (front.isNotEmpty && back.isNotEmpty) {
+            cards.add(FlashcardModel(
+              id: 'fc_${Random().nextInt(100000)}_${DateTime.now().millisecondsSinceEpoch}',
+              front: front,
+              back: back,
+            ));
+          }
+        }
+      }
+      if (cards.isNotEmpty) return cards;
+    }
+
+    // 3. Check if user entered sentences (separated by '.' or '!' or Kurdish commas)
+    final sentences = trimmed
+        .split(RegExp(r'[.!\n]+'))
+        .map((s) => s.trim())
+        .where((s) => s.length > 5)
+        .toList();
+    if (sentences.length >= 2) {
+      for (int i = 0; i < sentences.length; i++) {
+        final s = sentences[i];
+        cards.add(FlashcardModel(
+          id: 'fc_${Random().nextInt(100000)}_${DateTime.now().millisecondsSinceEpoch}_$i',
+          front: 'خاڵی سەرەکی #${i + 1}:',
+          back: s,
+        ));
+      }
+      if (cards.isNotEmpty) return cards;
+    }
+
+    return null;
+  }
+
+  List<FlashcardModel> _buildContextualFlashcards(String rawTopic) {
+    final topic = _sanitizeExtractedText(rawTopic).trim();
+    final lower = topic.toLowerCase();
+    final displayTopic = topic.isNotEmpty ? topic : 'بابەتی خوێندنەوە';
+
+    // 1. Computer Networks (تۆڕەکانی کۆمپیوتەر)
+    if (lower.contains('تۆڕ') || lower.contains('network') || lower.contains('osi') || lower.contains('tcp') || lower.contains('ip') || lower.contains('router') || lower.contains('switch')) {
+      return [
+        FlashcardModel(
+          id: 'fc_net_1_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'چینەکانی مۆدێلی حەوت چینی OSI چیین بە ڕیزبەندی لە خوارەوە بۆ سەرەوە؟',
+          back: '١. فیزیایی (Physical)\n٢. بەستەری داتا (Data Link)\n٣. تۆڕ (Network)\n٤. گواستنەوە (Transport)\n٥. دانیشتن (Session)\n٦. خستنەڕوو (Presentation)\n٧. بەرنامە (Application).',
+        ),
+        FlashcardModel(
+          id: 'fc_net_2_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'جیاوازی سەرەکی نێوان پرۆتۆکۆلی TCP و UDP چییە؟',
+          back: 'پرۆتۆکۆلی TCP دڵنیایی دەدات لە گەیشتنی تەواوی داتا (Reliable & Connection-Oriented)، بەڵام UDP خێراترە بەبێ دڵنیایی گەیشتن (Unreliable & Connectionless) وەک پەخشی دەنگ و ڤیدیۆ.',
+        ),
+        FlashcardModel(
+          id: 'fc_net_3_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'جیاوازی ئەدرێسی فیزیکی MAC Address و لۆژیکی IP Address چییە؟',
+          back: 'ئەدرێسی MAC نەگۆڕە و تایبەتە بە کارتی تۆڕ (NIC) لە چینی دووەم، بەڵام IP ناونیشانی لۆژیکی گۆڕاوە لە چینی سێیەم کە لە ڕێگەی تۆڕەوە دەدرێت بە ئامێرەکە.',
+        ),
+        FlashcardModel(
+          id: 'fc_net_4_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'ڕۆڵ و مەبەستی سەرەکی لە سیستەمی DNS چییە؟',
+          back: 'سیستەمی DNS ناوی دۆمەینی وێبسایتەکان (وەک google.com) دەگۆڕێت بۆ ناونیشانی ژمارەیی IP بۆ ئەوەی ڕاوتەر و وێبگەڕەکان بتوانن پەیوەندی پێوە بکەن.',
+        ),
+        FlashcardModel(
+          id: 'fc_net_5_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'جیاوازی ئامێری سۆویچ (Switch) و ڕاوتەر (Router) لە تۆڕدا چییە؟',
+          back: 'سۆویچ ئامێرەکانی ناو هەمان تۆڕی خۆجێیی (LAN) لە چینی دووەم بەیەکەوە دەبەستێت، بەڵام ڕاوتەر تۆڕە جیاوازەکان (LAN بۆ WAN یان ئینتەرنێت) لە چینی سێیەم ئاڕاستە دەکات.',
+        ),
+      ];
+    }
+
+    // 2. Operating Systems (سیستەمی کارپێکردن)
+    if (lower.contains('کارپێکردن') || lower.contains('operating') || lower.contains('os') || lower.contains('process') || lower.contains('thread') || lower.contains('deadlock')) {
+      return [
+        FlashcardModel(
+          id: 'fc_os_1_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'جیاوازی سەرەکی نێوان پرۆسێس (Process) و سرێد (Thread) چییە؟',
+          back: 'پرۆسێس بریتییە لە پرۆگرامێک لەکاتی جێبەجێکردندا کە خاوەن میمۆریی سەربەخۆیە، لەکاتێکدا سرێد یەکەیەکی سووک و بچووکتری ناو هەمان پرۆسێسە و میمۆری لەگەڵ سرێدەکانی تر هاوبەش دەکات.',
+        ),
+        FlashcardModel(
+          id: 'fc_os_2_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'چوار مەرجە سەرەکییەکەی دروستبوونی بنبەست (Deadlock) چین؟',
+          back: '١. بێبەشکردنی دوولایەنە (Mutual Exclusion)\n٢. دەستگرتن و چاوەڕوانی (Hold & Wait)\n٣. نەبوونی دەستبەسەرداگرتن (No Preemption)\n٤. چاوەڕوانی بازنەیی (Circular Wait).',
+        ),
+        FlashcardModel(
+          id: 'fc_os_3_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'چەمکی بیرگەی خەیاڵی (Virtual Memory) و پەیجکردن (Paging) چییە؟',
+          back: 'تەکنیکێکە ڕێگە دەدات پرۆگرامێک جێبەجێ بکرێت تەنانەت ئەگەر قەبارەکەی لە RAMی فیزیکی گەورەتریش بێت، بە دابەشکردنی بۆ چەند بلۆکێکی یەکسان (Pages) لە نێوان RAM و دیسکدا.',
+        ),
+        FlashcardModel(
+          id: 'fc_os_4_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'جیاوازی ئەلگۆریزمەکانی خشتەبەندی CPU (وەک FCFS بەرامبەر Round Robin) چییە؟',
+          back: 'لە FCFS پرۆسەکان بەپێی کاتی گەیشتن جێبەجێ دەبن بێ پچڕان، بەڵام لە Round Robin کاتێکی دیاریکراو (Time Quantum) بە یەکسانی دەدرێت بە هەر پرۆسەیەک.',
+        ),
+        FlashcardModel(
+          id: 'fc_os_5_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'کێشەی کێبڕکێ (Race Condition) و ڕۆڵی سیمافۆر (Semaphore) چییە؟',
+          back: 'ڕوودەدات کاتێک چەندین سرێد لە یەک کاتدا دەستکاری هەمان داتای هاوبەش دەکەن؛ بۆ چارەسەری، سیمافۆر یان میوتێکس بەکاردێت بۆ قفڵکردنی بەشە هەستیارەکە (Critical Section).',
+        ),
+      ];
+    }
+
+    // 3. Database & SQL (داتابەیس)
+    if (lower.contains('داتابەیس') || lower.contains('database') || lower.contains('sql') || lower.contains('query') || lower.contains('خشتە') || lower.contains('جدول')) {
+      return [
+        FlashcardModel(
+          id: 'fc_db_1_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'جیاوازی داتابەیسی پەیوەندیدار (SQL / RDBMS) لەگەڵ ناپەیوەندیدار (NoSQL) چییە؟',
+          back: 'داتابەیسی SQL داتاکان بە خشتە، پەیوەندی و ستراکچەری جێگیر (Schema) ڕێکدەخات، لەکاتێکدا NoSQL داتای بێ ستراکچەر و بەڵگەنامەیی (وەک JSON) بە قەبارەی زۆر پاشەکەوت دەکات.',
+        ),
+        FlashcardModel(
+          id: 'fc_db_2_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'کلیلە سەرەکی (Primary Key) و کلیلە بیانی (Foreign Key) لە داتابەیسدا چین؟',
+          back: 'کلیلە سەرەکی ناسێنەری تاک و نەدووبارەبووەوەی هەر دێڕێکە لە خشتەدا، کلیلە بیانیش ستوونێکە کە خشتەیەک بە خشتەیەکی ترەوە دەبەستێت.',
+        ),
+        FlashcardModel(
+          id: 'fc_db_3_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'مەبەست لە نۆرماڵایزەیشن (Normalization) لە داتابەیسدا چییە؟',
+          back: 'ڕێکخستنەوەی خشتەکانە بەپێی یاساکانی 1NF و 2NF و 3NF بۆ نەهێشتنی دووبارەبوونەوەی زیانبەخشی داتا (Redundancy) و پاراستنی دروستی داتا لەکاتی گۆڕانکاری.',
+        ),
+        FlashcardModel(
+          id: 'fc_db_4_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'تایبەتمەندییەکانی ACID لە ترانزاکشندا چی دەگەیەنن؟',
+          back: 'پێکدێن لە: یەکگرتوویی (Atomicity - هەمووی یان هیچ)، هاوسەنگی (Consistency)، دابڕان (Isolation)، و مانەوەی هەمیشەیی دوای پاشەکەوتکردن (Durability).',
+        ),
+        FlashcardModel(
+          id: 'fc_db_5_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'سوودی دروستکردنی Index لەسەر ستوونەکانی داتابەیس چییە؟',
+          back: 'خێرایی هێنانەوە و گەڕانی داتا لە فەرمانەکانی SELECT بە شێوەیەکی زۆر بەرچاو زیاد دەکات بە بەکارهێنانی درەختی B-Tree، بەڵام کەمێک کاتی نووسین (INSERT) هێواش دەکات.',
+        ),
+      ];
+    }
+
+    // 4. Artificial Intelligence & Machine Learning (ژیرەیی دەستکرد)
+    if (lower.contains('ژیرەیی') || lower.contains('دەستکرد') || lower.contains('ai') || lower.contains('intelligence') || lower.contains('machine learning') || lower.contains('deep learning')) {
+      return [
+        FlashcardModel(
+          id: 'fc_ai_1_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'جیاوازی ژیرەیی دەستکرد (AI)، فێربوونی مۆدێل (ML) و فێربوونی قووڵ (DL) چییە؟',
+          back: 'ژیرەیی دەستکرد چەمکی گشتی لێکچواندنی زیرەکییە؛ فێربوونی ئامێر (ML) بەشێکە لێی کە بە داتا مۆدێل فێر دەکات؛ فێربوونی قووڵ (DL) بەشێکە لە ML کە تۆڕی دەماری فرەچین بەکاردێنێت.',
+        ),
+        FlashcardModel(
+          id: 'fc_ai_2_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'جیاوازی فێربوونی چاودێریکراو (Supervised) و چاودێرینەکراو (Unsupervised) چییە؟',
+          back: 'لە چاودێریکراو داتاکە ناونیشان و وەڵامی ئامادەی لەگەڵدایە (Labeled Data)، لە چاودێرینەکراو مۆدێلەکە خۆی شێواز و گرووپەکان بەبێ وەڵامی پێشوەختە دەدۆزێتەوە.',
+        ),
+        FlashcardModel(
+          id: 'fc_ai_3_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'کێشەی Overfitting لە مۆدێلدا چییە و چۆن چارەسەر دەکرێت؟',
+          back: 'ئەوەیە کە مۆدێلەکە داتای مەشق زۆر لەبەر دەکات بەڵام لەسەر داتای نوێ ورد نییە؛ چارەسەرەکەی بریتییە لە Regularization، داتای زیاتر، و Dropout.',
+        ),
+        FlashcardModel(
+          id: 'fc_ai_4_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'ئەلگۆریزمی Backpropagation و Gradient Descent چی دەکەن لە تۆڕی دەماردا؟',
+          back: 'ڕێژەی هەڵەی دەرهاویشتە (Loss) هەژمار دەکەن و هەنگاو بە هەنگاو کێشی دەمارەکان (Weights) نوێ دەکەنەوە تا هەڵەکە کەمترین بڕی هەبێت.',
+        ),
+        FlashcardModel(
+          id: 'fc_ai_5_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'مۆدێلی زاری گەورە (LLM) چۆن کاردەکات؟',
+          back: 'مۆدێلێکی پێشکەوتووی زیرەکی دەستکردە لەسەر بنەمای Transformer کە ڕاهێنراوە لەسەر ملیاران دەق بۆ تێگەیشتن و دروستکردنی وەڵام بە پێشبینیکردنی وشەی دواتر.',
+        ),
+      ];
+    }
+
+    // 5. Mathematics & Calculus (ماتماتیک و کالکولەس)
+    if (lower.contains('ماتماتیک') || lower.contains('کالکولەس') || lower.contains('بیرکاری') || lower.contains('math') || lower.contains('calculus') || lower.contains('داتاشراو') || lower.contains('تەواوکاری')) {
+      return [
+        FlashcardModel(
+          id: 'fc_math_1_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'مانای ئەندازەیی داتاشراو (Derivative / التفاضل) لە خاڵێکدا چییە؟',
+          back: 'بریتییە لە لێژی (Slope)ی هێڵی لێکەوت لەسەر چەماوەی نەخشەکە لەو خاڵەدا، هەروەها نیشاندەری ڕێژەی گۆڕانی دەستبەجێی بڕەکانە (dy/dx).',
+        ),
+        FlashcardModel(
+          id: 'fc_math_2_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'مەبەست لە تەواوکاری دیاریکراو (Definite Integral / التكامل) چییە؟',
+          back: 'پڕۆسەی پێچەوانەی داتاشراوە و بۆ هەژمارکردنی ڕووبەری نێوان چەماوەی نەخشەکە و تەوەری ئاسۆیی لە نێوان دوو خاڵی دیاریکراودا بەکاردێت.',
+        ),
+        FlashcardModel(
+          id: 'fc_math_3_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'یاسای بەرهەمی لێکدان (Product Rule) لە داتاشراودا چییە؟',
+          back: 'ئەگەر دوو نەخشە لێکدرابن (u · v)، داتاشراوەکەی یەکسانە بە: یەکەمجار لێکدانی داتاشراوی دووەم + دووەمجار لێکدانی داتاشراوی یەکەم: (u · v)\' = u\'v + uv\'.',
+        ),
+        FlashcardModel(
+          id: 'fc_math_4_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'دیاریکەری ماتریکس (Determinant) چ گرنگییەکی هەیە؟',
+          back: 'ژمارەیەکە لە ماتریکسی چوارگۆشەدا؛ ئەگەر بڕەکەی یەکسان بێت بە صفر ئەوا پێچەوانەی ماتریکسەکە بوونی نییە و سیستەمی هاوکێشەکان وەڵامی تاکی نییە.',
+        ),
+      ];
+    }
+
+    // 6. Programming & Python / Flutter / Software
+    if (lower.contains('پایسۆن') || lower.contains('python') || lower.contains('پرۆگرام') || lower.contains('flutter') || lower.contains('فلاتەر') || lower.contains('کۆد') || lower.contains('جاڤا') || lower.contains('java') || lower.contains('c++')) {
+      return [
+        FlashcardModel(
+          id: 'fc_prog_1_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'چوار بنەمای سەرەکی بەرنامەسازی تەن-تەوەر (OOP) چین؟',
+          back: '١. شاردنەوەی زانیاری (Encapsulation)\n٢. بۆماوەیی (Inheritance)\n٣. فرەشێوەیی (Polymorphism)\n٤. پوختەکاری چەمک (Abstraction).',
+        ),
+        FlashcardModel(
+          id: 'fc_prog_2_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'جیاوازی نێوان زمانەکانی خاوەن پشکنینی جێگیر (Static Typing) و داینامیک (Dynamic Typing) چییە؟',
+          back: 'لە جۆری جێگیردا جۆری گۆڕاوەکان لە کاتی نووسین دەناسرێن (وەک Dart, Java, C++)، لە داینامیک لە کاتی کارپێکردندا دەناسرێن (وەک Python, JavaScript).',
+        ),
+        FlashcardModel(
+          id: 'fc_prog_3_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'مەبەست لە بەڕێوەبردنی بارودۆخ (State Management) لە فریمۆرکەکانی وەک Flutter چییە؟',
+          back: 'شێوازی کۆنترۆڵکردن، هاوبەشکردن، و نوێکردنەوەی داتاکانی شاشەی ئەپڵیکەیشنە لە نێوان چەندین پەڕە و ویجێت بە شێوەیەکی خێرا و سەربەخۆ.',
+        ),
+        FlashcardModel(
+          id: 'fc_prog_4_${DateTime.now().millisecondsSinceEpoch}',
+          front: 'کلیلەوشەکانی Async و Await لە پرۆگرامسازیدا بۆچی بەکاردێن؟',
+          back: 'بۆ ئەنجامدانی کردارە درێژخایەنەکان (وەک هێنانی داتا لە ئینتەرنێت یان داتابەیس) بەبێ بەستنی ڕووکاری شاشە (Non-blocking Asynchronous Code).',
+        ),
+      ];
+    }
+
+    // 7. General Academic Subject Synthesizer
+    return [
+      FlashcardModel(
+        id: 'fc_gen_1_${DateTime.now().millisecondsSinceEpoch}',
+        front: 'پێناسە و چەمکی بنەڕەتی «$displayTopic» چییە؟',
+        back: 'بریتییە لە کۆمەڵە بنەما، یاسا زانستییەکان، و تیۆرییە پەیوەندیدارەکانی «$displayTopic» کە بۆ شیکارکردن و تێگەیشتنی ورد لەم بوارەدا بەکاردێن.',
+      ),
+      FlashcardModel(
+        id: 'fc_gen_2_${DateTime.now().millisecondsSinceEpoch}',
+        front: 'گرنگترین جێبەجێکردنی «$displayTopic» لە تاقیکردنەوەدا چییە؟',
+        back: 'بەکارهێنانی هاوکێشە و چەمکە سەرەکییەکان بۆ شیکارکردنی پرسیارە وردەکان و پاشەکەوتکردنی کات لە ئەزموونی ئەکادیمیدا.',
+      ),
+      FlashcardModel(
+        id: 'fc_gen_3_${DateTime.now().millisecondsSinceEpoch}',
+        front: 'خاڵی جیاکەرەوەی سەرەکی «$displayTopic» لەگەڵ بابەتەکانی تر چییە؟',
+        back: 'پشت بەستن بە میتۆدی زانستی، بەڵگەی سەلمێنراو، و بەکارهێنانی لە پڕۆسە و سیستەمە پراکتیکییەکاندا.',
+      ),
+      FlashcardModel(
+        id: 'fc_gen_4_${DateTime.now().millisecondsSinceEpoch}',
+        front: 'چۆن بە باشترین شێوە پێداچوونەوە بۆ «$displayTopic» بکەم؟',
+        back: 'بە دابەشکردنی بۆ خاڵە سەرەکییەکان، فێربوونی یاسا بنەڕەتییەکان و ڕاهێنانی بەردەوام بە بەکارهێنانی فلاشکارد.',
+      ),
+    ];
+  }
+
   @override
   Future<List<FlashcardModel>> generateFlashcards(String topicOrText) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    
+    final cleanInput = topicOrText.trim();
+    if (cleanInput.isEmpty) return _buildContextualFlashcards('بابەتی گشتی');
+
+    // 1. Try parsing user-written custom notes/definitions directly first
+    final directCards = _parseCustomTextToFlashcards(cleanInput);
+    if (directCards != null && directCards.isNotEmpty) {
+      return directCards;
+    }
+
+    // 2. If Gemini API is available, ask AI with a 4-second timeout
     if (hasRealApiKey) {
       try {
         final prompt =
@@ -1407,10 +1695,10 @@ $pdfContext
             "[\n"
             "  { \"front\": \"پرسیار یان زاراوە\", \"back\": \"ڕوونکردنەوە یان وەڵام\" }\n"
             "]\n\n"
-            "بابەت:\n$topicOrText";
-            
-        final response = await _callGemini(prompt);
-        
+            "بابەت:\n$cleanInput";
+
+        final response = await _callGemini(prompt).timeout(const Duration(seconds: 4));
+
         String jsonText = response.trim();
         final jsonMatch = RegExp(r'\[\s*\{.*\}\s*\]', dotAll: true).firstMatch(jsonText);
         if (jsonMatch != null) {
@@ -1426,7 +1714,7 @@ $pdfContext
           }
         }
         jsonText = jsonText.trim();
-        
+
         final list = <FlashcardModel>[];
         try {
           final List<dynamic> data = jsonDecode(jsonText);
@@ -1458,39 +1746,12 @@ $pdfContext
 
         if (list.isNotEmpty) return list;
       } catch (e) {
-        return _getMockFlashcards(topicOrText);
+        debugPrint('Gemini flashcard call timed out or failed, using contextual generator: $e');
       }
     }
-    
-    return _getMockFlashcards(topicOrText);
-  }
 
-  List<FlashcardModel> _getMockFlashcards(String topic) {
-    final cleanTopic = _sanitizeExtractedText(topic);
-    final displayTopic = cleanTopic.isNotEmpty ? cleanTopic : 'بابەتی خوێندنەوە';
-
-    return [
-      FlashcardModel(
-        id: 'fc_1_${Random().nextInt(10000)}',
-        front: 'پێناسە و مەبەستی سەرەکی لە «$displayTopic» چییە؟',
-        back: 'بریتییە لە کۆمەڵە چەمک، بنەما و یاساکانی شیکارکردنی «$displayTopic» بە زمانی فەرمی زانستی.',
-      ),
-      FlashcardModel(
-        id: 'fc_2_${Random().nextInt(10000)}',
-        front: 'گرنگترین جێبەجێکردنی «$displayTopic» لە تاقیکردنەوەدا چییە؟',
-        back: 'تێگەیشتن لە فۆرمولەکان، پۆلێنکردنی داتاکان، و بەکارهێنانی تیۆری سەرەکی بابەتەکە.',
-      ),
-      FlashcardModel(
-        id: 'fc_3_${Random().nextInt(10000)}',
-        front: 'ڕێگەی سەرەکی بۆ شیکارکردنی بابەتەکانی «$displayTopic» چییە؟',
-        back: 'دابەشکردنی بابەتەکە بۆ بەشە سەرەکییەکان و پێداچوونەوەی دووبارە بە فلاشکارد و تێبینییەکان.',
-      ),
-      FlashcardModel(
-        id: 'fc_4_${Random().nextInt(10000)}',
-        front: 'کامیان بنەمای سەرەکی سەرکەوتنە لە وانەی «$displayTopic»دا؟',
-        back: 'تێگەیشتنی قووڵ لە زاراوە ئەکادیمییەکان و چارەسەرکردنی پرسیارە ڕاهێنکارییەکان.',
-      ),
-    ];
+    // 3. Fallback to contextual generator based on user's topic or text
+    return _buildContextualFlashcards(cleanInput);
   }
 
   @override
@@ -1945,12 +2206,12 @@ $jsonExample
 
     return {
       'title': 'ڕوونکردنەوەی دەنگی: ${pdfName ?? 'وانەی ئەکادیمی'}',
-      'summary': 'نەتوانرا پەیوەندی بە سێرڤەری AI بکرێت. تکایە ئینتەرنێت و کلیلی API پشکنین بکە.',
+      'summary': 'نەتوانرا پەیوەندی بە سێرڤەری AI بکرێت. تکایە پەیوەندی ئینتەرنێتت بپشکنە و دووبارە هەوڵ بدەرەوە.',
       'targetLanguage': 'ku',
       'sections': [
         {
           'sectionTitle': 'هەڵەی پەیوەندی',
-          'kurdishExplanation': 'نەتوانرا بە سێرڤەری AI پەیوەندی بکرێت. تکایە ئینتەرنێتت پشکنین بکە یان کلیلی API بنووسە، پاشان دووبارە هەوڵ بدە.',
+          'kurdishExplanation': 'نەتوانرا بە سێرڤەری AI پەیوەندی بکرێت. تکایە دڵنیابە لە هەبوونی ئینتەرنێت، پاشان دووبارە هەوڵ بدەرەوە.',
           'englishKeyTerms': []
         }
       ]

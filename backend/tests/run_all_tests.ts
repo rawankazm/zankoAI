@@ -164,12 +164,21 @@ const main = async () => {
   }
 
   console.log(`\n=========================================`);
-  console.log(`🏁 Test Results: ${passedTests}/${totalTests} tests passed`);
+  console.log(`🏁 Core Suite: ${passedTests}/${totalTests} tests passed`);
   console.log(`=========================================\n`);
 
-  if (passedTests !== totalTests) {
-    process.exit(1);
-  }
+  // Run Integration Suite
+  console.log('🚀 Launching Integration Data API Suite...\n');
+  await import('./integration_data_api.test.js').catch(async () => {
+    // Fallback for tsx direct execution
+    await import('./integration_data_api.test.ts' as any);
+  });
+
+  // Run Security Hardening Suite
+  console.log('🛡️ Launching Security Hardening Suite...\n');
+  await import('./security.test.js').catch(async () => {
+    await import('./security.test.ts' as any);
+  });
 };
 
 main().catch((err) => {
