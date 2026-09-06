@@ -9,7 +9,9 @@ import '../../services/language_provider.dart';
 import '../navigation_shell.dart';
 import '../../models/user_model.dart';
 import '../../widgets/university_department_picker.dart';
+import '../../core/auth/auth_state.dart';
 import 'login_screen.dart';
+import 'email_verification_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -186,14 +188,18 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
       final errStr = e.toString().toLowerCase();
       if (errStr.contains('ip-limit-exceeded') || errStr.contains('٣ ناونیشانی ip') || errStr.contains('ip limit')) {
         _errorMessage = '⛔ ناتوانیت لە زیاتر لە ٣ ناونیشانی IP جیاواز ئەکاونت دروست بکەیت یان بەکاربهێنیت.';
-      } else if (errStr.contains('email-already-in-use')) {
+      } else if (errStr.contains('already registered') || errStr.contains('user already exists') || errStr.contains('email-already-in-use')) {
         _errorMessage = 'ئەم ئیمەیڵە پێشتر تۆمار کراوە. تکایە چوونەژوورەوە بکە.';
-      } else if (errStr.contains('weak-password')) {
+      } else if (errStr.contains('weak-password') || errStr.contains('password should be at least')) {
         _errorMessage = 'وشەی نهێنی زۆر لاوازە (لانی کەم ٦ پیت).';
-      } else if (errStr.contains('invalid-email')) {
+      } else if (errStr.contains('invalid-email') || errStr.contains('invalid email')) {
         _errorMessage = 'ئیمەیڵەکە شێوازێکی دروستی نییە.';
+      } else if (errStr.contains('email not confirmed')) {
+        _errorMessage = 'ئیمەیڵەکەت دروست بوو! تکایە لە شاشەی Login بچۆ ژوورەوە.';
+      } else if (errStr.contains('email_provider_disabled') || errStr.contains('signups are disabled') || errStr.contains('logins are disabled')) {
+        _errorMessage = 'بژاردەی ئیمەیڵ لە سێرڤەر (Supabase) ناچالاکە. تکایە لە Authentication > Providers بەشی Email چالاک بکە.';
       } else {
-        _errorMessage = 'تۆمارکردن سەرکەوتوو نەبوو. تکایە هێڵی ئینتەرنێتەکەت بپشکنە.';
+        _errorMessage = 'هەڵەیەک ڕوویدا: ${e.toString().replaceAll('Exception: ', '').replaceAll('AuthException: ', '').replaceAll('AuthApiException: ', '')}';
       }
     } finally {
       if (mounted && !success) {
@@ -214,10 +220,20 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
         } catch (_) {}
       }
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const NavigationShell()),
-      );
+
+      if (authService.authState is EmailUnconfirmedState) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EmailVerificationScreen(email: _emailController.text.trim()),
+          ),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const NavigationShell()),
+        );
+      }
     }
   }
 

@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'score_service.dart';
 import '../models/user_model.dart';
 
@@ -119,20 +119,16 @@ class LeaderboardService extends ChangeNotifier {
       depts.add(currentUser.departmentName!.trim());
     }
 
-    // 2. Fetch registered student departments from Firestore (departments & leaderboard)
+    // 2. Fetch registered student departments from Supabase
     try {
-      final deptSnap = await FirebaseFirestore.instance.collection('departments').limit(50).get();
-      for (var doc in deptSnap.docs) {
-        final name = doc.data()['name'] as String?;
+      final deptRes = await Supabase.instance.client
+          .from('departments')
+          .select('name_ku, name_en')
+          .limit(50);
+      for (final row in (deptRes as List)) {
+        final name = (row['name_ku'] ?? row['name_en']) as String?;
         if (name != null && name.trim().isNotEmpty) {
           depts.add(name.trim());
-        }
-      }
-      final lbSnap = await FirebaseFirestore.instance.collection('leaderboard').limit(50).get();
-      for (var doc in lbSnap.docs) {
-        final dept = doc.data()['departmentName'] as String?;
-        if (dept != null && dept.trim().isNotEmpty) {
-          depts.add(dept.trim());
         }
       }
     } catch (_) {}
@@ -229,20 +225,17 @@ class LeaderboardService extends ChangeNotifier {
     ];
 
     try {
-      QuerySnapshot<Map<String, dynamic>> snap;
-      try {
-        snap = await FirebaseFirestore.instance.collection('leaderboard').orderBy('points', descending: true).limit(30).get();
-      } catch (_) {
-        snap = await FirebaseFirestore.instance.collection('leaderboard').limit(30).get();
-      }
-      if (snap.docs.isNotEmpty) {
-        for (var doc in snap.docs) {
-          final d = doc.data();
-          final name = d['name'] ?? 'Student';
-          final dept = d['departmentName'] ?? 'تەکنەلۆجیای زانیاری';
-          final uni = d['universityName'] ?? 'زانکۆی سلێمانی';
-          final photo = d['photoUrl'];
-          final isMe = currentUser != null && doc.id == currentUser.id;
+      final snap = await Supabase.instance.client
+          .from('profiles')
+          .select('id, full_name, avatar_url, score')
+          .limit(30);
+      if (snap.isNotEmpty) {
+        for (var d in snap) {
+          final name = d['full_name'] ?? 'Student';
+          final dept = 'تەکنەلۆجیای زانیاری';
+          final uni = 'زانکۆی سلێمانی';
+          final photo = d['avatar_url'];
+          final isMe = currentUser != null && d['id'] == currentUser.id;
 
           int pts = 0;
           int strk = 3;
@@ -258,7 +251,7 @@ class LeaderboardService extends ChangeNotifier {
               streak: strk,
             );
           } else {
-            // Use actual Firestore score fields when available
+            // Use actual Supabase score fields when available
             sc100 = (d['score100'] as num?)?.toInt() ?? (d['gpa'] != null ? ((d['gpa'] as num).toDouble() * 25).round().clamp(0, 100) : 60);
             strk = (d['studyStreak'] as num?)?.toInt() ?? 1;
             final totalQ = (d['totalQuestionsAnswered'] as num?)?.toInt() ?? 0;
@@ -319,19 +312,9 @@ class LeaderboardService extends ChangeNotifier {
       );
 
       if (currentUser.id.isNotEmpty && !currentUser.isGuest) {
-        FirebaseFirestore.instance.collection('leaderboard').doc(currentUser.id).set({
-          'name': currentUser.name,
-          'departmentName': currentUser.departmentName ?? 'تەکنەلۆجیای زانیاری',
-          'universityName': currentUser.universityName ?? 'زانکۆی سلێمانی',
-          'photoUrl': currentUser.photoUrl,
-          'points': myPts,
-          'streak': currentUserStreak,
-          'score100': scoreService.totalScore100,
-          'studyStreak': currentUserStreak,
-          'totalQuestionsAnswered': scoreService.totalQuestionsAnswered,
-          'todayStudyMinutes': scoreService.todayStudyMinutes,
-          'updatedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true)).catchError((_) {});
+        Supabase.instance.client.from('profiles').update({
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        }).eq('id', currentUser.id).catchError((_) {});
       }
     }
 

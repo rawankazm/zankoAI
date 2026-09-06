@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import '../services/language_provider.dart';
 import '../theme.dart';
 
-/// Reads active ads from Firestore and shows them as a hero banner matching the premium design.
-/// Pass [screenName] matching one of the screen IDs set in the Admin panel (e.g. 'home', 'zankoline', 'ai_teacher').
+/// Reads active ads from Supabase or returns empty banner
 class AdBannerWidget extends StatefulWidget {
   final String screenName;
 
@@ -19,15 +18,6 @@ class AdBannerWidget extends StatefulWidget {
 
 class _AdBannerWidgetState extends State<AdBannerWidget> {
   bool _dismissed = false;
-  static Stream<QuerySnapshot>? _sharedAdsStream;
-  static Stream<QuerySnapshot> get _adsStream {
-    _sharedAdsStream ??= FirebaseFirestore.instance
-        .collection('ads')
-        .where('isActive', isEqualTo: true)
-        .limit(10)
-        .snapshots();
-    return _sharedAdsStream!;
-  }
 
   Future<void> _openAdUrl(String urlStr) async {
     if (urlStr.trim().isEmpty) return;
@@ -54,42 +44,19 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
     final langProvider = Provider.of<LanguageProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return StreamBuilder<QuerySnapshot>(
-      stream: _adsStream,
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: Supabase.instance.client
+          .from('ads')
+          .select()
+          .limit(5)
+          .catchError((_) => <Map<String, dynamic>>[]),
       builder: (context, snapshot) {
-        if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
+        if (snapshot.hasError || !snapshot.hasData || snapshot.data == null || snapshot.data!.isEmpty) {
           return const SizedBox.shrink();
         }
 
-        final docs = snapshot.data!.docs;
-        final matchingAds = docs.where((doc) {
-          final data = doc.data() as Map<String, dynamic>?;
-          if (data == null) return false;
-
-          // Check active flag
-          final isActive = data['isActive'] == true;
-          if (!isActive) return false;
-
-          // Check showOnScreens array
-          final showOnScreens = data['showOnScreens'];
-          if (showOnScreens is List) {
-            final screens = showOnScreens.map((e) => e.toString().toLowerCase()).toList();
-            if (screens.contains('all') || screens.contains(widget.screenName.toLowerCase())) {
-              return true;
-            }
-          }
-          // If no showOnScreens specified, show on all by default
-          if (showOnScreens == null) return true;
-
-          return false;
-        }).toList();
-
-        if (matchingAds.isEmpty) {
-          return const SizedBox.shrink();
-        }
-
-        // Show the matching ad
-        final adData = matchingAds.first.data() as Map<String, dynamic>;
+        final matchingAds = snapshot.data!;
+        final adData = matchingAds.first;
 
         final currentLang = langProvider.currentLanguage;
         String title = adData['title'] ?? '';

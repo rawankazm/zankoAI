@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../services/language_provider.dart';
 import '../../theme.dart';
@@ -40,9 +40,12 @@ class _AdminPaymentConfigSheetState extends State<AdminPaymentConfigSheet> {
 
   Future<void> _fetchCurrentNumbers() async {
     try {
-      final doc = await FirebaseFirestore.instance.collection('config').doc('payment_config').get();
-      if (doc.exists && doc.data() != null) {
-        final data = doc.data()!;
+      final data = await Supabase.instance.client
+          .from('config')
+          .select()
+          .eq('key', 'payment_config')
+          .maybeSingle();
+      if (data != null) {
         if (data['whatsappNumber'] != null) _whatsappController.text = data['whatsappNumber'].toString();
         if (data['telegramUsername'] != null) _telegramController.text = data['telegramUsername'].toString();
         if (data['fibNumber'] != null) _fibController.text = data['fibNumber'].toString();
@@ -73,14 +76,15 @@ class _AdminPaymentConfigSheetState extends State<AdminPaymentConfigSheet> {
     });
 
     try {
-      await FirebaseFirestore.instance.collection('config').doc('payment_config').set({
+      await Supabase.instance.client.from('config').upsert({
+        'key': 'payment_config',
         'whatsappNumber': whatsapp,
         'telegramUsername': telegram,
         'fibNumber': fib,
         'fastPayNumber': fastpay,
         'zainCashNumber': zaincash,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+        'updated_at': DateTime.now().toIso8601String(),
+      });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

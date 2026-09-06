@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:zanko_ai/services/firebase_auth_service.dart';
+import 'package:zanko_ai/services/supabase_auth_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -11,12 +11,12 @@ void main() {
     });
 
     test('getDeviceId generates and persists a valid unique deviceId', () async {
-      final id1 = await FirebaseAuthService.getDeviceId();
+      final id1 = await SupabaseAuthService.getDeviceId();
       expect(id1, isNotEmpty);
       expect(id1.length, greaterThanOrEqualTo(16));
 
       // Second call returns cached / persisted device ID
-      final id2 = await FirebaseAuthService.getDeviceId();
+      final id2 = await SupabaseAuthService.getDeviceId();
       expect(id2, equals(id1));
     });
 

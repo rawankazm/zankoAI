@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../theme.dart';
 
@@ -79,12 +79,11 @@ class _AdminBroadcastSheetState extends State<AdminBroadcastSheet> {
     try {
       await _saveSettings();
 
-      // 1. Write to Firestore 'notifications' collection (for in-app bell & active streams)
-      await FirebaseFirestore.instance.collection('notifications').add({
+      // 1. Write to Supabase 'notifications' table (for in-app bell & realtime streams)
+      await Supabase.instance.client.from('notifications').insert({
         'title': title,
         'body': body,
-        'target': _selectedTarget,
-        'createdAt': FieldValue.serverTimestamp(),
+        'type': _selectedTarget,
       });
 
       // 2. Trigger Cloudflare Worker Push Notification (wakes up closed/locked phones)

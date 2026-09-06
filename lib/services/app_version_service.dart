@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AppUpdateInfo {
   final bool isUpdateAvailable;
@@ -31,50 +31,26 @@ class AppVersionService extends ChangeNotifier {
   static const String currentAppVersion = '1.0.0';
   static const int currentBuildNumber = 1;
 
-  StreamSubscription? _configSub;
   AppUpdateInfo? _updateInfo;
   AppUpdateInfo? get updateInfo => _updateInfo;
 
   void startListening(Function(AppUpdateInfo info)? onUpdateRequired) {
-    _configSub?.cancel();
     try {
-      _configSub = FirebaseFirestore.instance
-          .collection('config')
-          .doc('version_config')
-          .snapshots()
-          .listen((snap) {
-        if (snap.exists && snap.data() != null) {
-          final data = snap.data()!;
+      Supabase.instance.client
+          .from('config')
+          .select()
+          .eq('key', 'version_config')
+          .maybeSingle()
+          .then((data) {
+        if (data != null) {
           final info = _evaluateVersion(data);
           _updateInfo = info;
           notifyListeners();
           if (info.isUpdateAvailable && info.isForced && onUpdateRequired != null) {
             onUpdateRequired(info);
           }
-        } else {
-          FirebaseFirestore.instance.collection('config').doc('app_config').get().then((fallbackSnap) {
-            if (fallbackSnap.exists && fallbackSnap.data() != null) {
-              final info = _evaluateVersion(fallbackSnap.data()!);
-              _updateInfo = info;
-              notifyListeners();
-              if (info.isUpdateAvailable && info.isForced && onUpdateRequired != null) {
-                onUpdateRequired(info);
-              }
-            }
-          }).catchError((_) {});
         }
-      }, onError: (e) {
-        FirebaseFirestore.instance.collection('config').doc('app_config').get().then((fallbackSnap) {
-          if (fallbackSnap.exists && fallbackSnap.data() != null) {
-            final info = _evaluateVersion(fallbackSnap.data()!);
-            _updateInfo = info;
-            notifyListeners();
-            if (info.isUpdateAvailable && info.isForced && onUpdateRequired != null) {
-              onUpdateRequired(info);
-            }
-          }
-        }).catchError((_) {});
-      });
+      }).catchError((_) {});
     } catch (e) {
       debugPrint('AppVersionService startListening error: $e');
     }
@@ -82,28 +58,20 @@ class AppVersionService extends ChangeNotifier {
 
   Future<AppUpdateInfo> checkForUpdate() async {
     try {
-      var doc = await FirebaseFirestore.instance
-          .collection('config')
-          .doc('version_config')
-          .get()
-          .timeout(const Duration(seconds: 4));
+      final res = await Supabase.instance.client
+          .from('config')
+          .select()
+          .eq('key', 'version_config')
+          .maybeSingle();
 
-      if (!doc.exists || doc.data() == null) {
-        doc = await FirebaseFirestore.instance
-            .collection('config')
-            .doc('app_config')
-            .get()
-            .timeout(const Duration(seconds: 4));
-      }
-
-      if (doc.exists && doc.data() != null) {
-        final info = _evaluateVersion(doc.data()!);
+      if (res != null) {
+        final info = _evaluateVersion(res);
         _updateInfo = info;
         notifyListeners();
         return info;
       }
     } catch (e) {
-      debugPrint('AppVersionService checkForUpdate error: ');
+      debugPrint('AppVersionService checkForUpdate error: $e');
     }
 
     return const AppUpdateInfo(
@@ -121,7 +89,7 @@ class AppVersionService extends ChangeNotifier {
     final remoteVersion = (data['app_version'] ?? data['latest_version'] ?? currentAppVersion).toString().trim();
     final minRequired = (data['min_required_version'] ?? '1.0.0').toString().trim();
     final forceUpdateFlag = data['force_update'] == true;
-    final updateUrl = (data['update_url'] ?? 'https://play.google.com/store/apps/details?id=com.zanko.student').toString();
+    final updateUrl = (data['update_url'] ?? 'https://play.google.com/store/apps/details?id=com.zankoai.app').toString();
     final title = (data['update_title'] ?? '🚀 نوێکارییەکی نوێ بەردەستە!').toString();
     final notes = (data['update_notes'] ?? 'تایبەتمەندی نوێ زیادکراوە و خێرایی ئەپەکە بەرزکراوەتەوە.').toString();
 
@@ -162,9 +130,4 @@ class AppVersionService extends ChangeNotifier {
     return false;
   }
 
-  @override
-  void dispose() {
-    _configSub?.cancel();
-    super.dispose();
-  }
 }

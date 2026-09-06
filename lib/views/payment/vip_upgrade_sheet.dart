@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../services/auth_service.dart';
@@ -113,36 +113,14 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
       });
     }
 
-    FirebaseFirestore.instance
-        .collection('config')
-        .doc('payment_config')
-        .get()
-        .then((doc) {
-      if (doc.exists) parseData(doc.data());
-    }).catchError((e) {
-      debugPrint('payment_config initial get warning: $e');
-    });
-
-    FirebaseFirestore.instance
-        .collection('config')
-        .doc('app_config')
-        .get()
-        .then((doc) {
-      if (doc.exists) parseData(doc.data());
+    Supabase.instance.client
+        .from('config')
+        .select()
+        .eq('key', 'payment_config')
+        .maybeSingle()
+        .then((data) {
+      if (data != null) parseData(data);
     }).catchError((_) {});
-
-    FirebaseFirestore.instance
-        .collection('config')
-        .doc('payment_config')
-        .snapshots()
-        .listen(
-      (snap) {
-        if (snap.exists) parseData(snap.data());
-      },
-      onError: (err) {
-        debugPrint('payment_config snapshots error: $err');
-      },
-    );
   }
 
   String _formatPrice(int price) {
@@ -152,7 +130,7 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
     );
   }
 
-  // ── Register VIP Request to Firestore for Admin Panel ─────────────────────
+  // ── Register VIP Request to Supabase for Admin Panel ─────────────────────
   Future<bool> _registerVipRequest({
     required BuildContext ctx,
     required dynamic user,
@@ -181,32 +159,16 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
     }
 
     try {
-      final reqDoc = FirebaseFirestore.instance.collection('vip_requests').doc(user.id);
-      final priceStr = _formatPrice(_planPrice);
-
-      await reqDoc.set({
-        'id': user.id,
-        'userId': user.id,
-        'userEmail': user.email,
-        'userName': user.name,
-        'photoUrl': user.photoUrl,
-        'plan': _selectedPlan,
-        'planTitle': _planTitle,
-        'price': _planPrice,
-        'amount': '$priceStr د.ع',
-        'paymentMethod': platform,
-        'transactionId': 'لە چاتی $platform دەنێردرێت 💬',
-        'receiptImageUrl': '',
-        'method': platform.toLowerCase(),
+      await Supabase.instance.client.from('payment_transactions').insert({
+        'user_id': user.id,
+        'plan_id': _selectedPlan,
+        'amount_iqd': _planPrice,
+        'gateway': 'manual_receipt',
         'status': 'pending',
-        'notes': 'داواکاری لە ڕێگەی $platform نێردراوە',
-        'requestedAt': FieldValue.serverTimestamp(),
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      });
       return true;
     } catch (e) {
-      debugPrint('Error creating vip_request: $e');
+      debugPrint('Notice creating payment transaction: $e');
       return true; // proceed to open chat
     }
   }

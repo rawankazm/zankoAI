@@ -7,6 +7,9 @@ import '../services/auth_service.dart';
 import '../services/app_version_service.dart';
 import '../theme.dart';
 import 'auth/login_screen.dart';
+import 'auth/reset_password_screen.dart';
+import 'auth/email_verification_screen.dart';
+import '../core/auth/auth_state.dart';
 import 'navigation_shell.dart';
 import 'onboarding/onboarding_screen.dart';
 import 'update/force_update_screen.dart';
@@ -130,7 +133,12 @@ class _SplashScreenState extends State<SplashScreen>
       nextScreen = const OnboardingScreen();
     } else {
       final authService = Provider.of<AuthService>(context, listen: false);
-      if (authService.isAuthenticated) {
+      if (authService.authState is PasswordRecoveryState) {
+        nextScreen = const ResetPasswordScreen();
+      } else if (authService.authState is EmailUnconfirmedState) {
+        final state = authService.authState as EmailUnconfirmedState;
+        nextScreen = EmailVerificationScreen(email: state.email);
+      } else if (authService.isAuthenticated) {
         nextScreen = const NavigationShell();
       } else {
         nextScreen = const LoginScreen();

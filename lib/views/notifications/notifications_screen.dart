@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/language_provider.dart';
 import '../../services/auth_service.dart';
@@ -44,9 +44,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   String _selectedCategory = 'all';
   final List<NotificationItem> _notifications = [];
   StreamSubscription? _directMsgSub;
-  StreamSubscription? _broadcastMsgSub;
-  final List<NotificationItem> _directItems = [];
-  final List<NotificationItem> _broadcastItems = [];
   final Set<String> _readDocIds = {};
   final Set<String> _deletedDocIds = {};
 
@@ -74,7 +71,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   DateTime _parseTimestamp(dynamic value) {
     if (value == null) return DateTime.now();
-    if (value is Timestamp) return value.toDate();
     if (value is DateTime) return value;
     if (value is int) return DateTime.fromMillisecondsSinceEpoch(value);
     if (value is String) {
@@ -90,80 +86,22 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final user = authService.currentUser;
     if (user == null || user.isGuest) return;
 
-    final userEmail = user.email.trim().toLowerCase();
-
-    // 1. Direct Messages
     _directMsgSub?.cancel();
-    _directMsgSub = FirebaseFirestore.instance
-        .collection('direct_messages')
-        .where('userId', isEqualTo: user.id)
-        .snapshots()
-        .listen((snap) {
-      _directItems.clear();
-      for (var doc in snap.docs) {
-        if (_deletedDocIds.contains(doc.id)) continue;
-        final data = doc.data();
-        final docUserId = (data['userId'] ?? data['user_id'] ?? data['recipientId'] ?? data['studentId'] ?? '').toString().trim();
-        final docEmail = (data['email'] ?? data['userEmail'] ?? data['recipientEmail'] ?? '').toString().trim().toLowerCase();
+    _directMsgSub = Supabase.instance.client
+        .from('notifications')
+        .stream(primaryKey: ['id'])
+        .listen((data) {
+      _notifications.clear();
+      for (var row in data) {
+        final id = row['id'].toString();
+        if (_deletedDocIds.contains(id)) continue;
+        final targetUserId = (row['user_id'] ?? '').toString();
+        if (targetUserId.isNotEmpty && targetUserId != user.id) continue;
 
-        final isMatch = (docUserId.isNotEmpty && docUserId == user.id) ||
-            (userEmail.isNotEmpty && docEmail == userEmail);
-
-        if (!isMatch) continue;
-
-        final title = fixNotificationEncoding(data['title'] ?? data['header'] ?? data['subject'] ?? '✉️ پەیام لە ئەدمینەوە');
-        final body = fixNotificationEncoding(data['message'] ?? data['body'] ?? data['content'] ?? data['text'] ?? '');
-        final time = _parseTimestamp(data['createdAt'] ?? data['timestamp'] ?? data['date']);
-        final isRead = data['isRead'] == true || _readDocIds.contains(doc.id);
-
-        _directItems.add(NotificationItem(
-          id: doc.id,
-          title: title.toString(),
-          body: body.toString(),
-          time: time,
-          category: 'Admin Direct',
-          icon: CupertinoIcons.mail_solid,
-          color: ZankoColors.primary,
-          isRead: isRead,
-        ));
-      }
-      _combineAndSetNotifications();
-    });
-
-    // 2. Broadcast / Announcements
-    _broadcastMsgSub?.cancel();
-    _broadcastMsgSub = FirebaseFirestore.instance
-        .collection('notifications')
-        .snapshots()
-        .listen((snap) {
-      _broadcastItems.clear();
-      for (var doc in snap.docs) {
-        if (_deletedDocIds.contains(doc.id)) continue;
-        final data = doc.data();
-        final target = (data['target'] ?? data['to'] ?? data['audience'] ?? '').toString().trim().toLowerCase();
-        final docUserId = (data['userId'] ?? data['user_id'] ?? data['recipientId'] ?? '').toString().trim();
-        final docEmail = (data['email'] ?? data['userEmail'] ?? '').toString().trim().toLowerCase();
-
-        // If addressed to a specific user, ONLY deliver to that user
-        bool isMatch = false;
-        if (docUserId.isNotEmpty) {
-          isMatch = (docUserId == user.id);
-        } else if (docEmail.isNotEmpty) {
-          isMatch = (userEmail.isNotEmpty && docEmail == userEmail);
-        } else if (target == 'user' || target == 'direct' || target == 'single' || target == 'personal') {
-          isMatch = false; // missing recipient id/email, do not broadcast to all
-        } else if (target == 'vip') {
-          isMatch = user.isVip;
-        } else if (target == '' || target == 'all' || target == 'all_students' || target == 'students' || target == 'everyone') {
-          isMatch = true;
-        }
-
-        if (!isMatch) continue;
-
-        final title = fixNotificationEncoding(data['title'] ?? data['header'] ?? data['subject'] ?? '🔔 ئاگادارکردنەوە');
-        final body = fixNotificationEncoding(data['body'] ?? data['message'] ?? data['content'] ?? data['text'] ?? '');
-        final time = _parseTimestamp(data['createdAt'] ?? data['timestamp'] ?? data['date']);
-        final rawCat = (data['category'] ?? data['type'] ?? 'Announcement').toString().toLowerCase();
+        final title = fixNotificationEncoding(row['title'] ?? '🔔 ئاگادارکردنەوە');
+        final body = fixNotificationEncoding(row['body'] ?? '');
+        final time = _parseTimestamp(row['created_at']);
+        final rawCat = (row['type'] ?? 'Announcement').toString().toLowerCase();
 
         String category = 'Announcement';
         IconData icon = CupertinoIcons.bell_fill;
@@ -185,12 +123,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           category = 'Reminder';
           icon = CupertinoIcons.alarm_fill;
           color = const Color(0xFFEC4899);
+        } else if (rawCat.contains('admin') || rawCat.contains('direct')) {
+          category = 'Admin Direct';
+          icon = CupertinoIcons.mail_solid;
+          color = ZankoColors.primary;
         }
 
-        final isRead = data['isRead'] == true || _readDocIds.contains(doc.id);
+        final isRead = row['is_read'] == true || _readDocIds.contains(id);
 
-        _broadcastItems.add(NotificationItem(
-          id: doc.id,
+        _notifications.add(NotificationItem(
+          id: id,
           title: title.toString(),
           body: body.toString(),
           time: time,
@@ -200,34 +142,29 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           isRead: isRead,
         ));
       }
-      _combineAndSetNotifications();
-    });
-  }
-
-  void _combineAndSetNotifications() {
-    if (!mounted) return;
-    setState(() {
-      _notifications.clear();
-      _notifications.addAll([..._directItems, ..._broadcastItems]);
       _notifications.sort((a, b) => b.time.compareTo(a.time));
+      if (mounted) setState(() {});
     });
   }
 
   @override
   void dispose() {
     _directMsgSub?.cancel();
-    _broadcastMsgSub?.cancel();
     super.dispose();
   }
 
   Future<void> _markAllAsRead() async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final user = authService.currentUser;
     for (var item in _notifications) {
       item.isRead = true;
       _readDocIds.add(item.id);
-      FirebaseFirestore.instance
-          .collection('direct_messages')
-          .doc(item.id)
-          .update({'isRead': true})
+    }
+    if (user != null) {
+      Supabase.instance.client
+          .from('notifications')
+          .update({'is_read': true})
+          .eq('user_id', user.id)
           .catchError((_) {});
     }
     setState(() {});
@@ -255,8 +192,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<void> _deleteNotification(NotificationItem item) async {
     setState(() {
       _notifications.removeWhere((n) => n.id == item.id);
-      _directItems.removeWhere((n) => n.id == item.id);
-      _broadcastItems.removeWhere((n) => n.id == item.id);
     });
     _deletedDocIds.add(item.id);
     try {
@@ -264,10 +199,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       await prefs.setStringList(_prefDeletedNotificationsKey, _deletedDocIds.toList());
     } catch (_) {}
 
-    FirebaseFirestore.instance
-        .collection('direct_messages')
-        .doc(item.id)
+    Supabase.instance.client
+        .from('notifications')
         .delete()
+        .eq('id', item.id)
         .catchError((_) {});
   }
 
@@ -277,10 +212,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         item.isRead = true;
       });
       _readDocIds.add(item.id);
-      FirebaseFirestore.instance
-          .collection('direct_messages')
-          .doc(item.id)
-          .update({'isRead': true})
+      Supabase.instance.client
+          .from('notifications')
+          .update({'is_read': true})
+          .eq('id', item.id)
           .catchError((_) {});
       try {
         final prefs = await SharedPreferences.getInstance();

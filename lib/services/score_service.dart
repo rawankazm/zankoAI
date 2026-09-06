@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ScoreService extends ChangeNotifier {
   static final ScoreService instance = ScoreService._();
@@ -134,19 +133,14 @@ class ScoreService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Syncs current study progress and streak count to user's Firestore profile
+  /// Syncs current study progress and streak count to user's Supabase profile
   Future<void> syncToCloud([String? uid]) async {
     try {
-      final targetUid = uid ?? FirebaseAuth.instance.currentUser?.uid;
+      final targetUid = uid ?? Supabase.instance.client.auth.currentUser?.id;
       if (targetUid != null && targetUid.isNotEmpty && !targetUid.startsWith('guest_')) {
-        await FirebaseFirestore.instance.collection('users').doc(targetUid).set({
-          'studyStreak': _streakCount,
-          'lastStreakDate': _lastStreakDate,
-          'todayStudyMinutes': _todayStudyMinutes,
-          'totalQuestionsAnswered': totalQuestionsAnswered,
-          'score100': totalScore100,
-          'lastScoreSync': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
+        await Supabase.instance.client.from('profiles').update({
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        }).eq('id', targetUid);
       }
     } catch (_) {}
   }

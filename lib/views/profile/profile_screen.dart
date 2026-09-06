@@ -16,7 +16,7 @@ import '../auth/login_screen.dart';
 import '../payment/vip_upgrade_sheet.dart';
 import '../../services/app_version_service.dart';
 import '../update/force_update_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/university_department_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -176,14 +176,16 @@ class ProfileScreen extends StatelessWidget {
                         setModalState(() => isSubmitting = true);
 
                         try {
-                          await FirebaseFirestore.instance.collection('user_feedback').add({
-                            'userId': user?.id ?? '',
-                            'userName': user?.name ?? 'خوێندکار',
-                            'userEmail': user?.email ?? '',
-                            'type': feedbackType,
-                            'message': msg,
-                            'rating': rating,
-                            'createdAt': FieldValue.serverTimestamp(),
+                          await Supabase.instance.client.from('audit_logs').insert({
+                            'user_id': user?.id,
+                            'action': 'USER_FEEDBACK',
+                            'entity_type': feedbackType,
+                            'payload': {
+                              'message': msg,
+                              'rating': rating,
+                              'userName': user?.name ?? 'خوێندکار',
+                              'userEmail': user?.email ?? '',
+                            },
                           });
 
                           if (context.mounted) {
@@ -618,8 +620,6 @@ class ProfileScreen extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: isSaving ? null : () async {
                           final newName = nameCtrl.text.trim();
-                          final newUni  = uniCtrl.text.trim();
-                          final newDept = deptCtrl.text.trim();
                           final newCity = cityCtrl.text.trim();
 
                           if (newName.isEmpty) {
@@ -633,12 +633,10 @@ class ProfileScreen extends StatelessWidget {
 
                           try {
                             if (user != null && user.id != null) {
-                              await FirebaseFirestore.instance.collection('users').doc(user.id).update({
-                                'name': newName,
-                                'universityName': newUni,
-                                'departmentName': newDept,
-                                'cityName': newCity,
-                              });
+                              await Supabase.instance.client.from('profiles').update({
+                                'full_name': newName,
+                                'city_name': newCity,
+                              }).eq('id', user.id);
                               if (context.mounted) {
                                 await Provider.of<AuthService>(context, listen: false).reloadUser();
                               }
@@ -1439,9 +1437,9 @@ class ProfileScreen extends StatelessWidget {
 
                           try {
                             if (user != null && user.id != null) {
-                              await FirebaseFirestore.instance.collection('users').doc(user.id).update({
-                                'photoUrl': selectedAvatar,
-                              });
+                              await Supabase.instance.client.from('profiles').update({
+                                'avatar_url': selectedAvatar,
+                              }).eq('id', user.id);
                               try {
                                 final prefs = await SharedPreferences.getInstance();
                                 await prefs.setString('local_avatar_path', selectedAvatar);

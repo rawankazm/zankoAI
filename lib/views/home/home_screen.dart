@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
 import '../../services/score_service.dart';
@@ -368,24 +368,15 @@ class _NotificationBellButton extends StatelessWidget {
               ),
             ),
             if (user != null && !user.isGuest)
-              StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('direct_messages')
-                    .where('userId', isEqualTo: user.id)
-                    .snapshots(),
-                builder: (context, dmSnap) {
+              StreamBuilder<List<Map<String, dynamic>>>(
+                stream: Supabase.instance.client
+                    .from('notifications')
+                    .stream(primaryKey: ['id'])
+                    .eq('user_id', user.id),
+                builder: (context, notifSnap) {
                   bool hasUnread = false;
-                  if (dmSnap.hasData) {
-                    final normalizedEmail = user.email.trim().toLowerCase();
-                    hasUnread = dmSnap.data!.docs.any((doc) {
-                      final data = doc.data() as Map<String, dynamic>?;
-                      if (data == null) return false;
-                      final docUserId = (data['userId'] ?? data['user_id'] ?? data['recipientId'] ?? data['studentId'] ?? '').toString().trim();
-                      final docEmail = (data['email'] ?? data['userEmail'] ?? '').toString().trim().toLowerCase();
-                      final isMatch = (docUserId.isNotEmpty && docUserId == user.id) ||
-                          (normalizedEmail.isNotEmpty && docEmail == normalizedEmail);
-                      return isMatch && data['isRead'] != true;
-                    });
+                  if (notifSnap.hasData) {
+                    hasUnread = notifSnap.data!.any((n) => n['is_read'] != true);
                   }
 
                   if (!hasUnread) return const SizedBox.shrink();

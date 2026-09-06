@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
@@ -35,9 +35,15 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
   }
 
   String _formatDate(dynamic timestamp) {
-    if (timestamp is Timestamp) {
-      final date = timestamp.toDate();
+    if (timestamp is DateTime) {
+      final date = timestamp;
       return '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    }
+    if (timestamp is String) {
+      final date = DateTime.tryParse(timestamp);
+      if (date != null) {
+        return '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+      }
     }
     return '';
   }
@@ -57,56 +63,39 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
       final adminEmail = auth.currentUser?.email ?? 'admin';
       final planDays = _getPlanDays(plan);
 
-      Timestamp expiresAt;
-      if (existingExpiresAt is Timestamp && existingExpiresAt.toDate().isAfter(DateTime.now())) {
+      DateTime expiresAt;
+      if (existingExpiresAt is DateTime && existingExpiresAt.isAfter(DateTime.now())) {
         expiresAt = existingExpiresAt;
+      } else if (existingExpiresAt is String && (DateTime.tryParse(existingExpiresAt)?.isAfter(DateTime.now()) ?? false)) {
+        expiresAt = DateTime.parse(existingExpiresAt);
       } else {
-        expiresAt = Timestamp.fromDate(DateTime.now().add(Duration(days: planDays)));
+        expiresAt = DateTime.now().add(Duration(days: planDays));
       }
 
-      // 1. Update vip_requests doc
-      await FirebaseFirestore.instance.collection('vip_requests').doc(requestId).update({
-        'status': 'approved',
-        'approvedAt': FieldValue.serverTimestamp(),
-        'approvedBy': adminEmail,
-        'expiresAt': expiresAt,
-      });
+      // 1. Update payment_transactions doc
+      await Supabase.instance.client.from('payment_transactions').update({
+        'status': 'COMPLETED',
+        'metadata': {
+          'approvedBy': adminEmail,
+          'approvedAt': DateTime.now().toIso8601String(),
+          'expiresAt': expiresAt.toIso8601String(),
+        },
+      }).eq('id', requestId);
 
       // 2. Immediately update user document so auth stream instantly grants VIP
-      await FirebaseFirestore.instance.collection('users').doc(userId).set({
-        'isVip': true,
-        'vipGracePeriod': false,
-        'vipStatus': 'active',
-        'vipPlan': plan ?? 'monthly',
-        'vipExpiresAt': expiresAt,
-        'vipApprovedAt': FieldValue.serverTimestamp(),
-        'vipApprovedBy': adminEmail,
-      }, SetOptions(merge: true));
+      await Supabase.instance.client.from('profiles').update({
+        'is_vip': true,
+        'vip_status': 'active',
+        'vip_expiry': expiresAt.toIso8601String(),
+        'plan': 'premium',
+      }).eq('id', userId);
 
       // 3. Send instant private notification ONLY to this specific user
-      await FirebaseFirestore.instance.collection('notifications').add({
-        'userId': userId,
-        'recipientId': userId,
-        'target': 'user',
+      await Supabase.instance.client.from('notifications').insert({
+        'user_id': userId,
         'title': '🎉 پیرۆزە! هەژمارەکەت بوو بە VIP',
         'body': 'داواکاری بەشداریکردنی VIPەکەت لەلایەن بەڕێوەبەرەوە پەسەندکرا. ئێستا دەتوانیت لە هەموو تایبەتمەندییە بێسنوورەکانی ZankoAI سوودمەند بیت!',
         'type': 'vip_approved',
-        'category': 'vip_approved',
-        'isRead': false,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
-      // Also write directly to user's private subcollection
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection('notifications')
-          .add({
-        'title': '🎉 پیرۆزە! هەژمارەکەت بوو بە VIP',
-        'body': 'داواکاری بەشداریکردنی VIPەکەت لەلایەن بەڕێوەبەرەوە پەسەندکرا. ئێستا دەتوانیت لە هەموو تایبەتمەندییە بێسنوورەکانی ZankoAI سوودمەند بیت!',
-        'type': 'vip_approved',
-        'isRead': false,
-        'createdAt': FieldValue.serverTimestamp(),
       });
 
       if (mounted) {
@@ -206,33 +195,29 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
 
     try {
 
-      // 1. Update vip_requests doc
-      await FirebaseFirestore.instance.collection('vip_requests').doc(requestId).update({
-        'status': 'rejected',
-        'rejectedAt': FieldValue.serverTimestamp(),
-        'rejectedBy': adminEmail,
-        'rejectionReason': reason,
-      });
+      // 1. Update payment_transactions doc
+      await Supabase.instance.client.from('payment_transactions').update({
+        'status': 'FAILED',
+        'metadata': {
+          'rejectedBy': adminEmail,
+          'rejectedAt': DateTime.now().toIso8601String(),
+          'rejectionReason': reason,
+        },
+      }).eq('id', requestId);
 
       // 2. Update user doc
-      await FirebaseFirestore.instance.collection('users').doc(userId).set({
-        'isVip': false,
-        'vipGracePeriod': false,
-        'vipStatus': 'rejected',
-        'vipRejectedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      await Supabase.instance.client.from('profiles').update({
+        'is_vip': false,
+        'vip_status': 'none',
+        'plan': 'free',
+      }).eq('id', userId);
 
       // 3. Send notification to user
-      await FirebaseFirestore.instance.collection('notifications').add({
-        'userId': userId,
-        'recipientId': userId,
-        'target': 'user',
+      await Supabase.instance.client.from('notifications').insert({
+        'user_id': userId,
         'title': '⚠️ ئاگاداری دەربارەی داواکاری VIP',
         'body': 'داواکاری بەشداریکردنی VIPەکەت پەسەند نەکرا. هۆکار: $reason',
         'type': 'vip_rejected',
-        'category': 'vip_rejected',
-        'isRead': false,
-        'createdAt': FieldValue.serverTimestamp(),
       });
 
       if (mounted) {
@@ -342,27 +327,24 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
           color: isDark ? ZankoColors.darkCard : Colors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         ),
-        child: StreamBuilder<QuerySnapshot>(
-          stream: FirebaseFirestore.instance.collection('vip_requests').snapshots(),
+        child: StreamBuilder<List<Map<String, dynamic>>>(
+          stream: Supabase.instance.client.from('payment_transactions').stream(primaryKey: ['id']),
           builder: (context, snapshot) {
-            final allDocs = List<DocumentSnapshot>.from(snapshot.data?.docs ?? []);
+            final allDocs = List<Map<String, dynamic>>.from(snapshot.data ?? []);
             
             final pendingDocs = allDocs.where((d) {
-              final data = d.data() as Map<String, dynamic>? ?? {};
-              return (data['status'] as String? ?? 'pending').toLowerCase() == 'pending';
+              return (d['status'] as String? ?? 'pending').toLowerCase() == 'pending';
             }).toList();
 
             final approvedDocs = allDocs.where((d) {
-              final data = d.data() as Map<String, dynamic>? ?? {};
-              return (data['status'] as String? ?? '').toLowerCase() == 'approved';
+              return (d['status'] as String? ?? '').toLowerCase() == 'completed';
             }).toList();
 
             final rejectedDocs = allDocs.where((d) {
-              final data = d.data() as Map<String, dynamic>? ?? {};
-              return (data['status'] as String? ?? '').toLowerCase() == 'rejected';
+              return (d['status'] as String? ?? '').toLowerCase() == 'failed';
             }).toList();
 
-            List<DocumentSnapshot> displayedDocs;
+            List<Map<String, dynamic>> displayedDocs;
             if (_filterStatus == 'pending') {
               displayedDocs = pendingDocs;
             } else if (_filterStatus == 'approved') {
@@ -374,14 +356,8 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
             }
 
             displayedDocs.sort((a, b) {
-              final aData = a.data() as Map<String, dynamic>? ?? {};
-              final bData = b.data() as Map<String, dynamic>? ?? {};
-              final aTime = (aData['requestedAt'] as Timestamp?)?.toDate() ?? 
-                            (aData['createdAt'] as Timestamp?)?.toDate() ?? 
-                            DateTime.now();
-              final bTime = (bData['requestedAt'] as Timestamp?)?.toDate() ?? 
-                            (bData['createdAt'] as Timestamp?)?.toDate() ?? 
-                            DateTime.now();
+              final aTime = DateTime.tryParse(a['created_at']?.toString() ?? '') ?? DateTime.now();
+              final bTime = DateTime.tryParse(b['created_at']?.toString() ?? '') ?? DateTime.now();
               return bTime.compareTo(aTime);
             });
 
@@ -511,12 +487,11 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
                         itemCount: displayedDocs.length,
                         separatorBuilder: (context, index) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
-                          final doc = displayedDocs[index];
-                      final data = doc.data() as Map<String, dynamic>;
-                      final requestId = doc.id;
-                      final userId = data['userId'] as String? ?? '';
-                      final userName = data['userName'] as String? ?? 'خوێندکار';
-                      final userEmail = data['userEmail'] as String? ?? '';
+                          final data = displayedDocs[index];
+                          final requestId = data['id']?.toString() ?? '';
+                          final userId = (data['user_id'] ?? data['userId'] ?? '').toString();
+                          final userName = (data['userName'] ?? 'خوێندکار').toString();
+                          final userEmail = (data['userEmail'] ?? '').toString();
                       final plan = data['plan'] as String? ?? 'monthly';
                       final planTitle = data['planTitle'] as String? ?? 'پلان مانگانە';
                       final paymentMethod = data['paymentMethod'] as String? ?? 'FastPay';

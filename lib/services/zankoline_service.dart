@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'ai_service.dart';
 
 class ZankolineDepartmentModel {
@@ -104,7 +104,7 @@ class ZankolineService extends ChangeNotifier {
 
   ZankolineService([AiService? aiService]) : _aiService = aiService {
     loadDepartments();
-    _listenToFirestoreDepartments();
+    _listenToSupabaseDepartments();
   }
 
   void updateAiService(AiService? aiService) {
@@ -114,24 +114,21 @@ class ZankolineService extends ChangeNotifier {
   bool get isLoading => _isLoading;
   List<ZankolineDepartmentModel> get departments => _departments;
 
-  void _listenToFirestoreDepartments() {
+  void _listenToSupabaseDepartments() {
     try {
-      FirebaseFirestore.instance
-          .collection('zankoline_departments')
-          .get(const GetOptions(source: Source.serverAndCache))
-          .then((snapshot) {
-        if (snapshot.docs.isNotEmpty) {
-          for (var doc in snapshot.docs) {
-            final data = doc.data();
-            final item = ZankolineDepartmentModel.fromJson(data, docId: doc.id);
-            _deptMap[doc.id] = item;
+      Supabase.instance.client
+          .from('departments')
+          .select()
+          .then((data) {
+        if (data.isNotEmpty) {
+          for (var item in data) {
+            final dept = ZankolineDepartmentModel.fromJson(item, docId: item['id'].toString());
+            _deptMap[item['id'].toString()] = dept;
           }
           _departments = _deptMap.values.toList();
           notifyListeners();
         }
-      }).catchError((err) {
-        if (kDebugMode) print('Firestore zankoline fetch warning: $err');
-      });
+      }).catchError((_) {});
     } catch (_) {}
   }
 

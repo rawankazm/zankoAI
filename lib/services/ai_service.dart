@@ -3,10 +3,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:google_generative_ai/google_generative_ai.dart' as gemini;
 import '../models/quiz_model.dart';
 import '../models/flashcard_model.dart';
 import '../models/study_plan_model.dart';
@@ -110,9 +107,9 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   static String get _fallbackWorkingKey =>
       utf8.decode(base64.decode('QVEuQWI4Uk42S0ZjVEN2REVQbkplbC1aU0xyMEFGSlJFcENmRC1lRnA4cXh2Nk4zcTZFZUE='));
   String? _apiKey;
-  List<String> _keyPool = [];
+  final List<String> _keyPool = [];
   final Map<String, DateTime> _keyCooldowns = {};
-  int _freeMessageLimit = 10;
+  final int _freeMessageLimit = 10;
 
   @override
   int get freeMessageLimit => _freeMessageLimit;
@@ -150,40 +147,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
       _apiKey = _fallbackWorkingKey;
     }
 
-    try {
-      if (Firebase.apps.isNotEmpty) {
-        final docRef = FirebaseFirestore.instance.collection('config').doc('app_config');
-        docRef.snapshots().listen((doc) async {
-          if (doc.exists && doc.data() != null) {
-            final key = doc.data()!['gemini_api_key'] ?? doc.data()!['apiKey'];
-            final customModel = doc.data()!['gemini_model'] ?? doc.data()!['model'];
-            final rawKeys = doc.data()!['gemini_api_keys'] ?? doc.data()!['api_keys'];
-            final rawLimit = doc.data()!['freeMessageLimit'] ?? doc.data()!['free_message_limit'];
-
-            if (rawLimit is num && rawLimit > 0) {
-              _freeMessageLimit = rawLimit.toInt();
-            }
-            
-            if (rawKeys is List) {
-              _keyPool = rawKeys.map((e) => e.toString().trim()).where((s) => s.isNotEmpty).toList();
-            } else if (rawKeys is String && rawKeys.contains(',')) {
-              _keyPool = rawKeys.split(',').map((e) => e.trim()).where((s) => s.isNotEmpty).toList();
-            }
-
-            if (customModel != null && customModel.toString().trim().isNotEmpty) {
-              _lastWorkingModel = customModel.toString().trim();
-            }
-            if (key != null && key.toString().trim().isNotEmpty) {
-              _apiKey = key.toString().trim();
-              notifyListeners();
-            } else if (_apiKey == null || _apiKey!.trim().isEmpty) {
-              _apiKey = _fallbackWorkingKey;
-              notifyListeners();
-            }
-          }
-        }, onError: (_) {});
-      }
-    } catch (_) {}
+    // Config is securely managed via DigitalOcean backend API and Redis
 
     if (_apiKey == null || _apiKey!.trim().isEmpty) {
       _apiKey = _fallbackWorkingKey;
@@ -325,8 +289,14 @@ class ZankoAiService extends ChangeNotifier implements AiService {
               }
             }
           }
+        } else if (response.statusCode >= 400) {
+          _markKeyCooldown(key);
         }
-      } catch (_) {}
+      } catch (e) {
+        if (_isKeyAuthError(e)) {
+          _markKeyCooldown(key);
+        }
+      }
     }
 
     client.close();
@@ -364,42 +334,6 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     for (final keyToUse in keysToTry) {
       if (keyToUse.isEmpty) continue;
 
-      final modelsToTry = _lastWorkingModel != null 
-          ? [_lastWorkingModel!, ..._validFastModels.where((m) => m != _lastWorkingModel)]
-          : _validFastModels;
-
-      bool keyFailedAuth = false;
-
-      // Try top fast official models with adequate 25s timeout for complete academic outputs
-      for (final m in modelsToTry.take(3)) {
-        try {
-          final model = gemini.GenerativeModel(
-            model: m,
-            apiKey: keyToUse,
-            systemInstruction: systemInstruction.isNotEmpty
-                ? gemini.Content.system(systemInstruction)
-                : null,
-          );
-
-          final content = [gemini.Content.text(prompt)];
-          final response = await model.generateContent(content).timeout(const Duration(seconds: 25));
-          if (response.text != null && response.text!.isNotEmpty) {
-            _lastWorkingKey = keyToUse;
-            _lastWorkingModel = m;
-            return response.text!;
-          }
-        } catch (e) {
-          if (_isKeyAuthError(e)) {
-            keyFailedAuth = true;
-            _markKeyCooldown(keyToUse);
-            break; // Skip remaining models for this bad key immediately
-          }
-        }
-      }
-
-      if (keyFailedAuth) continue;
-
-      // Direct HTTP Fast Fallback
       final httpFallback = await _callGeminiHttp(keyToUse, prompt, systemInstruction);
       if (httpFallback.isNotEmpty) {
         return httpFallback;
@@ -419,35 +353,15 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
     for (final keyToUse in keysToTry) {
       if (keyToUse.isEmpty) continue;
-      for (final m in _validFastModels) {
-        try {
-          final model = gemini.GenerativeModel(
-            model: m,
-            apiKey: keyToUse,
-            systemInstruction: systemInstruction.isNotEmpty
-                ? gemini.Content.system(systemInstruction)
-                : null,
-          );
-
-          final content = [
-            gemini.Content.multi([
-              gemini.TextPart(prompt),
-              gemini.DataPart('application/pdf', pdfBytes),
-            ])
-          ];
-
-          final response = await model.generateContent(content).timeout(const Duration(seconds: 25));
-          if (response.text != null && response.text!.isNotEmpty) {
-            _lastWorkingKey = keyToUse;
-            _lastWorkingModel = m;
-            return response.text!;
-          }
-        } catch (e) {
-          if (_isKeyAuthError(e)) {
-            _markKeyCooldown(keyToUse);
-            break;
-          }
-        }
+      final httpRes = await _callGeminiMultimodalHttp(
+        keyToUse,
+        pdfBytes,
+        prompt,
+        systemInstruction,
+        mimeType: 'application/pdf',
+      );
+      if (httpRes.isNotEmpty) {
+        return httpRes;
       }
     }
     return _callGemini(prompt, systemInstruction: systemInstruction);
@@ -889,51 +803,6 @@ class StudentCard extends StatelessWidget {
         }
       }
 
-      for (final m in _validVisionModels) {
-        try {
-          final model = gemini.GenerativeModel(
-            model: m,
-            apiKey: keyToUse,
-            systemInstruction: gemini.Content.system(systemPrompt),
-          );
-
-          final content = [
-            gemini.Content.multi([
-              gemini.TextPart(effectivePrompt),
-              gemini.DataPart(actualMime, mediaBytes),
-            ])
-          ];
-
-          final response = await model.generateContent(content).timeout(const Duration(seconds: 25));
-          if (response.text != null && response.text!.isNotEmpty) {
-            _lastWorkingKey = keyToUse;
-            _lastWorkingModel = m;
-            return response.text!;
-          }
-        } catch (_) {
-          // Fallback without systemInstruction if rejected by model
-          try {
-            final modelNoSys = gemini.GenerativeModel(
-              model: m,
-              apiKey: keyToUse,
-            );
-            final contentNoSys = [
-              gemini.Content.multi([
-                gemini.TextPart("$systemPrompt\n\nپرسیاری بەکارهێنەر: $effectivePrompt"),
-                gemini.DataPart(actualMime, mediaBytes),
-              ])
-            ];
-            final respNoSys = await modelNoSys.generateContent(contentNoSys).timeout(const Duration(seconds: 25));
-            if (respNoSys.text != null && respNoSys.text!.isNotEmpty) {
-              _lastWorkingKey = keyToUse;
-              _lastWorkingModel = m;
-              return respNoSys.text!;
-            }
-          } catch (_) {}
-        }
-      }
-
-      // Direct HTTP Multimodal Fallback for all other keys
       final httpResult = await _callGeminiMultimodalHttp(
         keyToUse,
         mediaBytes,

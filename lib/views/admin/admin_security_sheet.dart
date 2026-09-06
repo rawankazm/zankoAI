@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 
@@ -33,9 +33,15 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
   }
 
   String _formatDate(dynamic timestamp) {
-    if (timestamp is Timestamp) {
-      final date = timestamp.toDate();
+    if (timestamp is DateTime) {
+      final date = timestamp;
       return '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    }
+    if (timestamp is String) {
+      final date = DateTime.tryParse(timestamp);
+      if (date != null) {
+        return '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+      }
     }
     return '';
   }
@@ -114,23 +120,18 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
       final reason = reasonCtrl.text.trim();
 
       // 1. Update user document
-      await FirebaseFirestore.instance.collection('users').doc(userId).set({
-        'isBlocked': true,
-        'status': 'blocked',
-        'blockReason': reason,
-        'blockedAt': FieldValue.serverTimestamp(),
-        'blockedBy': adminEmail,
-      }, SetOptions(merge: true));
+      await Supabase.instance.client.from('profiles').update({
+        'status': 'suspended',
+      }).eq('id', userId);
 
-      // 2. Update alert document if available
-      if (alertId != null) {
-        await FirebaseFirestore.instance.collection('security_alerts').doc(alertId).update({
-          'status': 'blocked',
-          'handledBy': adminEmail,
-          'handledAt': FieldValue.serverTimestamp(),
-          'adminNote': reason,
-        });
-      }
+      // 2. Log audit event
+      await Supabase.instance.client.from('audit_logs').insert({
+        'user_id': userId,
+        'action': 'USER_BLOCKED',
+        'entity_type': 'user',
+        'entity_id': userId,
+        'payload': {'reason': reason, 'blockedBy': adminEmail},
+      });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -165,21 +166,17 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
       final auth = Provider.of<AuthService>(context, listen: false);
       final adminEmail = auth.currentUser?.email ?? 'admin';
 
-      await FirebaseFirestore.instance.collection('users').doc(userId).set({
-        'isBlocked': false,
+      await Supabase.instance.client.from('profiles').update({
         'status': 'active',
-        'blockReason': FieldValue.delete(),
-        'unblockedAt': FieldValue.serverTimestamp(),
-        'unblockedBy': adminEmail,
-      }, SetOptions(merge: true));
+      }).eq('id', userId);
 
-      if (alertId != null) {
-        await FirebaseFirestore.instance.collection('security_alerts').doc(alertId).update({
-          'status': 'unblocked',
-          'handledBy': adminEmail,
-          'handledAt': FieldValue.serverTimestamp(),
-        });
-      }
+      await Supabase.instance.client.from('audit_logs').insert({
+        'user_id': userId,
+        'action': 'USER_UNBLOCKED',
+        'entity_type': 'user',
+        'entity_id': userId,
+        'payload': {'unblockedBy': adminEmail},
+      });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -214,31 +211,26 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
       final auth = Provider.of<AuthService>(context, listen: false);
       final adminEmail = auth.currentUser?.email ?? 'admin';
 
-      // 1. Reset user known IPs to the new/allowed IP
-      await FirebaseFirestore.instance.collection('users').doc(userId).set({
-        'knownIps': newIp != null && newIp.isNotEmpty ? [newIp] : <String>[],
-        'isBlocked': false,
+      // 1. Reset user blocked status
+      await Supabase.instance.client.from('profiles').update({
         'status': 'active',
-        'ipResetAt': FieldValue.serverTimestamp(),
-        'ipResetBy': adminEmail,
-      }, SetOptions(merge: true));
+      }).eq('id', userId);
 
-      // 2. Mark alert as resolved
-      await FirebaseFirestore.instance.collection('security_alerts').doc(alertId).update({
-        'status': 'resolved',
-        'action': 'approved_ip_reset',
-        'handledBy': adminEmail,
-        'handledAt': FieldValue.serverTimestamp(),
+      // 2. Mark audit log
+      await Supabase.instance.client.from('audit_logs').insert({
+        'user_id': userId,
+        'action': 'IP_RESET_APPROVED',
+        'entity_type': 'user',
+        'entity_id': userId,
+        'payload': {'newIp': newIp, 'approvedBy': adminEmail},
       });
 
       // 3. Send notification to user
-      await FirebaseFirestore.instance.collection('notifications').add({
-        'userId': userId,
+      await Supabase.instance.client.from('notifications').insert({
+        'user_id': userId,
         'title': '✅ داواکاریی IP پەسەندکرا',
         'body': 'داواکارییەکەت لەلایەن بەڕێوەبەرەوە پەسەندکرا و ناونیشانی IP نوێکرایەوە. دەتوانیت ئێستا بە ئاسایی بچیتە ژوورەوە.',
         'type': 'security_approved',
-        'isRead': false,
-        'createdAt': FieldValue.serverTimestamp(),
       });
 
       if (mounted) {
@@ -264,7 +256,7 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
   /// Dismiss / Delete security alert
   Future<void> _dismissAlert(String alertId) async {
     try {
-      await FirebaseFirestore.instance.collection('security_alerts').doc(alertId).delete();
+      await Supabase.instance.client.from('audit_logs').delete().eq('id', alertId);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('داواکارییەکە سڕایەوە.'), duration: Duration(seconds: 2)),
@@ -403,11 +395,11 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
 
   // ─── 1. ALERTS TAB ─────────────────────────────────────────────────────────
   Widget _buildAlertsTab(bool isDark) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('security_alerts')
-          .orderBy('createdAt', descending: true)
-          .snapshots(),
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: Supabase.instance.client
+          .from('audit_logs')
+          .stream(primaryKey: ['id'])
+          .eq('action', 'IP_LIMIT_APPEAL'),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -419,11 +411,7 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
           );
         }
 
-        final docs = snapshot.data?.docs ?? [];
-        final pendingDocs = docs.where((d) {
-          final data = d.data() as Map<String, dynamic>;
-          return data['status'] == 'pending' || data['status'] == null;
-        }).toList();
+        final pendingDocs = snapshot.data ?? [];
 
         if (pendingDocs.isEmpty) {
           return Center(
@@ -450,16 +438,16 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
           padding: const EdgeInsets.all(16),
           itemCount: pendingDocs.length,
           itemBuilder: (context, index) {
-            final doc = pendingDocs[index];
-            final data = doc.data() as Map<String, dynamic>;
-            final alertId = doc.id;
-            final userId = data['userId'] as String? ?? '';
-            final userName = data['name'] as String? ?? 'خوێندکار';
-            final email = data['email'] as String? ?? '';
-            final attemptedIp = data['attemptedIp'] as String? ?? '';
-            final reason = data['reason'] as String? ?? 'تێپەڕاندنی سنووری ٣ IP';
-            final userNote = data['userNote'] as String?;
-            final dateStr = _formatDate(data['createdAt']);
+            final data = pendingDocs[index];
+            final payload = (data['payload'] as Map<String, dynamic>?) ?? {};
+            final alertId = data['id']?.toString() ?? '';
+            final userId = (data['user_id'] ?? payload['userId'] ?? '').toString();
+            final userName = (payload['name'] ?? 'خوێندکار').toString();
+            final email = (payload['email'] ?? '').toString();
+            final attemptedIp = (payload['attemptedIp'] ?? '').toString();
+            final reason = (payload['reason'] ?? 'تێپەڕاندنی سنووری ٣ IP').toString();
+            final userNote = payload['userNote'] as String?;
+            final dateStr = _formatDate(data['created_at']);
             final rawKnownIps = data['knownIps'];
             List<String> knownIps = [];
             if (rawKnownIps is List) {
@@ -669,17 +657,17 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
 
   // ─── 2. BLOCKED USERS TAB ──────────────────────────────────────────────────
   Widget _buildBlockedUsersTab(bool isDark) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .where('isBlocked', isEqualTo: true)
-          .snapshots(),
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: Supabase.instance.client
+          .from('profiles')
+          .stream(primaryKey: ['id'])
+          .eq('status', 'suspended'),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final docs = snapshot.data?.docs ?? [];
+        final docs = snapshot.data ?? [];
         if (docs.isEmpty) {
           return const Center(
             child: Column(
@@ -697,13 +685,12 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
           padding: const EdgeInsets.all(16),
           itemCount: docs.length,
           itemBuilder: (context, index) {
-            final doc = docs[index];
-            final data = doc.data() as Map<String, dynamic>;
-            final userId = doc.id;
+            final data = docs[index];
+            final userId = data['id']?.toString() ?? '';
             final userName = data['name'] as String? ?? 'خوێندکار';
             final email = data['email'] as String? ?? '';
-            final blockReason = data['blockReason'] as String? ?? 'بلۆککراوە لەلایەن ئەدمین';
-            final blockedAtStr = _formatDate(data['blockedAt']);
+            final blockReason = 'بلۆککراوە لەلایەن ئەدمین';
+            final blockedAtStr = _formatDate(data['updated_at']);
             final isProcessing = _processingIds[userId] == true;
 
             return Container(
@@ -782,17 +769,16 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
           ),
         ),
         Expanded(
-          child: StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance.collection('users').limit(40).snapshots(),
+          child: StreamBuilder<List<Map<String, dynamic>>>(
+            stream: Supabase.instance.client.from('profiles').stream(primaryKey: ['id']).limit(40),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              final allDocs = snapshot.data?.docs ?? [];
-              final filteredDocs = allDocs.where((d) {
+              final allDocs = snapshot.data ?? [];
+              final filteredDocs = allDocs.where((data) {
                 if (_searchQuery.isEmpty) return true;
-                final data = d.data() as Map<String, dynamic>;
                 final name = (data['name'] as String? ?? '').toLowerCase();
                 final email = (data['email'] as String? ?? '').toLowerCase();
                 return name.contains(_searchQuery) || email.contains(_searchQuery);
@@ -808,16 +794,14 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: filteredDocs.length,
                 itemBuilder: (context, index) {
-                  final doc = filteredDocs[index];
-                  final data = doc.data() as Map<String, dynamic>;
-                  final userId = doc.id;
+                  final data = filteredDocs[index];
+                  final userId = data['id']?.toString() ?? '';
                   final userName = data['name'] as String? ?? 'خوێندکار';
                   final email = data['email'] as String? ?? '';
-                  final isBlocked = data['isBlocked'] == true || data['status'] == 'blocked';
-                  final isVip = data['isVip'] == true;
+                  final isBlocked = data['is_blocked'] == true;
+                  final isVip = data['subscription_tier'] == 'VIP';
                   final role = data['role'] as String? ?? 'student';
-                  final rawKnownIps = data['knownIps'];
-                  final ipCount = rawKnownIps is List ? rawKnownIps.length : 0;
+                  final ipCount = 0;
 
                   final isProcessing = _processingIds[userId] == true;
 

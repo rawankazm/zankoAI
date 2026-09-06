@@ -1,4 +1,4 @@
-package com.zanko.student
+package com.zankoai.app
 
 import io.flutter.embedding.android.FlutterActivity
 

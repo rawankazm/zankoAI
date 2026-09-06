@@ -1,12 +1,13 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
 import '../navigation_shell.dart';
 import '../../models/user_model.dart';
 import 'register_screen.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -96,16 +97,20 @@ class _LoginScreenState extends State<LoginScreen>
         _errorMessage = '⛔ ناتوانیت لە زیاتر لە ٣ ناونیشانی IP جیاواز ئەکاونتەکەت بکەیتەوە.\nئەمە بۆ پاراستنی ئەکاونت و ڕێگرییە لە هاوبەشکردنی نایاسایی.';
       } else if (errStr.contains('email-already-in-use')) {
         _errorMessage = 'ئەم ئیمەیڵە پێشتر تۆمار کراوە.';
-      } else if (errStr.contains('wrong-password') || errStr.contains('invalid-credential')) {
+      } else if (errStr.contains('wrong-password') || errStr.contains('invalid-credential') || errStr.contains('invalid login credentials')) {
         _errorMessage = 'وشەی نهێنی یان ئیمەیڵ هەڵەیە.';
-      } else if (errStr.contains('user-not-found')) {
+      } else if (errStr.contains('user-not-found') || errStr.contains('user not found')) {
         _errorMessage = 'هیچ هەژمارێک بەم ئیمەیڵە نەدۆزرایەوە.';
+      } else if (errStr.contains('email not confirmed')) {
+        _errorMessage = 'تکایە سەرەتا ئیمەیڵەکەت لە ناو ئیمەیڵەکەتەوە پشتڕاست بکەرەوە، یاخود لە پەنێڵی Supabase بژاردەی Confirm Email بکوژێنەرەوە.';
+      } else if (errStr.contains('email_provider_disabled') || errStr.contains('logins are disabled') || errStr.contains('signups are disabled')) {
+        _errorMessage = 'بژاردەی ئیمەیڵ لە سێرڤەر (Supabase) ناچالاکە. تکایە لە Authentication > Providers بەشی Email چالاک بکە.';
       } else if (errStr.contains('weak-password')) {
         _errorMessage = 'وشەی نهێنی زۆر لاوازە (لانی کەم ٦ پیت).';
-      } else if (errStr.contains('invalid-email')) {
+      } else if (errStr.contains('invalid-email') || errStr.contains('invalid email')) {
         _errorMessage = 'ئیمەیڵەکە شێوازێکی دروستی نییە.';
       } else {
-        _errorMessage = 'پڕۆسەکە سەرکەوتوو نەبوو. تکایە هێڵی ئینتەرنێتەکەت بپشکنە.';
+        _errorMessage = 'پڕۆسەکە سەرکەوتوو نەبوو: ${e.toString().replaceAll('Exception: ', '').replaceAll('AuthException: ', '').replaceAll('AuthApiException: ', '')}';
       }
     } finally {
       if (mounted && !success) {
@@ -145,12 +150,49 @@ class _LoginScreenState extends State<LoginScreen>
       _errorMessage = 'چوونەژوورەوە بە گووگڵ کاتی بەسەرچوو. تکایە هێڵی ئینتەرنێتەکەت بپشکنە.';
     } catch (e) {
       success = false;
-      _errorMessage = 'هەڵە لە چوونەژوورەوە بە گووگڵ. تکایە دووبارە تاقیبکەرەوە.';
+      _errorMessage = 'هەڵە لە چوونەژوورەوە بە گووگڵ: ${e.toString().replaceAll('Exception: ', '')}';
     } finally {
       if (mounted && !success) {
         setState(() {
           _isLoading = false;
-          _errorMessage ??= 'چوونەژوورەوە بە گووگڵ بەدی نەهات. تکایە دووبارە تاقیبکەرەوە.';
+        });
+      }
+    }
+
+    if (!mounted) return;
+
+    if (success) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const NavigationShell()),
+        (route) => false,
+      );
+    }
+  }
+
+  Future<void> _loginWithApple() async {
+    if (_isLoading) return;
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    bool success = false;
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      success = await authService
+          .loginWithApple(UserRole.student)
+          .timeout(const Duration(seconds: 25), onTimeout: () => false);
+    } on TimeoutException {
+      success = false;
+      _errorMessage = 'چوونەژوورەوە بە ئەپڵ کاتی بەسەرچوو. تکایە هێڵی ئینتەرنێتەکەت بپشکنە.';
+    } catch (e) {
+      success = false;
+      _errorMessage = 'هەڵە لە چوونەژوورەوە بە ئەپڵ: ${e.toString().replaceAll('Exception: ', '')}';
+    } finally {
+      if (mounted && !success) {
+        setState(() {
+          _isLoading = false;
         });
       }
     }
@@ -264,14 +306,16 @@ class _LoginScreenState extends State<LoginScreen>
                               setSheetState(() => isSubmitting = true);
                               try {
                                 final email = _emailController.text.trim();
-                                await FirebaseFirestore.instance.collection('security_alerts').add({
-                                  'email': email,
-                                  'name': email.isNotEmpty && email.contains('@') ? email.split('@').first : 'خوێندکار',
-                                  'type': 'ip_limit_appeal',
-                                  'reason': 'داواکاری نوێکردنەوەی IP لەلایەن بەکارهێنەرەوە',
-                                  'userNote': noteCtrl.text.trim().isNotEmpty ? noteCtrl.text.trim() : 'داواکاری نوێکردنەوەی IP لەلایەن بەکارهێنەرەوە',
-                                  'status': 'pending',
-                                  'createdAt': FieldValue.serverTimestamp(),
+                                await Supabase.instance.client.from('audit_logs').insert({
+                                  'action': 'IP_LIMIT_APPEAL',
+                                  'entity_type': 'security_alert',
+                                  'payload': {
+                                    'email': email,
+                                    'name': email.isNotEmpty && email.contains('@') ? email.split('@').first : 'خوێندکار',
+                                    'reason': 'داواکاری نوێکردنەوەی IP لەلایەن بەکارهێنەرەوە',
+                                    'userNote': noteCtrl.text.trim().isNotEmpty ? noteCtrl.text.trim() : 'داواکاری نوێکردنەوەی IP لەلایەن بەکارهێنەرەوە',
+                                    'status': 'pending',
+                                  },
                                 });
                                 if (ctx.mounted) Navigator.pop(ctx);
                                 if (mounted) {
@@ -501,7 +545,32 @@ class _LoginScreenState extends State<LoginScreen>
                                   return null;
                                 },
                               ),
-                              const SizedBox(height: 24),
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: TextButton(
+                                  onPressed: _isLoading ? null : () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                                    );
+                                  },
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: const Size(50, 30),
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: Text(
+                                    'وشەی نهێنیت لەبیرچووە؟',
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
 
                               _isLoading
                                   ? Column(
@@ -546,6 +615,29 @@ class _LoginScreenState extends State<LoginScreen>
                                                   const Icon(Icons.g_mobiledata, size: 24),
                                             ),
                                             label: Text(t('google_login')),
+                                            style: OutlinedButton.styleFrom(
+                                              minimumSize: const Size(0, 52),
+                                              shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(16)),
+                                              side: BorderSide(
+                                                color: theme.brightness == Brightness.dark
+                                                    ? Colors.white24
+                                                    : Colors.grey[300]!,
+                                                width: 1.5,
+                                              ),
+                                              textStyle: const TextStyle(
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 12),
+                                        SizedBox(
+                                          width: double.maxFinite,
+                                          child: OutlinedButton.icon(
+                                            onPressed: _isLoading ? null : _loginWithApple,
+                                            icon: const Icon(Icons.apple, size: 24),
+                                            label: const Text('چوونەژوورەوە بە ئەپڵ (Apple)'),
                                             style: OutlinedButton.styleFrom(
                                               minimumSize: const Size(0, 52),
                                               shape: RoundedRectangleBorder(

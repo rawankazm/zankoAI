@@ -92,23 +92,23 @@ class UserModel {
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
-      id: map['id'] ?? '',
-      name: map['name'] ?? '',
-      email: map['email'] ?? '',
-      isVip: map['isVip'] == true,
-      vipStatus: map['vipStatus'] ?? (map['isVip'] == true ? 'active' : 'none'),
+      id: map['id']?.toString() ?? '',
+      name: (map['full_name'] ?? map['name'] ?? '').toString(),
+      email: (map['email'] ?? '').toString(),
+      isVip: map['is_vip'] == true || map['isVip'] == true || map['subscription_tier'] == 'VIP',
+      vipStatus: (map['vip_status'] ?? map['vipStatus'] ?? ((map['is_vip'] == true || map['isVip'] == true) ? 'active' : 'none')).toString(),
       role: UserRole.values.firstWhere(
         (e) => e.toString().split('.').last == map['role'],
         orElse: () => UserRole.student,
       ),
-      universityName: map['universityName'],
-      departmentName: map['departmentName'],
-      cityName: map['cityName'],
-      gpa: map['gpa']?.toDouble(),
-      gpaHistory: map['gpaHistory'] != null 
-          ? List<double>.from(map['gpaHistory'].map((x) => x.toDouble())) 
-          : const [],
-      photoUrl: map['photoUrl'],
+      universityName: map['university_name']?.toString() ?? map['universityName']?.toString(),
+      departmentName: map['department_name']?.toString() ?? map['departmentName']?.toString(),
+      cityName: map['city_name']?.toString() ?? map['cityName']?.toString(),
+      gpa: (map['gpa'] as num?)?.toDouble(),
+      gpaHistory: map['gpa_history'] != null
+          ? List<double>.from((map['gpa_history'] as List).map((x) => (x as num).toDouble()))
+          : (map['gpaHistory'] != null ? List<double>.from((map['gpaHistory'] as List).map((x) => (x as num).toDouble())) : const []),
+      photoUrl: map['avatar_url']?.toString() ?? map['photoUrl']?.toString(),
     );
   }
 }

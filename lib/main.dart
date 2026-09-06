@@ -2,12 +2,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/config/env.dart';
 import 'theme.dart';
 import 'services/auth_service.dart';
-import 'services/firebase_auth_service.dart';
-import 'services/firestore_database_service.dart';
+import 'services/supabase_auth_service.dart';
+import 'services/supabase_database_service.dart';
 import 'services/database_service.dart';
 import 'services/ai_service.dart';
 import 'services/language_provider.dart';
@@ -21,11 +21,7 @@ import 'views/splash_screen.dart';
 import 'services/zankoline_service.dart';
 
 import 'package:device_preview/device_preview.dart';
-
 import 'package:flutter/foundation.dart';
-
-import 'firebase_options.dart';
-
 import 'dart:async';
 
 void main() async {
@@ -42,24 +38,15 @@ void main() async {
   };
 
   try {
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-    }
-    if (!kIsWeb) {
-      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-      // Initialize notifications asynchronously in background to eliminate splash freeze
-      unawaited(NotificationService().init().catchError((e) {
-        debugPrint('Notification init notice: $e');
-      }));
-    } else {
-      unawaited(NotificationService().init().catchError((e) {
-        debugPrint('Web notification init notice: $e');
-      }));
-    }
+    await Supabase.initialize(
+      url: AppEnv.supabaseUrl,
+      publishableKey: AppEnv.supabaseAnonKey,
+    );
+    unawaited(NotificationService().init().catchError((e) {
+      debugPrint('Notification init notice: $e');
+    }));
   } catch (e) {
-    debugPrint('Firebase core initialization notice: $e');
+    debugPrint('Supabase core initialization notice: $e');
   }
 
   runApp(
@@ -80,10 +67,10 @@ class ZankoApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthService>(
-          create: (_) => FirebaseAuthService(),
+          create: (_) => SupabaseAuthService(),
         ),
         ChangeNotifierProvider<DatabaseService>(
-          create: (_) => FirestoreDatabaseService(),
+          create: (_) => SupabaseDatabaseService(),
         ),
         ChangeNotifierProvider<AiService>(
           create: (_) => ZankoAiService(),
