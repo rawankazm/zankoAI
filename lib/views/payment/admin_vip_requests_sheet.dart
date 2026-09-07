@@ -63,14 +63,16 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
       final adminEmail = auth.currentUser?.email ?? 'admin';
       final planDays = _getPlanDays(plan);
 
-      DateTime expiresAt;
+      DateTime baseDate = DateTime.now();
       if (existingExpiresAt is DateTime && existingExpiresAt.isAfter(DateTime.now())) {
-        expiresAt = existingExpiresAt;
-      } else if (existingExpiresAt is String && (DateTime.tryParse(existingExpiresAt)?.isAfter(DateTime.now()) ?? false)) {
-        expiresAt = DateTime.parse(existingExpiresAt);
-      } else {
-        expiresAt = DateTime.now().add(Duration(days: planDays));
+        baseDate = existingExpiresAt;
+      } else if (existingExpiresAt is String) {
+        final parsed = DateTime.tryParse(existingExpiresAt);
+        if (parsed != null && parsed.isAfter(DateTime.now())) {
+          baseDate = parsed;
+        }
       }
+      final expiresAt = baseDate.add(Duration(days: planDays));
 
       // 1. Update payment_transactions doc
       await Supabase.instance.client.from('payment_transactions').update({
@@ -79,6 +81,7 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
           'approvedBy': adminEmail,
           'approvedAt': DateTime.now().toIso8601String(),
           'expiresAt': expiresAt.toIso8601String(),
+          'planDays': planDays,
         },
       }).eq('id', requestId);
 
@@ -89,6 +92,19 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
         'vip_expiry': expiresAt.toIso8601String(),
         'plan': 'premium',
       }).eq('id', userId);
+
+      // 3. Sync through RPC to update subscriptions table
+      try {
+        final dbPlan = planDays >= 250 ? 'PREMIUM_YEARLY' : 'PREMIUM_MONTHLY';
+        await Supabase.instance.client.rpc(
+          'sync_admin_approved_vip',
+          params: {
+            'p_user_id': userId,
+            'p_plan': dbPlan,
+            'p_days': planDays,
+          },
+        );
+      } catch (_) {}
 
       // 3. Send instant private notification ONLY to this specific user
       await Supabase.instance.client.from('notifications').insert({

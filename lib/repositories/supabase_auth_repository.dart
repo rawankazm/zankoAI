@@ -458,9 +458,22 @@ class SupabaseAuthRepository implements AuthRepository {
       // Read local cache for immediate fallback / offline persistence
       String? localName, localUni, localDept, localCity, localAvatar;
       bool? localIsVip;
+      DateTime? localVipExpiry;
       try {
         final prefs = await SharedPreferences.getInstance();
         localIsVip = prefs.getBool('zanko_user_is_vip_' + userId);
+        final expIso = prefs.getString('zanko_user_vip_expiry_' + userId);
+        if (expIso != null && expIso.isNotEmpty) {
+          final parsed = DateTime.tryParse(expIso);
+          if (parsed != null && parsed.isAfter(DateTime.now())) {
+            localVipExpiry = parsed;
+            localIsVip = true;
+          }
+        }
+        if (localVipExpiry == null && localIsVip == true) {
+          final days = prefs.getInt('zanko_user_vip_days_' + userId) ?? 30;
+          localVipExpiry = DateTime.now().add(Duration(days: days));
+        }
         localName = prefs.getString('zanko_user_name_' + userId) ??
             (cleanEmail.isNotEmpty ? prefs.getString('zanko_user_name_' + cleanEmail) : null) ??
             prefs.getString('zanko_active_user_name');
@@ -526,6 +539,7 @@ class SupabaseAuthRepository implements AuthRepository {
       if (res != null) {
         final dbModel = UserModel.fromMap(res);
         final effectiveVip = (localIsVip == true) ? true : dbModel.isVip;
+        final effectiveExpiry = dbModel.vipExpiry ?? localVipExpiry;
 
         // Auto-heal DB profile if out of sync with user's verified name
         if (effectiveName.isNotEmpty && res['full_name'] != effectiveName) {
@@ -541,6 +555,7 @@ class SupabaseAuthRepository implements AuthRepository {
           name: effectiveName,
           isVip: effectiveVip,
           vipStatus: effectiveVip ? 'active' : dbModel.vipStatus,
+          vipExpiry: effectiveExpiry,
           universityName: effectiveUni ?? dbModel.universityName,
           departmentName: effectiveDept ?? dbModel.departmentName,
           cityName: effectiveCity ?? dbModel.cityName,
@@ -560,9 +575,10 @@ class SupabaseAuthRepository implements AuthRepository {
         photoUrl: effectiveAvatar,
         isVip: localIsVip == true,
         vipStatus: localIsVip == true ? 'active' : 'none',
+        vipExpiry: localVipExpiry,
       );
     } catch (e) {
-      debugPrint('Error fetching user profile in repository: $e');
+      debugPrint('Error fetching user profile in repository: ' + e.toString());
       return null;
     }
   }

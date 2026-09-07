@@ -7,7 +7,7 @@ import { academicRoutes } from './academic.routes.js';
 import { learningRoutes } from './learning.routes.js';
 import { personalRoutes } from './personal.routes.js';
 import { userRoutes } from './user.routes.js';
-import { paymentRoutes } from '../modules/payments/payment.routes.js';
+import { paymentRoutes } from './payment.routes.js';
 import { aiRoutes } from '../modules/ai/ai.routes.js';
 import { storageRoutes } from './storage.routes.js';
 import { usageRoutes } from './usage.routes.js';

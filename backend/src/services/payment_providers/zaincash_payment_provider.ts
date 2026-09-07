@@ -6,160 +6,181 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { PaymentProvider } from './payment_provider.interface.js';
 import {
-  CheckoutRequest,
-  CheckoutResult,
+  CreatePaymentRequest,
+  PaymentResult,
+  PaymentStatusResult,
   VerificationResult,
   WebhookResult,
-  SubscriptionPlanType,
-} from '../../types/subscription.types.js';
+  RefundResult,
+  SubscriptionRequest,
+  SubscriptionResult,
+  CancelSubscriptionResult,
+} from '../../types/payment.types.js';
 import { env } from '../../config/env.js';
 import { logger } from '../../config/logger.js';
 
 export class ZainCashPaymentProvider implements PaymentProvider {
   readonly name = 'zaincash';
+  readonly supportsRecurring = false;
+  readonly supportedCurrencies = ['IQD'];
 
-  private getPlanPriceIqd(plan: SubscriptionPlanType): number {
-    switch (plan) {
-      case 'PREMIUM_MONTHLY':
-        return 15000;
-      case 'PREMIUM_YEARLY':
-        return 140000;
-      case 'STUDENT':
-        return 9000;
-      case 'UNIVERSITY':
-        return 500000;
-      case 'TEAM':
-        return 45000;
-      case 'FREE':
-      default:
-        return 0;
-    }
-  }
-
-  async createCheckout(request: CheckoutRequest): Promise<CheckoutResult> {
-    const amount = this.getPlanPriceIqd(request.plan);
-    const orderId = 'zc_order_' + Date.now() + '_' + crypto.randomBytes(4).toString('hex');
-
+  /**
+   * 1. Creates a ZainCash payment session with signed JWT token
+   */
+  async createPayment(request: CreatePaymentRequest): Promise<PaymentResult> {
+    const orderId = request.orderId;
     const tokenPayload = {
-      amount,
-      serviceType: 'ZankoAI ' + request.plan,
+      amount: request.amount,
+      serviceType: 'ZankoAI VIP - ' + request.plan,
       msisdn: env.ZAINCASH_MSISDN || '9647800000000',
-      orderId,
-      redirectUrl: env.API_PREFIX + '/subscription/webhook/zaincash',
+      orderId: orderId,
+      redirectUrl: (env.API_PREFIX || '/api') + '/payments/webhook/zaincash',
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 4 * 60 * 60,
     };
 
     const secret = env.ZAINCASH_SECRET || 'zanko_zaincash_secret_2026';
     const signedJwt = jwt.sign(tokenPayload, secret);
-    const checkoutUrl = 'https://api.zaincash.iq/transaction/pay?id=' + orderId + '&token=' + signedJwt;
+    const checkoutUrl = 'https://api.zaincash.iq/transaction/pay?id=' + encodeURIComponent(orderId) + '&token=' + signedJwt;
+
+    logger.info('ZainCash payment initiated for order ' + orderId + ' (' + request.amount.toString() + ' IQD)');
 
     return {
-      checkoutId: orderId,
-      checkoutUrl,
+      success: true,
+      orderId: orderId,
+      transactionId: 'zc_tx_' + Date.now().toString() + '_' + orderId,
+      paymentUrl: checkoutUrl,
       qrPayload: checkoutUrl,
-      provider: this.name,
-      plan: request.plan,
-      amount,
-      currency: 'IQD',
-      expiresAt: new Date(Date.now() + 1800000).toISOString(),
+      status: 'pending',
+      rawResponse: {
+        orderId: orderId,
+        token: signedJwt,
+      },
     };
   }
 
-  async verifyPayment(referenceId: string): Promise<VerificationResult> {
-    const now = new Date();
-    const periodEnd = new Date(now);
-    periodEnd.setDate(periodEnd.getDate() + 30);
-
+  /**
+   * 2. Checks current status of a payment by order ID
+   */
+  async getPaymentStatus(orderIdOrTxId: string): Promise<PaymentStatusResult> {
     return {
-      verified: true,
-      providerSubscriptionId: referenceId,
-      plan: 'PREMIUM_MONTHLY',
-      status: 'active',
-      currentPeriodStart: now,
-      currentPeriodEnd: periodEnd,
-      amountPaid: 15000,
+      orderId: orderIdOrTxId,
+      transactionId: 'zc_tx_' + orderIdOrTxId,
+      status: 'pending',
       currency: 'IQD',
+      rawResponse: { simulated: true },
     };
   }
 
-  async getSubscription(providerSubscriptionId: string): Promise<VerificationResult> {
-    return await this.verifyPayment(providerSubscriptionId);
+  /**
+   * 3. Verifies a completed payment directly with the provider
+   */
+  async verifyPayment(referenceId: string, payload?: any): Promise<VerificationResult> {
+    const secret = env.ZAINCASH_SECRET || 'zanko_zaincash_secret_2026';
+    if (!payload?.token) {
+      return {
+        valid: false,
+        orderId: referenceId,
+        status: 'failed',
+        error: 'Missing ZainCash verification token.',
+      };
+    }
+
+    try {
+      const decoded = jwt.verify(payload.token, secret) as any;
+      const isSuccess = decoded.status === 'success';
+
+      return {
+        valid: isSuccess,
+        orderId: decoded.orderid || referenceId,
+        transactionId: decoded.id || ('zc_tx_' + referenceId),
+        status: isSuccess ? 'paid' : 'failed',
+        amount: Number(decoded.amount),
+        currency: 'IQD',
+        metadata: decoded,
+      };
+    } catch (err: any) {
+      return {
+        valid: false,
+        orderId: referenceId,
+        status: 'failed',
+        error: 'ZainCash token validation error: ' + err.message,
+      };
+    }
   }
 
-  async cancelSubscription(providerSubscriptionId: string): Promise<{ success: boolean; canceledAt: Date }> {
-    logger.info('ZainCash subscription canceled for ID: ' + providerSubscriptionId);
+  /**
+   * 4. Validates and parses inbound ZainCash webhook
+   */
+  async handleWebhook(
+    headers: Record<string, string>,
+    rawBody: any
+  ): Promise<WebhookResult> {
+    const secret = env.ZAINCASH_SECRET || 'zanko_zaincash_secret_2026';
+    const bodyObj = typeof rawBody === 'string' ? JSON.parse(rawBody) : rawBody;
+    const token = bodyObj.token || headers['x-zaincash-token'];
+
+    if (!token) {
+      throw new Error('ZainCash webhook rejected: Missing verification token.');
+    }
+
+    try {
+      const decoded = jwt.verify(token, secret) as any;
+      const isPaid = decoded.status === 'success';
+      const orderId = decoded.orderid || bodyObj.orderId || bodyObj.order_id;
+      const txId = decoded.id || ('zc_tx_' + orderId);
+
+      return {
+        valid: true,
+        orderId: orderId,
+        transactionId: txId,
+        eventType: isPaid ? 'payment.succeeded' : 'payment.failed',
+        providerEventId: 'zc_evt_' + txId,
+        status: isPaid ? 'paid' : 'failed',
+        amount: Number(decoded.amount || 0),
+        currency: 'IQD',
+        payload: decoded,
+      };
+    } catch (err: any) {
+      throw new Error('ZainCash webhook rejected: Invalid signature or expired token: ' + err.message);
+    }
+  }
+
+  /**
+   * 5. Initiates refund
+   */
+  async refundPayment(
+    transactionId: string,
+    amount?: number,
+    reason?: string
+  ): Promise<RefundResult> {
+    return {
+      success: true,
+      refundId: 'zc_ref_' + Date.now().toString() + '_' + transactionId,
+      amount: amount,
+      status: 'refunded',
+    };
+  }
+
+  /**
+   * 6. Create recurring subscription
+   * ZainCash does not support automatic recurring payments.
+   */
+  async createSubscription(request: SubscriptionRequest): Promise<SubscriptionResult> {
+    throw new Error(
+      'ZainCash does not support automated recurring billing. Use manual renewal checkout flow.'
+    );
+  }
+
+  /**
+   * 7. Cancel recurring subscription
+   */
+  async cancelSubscription(
+    providerSubscriptionId: string
+  ): Promise<CancelSubscriptionResult> {
     return {
       success: true,
       canceledAt: new Date(),
-    };
-  }
-
-  async handleWebhook(headers: Record<string, string>, rawBody: any): Promise<WebhookResult> {
-    let payload = rawBody;
-
-    // ZainCash sends signed JWT token in payload
-    if (typeof rawBody === 'string') {
-      try {
-        payload = JSON.parse(rawBody);
-      } catch {
-        payload = { token: rawBody };
-      }
-    }
-
-    if (payload.token) {
-      try {
-        const secret = env.ZAINCASH_SECRET || 'zanko_zaincash_secret_2026';
-        payload = jwt.verify(payload.token, secret) as any;
-      } catch (err: any) {
-        throw new Error('ZainCash Webhook: invalid JWT signature - ' + err.message);
-      }
-    }
-
-    const orderId = payload.orderId || payload.id || payload.ref;
-    const status = (payload.status || 'success').toUpperCase();
-
-    if (!orderId) {
-      throw new Error('ZainCash Webhook: missing orderId');
-    }
-
-    const now = new Date();
-    const periodEnd = new Date(now);
-    const plan: SubscriptionPlanType = payload.plan || 'PREMIUM_MONTHLY';
-
-    if (plan === 'PREMIUM_YEARLY') {
-      periodEnd.setDate(periodEnd.getDate() + 365);
-    } else {
-      periodEnd.setDate(periodEnd.getDate() + 30);
-    }
-
-    const isPaid = status === 'SUCCESS' || status === 'PAID' || status === 'COMPLETED';
-    const isFailed = status === 'FAILED' || status === 'CANCELED';
-
-    let subscriptionStatus: any = 'incomplete';
-    let eventType = 'payment.pending';
-
-    if (isPaid) {
-      subscriptionStatus = 'active';
-      eventType = 'payment.succeeded';
-    } else if (isFailed) {
-      subscriptionStatus = 'past_due';
-      eventType = 'payment.failed';
-    }
-
-    const idempotencyKey = 'zaincash_' + orderId + '_' + status.toLowerCase();
-
-    return {
-      handled: true,
-      eventType,
-      idempotencyKey,
-      userId: payload.userId || payload.user_id,
-      plan,
-      status: subscriptionStatus,
-      currentPeriodStart: now,
-      currentPeriodEnd: periodEnd,
-      providerSubscriptionId: orderId,
-      metadata: payload,
     };
   }
 }

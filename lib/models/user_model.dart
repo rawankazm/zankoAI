@@ -17,6 +17,7 @@ class UserModel {
   final bool isVip;
   final String? photoUrl;
   final String vipStatus; // 'none' | 'pending' | 'active' | 'rejected' | 'expired'
+  final DateTime? vipExpiry;
 
   bool get isGuest =>
       id.startsWith('guest_') ||
@@ -34,6 +35,13 @@ class UserModel {
           universityName == null ||
           universityName!.trim().isEmpty);
 
+  int get vipDaysLeft {
+    if (!isVip) return 0;
+    if (vipExpiry == null) return 30;
+    final diff = vipExpiry!.difference(DateTime.now()).inDays;
+    return diff > 0 ? diff : (isVip ? 1 : 0);
+  }
+
   UserModel({
     required this.id,
     required this.name,
@@ -47,6 +55,7 @@ class UserModel {
     this.isVip = false,
     this.photoUrl,
     this.vipStatus = 'none',
+    this.vipExpiry,
   });
 
   UserModel copyWith({
@@ -62,6 +71,7 @@ class UserModel {
     bool? isVip,
     String? photoUrl,
     String? vipStatus,
+    DateTime? vipExpiry,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -76,6 +86,7 @@ class UserModel {
       isVip: isVip ?? this.isVip,
       photoUrl: photoUrl ?? this.photoUrl,
       vipStatus: vipStatus ?? this.vipStatus,
+      vipExpiry: vipExpiry ?? this.vipExpiry,
     );
   }
 
@@ -86,6 +97,7 @@ class UserModel {
       'email': email,
       'isVip': isVip,
       'vipStatus': vipStatus,
+      'vip_expiry': vipExpiry?.toIso8601String(),
       'role': role.toString().split('.').last,
       'universityName': universityName,
       'departmentName': departmentName,
@@ -121,12 +133,21 @@ class UserModel {
         rawSubTier == 'VIP' ||
         roleVal == UserRole.admin; // Platform Admins automatically receive VIP privileges!
 
+    DateTime? parsedVipExpiry;
+    final rawExpiry = map['vip_expiry'] ?? map['vipExpiry'] ?? map['expiresAt'];
+    if (rawExpiry is DateTime) {
+      parsedVipExpiry = rawExpiry;
+    } else if (rawExpiry is String && rawExpiry.isNotEmpty) {
+      parsedVipExpiry = DateTime.tryParse(rawExpiry);
+    }
+
     return UserModel(
       id: map['id']?.toString() ?? '',
       name: (map['full_name'] ?? map['name'] ?? '').toString(),
       email: (map['email'] ?? '').toString(),
       isVip: isVipCalculated,
       vipStatus: (map['vip_status'] ?? map['vipStatus'] ?? (isVipCalculated ? 'active' : 'none')).toString(),
+      vipExpiry: parsedVipExpiry,
       role: roleVal,
       universityName: map['university_name']?.toString() ?? map['universityName']?.toString(),
       departmentName: map['department_name']?.toString() ?? map['departmentName']?.toString(),

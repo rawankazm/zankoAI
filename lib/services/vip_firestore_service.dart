@@ -45,26 +45,35 @@ class VipFirestoreService {
 
       final client = HttpClient();
 
-      // 2. If we have a refresh token, refresh it to keep the exact same localId
-      if (cachedRefresh != null && cachedRefresh.isNotEmpty) {
+      // 2. If we have a refresh token (either email-specific or global), refresh it to keep the exact same localId
+      final effectiveRefresh = (cachedRefresh != null && cachedRefresh.isNotEmpty)
+          ? cachedRefresh
+          : prefs.getString('zanko_fb_global_refresh');
+      final effectiveUid = (cachedLocalId != null && cachedLocalId.isNotEmpty)
+          ? cachedLocalId
+          : prefs.getString('zanko_fb_global_uid');
+
+      if (effectiveRefresh != null && effectiveRefresh.isNotEmpty) {
         try {
           final refreshUri = Uri.parse('https://securetoken.googleapis.com/v1/token?key=' + _firebaseApiKey);
           final rReq = await client.postUrl(refreshUri);
           rReq.headers.contentType = ContentType.parse('application/x-www-form-urlencoded');
-          rReq.write('grant_type=refresh_token&refresh_token=' + cachedRefresh);
+          rReq.write('grant_type=refresh_token&refresh_token=' + effectiveRefresh);
           final rResp = await rReq.close();
           final rBody = await rResp.transform(utf8.decoder).join();
           if (rResp.statusCode == 200) {
             final rParsed = jsonDecode(rBody) as Map<String, dynamic>;
-            final newIdToken = rParsed['id_token']?.toString();
-            final uid = rParsed['user_id']?.toString() ?? cachedLocalId ?? '';
-            final newRefresh = rParsed['refresh_token']?.toString() ?? cachedRefresh;
+            final newIdToken = rParsed['id_token']?.toString() ?? rParsed['access_token']?.toString();
+            final uid = rParsed['user_id']?.toString() ?? effectiveUid ?? '';
+            final newRefresh = rParsed['refresh_token']?.toString() ?? effectiveRefresh;
             final expiresIn = int.tryParse(rParsed['expires_in']?.toString() ?? '3600') ?? 3600;
 
             if (newIdToken != null && uid.isNotEmpty) {
               await prefs.setString(tokenKey, newIdToken);
               await prefs.setString(localIdKey, uid);
               await prefs.setString(refreshKey, newRefresh);
+              await prefs.setString('zanko_fb_global_uid', uid);
+              await prefs.setString('zanko_fb_global_refresh', newRefresh);
               await prefs.setInt(expKey, DateTime.now().millisecondsSinceEpoch + (expiresIn * 1000));
               client.close();
               return {'idToken': newIdToken, 'localId': uid};
@@ -125,7 +134,11 @@ class VipFirestoreService {
       if (idToken != null && localId != null) {
         await prefs.setString(tokenKey, idToken);
         await prefs.setString(localIdKey, localId);
-        if (refreshToken != null) await prefs.setString(refreshKey, refreshToken);
+        await prefs.setString('zanko_fb_global_uid', localId);
+        if (refreshToken != null) {
+          await prefs.setString(refreshKey, refreshToken);
+          await prefs.setString('zanko_fb_global_refresh', refreshToken);
+        }
         await prefs.setInt(expKey, DateTime.now().millisecondsSinceEpoch + (expiresIn * 1000));
         return {'idToken': idToken, 'localId': localId};
       }
@@ -136,7 +149,7 @@ class VipFirestoreService {
   }
 
   /// Synchronizes a user profile directly to the Firestore `users` collection.
-  /// CRITICAL: Uses updateMask so it NEVER overwrites an admin approval with false!
+  /// CRITICAL: Uses updateMask so it NEVER overwrites an admin VIP approval with false!
   static Future<void> syncUserToFirestore(UserModel user) async {
     if (user.isGuest || user.email.isEmpty) return;
 
@@ -182,6 +195,10 @@ class VipFirestoreService {
         maskPaths.add('vipStatus');
         fieldsMap['isVip'] = {'booleanValue': true};
         fieldsMap['vipStatus'] = {'stringValue': user.vipStatus.isNotEmpty ? user.vipStatus : 'active'};
+        if (user.vipExpiry != null) {
+          maskPaths.add('vipExpiry');
+          fieldsMap['vipExpiry'] = {'timestampValue': user.vipExpiry!.toUtc().toIso8601String()};
+        }
       }
 
       final maskQuery = maskPaths.map((p) => 'updateMask.fieldPaths=' + p).join('&');
@@ -208,6 +225,44 @@ class VipFirestoreService {
     }
   }
 
+  /// Calculates VIP plan duration in days:
+  /// - 9 months (academic year) -> 270 days
+  /// - 3 months (quarter / semester) -> 90 days
+  /// - 1 month -> 30 days
+  /// - custom explicit days or price-based fallback
+  static int calculatePlanDays({
+    String? plan,
+    num? price,
+    int? durationDays,
+    String? expiryIso,
+  }) {
+    if (durationDays != null && durationDays > 0) return durationDays;
+
+    final p = (plan ?? '').trim().toLowerCase();
+    if (p == '9_months' || p == '9months' || p == '9_month' || p == '9m' || p == 'annual' || p == 'academic_year') {
+      return 270; // 9 months
+    }
+    if (p == '3_months' || p == '3months' || p == '3_month' || p == '3m' || p == 'semester' || p == 'quarterly') {
+      return 90; // 3 months
+    }
+    if (p == '1_year' || p == 'yearly' || p == '12_months') {
+      return 365; // 1 year
+    }
+    if (p == '1_month' || p == '1month' || p == 'monthly') {
+      return 30; // 1 month
+    }
+
+    // Fallback based on IQD price
+    if (price != null) {
+      final pr = price.toInt();
+      if (pr >= 35000) return 270; // 40,000 IQD -> 9 months
+      if (pr >= 10000) return 90;  // 12,000 IQD -> 3 months
+      if (pr > 0) return 30;       // 5,000 IQD -> 1 month
+    }
+
+    return 30;
+  }
+
   /// Submits a VIP upgrade request to Firestore `vip_requests` collection
   /// so it appears immediately on `zanko-admin.vercel.app/vip`.
   static Future<bool> submitVipRequest({
@@ -221,6 +276,8 @@ class VipFirestoreService {
     String? receiptImageUrl,
   }) async {
     bool firestoreSuccess = false;
+    final planDays = calculatePlanDays(plan: planId, price: amountIqd);
+    final durationMonths = planId == '9_months' ? 9 : (planId == '3_months' ? 3 : 1);
 
     try {
       final auth = await _getFirebaseAuthToken(userEmail: userEmail, userId: userId);
@@ -248,6 +305,8 @@ class VipFirestoreService {
           'userName': {'stringValue': userName.trim().isNotEmpty ? userName.trim() : 'خوێندکار'},
           'userEmail': {'stringValue': userEmail.trim().toLowerCase()},
           'plan': {'stringValue': planId},
+          'planDays': {'integerValue': planDays.toString()},
+          'durationMonths': {'integerValue': durationMonths.toString()},
           'price': {'doubleValue': amountIqd.toDouble()},
           'paymentMethod': {'stringValue': paymentMethod},
           'transactionId': {'stringValue': transactionId?.trim() ?? ''},
@@ -264,13 +323,35 @@ class VipFirestoreService {
       if (resp.statusCode == 200 || resp.statusCode == 201) {
         firestoreSuccess = true;
         debugPrint('Successfully submitted VIP request to Firestore: ' + body);
+
+        // Store created document ID and request context for instant polling & approval detection
+        try {
+          final parsed = jsonDecode(body) as Map<String, dynamic>;
+          final docName = parsed['name']?.toString() ?? '';
+          final docId = docName.split('/').last;
+          if (docId.isNotEmpty) {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('zanko_last_vip_req_id_' + userId, docId);
+            await prefs.setString('zanko_last_vip_req_plan_' + userId, planId);
+            await prefs.setInt('zanko_last_vip_req_days_' + userId, planDays);
+            await prefs.setString('zanko_last_vip_req_local_id_' + userId, localId);
+
+            final existingList = prefs.getStringList('zanko_vip_req_ids_' + userId) ?? [];
+            if (!existingList.contains(docId)) {
+              existingList.insert(0, docId);
+              await prefs.setStringList('zanko_vip_req_ids_' + userId, existingList.take(10).toList());
+            }
+          }
+        } catch (saveErr) {
+          debugPrint('Notice caching created VIP request ID: ' + saveErr.toString());
+        }
       } else {
         debugPrint('Firestore submit returned status ' + resp.statusCode.toString() + ': ' + body);
       }
 
-      // 2. Also ensure users/$localId is set to pending in Firestore
+      // 2. Also ensure users/$localId is set to pending with requested plan in Firestore
       try {
-        final maskQuery = 'updateMask.fieldPaths=email&updateMask.fieldPaths=name&updateMask.fieldPaths=vipStatus&updateMask.fieldPaths=role&updateMask.fieldPaths=status';
+        final maskQuery = 'updateMask.fieldPaths=email&updateMask.fieldPaths=name&updateMask.fieldPaths=vipStatus&updateMask.fieldPaths=role&updateMask.fieldPaths=status&updateMask.fieldPaths=plan&updateMask.fieldPaths=requestedPlan&updateMask.fieldPaths=requestedDays';
         final userUri = Uri.parse(
           'https://firestore.googleapis.com/v1/projects/' +
               _firebaseProjectId +
@@ -291,6 +372,9 @@ class VipFirestoreService {
             'vipStatus': {'stringValue': 'pending'},
             'role': {'stringValue': 'student'},
             'status': {'stringValue': 'active'},
+            'plan': {'stringValue': planId},
+            'requestedPlan': {'stringValue': planId},
+            'requestedDays': {'integerValue': planDays.toString()},
           }
         }));
         final uResp = await uReq.close();
@@ -312,6 +396,10 @@ class VipFirestoreService {
         'transaction_reference': transactionId,
         'receipt_url': receiptImageUrl,
         'status': 'pending',
+        'metadata': {
+          'plan_days': planDays,
+          'duration_months': durationMonths,
+        },
       });
     } catch (supaErr) {
       debugPrint('Notice saving to Supabase payment_transactions: ' + supaErr.toString());
@@ -321,55 +409,89 @@ class VipFirestoreService {
   }
 
   /// Checks if the admin approved VIP on the admin web panel (Firestore users or vip_requests)
-  /// and syncs the status to Supabase profiles. Returns true ONLY when admin has approved.
+  /// and syncs the status to Supabase profiles and local cache with the EXACT requested duration:
+  /// - 3 months -> 90 days
+  /// - 9 months -> 270 days
+  /// - 1 month -> 30 days
   static Future<bool> checkAndSyncVipStatus({
     required String userId,
     required String userEmail,
   }) async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+
       final auth = await _getFirebaseAuthToken(userEmail: userEmail, userId: userId);
       final idToken = auth?['idToken'];
-      final localId = auth?['localId'];
+      final localId = auth?['localId'] ?? prefs.getString('zanko_last_vip_req_local_id_' + userId);
 
-      if (localId == null || idToken == null) return false;
+      if (idToken == null) return false;
 
       final client = HttpClient();
       bool isApproved = false;
 
-      // 1. Check users/$localId document
-      try {
-        final uri = Uri.parse(
-          'https://firestore.googleapis.com/v1/projects/' +
-              _firebaseProjectId +
-              '/databases/(default)/documents/users/' +
-              localId,
-        );
-        final req = await client.getUrl(uri);
-        req.headers.set('Authorization', 'Bearer ' + idToken);
+      String? detectedPlan = prefs.getString('zanko_last_vip_req_plan_' + userId);
+      num? detectedPrice;
+      int? detectedDays = prefs.getInt('zanko_last_vip_req_days_' + userId);
+      String? detectedExpiry;
 
-        final resp = await req.close();
-        final body = await resp.transform(utf8.decoder).join();
-
-        if (resp.statusCode == 200) {
-          final parsed = jsonDecode(body) as Map<String, dynamic>;
-          final fields = parsed['fields'] as Map<String, dynamic>?;
-          if (fields != null) {
-            final isVipVal = fields['isVip']?['booleanValue'] == true;
-            final vipStatusVal = fields['vipStatus']?['stringValue']?.toString().toLowerCase();
-
-            if (isVipVal || vipStatusVal == 'active' || vipStatusVal == 'approved') {
-              isApproved = true;
-            }
-          }
-        }
-      } catch (e) {
-        debugPrint('Notice checking users doc: ' + e.toString());
+      // ── Path 1: Check known vip_requests document IDs directly ─────────────
+      // Firestore security rules allow the owner to read specific documents by ID!
+      final knownReqIds = <String>[];
+      final lastReqId = prefs.getString('zanko_last_vip_req_id_' + userId);
+      if (lastReqId != null && lastReqId.isNotEmpty) {
+        knownReqIds.add(lastReqId);
+      }
+      final allReqIds = prefs.getStringList('zanko_vip_req_ids_' + userId) ?? [];
+      for (final id in allReqIds) {
+        if (!knownReqIds.contains(id)) knownReqIds.add(id);
       }
 
-      // 2. Also check vip_requests collection via runQuery for status == "approved"
-      if (!isApproved) {
+      for (final reqDocId in knownReqIds) {
         try {
-          final cleanEmail = userEmail.trim().toLowerCase();
+          final docUri = Uri.parse(
+            'https://firestore.googleapis.com/v1/projects/' +
+                _firebaseProjectId +
+                '/databases/(default)/documents/vip_requests/' +
+                reqDocId,
+          );
+          final dReq = await client.getUrl(docUri);
+          dReq.headers.set('Authorization', 'Bearer ' + idToken);
+          final dResp = await dReq.close();
+          final dBody = await dResp.transform(utf8.decoder).join();
+
+          if (dResp.statusCode == 200) {
+            final parsed = jsonDecode(dBody) as Map<String, dynamic>;
+            final fields = parsed['fields'] as Map<String, dynamic>?;
+            if (fields != null) {
+              final rStatus = fields['status']?['stringValue']?.toString().toLowerCase();
+              final rPlan = fields['plan']?['stringValue']?.toString() ??
+                  fields['planId']?['stringValue']?.toString();
+              final rPrice = (fields['price']?['doubleValue'] ?? fields['price']?['integerValue']) as num?;
+              final rExpiry = fields['expiresAt']?['timestampValue']?.toString() ??
+                  fields['expiresAt']?['stringValue']?.toString();
+              final rDays = int.tryParse(fields['planDays']?['integerValue']?.toString() ?? '');
+
+              if (rPlan != null && rPlan.isNotEmpty) detectedPlan = rPlan;
+              if (rPrice != null) detectedPrice = rPrice;
+              if (rDays != null && rDays > 0) detectedDays = rDays;
+              if (rExpiry != null && rExpiry.isNotEmpty) detectedExpiry = rExpiry;
+
+              if (rStatus == 'approved') {
+                isApproved = true;
+                debugPrint('Detected VIP approval from vip_requests/' + reqDocId + ' (plan: ' + (detectedPlan ?? '3_months') + ')');
+                break;
+              }
+            }
+          }
+        } catch (e) {
+          debugPrint('Notice checking doc ' + reqDocId + ': ' + e.toString());
+        }
+      }
+
+      // ── Path 2: Query vip_requests WHERE userId == localId ────────────────
+      // Firestore rule: resource.data.userId == request.auth.uid (200 OK!)
+      if (!isApproved && localId != null && localId.isNotEmpty) {
+        try {
           final qUri = Uri.parse(
             'https://firestore.googleapis.com/v1/projects/' +
                 _firebaseProjectId +
@@ -383,27 +505,13 @@ class VipFirestoreService {
             'structuredQuery': {
               'from': [{'collectionId': 'vip_requests'}],
               'where': {
-                'compositeFilter': {
-                  'op': 'AND',
-                  'filters': [
-                    {
-                      'fieldFilter': {
-                        'field': {'fieldPath': 'userEmail'},
-                        'op': 'EQUAL',
-                        'value': {'stringValue': cleanEmail},
-                      }
-                    },
-                    {
-                      'fieldFilter': {
-                        'field': {'fieldPath': 'status'},
-                        'op': 'EQUAL',
-                        'value': {'stringValue': 'approved'},
-                      }
-                    },
-                  ],
-                },
+                'fieldFilter': {
+                  'field': {'fieldPath': 'userId'},
+                  'op': 'EQUAL',
+                  'value': {'stringValue': localId},
+                }
               },
-              'limit': 1,
+              'limit': 5,
             },
           };
 
@@ -415,52 +523,234 @@ class VipFirestoreService {
             final results = jsonDecode(qBody) as List<dynamic>;
             for (final item in results) {
               if (item is Map<String, dynamic> && item['document'] != null) {
-                isApproved = true;
-                break;
+                final rFields = item['document']['fields'] as Map<String, dynamic>?;
+                if (rFields != null) {
+                  final rStatus = rFields['status']?['stringValue']?.toString().toLowerCase();
+                  final rPlan = rFields['plan']?['stringValue']?.toString() ??
+                      rFields['planId']?['stringValue']?.toString();
+                  final rPrice = (rFields['price']?['doubleValue'] ?? rFields['price']?['integerValue']) as num?;
+                  final rExpiry = rFields['expiresAt']?['timestampValue']?.toString() ??
+                      rFields['expiresAt']?['stringValue']?.toString();
+                  final rDays = int.tryParse(rFields['planDays']?['integerValue']?.toString() ?? '');
+
+                  if (rPlan != null && rPlan.isNotEmpty) detectedPlan = rPlan;
+                  if (rPrice != null) detectedPrice = rPrice;
+                  if (rDays != null && rDays > 0) detectedDays = rDays;
+                  if (rExpiry != null && rExpiry.isNotEmpty) detectedExpiry = rExpiry;
+
+                  if (rStatus == 'approved') {
+                    isApproved = true;
+                    debugPrint('Detected VIP approval from runQuery userId filter (plan: ' + (detectedPlan ?? '3_months') + ')');
+                    break;
+                  }
+                }
               }
             }
           }
         } catch (e) {
-          debugPrint('Notice checking vip_requests: ' + e.toString());
+          debugPrint('Notice querying vip_requests: ' + e.toString());
         }
+      }
+
+      // ── Path 3: Check users/$localId document ─────────────────────────────
+      if (!isApproved && localId != null && localId.isNotEmpty) {
+        try {
+          final uri = Uri.parse(
+            'https://firestore.googleapis.com/v1/projects/' +
+                _firebaseProjectId +
+                '/databases/(default)/documents/users/' +
+                localId,
+          );
+          final req = await client.getUrl(uri);
+          req.headers.set('Authorization', 'Bearer ' + idToken);
+
+          final resp = await req.close();
+          final body = await resp.transform(utf8.decoder).join();
+
+          if (resp.statusCode == 200) {
+            final parsed = jsonDecode(body) as Map<String, dynamic>;
+            final fields = parsed['fields'] as Map<String, dynamic>?;
+            if (fields != null) {
+              final isVipVal = fields['isVip']?['booleanValue'] == true;
+              final vipStatusVal = fields['vipStatus']?['stringValue']?.toString().toLowerCase();
+
+              if (isVipVal || vipStatusVal == 'active' || vipStatusVal == 'approved') {
+                isApproved = true;
+              }
+
+              detectedPlan ??= fields['plan']?['stringValue']?.toString() ??
+                  fields['requestedPlan']?['stringValue']?.toString() ??
+                  fields['vipPlan']?['stringValue']?.toString();
+              detectedPrice ??= (fields['price']?['doubleValue'] ?? fields['price']?['integerValue']) as num?;
+              detectedExpiry ??= fields['vipExpiry']?['timestampValue']?.toString() ??
+                  fields['expiresAt']?['timestampValue']?.toString() ??
+                  fields['vipExpiresAt']?['timestampValue']?.toString() ??
+                  fields['vipExpiry']?['stringValue']?.toString() ??
+                  fields['expiresAt']?['stringValue']?.toString();
+              detectedDays ??= int.tryParse(fields['vipDurationDays']?['integerValue']?.toString() ??
+                  fields['requestedDays']?['integerValue']?.toString() ?? '');
+            }
+          }
+        } catch (e) {
+          debugPrint('Notice checking users doc: ' + e.toString());
+        }
+      }
+
+      // ── Path 4: Check users/$userId document (Supabase UUID) ───────────────
+      if (!isApproved && userId.isNotEmpty && userId != localId) {
+        try {
+          final uUri = Uri.parse(
+            'https://firestore.googleapis.com/v1/projects/' +
+                _firebaseProjectId +
+                '/databases/(default)/documents/users/' +
+                userId,
+          );
+          final uReq = await client.getUrl(uUri);
+          uReq.headers.set('Authorization', 'Bearer ' + idToken);
+
+          final uResp = await uReq.close();
+          final uBody = await uResp.transform(utf8.decoder).join();
+
+          if (uResp.statusCode == 200) {
+            final parsed = jsonDecode(uBody) as Map<String, dynamic>;
+            final fields = parsed['fields'] as Map<String, dynamic>?;
+            if (fields != null) {
+              final isVipVal = fields['isVip']?['booleanValue'] == true;
+              final vipStatusVal = fields['vipStatus']?['stringValue']?.toString().toLowerCase();
+
+              if (isVipVal || vipStatusVal == 'active' || vipStatusVal == 'approved') {
+                isApproved = true;
+                detectedPlan ??= fields['plan']?['stringValue']?.toString();
+              }
+            }
+          }
+        } catch (_) {}
       }
 
       client.close();
 
-      // If admin approved:
+      // ── Path 5: Fallback to Supabase payment_transactions ─────────────────
+      if (detectedPlan == null) {
+        try {
+          final tx = await Supabase.instance.client
+              .from('payment_transactions')
+              .select('plan_id, amount_iqd, status')
+              .eq('user_id', userId)
+              .order('created_at', ascending: false)
+              .limit(1)
+              .maybeSingle();
+          if (tx != null) {
+            detectedPlan = tx['plan_id']?.toString();
+            detectedPrice = tx['amount_iqd'] is num ? (tx['amount_iqd'] as num) : null;
+            if (tx['status'] == 'approved' || tx['status'] == 'completed') {
+              isApproved = true;
+            }
+          }
+        } catch (_) {}
+      }
+
+      // ── Path 6: Calculate exact plan days (3 months -> 90 days, 9 months -> 270 days) ───
+      final finalDays = calculatePlanDays(
+        plan: detectedPlan,
+        price: detectedPrice,
+        durationDays: detectedDays,
+        expiryIso: detectedExpiry,
+      );
+      final finalDbPlan = finalDays >= 250
+          ? 'PREMIUM_YEARLY'
+          : (finalDays >= 75 ? 'PREMIUM_MONTHLY' : 'PREMIUM_MONTHLY');
+
+      // ── Apply Approval & Synchronize ──────────────────────────────────────
       if (isApproved) {
+        // Calculate new expiry date: extend from active expiry if already active in future
+        final now = DateTime.now();
+        DateTime baseDate = now;
+        final cachedExpIso = prefs.getString('zanko_user_vip_expiry_' + userId);
+        if (cachedExpIso != null && cachedExpIso.isNotEmpty) {
+          final parsedExp = DateTime.tryParse(cachedExpIso);
+          if (parsedExp != null && parsedExp.isAfter(now)) {
+            baseDate = parsedExp;
+          }
+        }
+        final newExpiry = baseDate.add(Duration(days: finalDays));
+
         // Cache locally for offline and instant UI persistence
         try {
-          final prefs = await SharedPreferences.getInstance();
           await prefs.setBool('zanko_user_is_vip_' + userId, true);
+          await prefs.setString('zanko_user_vip_status_' + userId, 'active');
+          await prefs.setInt('zanko_user_vip_days_' + userId, finalDays);
+          await prefs.setString('zanko_user_vip_expiry_' + userId, newExpiry.toIso8601String());
+          await prefs.setString('zanko_user_vip_plan_' + userId, finalDbPlan);
         } catch (_) {}
 
-        // Call PostgreSQL SECURITY DEFINER RPC to update profiles & subscriptions
+        // 1. Sync the corrected 270-day or 90-day expiry directly back to Firestore users collection
+        // so the web admin panel (zanko-admin.vercel.app) immediately changes from 30 days to 270 or 90 days!
+        if (localId != null && localId.isNotEmpty) {
+          try {
+            final maskQuery = 'updateMask.fieldPaths=isVip&updateMask.fieldPaths=vipStatus&updateMask.fieldPaths=vipExpiresAt&updateMask.fieldPaths=vipExpiry&updateMask.fieldPaths=vipDurationDays&updateMask.fieldPaths=plan';
+            final userUri = Uri.parse(
+              'https://firestore.googleapis.com/v1/projects/' +
+                  _firebaseProjectId +
+                  '/databases/(default)/documents/users/' +
+                  localId +
+                  '?' +
+                  maskQuery,
+            );
+            final uReq = await client.patchUrl(userUri);
+            uReq.headers.contentType = ContentType.json;
+            uReq.headers.set('Authorization', 'Bearer ' + idToken);
+            uReq.write(jsonEncode({
+              'fields': {
+                'isVip': {'booleanValue': true},
+                'vipStatus': {'stringValue': 'approved'},
+                'vipExpiresAt': {'timestampValue': newExpiry.toUtc().toIso8601String()},
+                'vipExpiry': {'timestampValue': newExpiry.toUtc().toIso8601String()},
+                'vipDurationDays': {'integerValue': finalDays.toString()},
+                'plan': {'stringValue': finalDbPlan},
+              }
+            }));
+            final uResp = await uReq.close();
+            await uResp.drain();
+            debugPrint('Auto-corrected Firestore users/' + localId + ' vipExpiresAt to ' + finalDays.toString() + ' days (' + newExpiry.toIso8601String() + ')');
+          } catch (e) {
+            debugPrint('Notice syncing corrected vipExpiresAt to Firestore: ' + e.toString());
+          }
+        }
+
+        // 2. Call PostgreSQL SECURITY DEFINER RPC to update profiles & subscriptions
         try {
           await Supabase.instance.client.rpc(
             'sync_admin_approved_vip',
             params: {
               'p_user_id': userId,
-              'p_plan': 'PREMIUM_MONTHLY',
-              'p_days': 365,
+              'p_plan': finalDbPlan,
+              'p_days': finalDays,
             },
           );
-          debugPrint('Successfully synced admin VIP approval via RPC for ' + userId);
+          debugPrint('Successfully synced admin VIP approval via RPC for ' + userId + ' (plan: ' + finalDbPlan + ', days: ' + finalDays.toString() + ')');
         } catch (rpcErr) {
-          debugPrint('RPC sync notice (falling back to direct update): ' + rpcErr.toString());
+          debugPrint('RPC sync notice (local VIP cache active): ' + rpcErr.toString());
           try {
             await Supabase.instance.client.from('profiles').update({
-              'plan': 'premium',
-              'vip_expiry': DateTime.now().add(const Duration(days: 365)).toUtc().toIso8601String(),
+              'is_vip': true,
+              'vip_status': 'active',
+              'vip_expiry': newExpiry.toUtc().toIso8601String(),
             }).eq('id', userId);
           } catch (_) {}
         }
 
         return true;
       } else {
-        // Admin has not approved yet
+        // Admin has not approved yet: ONLY reset if existing local expiry is expired!
+        final cachedExpIso = prefs.getString('zanko_user_vip_expiry_' + userId);
+        if (cachedExpIso != null && cachedExpIso.isNotEmpty) {
+          final parsedExp = DateTime.tryParse(cachedExpIso);
+          if (parsedExp != null && parsedExp.isAfter(DateTime.now())) {
+            // Still active VIP locally!
+            return true;
+          }
+        }
         try {
-          final prefs = await SharedPreferences.getInstance();
           await prefs.setBool('zanko_user_is_vip_' + userId, false);
         } catch (_) {}
       }
@@ -470,3 +760,4 @@ class VipFirestoreService {
     return false;
   }
 }
+

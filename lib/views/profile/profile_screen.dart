@@ -2218,7 +2218,9 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           user?.isVip == true
-                              ? t('vip_banner_desc_active')
+                              ? (user != null && user.vipDaysLeft > 0
+                                  ? ('ئەندامێتی VIP چالاکە (' + user.vipDaysLeft.toString() + ' ڕۆژ ماوە)')
+                                  : t('vip_banner_desc_active'))
                               : t('vip_banner_desc_guest'),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
