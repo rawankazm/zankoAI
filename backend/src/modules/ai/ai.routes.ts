@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authenticate } from '../../middleware/authenticate.js';
 import { enforceUsage } from '../../middleware/enforceUsage.js';
 import { rateLimiter } from '../../middleware/rate_limiter.js';
+import { uploadGuard } from '../../middleware/uploadGuard.js';
 import {
   chatHandler,
   listConversationsHandler,
@@ -11,10 +12,16 @@ import {
   generateQuizHandler,
   generateFlashcardsHandler,
 } from './ai.controller.js';
+import {
+  pdfUpload,
+  submitPdfJobHandler,
+  getPdfJobStatusHandler,
+  askPdfQuestionHandler,
+} from './pdf.controller.js';
 
 const router = Router();
 
-// 1. AI Chat (Enforce daily plan limit: free = 10, premium = 500 fair use)
+// ── 1. AI Chat (daily limit: free=10, premium=500) ────────────────────────────
 router.post(
   '/chat',
   authenticate,
@@ -23,7 +30,7 @@ router.post(
   chatHandler
 );
 
-// 2. AI Conversations Management
+// ── 2. AI Conversations Management ───────────────────────────────────────────
 router.get(
   '/conversations',
   authenticate,
@@ -42,7 +49,7 @@ router.delete(
   deleteConversationHandler
 );
 
-// 2. Homework & Image Solving (Enforce daily plan limit: free = 10, premium = 200 fair use)
+// ── 3. Homework / Image Solving (daily limit: free=10, premium=200) ───────────
 router.post(
   '/solve-image',
   authenticate,
@@ -51,7 +58,7 @@ router.post(
   solveImageHandler
 );
 
-// 3. Quiz Generation (Enforce monthly plan limit: free = 5, premium = 200 fair use)
+// ── 4. Quiz Generation (monthly limit: free=5, premium=200) ──────────────────
 router.post(
   '/generate-quiz',
   authenticate,
@@ -60,7 +67,7 @@ router.post(
   generateQuizHandler
 );
 
-// 4. Flashcards Generation (Enforce monthly plan limit: free = 5, premium = 200 fair use)
+// ── 5. Flashcards Generation (monthly limit: free=5, premium=200) ─────────────
 router.post(
   '/generate-flashcards',
   authenticate,
@@ -69,5 +76,53 @@ router.post(
   generateFlashcardsHandler
 );
 
-export const aiRoutes = router;
+// ── 6. PDF AI Processing ──────────────────────────────────────────────────────
 
+/**
+ * POST /api/ai/pdf
+ * Submit a PDF for async AI processing (summarize, quiz, flashcards, questions).
+ * - Quota: 'pdf' (monthly). Enforced inside PdfService.submitJob for idempotency safety.
+ * - File: multipart/form-data, field name "file", max 30 MB.
+ * - Header: Idempotency-Key (optional UUID) to safely retry on network errors.
+ * - Response: 202 Accepted + { jobId, status: 'queued', ... }
+ */
+router.post(
+  '/pdf',
+  authenticate,
+  rateLimiter({ windowMs: 60 * 1000, maxRequests: 5, keyPrefix: 'rl:ai:pdf' }),
+  pdfUpload.single('file'),
+  uploadGuard({
+    type: 'document',
+    allowedMimes: ['application/pdf'],
+    allowedExtensions: ['.pdf'],
+    maxSizeBytes: 30 * 1024 * 1024,
+  }),
+  submitPdfJobHandler
+);
+
+/**
+ * GET /api/ai/pdf/:jobId
+ * Poll the processing status of a submitted PDF job.
+ * Returns results when status === 'completed'.
+ * No quota consumption — safe to poll every 3 seconds.
+ */
+router.get(
+  '/pdf/:jobId',
+  authenticate,
+  getPdfJobStatusHandler
+);
+
+/**
+ * POST /api/ai/pdf/:jobId/ask
+ * Ask a question about a completed PDF using stored AI context.
+ * Consumes ai_chat quota (not pdf quota).
+ */
+router.post(
+  '/pdf/:jobId/ask',
+  authenticate,
+  rateLimiter({ windowMs: 60 * 1000, maxRequests: 20, keyPrefix: 'rl:ai:pdf:ask' }),
+  enforceUsage('ai_chat'),
+  askPdfQuestionHandler
+);
+
+export const aiRoutes = router;

@@ -112,8 +112,8 @@ BEGIN
   RETURN (
     public.is_course_instructor(p_course_id) OR
     EXISTS (
-      SELECT 1 FROM public.enrollments
-      WHERE course_id = p_course_id AND student_id = auth.uid()
+      SELECT 1 FROM public.course_members
+      WHERE course_id = p_course_id AND user_id = auth.uid()
     ) OR
     EXISTS (
       SELECT 1 FROM public.courses c
