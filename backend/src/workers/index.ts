@@ -4,6 +4,8 @@ import { logger } from '../config/logger.js';
 import { env } from '../config/env.js';
 import { processPdfAiJob } from '../jobs/pdf_processor.js';
 import { PdfAiJobData } from '../types/pdf.types.js';
+import { processOcrAiJob } from '../jobs/ocr_processor.js';
+import { OcrAiJobData } from '../types/ocr.types.js';
 
 logger.info(`👷 Starting ZankoAI Background Worker in ${env.NODE_ENV} mode...`);
 
@@ -88,6 +90,42 @@ pdfAiWorker.on('stalled', (jobId: string) => {
   logger.warn(`[Worker:pdf-ai] Job ${jobId} stalled — will be re-queued automatically`);
 });
 
+// ── 4. OCR AI Processing Worker ────────────────────────────────────────────────
+export const ocrWorker = new Worker(
+  'ocr-processing',
+  async (job: Job<OcrAiJobData>) => {
+    logger.info(
+      `[Worker:ocr] Processing job ${job.id} for user ${job.data.userId} (${job.data.originalFilename}, type=${job.data.ocrType})`
+    );
+    await processOcrAiJob(job.data);
+    return { processed: true };
+  },
+  {
+    connection: redis,
+    concurrency: 3, // Vision API calls are I/O bound
+    limiter: {
+      max: 20,
+      duration: 60_000, // max 20 OCR jobs per minute
+    },
+  }
+);
+
+ocrWorker.on('completed', (job: Job) => {
+  logger.info(`[Worker:ocr] Job ${job.id} completed successfully`);
+});
+
+ocrWorker.on('failed', (job: Job | undefined, err: Error) => {
+  const attempt = job?.attemptsMade ?? 0;
+  const maxAttempts = job?.opts?.attempts ?? 3;
+  logger.error(
+    `[Worker:ocr] Job ${job?.id} failed (attempt ${attempt}/${maxAttempts}): ${err.message}`
+  );
+});
+
+ocrWorker.on('stalled', (jobId: string) => {
+  logger.warn(`[Worker:ocr] Job ${jobId} stalled — will be re-queued automatically`);
+});
+
 // ── Graceful Shutdown ─────────────────────────────────────────────────────────
 const shutdownWorkers = async () => {
   logger.info('🛑 Shutting down queue workers gracefully...');
@@ -95,6 +133,7 @@ const shutdownWorkers = async () => {
     fileWorker.close(),
     notificationWorker.close(),
     pdfAiWorker.close(),
+    ocrWorker.close(),
   ]);
   await redis.quit();
   logger.info('Queue workers closed. Exiting process.');
@@ -103,3 +142,4 @@ const shutdownWorkers = async () => {
 
 process.on('SIGTERM', shutdownWorkers);
 process.on('SIGINT', shutdownWorkers);
+

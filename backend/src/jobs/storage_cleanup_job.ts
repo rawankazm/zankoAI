@@ -135,3 +135,107 @@ export async function executeFailedPdfJobCleanup(
 
   return report;
 }
+
+// ─── Failed / Orphaned OCR Job Cleanup ───────────────────────────────────────
+
+export interface OcrJobCleanupReport {
+  scannedCount: number;
+  storageDeletedCount: number;
+  jobsMarkedFailed: number;
+  timestamp: string;
+}
+
+/**
+ * Cleans up stale OCR jobs (queued or failed) older than the specified hours.
+ * 1. Queries ocr_jobs via get_orphaned_ocr_jobs RPC.
+ * 2. Deletes associated Supabase Storage files from ocr-images bucket.
+ * 3. Ensures zombie 'queued' jobs are marked 'failed'.
+ */
+export async function executeFailedOcrJobCleanup(
+  olderThanHours = 24
+): Promise<OcrJobCleanupReport> {
+  logger.info(
+    `[OcrJobCleanupJob] Starting cleanup of stale OCR jobs older than ${olderThanHours} hours...`
+  );
+
+  const report: OcrJobCleanupReport = {
+    scannedCount: 0,
+    storageDeletedCount: 0,
+    jobsMarkedFailed: 0,
+    timestamp: new Date().toISOString(),
+  };
+
+  try {
+    const { data: orphanedJobs, error: rpcErr } = await supabaseAdmin.rpc(
+      'get_orphaned_ocr_jobs',
+      { p_older_than_hours: olderThanHours }
+    );
+
+    if (rpcErr) {
+      logger.error(`[OcrJobCleanupJob] RPC get_orphaned_ocr_jobs failed: ${rpcErr.message}`);
+      throw new Error(`Failed to fetch orphaned OCR jobs: ${rpcErr.message}`);
+    }
+
+    if (!orphanedJobs || !Array.isArray(orphanedJobs) || orphanedJobs.length === 0) {
+      logger.info('[OcrJobCleanupJob] No orphaned OCR jobs found. Nothing to clean.');
+      return report;
+    }
+
+    report.scannedCount = orphanedJobs.length;
+    logger.info(`[OcrJobCleanupJob] Found ${orphanedJobs.length} orphaned/stale OCR jobs.`);
+
+    for (const job of orphanedJobs) {
+      const { job_id, storage_path, status } = job;
+
+      // Delete storage file if path exists
+      if (storage_path) {
+        try {
+          const { error: storageErr } = await supabaseAdmin.storage
+            .from('ocr-images')
+            .remove([storage_path]);
+
+          if (!storageErr) {
+            report.storageDeletedCount++;
+            logger.info(`[OcrJobCleanupJob] Deleted storage file ${storage_path} for job ${job_id}.`);
+          } else {
+            logger.warn(
+              `[OcrJobCleanupJob] Storage delete error for ${storage_path}: ${storageErr.message}`
+            );
+          }
+        } catch (storageErr: any) {
+          logger.warn(
+            `[OcrJobCleanupJob] Storage delete error for ${storage_path}: ${storageErr.message}`
+          );
+        }
+      }
+
+      // Mark job as failed if stuck in queued
+      if (status === 'queued') {
+        try {
+          await supabaseAdmin
+            .from('ocr_jobs')
+            .update({
+              status: 'failed',
+              error_message: `Job timed out after ${olderThanHours} hours in queued state. Cleaned up by maintenance job.`,
+            })
+            .eq('id', job_id);
+
+          report.jobsMarkedFailed++;
+          logger.info(`[OcrJobCleanupJob] Marked job ${job_id} as failed (was stuck in queued).`);
+        } catch (updateErr: any) {
+          logger.warn(`[OcrJobCleanupJob] Failed to update job ${job_id} status: ${updateErr.message}`);
+        }
+      }
+    }
+
+    logger.info(
+      `[OcrJobCleanupJob] Cleanup complete: scanned=${report.scannedCount}, storageDeleted=${report.storageDeletedCount}, markedFailed=${report.jobsMarkedFailed}`
+    );
+  } catch (err: any) {
+    logger.error(`[OcrJobCleanupJob] Unexpected error during cleanup: ${err.message}`);
+    throw err;
+  }
+
+  return report;
+}
+

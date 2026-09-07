@@ -43,4 +43,19 @@ export const pdfAiQueue = new Queue('pdf-ai-processing', {
   },
 });
 
-logger.info('📦 BullMQ queues initialized (file-processing, notifications, pdf-ai-processing)');
+// Queue for OCR AI processing (handwriting/printed extraction + summary + quiz + flashcards + questions)
+export const ocrAiQueue = new Queue('ocr-processing', {
+  connection: redis,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: {
+      type: 'exponential',
+      delay: 3000,
+    },
+    removeOnComplete: 100,
+    removeOnFail: 200,
+  },
+});
+
+logger.info('📦 BullMQ queues initialized (file-processing, notifications, pdf-ai-processing, ocr-processing)');
+

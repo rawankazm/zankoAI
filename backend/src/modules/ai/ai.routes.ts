@@ -18,6 +18,12 @@ import {
   getPdfJobStatusHandler,
   askPdfQuestionHandler,
 } from './pdf.controller.js';
+import {
+  ocrUpload,
+  submitOcrJobHandler,
+  getOcrJobStatusHandler,
+  deleteOcrJobHandler,
+} from './ocr.controller.js';
 
 const router = Router();
 
@@ -125,4 +131,50 @@ router.post(
   askPdfQuestionHandler
 );
 
+// ── 7. AI OCR Processing ──────────────────────────────────────────────────────
+
+/**
+ * POST /api/ai/ocr
+ * Submit an image (handwritten or printed) for async OCR and AI processing.
+ * - Quota: 'ocr' (monthly). Enforced server-side with idempotency protection.
+ * - File: multipart/form-data, field name "file", max 10 MB.
+ * - Header: Idempotency-Key (optional UUID).
+ * - Response: 202 Accepted + { jobId, status: 'queued', ... }
+ */
+router.post(
+  '/ocr',
+  authenticate,
+  rateLimiter({ windowMs: 60 * 1000, maxRequests: 10, keyPrefix: 'rl:ai:ocr' }),
+  ocrUpload.single('file'),
+  uploadGuard({
+    type: 'image',
+    allowedMimes: ['image/jpeg', 'image/png', 'image/webp'],
+    allowedExtensions: ['.jpg', '.jpeg', '.png', '.webp'],
+    maxSizeBytes: 10 * 1024 * 1024,
+  }),
+  submitOcrJobHandler
+);
+
+/**
+ * GET /api/ai/ocr/:jobId
+ * Poll the processing status of an OCR job.
+ * Returns extracted text, detected type, and AI learning aids when completed.
+ */
+router.get(
+  '/ocr/:jobId',
+  authenticate,
+  getOcrJobStatusHandler
+);
+
+/**
+ * DELETE /api/ai/ocr/:jobId
+ * Delete user's OCR job and permanently purge the image from private storage.
+ */
+router.delete(
+  '/ocr/:jobId',
+  authenticate,
+  deleteOcrJobHandler
+);
+
 export const aiRoutes = router;
+
