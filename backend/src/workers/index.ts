@@ -8,6 +8,7 @@ import { processOcrAiJob } from '../jobs/ocr_processor.js';
 import { OcrAiJobData } from '../types/ocr.types.js';
 import { processAudioLectureJob } from '../jobs/audio_processor.js';
 import { LectureAudioJobData } from '../types/audio.types.js';
+import { NotificationService } from '../services/notification.service.js';
 
 logger.info(`👷 Starting ZankoAI Background Worker in ${env.NODE_ENV} mode...`);
 
@@ -42,7 +43,9 @@ export const notificationWorker = new Worker(
   'notifications',
   async (job: Job) => {
     logger.info(`[Worker:notifications] Dispatching notification job ${job.id}`, { data: job.data });
-    await new Promise((res) => setTimeout(res, 200));
+    if (job.data && job.data.userId) {
+      return await NotificationService.processNotificationJob(job.data);
+    }
     return { delivered: true };
   },
   { connection: redis, concurrency: 8 }

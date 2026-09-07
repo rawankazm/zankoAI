@@ -1,38 +1,51 @@
 import { Request, Response } from 'express';
+import { CalendarService } from '../services/calendar.service.js';
+import { NotificationService } from '../services/notification.service.js';
 import { PersonalService } from '../services/personal.service.js';
 import { ResponseFormatter } from '../utils/apiResponse.js';
-import { QueryHelper } from '../utils/queryBuilder.js';
+import { NotificationType } from '../types/calendar_notification.types.js';
 
 export class PersonalController {
-  // ─── Calendar ───
+  // ─── Calendar Events ───
   static async listCalendarEvents(req: Request, res: Response): Promise<Response> {
-    const startTime = req.query.start_time as string;
-    const endTime = req.query.end_time as string;
-    const events = await PersonalService.getCalendarEvents(req.user!.id, startTime, endTime);
+    const startDate = (req.query.start_date || req.query.start_time) as string | undefined;
+    const endDate = (req.query.end_date || req.query.end_time) as string | undefined;
+    const eventType = req.query.event_type as string | undefined;
+    const courseId = req.query.course_id as string | undefined;
+
+    const events = await CalendarService.listEvents(req.user!.id, {
+      startDate,
+      endDate,
+      eventType,
+      courseId,
+    });
     return ResponseFormatter.success(res, events);
   }
 
+  static async getCalendarEvent(req: Request, res: Response): Promise<Response> {
+    const event = await CalendarService.getEventById(req.params.id, req.user!.id);
+    if (!event) {
+      return ResponseFormatter.notFound(res, 'Calendar event not found');
+    }
+    return ResponseFormatter.success(res, event);
+  }
+
   static async createCalendarEvent(req: Request, res: Response): Promise<Response> {
-    const event = await PersonalService.createCalendarEvent(req.user!.id, req.body);
+    const event = await CalendarService.createEvent(req.user!.id, req.body);
     return ResponseFormatter.created(res, event, 'Calendar event created successfully');
   }
 
   static async updateCalendarEvent(req: Request, res: Response): Promise<Response> {
-    const event = await PersonalService.updateCalendarEvent(
-      req.params.id,
-      req.user!.id,
-      req.profile!.role,
-      req.body
-    );
+    const event = await CalendarService.updateEvent(req.params.id, req.user!.id, req.body);
     return ResponseFormatter.success(res, event, 'Calendar event updated successfully');
   }
 
   static async deleteCalendarEvent(req: Request, res: Response): Promise<Response> {
-    await PersonalService.deleteCalendarEvent(req.params.id, req.user!.id, req.profile!.role);
+    await CalendarService.deleteEvent(req.params.id, req.user!.id);
     return ResponseFormatter.success(res, null, 'Calendar event deleted successfully');
   }
 
-  // ─── Progress ───
+  // ─── Progress Tracking ───
   static async trackLectureProgress(req: Request, res: Response): Promise<Response> {
     const { lecture_id, progress_percent, is_completed } = req.body;
     const record = await PersonalService.trackLectureProgress(
@@ -50,29 +63,76 @@ export class PersonalController {
     return ResponseFormatter.success(res, progress);
   }
 
-  // ─── Notifications ───
+  // ─── Notifications (Paginated & Preference-Aware) ───
   static async listNotifications(req: Request, res: Response): Promise<Response> {
-    const query = QueryHelper.parse(req, {
-      allowedSortFields: ['created_at'],
-      defaultSortField: 'created_at',
-      defaultSortAsc: false,
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 20;
+    const type = req.query.type as NotificationType | undefined;
+    let isRead: boolean | undefined;
+    if (req.query.is_read !== undefined) {
+      isRead = req.query.is_read === 'true' || req.query.is_read === '1';
+    }
+
+    const result = await NotificationService.listNotifications(req.user!.id, {
+      page,
+      limit,
+      type,
+      isRead,
     });
-    const result = await PersonalService.getNotifications(req.user!.id, query);
     return ResponseFormatter.success(res, result);
   }
 
   static async markRead(req: Request, res: Response): Promise<Response> {
-    const notification = await PersonalService.markNotificationRead(req.params.id, req.user!.id);
+    const notification = await NotificationService.markNotificationRead(req.params.id, req.user!.id);
     return ResponseFormatter.success(res, notification, 'Notification marked as read');
   }
 
   static async markAllRead(req: Request, res: Response): Promise<Response> {
-    await PersonalService.markAllNotificationsRead(req.user!.id);
+    await NotificationService.markAllNotificationsRead(req.user!.id);
     return ResponseFormatter.success(res, null, 'All notifications marked as read');
   }
 
   static async deleteNotification(req: Request, res: Response): Promise<Response> {
     await PersonalService.deleteNotification(req.params.id, req.user!.id);
     return ResponseFormatter.success(res, null, 'Notification deleted successfully');
+  }
+
+  // ─── Notification Preferences ───
+  static async getPreferences(req: Request, res: Response): Promise<Response> {
+    const preferences = await NotificationService.getPreferences(req.user!.id);
+    return ResponseFormatter.success(res, preferences);
+  }
+
+  static async updatePreferences(req: Request, res: Response): Promise<Response> {
+    const updated = await NotificationService.updatePreferences(req.user!.id, req.body);
+    return ResponseFormatter.success(res, updated, 'Notification preferences updated');
+  }
+
+  // ─── Device Tokens ───
+  static async registerDevice(req: Request, res: Response): Promise<Response> {
+    const device = await NotificationService.registerDevice(req.user!.id, req.body);
+    return ResponseFormatter.success(res, device, 'Device registered successfully');
+  }
+
+  static async unregisterDevice(req: Request, res: Response): Promise<Response> {
+    const token = req.params.token || req.body.fcm_token;
+    await NotificationService.unregisterDevice(req.user!.id, token);
+    return ResponseFormatter.success(res, null, 'Device unregistered successfully');
+  }
+
+  // ─── Asynchronous Notification Scheduling ───
+  static async scheduleNotification(req: Request, res: Response): Promise<Response> {
+    const targetUserId = req.body.user_id || req.user!.id;
+    const result = await NotificationService.scheduleNotification({
+      userId: targetUserId,
+      title: req.body.title,
+      body: req.body.body,
+      type: req.body.type,
+      data: req.body.data,
+      idempotencyKey: req.body.idempotency_key,
+      referenceId: req.body.reference_id,
+      scheduledFor: req.body.scheduled_for,
+    });
+    return ResponseFormatter.success(res, result, 'Notification scheduled successfully');
   }
 }
