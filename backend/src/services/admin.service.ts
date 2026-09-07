@@ -36,7 +36,34 @@ export class AdminService {
       })
       .eq('id', userId);
 
-    return !error;
+    if (error) return false;
+
+    // Sync with production subscriptions table
+    if (isVip && expiry) {
+      await supabaseAdmin.from('subscriptions').upsert(
+        {
+          user_id: userId,
+          plan: days >= 365 ? 'PREMIUM_YEARLY' : 'PREMIUM_MONTHLY',
+          status: 'active',
+          provider: 'admin',
+          current_period_start: new Date().toISOString(),
+          current_period_end: expiry,
+          cancel_at_period_end: false,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id' }
+      );
+    } else {
+      await supabaseAdmin
+        .from('subscriptions')
+        .update({
+          status: 'canceled',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId);
+    }
+
+    return true;
   }
 
   static async getSystemStats() {

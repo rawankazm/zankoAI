@@ -457,22 +457,24 @@ class SupabaseAuthRepository implements AuthRepository {
 
       // Read local cache for immediate fallback / offline persistence
       String? localName, localUni, localDept, localCity, localAvatar;
+      bool? localIsVip;
       try {
         final prefs = await SharedPreferences.getInstance();
-        localName = prefs.getString('zanko_user_name_$userId') ??
-            (cleanEmail.isNotEmpty ? prefs.getString('zanko_user_name_$cleanEmail') : null) ??
+        localIsVip = prefs.getBool('zanko_user_is_vip_' + userId);
+        localName = prefs.getString('zanko_user_name_' + userId) ??
+            (cleanEmail.isNotEmpty ? prefs.getString('zanko_user_name_' + cleanEmail) : null) ??
             prefs.getString('zanko_active_user_name');
-        localUni = prefs.getString('zanko_user_uni_$userId') ??
-            (cleanEmail.isNotEmpty ? prefs.getString('zanko_user_uni_$cleanEmail') : null) ??
+        localUni = prefs.getString('zanko_user_uni_' + userId) ??
+            (cleanEmail.isNotEmpty ? prefs.getString('zanko_user_uni_' + cleanEmail) : null) ??
             prefs.getString('zanko_active_user_uni');
-        localDept = prefs.getString('zanko_user_dept_$userId') ??
-            (cleanEmail.isNotEmpty ? prefs.getString('zanko_user_dept_$cleanEmail') : null) ??
+        localDept = prefs.getString('zanko_user_dept_' + userId) ??
+            (cleanEmail.isNotEmpty ? prefs.getString('zanko_user_dept_' + cleanEmail) : null) ??
             prefs.getString('zanko_active_user_dept');
-        localCity = prefs.getString('zanko_user_city_$userId') ??
-            (cleanEmail.isNotEmpty ? prefs.getString('zanko_user_city_$cleanEmail') : null) ??
+        localCity = prefs.getString('zanko_user_city_' + userId) ??
+            (cleanEmail.isNotEmpty ? prefs.getString('zanko_user_city_' + cleanEmail) : null) ??
             prefs.getString('zanko_active_user_city');
-        localAvatar = prefs.getString('zanko_user_avatar_$userId') ??
-            (cleanEmail.isNotEmpty ? prefs.getString('zanko_user_avatar_$cleanEmail') : null) ??
+        localAvatar = prefs.getString('zanko_user_avatar_' + userId) ??
+            (cleanEmail.isNotEmpty ? prefs.getString('zanko_user_avatar_' + cleanEmail) : null) ??
             prefs.getString('zanko_active_user_avatar');
       } catch (_) {}
 
@@ -523,6 +525,7 @@ class SupabaseAuthRepository implements AuthRepository {
 
       if (res != null) {
         final dbModel = UserModel.fromMap(res);
+        final effectiveVip = (localIsVip == true) ? true : dbModel.isVip;
 
         // Auto-heal DB profile if out of sync with user's verified name
         if (effectiveName.isNotEmpty && res['full_name'] != effectiveName) {
@@ -536,6 +539,8 @@ class SupabaseAuthRepository implements AuthRepository {
 
         return dbModel.copyWith(
           name: effectiveName,
+          isVip: effectiveVip,
+          vipStatus: effectiveVip ? 'active' : dbModel.vipStatus,
           universityName: effectiveUni ?? dbModel.universityName,
           departmentName: effectiveDept ?? dbModel.departmentName,
           cityName: effectiveCity ?? dbModel.cityName,
@@ -553,8 +558,8 @@ class SupabaseAuthRepository implements AuthRepository {
         departmentName: effectiveDept,
         cityName: effectiveCity,
         photoUrl: effectiveAvatar,
-        isVip: false,
-        vipStatus: 'none',
+        isVip: localIsVip == true,
+        vipStatus: localIsVip == true ? 'active' : 'none',
       );
     } catch (e) {
       debugPrint('Error fetching user profile in repository: $e');

@@ -5,33 +5,31 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
 
-/// Bridges ZankoAI Flutter application directly into the admin panel's Firestore
+/// Bridges ZankoAI Flutter application directly into the admin panel Firestore
 /// project (tomartv-67cda):
-/// 1. Synchronizes all active users into Firestore `users` collection so they appear
-///    in real-time on https://zanko-admin.vercel.app/users ("بەکارهێنەران").
-/// 2. Posts VIP purchase requests to Firestore `vip_requests` collection
-///    so they appear on https://zanko-admin.vercel.app/vip ("داواکاریەکانی VIP").
+/// 1. Synchronizes active users into Firestore `users` collection without overwriting admin VIP approval.
+/// 2. Posts VIP purchase requests to Firestore `vip_requests` collection.
 /// 3. Detects VIP approval from the admin panel and automatically promotes the user
-///    to VIP in Supabase and the mobile app.
+///    to VIP in Supabase PostgreSQL and the mobile app.
 class VipFirestoreService {
   static const String _firebaseApiKey = 'AIzaSyAebiUPE9OyxhrHjanHy98ZXeVBJm0FRvA';
   static const String _firebaseProjectId = 'tomartv-67cda';
 
-  /// Obtains a persistent, authenticated Firebase session tied to the user's email
+  /// Obtains a persistent, authenticated Firebase session tied to the user email
   static Future<Map<String, String>?> _getFirebaseAuthToken({
     required String userEmail,
     String? userId,
   }) async {
     final cleanEmail = userEmail.trim().toLowerCase().isNotEmpty
         ? userEmail.trim().toLowerCase()
-        : '${userId ?? "user"}@zanko.edu';
+        : ((userId ?? 'user') + '@zanko.edu');
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      final tokenKey = 'zanko_fb_token_$cleanEmail';
-      final expKey = 'zanko_fb_exp_$cleanEmail';
-      final localIdKey = 'zanko_fb_uid_$cleanEmail';
-      final refreshKey = 'zanko_fb_refresh_$cleanEmail';
+      final tokenKey = 'zanko_fb_token_' + cleanEmail;
+      final expKey = 'zanko_fb_exp_' + cleanEmail;
+      final localIdKey = 'zanko_fb_uid_' + cleanEmail;
+      final refreshKey = 'zanko_fb_refresh_' + cleanEmail;
 
       final cachedToken = prefs.getString(tokenKey);
       final cachedLocalId = prefs.getString(localIdKey);
@@ -50,10 +48,10 @@ class VipFirestoreService {
       // 2. If we have a refresh token, refresh it to keep the exact same localId
       if (cachedRefresh != null && cachedRefresh.isNotEmpty) {
         try {
-          final refreshUri = Uri.parse('https://securetoken.googleapis.com/v1/token?key=$_firebaseApiKey');
+          final refreshUri = Uri.parse('https://securetoken.googleapis.com/v1/token?key=' + _firebaseApiKey);
           final rReq = await client.postUrl(refreshUri);
           rReq.headers.contentType = ContentType.parse('application/x-www-form-urlencoded');
-          rReq.write('grant_type=refresh_token&refresh_token=$cachedRefresh');
+          rReq.write('grant_type=refresh_token&refresh_token=' + cachedRefresh);
           final rResp = await rReq.close();
           final rBody = await rResp.transform(utf8.decoder).join();
           if (rResp.statusCode == 200) {
@@ -76,10 +74,10 @@ class VipFirestoreService {
       }
 
       // 3. Authenticate with deterministic sync password for this user
-      final syncPassword = 'ZankoFbSync2026_${cleanEmail.hashCode.abs()}';
+      final syncPassword = 'ZankoFbSync2026_' + cleanEmail.hashCode.abs().toString();
 
       // Try signIn first
-      final signInUri = Uri.parse('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=$_firebaseApiKey');
+      final signInUri = Uri.parse('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + _firebaseApiKey);
       var req = await client.postUrl(signInUri);
       req.headers.contentType = ContentType.json;
       req.write(jsonEncode({
@@ -93,7 +91,7 @@ class VipFirestoreService {
 
       // If signIn failed, create the Firebase account
       if (resp.statusCode != 200) {
-        final signUpUri = Uri.parse('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=$_firebaseApiKey');
+        final signUpUri = Uri.parse('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + _firebaseApiKey);
         req = await client.postUrl(signUpUri);
         req.headers.contentType = ContentType.json;
         req.write(jsonEncode({
@@ -108,7 +106,7 @@ class VipFirestoreService {
 
       // Fallback: anonymous sign-in if email registration fails
       if (resp.statusCode != 200) {
-        final anonUri = Uri.parse('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=$_firebaseApiKey');
+        final anonUri = Uri.parse('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + _firebaseApiKey);
         req = await client.postUrl(anonUri);
         req.headers.contentType = ContentType.json;
         req.write(jsonEncode({'returnSecureToken': true}));
@@ -132,13 +130,13 @@ class VipFirestoreService {
         return {'idToken': idToken, 'localId': localId};
       }
     } catch (e) {
-      debugPrint('Error obtaining Firebase auth token: $e');
+      debugPrint('Error obtaining Firebase auth token: ' + e.toString());
     }
     return null;
   }
 
-  /// Synchronizes a user's profile directly to the Firestore `users` collection.
-  /// This ensures every user appears in the admin panel under "بەکارهێنەران".
+  /// Synchronizes a user profile directly to the Firestore `users` collection.
+  /// CRITICAL: Uses updateMask so it NEVER overwrites an admin approval with false!
   static Future<void> syncUserToFirestore(UserModel user) async {
     if (user.isGuest || user.email.isEmpty) return;
 
@@ -149,39 +147,64 @@ class VipFirestoreService {
       if (idToken == null || localId == null) return;
 
       final client = HttpClient();
-      final userUri = Uri.parse(
-        'https://firestore.googleapis.com/v1/projects/$_firebaseProjectId/databases/(default)/documents/users/$localId',
-      );
-      final req = await client.patchUrl(userUri);
-      req.headers.contentType = ContentType.json;
-      req.headers.set('Authorization', 'Bearer $idToken');
-
       final nowIso = DateTime.now().toUtc().toIso8601String();
-      final payload = {
-        'fields': {
-          'name': {'stringValue': user.name.trim().isNotEmpty ? user.name.trim() : 'بەکارهێنەر'},
-          'email': {'stringValue': user.email.trim().toLowerCase()},
-          'role': {'stringValue': user.role.name},
-          'university': {'stringValue': user.universityName ?? ''},
-          'department': {'stringValue': user.departmentName ?? ''},
-          'city': {'stringValue': user.cityName ?? ''},
-          'isVip': {'booleanValue': user.isVip},
-          'vipStatus': {'stringValue': user.vipStatus},
-          'status': {'stringValue': 'active'},
-          'isBlocked': {'booleanValue': false},
-          'lastLoginAt': {'timestampValue': nowIso},
-          'createdAt': {'timestampValue': nowIso},
-          'supabaseId': {'stringValue': user.id},
-        }
+
+      // Build updateMask field paths
+      final maskPaths = <String>[
+        'name',
+        'email',
+        'role',
+        'university',
+        'department',
+        'city',
+        'status',
+        'lastLoginAt',
+        'supabaseId',
+      ];
+
+      final fieldsMap = <String, dynamic>{
+        'name': {'stringValue': user.name.trim().isNotEmpty ? user.name.trim() : 'بەکارهێنەر'},
+        'email': {'stringValue': user.email.trim().toLowerCase()},
+        'role': {'stringValue': user.role.name},
+        'university': {'stringValue': user.universityName ?? ''},
+        'department': {'stringValue': user.departmentName ?? ''},
+        'city': {'stringValue': user.cityName ?? ''},
+        'status': {'stringValue': 'active'},
+        'isBlocked': {'booleanValue': false},
+        'lastLoginAt': {'timestampValue': nowIso},
+        'supabaseId': {'stringValue': user.id},
       };
 
-      req.write(jsonEncode(payload));
+      // ONLY include isVip and vipStatus when user is actually VIP!
+      // This prevents ever clearing an admin approval from the client.
+      if (user.isVip) {
+        maskPaths.add('isVip');
+        maskPaths.add('vipStatus');
+        fieldsMap['isVip'] = {'booleanValue': true};
+        fieldsMap['vipStatus'] = {'stringValue': user.vipStatus.isNotEmpty ? user.vipStatus : 'active'};
+      }
+
+      final maskQuery = maskPaths.map((p) => 'updateMask.fieldPaths=' + p).join('&');
+      final userUri = Uri.parse(
+        'https://firestore.googleapis.com/v1/projects/' +
+            _firebaseProjectId +
+            '/databases/(default)/documents/users/' +
+            localId +
+            '?' +
+            maskQuery,
+      );
+
+      final req = await client.patchUrl(userUri);
+      req.headers.contentType = ContentType.json;
+      req.headers.set('Authorization', 'Bearer ' + idToken);
+
+      req.write(jsonEncode({'fields': fieldsMap}));
       final resp = await req.close();
       await resp.drain();
       client.close();
-      debugPrint('Synced user "${user.name}" to Firestore users/$localId: status ${resp.statusCode}');
+      debugPrint('Synced user "' + user.name + '" to Firestore users/' + localId + ': status ' + resp.statusCode.toString());
     } catch (e) {
-      debugPrint('Error syncing user to Firestore: $e');
+      debugPrint('Error syncing user to Firestore: ' + e.toString());
     }
   }
 
@@ -208,12 +231,14 @@ class VipFirestoreService {
 
       // 1. Post to vip_requests collection
       final uri = Uri.parse(
-        'https://firestore.googleapis.com/v1/projects/$_firebaseProjectId/databases/(default)/documents/vip_requests',
+        'https://firestore.googleapis.com/v1/projects/' +
+            _firebaseProjectId +
+            '/databases/(default)/documents/vip_requests',
       );
       final req = await client.postUrl(uri);
       req.headers.contentType = ContentType.json;
       if (idToken != null) {
-        req.headers.set('Authorization', 'Bearer $idToken');
+        req.headers.set('Authorization', 'Bearer ' + idToken);
       }
 
       final payload = {
@@ -238,31 +263,34 @@ class VipFirestoreService {
 
       if (resp.statusCode == 200 || resp.statusCode == 201) {
         firestoreSuccess = true;
-        debugPrint('Successfully submitted VIP request to Firestore: $body');
+        debugPrint('Successfully submitted VIP request to Firestore: ' + body);
       } else {
-        debugPrint('Firestore submit returned status ${resp.statusCode}: $body');
+        debugPrint('Firestore submit returned status ' + resp.statusCode.toString() + ': ' + body);
       }
 
       // 2. Also ensure users/$localId is set to pending in Firestore
       try {
+        final maskQuery = 'updateMask.fieldPaths=email&updateMask.fieldPaths=name&updateMask.fieldPaths=vipStatus&updateMask.fieldPaths=role&updateMask.fieldPaths=status';
         final userUri = Uri.parse(
-          'https://firestore.googleapis.com/v1/projects/$_firebaseProjectId/databases/(default)/documents/users/$localId',
+          'https://firestore.googleapis.com/v1/projects/' +
+              _firebaseProjectId +
+              '/databases/(default)/documents/users/' +
+              localId +
+              '?' +
+              maskQuery,
         );
         final uReq = await client.patchUrl(userUri);
         uReq.headers.contentType = ContentType.json;
         if (idToken != null) {
-          uReq.headers.set('Authorization', 'Bearer $idToken');
+          uReq.headers.set('Authorization', 'Bearer ' + idToken);
         }
         uReq.write(jsonEncode({
           'fields': {
             'email': {'stringValue': userEmail.trim().toLowerCase()},
             'name': {'stringValue': userName.trim()},
             'vipStatus': {'stringValue': 'pending'},
-            'isVip': {'booleanValue': false},
             'role': {'stringValue': 'student'},
             'status': {'stringValue': 'active'},
-            'isBlocked': {'booleanValue': false},
-            'lastLoginAt': {'timestampValue': DateTime.now().toUtc().toIso8601String()},
           }
         }));
         final uResp = await uReq.close();
@@ -271,7 +299,7 @@ class VipFirestoreService {
 
       client.close();
     } catch (e) {
-      debugPrint('Error posting VIP request to Firestore: $e');
+      debugPrint('Error posting VIP request to Firestore: ' + e.toString());
     }
 
     // Persist in Supabase as a local audit record
@@ -286,14 +314,14 @@ class VipFirestoreService {
         'status': 'pending',
       });
     } catch (supaErr) {
-      debugPrint('Notice saving to Supabase payment_transactions: $supaErr');
+      debugPrint('Notice saving to Supabase payment_transactions: ' + supaErr.toString());
     }
 
     return firestoreSuccess;
   }
 
-  /// Checks if the admin approved VIP on the admin web panel (Firestore users collection)
-  /// and syncs the status to Supabase profiles. Returns true if VIP is active.
+  /// Checks if the admin approved VIP on the admin web panel (Firestore users or vip_requests)
+  /// and syncs the status to Supabase profiles. Returns true ONLY when admin has approved.
   static Future<bool> checkAndSyncVipStatus({
     required String userId,
     required String userEmail,
@@ -306,38 +334,138 @@ class VipFirestoreService {
       if (localId == null || idToken == null) return false;
 
       final client = HttpClient();
-      final uri = Uri.parse(
-        'https://firestore.googleapis.com/v1/projects/$_firebaseProjectId/databases/(default)/documents/users/$localId',
-      );
-      final req = await client.getUrl(uri);
-      req.headers.set('Authorization', 'Bearer $idToken');
+      bool isApproved = false;
 
-      final resp = await req.close();
-      final body = await resp.transform(utf8.decoder).join();
-      client.close();
+      // 1. Check users/$localId document
+      try {
+        final uri = Uri.parse(
+          'https://firestore.googleapis.com/v1/projects/' +
+              _firebaseProjectId +
+              '/databases/(default)/documents/users/' +
+              localId,
+        );
+        final req = await client.getUrl(uri);
+        req.headers.set('Authorization', 'Bearer ' + idToken);
 
-      if (resp.statusCode == 200) {
-        final parsed = jsonDecode(body) as Map<String, dynamic>;
-        final fields = parsed['fields'] as Map<String, dynamic>?;
-        if (fields != null) {
-          final isVip = fields['isVip']?['booleanValue'] == true;
-          final vipStatus = fields['vipStatus']?['stringValue']?.toString().toLowerCase();
+        final resp = await req.close();
+        final body = await resp.transform(utf8.decoder).join();
 
-          if (isVip || vipStatus == 'active' || vipStatus == 'approved') {
-            // Update Supabase profile
-            try {
-              await Supabase.instance.client.from('profiles').update({
-                'is_vip': true,
-                'vip_status': 'active',
-                'plan': 'vip_unlimited',
-              }).eq('id', userId);
-            } catch (_) {}
-            return true;
+        if (resp.statusCode == 200) {
+          final parsed = jsonDecode(body) as Map<String, dynamic>;
+          final fields = parsed['fields'] as Map<String, dynamic>?;
+          if (fields != null) {
+            final isVipVal = fields['isVip']?['booleanValue'] == true;
+            final vipStatusVal = fields['vipStatus']?['stringValue']?.toString().toLowerCase();
+
+            if (isVipVal || vipStatusVal == 'active' || vipStatusVal == 'approved') {
+              isApproved = true;
+            }
           }
         }
+      } catch (e) {
+        debugPrint('Notice checking users doc: ' + e.toString());
+      }
+
+      // 2. Also check vip_requests collection via runQuery for status == "approved"
+      if (!isApproved) {
+        try {
+          final cleanEmail = userEmail.trim().toLowerCase();
+          final qUri = Uri.parse(
+            'https://firestore.googleapis.com/v1/projects/' +
+                _firebaseProjectId +
+                '/databases/(default)/documents:runQuery',
+          );
+          final qReq = await client.postUrl(qUri);
+          qReq.headers.contentType = ContentType.json;
+          qReq.headers.set('Authorization', 'Bearer ' + idToken);
+
+          final qPayload = {
+            'structuredQuery': {
+              'from': [{'collectionId': 'vip_requests'}],
+              'where': {
+                'compositeFilter': {
+                  'op': 'AND',
+                  'filters': [
+                    {
+                      'fieldFilter': {
+                        'field': {'fieldPath': 'userEmail'},
+                        'op': 'EQUAL',
+                        'value': {'stringValue': cleanEmail},
+                      }
+                    },
+                    {
+                      'fieldFilter': {
+                        'field': {'fieldPath': 'status'},
+                        'op': 'EQUAL',
+                        'value': {'stringValue': 'approved'},
+                      }
+                    },
+                  ],
+                },
+              },
+              'limit': 1,
+            },
+          };
+
+          qReq.write(jsonEncode(qPayload));
+          final qResp = await qReq.close();
+          final qBody = await qResp.transform(utf8.decoder).join();
+
+          if (qResp.statusCode == 200) {
+            final results = jsonDecode(qBody) as List<dynamic>;
+            for (final item in results) {
+              if (item is Map<String, dynamic> && item['document'] != null) {
+                isApproved = true;
+                break;
+              }
+            }
+          }
+        } catch (e) {
+          debugPrint('Notice checking vip_requests: ' + e.toString());
+        }
+      }
+
+      client.close();
+
+      // If admin approved:
+      if (isApproved) {
+        // Cache locally for offline and instant UI persistence
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('zanko_user_is_vip_' + userId, true);
+        } catch (_) {}
+
+        // Call PostgreSQL SECURITY DEFINER RPC to update profiles & subscriptions
+        try {
+          await Supabase.instance.client.rpc(
+            'sync_admin_approved_vip',
+            params: {
+              'p_user_id': userId,
+              'p_plan': 'PREMIUM_MONTHLY',
+              'p_days': 365,
+            },
+          );
+          debugPrint('Successfully synced admin VIP approval via RPC for ' + userId);
+        } catch (rpcErr) {
+          debugPrint('RPC sync notice (falling back to direct update): ' + rpcErr.toString());
+          try {
+            await Supabase.instance.client.from('profiles').update({
+              'plan': 'premium',
+              'vip_expiry': DateTime.now().add(const Duration(days: 365)).toUtc().toIso8601String(),
+            }).eq('id', userId);
+          } catch (_) {}
+        }
+
+        return true;
+      } else {
+        // Admin has not approved yet
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('zanko_user_is_vip_' + userId, false);
+        } catch (_) {}
       }
     } catch (e) {
-      debugPrint('Error syncing VIP status from Firestore: $e');
+      debugPrint('Error syncing VIP status from Firestore: ' + e.toString());
     }
     return false;
   }

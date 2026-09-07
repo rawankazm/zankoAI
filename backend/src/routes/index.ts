@@ -11,6 +11,7 @@ import { paymentRoutes } from '../modules/payments/payment.routes.js';
 import { aiRoutes } from '../modules/ai/ai.routes.js';
 import { storageRoutes } from './storage.routes.js';
 import { usageRoutes } from './usage.routes.js';
+import { subscriptionRoutes } from './subscription.routes.js';
 
 const apiRouter = Router();
 
@@ -45,6 +46,9 @@ apiRouter.use('/storage', storageRoutes);
 
 // 10. Centralized Usage Limits & Quotas (/api/usage)
 apiRouter.use('/usage', usageRoutes);
+
+// 11. Production Subscription Architecture (/api/subscription)
+apiRouter.use('/subscription', subscriptionRoutes);
 
 export { apiRouter };
 

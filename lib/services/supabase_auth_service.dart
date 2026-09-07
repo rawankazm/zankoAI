@@ -13,6 +13,7 @@ import 'vip_firestore_service.dart';
 class SupabaseAuthService extends ChangeNotifier implements AuthService {
   final AuthRepository _repository;
   StreamSubscription<ZankoAuthState>? _repoSub;
+  Timer? _vipWatcherTimer;
 
   UserModel? _currentUser;
   ZankoAuthState _authState = const Unauthenticated();
@@ -73,17 +74,50 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
     }
   }
 
+  void _startVipWatcher() {
+    _vipWatcherTimer?.cancel();
+    if (_currentUser == null || _currentUser!.isGuest || _currentUser!.isVip) {
+      return;
+    }
+
+    // Periodic background watcher to detect when admin approves VIP on admin panel
+    _vipWatcherTimer = Timer.periodic(const Duration(seconds: 8), (_) async {
+      final u = _currentUser;
+      if (u == null || u.isGuest || u.isVip) {
+        _vipWatcherTimer?.cancel();
+        return;
+      }
+
+      final isVip = await VipFirestoreService.checkAndSyncVipStatus(
+        userId: u.id,
+        userEmail: u.email,
+      );
+
+      if (isVip && _currentUser != null && !_currentUser!.isVip) {
+        _vipWatcherTimer?.cancel();
+        _currentUser = _currentUser!.copyWith(isVip: true, vipStatus: 'active');
+        notifyListeners();
+        await reloadUser();
+      }
+    });
+  }
+
   void _syncUserAndVipStatus(UserModel profile) {
-    VipFirestoreService.syncUserToFirestore(profile).ignore();
     VipFirestoreService.checkAndSyncVipStatus(
       userId: profile.id,
       userEmail: profile.email,
     ).then((isVip) {
       if (isVip && _currentUser != null && !_currentUser!.isVip) {
         _currentUser = _currentUser!.copyWith(isVip: true, vipStatus: 'active');
+        _vipWatcherTimer?.cancel();
         notifyListeners();
+      } else if (!isVip) {
+        _startVipWatcher();
       }
-    }).catchError((_) {});
+      VipFirestoreService.syncUserToFirestore(_currentUser ?? profile).ignore();
+    }).catchError((_) {
+      _startVipWatcher();
+    });
   }
 
   @override
@@ -317,6 +351,7 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
 
   @override
   Future<void> logout() async {
+    _vipWatcherTimer?.cancel();
     await _repository.signOut();
     _currentUser = null;
     _authState = const Unauthenticated();
@@ -329,23 +364,34 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
     final user = session?.user ?? _repository.currentAuthUser;
     if (user != null) {
       final cleanEmail = user.email ?? _currentUser?.email ?? '';
+
       // Check & sync VIP approval status from Admin panel (Firestore tomartv-67cda)
+      bool firestoreIsVip = false;
       try {
-        final isVip = await VipFirestoreService.checkAndSyncVipStatus(
+        firestoreIsVip = await VipFirestoreService.checkAndSyncVipStatus(
           userId: user.id,
           userEmail: cleanEmail,
         );
-        if (isVip && _currentUser != null && !_currentUser!.isVip) {
+        if (firestoreIsVip && _currentUser != null && !_currentUser!.isVip) {
           _currentUser = _currentUser!.copyWith(isVip: true, vipStatus: 'active');
+          _vipWatcherTimer?.cancel();
           notifyListeners();
         }
       } catch (_) {}
 
       final profile = await _repository.fetchUserProfile(user.id, user.email, user);
       if (profile != null) {
-        _currentUser = profile;
+        final shouldBeVip = firestoreIsVip || (_currentUser?.isVip == true) || profile.isVip;
+        _currentUser = (shouldBeVip && !profile.isVip)
+            ? profile.copyWith(isVip: true, vipStatus: 'active')
+            : profile;
         if (session != null) {
-          _authState = Authenticated(user: profile, session: session);
+          _authState = Authenticated(user: _currentUser!, session: session);
+        }
+        if (_currentUser!.isVip) {
+          _vipWatcherTimer?.cancel();
+        } else {
+          _startVipWatcher();
         }
         VipFirestoreService.syncUserToFirestore(_currentUser!).ignore();
         notifyListeners();
@@ -508,6 +554,7 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
 
   @override
   void dispose() {
+    _vipWatcherTimer?.cancel();
     _repoSub?.cancel();
     super.dispose();
   }
