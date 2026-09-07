@@ -57,5 +57,20 @@ export const ocrAiQueue = new Queue('ocr-processing', {
   },
 });
 
-logger.info('📦 BullMQ queues initialized (file-processing, notifications, pdf-ai-processing, ocr-processing)');
+// Queue for Lecture Audio transcription and AI generation
+export const audioTranscriptionQueue = new Queue('audio-transcription', {
+  connection: redis,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: {
+      type: 'exponential',
+      delay: 5000,
+    },
+    removeOnComplete: 100,
+    removeOnFail: 200,
+  },
+});
+
+logger.info('📦 BullMQ queues initialized (file-processing, notifications, pdf-ai-processing, ocr-processing, audio-transcription)');
+
 

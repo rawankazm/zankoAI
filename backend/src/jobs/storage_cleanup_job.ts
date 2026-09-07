@@ -239,3 +239,102 @@ export async function executeFailedOcrJobCleanup(
   return report;
 }
 
+// ─── Failed / Orphaned Lecture Audio Job Cleanup ─────────────────────────────
+
+export interface LectureAudioJobCleanupReport {
+  scannedCount: number;
+  storageDeletedCount: number;
+  jobsMarkedFailed: number;
+  timestamp: string;
+}
+
+/**
+ * Cleans up stale lecture audio jobs older than specified hours.
+ * Calls get_orphaned_lecture_audio_jobs RPC, deletes audio storage files,
+ * and marks dead jobs as 'failed'.
+ */
+export async function executeFailedLectureAudioJobCleanup(
+  olderThanHours = 24
+): Promise<LectureAudioJobCleanupReport> {
+  logger.info(
+    `[LectureAudioCleanupJob] Starting cleanup of stale lecture audio jobs older than ${olderThanHours} hours...`
+  );
+
+  const report: LectureAudioJobCleanupReport = {
+    scannedCount: 0,
+    storageDeletedCount: 0,
+    jobsMarkedFailed: 0,
+    timestamp: new Date().toISOString(),
+  };
+
+  try {
+    const { data: orphanedJobs, error: rpcErr } = await supabaseAdmin.rpc(
+      'get_orphaned_lecture_audio_jobs',
+      { p_older_than_hours: olderThanHours }
+    );
+
+    if (rpcErr) {
+      logger.error(`[LectureAudioCleanupJob] RPC get_orphaned_lecture_audio_jobs failed: ${rpcErr.message}`);
+      throw new Error(`Failed to fetch orphaned lecture audio jobs: ${rpcErr.message}`);
+    }
+
+    if (!orphanedJobs || !Array.isArray(orphanedJobs) || orphanedJobs.length === 0) {
+      logger.info('[LectureAudioCleanupJob] No orphaned lecture audio jobs found. Nothing to clean.');
+      return report;
+    }
+
+    report.scannedCount = orphanedJobs.length;
+    logger.info(`[LectureAudioCleanupJob] Found ${orphanedJobs.length} orphaned/stale audio jobs.`);
+
+    for (const job of orphanedJobs) {
+      const { job_id, storage_path, status } = job;
+
+      // Delete storage file if path exists
+      if (storage_path) {
+        try {
+          const { error: storageErr } = await supabaseAdmin.storage
+            .from('audio')
+            .remove([storage_path]);
+
+          if (!storageErr) {
+            report.storageDeletedCount++;
+            logger.info(`[LectureAudioCleanupJob] Deleted audio file ${storage_path} for job ${job_id}.`);
+          }
+        } catch (storageErr: any) {
+          logger.warn(
+            `[LectureAudioCleanupJob] Storage delete error for ${storage_path}: ${storageErr.message}`
+          );
+        }
+      }
+
+      // Mark job as failed if not already completed/failed
+      if (status !== 'completed' && status !== 'failed') {
+        try {
+          await supabaseAdmin
+            .from('lecture_audio_jobs')
+            .update({
+              status: 'failed',
+              error_message: `Job timed out after ${olderThanHours} hours in ${status} state. Cleaned up by maintenance job.`,
+            })
+            .eq('id', job_id);
+
+          report.jobsMarkedFailed++;
+          logger.info(`[LectureAudioCleanupJob] Marked job ${job_id} as failed.`);
+        } catch (updateErr: any) {
+          logger.warn(`[LectureAudioCleanupJob] Failed to update job ${job_id} status: ${updateErr.message}`);
+        }
+      }
+    }
+
+    logger.info(
+      `[LectureAudioCleanupJob] Cleanup complete: scanned=${report.scannedCount}, storageDeleted=${report.storageDeletedCount}, markedFailed=${report.jobsMarkedFailed}`
+    );
+  } catch (err: any) {
+    logger.error(`[LectureAudioCleanupJob] Unexpected error during cleanup: ${err.message}`);
+    throw err;
+  }
+
+  return report;
+}
+
+

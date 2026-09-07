@@ -6,6 +6,8 @@ import { processPdfAiJob } from '../jobs/pdf_processor.js';
 import { PdfAiJobData } from '../types/pdf.types.js';
 import { processOcrAiJob } from '../jobs/ocr_processor.js';
 import { OcrAiJobData } from '../types/ocr.types.js';
+import { processAudioLectureJob } from '../jobs/audio_processor.js';
+import { LectureAudioJobData } from '../types/audio.types.js';
 
 logger.info(`👷 Starting ZankoAI Background Worker in ${env.NODE_ENV} mode...`);
 
@@ -126,6 +128,42 @@ ocrWorker.on('stalled', (jobId: string) => {
   logger.warn(`[Worker:ocr] Job ${jobId} stalled — will be re-queued automatically`);
 });
 
+// ── 5. Lecture Audio Processing Worker ─────────────────────────────────────────
+export const audioWorker = new Worker(
+  'audio-transcription',
+  async (job: Job<LectureAudioJobData>) => {
+    logger.info(
+      `[Worker:audio] Processing lecture audio job ${job.id} for teacher ${job.data.teacherId} (title="${job.data.title}")`
+    );
+    await processAudioLectureJob(job.data);
+    return { processed: true };
+  },
+  {
+    connection: redis,
+    concurrency: 2,
+    limiter: {
+      max: 10,
+      duration: 60_000,
+    },
+  }
+);
+
+audioWorker.on('completed', (job: Job) => {
+  logger.info(`[Worker:audio] Lecture audio job ${job.id} completed successfully`);
+});
+
+audioWorker.on('failed', (job: Job | undefined, err: Error) => {
+  const attempt = job?.attemptsMade ?? 0;
+  const maxAttempts = job?.opts?.attempts ?? 3;
+  logger.error(
+    `[Worker:audio] Job ${job?.id} failed (attempt ${attempt}/${maxAttempts}): ${err.message}`
+  );
+});
+
+audioWorker.on('stalled', (jobId: string) => {
+  logger.warn(`[Worker:audio] Job ${jobId} stalled — will be re-queued automatically`);
+});
+
 // ── Graceful Shutdown ─────────────────────────────────────────────────────────
 const shutdownWorkers = async () => {
   logger.info('🛑 Shutting down queue workers gracefully...');
@@ -134,6 +172,7 @@ const shutdownWorkers = async () => {
     notificationWorker.close(),
     pdfAiWorker.close(),
     ocrWorker.close(),
+    audioWorker.close(),
   ]);
   await redis.quit();
   logger.info('Queue workers closed. Exiting process.');
@@ -142,4 +181,5 @@ const shutdownWorkers = async () => {
 
 process.on('SIGTERM', shutdownWorkers);
 process.on('SIGINT', shutdownWorkers);
+
 

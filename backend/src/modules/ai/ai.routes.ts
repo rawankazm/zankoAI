@@ -24,6 +24,12 @@ import {
   getOcrJobStatusHandler,
   deleteOcrJobHandler,
 } from './ocr.controller.js';
+import {
+  audioUpload,
+  submitAudioJobHandler,
+  getAudioJobStatusHandler,
+  deleteAudioJobHandler,
+} from './audio.controller.js';
 
 const router = Router();
 
@@ -176,5 +182,62 @@ router.delete(
   deleteOcrJobHandler
 );
 
+// ── 8. AI Lecture Audio Recording & Processing ────────────────────────────────
+
+/**
+ * POST /api/ai/audio
+ * Submit teacher lecture audio for async transcription and AI generation.
+ * - Role: 'teacher' or 'admin' only.
+ * - Course: Instructor must be assigned to courseId.
+ * - Quota: 'audio' (monthly).
+ * - File: multipart/form-data, field name "file", max 50 MB.
+ * - Response: 202 Accepted + { jobId, status: 'queued', ... }
+ */
+router.post(
+  '/audio',
+  authenticate,
+  rateLimiter({ windowMs: 60 * 1000, maxRequests: 5, keyPrefix: 'rl:ai:audio' }),
+  audioUpload.single('file'),
+  uploadGuard({
+    type: 'any',
+    allowedMimes: [
+      'audio/mpeg',
+      'audio/mp4',
+      'audio/wav',
+      'audio/x-wav',
+      'audio/aac',
+      'audio/ogg',
+      'audio/webm',
+      'audio/x-m4a',
+      'audio/m4a',
+    ],
+    allowedExtensions: ['.mp3', '.m4a', '.wav', '.aac', '.ogg', '.webm', '.flac'],
+    maxSizeBytes: 50 * 1024 * 1024,
+  }),
+  submitAudioJobHandler
+);
+
+/**
+ * GET /api/ai/audio/:jobId
+ * Poll the processing status of a lecture recording.
+ * Course membership strictly enforced (teacher owner or enrolled student).
+ */
+router.get(
+  '/audio/:jobId',
+  authenticate,
+  getAudioJobStatusHandler
+);
+
+/**
+ * DELETE /api/ai/audio/:jobId
+ * Teacher deletion of their lecture recording and storage file.
+ */
+router.delete(
+  '/audio/:jobId',
+  authenticate,
+  deleteAudioJobHandler
+);
+
 export const aiRoutes = router;
+
 
