@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { LearningController } from '../controllers/learning.controller.js';
+import { QuizController } from '../controllers/quiz.controller.js';
 import { authenticateUser } from '../middleware/authenticateUser.js';
 import { requireRole } from '../middleware/requireRole.js';
 import { enforceCourseMember } from '../middleware/membershipGuard.js';
@@ -11,13 +12,16 @@ import {
   updateAssignmentSchema,
   submitAssignmentSchema,
   gradeSubmissionSchema,
-  createQuizSchema,
   updateQuizSchema,
   createQuizQuestionSchema,
-  submitQuizAttemptSchema,
   createFlashcardSchema,
   updateFlashcardSchema,
 } from '../validators/learning.validators.js';
+import {
+  createQuizSchema as createQuizNewSchema,
+  submitQuizAttemptSchema as submitQuizAttemptNewSchema,
+  reviewFlashcardSchema,
+} from '../validators/quiz.validators.js';
 import { asyncWrapper } from '../utils/asyncWrapper.js';
 
 const router = Router();
@@ -98,12 +102,23 @@ router.get(
   enforceCourseMember('courseId'),
   asyncWrapper(LearningController.listQuizzes)
 );
-router.get('/quizzes/:id', asyncWrapper(LearningController.getQuiz));
+router.get('/quizzes/:id', asyncWrapper(QuizController.getQuiz));
 router.post(
   '/quizzes',
-  requireRole(['teacher', 'admin']),
-  validateRequest({ body: createQuizSchema }),
-  asyncWrapper(LearningController.createQuiz)
+  validateRequest({ body: createQuizNewSchema }),
+  asyncWrapper(QuizController.createQuiz)
+);
+router.post('/quizzes/:id/start', asyncWrapper(QuizController.startAttempt));
+router.post(
+  '/quizzes/:id/submit',
+  validateRequest({ body: submitQuizAttemptNewSchema }),
+  asyncWrapper(QuizController.submitAttempt)
+);
+// Legacy attempt route alias
+router.post(
+  '/quizzes/:id/attempt',
+  validateRequest({ body: submitQuizAttemptNewSchema }),
+  asyncWrapper(QuizController.submitAttempt)
 );
 router.patch(
   '/quizzes/:id',
@@ -121,18 +136,19 @@ router.post(
   },
   asyncWrapper(LearningController.addQuestion)
 );
-router.post(
-  '/quizzes/:id/attempt',
-  validateRequest({ body: submitQuizAttemptSchema }),
-  asyncWrapper(LearningController.submitQuizAttempt)
-);
 
 // ─── Flashcards ───
 router.get('/flashcards', asyncWrapper(LearningController.listFlashcards));
+router.get('/flashcards/due', asyncWrapper(QuizController.getDueFlashcards));
 router.post(
   '/flashcards',
   validateRequest({ body: createFlashcardSchema }),
   asyncWrapper(LearningController.createFlashcard)
+);
+router.post(
+  '/flashcards/:id/review',
+  validateRequest({ body: reviewFlashcardSchema }),
+  asyncWrapper(QuizController.reviewFlashcard)
 );
 router.patch(
   '/flashcards/:id',
