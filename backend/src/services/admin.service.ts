@@ -23,6 +23,22 @@ export class AdminService {
     return ProfileRepository.updateStatus(userId, newStatus);
   }
 
+  static async setUserVip(userId: string, isVip: boolean, days = 30): Promise<boolean> {
+    const expiry = isVip ? new Date(Date.now() + days * 86400000).toISOString() : null;
+    const { error } = await supabaseAdmin
+      .from('profiles')
+      .update({
+        is_vip: isVip,
+        plan: isVip ? 'premium' : 'free',
+        vip_status: isVip ? 'active' : 'none',
+        vip_expiry: expiry,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId);
+
+    return !error;
+  }
+
   static async getSystemStats() {
     const [profilesRes, coursesRes, aiRequestsRes, paymentsRes] = await Promise.all([
       supabaseAdmin.from('profiles').select('id, role', { count: 'exact' }),

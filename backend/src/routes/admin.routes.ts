@@ -24,6 +24,7 @@ router.post(
   validateRequest({ body: updateAccountStatusSchema }),
   asyncWrapper(AdminController.setUserStatus)
 );
+router.post('/users/vip', asyncWrapper(AdminController.setUserVip));
 router.get('/stats', asyncWrapper(AdminController.getSystemStats));
 
 // ─── Plan Limits (Centralized Configuration Management) ───

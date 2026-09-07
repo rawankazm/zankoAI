@@ -23,6 +23,16 @@ export class AdminController {
     return ResponseFormatter.success(res, { user_id, status }, 'User status updated successfully');
   }
 
+  static async setUserVip(req: Request, res: Response): Promise<Response> {
+    const { user_id, is_vip, days } = req.body;
+    const success = await AdminService.setUserVip(user_id, is_vip !== false, days || 30);
+    return ResponseFormatter.success(
+      res,
+      { user_id, is_vip: is_vip !== false, days: days || 30, success },
+      is_vip !== false ? 'User upgraded to VIP successfully' : 'User downgraded from VIP'
+    );
+  }
+
   static async getSystemStats(req: Request, res: Response): Promise<Response> {
     const stats = await AdminService.getSystemStats();
     return ResponseFormatter.success(res, stats);
