@@ -2,18 +2,20 @@ import { Redis } from 'ioredis';
 import { env } from './env.js';
 import { logger } from './logger.js';
 
-export const redis = new Redis({
+export const redisConnectionOptions = {
   host: env.REDIS_HOST,
   port: env.REDIS_PORT,
-  password: env.REDIS_PASSWORD,
+  password: env.REDIS_PASSWORD || undefined,
   tls: env.REDIS_TLS ? {} : undefined,
   lazyConnect: true,
-  maxRetriesPerRequest: 3,
-  retryStrategy(times) {
+  maxRetriesPerRequest: null, // Required by BullMQ for reliable blocking operations
+  retryStrategy(times: number) {
     const delay = Math.min(times * 100, 3000);
     return delay;
   },
-});
+};
+
+export const redis = new Redis(redisConnectionOptions);
 
 redis.on('connect', () => {
   logger.info(' Connected to Redis server successfully');

@@ -4,6 +4,8 @@ import { checkSupabaseHealth } from '../config/supabase.js';
 import { checkRedisHealth } from '../config/redis.js';
 import { env } from '../config/env.js';
 
+import { WorkerHealthService } from '../services/worker_health.service.js';
+
 export class HealthController {
   /**
    * Liveness probe: returns 200 if the process is up and receiving requests
@@ -44,6 +46,21 @@ export class HealthController {
         redisCache: redisReady ? 'healthy' : 'unreachable',
       },
       timestamp: new Date().toISOString(),
+    });
+  }
+
+  /**
+   * Worker health check: reports status of background workers, queues, and dead letters
+   * Endpoint: GET /api/health/worker
+   */
+  static async getWorkerHealth(req: Request, res: Response): Promise<Response> {
+    const report = await WorkerHealthService.getHealthReport();
+    const statusCode = report.status === 'down' ? 503 : 200;
+
+    return res.status(statusCode).json({
+      success: report.status !== 'down',
+      data: report,
+      message: 'Background worker status: ' + report.status,
     });
   }
 }

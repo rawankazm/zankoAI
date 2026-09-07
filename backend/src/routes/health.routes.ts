@@ -10,4 +10,7 @@ router.get('/health', HealthController.getHealth);
 // Readiness probe (verifies database & Redis connectivity)
 router.get('/ready', asyncWrapper(HealthController.getReady));
 
+// Background Worker & Redis Queue health check
+router.get('/health/worker', asyncWrapper(HealthController.getWorkerHealth));
+
 export const healthRoutes = router;

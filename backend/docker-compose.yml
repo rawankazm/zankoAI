@@ -28,6 +28,7 @@ services:
       - PORT=4000
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-zanko_secure_redis_2026}
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
@@ -58,6 +59,7 @@ services:
       - NODE_ENV=production
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-zanko_secure_redis_2026}
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
     depends_on:
@@ -65,12 +67,16 @@ services:
     networks:
       - zanko_network
 
-  # ─── 4. Redis Cache & Queue Storage ───
+  # ─── 4. Redis Cache & Queue Storage (Private, Authenticated, Persistent) ───
   redis:
     image: redis:7-alpine
     container_name: zanko_redis
     restart: unless-stopped
-    command: redis-server --appendonly yes
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --requirepass ${REDIS_PASSWORD:-zanko_secure_redis_2026}
     volumes:
       - redis_data:/data
     networks:
