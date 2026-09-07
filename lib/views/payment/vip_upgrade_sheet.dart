@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
+import '../../services/vip_firestore_service.dart';
 import '../../theme.dart';
 import '../auth/login_screen.dart';
 
@@ -63,10 +64,54 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
     }
   }
 
+  Timer? _vipPollTimer;
+
   @override
   void initState() {
     super.initState();
     _listenToPaymentConfig();
+    _startVipStatusPolling();
+  }
+
+  @override
+  void dispose() {
+    _vipPollTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startVipStatusPolling() {
+    _vipPollTimer?.cancel();
+    _vipPollTimer = Timer.periodic(const Duration(seconds: 4), (_) async {
+      if (!mounted) return;
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final user = authService.currentUser;
+      if (user == null || user.isGuest) return;
+
+      final isVip = await VipFirestoreService.checkAndSyncVipStatus(
+        userId: user.id,
+        userEmail: user.email,
+      );
+
+      if (isVip && mounted) {
+        _vipPollTimer?.cancel();
+        await authService.reloadUser();
+        if (!mounted) return;
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.workspace_premium, color: Colors.amber),
+                SizedBox(width: 8),
+                Text('🎉 پیرۆزە! بەشداربوونی VIPی تۆ بە سەرکەوتوویی چالاککرا 👑'),
+              ],
+            ),
+            backgroundColor: Color(0xFF1E293B),
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
+    });
   }
 
   void _listenToPaymentConfig() {
@@ -159,13 +204,15 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
     }
 
     try {
-      await Supabase.instance.client.from('payment_transactions').insert({
-        'user_id': user.id,
-        'plan_id': _selectedPlan,
-        'amount_iqd': _planPrice,
-        'gateway': 'manual_receipt',
-        'status': 'pending',
-      });
+      await VipFirestoreService.submitVipRequest(
+        userId: user.id,
+        userName: user.name,
+        userEmail: user.email,
+        planId: _selectedPlan,
+        amountIqd: _planPrice,
+        paymentMethod: platform,
+        transactionId: 'RECEIPT-${DateTime.now().millisecondsSinceEpoch}',
+      );
       return true;
     } catch (e) {
       debugPrint('Notice creating payment transaction: $e');

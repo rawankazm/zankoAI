@@ -345,13 +345,68 @@ class SupabaseAuthRepository implements AuthRepository {
   Future<void> deleteAccount() async {
     final user = _supabase.auth.currentUser;
     if (user != null) {
+      final userId = user.id;
+      final cleanEmail = (user.email ?? '').trim().toLowerCase();
+
+      // 1. Purge all local cached user data
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final keysToRemove = prefs.getKeys().where((k) =>
+          k.startsWith('zanko_user_') ||
+          k.startsWith('zanko_active_') ||
+          k.startsWith('zanko_fb_') ||
+          k.startsWith('apple_')
+        ).toList();
+        for (final k in keysToRemove) {
+          await prefs.remove(k);
+        }
+        if (cleanEmail.isNotEmpty) {
+          await prefs.remove('zanko_user_name_$cleanEmail');
+          await prefs.remove('zanko_user_uni_$cleanEmail');
+          await prefs.remove('zanko_user_dept_$cleanEmail');
+          await prefs.remove('zanko_user_city_$cleanEmail');
+          await prefs.remove('zanko_user_avatar_$cleanEmail');
+        }
+        await prefs.remove('zanko_user_name_$userId');
+        await prefs.remove('zanko_user_uni_$userId');
+        await prefs.remove('zanko_user_dept_$userId');
+        await prefs.remove('zanko_user_city_$userId');
+        await prefs.remove('zanko_user_avatar_$userId');
+      } catch (_) {}
+
+      // 2. Reset profile in Supabase to blank/deleted state
+      try {
+        await _supabase.from('profiles').update({
+          'full_name': '',
+          'university_name': null,
+          'department_name': null,
+          'city_name': null,
+          'avatar_url': null,
+          'status': 'deleted',
+          'is_vip': false,
+          'vip_status': 'none',
+          'plan': 'free',
+        }).eq('id', userId);
+      } catch (_) {}
+
+      // 3. Reset auth metadata so subsequent logins do not resurrect old info
+      try {
+        await _supabase.auth.updateUser(UserAttributes(data: {
+          'full_name': '',
+          'university_name': null,
+          'department_name': null,
+          'city_name': null,
+          'avatar_url': null,
+        }));
+      } catch (_) {}
+
       try {
         // Attempt Postgres RPC security-definer function
         await _supabase.rpc('delete_user_account');
       } catch (rpcError) {
         debugPrint('RPC delete_user_account failed, using profile cleanup fallback: $rpcError');
         try {
-          await _supabase.from('profiles').delete().eq('id', user.id);
+          await _supabase.from('profiles').delete().eq('id', userId);
         } catch (_) {}
       }
       await signOut();
@@ -381,6 +436,25 @@ class SupabaseAuthRepository implements AuthRepository {
       final email = fallbackEmail ?? authUser?.email ?? 'user@zanko.edu';
       final cleanEmail = email.trim().toLowerCase();
 
+      final res = await _supabase
+          .from('profiles')
+          .select()
+          .eq('id', userId)
+          .maybeSingle();
+
+      // If account was marked deleted or has empty profile in DB, do not restore old cached data!
+      final isDeleted = res != null && res['status'] == 'deleted';
+      if (isDeleted) {
+        return UserModel(
+          id: userId,
+          name: '',
+          email: email,
+          role: UserRole.student,
+          isVip: false,
+          vipStatus: 'none',
+        );
+      }
+
       // Read local cache for immediate fallback / offline persistence
       String? localName, localUni, localDept, localCity, localAvatar;
       try {
@@ -402,17 +476,11 @@ class SupabaseAuthRepository implements AuthRepository {
             prefs.getString('zanko_active_user_avatar');
       } catch (_) {}
 
-      final res = await _supabase
-          .from('profiles')
-          .select()
-          .eq('id', userId)
-          .maybeSingle();
-
       // Priority for resolved user full name:
       // 1. Explicit local modification on this device (user explicitly edited profile here)
       // 2. Auth user metadata (from Supabase Auth server)
       // 3. Database public.profiles record
-      // 4. Email prefix fallback
+      // 4. Default to empty if fresh/deleted
       final String effectiveName;
       if (localName != null && localName.trim().isNotEmpty) {
         effectiveName = localName.trim();
@@ -428,7 +496,7 @@ class SupabaseAuthRepository implements AuthRepository {
       } else if (res != null && res['full_name'] != null && res['full_name'].toString().trim().isNotEmpty) {
         effectiveName = res['full_name'].toString().trim();
       } else {
-        effectiveName = email.split('@').first;
+        effectiveName = '';
       }
 
       final effectiveUni = (localUni != null && localUni.trim().isNotEmpty)

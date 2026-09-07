@@ -1726,6 +1726,30 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
         actions: [
+          IconButton(
+            icon: Icon(
+              CupertinoIcons.arrow_2_circlepath,
+              size: 20,
+              color: ZankoColors.primary,
+            ),
+            tooltip: 'نوێکردنەوە',
+            onPressed: () async {
+              await authService.reloadUser();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      user?.isVip == true
+                          ? 'پڕۆفایل نوێکرایەوە: ئەندامی VIP چالاکە 👑'
+                          : 'پڕۆفایل نوێکرایەوە ✅',
+                    ),
+                    duration: const Duration(seconds: 2),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
+          ),
           if (!isGuest)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -1748,10 +1772,15 @@ class ProfileScreen extends StatelessWidget {
         ],
       ),
       body: SafeArea(
-        child: ListView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          children: [
+        child: RefreshIndicator(
+          color: ZankoColors.primary,
+          onRefresh: () async {
+            await authService.reloadUser();
+          },
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            children: [
             // ─── 1. Modern Hero Identity Card (App Color Gradient) ───
             Container(
               decoration: BoxDecoration(
@@ -2459,6 +2488,7 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 80),
           ],
+        ),
         ),
       ),
     );

@@ -45,6 +45,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       duration: const Duration(milliseconds: 1000),
     );
     _entranceController.forward();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final auth = Provider.of<AuthService>(context, listen: false);
+        if (auth.currentUser != null && !auth.currentUser!.isGuest) {
+          auth.reloadUser();
+        }
+      }
+    });
   }
 
   @override
@@ -200,16 +208,27 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Text(
-                                      userName,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w800,
-                                        color: isDark ? Colors.white : const Color(0xFF17191F),
-                                        letterSpacing: -0.3,
-                                      ),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            userName,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w800,
+                                              color: isDark ? Colors.white : const Color(0xFF17191F),
+                                              letterSpacing: -0.3,
+                                            ),
+                                          ),
+                                        ),
+                                        if (!isGuest && user.isVip) ...[
+                                          const SizedBox(width: 5),
+                                          const Text('👑', style: TextStyle(fontSize: 15)),
+                                        ],
+                                      ],
                                     ),
                                     const SizedBox(height: 2),
                                       Text(

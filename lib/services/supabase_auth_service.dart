@@ -7,6 +7,7 @@ import '../models/user_model.dart';
 import '../repositories/auth_repository.dart';
 import '../repositories/supabase_auth_repository.dart';
 import 'auth_service.dart';
+import 'vip_firestore_service.dart';
 
 /// Production-ready AuthService implementation backed by SupabaseAuthRepository
 class SupabaseAuthService extends ChangeNotifier implements AuthService {
@@ -65,10 +66,24 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
         if (profile != null) {
           _currentUser = profile;
           _authState = Authenticated(user: profile, session: currentSession);
+          _syncUserAndVipStatus(profile);
           notifyListeners();
         }
       });
     }
+  }
+
+  void _syncUserAndVipStatus(UserModel profile) {
+    VipFirestoreService.syncUserToFirestore(profile).ignore();
+    VipFirestoreService.checkAndSyncVipStatus(
+      userId: profile.id,
+      userEmail: profile.email,
+    ).then((isVip) {
+      if (isVip && _currentUser != null && !_currentUser!.isVip) {
+        _currentUser = _currentUser!.copyWith(isVip: true, vipStatus: 'active');
+        notifyListeners();
+      }
+    }).catchError((_) {});
   }
 
   @override
@@ -91,6 +106,7 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
           } else {
             _authState = EmailUnconfirmedState(email: res.user!.email ?? email, userId: res.user!.id);
           }
+          _syncUserAndVipStatus(profile);
           notifyListeners();
           return true;
         }
@@ -201,6 +217,7 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
           if (res.session != null) {
             _authState = Authenticated(user: profile, session: res.session!);
           }
+          _syncUserAndVipStatus(profile);
           notifyListeners();
           return true;
         }
@@ -236,6 +253,7 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
           if (res.session != null) {
             _authState = Authenticated(user: profile, session: res.session!);
           }
+          _syncUserAndVipStatus(profile);
           notifyListeners();
           return true;
         }
@@ -307,11 +325,29 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
 
   @override
   Future<void> reloadUser() async {
-    final user = _repository.currentAuthUser;
+    final session = _repository.currentSession;
+    final user = session?.user ?? _repository.currentAuthUser;
     if (user != null) {
+      final cleanEmail = user.email ?? _currentUser?.email ?? '';
+      // Check & sync VIP approval status from Admin panel (Firestore tomartv-67cda)
+      try {
+        final isVip = await VipFirestoreService.checkAndSyncVipStatus(
+          userId: user.id,
+          userEmail: cleanEmail,
+        );
+        if (isVip && _currentUser != null && !_currentUser!.isVip) {
+          _currentUser = _currentUser!.copyWith(isVip: true, vipStatus: 'active');
+          notifyListeners();
+        }
+      } catch (_) {}
+
       final profile = await _repository.fetchUserProfile(user.id, user.email, user);
       if (profile != null) {
         _currentUser = profile;
+        if (session != null) {
+          _authState = Authenticated(user: profile, session: session);
+        }
+        VipFirestoreService.syncUserToFirestore(_currentUser!).ignore();
         notifyListeners();
       }
     }
@@ -431,6 +467,7 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
           departmentName: departmentName?.trim() ?? _currentUser!.departmentName,
           photoUrl: avatarUrl?.trim() ?? _currentUser!.photoUrl,
         );
+        VipFirestoreService.syncUserToFirestore(_currentUser!).ignore();
         notifyListeners();
       }
       return true;
@@ -439,6 +476,7 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
       rethrow;
     }
   }
+
 
   @override
   Future<void> deleteAccount() async {

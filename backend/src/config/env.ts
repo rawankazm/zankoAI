@@ -40,10 +40,22 @@ const envSchema = z.object({
     .default('100')
     .transform((val) => parseInt(val, 10)),
 
-  // Future AI API Keys (placeholders)
+  // AI Provider Configurations & API Keys
+  DEFAULT_AI_PROVIDER: z.enum(['google', 'openai', 'anthropic']).default('google'),
   GEMINI_API_KEY: z.string().optional(),
+  GEMINI_MODEL: z.string().default('gemini-3.5-flash-lite'),
   OPENAI_API_KEY: z.string().optional(),
+  OPENAI_MODEL: z.string().default('gpt-4o-mini'),
   ANTHROPIC_API_KEY: z.string().optional(),
+  ANTHROPIC_MODEL: z.string().default('claude-3-5-haiku-20241022'),
+  AI_TIMEOUT_MS: z
+    .string()
+    .default('30000')
+    .transform((val) => parseInt(val, 10)),
+  AI_MAX_RETRIES: z
+    .string()
+    .default('2')
+    .transform((val) => parseInt(val, 10)),
 
   // Future Payment Gateways (placeholders)
   FIB_CLIENT_ID: z.string().optional(),

@@ -2,7 +2,15 @@ import { Router } from 'express';
 import { authenticate } from '../../middleware/authenticate.js';
 import { enforceUsage } from '../../middleware/enforceUsage.js';
 import { rateLimiter } from '../../middleware/rate_limiter.js';
-import { chatHandler, solveImageHandler, generateQuizHandler, generateFlashcardsHandler } from './ai.controller.js';
+import {
+  chatHandler,
+  listConversationsHandler,
+  getConversationHandler,
+  deleteConversationHandler,
+  solveImageHandler,
+  generateQuizHandler,
+  generateFlashcardsHandler,
+} from './ai.controller.js';
 
 const router = Router();
 
@@ -13,6 +21,25 @@ router.post(
   rateLimiter({ windowMs: 60 * 1000, maxRequests: 30, keyPrefix: 'rl:ai:chat' }),
   enforceUsage('ai_chat'),
   chatHandler
+);
+
+// 2. AI Conversations Management
+router.get(
+  '/conversations',
+  authenticate,
+  listConversationsHandler
+);
+
+router.get(
+  '/conversations/:id',
+  authenticate,
+  getConversationHandler
+);
+
+router.delete(
+  '/conversations/:id',
+  authenticate,
+  deleteConversationHandler
 );
 
 // 2. Homework & Image Solving (Enforce daily plan limit: free = 10, premium = 200 fair use)

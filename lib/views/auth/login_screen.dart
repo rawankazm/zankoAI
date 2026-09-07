@@ -8,6 +8,7 @@ import '../navigation_shell.dart';
 import '../../models/user_model.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
+import 'complete_profile_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -124,12 +125,21 @@ class _LoginScreenState extends State<LoginScreen>
     if (!mounted) return;
 
     if (success) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const NavigationShell()),
-        (route) => false,
-      );
+      _navigateAfterAuth();
     }
+  }
+
+  void _navigateAfterAuth() {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final user = authService.currentUser;
+    final Widget target = (user != null && user.isNeedsSetup)
+        ? const CompleteProfileScreen()
+        : const NavigationShell();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => target),
+      (route) => false,
+    );
   }
 
   Future<void> _loginWithGoogle() async {
@@ -162,11 +172,7 @@ class _LoginScreenState extends State<LoginScreen>
     if (!mounted) return;
 
     if (success) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const NavigationShell()),
-        (route) => false,
-      );
+      _navigateAfterAuth();
     }
   }
 
@@ -200,11 +206,7 @@ class _LoginScreenState extends State<LoginScreen>
     if (!mounted) return;
 
     if (success) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const NavigationShell()),
-        (route) => false,
-      );
+      _navigateAfterAuth();
     }
   }
 

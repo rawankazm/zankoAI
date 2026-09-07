@@ -27,6 +27,12 @@ class UserModel {
       name == 'زائر' ||
       name.toLowerCase() == 'guest';
   bool get isPendingVip => vipStatus == 'pending';
+  bool get isNeedsSetup =>
+      !isGuest &&
+      (name.trim().isEmpty ||
+          name.trim().toLowerCase() == 'student' ||
+          universityName == null ||
+          universityName!.trim().isEmpty);
 
   UserModel({
     required this.id,
@@ -91,16 +97,37 @@ class UserModel {
   }
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
+    final rawRole = (map['role'] ?? 'student').toString().toLowerCase();
+    final roleVal = UserRole.values.firstWhere(
+      (e) => e.toString().split('.').last.toLowerCase() == rawRole,
+      orElse: () => UserRole.student,
+    );
+
+    final rawIsVip = map['is_vip'] ?? map['isVip'];
+    final rawVipStatus = (map['vip_status'] ?? map['vipStatus'] ?? '').toString().toLowerCase();
+    final rawPlan = (map['plan'] ?? '').toString().toLowerCase();
+    final rawSubTier = (map['subscription_tier'] ?? map['subscriptionTier'] ?? '').toString().toUpperCase();
+
+    // Comprehensive VIP evaluation across all database columns and admin roles
+    final bool isVipCalculated = rawIsVip == true ||
+        rawIsVip == 1 ||
+        rawIsVip?.toString().toLowerCase() == 'true' ||
+        rawIsVip?.toString() == '1' ||
+        rawVipStatus == 'active' ||
+        rawVipStatus == 'approved' ||
+        rawPlan == 'premium' ||
+        rawPlan == 'vip_unlimited' ||
+        rawPlan == 'vip' ||
+        rawSubTier == 'VIP' ||
+        roleVal == UserRole.admin; // Platform Admins automatically receive VIP privileges!
+
     return UserModel(
       id: map['id']?.toString() ?? '',
       name: (map['full_name'] ?? map['name'] ?? '').toString(),
       email: (map['email'] ?? '').toString(),
-      isVip: map['is_vip'] == true || map['isVip'] == true || map['subscription_tier'] == 'VIP',
-      vipStatus: (map['vip_status'] ?? map['vipStatus'] ?? ((map['is_vip'] == true || map['isVip'] == true) ? 'active' : 'none')).toString(),
-      role: UserRole.values.firstWhere(
-        (e) => e.toString().split('.').last == map['role'],
-        orElse: () => UserRole.student,
-      ),
+      isVip: isVipCalculated,
+      vipStatus: (map['vip_status'] ?? map['vipStatus'] ?? (isVipCalculated ? 'active' : 'none')).toString(),
+      role: roleVal,
       universityName: map['university_name']?.toString() ?? map['universityName']?.toString(),
       departmentName: map['department_name']?.toString() ?? map['departmentName']?.toString(),
       cityName: map['city_name']?.toString() ?? map['cityName']?.toString(),

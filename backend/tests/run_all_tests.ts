@@ -197,6 +197,12 @@ const main = async () => {
   await import('./mau_analytics.test.js').catch(async () => {
     await import('./mau_analytics.test.ts' as any);
   });
+
+  // Run Production AI Chat & Multi-Provider Architecture Suite
+  console.log('🤖 Launching Production AI Chat & Provider Abstraction Suite...\n');
+  await import('./ai_chat.test.js').catch(async () => {
+    await import('./ai_chat.test.ts' as any);
+  });
 };
 
 main().catch((err) => {

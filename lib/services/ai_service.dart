@@ -5,6 +5,9 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:dio/dio.dart';
+import '../core/network/api_client.dart';
+import '../core/config/env.dart';
 import '../models/quiz_model.dart';
 import '../models/flashcard_model.dart';
 import '../models/study_plan_model.dart';
@@ -229,10 +232,9 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   // High-performance multimodal Gemini models (Official Google Gemini production models)
   static const List<String> _validFastModels = [
-    'gemini-3.8-flash',
-    'gemini-3.7-flash',
+    'gemini-3.5-flash-lite',
+    'gemini-3.5-flash',
     'gemini-3.6-flash',
-    'gemini-2.5-flash',
   ];
 
   String? _lastWorkingKey;
@@ -289,7 +291,11 @@ class ZankoAiService extends ChangeNotifier implements AiService {
             {
               'parts': [{'text': prompt}]
             }
-          ]
+          ],
+          'generationConfig': {
+            'maxOutputTokens': 800,
+            'temperature': 0.7,
+          }
         };
 
         request.add(utf8.encode(jsonEncode(bodyMap)));
@@ -303,12 +309,18 @@ class ZankoAiService extends ChangeNotifier implements AiService {
             final contentMap = candidates[0]['content'];
             final parts = contentMap['parts'] as List?;
             if (parts != null && parts.isNotEmpty) {
-              final text = parts[0]['text'];
-              if (text != null && text.toString().isNotEmpty) {
+              final buffer = StringBuffer();
+              for (final p in parts) {
+                if (p is Map && p.containsKey('text') && p['text'] != null) {
+                  buffer.write(p['text'].toString());
+                }
+              }
+              final fullText = buffer.toString().trim();
+              if (fullText.isNotEmpty) {
                 _lastWorkingKey = key;
                 _lastWorkingModel = m;
                 client.close();
-                return text.toString();
+                return fullText;
               }
             }
           }
@@ -413,24 +425,65 @@ class ZankoAiService extends ChangeNotifier implements AiService {
              "بۆ نامەی بێسنوور ئەپەکەت بۆ **VIP** بەرز بکەرەوە!";
     }
 
-    try {
-      String historyStr = "";
-      for (var msg in chatHistory) {
-        historyStr += "${msg['role'] == 'user' ? 'خوێندکار' : 'مامۆستا'}: ${msg['content']}\n";
-      }
-      final prompt = historyStr.isEmpty ? userPrompt : "$historyStrخوێندکار: $userPrompt\nمامۆستا:";
-      
-      const systemInstruction = 
-          "تۆ یاریدەدەری زیرەکی زانکۆیت بە ناوی ZankoAI. ڕێنمایی زۆر گرنگ:\n"
-          "١- ئەگەر نامەکە سڵاو بوو، تەنها بڵێ: 'سڵاو! چۆن دەتوانم یارمەتیت بدەم؟'.\n"
-          "٢- ڕاستەوخۆ و بێ هیچ پێشەکی و دەستپێکێکی درێژ و قسەی زیادە وەڵامی پرسیارەکە بدەرەوە.\n"
-          "٣- بە هیچ جۆرێک پێشەکی، وتەی زیادە، یان ناساندنی دووبارەی خۆت مەنووسە؛ تەنها شیکاری زانستی پوخت بنووسە.\n"
-          "٤- بە زمانی پرسیارکەرەکە (سۆرانی، بادینی، عەرەبی، یان ئینگلیزی) وەڵام بدەرەوە.";
-          
-      return await _callGemini(prompt, systemInstruction: systemInstruction);
-    } catch (e) {
-      return _generateAcademicResponse(userPrompt);
+    // 2. Build multi-turn context
+    String historyStr = "";
+    for (var msg in chatHistory.take(8)) {
+      historyStr += "${msg['role'] == 'user' ? 'خوێندکار' : 'مامۆستا'}: ${msg['content']}\n";
     }
+    final prompt = historyStr.isEmpty ? userPrompt : "$historyStrخوێندکار: $userPrompt\nمامۆستا:";
+    
+    const systemInstruction = 
+        "تۆ مامۆستای ژیری زانکۆیت لە ئەپڵیکەیشنی ZankoAI (Academic AI Tutor). ڕێنمایی زۆر گرنگ:\n"
+        "١. ئەگەر پەیامەکە تەنها سڵاو بوو، تەنها بڵێ: 'سڵاو! چۆن دەتوانم لە وانەکانتدا یارمەتیت بدەم؟'.\n"
+        "٢. ڕاستەوخۆ و دەستبەجێ بەبێ پێشەکی، وتەی زیادە، یان ناساندنی خۆت، وەڵامی تەواوی زانستی و هاوکێشە یان یاساکە بە وردی ڕوون بکەرەوە.\n"
+        "٣. شیکارییەکان زۆر ڕێکخراو و بە شێوازی ئەکادیمی (خاڵبەندی، هاوکێشەی بیرکاری، نموونەی ژیانی ڕۆژانە) بنووسە.\n"
+        "٤. بە هەمان زمان و دیالێکتی پرسیارەکە (سۆرانی، بادینی، عەرەبی، ئینگلیزی) وەڵام بدەرەوە.";
+
+    // 3. Production: Route through Trusted Server-Side AI Gateway (if configured with real host)
+    final isPlaceholderBackend = AppEnv.backendBaseUrl.contains('api.zankoai.com');
+    if (!isPlaceholderBackend) {
+      try {
+        final session = Supabase.instance.client.auth.currentSession;
+        if (session != null) {
+          final client = ApiClient();
+          final response = await client.dio.post(
+            '/ai/chat',
+            data: {
+              'message': userPrompt,
+            },
+            options: Options(
+              headers: {
+                'Authorization': 'Bearer ${session.accessToken}',
+              },
+              sendTimeout: const Duration(seconds: 2),
+              receiveTimeout: const Duration(seconds: 10),
+            ),
+          );
+
+          if (response.statusCode == 200 && response.data != null) {
+            final data = response.data['data'];
+            if (data != null && data['message'] != null && data['message']['content'] != null) {
+              return data['message']['content'].toString();
+            }
+          }
+        }
+      } catch (backendError) {
+        debugPrint('ℹ️ [Backend AI Gateway unavailable]: $backendError');
+      }
+    }
+
+    // 4. Ultra-Fast Direct Gemini Engine (Sub-2s response with Gemini 3.5 Flash-Lite)
+    try {
+      final aiRes = await _callGemini(prompt, systemInstruction: systemInstruction);
+      if (aiRes.trim().isNotEmpty) {
+        return aiRes;
+      }
+    } catch (geminiError) {
+      debugPrint('❌ [Gemini Error]: $geminiError');
+    }
+
+    // 5. Offline academic knowledge engine fallback
+    return _generateAcademicResponse(userPrompt);
   }
 
   // Instant Context-Aware Academic Knowledge Engine (Sub-0.2s execution)
@@ -765,11 +818,10 @@ class StudentCard extends StatelessWidget {
   }
 
   static const List<String> _validVisionModels = [
+    'gemini-3.6-flash',
+    'gemini-3.1-flash-image',
     'gemini-3.8-flash',
     'gemini-3.7-flash',
-    'gemini-3.6-flash',
-    'gemini-3.7-pro',
-    'gemini-2.5-flash',
   ];
 
   Future<String> _callGeminiMultimodal(Uint8List mediaBytes, String prompt, {String mimeType = 'image/jpeg'}) async {
