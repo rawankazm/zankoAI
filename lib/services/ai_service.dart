@@ -11,6 +11,7 @@ import '../core/config/env.dart';
 import '../models/quiz_model.dart';
 import '../models/flashcard_model.dart';
 import '../models/study_plan_model.dart';
+import '../utils/math_text_cleaner.dart';
 
 abstract class AiService extends ChangeNotifier {
   String? get apiKey;
@@ -437,7 +438,8 @@ class ZankoAiService extends ChangeNotifier implements AiService {
         "١. ئەگەر پەیامەکە تەنها سڵاو بوو، تەنها بڵێ: 'سڵاو! چۆن دەتوانم لە وانەکانتدا یارمەتیت بدەم؟'.\n"
         "٢. ڕاستەوخۆ و دەستبەجێ بەبێ پێشەکی، وتەی زیادە، یان ناساندنی خۆت، وەڵامی تەواوی زانستی و هاوکێشە یان یاساکە بە وردی ڕوون بکەرەوە.\n"
         "٣. شیکارییەکان زۆر ڕێکخراو و بە شێوازی ئەکادیمی (خاڵبەندی، هاوکێشەی بیرکاری، نموونەی ژیانی ڕۆژانە) بنووسە.\n"
-        "٤. بە هەمان زمان و دیالێکتی پرسیارەکە (سۆرانی، بادینی، عەرەبی، ئینگلیزی) وەڵام بدەرەوە.";
+        "٤. بە هەمان زمان و دیالێکتی پرسیارەکە (سۆرانی، بادینی، عەرەبی، ئینگلیزی) وەڵام بدەرەوە.\n"
+        "٥. یاسای بیرکاری و سیمبولی دۆلار: هەرگیز و بە هیچ جۆرێک نیشانەی دۆلار (\$ یان \$\$) لە وەڵامەکانتدا بەکارمەهێنە بۆ هاوکێشە یان نووسین. هاوکێشەکان بە شێوازی دەقی سادە و ڕوون بنووسە (وەک: d/dx(x^n) = n · x^(n-1) یان 3x² یان 6x) بەبێ هیچ نیشانەیەکی \$.";
 
     // 3. Production: Route through Trusted Server-Side AI Gateway (if configured with real host)
     final isPlaceholderBackend = AppEnv.backendBaseUrl.contains('api.zankoai.com');
@@ -463,7 +465,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
           if (response.statusCode == 200 && response.data != null) {
             final data = response.data['data'];
             if (data != null && data['message'] != null && data['message']['content'] != null) {
-              return data['message']['content'].toString();
+              return cleanMathAndDollarSigns(data['message']['content'].toString());
             }
           }
         }
@@ -476,14 +478,14 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     try {
       final aiRes = await _callGemini(prompt, systemInstruction: systemInstruction);
       if (aiRes.trim().isNotEmpty) {
-        return aiRes;
+        return cleanMathAndDollarSigns(aiRes);
       }
     } catch (geminiError) {
       debugPrint('❌ [Gemini Error]: $geminiError');
     }
 
     // 5. Offline academic knowledge engine fallback
-    return _generateAcademicResponse(userPrompt);
+    return cleanMathAndDollarSigns(_generateAcademicResponse(userPrompt));
   }
 
   // Instant Context-Aware Academic Knowledge Engine (Sub-0.2s execution)
@@ -875,7 +877,8 @@ class StudentCard extends StatelessWidget {
     final systemPrompt = isAudio
         ? "You are an advanced AI Speech-to-Text transcriber. Listen to the audio and transcribe every spoken word accurately in the exact language spoken (Kurdish Sorani, Kurdish Badini, Arabic, or English). Output ONLY the transcribed words without any preamble or notes."
         : "تۆ مامۆستایەکی زۆر زیرەک و شارەزای هەموو بوارە ئەکادیمییەکان، بڕوانامەکان، بەڵگەنامەکان، بیرکاری و زانستەکانی بە ناوی ZankoAI. "
-          "ئەم وێنەیە بە تەواوی و بە وردی شیکار بکە. ئەگەر بەکارهێنەر پرسیار یان تێبینییەکی تایبەتی هەبوو لەسەر وێنەکە (وەک ناوی کەس، پرسیارێکی دیاریکراو، یان داواکارییەک وەک وەرگێڕان)، وەڵامی ورد و ڕاستەوخۆ دەربارەی وێنەکە بدەرەوە بە هەمان زمانی پرسیارەکە (کوردی سۆرانی، کوردی بادینی، عەرەبی، یان ئینگلیزی).";
+          "ئەم وێنەیە بە تەواوی و بە وردی شیکار بکە. ئەگەر بەکارهێنەر پرسیار یان تێبینییەکی تایبەتی هەبوو لەسەر وێنەکە (وەک ناوی کەس، پرسیارێکی دیاریکراو، یان داواکارییەک وەک وەرگێڕان)، وەڵامی ورد و ڕاستەوخۆ دەربارەی وێنەکە بدەرەوە بە هەمان زمانی پرسیارەکە (کوردی سۆرانی، کوردی بادینی، عەرەبی، یان ئینگلیزی). "
+          "هەرگیز نیشانەی دۆلار (\$ یان \$\$) بۆ هاوکێشە بیرکارییەکان بەکارمەهێنە، بەڵکو بە دەقی ئاسایی و ڕوونی بێ \$ بنووسە.";
 
     final defaultPrompt = isAudio
         ? "Transcribe the spoken words in this audio exactly in Kurdish (Sorani/Badini), Arabic, or English."
@@ -936,7 +939,8 @@ class StudentCard extends StatelessWidget {
     }
 
     try {
-      return await _callGeminiMultimodal(imageBytes, promptText);
+      final res = await _callGeminiMultimodal(imageBytes, promptText);
+      return cleanMathAndDollarSigns(res);
     } catch (e) {
       return "⚠️ **هەڵە لە بارکردنی وێنەکە**: $e\n\nتکایە دووبارە تێبینی یان وێنەکە بنێرەوە.";
     }

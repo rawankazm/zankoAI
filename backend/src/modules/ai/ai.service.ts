@@ -34,7 +34,8 @@ CRITICAL BEHAVIORAL RULES:
 1. GREETING: If the user simply says a greeting (such as "سڵاو", "سلاو", "hello", "hi", "مرحبا"), respond ONLY with: "سڵاو! چۆن دەتوانم لە وانەکانتدا یارمەتیت بدەم؟"
 2. NO PREAMBLE / NO FLUFF: Answer the user's question directly and immediately. Do NOT write unnecessary introductions, conversational filler, polite intros, or redundant disclaimers.
 3. ACADEMIC EXCELLENCE & CONCISENESS: Keep explanations structured, rigorous, and directly helpful for university coursework. Use clear bullet points, formulas, or code snippets where applicable.
-4. LANGUAGE MATCHING: Always reply in the exact language/dialect of the prompt (Kurdish Sorani, Kurdish Badini, Arabic, or English).`;
+4. LANGUAGE MATCHING: Always reply in the exact language/dialect of the prompt (Kurdish Sorani, Kurdish Badini, Arabic, or English).
+5. MATH FORMATTING: NEVER use dollar signs ($ or $$) or LaTeX math delimiters ($...$ or $$...$$). NEVER wrap formulas in dollar signs. Present all math, formulas, and expressions using plain readable text or Unicode (e.g. x², d/dx, ·, =, +, -). Right-to-left readers must not have dollar signs breaking text flow.`;
   }
 
   /**
@@ -86,7 +87,7 @@ CRITICAL BEHAVIORAL RULES:
       });
 
       return {
-        text: result.text,
+        text: cleanMathAndDollarSigns(result.text),
         provider: result.provider,
         model: result.model,
         promptTokens: result.promptTokens,
@@ -298,3 +299,51 @@ Respond ONLY with valid JSON in the following format:
 }
 
 export const aiGateway = new AiGatewayService();
+
+/**
+ * Cleans LaTeX delimiters ($, $$, \$) and converts LaTeX math syntax into clean Unicode/plain text.
+ */
+export function cleanMathAndDollarSigns(text: string): string {
+  if (!text) return text;
+  let result = text;
+  result = result.replace(/\\\$\$/g, '');
+  result = result.replace(/\$\$/g, '');
+  result = result.replace(/\\?\$/g, '');
+  result = result.replace(/\\?frac\s*\{([^{}]+)\}\s*\{([^{}]+)\}/g, (_m, num, den) => {
+    const n = num.trim();
+    const d = den.trim();
+    return n.length <= 4 && d.length <= 4 ? `${n}/${d}` : `(${n})/(${d})`;
+  });
+  result = result.replace(/\\?sqrt\s*\{([^{}]+)\}/g, '√($1)');
+  result = result.replace(/\\cdot/g, '·');
+  result = result.replace(/\\times/g, '×');
+  result = result.replace(/\\div/g, '÷');
+  result = result.replace(/\\pm/g, '±');
+  result = result.replace(/\\mp/g, '∓');
+  result = result.replace(/\\leq|\\le/g, '≤');
+  result = result.replace(/\\geq|\\ge/g, '≥');
+  result = result.replace(/\\neq|\\ne/g, '≠');
+  result = result.replace(/\\approx/g, '≈');
+  result = result.replace(/\\sim/g, '~');
+  result = result.replace(/\\infty/g, '∞');
+  result = result.replace(/\\int/g, '∫');
+  result = result.replace(/\\partial/g, '∂');
+  result = result.replace(/\\sum/g, '∑');
+  result = result.replace(/\\prod/g, '∏');
+  result = result.replace(/\\pi/g, 'π');
+  result = result.replace(/\\theta/g, 'θ');
+  result = result.replace(/\\alpha/g, 'α');
+  result = result.replace(/\\beta/g, 'β');
+  result = result.replace(/\\Delta/g, 'Δ');
+  result = result.replace(/\\to|\\rightarrow/g, '→');
+  result = result.replace(/\\Rightarrow/g, '⇒');
+  result = result.replace(/\\Leftrightarrow|\\iff/g, '⇔');
+  result = result.replace(/\^\{([^{}]+)\}/g, (_m, inner) => (inner.length === 1 ? `^${inner}` : `^(${inner})`));
+  result = result.replace(/_\{([^{}]+)\}/g, (_m, inner) => (inner.length === 1 ? `_${inner}` : `_(${inner})`));
+  result = result.replace(/\\(text|mathrm|mathbf|mathit|textbf|textit)\{([^{}]+)\}/g, '$2');
+  result = result.replace(/\\\(/g, '(').replace(/\\\)/g, ')');
+  result = result.replace(/\\\[/g, '[').replace(/\\\]/g, ']');
+  result = result.replace(/\$/g, '');
+  result = result.replace(/[ \t]{2,}/g, ' ');
+  return result;
+}

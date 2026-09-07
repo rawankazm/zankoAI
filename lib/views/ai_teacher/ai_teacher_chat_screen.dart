@@ -20,6 +20,7 @@ import '../../theme.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../widgets/apple_ui_components.dart';
 import '../payment/vip_upgrade_sheet.dart';
+import '../../utils/math_text_cleaner.dart';
 
 
 class AiTeacherChatScreen extends StatefulWidget {
@@ -175,6 +176,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
               for (var item in decoded) {
                 final map = Map<String, String>.from(item);
                 map['time'] ??= '4:09 pm';
+                if (map['role'] == 'assistant' && map['content'] != null) {
+                  map['content'] = cleanMathAndDollarSigns(map['content']!);
+                }
                 _messages.add(map);
               }
             });
@@ -408,8 +412,8 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
           .toList();
 
       final modePrefix = _selectedModeIndex != 0
-          ? "[تایبەتمەندی: ${_modes[_selectedModeIndex]['tag']}]\n"
-          : "";
+          ? "[تایبەتمەندی: ${_modes[_selectedModeIndex]['tag']}]\n[ڕێنمایی زۆر گرنگ: هەرگیز نیشانەی دۆلار \$ یان \$\$ بەکارمەهێنە بۆ هاوکێشە و ژمارەکان. هاوکێشەکان بە شێوازی دەقی سادە و ڕوون بنووسە]\n"
+          : "[ڕێنمایی: بەبێ نیشانەی دۆلار \$ و بە شێوازی دەقی سادە هاوکێشەکان بنووسە]\n";
 
       final response = await aiService.askTeacher(
         modePrefix + text,
@@ -418,12 +422,14 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
         isPendingVip: isPendingVip,
       );
 
+      final cleanResponse = cleanMathAndDollarSigns(response);
+
       if (mounted) {
         setState(() {
           _isTyping = false;
           _messages.add({
             'role': 'assistant',
-            'content': response,
+            'content': cleanResponse,
             'time': _formatTime(),
           });
         });
@@ -768,12 +774,14 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
         isPendingVip: isPendingVip,
       );
 
+      final cleanResponse = cleanMathAndDollarSigns(response);
+
       if (mounted) {
         setState(() {
           _isTyping = false;
           _messages.add({
             'role': 'assistant',
-            'content': response,
+            'content': cleanResponse,
             'time': _formatTime(),
           });
         });
@@ -1698,7 +1706,8 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
 
   Widget _buildMessageBubble(Map<String, String> msg, bool isUser) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final content = msg['content'] ?? '';
+    final rawContent = msg['content'] ?? '';
+    final content = !isUser ? cleanMathAndDollarSigns(rawContent) : rawContent;
     final time = msg['time'] ?? _formatTime();
     final isSpeaking = _currentlySpeakingMsg == content;
     final isLimitMsg = !isUser && (content.contains('Free Daily Limit Reached') || content.contains('سنووری ١٠'));

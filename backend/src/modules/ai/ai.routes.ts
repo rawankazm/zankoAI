@@ -30,6 +30,10 @@ import {
   getAudioJobStatusHandler,
   deleteAudioJobHandler,
 } from './audio.controller.js';
+import {
+  homeworkUpload,
+  submitHomeworkHandler,
+} from './homework.controller.js';
 
 const router = Router();
 
@@ -61,7 +65,23 @@ router.delete(
   deleteConversationHandler
 );
 
-// ── 3. Homework / Image Solving (daily limit: free=10, premium=200) ───────────
+// ── 3. AI Homework Solver (POST /api/ai/homework) ────────────────────────────
+/**
+ * POST /api/ai/homework
+ * Solves homework questions from text and/or optional image.
+ * Returns concise educational answer, explanation, step-by-step reasoning,
+ * common mistakes identified, hints, and related concepts.
+ * Rate limit: 15 req/min. Usage limit: 'homework' (free=10/day, premium=200/day).
+ */
+router.post(
+  '/homework',
+  authenticate,
+  rateLimiter({ windowMs: 60 * 1000, maxRequests: 15, keyPrefix: 'rl:ai:homework' }),
+  homeworkUpload.single('image'),
+  submitHomeworkHandler
+);
+
+// ── 3.1 Legacy Homework / Image Solving (daily limit: free=10, premium=200) ────
 router.post(
   '/solve-image',
   authenticate,

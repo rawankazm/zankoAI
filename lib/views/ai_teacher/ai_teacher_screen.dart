@@ -4,6 +4,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import '../../services/ai_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
+import '../../utils/math_text_cleaner.dart';
 
 class AiTeacherScreen extends StatefulWidget {
   const AiTeacherScreen({super.key});
@@ -283,7 +284,7 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            message['content']!,
+                            cleanMathAndDollarSigns(message['content']!),
                             style: TextStyle(
                               color: isUser 
                                   ? Colors.white 
