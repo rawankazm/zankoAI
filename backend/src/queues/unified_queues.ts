@@ -77,14 +77,50 @@ export const notificationQueue = new Queue('notifications', {
   },
 });
 
-// Registry of all 5 queues
+// ── 6. Subscription Maintenance Queue ────────────────────────────────────────
+export const subscriptionMaintenanceQueue = new Queue('subscription-maintenance', {
+  connection: redisConnectionOptions,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: {
+      type: 'exponential',
+      delay: 5000,
+    },
+    removeOnComplete: { count: 200, age: 86400 },
+    removeOnFail: { count: 500, age: 604800 },
+  },
+});
+
+// Registry of all 6 queues
 export const allQueues: Record<QueueName, Queue> = {
   pdf: pdfQueue,
   ocr: ocrQueue,
   audio: audioQueue,
   ai: aiQueue,
   notifications: notificationQueue,
+  'subscription-maintenance': subscriptionMaintenanceQueue,
 };
+
+/**
+ * Schedules recurring subscription maintenance background job in BullMQ
+ */
+export async function scheduleRecurringSubscriptionMaintenance(intervalMinutes = 10): Promise<void> {
+  try {
+    await subscriptionMaintenanceQueue.add(
+      'run-subscription-maintenance',
+      { triggeredBy: 'scheduler', timestamp: new Date().toISOString() },
+      {
+        repeat: {
+          every: intervalMinutes * 60 * 1000,
+        },
+        jobId: 'scheduled_subscription_maintenance',
+      }
+    );
+    logger.info('Scheduled recurring subscription-maintenance job every ' + intervalMinutes + ' minutes');
+  } catch (err: any) {
+    logger.error('Failed to schedule recurring subscription maintenance: ' + err.message);
+  }
+}
 
 /**
  * Adds a background job with idempotency, duplicate prevention, retry, exponential backoff,

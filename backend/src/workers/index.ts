@@ -12,6 +12,8 @@ import { NotificationService } from '../services/notification.service.js';
 import { IdempotencyService } from '../services/idempotency.service.js';
 import { JobMetadataService } from '../services/job_metadata.service.js';
 import { QueueName } from '../types/worker.types.js';
+import { processSubscriptionMaintenanceJob } from '../jobs/subscription_maintenance.js';
+import { scheduleRecurringSubscriptionMaintenance } from '../queues/unified_queues.js';
 
 logger.info('Starting ZankoAI Background Worker in ' + env.NODE_ENV + ' mode...');
 
@@ -348,6 +350,34 @@ notificationWorker.on('failed', (job: Job | undefined, err: Error) => {
   logger.error('[Worker:notifications] Job ' + job?.id + ' failed (attempt ' + attempt + '/' + maxAttempts + '): ' + err.message);
 });
 
+// ── 6. Subscription Maintenance Worker (queue: 'subscription-maintenance') ───
+export const subscriptionMaintenanceWorker = new Worker(
+  'subscription-maintenance',
+  async (job: Job) => {
+    logger.info('[Worker:subscription-maintenance] Processing maintenance job ' + job.id + ' (' + job.name + ')');
+    return await executeWithLifecycle(
+      'subscription-maintenance',
+      job,
+      async () => {
+        return await processSubscriptionMaintenanceJob(job.data);
+      },
+      60000 // 60s timeout
+    );
+  },
+  {
+    connection: redisConnectionOptions,
+    concurrency: 1, // Run sequentially to avoid race conditions on subscription states
+  }
+);
+
+subscriptionMaintenanceWorker.on('completed', (job: Job) => {
+  logger.info('[Worker:subscription-maintenance] Maintenance job ' + job.id + ' completed successfully');
+});
+
+subscriptionMaintenanceWorker.on('failed', (job: Job | undefined, err: Error) => {
+  logger.error('[Worker:subscription-maintenance] Maintenance job ' + job?.id + ' failed: ' + err.message);
+});
+
 // Legacy fileWorker for 'file-processing'
 export const fileWorker = new Worker(
   'file-processing',
@@ -357,6 +387,11 @@ export const fileWorker = new Worker(
   },
   { connection: redisConnectionOptions, concurrency: 4 }
 );
+
+// Initialize recurring subscription maintenance schedule
+scheduleRecurringSubscriptionMaintenance(10).catch((err) => {
+  logger.error('Failed to initialize subscription maintenance recurring schedule: ' + err.message);
+});
 
 // ── Graceful Shutdown Handler ────────────────────────────────────────────────
 let isShuttingDown = false;
@@ -376,6 +411,7 @@ export const shutdownWorkers = async (): Promise<void> => {
     audioLegacyWorker.close(),
     aiWorker.close(),
     notificationWorker.close(),
+    subscriptionMaintenanceWorker.close(),
     fileWorker.close(),
   ];
 

@@ -2,6 +2,8 @@
 // ZankoAI Premium Subscription System Types & Contracts
 // ==============================================================================
 
+import { PaymentRecord } from './payment.types.js';
+
 export type SubscriptionPlanType =
   | 'FREE'
   | 'PREMIUM_MONTHLY'
@@ -22,7 +24,9 @@ export type PaymentProviderType =
   | 'fib'
   | 'fastpay'
   | 'zaincash'
+  | 'qi_card'
   | 'stripe'
+  | 'sandbox'
   | 'voucher';
 
 export interface SubscriptionRecord {
@@ -36,6 +40,10 @@ export interface SubscriptionRecord {
   current_period_start: string;
   current_period_end: string;
   cancel_at_period_end: boolean;
+  grace_period_end?: string | null;
+  auto_renew?: boolean;
+  renewal_reminder_sent_at?: string | null;
+  metadata?: Record<string, any>;
   created_at: string;
   updated_at: string;
 }
@@ -107,6 +115,51 @@ export interface SubscriptionStatusResponse {
   currentPeriodStart?: string;
   currentPeriodEnd?: string;
   cancelAtPeriodEnd: boolean;
+  inGracePeriod?: boolean;
+  gracePeriodEnd?: string | null;
+  autoRenew?: boolean;
   provider?: string;
   daysRemaining?: number;
+}
+
+export interface SubscriptionHistoryResponse {
+  subscriptions: SubscriptionRecord[];
+  payments: PaymentRecord[];
+  events: SubscriptionEventRecord[];
+}
+
+export interface SubscriptionMaintenanceResult {
+  scannedCount: number;
+  expiredCount: number;
+  pastDueCount: number;
+  remindersSentCount: number;
+  stalePendingProcessed: number;
+  timestamp: string;
+}
+
+export interface ActivateSubscriptionParams {
+  userId: string;
+  plan: SubscriptionPlanType;
+  provider: string;
+  durationDays?: number;
+  providerSubscriptionId?: string;
+  providerCustomerId?: string;
+  autoRenew?: boolean;
+  idempotencyKey?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface RenewSubscriptionParams {
+  userId: string;
+  durationDays?: number;
+  provider?: string;
+  providerSubscriptionId?: string;
+  autoRenew?: boolean;
+  idempotencyKey?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface CancelSubscriptionOptions {
+  immediate?: boolean;
+  reason?: string;
 }

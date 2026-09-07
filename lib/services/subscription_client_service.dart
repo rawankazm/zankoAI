@@ -65,4 +65,11 @@ class SubscriptionClientService {
     final data = body['data'] as Map<String, dynamic>? ?? body;
     return UserSubscriptionModel.fromJson(data);
   }
+
+  /// Fetches subscription history, payment history, and event audit history
+  Future<Map<String, dynamic>> getHistory() async {
+    final response = await _dio.get<Map<String, dynamic>>('/subscription/history');
+    final body = response.data ?? {};
+    return (body['data'] as Map<String, dynamic>?) ?? body;
+  }
 }

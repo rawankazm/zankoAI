@@ -6,6 +6,8 @@ import crypto from 'crypto';
 import { supabaseAdmin } from '../config/supabase.js';
 import { logger } from '../config/logger.js';
 import { PaymentProviderRegistry } from './payment_providers/index.js';
+import { SubscriptionService } from './subscription.service.js';
+import { SubscriptionPlanType } from '../types/subscription.types.js';
 import {
   PaymentRecord,
   PaymentStatus,
@@ -257,58 +259,25 @@ export class PaymentService {
     transactionId: string
   ): Promise<void> {
     const isYearly = payment.plan === 'PREMIUM_YEARLY' || payment.plan === 'YEARLY';
-    const periodDays = isYearly ? 365 : 30;
+    const periodDays = (payment.metadata && payment.metadata.duration_days) ? payment.metadata.duration_days : (isYearly ? 365 : 30);
+    const subPlan: SubscriptionPlanType = isYearly ? 'PREMIUM_YEARLY' : 'PREMIUM_MONTHLY';
 
-    const now = new Date();
-    const expiry = new Date(now.getTime() + periodDays * 86400000);
+    logger.info('Activating VIP subscription for user ' + payment.user_id + ' for ' + periodDays + ' days');
 
-    logger.info('Activating VIP subscription for user ' + payment.user_id + ' until ' + expiry.toISOString());
-
-    // 1. Record in subscription_events
-    await supabaseAdmin
-      .from('subscription_events')
-      .insert({
-        user_id: payment.user_id,
-        event_type: 'payment.succeeded',
-        provider: payment.provider,
-        provider_event_id: transactionId,
-        idempotency_key: 'sub_evt_' + payment.provider + '_' + transactionId,
-        payload: {
-          orderId: payment.order_id,
-          amount: payment.amount,
-          currency: payment.currency,
-          plan: payment.plan,
-        },
-      });
-
-    // 2. Upsert into subscriptions table
-    await supabaseAdmin
-      .from('subscriptions')
-      .upsert(
-        {
-          user_id: payment.user_id,
-          plan: isYearly ? 'PREMIUM_YEARLY' : 'PREMIUM_MONTHLY',
-          status: 'active',
-          provider: payment.provider,
-          current_period_start: now.toISOString(),
-          current_period_end: expiry.toISOString(),
-          cancel_at_period_end: false,
-          updated_at: now.toISOString(),
-        },
-        { onConflict: 'user_id' }
-      );
-
-    // 3. Update public.profiles (privileged service_role write bypasses RLS)
-    await supabaseAdmin
-      .from('profiles')
-      .update({
-        is_vip: true,
-        plan: 'premium',
-        vip_status: 'active',
-        vip_expiry: expiry.toISOString(),
-        updated_at: now.toISOString(),
-      })
-      .eq('id', payment.user_id);
+    await SubscriptionService.activateSubscription({
+      userId: payment.user_id,
+      plan: subPlan,
+      provider: payment.provider,
+      durationDays: periodDays,
+      providerSubscriptionId: transactionId,
+      idempotencyKey: 'sub_evt_' + payment.provider + '_' + transactionId,
+      metadata: {
+        orderId: payment.order_id,
+        paymentId: payment.id,
+        amount: payment.amount,
+        currency: payment.currency,
+      },
+    });
   }
 
   /**

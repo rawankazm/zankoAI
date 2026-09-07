@@ -48,8 +48,22 @@ export class SubscriptionController {
   }
 
   /**
+   * GET /api/subscription/history
+   * Retrieves user subscription history, payment history, and event audit history.
+   */
+  static async getHistory(req: Request, res: Response): Promise<Response> {
+    const userId = (req as any).user?.id || (req as any).profile?.id;
+    if (!userId) {
+      throw new UnauthorizedError('Authentication required to fetch subscription history');
+    }
+
+    const history = await SubscriptionService.getSubscriptionHistory(userId);
+    return ResponseFormatter.success(res, history, 'Subscription history retrieved successfully');
+  }
+
+  /**
    * POST /api/subscription/cancel
-   * Cancels active recurring subscription at period end.
+   * Cancels active recurring subscription at period end or immediately.
    */
   static async cancelSubscription(req: Request, res: Response): Promise<Response> {
     const userId = (req as any).user?.id || (req as any).profile?.id;
@@ -57,8 +71,18 @@ export class SubscriptionController {
       throw new UnauthorizedError('Authentication required to cancel subscription');
     }
 
-    const result = await SubscriptionService.cancelSubscription(userId);
+    const immediate = req.body?.immediate === true;
+    const result = await SubscriptionService.cancelSubscription(userId, { immediate });
     return ResponseFormatter.success(res, result, result.message);
+  }
+
+  /**
+   * POST /api/subscription/maintenance
+   * Triggers subscription maintenance execution on-demand.
+   */
+  static async runMaintenance(req: Request, res: Response): Promise<Response> {
+    const result = await SubscriptionService.runMaintenance();
+    return ResponseFormatter.success(res, result, 'Subscription maintenance executed successfully');
   }
 
   /**

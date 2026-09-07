@@ -125,6 +125,9 @@ class UserSubscriptionModel {
   final DateTime? currentPeriodStart;
   final DateTime? currentPeriodEnd;
   final bool cancelAtPeriodEnd;
+  final bool inGracePeriod;
+  final DateTime? gracePeriodEnd;
+  final bool autoRenew;
   final String? provider;
   final int daysRemaining;
 
@@ -136,14 +139,19 @@ class UserSubscriptionModel {
     this.currentPeriodStart,
     this.currentPeriodEnd,
     this.cancelAtPeriodEnd = false,
+    this.inGracePeriod = false,
+    this.gracePeriodEnd,
+    this.autoRenew = false,
     this.provider,
     this.daysRemaining = 0,
   });
 
+  /// STRICT RULE: If current_period_end < now, user cannot be treated as Premium
   bool get canAccessPremiumFeatures =>
       isPremium &&
       (status == SubscriptionStatusType.active ||
-          status == SubscriptionStatusType.trialing);
+          status == SubscriptionStatusType.trialing) &&
+      (currentPeriodEnd == null || currentPeriodEnd!.isAfter(DateTime.now()));
 
   bool get isExpired =>
       status == SubscriptionStatusType.expired ||
@@ -162,6 +170,11 @@ class UserSubscriptionModel {
           ? DateTime.tryParse(json['currentPeriodEnd'].toString())
           : null,
       cancelAtPeriodEnd: json['cancelAtPeriodEnd'] == true,
+      inGracePeriod: json['inGracePeriod'] == true,
+      gracePeriodEnd: json['gracePeriodEnd'] != null
+          ? DateTime.tryParse(json['gracePeriodEnd'].toString())
+          : null,
+      autoRenew: json['autoRenew'] == true,
       provider: json['provider']?.toString(),
       daysRemaining: (json['daysRemaining'] as num?)?.toInt() ?? 0,
     );
@@ -176,6 +189,9 @@ class UserSubscriptionModel {
       'currentPeriodStart': currentPeriodStart?.toIso8601String(),
       'currentPeriodEnd': currentPeriodEnd?.toIso8601String(),
       'cancelAtPeriodEnd': cancelAtPeriodEnd,
+      'inGracePeriod': inGracePeriod,
+      'gracePeriodEnd': gracePeriodEnd?.toIso8601String(),
+      'autoRenew': autoRenew,
       'provider': provider,
       'daysRemaining': daysRemaining,
     };

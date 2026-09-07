@@ -1,4 +1,4 @@
-export type QueueName = 'pdf' | 'ocr' | 'audio' | 'ai' | 'notifications';
+export type QueueName = 'pdf' | 'ocr' | 'audio' | 'ai' | 'notifications' | 'subscription-maintenance';
 
 export type JobState = 'queued' | 'processing' | 'completed' | 'failed';
 
