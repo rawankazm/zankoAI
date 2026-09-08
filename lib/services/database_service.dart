@@ -31,7 +31,7 @@ abstract class DatabaseService extends ChangeNotifier {
   Future<void> addScheduleItem(ScheduleModel item);
   Future<void> deleteScheduleItem(String itemId);
   Future<void> addQuiz(QuizModel quiz);
-  
+
   Future<void> addFlashcard(FlashcardModel card);
   Future<void> clearFlashcards();
   Future<void> addReminder(ReminderModel reminder);
@@ -43,7 +43,12 @@ abstract class DatabaseService extends ChangeNotifier {
   Future<void> addAnnouncement(AnnouncementModel announcement);
   Future<void> deleteAnnouncement(String id);
 
-  Future<void> requestEnrollment(String studentName, String studentEmail, String courseName, String teacherName);
+  Future<void> requestEnrollment(
+    String studentName,
+    String studentEmail,
+    String courseName,
+    String teacherName,
+  );
   Future<void> approveEnrollment(String requestId);
   Future<void> rejectEnrollment(String requestId);
 
@@ -104,7 +109,8 @@ class MockDatabaseService extends ChangeNotifier implements DatabaseService {
       NoteModel(
         id: 'n1',
         title: 'تێبینی دەربارەی سیستەمی کارپێکردن',
-        content: 'سیستەمی کارپێکردن (OS) بریتییە لەو نەرمەکاڵایەی کە ڕەقەکاڵاکان و نەرمەکاڵاکانی تر بەڕێوەدەبات. کارە سەرەکییەکانی بریتین لە: بەڕێوەبردنی یادگە (Memory Management)، بەڕێوەبردنی پڕۆسسەکان (Process Management)، و سیستەمی فایلەکان (File System).',
+        content:
+            'سیستەمی کارپێکردن (OS) بریتییە لەو نەرمەکاڵایەی کە ڕەقەکاڵاکان و نەرمەکاڵاکانی تر بەڕێوەدەبات. کارە سەرەکییەکانی بریتین لە: بەڕێوەبردنی یادگە (Memory Management)، بەڕێوەبردنی پڕۆسسەکان (Process Management)، و سیستەمی فایلەکان (File System).',
         createdAt: DateTime.now().subtract(const Duration(days: 2)),
         isAiFormatted: true,
         courseName: 'سیستەمی کارپێکردن',
@@ -112,7 +118,8 @@ class MockDatabaseService extends ChangeNotifier implements DatabaseService {
       NoteModel(
         id: 'n2',
         title: 'کورتەی وانەی داتابەیس',
-        content: 'داتابەیس (Database) سیستەمێکە بۆ کۆکردنەوە و ڕێکخستنی زانیارییەکان بە شێوازێک کە ئاسان بێت بۆ بەدەستهێنانەوە و دەستکاریکردن. جۆرە سەرەکییەکانی داتابەیس بریتین لە داتابەیسی پەیوەندیار (Relational DB) و داتابەیسی ناپەیوەندیار (NoSQL).',
+        content:
+            'داتابەیس (Database) سیستەمێکە بۆ کۆکردنەوە و ڕێکخستنی زانیارییەکان بە شێوازێک کە ئاسان بێت بۆ بەدەستهێنانەوە و دەستکاریکردن. جۆرە سەرەکییەکانی داتابەیس بریتین لە داتابەیسی پەیوەندیار (Relational DB) و داتابەیسی ناپەیوەندیار (NoSQL).',
         createdAt: DateTime.now().subtract(const Duration(hours: 5)),
         isAiFormatted: false,
         courseName: 'بنکەی زانیاری',
@@ -129,20 +136,23 @@ class MockDatabaseService extends ChangeNotifier implements DatabaseService {
         questions: [
           QuestionModel(
             id: 'q1_1',
-            questionText: 'سی پی یو (CPU) مێشکی کۆمپیوتەرە و بەرپرسە لە پڕۆسێسکردنی فەرمانەکان.',
+            questionText:
+                'سی پی یو (CPU) مێشکی کۆمپیوتەرە و بەرپرسە لە پڕۆسێسکردنی فەرمانەکان.',
             type: QuestionType.trueFalse,
             correctAnswer: 'ڕاستە',
           ),
           QuestionModel(
             id: 'q1_2',
-            questionText: 'کام لەمانە وەک یادگەی کاتی (Volatile memory) دادەنرێت؟',
+            questionText:
+                'کام لەمانە وەک یادگەی کاتی (Volatile memory) دادەنرێت؟',
             type: QuestionType.multipleChoice,
             options: ['RAM', 'ROM', 'HDD', 'SSD'],
             correctAnswer: 'RAM',
           ),
           QuestionModel(
             id: 'q1_3',
-            questionText: 'بەشی سەرەکی و گرنگی ڕەقەکاڵا کە هەموو بەشەکانی تری پێوە دەبەسترێتەوە پێی دەوترێت: ______',
+            questionText:
+                'بەشی سەرەکی و گرنگی ڕەقەکاڵا کە هەموو بەشەکانی تری پێوە دەبەسترێتەوە پێی دەوترێت: ______',
             type: QuestionType.fillInBlank,
             correctAnswer: 'Motherboard',
           ),
@@ -155,12 +165,14 @@ class MockDatabaseService extends ChangeNotifier implements DatabaseService {
       FlashcardModel(
         id: 'c1',
         front: 'مۆدێلی OSI چییە؟',
-        back: 'ڕێکخراوێکە بۆ لێکتێگەیشتنی پرۆتۆکۆلەکانی تۆڕ لە ٧ چینی جیاوازدا.',
+        back:
+            'ڕێکخراوێکە بۆ لێکتێگەیشتنی پرۆتۆکۆلەکانی تۆڕ لە ٧ چینی جیاوازدا.',
       ),
       FlashcardModel(
         id: 'c2',
         front: 'کارکردنی CPU چییە؟',
-        back: 'ئامێری سەرەکی جێبەجێکردنی فەرمانەکان و پرۆسێسەکردنی زانیارییەکان لە کۆمپیوتەردا.',
+        back:
+            'ئامێری سەرەکی جێبەجێکردنی فەرمانەکان و پرۆسێسەکردنی زانیارییەکان لە کۆمپیوتەردا.',
       ),
     ]);
 
@@ -210,7 +222,7 @@ class MockDatabaseService extends ChangeNotifier implements DatabaseService {
         'teacherName': 'د. سارا محمد',
         'status': 'pending',
         'createdAt': DateTime.now().subtract(const Duration(minutes: 45)),
-      }
+      },
     ]);
   }
 
@@ -280,7 +292,9 @@ class MockDatabaseService extends ChangeNotifier implements DatabaseService {
   Future<void> toggleReminder(String id) async {
     final index = _reminders.indexWhere((r) => r.id == id);
     if (index != -1) {
-      _reminders[index] = _reminders[index].copyWith(isCompleted: !_reminders[index].isCompleted);
+      _reminders[index] = _reminders[index].copyWith(
+        isCompleted: !_reminders[index].isCompleted,
+      );
       notifyListeners();
     }
   }
@@ -292,7 +306,12 @@ class MockDatabaseService extends ChangeNotifier implements DatabaseService {
   }
 
   @override
-  Future<void> requestEnrollment(String studentName, String studentEmail, String courseName, String teacherName) async {
+  Future<void> requestEnrollment(
+    String studentName,
+    String studentEmail,
+    String courseName,
+    String teacherName,
+  ) async {
     await Future.delayed(const Duration(milliseconds: 400));
     _enrollmentRequests.add({
       'id': 'req_${DateTime.now().millisecondsSinceEpoch}',

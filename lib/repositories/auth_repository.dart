@@ -56,5 +56,9 @@ abstract class AuthRepository {
   Future<AuthResponse> refreshSession();
 
   /// Fetch user profile from public.profiles or user metadata
-  Future<UserModel?> fetchUserProfile(String userId, [String? fallbackEmail, User? providedUser]);
+  Future<UserModel?> fetchUserProfile(
+    String userId, [
+    String? fallbackEmail,
+    User? providedUser,
+  ]);
 }

@@ -17,7 +17,10 @@ class ReportPdfGeneratorService {
     for (var path in paths) {
       try {
         final byteData = await rootBundle.load(path);
-        final bytes = byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes);
+        final bytes = byteData.buffer.asUint8List(
+          byteData.offsetInBytes,
+          byteData.lengthInBytes,
+        );
         if (bytes.isNotEmpty) return bytes;
       } catch (_) {
         try {
@@ -63,9 +66,7 @@ class ReportPdfGeneratorService {
   }
 
   static PdfStringFormat _fmt(PdfTextAlignment alignment, bool isRtl) {
-    return PdfStringFormat(
-      alignment: alignment,
-    );
+    return PdfStringFormat(alignment: alignment);
   }
 
   /// Shapes and reorders Kurdish/Arabic characters cleanly for TrueType font rendering
@@ -75,7 +76,12 @@ class ReportPdfGeneratorService {
   }
 
   /// Dynamically wraps RTL/LTR text based on font metrics with a safety buffer
-  static List<String> _wrapRtlTextDynamic(String text, PdfFont font, double maxWidth, bool isRtl) {
+  static List<String> _wrapRtlTextDynamic(
+    String text,
+    PdfFont font,
+    double maxWidth,
+    bool isRtl,
+  ) {
     if (text.trim().isEmpty) return [];
     final rawLines = text.split('\n');
     final List<String> result = [];
@@ -89,8 +95,12 @@ class ReportPdfGeneratorService {
 
       final StringBuffer currentLine = StringBuffer();
       for (var word in words) {
-        final testLine = currentLine.isEmpty ? word : '${currentLine.toString()} $word';
-        final measuredWidth = font.measureString(_fixText(testLine, isRtl)).width;
+        final testLine = currentLine.isEmpty
+            ? word
+            : '${currentLine.toString()} $word';
+        final measuredWidth = font
+            .measureString(_fixText(testLine, isRtl))
+            .width;
 
         if (measuredWidth > safeWidth && currentLine.isNotEmpty) {
           result.add(_fixText(currentLine.toString().trim(), isRtl));
@@ -123,7 +133,9 @@ class ReportPdfGeneratorService {
         fetchedImages[i] = page.imageBytes!;
       } else if (page.imageUrl != null && page.imageUrl!.isNotEmpty) {
         try {
-          final bytes = await DocxGeneratorService.fetchImageBytes(page.imageUrl!);
+          final bytes = await DocxGeneratorService.fetchImageBytes(
+            page.imageUrl!,
+          );
           if (bytes != null && bytes.isNotEmpty) {
             fetchedImages[i] = bytes;
           }
@@ -140,36 +152,68 @@ class ReportPdfGeneratorService {
     final boldFontBytes = isRtl ? _cachedNotoBold : _cachedTimesBold;
 
     // Academic Typography
-    final PdfFont bigTitleFont = (boldFontBytes != null && boldFontBytes.isNotEmpty)
-        ? PdfTrueTypeFont(boldFontBytes, isRtl ? 22 : 24, style: PdfFontStyle.bold)
-        : PdfStandardFont(PdfFontFamily.timesRoman, isRtl ? 22 : 24, style: PdfFontStyle.bold);
+    final PdfFont bigTitleFont =
+        (boldFontBytes != null && boldFontBytes.isNotEmpty)
+        ? PdfTrueTypeFont(
+            boldFontBytes,
+            isRtl ? 22 : 24,
+            style: PdfFontStyle.bold,
+          )
+        : PdfStandardFont(
+            PdfFontFamily.timesRoman,
+            isRtl ? 22 : 24,
+            style: PdfFontStyle.bold,
+          );
 
-    final PdfFont sectionTitleFont = (boldFontBytes != null && boldFontBytes.isNotEmpty)
+    final PdfFont sectionTitleFont =
+        (boldFontBytes != null && boldFontBytes.isNotEmpty)
         ? PdfTrueTypeFont(boldFontBytes, 20, style: PdfFontStyle.bold)
-        : PdfStandardFont(PdfFontFamily.timesRoman, 20, style: PdfFontStyle.bold);
+        : PdfStandardFont(
+            PdfFontFamily.timesRoman,
+            20,
+            style: PdfFontStyle.bold,
+          );
 
-    final PdfFont midTitleFont = (boldFontBytes != null && boldFontBytes.isNotEmpty)
+    final PdfFont midTitleFont =
+        (boldFontBytes != null && boldFontBytes.isNotEmpty)
         ? PdfTrueTypeFont(boldFontBytes, 18, style: PdfFontStyle.bold)
-        : PdfStandardFont(PdfFontFamily.timesRoman, 18, style: PdfFontStyle.bold);
+        : PdfStandardFont(
+            PdfFontFamily.timesRoman,
+            18,
+            style: PdfFontStyle.bold,
+          );
 
-    final PdfFont boldBodyFont = (boldFontBytes != null && boldFontBytes.isNotEmpty)
+    final PdfFont boldBodyFont =
+        (boldFontBytes != null && boldFontBytes.isNotEmpty)
         ? PdfTrueTypeFont(boldFontBytes, 14, style: PdfFontStyle.bold)
-        : PdfStandardFont(PdfFontFamily.timesRoman, 14, style: PdfFontStyle.bold);
+        : PdfStandardFont(
+            PdfFontFamily.timesRoman,
+            14,
+            style: PdfFontStyle.bold,
+          );
 
-    final PdfFont bodyFont = (regularFontBytes != null && regularFontBytes.isNotEmpty)
+    final PdfFont bodyFont =
+        (regularFontBytes != null && regularFontBytes.isNotEmpty)
         ? PdfTrueTypeFont(regularFontBytes, 14)
         : PdfStandardFont(PdfFontFamily.timesRoman, 14);
 
-    final PdfFont smallMutedFont = (regularFontBytes != null && regularFontBytes.isNotEmpty)
+    final PdfFont smallMutedFont =
+        (regularFontBytes != null && regularFontBytes.isNotEmpty)
         ? PdfTrueTypeFont(regularFontBytes, 12)
         : PdfStandardFont(PdfFontFamily.timesRoman, 12);
 
     // Academic Color Palette
-    final PdfBrush primaryNavy = PdfSolidBrush(PdfColor(15, 23, 42));     // #0F172A
-    final PdfBrush academicMaroon = PdfSolidBrush(PdfColor(136, 19, 55)); // #881337
-    final PdfBrush bodyBrush = PdfSolidBrush(PdfColor(0, 0, 0));          // #000000 Solid Black
-    final PdfBrush mutedBrush = PdfSolidBrush(PdfColor(71, 85, 105));     // #475569
-    final PdfBrush solidBlack = PdfSolidBrush(PdfColor(0, 0, 0));         // #000000 Solid Black
+    final PdfBrush primaryNavy = PdfSolidBrush(PdfColor(15, 23, 42)); // #0F172A
+    final PdfBrush academicMaroon = PdfSolidBrush(
+      PdfColor(136, 19, 55),
+    ); // #881337
+    final PdfBrush bodyBrush = PdfSolidBrush(
+      PdfColor(0, 0, 0),
+    ); // #000000 Solid Black
+    final PdfBrush mutedBrush = PdfSolidBrush(PdfColor(71, 85, 105)); // #475569
+    final PdfBrush solidBlack = PdfSolidBrush(
+      PdfColor(0, 0, 0),
+    ); // #000000 Solid Black
     final PdfPen subtleBorder = PdfPen(PdfColor(226, 232, 240), width: 0.8);
 
     final cleanMainTitle = DocxGeneratorService.cleanTopicTitle(report.title);
@@ -184,7 +228,16 @@ class ReportPdfGeneratorService {
       // Requirement 6: No header at all, in footer only page numbers
       if (pIndex > 0) {
         final double footerY = pageSize.height - 18;
-        final pageNumKurdish = (pIndex + 1).toString().replaceAll('1', '١').replaceAll('2', '٢').replaceAll('3', '٣').replaceAll('4', '٤').replaceAll('5', '٥').replaceAll('6', '٦').replaceAll('7', '٧').replaceAll('8', '٨');
+        final pageNumKurdish = (pIndex + 1)
+            .toString()
+            .replaceAll('1', '١')
+            .replaceAll('2', '٢')
+            .replaceAll('3', '٣')
+            .replaceAll('4', '٤')
+            .replaceAll('5', '٥')
+            .replaceAll('6', '٦')
+            .replaceAll('7', '٧')
+            .replaceAll('8', '٨');
         final pageNumText = isRtl ? pageNumKurdish : '${pIndex + 1}';
 
         g.drawString(
@@ -201,41 +254,41 @@ class ReportPdfGeneratorService {
         final ministryLine1 = report.languageCode == 'en'
             ? 'Kurdistan Regional Government - Iraq'
             : (report.languageCode == 'ar'
-                ? 'حكومة إقليم كوردستان - العراق'
-                : (report.languageCode == 'badini'
-                    ? 'حکومەتا هەرێما کوردستانێ - عیراق'
-                    : 'حکومەتی هەرێمی کوردستان - عێراق'));
+                  ? 'حكومة إقليم كوردستان - العراق'
+                  : (report.languageCode == 'badini'
+                        ? 'حکومەتا هەرێما کوردستانێ - عیراق'
+                        : 'حکومەتی هەرێمی کوردستان - عێراق'));
         final ministryLine2 = report.languageCode == 'en'
             ? 'Ministry of Higher Education & Scientific Research'
             : (report.languageCode == 'ar'
-                ? 'وزارة التعليم العالي والبحث العلمي'
-                : (report.languageCode == 'badini'
-                    ? 'وەزارەتا خوێندنا باڵا و ڤەکۆلینێن زانستی'
-                    : 'وەزارەتی خوێندنی باڵا و توێژینەوەی زانستی'));
+                  ? 'وزارة التعليم العالي والبحث العلمي'
+                  : (report.languageCode == 'badini'
+                        ? 'وەزارەتا خوێندنا باڵا و ڤەکۆلینێن زانستی'
+                        : 'وەزارەتی خوێندنی باڵا و توێژینەوەی زانستی'));
 
         final preparedLabel = report.languageCode == 'en'
             ? 'Prepared by:'
             : (report.languageCode == 'ar'
-                ? 'إعداد الطالب:'
-                : (report.languageCode == 'badini'
-                    ? 'ئامادەکرن ژ لایێ قوتابی:'
-                    : 'ئامادەکردنی خوێندکار:'));
+                  ? 'إعداد الطالب:'
+                  : (report.languageCode == 'badini'
+                        ? 'ئامادەکرن ژ لایێ قوتابی:'
+                        : 'ئامادەکردنی خوێندکار:'));
 
         final supervisorLabel = report.languageCode == 'en'
             ? 'Supervised by:'
             : (report.languageCode == 'ar'
-                ? 'بإشراف الأستاذ:'
-                : (report.languageCode == 'badini'
-                    ? 'ب سەرپەرشتیا مامۆستای:'
-                    : 'بەسەرپەرشتیی مامۆستا:'));
+                  ? 'بإشراف الأستاذ:'
+                  : (report.languageCode == 'badini'
+                        ? 'ب سەرپەرشتیا مامۆستای:'
+                        : 'بەسەرپەرشتیی مامۆستا:'));
 
         final stageLabel = report.languageCode == 'en'
             ? 'Academic Year:'
             : (report.languageCode == 'ar'
-                ? 'العام الدراسي:'
-                : (report.languageCode == 'badini'
-                    ? 'ساڵا خوێندنا ئەکادیمی:'
-                    : 'ساڵی خوێندنی ئەکادیمی:'));
+                  ? 'العام الدراسي:'
+                  : (report.languageCode == 'badini'
+                        ? 'ساڵا خوێندنا ئەکادیمی:'
+                        : 'ساڵی خوێندنی ئەکادیمی:'));
 
         // ── 1. Official University Header (سەردێڕی فەرمی زانکۆ) ──
         final double logoSize = 64;
@@ -245,7 +298,10 @@ class ReportPdfGeneratorService {
         if (report.logoBytes != null && report.logoBytes!.isNotEmpty) {
           try {
             final PdfBitmap logoBitmap = PdfBitmap(report.logoBytes!);
-            g.drawImage(logoBitmap, Rect.fromLTWH(logoX, headerY, logoSize, logoSize));
+            g.drawImage(
+              logoBitmap,
+              Rect.fromLTWH(logoX, headerY, logoSize, logoSize),
+            );
           } catch (_) {
             _drawOfficialEmblem(g, logoX, headerY, logoSize, logoSize);
           }
@@ -301,11 +357,20 @@ class ReportPdfGeneratorService {
         headerY += 6;
         final double divW = pageSize.width - 120;
         final double divX = 60;
-        g.drawLine(PdfPen(PdfColor(15, 23, 42), width: 1.2), Offset(divX, headerY), Offset(divX + divW, headerY));
+        g.drawLine(
+          PdfPen(PdfColor(15, 23, 42), width: 1.2),
+          Offset(divX, headerY),
+          Offset(divX + divW, headerY),
+        );
 
         // ── 2. Main Report Title (ناونیشانی سەرەکی ڕاپۆرت - ڕاستەوخۆ بە قەبارەی گەورە و تۆخ) ──
         double titleCardY = headerY + 45;
-        final titleLines = _wrapRtlTextDynamic(cleanMainTitle, bigTitleFont, pageSize.width - 40, isRtl);
+        final titleLines = _wrapRtlTextDynamic(
+          cleanMainTitle,
+          bigTitleFont,
+          pageSize.width - 40,
+          isRtl,
+        );
 
         for (var tLine in titleLines) {
           g.drawString(
@@ -337,7 +402,9 @@ class ReportPdfGeneratorService {
             .where((s) => s.isNotEmpty)
             .toList();
 
-        final studentNamesCombined = studentList.isNotEmpty ? studentList.join(' ، ') : (isRtl ? 'ناوی قوتابی' : 'Student Name');
+        final studentNamesCombined = studentList.isNotEmpty
+            ? studentList.join(' ، ')
+            : (isRtl ? 'ناوی قوتابی' : 'Student Name');
         g.drawString(
           _fixText(studentNamesCombined, isRtl),
           boldBodyFont,
@@ -357,7 +424,9 @@ class ReportPdfGeneratorService {
         );
         metaY += 22;
 
-        final supervisorName = report.supervisorName.isNotEmpty ? report.supervisorName : (isRtl ? 'ناوی مامۆستا' : 'Supervisor Name');
+        final supervisorName = report.supervisorName.isNotEmpty
+            ? report.supervisorName
+            : (isRtl ? 'ناوی مامۆستا' : 'Supervisor Name');
         g.drawString(
           _fixText(supervisorName, isRtl),
           boldBodyFont,
@@ -368,8 +437,12 @@ class ReportPdfGeneratorService {
 
         // ── 4. Academic Year at Bottom (لە ناوەڕاست) ──
         final double bottomY = pageSize.height - 40;
-        final yearDisplay = report.academicYear.isNotEmpty ? report.academicYear : '2025 - 2026';
-        final yearText = isRtl ? '$stageLabel $yearDisplay' : 'Academic Year: $yearDisplay';
+        final yearDisplay = report.academicYear.isNotEmpty
+            ? report.academicYear
+            : '2025 - 2026';
+        final yearText = isRtl
+            ? '$stageLabel $yearDisplay'
+            : 'Academic Year: $yearDisplay';
 
         g.drawString(
           _fixText(yearText, isRtl),
@@ -404,12 +477,21 @@ class ReportPdfGeneratorService {
         final bullets = pageModel.bulletPoints;
         for (int bIdx = 0; bIdx < bullets.length; bIdx++) {
           final item = bullets[bIdx];
-          final cleanItem = item.startsWith(RegExp(r'^\d+\.')) ? item : '${bIdx + 1}. $item';
+          final cleanItem = item.startsWith(RegExp(r'^\d+\.'))
+              ? item
+              : '${bIdx + 1}. $item';
 
           // Target Page calculation: Content pages start at Page 3 (2 sections per page)
           final targetPageNum = bIdx < 10 ? (3 + (bIdx ~/ 2)) : 8;
           final pageStr = isRtl
-              ? targetPageNum.toString().replaceAll('3', '٣').replaceAll('4', '٤').replaceAll('5', '٥').replaceAll('6', '٦').replaceAll('7', '٧').replaceAll('8', '٨')
+              ? targetPageNum
+                    .toString()
+                    .replaceAll('3', '٣')
+                    .replaceAll('4', '٤')
+                    .replaceAll('5', '٥')
+                    .replaceAll('6', '٦')
+                    .replaceAll('7', '٧')
+                    .replaceAll('8', '٨')
               : targetPageNum.toString();
 
           final double itemH = 25;
@@ -456,7 +538,12 @@ class ReportPdfGeneratorService {
                 '. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .',
                 smallMutedFont,
                 brush: mutedBrush,
-                bounds: Rect.fromLTWH(dotStartX, currY + 2, dotEndX - dotStartX, 15),
+                bounds: Rect.fromLTWH(
+                  dotStartX,
+                  currY + 2,
+                  dotEndX - dotStartX,
+                  15,
+                ),
                 format: _fmt(PdfTextAlignment.center, isRtl),
               );
             }
@@ -493,7 +580,12 @@ class ReportPdfGeneratorService {
                 '. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .',
                 smallMutedFont,
                 brush: mutedBrush,
-                bounds: Rect.fromLTWH(dotStartX, currY + 2, dotEndX - dotStartX, 15),
+                bounds: Rect.fromLTWH(
+                  dotStartX,
+                  currY + 2,
+                  dotEndX - dotStartX,
+                  15,
+                ),
                 format: _fmt(PdfTextAlignment.center, isRtl),
               );
             }
@@ -501,7 +593,6 @@ class ReportPdfGeneratorService {
 
           currY += itemH;
         }
-
       } else if (pageModel.pageType == 'references') {
         // ── PAGE 8: REFERENCES (سەرچاوە زانستییەکان) ──
         double currY = 40;
@@ -529,7 +620,12 @@ class ReportPdfGeneratorService {
           final ref = pageModel.bulletPoints[rIdx];
           final refNum = '[${rIdx + 1}]';
 
-          final wrappedLines = _wrapRtlTextDynamic(ref, bodyFont, pageSize.width - 44, isRtl);
+          final wrappedLines = _wrapRtlTextDynamic(
+            ref,
+            bodyFont,
+            pageSize.width - 44,
+            isRtl,
+          );
           final double blockH = (wrappedLines.length * 15.5) + 14;
 
           // Reference Item Card
@@ -546,7 +642,10 @@ class ReportPdfGeneratorService {
             boldBodyFont,
             brush: academicMaroon,
             bounds: Rect.fromLTWH(badgeX, currY + 6, 24, 16),
-            format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
+            format: _fmt(
+              isRtl ? PdfTextAlignment.right : PdfTextAlignment.left,
+              isRtl,
+            ),
           );
 
           // Citation Text
@@ -560,14 +659,16 @@ class ReportPdfGeneratorService {
               bodyFont,
               brush: bodyBrush,
               bounds: Rect.fromLTWH(textX, lineY, textW, 16),
-              format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
+              format: _fmt(
+                isRtl ? PdfTextAlignment.right : PdfTextAlignment.left,
+                isRtl,
+              ),
             );
             lineY += 15.5;
           }
 
           currY += blockH + 8;
         }
-
       } else {
         // ── PAGES 3 TO 7: CONTENT PAGES (2 SECTIONS + SCIENTIFIC FIGURE) ──
         final sections = pageModel.sections;
@@ -598,7 +699,10 @@ class ReportPdfGeneratorService {
             sectionTitleFont,
             brush: solidBlack,
             bounds: Rect.fromLTWH(10, currentY + 2.0, pageSize.width - 20, 24),
-            format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
+            format: _fmt(
+              isRtl ? PdfTextAlignment.right : PdfTextAlignment.left,
+              isRtl,
+            ),
           );
           currentY += headerBoxH + 10;
 
@@ -608,14 +712,22 @@ class ReportPdfGeneratorService {
             final trimmedP = p.trim();
             if (trimmedP.isEmpty) continue;
 
-            final wrappedLines = _wrapRtlTextDynamic(trimmedP, bodyFont, pageSize.width - 24, isRtl);
+            final wrappedLines = _wrapRtlTextDynamic(
+              trimmedP,
+              bodyFont,
+              pageSize.width - 24,
+              isRtl,
+            );
             for (var line in wrappedLines) {
               g.drawString(
                 line,
                 bodyFont,
                 brush: bodyBrush,
                 bounds: Rect.fromLTWH(6, currentY, pageSize.width - 12, 19),
-                format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
+                format: _fmt(
+                  isRtl ? PdfTextAlignment.right : PdfTextAlignment.left,
+                  isRtl,
+                ),
               );
               currentY += 19.5;
             }
@@ -624,7 +736,12 @@ class ReportPdfGeneratorService {
 
           // 3. Section Bullet Points (Size 14)
           for (var bullet in sec.bulletPoints) {
-            final bulletWrapped = _wrapRtlTextDynamic(bullet, bodyFont, pageSize.width - 32, isRtl);
+            final bulletWrapped = _wrapRtlTextDynamic(
+              bullet,
+              bodyFont,
+              pageSize.width - 32,
+              isRtl,
+            );
 
             // Draw bullet dot
             final double bulletX = isRtl ? pageSize.width - 14 : 6;
@@ -633,7 +750,10 @@ class ReportPdfGeneratorService {
               boldBodyFont,
               brush: solidBlack,
               bounds: Rect.fromLTWH(bulletX, currentY, 12, 19),
-              format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
+              format: _fmt(
+                isRtl ? PdfTextAlignment.right : PdfTextAlignment.left,
+                isRtl,
+              ),
             );
 
             final double bTextX = isRtl ? 4 : 20;
@@ -642,8 +762,16 @@ class ReportPdfGeneratorService {
                 bLine,
                 bodyFont,
                 brush: bodyBrush,
-                bounds: Rect.fromLTWH(bTextX, currentY, pageSize.width - 26, 19),
-                format: _fmt(isRtl ? PdfTextAlignment.right : PdfTextAlignment.left, isRtl),
+                bounds: Rect.fromLTWH(
+                  bTextX,
+                  currentY,
+                  pageSize.width - 26,
+                  19,
+                ),
+                format: _fmt(
+                  isRtl ? PdfTextAlignment.right : PdfTextAlignment.left,
+                  isRtl,
+                ),
               );
               currentY += 19.5;
             }
@@ -681,10 +809,36 @@ class ReportPdfGeneratorService {
                 Rect.fromLTWH(2, figTopY + 2, figW - 4, imgAreaH - 4),
               );
             } catch (_) {
-              _drawAcademicFallbackVector(g, 0, figTopY, figW, imgAreaH, isRtl, pageModel, boldBodyFont, smallMutedFont, academicMaroon, primaryNavy, subtleBorder);
+              _drawAcademicFallbackVector(
+                g,
+                0,
+                figTopY,
+                figW,
+                imgAreaH,
+                isRtl,
+                pageModel,
+                boldBodyFont,
+                smallMutedFont,
+                academicMaroon,
+                primaryNavy,
+                subtleBorder,
+              );
             }
           } else {
-            _drawAcademicFallbackVector(g, 0, figTopY, figW, imgAreaH, isRtl, pageModel, boldBodyFont, smallMutedFont, academicMaroon, primaryNavy, subtleBorder);
+            _drawAcademicFallbackVector(
+              g,
+              0,
+              figTopY,
+              figW,
+              imgAreaH,
+              isRtl,
+              pageModel,
+              boldBodyFont,
+              smallMutedFont,
+              academicMaroon,
+              primaryNavy,
+              subtleBorder,
+            );
           }
 
           // Caption Banner at the bottom of the card
@@ -695,11 +849,21 @@ class ReportPdfGeneratorService {
           );
 
           final figureNum = pIndex - 1;
-          final figNumKurdish = figureNum.toString().replaceAll('1', '١').replaceAll('2', '٢').replaceAll('3', '٣').replaceAll('4', '٤').replaceAll('5', '٥');
-          final firstSecTitle = sections.isNotEmpty ? sections.first.title : cleanMainTitle;
+          final figNumKurdish = figureNum
+              .toString()
+              .replaceAll('1', '١')
+              .replaceAll('2', '٢')
+              .replaceAll('3', '٣')
+              .replaceAll('4', '٤')
+              .replaceAll('5', '٥');
+          final firstSecTitle = sections.isNotEmpty
+              ? sections.first.title
+              : cleanMainTitle;
 
           final captionText = isRtl
-              ? (report.languageCode == 'ar' ? 'الشكل العلمي ($figNumKurdish): التحليل المنهجي لـ $firstSecTitle' : 'شێوەی زانستی ($figNumKurdish): شیکاری و دایەگرامی $firstSecTitle')
+              ? (report.languageCode == 'ar'
+                    ? 'الشكل العلمي ($figNumKurdish): التحليل المنهجي لـ $firstSecTitle'
+                    : 'شێوەی زانستی ($figNumKurdish): شیکاری و دایەگرامی $firstSecTitle')
               : 'Figure ($figureNum): Architectural and operational workflow of $firstSecTitle';
 
           g.drawString(
@@ -719,7 +883,13 @@ class ReportPdfGeneratorService {
   }
 
   /// Draws official university emblem on Cover page
-  static void _drawOfficialEmblem(PdfGraphics g, double x, double y, double w, double h) {
+  static void _drawOfficialEmblem(
+    PdfGraphics g,
+    double x,
+    double y,
+    double w,
+    double h,
+  ) {
     // Circle background
     g.drawEllipse(
       Rect.fromLTWH(x, y, w, h),
@@ -732,7 +902,11 @@ class ReportPdfGeneratorService {
       pen: PdfPen(PdfColor(15, 23, 42), width: 0.8),
     );
     // Center Academic Icon representation
-    final PdfFont capFont = PdfStandardFont(PdfFontFamily.timesRoman, 18, style: PdfFontStyle.bold);
+    final PdfFont capFont = PdfStandardFont(
+      PdfFontFamily.timesRoman,
+      18,
+      style: PdfFontStyle.bold,
+    );
     g.drawString(
       'Z',
       capFont,
@@ -762,13 +936,17 @@ class ReportPdfGeneratorService {
       bounds: Rect.fromLTWH(x, y, w, h),
     );
 
-    final title = isRtl ? 'هەنگاوەکانی کارکردن و پێکهاتەی پەیوەستکراو' : 'Operational Workflow & Architecture';
+    final title = isRtl
+        ? 'هەنگاوەکانی کارکردن و پێکهاتەی پەیوەستکراو'
+        : 'Operational Workflow & Architecture';
     g.drawString(
       _fixText(title, isRtl),
       boldFont,
       brush: maroon,
       bounds: Rect.fromLTWH(x + 10, y + 10, w - 20, 16),
-      format: PdfStringFormat(alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left),
+      format: PdfStringFormat(
+        alignment: isRtl ? PdfTextAlignment.right : PdfTextAlignment.left,
+      ),
     );
 
     // 3 Workflow Steps Boxes
@@ -777,8 +955,16 @@ class ReportPdfGeneratorService {
     final double boxY = y + 32;
 
     final steps = isRtl
-        ? ['١. وەرگرتن و پشکنین', '٢. پڕۆسێسکردنی سەرەکی', '٣. بەرهەم و دەرئەنجام']
-        : ['1. Ingestion & Validation', '2. Core Processing', '3. Synthesis & Output'];
+        ? [
+            '١. وەرگرتن و پشکنین',
+            '٢. پڕۆسێسکردنی سەرەکی',
+            '٣. بەرهەم و دەرئەنجام',
+          ]
+        : [
+            '1. Ingestion & Validation',
+            '2. Core Processing',
+            '3. Synthesis & Output',
+          ];
 
     for (int i = 0; i < 3; i++) {
       final idx = isRtl ? (2 - i) : i;
@@ -816,7 +1002,8 @@ class ReportPdfGeneratorService {
         .replaceAll(RegExp(r'\s+'), '_')
         .replaceAll(RegExp(r'_+'), '_')
         .trim();
-    final fileName = '${cleanFileName.isEmpty ? 'Academic_Report' : cleanFileName}.pdf';
+    final fileName =
+        '${cleanFileName.isEmpty ? 'Academic_Report' : cleanFileName}.pdf';
     final filePath = '${targetDir.path}/$fileName';
 
     final file = File(filePath);
@@ -825,7 +1012,12 @@ class ReportPdfGeneratorService {
     // On Windows, auto-open the PDF document in the default PDF viewer / browser
     if (!kIsWeb && Platform.isWindows) {
       try {
-        await Process.run('cmd', ['/c', 'start', '""', filePath], runInShell: true);
+        await Process.run('cmd', [
+          '/c',
+          'start',
+          '""',
+          filePath,
+        ], runInShell: true);
       } catch (e) {
         debugPrint('Windows auto-launch info: $e');
       }

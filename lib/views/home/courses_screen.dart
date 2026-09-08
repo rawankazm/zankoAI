@@ -99,14 +99,21 @@ class _CoursesScreenState extends State<CoursesScreen> {
             if (dummyTitles.contains(title)) continue;
 
             loaded.add({
-              'id': item['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+              'id':
+                  item['id']?.toString() ??
+                  DateTime.now().millisecondsSinceEpoch.toString(),
               'title': title,
-              'subtitle': item['subtitle']?.toString() ?? '10 Lessons • Chapter 1',
+              'subtitle':
+                  item['subtitle']?.toString() ?? '10 Lessons • Chapter 1',
               'progress': (item['progress'] as num?)?.toDouble() ?? 0.0,
               'icon': _getIconFromCode(item['iconCode'] as int?),
               'color': Color(item['colorValue'] as int? ?? 0xFF035EC2),
-              'midtermDate': item['midtermDate'] != null ? DateTime.tryParse(item['midtermDate']) : null,
-              'finalDate': item['finalDate'] != null ? DateTime.tryParse(item['finalDate']) : null,
+              'midtermDate': item['midtermDate'] != null
+                  ? DateTime.tryParse(item['midtermDate'])
+                  : null,
+              'finalDate': item['finalDate'] != null
+                  ? DateTime.tryParse(item['finalDate'])
+                  : null,
             });
           }
         }
@@ -140,7 +147,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
           'title': c['title'],
           'subtitle': c['subtitle'],
           'progress': c['progress'],
-          'iconCode': (c['icon'] is IconData) ? (c['icon'] as IconData).codePoint : 0,
+          'iconCode': (c['icon'] is IconData)
+              ? (c['icon'] as IconData).codePoint
+              : 0,
           'colorValue': (c['color'] as Color?)?.toARGB32() ?? 0xFF035EC2,
           'midtermDate': (c['midtermDate'] as DateTime?)?.toIso8601String(),
           'finalDate': (c['finalDate'] as DateTime?)?.toIso8601String(),
@@ -157,7 +166,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
       CupertinoIcons.function.codePoint: HugeIcons.strokeRoundedAnalytics01,
       CupertinoIcons.sparkles.codePoint: HugeIcons.strokeRoundedAiMagic,
       CupertinoIcons.square_grid_2x2.codePoint: HugeIcons.strokeRoundedLayers01,
-      CupertinoIcons.chevron_left_slash_chevron_right.codePoint: HugeIcons.strokeRoundedCode,
+      CupertinoIcons.chevron_left_slash_chevron_right.codePoint:
+          HugeIcons.strokeRoundedCode,
       CupertinoIcons.device_desktop.codePoint: HugeIcons.strokeRoundedComputer,
       CupertinoIcons.book.codePoint: HugeIcons.strokeRoundedBook02,
     };
@@ -167,12 +177,19 @@ class _CoursesScreenState extends State<CoursesScreen> {
   // Calculate stats
   double get _averageProgress {
     if (_courses.isEmpty) return 0.0;
-    final sum = _courses.fold<double>(0.0, (acc, c) => acc + ((c['progress'] as num?)?.toDouble() ?? 0.0));
+    final sum = _courses.fold<double>(
+      0.0,
+      (acc, c) => acc + ((c['progress'] as num?)?.toDouble() ?? 0.0),
+    );
     return sum / _courses.length;
   }
 
-  int get _inProgressCount => _courses.where((c) => ((c['progress'] as num?)?.toDouble() ?? 0.0) < 1.0).length;
-  int get _completedCount => _courses.where((c) => ((c['progress'] as num?)?.toDouble() ?? 0.0) >= 1.0).length;
+  int get _inProgressCount => _courses
+      .where((c) => ((c['progress'] as num?)?.toDouble() ?? 0.0) < 1.0)
+      .length;
+  int get _completedCount => _courses
+      .where((c) => ((c['progress'] as num?)?.toDouble() ?? 0.0) >= 1.0)
+      .length;
 
   Map<String, dynamic>? get _nextUpcomingExamInfo {
     final now = DateTime.now();
@@ -199,7 +216,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
       }
 
       if (finalExam != null) {
-        final examDate = DateTime(finalExam.year, finalExam.month, finalExam.day);
+        final examDate = DateTime(
+          finalExam.year,
+          finalExam.month,
+          finalExam.day,
+        );
         final diff = examDate.difference(today).inDays;
         if (diff >= 0 && diff < minDays) {
           minDays = diff;
@@ -234,22 +255,34 @@ class _CoursesScreenState extends State<CoursesScreen> {
     }).toList();
 
     if (inProgress.isNotEmpty) {
-      inProgress.sort((a, b) => ((b['progress'] as num?) ?? 0.0).compareTo((a['progress'] as num?) ?? 0.0));
+      inProgress.sort(
+        (a, b) => ((b['progress'] as num?) ?? 0.0).compareTo(
+          (a['progress'] as num?) ?? 0.0,
+        ),
+      );
       return inProgress.first;
     }
 
     return _courses.first;
   }
 
-  void _showAddOrEditCourseModal([Map<String, dynamic>? existingCourse, int? index]) {
+  void _showAddOrEditCourseModal([
+    Map<String, dynamic>? existingCourse,
+    int? index,
+  ]) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isEditing = existingCourse != null;
     final langProvider = Provider.of<LanguageProvider>(context, listen: false);
 
-    final titleController = TextEditingController(text: existingCourse?['title'] ?? '');
-    final subtitleController = TextEditingController(text: existingCourse?['subtitle'] ?? '');
+    final titleController = TextEditingController(
+      text: existingCourse?['title'] ?? '',
+    );
+    final subtitleController = TextEditingController(
+      text: existingCourse?['subtitle'] ?? '',
+    );
     double progress = existingCourse?['progress'] ?? 0.0;
-    dynamic selectedIcon = existingCourse?['icon'] ?? HugeIcons.strokeRoundedBook02;
+    dynamic selectedIcon =
+        existingCourse?['icon'] ?? HugeIcons.strokeRoundedBook02;
 
     DateTime? midtermDate = existingCourse?['midtermDate'] as DateTime?;
     DateTime? finalDate = existingCourse?['finalDate'] as DateTime?;
@@ -273,13 +306,20 @@ class _CoursesScreenState extends State<CoursesScreen> {
         return StatefulBuilder(
           builder: (modalCtx, setModalState) {
             String formatDate(DateTime? date) {
-              if (date == null) return langProvider.currentLanguage == AppLanguage.english ? 'Not Set' : 'دیاری نەکراوە';
+              if (date == null)
+                return langProvider.currentLanguage == AppLanguage.english
+                    ? 'Not Set'
+                    : 'دیاری نەکراوە';
               return '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}';
             }
 
             final cardBg = isDark ? const Color(0xFF171B23) : Colors.white;
-            final inputBg = isDark ? const Color(0xFF0E1117) : const Color(0xFFF1F5F9);
-            final borderColor = isDark ? const Color(0xFF262C36) : const Color(0xFFE2E8F0);
+            final inputBg = isDark
+                ? const Color(0xFF0E1117)
+                : const Color(0xFFF1F5F9);
+            final borderColor = isDark
+                ? const Color(0xFF262C36)
+                : const Color(0xFFE2E8F0);
 
             return Container(
               padding: EdgeInsets.only(
@@ -290,7 +330,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
               ),
               decoration: BoxDecoration(
                 color: cardBg,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
                 border: Border.all(color: borderColor, width: 1),
               ),
               child: SingleChildScrollView(
@@ -330,13 +372,21 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         const SizedBox(width: 12),
                         Text(
                           isEditing
-                              ? (langProvider.currentLanguage == AppLanguage.english ? 'Edit Course' : 'دەستکاریکردنی وانە')
-                              : (langProvider.currentLanguage == AppLanguage.english ? 'Add New Course' : 'زیادکردنی وانەی نوێ'),
+                              ? (langProvider.currentLanguage ==
+                                        AppLanguage.english
+                                    ? 'Edit Course'
+                                    : 'دەستکاریکردنی وانە')
+                              : (langProvider.currentLanguage ==
+                                        AppLanguage.english
+                                    ? 'Add New Course'
+                                    : 'زیادکردنی وانەی نوێ'),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
                             letterSpacing: -0.3,
-                            color: isDark ? Colors.white : const Color(0xFF17191F),
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF17191F),
                           ),
                         ),
                       ],
@@ -366,7 +416,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               ),
                               child: HugeIcon(
                                 icon: ic,
-                                color: isSel ? Colors.white : (isDark ? Colors.white70 : const Color(0xFF475569)),
+                                color: isSel
+                                    ? Colors.white
+                                    : (isDark
+                                          ? Colors.white70
+                                          : const Color(0xFF475569)),
                                 size: 20,
                               ),
                             ),
@@ -378,25 +432,47 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
                     TextField(
                       controller: titleController,
-                      style: TextStyle(color: isDark ? Colors.white : const Color(0xFF17191F)),
+                      style: TextStyle(
+                        color: isDark ? Colors.white : const Color(0xFF17191F),
+                      ),
                       decoration: InputDecoration(
-                        labelText: langProvider.currentLanguage == AppLanguage.english ? 'Course Title' : 'ناوی وانە',
-                        hintText: langProvider.currentLanguage == AppLanguage.english ? 'e.g. Operating Systems' : 'نموونە: سیستەمی کارپێکردن',
+                        labelText:
+                            langProvider.currentLanguage == AppLanguage.english
+                            ? 'Course Title'
+                            : 'ناوی وانە',
+                        hintText:
+                            langProvider.currentLanguage == AppLanguage.english
+                            ? 'e.g. Operating Systems'
+                            : 'نموونە: سیستەمی کارپێکردن',
                         filled: true,
                         fillColor: inputBg,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: subtitleController,
-                      style: TextStyle(color: isDark ? Colors.white : const Color(0xFF17191F)),
+                      style: TextStyle(
+                        color: isDark ? Colors.white : const Color(0xFF17191F),
+                      ),
                       decoration: InputDecoration(
-                        labelText: langProvider.currentLanguage == AppLanguage.english ? 'Lessons & Chapters' : 'زانیاری وانە و ژمارەی بەشەکان',
-                        hintText: langProvider.currentLanguage == AppLanguage.english ? 'e.g. 12 Lessons • Chapter 1' : 'نموونە: 12 Lessons • Chapter 1',
+                        labelText:
+                            langProvider.currentLanguage == AppLanguage.english
+                            ? 'Lessons & Chapters'
+                            : 'زانیاری وانە و ژمارەی بەشەکان',
+                        hintText:
+                            langProvider.currentLanguage == AppLanguage.english
+                            ? 'e.g. 12 Lessons • Chapter 1'
+                            : 'نموونە: 12 Lessons • Chapter 1',
                         filled: true,
                         fillColor: inputBg,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 18),
@@ -406,15 +482,22 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          langProvider.currentLanguage == AppLanguage.english ? 'Course Completion:' : 'ڕێژەی پێشکەوتن:',
+                          langProvider.currentLanguage == AppLanguage.english
+                              ? 'Course Completion:'
+                              : 'ڕێژەی پێشکەوتن:',
                           style: TextStyle(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w700,
-                            color: isDark ? Colors.white70 : const Color(0xFF475569),
+                            color: isDark
+                                ? Colors.white70
+                                : const Color(0xFF475569),
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: _primaryBlue.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(8),
@@ -435,7 +518,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       min: 0.0,
                       max: 1.0,
                       activeColor: _primaryBlue,
-                      inactiveColor: isDark ? const Color(0xFF262C36) : const Color(0xFFE2E8F0),
+                      inactiveColor: isDark
+                          ? const Color(0xFF262C36)
+                          : const Color(0xFFE2E8F0),
                       onChanged: (val) {
                         setModalState(() => progress = val);
                       },
@@ -443,7 +528,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
                     const SizedBox(height: 14),
                     Text(
-                      langProvider.currentLanguage == AppLanguage.english ? '📅 Exam Schedules' : '📅 بەرواری تاقیکردنەوەکان',
+                      langProvider.currentLanguage == AppLanguage.english
+                          ? '📅 Exam Schedules'
+                          : '📅 بەرواری تاقیکردنەوەکان',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
@@ -454,7 +541,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
                     // Midterm Date Picker
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: inputBg,
                         borderRadius: BorderRadius.circular(16),
@@ -462,22 +552,35 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       ),
                       child: Row(
                         children: [
-                          const HugeIcon(icon: HugeIcons.strokeRoundedClock01, color: _primaryBlue, size: 20),
+                          const HugeIcon(
+                            icon: HugeIcons.strokeRoundedClock01,
+                            color: _primaryBlue,
+                            size: 20,
+                          ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  langProvider.currentLanguage == AppLanguage.english ? 'Midterm Exam' : 'تاقیکردنەوەی میدترم',
-                                  style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Colors.grey),
+                                  langProvider.currentLanguage ==
+                                          AppLanguage.english
+                                      ? 'Midterm Exam'
+                                      : 'تاقیکردنەوەی میدترم',
+                                  style: const TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey,
+                                  ),
                                 ),
                                 Text(
                                   formatDate(midtermDate),
                                   style: TextStyle(
                                     fontSize: 13.5,
                                     fontWeight: FontWeight.w800,
-                                    color: isDark ? Colors.white : const Color(0xFF17191F),
+                                    color: isDark
+                                        ? Colors.white
+                                        : const Color(0xFF17191F),
                                   ),
                                 ),
                               ],
@@ -487,7 +590,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             onPressed: () async {
                               final picked = await showDatePicker(
                                 context: modalCtx,
-                                initialDate: midtermDate ?? DateTime.now().add(const Duration(days: 14)),
+                                initialDate:
+                                    midtermDate ??
+                                    DateTime.now().add(
+                                      const Duration(days: 14),
+                                    ),
                                 firstDate: DateTime(2020),
                                 lastDate: DateTime(2030),
                               );
@@ -496,14 +603,25 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               }
                             },
                             child: Text(
-                              langProvider.currentLanguage == AppLanguage.english ? 'Pick Date' : 'هەڵبژاردن',
-                              style: const TextStyle(fontWeight: FontWeight.w700, color: _primaryBlue),
+                              langProvider.currentLanguage ==
+                                      AppLanguage.english
+                                  ? 'Pick Date'
+                                  : 'هەڵبژاردن',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: _primaryBlue,
+                              ),
                             ),
                           ),
                           if (midtermDate != null)
                             IconButton(
-                              icon: const HugeIcon(icon: HugeIcons.strokeRoundedCancelCircle, size: 18, color: Colors.grey),
-                              onPressed: () => setModalState(() => midtermDate = null),
+                              icon: const HugeIcon(
+                                icon: HugeIcons.strokeRoundedCancelCircle,
+                                size: 18,
+                                color: Colors.grey,
+                              ),
+                              onPressed: () =>
+                                  setModalState(() => midtermDate = null),
                             ),
                         ],
                       ),
@@ -513,7 +631,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
                     // Final Date Picker
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: inputBg,
                         borderRadius: BorderRadius.circular(16),
@@ -521,22 +642,35 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       ),
                       child: Row(
                         children: [
-                          const HugeIcon(icon: HugeIcons.strokeRoundedFlag01, color: _azureCyan, size: 20),
+                          const HugeIcon(
+                            icon: HugeIcons.strokeRoundedFlag01,
+                            color: _azureCyan,
+                            size: 20,
+                          ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  langProvider.currentLanguage == AppLanguage.english ? 'Final Exam' : 'تاقیکردنەوەی فایناڵ',
-                                  style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Colors.grey),
+                                  langProvider.currentLanguage ==
+                                          AppLanguage.english
+                                      ? 'Final Exam'
+                                      : 'تاقیکردنەوەی فایناڵ',
+                                  style: const TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey,
+                                  ),
                                 ),
                                 Text(
                                   formatDate(finalDate),
                                   style: TextStyle(
                                     fontSize: 13.5,
                                     fontWeight: FontWeight.w800,
-                                    color: isDark ? Colors.white : const Color(0xFF17191F),
+                                    color: isDark
+                                        ? Colors.white
+                                        : const Color(0xFF17191F),
                                   ),
                                 ),
                               ],
@@ -546,7 +680,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             onPressed: () async {
                               final picked = await showDatePicker(
                                 context: modalCtx,
-                                initialDate: finalDate ?? DateTime.now().add(const Duration(days: 30)),
+                                initialDate:
+                                    finalDate ??
+                                    DateTime.now().add(
+                                      const Duration(days: 30),
+                                    ),
                                 firstDate: DateTime(2020),
                                 lastDate: DateTime(2030),
                               );
@@ -555,14 +693,25 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               }
                             },
                             child: Text(
-                              langProvider.currentLanguage == AppLanguage.english ? 'Pick Date' : 'هەڵبژاردن',
-                              style: const TextStyle(fontWeight: FontWeight.w700, color: _azureCyan),
+                              langProvider.currentLanguage ==
+                                      AppLanguage.english
+                                  ? 'Pick Date'
+                                  : 'هەڵبژاردن',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: _azureCyan,
+                              ),
                             ),
                           ),
                           if (finalDate != null)
                             IconButton(
-                              icon: const HugeIcon(icon: HugeIcons.strokeRoundedCancelCircle, size: 18, color: Colors.grey),
-                              onPressed: () => setModalState(() => finalDate = null),
+                              icon: const HugeIcon(
+                                icon: HugeIcons.strokeRoundedCancelCircle,
+                                size: 18,
+                                color: Colors.grey,
+                              ),
+                              onPressed: () =>
+                                  setModalState(() => finalDate = null),
                             ),
                         ],
                       ),
@@ -579,16 +728,21 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         setState(() {
                           if (isEditing && index != null) {
                             _courses[index]['title'] = title;
-                            _courses[index]['subtitle'] = subtitle.isNotEmpty ? subtitle : '0 Lessons • Chapter 1';
+                            _courses[index]['subtitle'] = subtitle.isNotEmpty
+                                ? subtitle
+                                : '0 Lessons • Chapter 1';
                             _courses[index]['progress'] = progress;
                             _courses[index]['icon'] = selectedIcon;
                             _courses[index]['midtermDate'] = midtermDate;
                             _courses[index]['finalDate'] = finalDate;
                           } else {
                             _courses.add({
-                              'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                              'id': DateTime.now().millisecondsSinceEpoch
+                                  .toString(),
                               'title': title,
-                              'subtitle': subtitle.isNotEmpty ? subtitle : '10 Lessons • Chapter 1',
+                              'subtitle': subtitle.isNotEmpty
+                                  ? subtitle
+                                  : '10 Lessons • Chapter 1',
                               'progress': progress,
                               'icon': selectedIcon,
                               'color': _primaryBlue,
@@ -621,8 +775,14 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         child: Center(
                           child: Text(
                             isEditing
-                                ? (langProvider.currentLanguage == AppLanguage.english ? 'Save Changes' : 'پاشەکەوتکردنی گۆڕانکارییەکان')
-                                : (langProvider.currentLanguage == AppLanguage.english ? 'Add Course' : 'زیادکردنی وانە'),
+                                ? (langProvider.currentLanguage ==
+                                          AppLanguage.english
+                                      ? 'Save Changes'
+                                      : 'پاشەکەوتکردنی گۆڕانکارییەکان')
+                                : (langProvider.currentLanguage ==
+                                          AppLanguage.english
+                                      ? 'Add Course'
+                                      : 'زیادکردنی وانە'),
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
@@ -650,7 +810,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
       builder: (dialogCtx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          langProvider.currentLanguage == AppLanguage.english ? 'Delete Course' : 'سڕینەوەی وانە',
+          langProvider.currentLanguage == AppLanguage.english
+              ? 'Delete Course'
+              : 'سڕینەوەی وانە',
           style: const TextStyle(fontWeight: FontWeight.w800),
         ),
         content: Text(
@@ -661,7 +823,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
-            child: Text(langProvider.currentLanguage == AppLanguage.english ? 'Cancel' : 'پەشیمانبوونەوە'),
+            child: Text(
+              langProvider.currentLanguage == AppLanguage.english
+                  ? 'Cancel'
+                  : 'پەشیمانبوونەوە',
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -674,11 +840,18 @@ class _CoursesScreenState extends State<CoursesScreen> {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.redAccent,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             child: Text(
-              langProvider.currentLanguage == AppLanguage.english ? 'Delete' : 'سڕینەوە',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              langProvider.currentLanguage == AppLanguage.english
+                  ? 'Delete'
+                  : 'سڕینەوە',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -718,7 +891,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
     final filteredCourses = _courses.where((c) {
       final title = (c['title'] as String? ?? '').toLowerCase();
-      final matchesSearch = _searchQuery.isEmpty || title.contains(_searchQuery.toLowerCase());
+      final matchesSearch =
+          _searchQuery.isEmpty || title.contains(_searchQuery.toLowerCase());
       if (!matchesSearch) return false;
 
       final progress = (c['progress'] as num?)?.toDouble() ?? 0.0;
@@ -728,17 +902,25 @@ class _CoursesScreenState extends State<CoursesScreen> {
     }).toList();
 
     final textPrimary = isDark ? Colors.white : const Color(0xFF17191F);
-    final textSecondary = isDark ? const Color(0xFFA6ACB8) : const Color(0xFF6B7280);
+    final textSecondary = isDark
+        ? const Color(0xFFA6ACB8)
+        : const Color(0xFF6B7280);
     final cardBg = isDark ? const Color(0xFF171B23) : Colors.white;
-    final borderColor = isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2);
+    final borderColor = isDark
+        ? const Color(0xFF262C36)
+        : const Color(0xFFECEEF2);
 
     final featured = _featuredCourse;
     final nextExam = _nextUpcomingExamInfo;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0E1117) : const Color(0xFFFAFAFB),
+      backgroundColor: isDark
+          ? const Color(0xFF0E1117)
+          : const Color(0xFFFAFAFB),
       appBar: AppBar(
-        backgroundColor: (isDark ? const Color(0xFF0E1117) : const Color(0xFFFAFAFB)).withValues(alpha: 0.95),
+        backgroundColor:
+            (isDark ? const Color(0xFF0E1117) : const Color(0xFFFAFAFB))
+                .withValues(alpha: 0.95),
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         title: Column(
@@ -773,7 +955,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 _showAddOrEditCourseModal();
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 7,
+                ),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [_primaryBlue, Color(0xFF024A9B)],
@@ -792,7 +977,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, color: Colors.white, size: 16),
+                    const HugeIcon(
+                      icon: HugeIcons.strokeRoundedAdd01,
+                      color: Colors.white,
+                      size: 16,
+                    ),
                     const SizedBox(width: 5),
                     Text(
                       langProvider.translate('add_new_course'),
@@ -814,7 +1003,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
             ? const Center(child: CupertinoActivityIndicator(radius: 14))
             : ListView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 children: [
                   // ─── 1. Academic Performance Dashboard ──────────────────
                   Container(
@@ -825,7 +1017,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       border: Border.all(color: borderColor, width: 1.2),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
+                          color: Colors.black.withValues(
+                            alpha: isDark ? 0.25 : 0.03,
+                          ),
                           blurRadius: 16,
                           offset: const Offset(0, 4),
                         ),
@@ -839,7 +1033,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             icon: HugeIcons.strokeRoundedMortarboard02,
                             iconColor: _primaryBlue,
                             value: '${_courses.length}',
-                            label: langProvider.translate('active_courses_count'),
+                            label: langProvider.translate(
+                              'active_courses_count',
+                            ),
                             isDark: isDark,
                           ),
                         ),
@@ -859,8 +1055,14 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         Expanded(
                           child: _buildMetricTile(
                             icon: HugeIcons.strokeRoundedClock01,
-                            iconColor: nextExam != null && (nextExam['days'] as int) <= 5 ? Colors.amber[700]! : _accentGold,
-                            value: nextExam != null ? '${nextExam['days']}d' : '-',
+                            iconColor:
+                                nextExam != null &&
+                                    (nextExam['days'] as int) <= 5
+                                ? Colors.amber[700]!
+                                : _accentGold,
+                            value: nextExam != null
+                                ? '${nextExam['days']}d'
+                                : '-',
                             label: langProvider.translate('upcoming_exams'),
                             isDark: isDark,
                           ),
@@ -871,7 +1073,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   const SizedBox(height: 16),
 
                   // ─── 2. Hero Spotlight Card: "Continue Studying" ─────────
-                  if (featured != null && _searchQuery.isEmpty && _selectedFilter == 'all') ...[
+                  if (featured != null &&
+                      _searchQuery.isEmpty &&
+                      _selectedFilter == 'all') ...[
                     GestureDetector(
                       onTap: () {
                         final idx = _courses.indexOf(featured);
@@ -882,19 +1086,29 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: isDark
-                                ? [const Color(0xFF0F2B54), const Color(0xFF131D2D)]
-                                : [const Color(0xFFE3F0FF), const Color(0xFFF1F6FD)],
+                                ? [
+                                    const Color(0xFF0F2B54),
+                                    const Color(0xFF131D2D),
+                                  ]
+                                : [
+                                    const Color(0xFFE3F0FF),
+                                    const Color(0xFFF1F6FD),
+                                  ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
                           borderRadius: BorderRadius.circular(22),
                           border: Border.all(
-                            color: _primaryBlue.withValues(alpha: isDark ? 0.4 : 0.25),
+                            color: _primaryBlue.withValues(
+                              alpha: isDark ? 0.4 : 0.25,
+                            ),
                             width: 1.2,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: _primaryBlue.withValues(alpha: isDark ? 0.25 : 0.08),
+                              color: _primaryBlue.withValues(
+                                alpha: isDark ? 0.25 : 0.08,
+                              ),
                               blurRadius: 18,
                               offset: const Offset(0, 6),
                             ),
@@ -906,7 +1120,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             Row(
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 9,
+                                    vertical: 4,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: _primaryBlue,
                                     borderRadius: BorderRadius.circular(8),
@@ -914,10 +1131,16 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const HugeIcon(icon: HugeIcons.strokeRoundedPlay, color: Colors.white, size: 11),
+                                      const HugeIcon(
+                                        icon: HugeIcons.strokeRoundedPlay,
+                                        color: Colors.white,
+                                        size: 11,
+                                      ),
                                       const SizedBox(width: 4),
                                       Text(
-                                        langProvider.translate('continue_studying'),
+                                        langProvider.translate(
+                                          'continue_studying',
+                                        ),
                                         style: const TextStyle(
                                           fontSize: 11,
                                           fontWeight: FontWeight.w800,
@@ -928,13 +1151,25 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                   ),
                                 ),
                                 const Spacer(),
-                                if (nextExam != null && nextExam['courseTitle'] == featured['title'])
+                                if (nextExam != null &&
+                                    nextExam['courseTitle'] ==
+                                        featured['title'])
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 3,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFFF9500).withValues(alpha: 0.15),
+                                      color: const Color(
+                                        0xFFFF9500,
+                                      ).withValues(alpha: 0.15),
                                       borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(color: const Color(0xFFFF9500).withValues(alpha: 0.3), width: 1),
+                                      border: Border.all(
+                                        color: const Color(
+                                          0xFFFF9500,
+                                        ).withValues(alpha: 0.3),
+                                        width: 1,
+                                      ),
                                     ),
                                     child: Text(
                                       '${nextExam['type']} in ${nextExam['days']}d 🔥',
@@ -962,7 +1197,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                     borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: _primaryBlue.withValues(alpha: 0.3),
+                                        color: _primaryBlue.withValues(
+                                          alpha: 0.3,
+                                        ),
                                         blurRadius: 10,
                                         offset: const Offset(0, 3),
                                       ),
@@ -970,7 +1207,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                   ),
                                   child: Center(
                                     child: appIcon(
-                                      featured['icon'] ?? HugeIcons.strokeRoundedBook02,
+                                      featured['icon'] ??
+                                          HugeIcons.strokeRoundedBook02,
                                       color: Colors.white,
                                       size: 22,
                                     ),
@@ -979,7 +1217,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                 const SizedBox(width: 14),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         featured['title'] as String,
@@ -1007,7 +1246,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                 ),
                                 const SizedBox(width: 8),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: _primaryBlue,
                                     borderRadius: BorderRadius.circular(14),
@@ -1016,7 +1258,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
-                                        langProvider.translate('resume_learning'),
+                                        langProvider.translate(
+                                          'resume_learning',
+                                        ),
                                         style: const TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w800,
@@ -1024,7 +1268,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                         ),
                                       ),
                                       const SizedBox(width: 4),
-                                      const Icon(Icons.arrow_forward_rounded, size: 14, color: Colors.white),
+                                      const Icon(
+                                        Icons.arrow_forward_rounded,
+                                        size: 14,
+                                        color: Colors.white,
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -1035,10 +1283,18 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             ClipRRect(
                               borderRadius: BorderRadius.circular(6),
                               child: LinearProgressIndicator(
-                                value: ((featured['progress'] as num?)?.toDouble() ?? 0.0).clamp(0.0, 1.0),
+                                value:
+                                    ((featured['progress'] as num?)
+                                                ?.toDouble() ??
+                                            0.0)
+                                        .clamp(0.0, 1.0),
                                 minHeight: 6,
-                                backgroundColor: isDark ? const Color(0xFF263345) : const Color(0xFFD6E4F7),
-                                valueColor: const AlwaysStoppedAnimation<Color>(_primaryBlue),
+                                backgroundColor: isDark
+                                    ? const Color(0xFF263345)
+                                    : const Color(0xFFD6E4F7),
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                  _primaryBlue,
+                                ),
                               ),
                             ),
                           ],
@@ -1050,14 +1306,19 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
                   // ─── 3. Search Bar ──────────────────────────────────────
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: cardBg,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: borderColor, width: 1.2),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
+                          color: Colors.black.withValues(
+                            alpha: isDark ? 0.2 : 0.02,
+                          ),
                           blurRadius: 10,
                           offset: const Offset(0, 3),
                         ),
@@ -1068,24 +1329,31 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         HugeIcon(
                           icon: HugeIcons.strokeRoundedSearch01,
                           size: 18,
-                          color: isDark ? Colors.white54 : const Color(0xFF6B7280),
+                          color: isDark
+                              ? Colors.white54
+                              : const Color(0xFF6B7280),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: TextField(
-                            onChanged: (val) => setState(() => _searchQuery = val),
+                            onChanged: (val) =>
+                                setState(() => _searchQuery = val),
                             style: TextStyle(
                               fontSize: 13.5,
                               color: textPrimary,
                             ),
                             decoration: InputDecoration(
-                              hintText: langProvider.translate('search_course_hint'),
+                              hintText: langProvider.translate(
+                                'search_course_hint',
+                              ),
                               hintStyle: TextStyle(
                                 fontSize: 13,
                                 color: textSecondary,
                               ),
                               border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                              ),
                             ),
                           ),
                         ),
@@ -1137,7 +1405,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   // ─── 5. Courses List ────────────────────────────────────
                   if (filteredCourses.isEmpty)
                     Container(
-                      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 48,
+                        horizontal: 24,
+                      ),
                       decoration: BoxDecoration(
                         color: cardBg,
                         borderRadius: BorderRadius.circular(22),
@@ -1185,12 +1456,19 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ElevatedButton.icon(
                             onPressed: () => _showAddOrEditCourseModal(),
                             icon: const Icon(Icons.add, size: 18),
-                            label: Text(langProvider.translate('add_new_course')),
+                            label: Text(
+                              langProvider.translate('add_new_course'),
+                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: _primaryBlue,
                               foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                                vertical: 10,
+                              ),
                             ),
                           ),
                         ],
@@ -1312,7 +1590,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                 color: isSelected
                     ? Colors.white
-                    : (isDark ? const Color(0xFFA6ACB8) : const Color(0xFF64748B)),
+                    : (isDark
+                          ? const Color(0xFFA6ACB8)
+                          : const Color(0xFF64748B)),
               ),
             ),
             const SizedBox(width: 6),
@@ -1321,7 +1601,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
               decoration: BoxDecoration(
                 color: isSelected
                     ? Colors.white.withValues(alpha: 0.25)
-                    : (isDark ? const Color(0xFF262C36) : const Color(0xFFE2E8F0)),
+                    : (isDark
+                          ? const Color(0xFF262C36)
+                          : const Color(0xFFE2E8F0)),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -1349,15 +1631,22 @@ class _CoursesScreenState extends State<CoursesScreen> {
   }) {
     final title = c['title'] as String? ?? '';
     final subtitle = c['subtitle'] as String? ?? '';
-    final progress = ((c['progress'] as num?)?.toDouble() ?? 0.0).clamp(0.0, 1.0);
+    final progress = ((c['progress'] as num?)?.toDouble() ?? 0.0).clamp(
+      0.0,
+      1.0,
+    );
     final icon = c['icon'] ?? HugeIcons.strokeRoundedBook02;
     final midterm = c['midtermDate'] as DateTime?;
     final finalExam = c['finalDate'] as DateTime?;
 
     final cardBg = isDark ? const Color(0xFF171B23) : Colors.white;
-    final borderColor = isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2);
+    final borderColor = isDark
+        ? const Color(0xFF262C36)
+        : const Color(0xFFECEEF2);
     final textPrimary = isDark ? Colors.white : const Color(0xFF17191F);
-    final textSecondary = isDark ? const Color(0xFFA6ACB8) : const Color(0xFF6B7280);
+    final textSecondary = isDark
+        ? const Color(0xFFA6ACB8)
+        : const Color(0xFF6B7280);
 
     return GestureDetector(
       onTap: () => _openCourseDetail(c, index),
@@ -1385,7 +1674,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: isDark ? _primaryBlue.withValues(alpha: 0.18) : const Color(0xFFE2EDFB),
+                    color: isDark
+                        ? _primaryBlue.withValues(alpha: 0.18)
+                        : const Color(0xFFE2EDFB),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Center(
@@ -1411,10 +1702,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       const SizedBox(height: 2),
                       Text(
                         subtitle,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: textSecondary,
-                        ),
+                        style: TextStyle(fontSize: 12, color: textSecondary),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1436,9 +1724,16 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       value: 'edit',
                       child: Row(
                         children: [
-                          const HugeIcon(icon: HugeIcons.strokeRoundedPencilEdit02, size: 16, color: _primaryBlue),
+                          const HugeIcon(
+                            icon: HugeIcons.strokeRoundedPencilEdit02,
+                            size: 16,
+                            color: _primaryBlue,
+                          ),
                           const SizedBox(width: 8),
-                          Text(lang.translate('edit_profile'), style: const TextStyle(fontSize: 13)),
+                          Text(
+                            lang.translate('edit_profile'),
+                            style: const TextStyle(fontSize: 13),
+                          ),
                         ],
                       ),
                     ),
@@ -1446,9 +1741,21 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       value: 'delete',
                       child: Row(
                         children: [
-                          const HugeIcon(icon: HugeIcons.strokeRoundedDelete02, size: 16, color: Colors.redAccent),
+                          const HugeIcon(
+                            icon: HugeIcons.strokeRoundedDelete02,
+                            size: 16,
+                            color: Colors.redAccent,
+                          ),
                           const SizedBox(width: 8),
-                          Text(lang.currentLanguage == AppLanguage.english ? 'Delete' : 'سڕینەوە', style: const TextStyle(fontSize: 13, color: Colors.redAccent)),
+                          Text(
+                            lang.currentLanguage == AppLanguage.english
+                                ? 'Delete'
+                                : 'سڕینەوە',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.redAccent,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -1466,14 +1773,18 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 children: [
                   if (midterm != null)
                     _buildExamBadge(
-                      label: lang.currentLanguage == AppLanguage.english ? 'Midterm' : 'میدترم',
+                      label: lang.currentLanguage == AppLanguage.english
+                          ? 'Midterm'
+                          : 'میدترم',
                       date: midterm,
                       icon: HugeIcons.strokeRoundedClock01,
                       isDark: isDark,
                     ),
                   if (finalExam != null)
                     _buildExamBadge(
-                      label: lang.currentLanguage == AppLanguage.english ? 'Final' : 'فایناڵ',
+                      label: lang.currentLanguage == AppLanguage.english
+                          ? 'Final'
+                          : 'فایناڵ',
                       date: finalExam,
                       icon: HugeIcons.strokeRoundedFlag01,
                       isDark: isDark,
@@ -1512,7 +1823,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
               child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 6,
-                backgroundColor: isDark ? const Color(0xFF232A38) : const Color(0xFFE5EBF5),
+                backgroundColor: isDark
+                    ? const Color(0xFF232A38)
+                    : const Color(0xFFE5EBF5),
                 valueColor: const AlwaysStoppedAnimation<Color>(_primaryBlue),
               ),
             ),
@@ -1560,7 +1873,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
       decoration: BoxDecoration(
         color: badgeBg,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: textColor.withValues(alpha: 0.25), width: 0.8),
+        border: Border.all(
+          color: textColor.withValues(alpha: 0.25),
+          width: 0.8,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

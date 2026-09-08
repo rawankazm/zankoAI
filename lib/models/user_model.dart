@@ -1,8 +1,4 @@
-enum UserRole {
-  student,
-  teacher,
-  admin,
-}
+enum UserRole { student, teacher, admin }
 
 class UserModel {
   final String id;
@@ -16,7 +12,8 @@ class UserModel {
   final List<double> gpaHistory;
   final bool isVip;
   final String? photoUrl;
-  final String vipStatus; // 'none' | 'pending' | 'active' | 'rejected' | 'expired'
+  final String
+  vipStatus; // 'none' | 'pending' | 'active' | 'rejected' | 'expired'
   final DateTime? vipExpiry;
   final String status; // 'active' | 'suspended' | 'deleted' | 'pending'
 
@@ -122,12 +119,18 @@ class UserModel {
     );
 
     final rawIsVip = map['is_vip'] ?? map['isVip'];
-    final rawVipStatus = (map['vip_status'] ?? map['vipStatus'] ?? '').toString().toLowerCase();
+    final rawVipStatus = (map['vip_status'] ?? map['vipStatus'] ?? '')
+        .toString()
+        .toLowerCase();
     final rawPlan = (map['plan'] ?? '').toString().toLowerCase();
-    final rawSubTier = (map['subscription_tier'] ?? map['subscriptionTier'] ?? '').toString().toUpperCase();
+    final rawSubTier =
+        (map['subscription_tier'] ?? map['subscriptionTier'] ?? '')
+            .toString()
+            .toUpperCase();
 
     // Comprehensive VIP evaluation across all database columns and admin roles
-    final bool isVipCalculated = rawIsVip == true ||
+    final bool isVipCalculated =
+        rawIsVip == true ||
         rawIsVip == 1 ||
         rawIsVip?.toString().toLowerCase() == 'true' ||
         rawIsVip?.toString() == '1' ||
@@ -137,7 +140,9 @@ class UserModel {
         rawPlan == 'vip_unlimited' ||
         rawPlan == 'vip' ||
         rawSubTier == 'VIP' ||
-        roleVal == UserRole.admin; // Platform Admins automatically receive VIP privileges!
+        roleVal ==
+            UserRole
+                .admin; // Platform Admins automatically receive VIP privileges!
 
     DateTime? parsedVipExpiry;
     final rawExpiry = map['vip_expiry'] ?? map['vipExpiry'] ?? map['expiresAt'];
@@ -152,19 +157,34 @@ class UserModel {
       name: (map['full_name'] ?? map['name'] ?? '').toString(),
       email: (map['email'] ?? '').toString(),
       isVip: isVipCalculated,
-      vipStatus: (map['vip_status'] ?? map['vipStatus'] ?? (isVipCalculated ? 'active' : 'none')).toString(),
+      vipStatus:
+          (map['vip_status'] ??
+                  map['vipStatus'] ??
+                  (isVipCalculated ? 'active' : 'none'))
+              .toString(),
       vipExpiry: parsedVipExpiry,
       role: roleVal,
-      universityName: map['university_name']?.toString() ?? map['universityName']?.toString(),
-      departmentName: map['department_name']?.toString() ?? map['departmentName']?.toString(),
+      universityName:
+          map['university_name']?.toString() ??
+          map['universityName']?.toString(),
+      departmentName:
+          map['department_name']?.toString() ??
+          map['departmentName']?.toString(),
       cityName: map['city_name']?.toString() ?? map['cityName']?.toString(),
       gpa: (map['gpa'] as num?)?.toDouble(),
       gpaHistory: map['gpa_history'] != null
-          ? List<double>.from((map['gpa_history'] as List).map((x) => (x as num).toDouble()))
-          : (map['gpaHistory'] != null ? List<double>.from((map['gpaHistory'] as List).map((x) => (x as num).toDouble())) : const []),
+          ? List<double>.from(
+              (map['gpa_history'] as List).map((x) => (x as num).toDouble()),
+            )
+          : (map['gpaHistory'] != null
+                ? List<double>.from(
+                    (map['gpaHistory'] as List).map(
+                      (x) => (x as num).toDouble(),
+                    ),
+                  )
+                : const []),
       photoUrl: map['avatar_url']?.toString() ?? map['photoUrl']?.toString(),
       status: (map['status'] ?? 'active').toString(),
     );
   }
 }
-

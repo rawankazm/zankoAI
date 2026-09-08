@@ -10,7 +10,9 @@ import 'package:zanko_ai/utils/kurdish_arabic_reshaper.dart';
 void main() {
   test('Compare PDF Rendering Approaches for Kurdish', () async {
     final fontBytes = File('assets/fonts/calibri.ttf').readAsBytesSync();
-    final notoSansBytes = File('assets/fonts/NotoSansArabic-Regular.ttf').readAsBytesSync();
+    final notoSansBytes = File(
+      'assets/fonts/NotoSansArabic-Regular.ttf',
+    ).readAsBytesSync();
 
     final testPhrases = [
       'حکومەتی هەرێمی کوردستان - عێراق',
@@ -41,8 +43,9 @@ void main() {
 
       final bytes = await doc.save();
       doc.dispose();
-      File('${Directory.systemTemp.path}/kurdish_calibri_bidi.pdf')
-          .writeAsBytesSync(bytes);
+      File(
+        '${Directory.systemTemp.path}/kurdish_calibri_bidi.pdf',
+      ).writeAsBytesSync(bytes);
       debugPrint('Saved kurdish_calibri_bidi.pdf (${bytes.length} bytes)');
     }
 
@@ -68,8 +71,9 @@ void main() {
 
       final bytes = await doc.save();
       doc.dispose();
-      File('${Directory.systemTemp.path}/kurdish_notosans_bidi.pdf')
-          .writeAsBytesSync(bytes);
+      File(
+        '${Directory.systemTemp.path}/kurdish_notosans_bidi.pdf',
+      ).writeAsBytesSync(bytes);
       debugPrint('Saved kurdish_notosans_bidi.pdf (${bytes.length} bytes)');
     }
 
@@ -88,8 +92,9 @@ void main() {
 
       final pdfBytes = await ReportPdfGeneratorService.createPdfBytes(report);
       expect(pdfBytes.length > 50000, true);
-      File('${Directory.systemTemp.path}/full_kurdish_report.pdf')
-          .writeAsBytesSync(pdfBytes);
+      File(
+        '${Directory.systemTemp.path}/full_kurdish_report.pdf',
+      ).writeAsBytesSync(pdfBytes);
       debugPrint('Saved full_kurdish_report.pdf (${pdfBytes.length} bytes)');
     }
 
@@ -111,7 +116,9 @@ void main() {
 
   test('Test Kurdish Glyphs with Calibri and Noto', () async {
     final calibriBytes = File('assets/fonts/calibri.ttf').readAsBytesSync();
-    final notoBoldBytes = File('assets/fonts/NotoNaskhArabic-Bold.ttf').readAsBytesSync();
+    final notoBoldBytes = File(
+      'assets/fonts/NotoNaskhArabic-Bold.ttf',
+    ).readAsBytesSync();
 
     final calFont = PdfTrueTypeFont(calibriBytes, 14);
     final notoFont = PdfTrueTypeFont(notoBoldBytes, 14);
@@ -135,6 +142,3 @@ void main() {
     }
   });
 }
-
-
-

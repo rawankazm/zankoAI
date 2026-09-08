@@ -215,16 +215,16 @@ class ProductionDatabaseBackupEngine {
     String key = testVaultKey,
   }) {
     // 1. Verify SHA-256 checksum
-    final computedDigest =
-        sha256.convert(package.encryptedPayload).toString();
+    final computedDigest = sha256.convert(package.encryptedPayload).toString();
     if (computedDigest != package.sha256Checksum) {
       throw StateError('Checksum verification failed! Data is corrupted.');
     }
 
     // 2. Decrypt
     final keyBytes = utf8.encode(key);
-    final decryptedBytes =
-        List<int>.generate(package.encryptedPayload.length, (i) {
+    final decryptedBytes = List<int>.generate(package.encryptedPayload.length, (
+      i,
+    ) {
       return package.encryptedPayload[i] ^ keyBytes[i % keyBytes.length];
     });
 
@@ -261,8 +261,9 @@ void main() {
 
   setUpAll(() {
     mockLiveDb = ProductionDatabaseBackupEngine.generateProductionSnapshot();
-    backupPackage =
-        ProductionDatabaseBackupEngine.createEncryptedBackup(mockLiveDb);
+    backupPackage = ProductionDatabaseBackupEngine.createEncryptedBackup(
+      mockLiveDb,
+    );
     sandbox = ProductionDatabaseBackupEngine.restoreToIsolatedSandbox(
       backupPackage,
       'zanko_restore_sandbox_drill_test',
@@ -271,138 +272,177 @@ void main() {
 
   group('ZankoAI Production Database Backup & Restoration — The 9 Checkpoints', () {
     // ─── 1. Backup exists ───
-    test('Checkpoint 1: Backup exists with valid metadata and non-zero size', () {
-      expect(backupPackage, isNotNull);
-      expect(backupPackage.filename, endsWith('.enc'));
-      expect(backupPackage.byteSize, greaterThan(0));
-      expect(backupPackage.sha256Checksum, isNotEmpty);
-      expect(backupPackage.sha256Checksum.length, equals(64));
-    });
+    test(
+      'Checkpoint 1: Backup exists with valid metadata and non-zero size',
+      () {
+        expect(backupPackage, isNotNull);
+        expect(backupPackage.filename, endsWith('.enc'));
+        expect(backupPackage.byteSize, greaterThan(0));
+        expect(backupPackage.sha256Checksum, isNotEmpty);
+        expect(backupPackage.sha256Checksum.length, equals(64));
+      },
+    );
 
     // ─── 2. Backup is restorable ───
-    test('Checkpoint 2: Backup is restorable (decryption & checksum verified)', () {
-      final restored =
-          ProductionDatabaseBackupEngine.restoreEncryptedBackup(backupPackage);
-      expect(restored, isNotNull);
-      expect(restored.keys, containsAll(['users', 'subscriptions', 'courses']));
+    test(
+      'Checkpoint 2: Backup is restorable (decryption & checksum verified)',
+      () {
+        final restored = ProductionDatabaseBackupEngine.restoreEncryptedBackup(
+          backupPackage,
+        );
+        expect(restored, isNotNull);
+        expect(
+          restored.keys,
+          containsAll(['users', 'subscriptions', 'courses']),
+        );
 
-      // Expect corrupted checksum to fail decryption cleanly
-      final corruptedPackage = DatabaseBackupPackage(
-        filename: backupPackage.filename,
-        encryptedPayload: List.from(backupPackage.encryptedPayload)..first ^= 0xFF,
-        sha256Checksum: backupPackage.sha256Checksum,
-        byteSize: backupPackage.byteSize,
-        createdAt: backupPackage.createdAt,
-      );
+        // Expect corrupted checksum to fail decryption cleanly
+        final corruptedPackage = DatabaseBackupPackage(
+          filename: backupPackage.filename,
+          encryptedPayload: List.from(backupPackage.encryptedPayload)
+            ..first ^= 0xFF,
+          sha256Checksum: backupPackage.sha256Checksum,
+          byteSize: backupPackage.byteSize,
+          createdAt: backupPackage.createdAt,
+        );
 
-      expect(
-        () => ProductionDatabaseBackupEngine.restoreEncryptedBackup(corruptedPackage),
-        throwsA(isA<StateError>()),
-      );
-    });
+        expect(
+          () => ProductionDatabaseBackupEngine.restoreEncryptedBackup(
+            corruptedPackage,
+          ),
+          throwsA(isA<StateError>()),
+        );
+      },
+    );
 
     // ─── 3. Restore to isolated environment ───
-    test('Checkpoint 3: Restores into an isolated sandbox without touching live schema', () {
-      expect(sandbox, isNotNull);
-      expect(sandbox.schemaName, equals('zanko_restore_sandbox_drill_test'));
-      expect(sandbox.tables, isNotEmpty);
-    });
+    test(
+      'Checkpoint 3: Restores into an isolated sandbox without touching live schema',
+      () {
+        expect(sandbox, isNotNull);
+        expect(sandbox.schemaName, equals('zanko_restore_sandbox_drill_test'));
+        expect(sandbox.tables, isNotEmpty);
+      },
+    );
 
     // ─── 4. Verify important tables ───
-    test('Checkpoint 4: Verifies all 7 critical production tables exist in sandbox', () {
-      final requiredTables = [
-        'users',
-        'subscriptions',
-        'payment_transactions',
-        'courses',
-        'ai_conversations',
-        'ai_messages',
-        'documents',
-      ];
+    test(
+      'Checkpoint 4: Verifies all 7 critical production tables exist in sandbox',
+      () {
+        final requiredTables = [
+          'users',
+          'subscriptions',
+          'payment_transactions',
+          'courses',
+          'ai_conversations',
+          'ai_messages',
+          'documents',
+        ];
 
-      for (final table in requiredTables) {
-        expect(sandbox.hasTable(table), isTrue,
-            reason: 'Expected table $table to be present in restored schema');
-      }
-    });
+        for (final table in requiredTables) {
+          expect(
+            sandbox.hasTable(table),
+            isTrue,
+            reason: 'Expected table $table to be present in restored schema',
+          );
+        }
+      },
+    );
 
     // ─── 5. Verify user data ───
-    test('Checkpoint 5: Verifies user data rows, email, roles, university, and VIP status', () {
-      final users = sandbox.getRecords('users');
-      expect(users.length, equals(2));
+    test(
+      'Checkpoint 5: Verifies user data rows, email, roles, university, and VIP status',
+      () {
+        final users = sandbox.getRecords('users');
+        expect(users.length, equals(2));
 
-      final admin = users.firstWhere((u) => u['role'] == 'admin');
-      expect(admin['email'], equals('rawan@zankoai.com'));
-      expect(admin['name'], equals('Rawan Kazm'));
-      expect(admin['is_vip'], isTrue);
-      expect(admin['university_id'], equals('uni_salahaddin'));
+        final admin = users.firstWhere((u) => u['role'] == 'admin');
+        expect(admin['email'], equals('rawan@zankoai.com'));
+        expect(admin['name'], equals('Rawan Kazm'));
+        expect(admin['is_vip'], isTrue);
+        expect(admin['university_id'], equals('uni_salahaddin'));
 
-      final student = users.firstWhere((u) => u['role'] == 'student');
-      expect(student['email'], equals('student@zankoai.com'));
-      expect(student['is_vip'], isFalse);
-    });
+        final student = users.firstWhere((u) => u['role'] == 'student');
+        expect(student['email'], equals('student@zankoai.com'));
+        expect(student['is_vip'], isFalse);
+      },
+    );
 
     // ─── 6. Verify subscriptions ───
-    test('Checkpoint 6: Verifies subscription lifecycles, plans, and grace period timestamps', () {
-      final subs = sandbox.getRecords('subscriptions');
-      expect(subs.length, equals(2));
+    test(
+      'Checkpoint 6: Verifies subscription lifecycles, plans, and grace period timestamps',
+      () {
+        final subs = sandbox.getRecords('subscriptions');
+        expect(subs.length, equals(2));
 
-      final activeSub = subs.firstWhere((s) => s['status'] == 'active');
-      expect(activeSub['plan_id'], equals('vip_annual'));
-      expect(activeSub['auto_renew'], isTrue);
+        final activeSub = subs.firstWhere((s) => s['status'] == 'active');
+        expect(activeSub['plan_id'], equals('vip_annual'));
+        expect(activeSub['auto_renew'], isTrue);
 
-      final graceSub = subs.firstWhere((s) => s['status'] == 'grace_period');
-      expect(graceSub['plan_id'], equals('vip_monthly'));
-      expect(graceSub['grace_period_until'], isNotNull);
-    });
+        final graceSub = subs.firstWhere((s) => s['status'] == 'grace_period');
+        expect(graceSub['plan_id'], equals('vip_monthly'));
+        expect(graceSub['grace_period_until'], isNotNull);
+      },
+    );
 
     // ─── 7. Verify payments ───
-    test('Checkpoint 7: Verifies payment gateway records, amounts, currency (IQD), and providers', () {
-      final payments = sandbox.getRecords('payment_transactions');
-      expect(payments.length, equals(2));
+    test(
+      'Checkpoint 7: Verifies payment gateway records, amounts, currency (IQD), and providers',
+      () {
+        final payments = sandbox.getRecords('payment_transactions');
+        expect(payments.length, equals(2));
 
-      final fibTxn = payments.firstWhere((p) => p['provider'] == 'fib');
-      expect(fibTxn['amount_iqd'], equals(75000));
-      expect(fibTxn['currency'], equals('IQD'));
-      expect(fibTxn['status'], equals('completed'));
+        final fibTxn = payments.firstWhere((p) => p['provider'] == 'fib');
+        expect(fibTxn['amount_iqd'], equals(75000));
+        expect(fibTxn['currency'], equals('IQD'));
+        expect(fibTxn['status'], equals('completed'));
 
-      final zainTxn = payments.firstWhere((p) => p['provider'] == 'zaincash');
-      expect(zainTxn['amount_iqd'], equals(10000));
-      expect(zainTxn['currency'], equals('IQD'));
-    });
+        final zainTxn = payments.firstWhere((p) => p['provider'] == 'zaincash');
+        expect(zainTxn['amount_iqd'], equals(10000));
+        expect(zainTxn['currency'], equals('IQD'));
+      },
+    );
 
     // ─── 8. Verify courses ───
-    test('Checkpoint 8: Verifies academic courses, course codes, stages, and semesters', () {
-      final courses = sandbox.getRecords('courses');
-      expect(courses.length, equals(2));
+    test(
+      'Checkpoint 8: Verifies academic courses, course codes, stages, and semesters',
+      () {
+        final courses = sandbox.getRecords('courses');
+        expect(courses.length, equals(2));
 
-      final aiCourse = courses.firstWhere((c) => c['code'] == 'CS-301');
-      expect(aiCourse['name'], contains('Artificial Intelligence'));
-      expect(aiCourse['stage'], equals(3));
-      expect(aiCourse['semester'], equals(1));
+        final aiCourse = courses.firstWhere((c) => c['code'] == 'CS-301');
+        expect(aiCourse['name'], contains('Artificial Intelligence'));
+        expect(aiCourse['stage'], equals(3));
+        expect(aiCourse['semester'], equals(1));
 
-      final dbCourse = courses.firstWhere((c) => c['code'] == 'CS-202');
-      expect(dbCourse['name'], contains('Relational Database'));
-      expect(dbCourse['stage'], equals(2));
-    });
+        final dbCourse = courses.firstWhere((c) => c['code'] == 'CS-202');
+        expect(dbCourse['name'], contains('Relational Database'));
+        expect(dbCourse['stage'], equals(2));
+      },
+    );
 
     // ─── 9. Verify AI data ───
-    test('Checkpoint 9: Verifies AI conversations, student prompt messages, completions, and documents', () {
-      final convs = sandbox.getRecords('ai_conversations');
-      expect(convs.length, equals(1));
-      expect(convs.first['title'], contains('Machine Learning'));
+    test(
+      'Checkpoint 9: Verifies AI conversations, student prompt messages, completions, and documents',
+      () {
+        final convs = sandbox.getRecords('ai_conversations');
+        expect(convs.length, equals(1));
+        expect(convs.first['title'], contains('Machine Learning'));
 
-      final messages = sandbox.getRecords('ai_messages');
-      expect(messages.length, equals(2));
-      expect(messages.any((m) => m['sender'] == 'user'), isTrue);
-      expect(messages.any((m) => m['sender'] == 'assistant'), isTrue);
-      expect(messages.firstWhere((m) => m['sender'] == 'assistant')['content'],
-          contains('باکپرۆپاگەیشن'));
+        final messages = sandbox.getRecords('ai_messages');
+        expect(messages.length, equals(2));
+        expect(messages.any((m) => m['sender'] == 'user'), isTrue);
+        expect(messages.any((m) => m['sender'] == 'assistant'), isTrue);
+        expect(
+          messages.firstWhere((m) => m['sender'] == 'assistant')['content'],
+          contains('باکپرۆپاگەیشن'),
+        );
 
-      final documents = sandbox.getRecords('documents');
-      expect(documents.length, equals(1));
-      expect(documents.first['filename'], equals('lecture_1_ai_intro.pdf'));
-      expect(documents.first['status'], equals('processed'));
-    });
+        final documents = sandbox.getRecords('documents');
+        expect(documents.length, equals(1));
+        expect(documents.first['filename'], equals('lecture_1_ai_intro.pdf'));
+        expect(documents.first['status'], equals('processed'));
+      },
+    );
   });
 }

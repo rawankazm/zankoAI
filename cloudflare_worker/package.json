@@ -1,0 +1,10 @@
+{
+  "name": "zankoai",
+  "version": "1.0.0",
+  "description": "ZankoAI Cloudflare Worker Push Notification Engine",
+  "main": "worker.js",
+  "type": "module",
+  "scripts": {
+    "build": "echo 'No build step required for ES module worker'"
+  }
+}

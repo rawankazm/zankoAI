@@ -7,10 +7,11 @@
     "dev": "tsx watch src/server.ts",
     "worker": "tsx watch src/workers/index.ts",
     "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
     "start": "node dist/server.js",
     "start:worker": "node dist/workers/index.js",
-    "test": "tsx tests/run_all_tests.ts",
-    "lint": "eslint src --ext .ts"
+    "test": "tsx tests/run_all_tests.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.0",

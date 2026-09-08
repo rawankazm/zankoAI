@@ -16,10 +16,15 @@ class KurdishVoiceTutorScreen extends StatefulWidget {
   final String? initialFileName;
   final String? initialFileContent;
 
-  const KurdishVoiceTutorScreen({super.key, this.initialFileName, this.initialFileContent});
+  const KurdishVoiceTutorScreen({
+    super.key,
+    this.initialFileName,
+    this.initialFileContent,
+  });
 
   @override
-  State<KurdishVoiceTutorScreen> createState() => _KurdishVoiceTutorScreenState();
+  State<KurdishVoiceTutorScreen> createState() =>
+      _KurdishVoiceTutorScreenState();
 }
 
 class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
@@ -43,7 +48,10 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
     if (widget.initialFileName != null && widget.initialFileContent != null) {
       _lastContent = widget.initialFileContent!;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _promptLanguageAndGenerate(widget.initialFileName!, widget.initialFileContent!);
+        _promptLanguageAndGenerate(
+          widget.initialFileName!,
+          widget.initialFileContent!,
+        );
       });
     }
   }
@@ -77,7 +85,11 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                 color: ZankoColors.primary.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
-              child: Icon(CupertinoIcons.globe, size: 36, color: ZankoColors.primary),
+              child: Icon(
+                CupertinoIcons.globe,
+                size: 36,
+                color: ZankoColors.primary,
+              ),
             ),
             const SizedBox(height: 12),
             Text(
@@ -92,7 +104,10 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
             Text(
               'دەتەوێت مامۆستا AI بە چ زمانێک فایلی ($fileName) بە دەنگ لێکبداتەوە؟',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : ZankoColors.textSecondary),
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+              ),
             ),
             const SizedBox(height: 20),
             InkWell(
@@ -106,7 +121,9 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                 decoration: BoxDecoration(
                   color: ZankoColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: ZankoColors.primary.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -121,14 +138,22 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 15,
-                              color: isDark ? Colors.white : ZankoColors.textPrimary,
+                              color: isDark
+                                  ? Colors.white
+                                  : ZankoColors.textPrimary,
                             ),
                           ),
-                          const Text('ڕوونکردنەوەی ڕێکخراو و تێروتەسەلی مامۆستایانە بە کوردی', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                          const Text(
+                            'ڕوونکردنەوەی ڕێکخراو و تێروتەسەلی مامۆستایانە بە کوردی',
+                            style: TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
                         ],
                       ),
                     ),
-                    Icon(CupertinoIcons.chevron_left, color: ZankoColors.primary),
+                    Icon(
+                      CupertinoIcons.chevron_left,
+                      color: ZankoColors.primary,
+                    ),
                   ],
                 ),
               ),
@@ -145,7 +170,9 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                 decoration: BoxDecoration(
                   color: ZankoColors.accent.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: ZankoColors.accent.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: ZankoColors.accent.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -160,14 +187,22 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 15,
-                              color: isDark ? Colors.white : ZankoColors.textPrimary,
+                              color: isDark
+                                  ? Colors.white
+                                  : ZankoColors.textPrimary,
                             ),
                           ),
-                          const Text('HD Neural Academic AI Voice Explanation in English', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                          const Text(
+                            'HD Neural Academic AI Voice Explanation in English',
+                            style: TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
                         ],
                       ),
                     ),
-                    Icon(CupertinoIcons.chevron_left, color: ZankoColors.accent),
+                    Icon(
+                      CupertinoIcons.chevron_left,
+                      color: ZankoColors.accent,
+                    ),
                   ],
                 ),
               ),
@@ -178,7 +213,11 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
     );
   }
 
-  Future<void> _generateAudioExplanation(String fileName, String content, {required String lang}) async {
+  Future<void> _generateAudioExplanation(
+    String fileName,
+    String content, {
+    required String lang,
+  }) async {
     setState(() {
       _isLoading = true;
       _pdfFileName = fileName;
@@ -266,11 +305,23 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
             const SizedBox(height: 16),
             // 1. Audio recording file
             ListTile(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               tileColor: ZankoColors.primary.withValues(alpha: 0.1),
-              leading: Icon(Icons.audio_file_rounded, color: ZankoColors.primary, size: 28),
-              title: const Text('بارکردنی فایلی تۆماری دەنگ (Audio)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-              subtitle: const Text('فایلی دەنگی مامۆستا (MP3, M4A, WAV...)', style: TextStyle(fontSize: 11.5, color: Colors.grey)),
+              leading: Icon(
+                Icons.audio_file_rounded,
+                color: ZankoColors.primary,
+                size: 28,
+              ),
+              title: const Text(
+                'بارکردنی فایلی تۆماری دەنگ (Audio)',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              subtitle: const Text(
+                'فایلی دەنگی مامۆستا (MP3, M4A, WAV...)',
+                style: TextStyle(fontSize: 11.5, color: Colors.grey),
+              ),
               onTap: () {
                 Navigator.pop(ctx);
                 _pickAndProcessAudio();
@@ -279,24 +330,53 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
             const SizedBox(height: 10),
             // 2. Live Recording
             ListTile(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               tileColor: Colors.deepPurple.withValues(alpha: 0.1),
-              leading: const Icon(Icons.mic_rounded, color: Colors.deepPurple, size: 28),
-              title: const Text('تۆمارکردنی ڕاستەوخۆی دەنگ (Live Voice)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-              subtitle: const Text('تۆمارکردنی وانەی مامۆستا بە مایکرۆفۆن', style: TextStyle(fontSize: 11.5, color: Colors.grey)),
+              leading: const Icon(
+                Icons.mic_rounded,
+                color: Colors.deepPurple,
+                size: 28,
+              ),
+              title: const Text(
+                'تۆمارکردنی ڕاستەوخۆی دەنگ (Live Voice)',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              subtitle: const Text(
+                'تۆمارکردنی وانەی مامۆستا بە مایکرۆفۆن',
+                style: TextStyle(fontSize: 11.5, color: Colors.grey),
+              ),
               onTap: () {
                 Navigator.pop(ctx);
-                Navigator.push(context, CupertinoPageRoute(builder: (_) => const AudioSummarizerView()));
+                Navigator.push(
+                  context,
+                  CupertinoPageRoute(
+                    builder: (_) => const AudioSummarizerView(),
+                  ),
+                );
               },
             ),
             const SizedBox(height: 10),
             // 3. Document / PDF
             ListTile(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               tileColor: ZankoColors.accent.withValues(alpha: 0.1),
-              leading: Icon(Icons.description_rounded, color: ZankoColors.accent, size: 28),
-              title: const Text('مەلزەمەی وانە (PDF, Word, PPTX)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-              subtitle: const Text('شیکردنەوەی مەلزەمەی نووسراو بە دەنگی کوردی', style: TextStyle(fontSize: 11.5, color: Colors.grey)),
+              leading: Icon(
+                Icons.description_rounded,
+                color: ZankoColors.accent,
+                size: 28,
+              ),
+              title: const Text(
+                'مەلزەمەی وانە (PDF, Word, PPTX)',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              subtitle: const Text(
+                'شیکردنەوەی مەلزەمەی نووسراو بە دەنگی کوردی',
+                style: TextStyle(fontSize: 11.5, color: Colors.grey),
+              ),
               onTap: () {
                 Navigator.pop(ctx);
                 _pickAndProcessPdf();
@@ -309,7 +389,20 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
   }
 
   Future<void> _pickAndProcessAudio() async {
-    const allowedAudio = ['mp3', 'm4a', 'wav', 'aac', 'ogg', 'opus', 'flac', 'amr', 'wma', '3gp', 'm4b', 'alac'];
+    const allowedAudio = [
+      'mp3',
+      'm4a',
+      'wav',
+      'aac',
+      'ogg',
+      'opus',
+      'flac',
+      'amr',
+      'wma',
+      '3gp',
+      'm4b',
+      'alac',
+    ];
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -322,13 +415,17 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
       final file = result.files.single;
       final fileName = file.name;
       final dotIndex = fileName.lastIndexOf('.');
-      final ext = dotIndex != -1 ? fileName.substring(dotIndex + 1).toLowerCase() : '';
+      final ext = dotIndex != -1
+          ? fileName.substring(dotIndex + 1).toLowerCase()
+          : '';
 
       if (!allowedAudio.contains(ext)) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('تکایە تەنها فایلی تۆمارکراوی دەنگ هەڵبژێرە (وەک MP3, M4A, WAV)، نەک PDF یان فایلی تر!'),
+              content: const Text(
+                'تکایە تەنها فایلی تۆمارکراوی دەنگ هەڵبژێرە (وەک MP3, M4A, WAV)، نەک PDF یان فایلی تر!',
+              ),
               backgroundColor: Colors.red.shade700,
             ),
           );
@@ -378,7 +475,11 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
         if (mounted) {
           setState(() => _isLoading = false);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('نەتوانرا دەنگی ئەم فایلە بناسرێتەوە، تکایە دڵنیابە لە ڕوونی دەنگەکە.')),
+            const SnackBar(
+              content: Text(
+                'نەتوانرا دەنگی ئەم فایلە بناسرێتەوە، تکایە دڵنیابە لە ڕوونی دەنگەکە.',
+              ),
+            ),
           );
         }
         return;
@@ -392,9 +493,9 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('هەڵە لە خوێندنەوەی دەنگ: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('هەڵە لە خوێندنەوەی دەنگ: $e')));
       }
     }
   }
@@ -410,7 +511,8 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
       String extractedText = parsed.content;
 
       if (extractedText.trim().isEmpty) {
-        extractedText = 'Sample English lecture text regarding computer networks and artificial intelligence.';
+        extractedText =
+            'Sample English lecture text regarding computer networks and artificial intelligence.';
       }
 
       _lastContent = extractedText;
@@ -420,9 +522,9 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
     } catch (e) {
       debugPrint('Error loading document for voice tutor: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('هەڵە لە خوێندنەوەی فایل: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('هەڵە لە خوێندنەوەی فایل: $e')));
       }
     }
   }
@@ -434,11 +536,15 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
   void _playSectionAt(int index) {
     if (_voiceExplanationData == null) return;
     final sections = _voiceExplanationData!['sections'] as List<dynamic>?;
-    if (sections == null || sections.isEmpty || index >= sections.length) return;
+    if (sections == null || sections.isEmpty || index >= sections.length)
+      return;
 
     // Smoothly scroll active chip into view
     if (_chipsScrollController.hasClients) {
-      final targetScroll = (index * 130.0).clamp(0.0, _chipsScrollController.position.maxScrollExtent);
+      final targetScroll = (index * 130.0).clamp(
+        0.0,
+        _chipsScrollController.position.maxScrollExtent,
+      );
       _chipsScrollController.animateTo(
         targetScroll,
         duration: const Duration(milliseconds: 300),
@@ -519,7 +625,9 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
     return Directionality(
       textDirection: langProvider.textDirection,
       child: Scaffold(
-        backgroundColor: isDark ? ZankoColors.darkBackground : const Color(0xFFF8F9FD),
+        backgroundColor: isDark
+            ? ZankoColors.darkBackground
+            : const Color(0xFFF8F9FD),
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -536,7 +644,11 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                   color: ZankoColors.primary.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(CupertinoIcons.waveform_circle_fill, color: ZankoColors.primary, size: 20),
+                child: Icon(
+                  CupertinoIcons.waveform_circle_fill,
+                  color: ZankoColors.primary,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 8),
               const Text(
@@ -590,7 +702,11 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                             color: Colors.white.withValues(alpha: 0.2),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(CupertinoIcons.waveform_circle_fill, color: Colors.white, size: 26),
+                          child: const Icon(
+                            CupertinoIcons.waveform_circle_fill,
+                            color: Colors.white,
+                            size: 26,
+                          ),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
@@ -598,7 +714,8 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                _pdfFileName ?? 'هەڵبژاردنی فایلی تۆماری دەنگ یان مەلزەمە',
+                                _pdfFileName ??
+                                    'هەڵبژاردنی فایلی تۆماری دەنگ یان مەلزەمە',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -610,12 +727,19 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                               const SizedBox(height: 4),
                               const Text(
                                 'دەنگ یان PDF هەڵبژێرە بۆ شیکردنەوەی دەنگی 🎙️',
-                                style: TextStyle(color: Colors.white70, fontSize: 12),
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                ),
                               ),
                             ],
                           ),
                         ),
-                        const Icon(CupertinoIcons.cloud_upload_fill, color: Colors.white, size: 22),
+                        const Icon(
+                          CupertinoIcons.cloud_upload_fill,
+                          color: Colors.white,
+                          size: 22,
+                        ),
                       ],
                     ),
                   ),
@@ -632,11 +756,16 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                               width: 80,
                               height: 80,
                               decoration: BoxDecoration(
-                                color: ZankoColors.primary.withValues(alpha: 0.15),
+                                color: ZankoColors.primary.withValues(
+                                  alpha: 0.15,
+                                ),
                                 shape: BoxShape.circle,
                               ),
                               child: Center(
-                                child: CircularProgressIndicator(color: ZankoColors.primary, strokeWidth: 3.5),
+                                child: CircularProgressIndicator(
+                                  color: ZankoColors.primary,
+                                  strokeWidth: 3.5,
+                                ),
                               ),
                             ),
                             const SizedBox(height: 24),
@@ -645,39 +774,46 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white : ZankoColors.textPrimary,
+                                color: isDark
+                                    ? Colors.white
+                                    : ZankoColors.textPrimary,
                               ),
                               textAlign: TextAlign.center,
                             ),
                           ],
                         )
                       : _voiceExplanationData == null
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    CupertinoIcons.music_mic,
-                                    size: 70,
-                                    color: isDark ? Colors.white24 : Colors.grey[300],
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'مەلزەمە یان فایلی PDF ئینگلیزی هەڵبژێرە\nتا مامۆستا AI بە دەنگی کوردی بۆت بڵێتەوە! 🎓',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
-                                    ),
-                                  ),
-                                ],
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                CupertinoIcons.music_mic,
+                                size: 70,
+                                color: isDark
+                                    ? Colors.white24
+                                    : Colors.grey[300],
                               ),
-                            )
-                          : _buildActiveAudioView(isDark),
+                              const SizedBox(height: 16),
+                              Text(
+                                'مەلزەمە یان فایلی PDF ئینگلیزی هەڵبژێرە\nتا مامۆستا AI بە دەنگی کوردی بۆت بڵێتەوە! 🎓',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: isDark
+                                      ? Colors.grey[400]
+                                      : ZankoColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : _buildActiveAudioView(isDark),
                 ),
 
                 // ── Audio Player Control Bar ───────────────────────────────
-                if (_voiceExplanationData != null && !_isLoading) _buildAudioControlBar(isDark),
+                if (_voiceExplanationData != null && !_isLoading)
+                  _buildAudioControlBar(isDark),
               ],
             ),
           ),
@@ -692,10 +828,14 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
 
     final summary = _voiceExplanationData!['summary'] as String? ?? '';
     final title = _voiceExplanationData!['title'] as String? ?? '';
-    final currentSection = sections[_activeSectionIndex] as Map<String, dynamic>;
+    final currentSection =
+        sections[_activeSectionIndex] as Map<String, dynamic>;
     final sectionTitle = currentSection['sectionTitle'] as String? ?? '';
-    final kurdishExplanation = currentSection['kurdishExplanation'] as String? ?? '';
-    final keyTerms = (currentSection['englishKeyTerms'] as List<dynamic>?)?.cast<String>() ?? [];
+    final kurdishExplanation =
+        currentSection['kurdishExplanation'] as String? ?? '';
+    final keyTerms =
+        (currentSection['englishKeyTerms'] as List<dynamic>?)?.cast<String>() ??
+        [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -708,24 +848,39 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [ZankoColors.primary.withValues(alpha: 0.12), ZankoColors.accent.withValues(alpha: 0.08)],
+                colors: [
+                  ZankoColors.primary.withValues(alpha: 0.12),
+                  ZankoColors.accent.withValues(alpha: 0.08),
+                ],
               ),
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.2)),
+              border: Border.all(
+                color: ZankoColors.primary.withValues(alpha: 0.2),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: ZankoColors.primary),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: ZankoColors.primary,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 6),
                 Text(
                   summary,
-                  style: TextStyle(fontSize: 12.5, height: 1.5, color: isDark ? Colors.grey[300] : ZankoColors.textSecondary),
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    height: 1.5,
+                    color: isDark
+                        ? Colors.grey[300]
+                        : ZankoColors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -741,7 +896,8 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
             separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (context, i) {
               final sec = sections[i] as Map<String, dynamic>;
-              final secTitle = sec['sectionTitle'] as String? ?? 'بەشی ${i + 1}';
+              final secTitle =
+                  sec['sectionTitle'] as String? ?? 'بەشی ${i + 1}';
               final isActive = i == _activeSectionIndex;
               return GestureDetector(
                 onTap: () {
@@ -753,18 +909,33 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     gradient: isActive
-                        ? LinearGradient(colors: [ZankoColors.primary, ZankoColors.accent])
+                        ? LinearGradient(
+                            colors: [ZankoColors.primary, ZankoColors.accent],
+                          )
                         : null,
-                    color: isActive ? null : (isDark ? ZankoColors.darkCard : Colors.white),
+                    color: isActive
+                        ? null
+                        : (isDark ? ZankoColors.darkCard : Colors.white),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: isActive ? ZankoColors.primary : (isDark ? Colors.white12 : Colors.grey[200]!),
+                      color: isActive
+                          ? ZankoColors.primary
+                          : (isDark ? Colors.white12 : Colors.grey[200]!),
                     ),
                     boxShadow: isActive
-                        ? [BoxShadow(color: ZankoColors.primary.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 3))]
+                        ? [
+                            BoxShadow(
+                              color: ZankoColors.primary.withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ]
                         : null,
                   ),
                   child: Row(
@@ -773,7 +944,11 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                       if (isActive && _isPlaying)
                         const Padding(
                           padding: EdgeInsets.only(left: 4),
-                          child: Icon(CupertinoIcons.waveform, size: 14, color: Colors.white),
+                          child: Icon(
+                            CupertinoIcons.waveform,
+                            size: 14,
+                            color: Colors.white,
+                          ),
                         ),
                       const SizedBox(width: 4),
                       Text(
@@ -781,7 +956,11 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: isActive ? Colors.white : (isDark ? Colors.grey[300] : ZankoColors.textPrimary),
+                          color: isActive
+                              ? Colors.white
+                              : (isDark
+                                    ? Colors.grey[300]
+                                    : ZankoColors.textPrimary),
                         ),
                       ),
                     ],
@@ -806,7 +985,13 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                     Expanded(
                       child: Text(
                         sectionTitle,
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: isDark ? Colors.white : ZankoColors.textPrimary),
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: isDark
+                              ? Colors.white
+                              : ZankoColors.textPrimary,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -819,7 +1004,9 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          _isPlaying ? CupertinoIcons.pause_fill : CupertinoIcons.play_fill,
+                          _isPlaying
+                              ? CupertinoIcons.pause_fill
+                              : CupertinoIcons.play_fill,
                           size: 18,
                           color: ZankoColors.primary,
                         ),
@@ -846,12 +1033,26 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                           : (isDark ? Colors.white10 : Colors.grey[200]!),
                       width: _isPlaying ? 1.5 : 1,
                     ),
-                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4))],
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Text(
                     kurdishExplanation,
-                    style: TextStyle(fontSize: 14.5, height: 1.7, color: isDark ? Colors.grey[300] : ZankoColors.textPrimary),
-                    textDirection: _selectedVoiceLang == 'en' ? TextDirection.ltr : TextDirection.rtl,
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      height: 1.7,
+                      color: isDark
+                          ? Colors.grey[300]
+                          : ZankoColors.textPrimary,
+                    ),
+                    textDirection: _selectedVoiceLang == 'en'
+                        ? TextDirection.ltr
+                        : TextDirection.rtl,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -860,7 +1061,13 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                 if (keyTerms.isNotEmpty) ...[
                   Text(
                     'وشە کلیلییەکان (Key Terms):',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? Colors.grey[300] : ZankoColors.textPrimary),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: isDark
+                          ? Colors.grey[300]
+                          : ZankoColors.textPrimary,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Wrap(
@@ -868,13 +1075,25 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                     runSpacing: 8,
                     children: keyTerms.map((term) {
                       return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: ZankoColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.25)),
+                          border: Border.all(
+                            color: ZankoColors.primary.withValues(alpha: 0.25),
+                          ),
                         ),
-                        child: Text(term, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ZankoColors.primary)),
+                        child: Text(
+                          term,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: ZankoColors.primary,
+                          ),
+                        ),
                       );
                     }).toList(),
                   ),
@@ -887,7 +1106,6 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
       ],
     );
   }
-
 
   Widget _buildAudioControlBar(bool isDark) {
     return Container(
@@ -925,7 +1143,9 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
               IconButton(
                 icon: const Icon(CupertinoIcons.backward_fill),
                 onPressed: _previousSection,
-                color: _activeSectionIndex > 0 ? (isDark ? Colors.white : ZankoColors.textPrimary) : Colors.grey,
+                color: _activeSectionIndex > 0
+                    ? (isDark ? Colors.white : ZankoColors.textPrimary)
+                    : Colors.grey,
               ),
               const SizedBox(width: 12),
 
@@ -949,7 +1169,9 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
                     ],
                   ),
                   child: Icon(
-                    _isPlaying ? CupertinoIcons.pause_fill : CupertinoIcons.play_fill,
+                    _isPlaying
+                        ? CupertinoIcons.pause_fill
+                        : CupertinoIcons.play_fill,
                     color: Colors.white,
                     size: 28,
                   ),
@@ -967,7 +1189,9 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
 
           // Soundwave icon indicator
           Icon(
-            _isPlaying ? CupertinoIcons.waveform : CupertinoIcons.speaker_1_fill,
+            _isPlaying
+                ? CupertinoIcons.waveform
+                : CupertinoIcons.speaker_1_fill,
             color: _isPlaying ? ZankoColors.accent : Colors.grey,
           ),
         ],
@@ -993,11 +1217,34 @@ class VoiceWaveformWidget extends StatefulWidget {
   State<VoiceWaveformWidget> createState() => _VoiceWaveformWidgetState();
 }
 
-class _VoiceWaveformWidgetState extends State<VoiceWaveformWidget> with SingleTickerProviderStateMixin {
+class _VoiceWaveformWidgetState extends State<VoiceWaveformWidget>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   final List<double> _baseHeights = [
-    0.3, 0.6, 0.9, 0.4, 0.8, 1.0, 0.5, 0.7, 0.3, 0.8, 0.6, 1.0,
-    0.7, 0.4, 0.9, 0.5, 0.8, 0.3, 0.6, 0.9, 0.4, 0.7, 0.5, 0.3
+    0.3,
+    0.6,
+    0.9,
+    0.4,
+    0.8,
+    1.0,
+    0.5,
+    0.7,
+    0.3,
+    0.8,
+    0.6,
+    1.0,
+    0.7,
+    0.4,
+    0.9,
+    0.5,
+    0.8,
+    0.3,
+    0.6,
+    0.9,
+    0.4,
+    0.7,
+    0.5,
+    0.3,
   ];
 
   @override
@@ -1027,7 +1274,9 @@ class _VoiceWaveformWidgetState extends State<VoiceWaveformWidget> with SingleTi
             color: widget.primaryColor.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: widget.primaryColor.withValues(alpha: widget.isPlaying ? 0.25 : 0.1),
+              color: widget.primaryColor.withValues(
+                alpha: widget.isPlaying ? 0.25 : 0.1,
+              ),
             ),
           ),
           child: Row(
@@ -1038,7 +1287,10 @@ class _VoiceWaveformWidgetState extends State<VoiceWaveformWidget> with SingleTi
               final wave = widget.isPlaying
                   ? math.sin(_animController.value * 2 * 3.14 + phase).abs()
                   : 0.15;
-              final heightFactor = (0.2 + wave * _baseHeights[i] * 0.8).clamp(0.15, 1.0);
+              final heightFactor = (0.2 + wave * _baseHeights[i] * 0.8).clamp(
+                0.15,
+                1.0,
+              );
 
               return Container(
                 width: 3.5,
@@ -1056,7 +1308,7 @@ class _VoiceWaveformWidgetState extends State<VoiceWaveformWidget> with SingleTi
                             color: widget.primaryColor.withValues(alpha: 0.3),
                             blurRadius: 4,
                             offset: const Offset(0, 1),
-                          )
+                          ),
                         ]
                       : null,
                 ),

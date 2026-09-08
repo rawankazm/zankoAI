@@ -15,7 +15,11 @@ class PdfChatScreen extends StatefulWidget {
   final String? initialFileName;
   final String? initialFileContent;
 
-  const PdfChatScreen({super.key, this.initialFileName, this.initialFileContent});
+  const PdfChatScreen({
+    super.key,
+    this.initialFileName,
+    this.initialFileContent,
+  });
 
   @override
   State<PdfChatScreen> createState() => _PdfChatScreenState();
@@ -38,11 +42,17 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
     super.initState();
     if (widget.initialFileName != null && widget.initialFileName!.isNotEmpty) {
       _selectedPdf = widget.initialFileName!;
-      _selectedFileContent = widget.initialFileContent ??
-          SamplePdfService().getSampleLectureText(widget.initialFileName!, 'Academic Course');
-    } else {
       _selectedFileContent =
-          SamplePdfService().getSampleLectureText(_selectedPdf, 'Academic Course');
+          widget.initialFileContent ??
+          SamplePdfService().getSampleLectureText(
+            widget.initialFileName!,
+            'Academic Course',
+          );
+    } else {
+      _selectedFileContent = SamplePdfService().getSampleLectureText(
+        _selectedPdf,
+        'Academic Course',
+      );
     }
 
     _initWelcomeMessage();
@@ -73,7 +83,8 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
           _selectedFileContent = parsed.content;
           _messages.add({
             'role': 'system',
-            'text': '📄 فایلی نوێ هەڵبژێردرا: ${parsed.fileName} (${parsed.formattedSize})',
+            'text':
+                '📄 فایلی نوێ هەڵبژێردرا: ${parsed.fileName} (${parsed.formattedSize})',
             'time': _formatCurrentTime(),
           });
         });
@@ -125,13 +136,17 @@ class _PdfChatScreenState extends State<PdfChatScreen> {
     try {
       final ai = Provider.of<AiService>(context, listen: false);
       final String pdfContext =
-          (_selectedFileContent != null && _selectedFileContent!.trim().isNotEmpty)
-              ? _selectedFileContent!
-              : 'فایلی $_selectedPdf';
+          (_selectedFileContent != null &&
+              _selectedFileContent!.trim().isNotEmpty)
+          ? _selectedFileContent!
+          : 'فایلی $_selectedPdf';
 
-      final englishCharCount = RegExp(r'[a-zA-Z]').allMatches(pdfContext).length;
+      final englishCharCount = RegExp(
+        r'[a-zA-Z]',
+      ).allMatches(pdfContext).length;
       final isEnglishDoc =
-          pdfContext.length > 30 && (englishCharCount / pdfContext.length) > 0.35;
+          pdfContext.length > 30 &&
+          (englishCharCount / pdfContext.length) > 0.35;
       final isEnglishQuestion =
           RegExp(r'[a-zA-Z]').allMatches(text).length > (text.length * 0.5);
 
@@ -160,7 +175,8 @@ $text
 ''';
 
       final response = await ai.askTeacher(fullPrompt, [], isVip: true);
-      final isInvalid = response.trim().isEmpty ||
+      final isInvalid =
+          response.trim().isEmpty ||
           response.contains('Error') ||
           response.contains('⚠️') ||
           response.contains('blocked');
@@ -172,8 +188,8 @@ $text
             'text': !isInvalid
                 ? response
                 : (response.isNotEmpty
-                    ? response
-                    : '⚠️ ببورە، نەتوانرا وەڵام لە سێرڤەری AI وەربگیرێت. تکایە دووبارە هەوڵ بدەرەوە.'),
+                      ? response
+                      : '⚠️ ببورە، نەتوانرا وەڵام لە سێرڤەری AI وەربگیرێت. تکایە دووبارە هەوڵ بدەرەوە.'),
             'time': _formatCurrentTime(),
           });
           _isThinking = false;
@@ -250,7 +266,9 @@ $text
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
-                            color: isDark ? Colors.white : ZankoColors.textPrimary,
+                            color: isDark
+                                ? Colors.white
+                                : ZankoColors.textPrimary,
                           ),
                         ),
                         Text(
@@ -286,7 +304,9 @@ $text
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: isDark ? ZankoColors.darkBackground : const Color(0xFFF8FAFC),
+                    color: isDark
+                        ? ZankoColors.darkBackground
+                        : const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
@@ -298,7 +318,9 @@ $text
                       style: TextStyle(
                         fontSize: 13,
                         height: 1.6,
-                        color: isDark ? Colors.grey[300] : ZankoColors.textPrimary,
+                        color: isDark
+                            ? Colors.grey[300]
+                            : ZankoColors.textPrimary,
                       ),
                     ),
                   ),
@@ -388,8 +410,9 @@ $text
           maxWidth: MediaQuery.of(context).size.width * 0.84,
         ),
         child: Column(
-          crossAxisAlignment:
-              isAi ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+          crossAxisAlignment: isAi
+              ? CrossAxisAlignment.start
+              : CrossAxisAlignment.end,
           children: [
             Container(
               padding: const EdgeInsets.all(14),
@@ -490,8 +513,10 @@ $text
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            Provider.of<LanguageProvider>(context, listen: false)
-                                .translate('response_copied'),
+                            Provider.of<LanguageProvider>(
+                              context,
+                              listen: false,
+                            ).translate('response_copied'),
                           ),
                           behavior: SnackBarBehavior.floating,
                           duration: const Duration(seconds: 1),
@@ -523,7 +548,9 @@ $text
     final isRtl = lang.isRtl;
 
     return Scaffold(
-      backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
+      backgroundColor: isDark
+          ? ZankoColors.darkBackground
+          : ZankoColors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -549,7 +576,9 @@ $text
                               ? HugeIcons.strokeRoundedArrowRight01
                               : HugeIcons.strokeRoundedArrowLeft01,
                           size: 20,
-                          color: isDark ? Colors.white : ZankoColors.textPrimary,
+                          color: isDark
+                              ? Colors.white
+                              : ZankoColors.textPrimary,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -567,7 +596,9 @@ $text
                                 width: 38,
                                 height: 38,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFF3B30).withValues(alpha: 0.12),
+                                  color: const Color(
+                                    0xFFFF3B30,
+                                  ).withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Center(
@@ -588,7 +619,9 @@ $text
                                       style: TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w800,
-                                        color: isDark ? Colors.white : ZankoColors.textPrimary,
+                                        color: isDark
+                                            ? Colors.white
+                                            : ZankoColors.textPrimary,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -616,7 +649,9 @@ $text
                         icon: HugeIcon(
                           icon: HugeIcons.strokeRoundedDocumentCode,
                           size: 20,
-                          color: isDark ? Colors.white70 : ZankoColors.textPrimary,
+                          color: isDark
+                              ? Colors.white70
+                              : ZankoColors.textPrimary,
                         ),
                         onPressed: _showDocumentTextModal,
                       ),
@@ -647,9 +682,14 @@ $text
                   if (_isBannerExpanded) ...[
                     const SizedBox(height: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
-                        color: isDark ? ZankoColors.darkBackground : const Color(0xFFF8FAFC),
+                        color: isDark
+                            ? ZankoColors.darkBackground
+                            : const Color(0xFFF8FAFC),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -740,7 +780,10 @@ $text
               child: ListView.builder(
                 controller: _scrollController,
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 itemCount: _messages.length,
                 itemBuilder: (context, index) {
                   return _buildMessageBubble(_messages[index], isDark);
@@ -751,7 +794,10 @@ $text
             // Thinking Progress Indicator
             if (_isThinking)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
                     Container(
@@ -760,7 +806,9 @@ $text
                       padding: const EdgeInsets.all(4),
                       child: const CircularProgressIndicator(
                         strokeWidth: 2.2,
-                        valueColor: AlwaysStoppedAnimation<Color>(ZankoColors.primaryBlue),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          ZankoColors.primaryBlue,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -769,7 +817,9 @@ $text
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                        color: isDark
+                            ? Colors.grey[400]
+                            : ZankoColors.textSecondary,
                       ),
                     ),
                   ],
@@ -802,12 +852,16 @@ $text
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: isDark ? ZankoColors.darkBackground : const Color(0xFFF1F5F9),
+                        color: isDark
+                            ? ZankoColors.darkBackground
+                            : const Color(0xFFF1F5F9),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: HugeIcon(
                         icon: HugeIcons.strokeRoundedAttachment01,
-                        color: isDark ? Colors.white70 : ZankoColors.textPrimary,
+                        color: isDark
+                            ? Colors.white70
+                            : ZankoColors.textPrimary,
                         size: 20,
                       ),
                     ),
@@ -827,18 +881,23 @@ $text
                       decoration: InputDecoration(
                         hintText: lang.translate('ask_pdf_hint'),
                         hintStyle: TextStyle(
-                          color: isDark ? Colors.grey[500] : ZankoColors.textSecondary,
+                          color: isDark
+                              ? Colors.grey[500]
+                              : ZankoColors.textSecondary,
                           fontSize: 12.5,
                         ),
                         filled: true,
-                        fillColor:
-                            isDark ? ZankoColors.darkBackground : const Color(0xFFF8FAFC),
+                        fillColor: isDark
+                            ? ZankoColors.darkBackground
+                            : const Color(0xFFF8FAFC),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(18),
                           borderSide: BorderSide.none,
                         ),
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 11,
+                        ),
                       ),
                       onSubmitted: (_) => _sendMessage(),
                     ),

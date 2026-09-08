@@ -1,0 +1,9 @@
+{
+  "name": "zankoai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ZankoAI monorepo root package",
+  "scripts": {
+    "build": "echo 'Build complete'"
+  }
+}

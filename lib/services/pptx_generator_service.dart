@@ -42,7 +42,15 @@ class PptxGeneratorService {
     final t = topic.toLowerCase();
 
     // 1. Medicine, Clinical Healthcare & Surgery
-    if (t.contains('پزیشک') || t.contains('med') || t.contains('health') || t.contains('دکتۆر') || t.contains('نەخۆش') || t.contains('طب') || t.contains('صحة') || t.contains('جراح') || t.contains('clinical')) {
+    if (t.contains('پزیشک') ||
+        t.contains('med') ||
+        t.contains('health') ||
+        t.contains('دکتۆر') ||
+        t.contains('نەخۆش') ||
+        t.contains('طب') ||
+        t.contains('صحة') ||
+        t.contains('جراح') ||
+        t.contains('clinical')) {
       final images = [
         'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&auto=format&fit=crop&q=80', // Slide 1: Medical stethoscope & tablet
         'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&auto=format&fit=crop&q=80', // Slide 2: Doctor team consulting
@@ -57,7 +65,18 @@ class PptxGeneratorService {
     }
 
     // 2. Biology, Genetics, Pharmacy & Laboratory
-    if (t.contains('بایۆلۆجی') || t.contains('دەرمان') || t.contains('تاقیگە') || t.contains('جین') || t.contains('biolog') || t.contains('pharma') || t.contains('gene') || t.contains('lab') || t.contains('أحياء') || t.contains('دواء') || t.contains('مختبر') || t.contains('وراث')) {
+    if (t.contains('بایۆلۆجی') ||
+        t.contains('دەرمان') ||
+        t.contains('تاقیگە') ||
+        t.contains('جین') ||
+        t.contains('biolog') ||
+        t.contains('pharma') ||
+        t.contains('gene') ||
+        t.contains('lab') ||
+        t.contains('أحياء') ||
+        t.contains('دواء') ||
+        t.contains('مختبر') ||
+        t.contains('وراث')) {
       final images = [
         'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800&auto=format&fit=crop&q=80', // Slide 1: Lab glassware & research
         'https://images.unsplash.com/photo-1530497610245-94d3c16cda28?w=800&auto=format&fit=crop&q=80', // Slide 2: DNA structure & genetics
@@ -72,7 +91,15 @@ class PptxGeneratorService {
     }
 
     // 3. AI, Machine Learning, Robotics & Neural Networks
-    if (t.contains('ژیری') || t.contains('دەستکرد') || t.contains('ai') || t.contains('machine learning') || t.contains('neural') || t.contains('robot') || t.contains('ذكاء') || t.contains('اصطناعي') || t.contains('روبوت')) {
+    if (t.contains('ژیری') ||
+        t.contains('دەستکرد') ||
+        t.contains('ai') ||
+        t.contains('machine learning') ||
+        t.contains('neural') ||
+        t.contains('robot') ||
+        t.contains('ذكاء') ||
+        t.contains('اصطناعي') ||
+        t.contains('روبوت')) {
       final images = [
         'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80', // Slide 1: Glowing AI neural network
         'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&auto=format&fit=crop&q=80', // Slide 2: Humanoid robot hand
@@ -87,7 +114,16 @@ class PptxGeneratorService {
     }
 
     // 4. Cybersecurity, Network Security & Ethical Hacking
-    if (t.contains('سایبەر') || t.contains('سکیوریتی') || t.contains('security') || t.contains('cyber') || t.contains('network') || t.contains('ئاسایش') || t.contains('تۆڕ') || t.contains('أمن') || t.contains('شبك') || t.contains('حماي')) {
+    if (t.contains('سایبەر') ||
+        t.contains('سکیوریتی') ||
+        t.contains('security') ||
+        t.contains('cyber') ||
+        t.contains('network') ||
+        t.contains('ئاسایش') ||
+        t.contains('تۆڕ') ||
+        t.contains('أمن') ||
+        t.contains('شبك') ||
+        t.contains('حماي')) {
       final images = [
         'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&auto=format&fit=crop&q=80', // Slide 1: Cyber lock & security shield
         'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80', // Slide 2: Server room infrastructure
@@ -102,7 +138,19 @@ class PptxGeneratorService {
     }
 
     // 5. Software Engineering, Computer Science & Web/Mobile Dev
-    if (t.contains('کۆمپیوتەر') || t.contains('بەرنامە') || t.contains('نەرمەکاڵا') || t.contains('تەکنەلۆجیا') || t.contains('computer') || t.contains('software') || t.contains('code') || t.contains('program') || t.contains('app') || t.contains('web') || t.contains('حاسوب') || t.contains('برمج') || t.contains('تطوير')) {
+    if (t.contains('کۆمپیوتەر') ||
+        t.contains('بەرنامە') ||
+        t.contains('نەرمەکاڵا') ||
+        t.contains('تەکنەلۆجیا') ||
+        t.contains('computer') ||
+        t.contains('software') ||
+        t.contains('code') ||
+        t.contains('program') ||
+        t.contains('app') ||
+        t.contains('web') ||
+        t.contains('حاسوب') ||
+        t.contains('برمج') ||
+        t.contains('تطوير')) {
       final images = [
         'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80', // Slide 1: Clean developer workspace & code
         'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&auto=format&fit=crop&q=80', // Slide 2: Laptop and software workflow
@@ -117,7 +165,16 @@ class PptxGeneratorService {
     }
 
     // 6. Cloud Computing, Big Data, Data Science & Analytics
-    if (t.contains('کلاود') || t.contains('داتا') || t.contains('ئامار') || t.contains('cloud') || t.contains('data') || t.contains('analytics') || t.contains('database') || t.contains('سحاب') || t.contains('بيانات') || t.contains('إحصاء')) {
+    if (t.contains('کلاود') ||
+        t.contains('داتا') ||
+        t.contains('ئامار') ||
+        t.contains('cloud') ||
+        t.contains('data') ||
+        t.contains('analytics') ||
+        t.contains('database') ||
+        t.contains('سحاب') ||
+        t.contains('بيانات') ||
+        t.contains('إحصاء')) {
       final images = [
         'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&auto=format&fit=crop&q=80', // Slide 1: Big data analytics chart
         'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80', // Slide 2: Cloud computing network
@@ -132,7 +189,16 @@ class PptxGeneratorService {
     }
 
     // 7. Civil Engineering, Architecture & Construction
-    if (t.contains('تەلارساز') || t.contains('بیناساز') || t.contains('شارستان') || t.contains('architecture') || t.contains('civil') || t.contains('construction') || t.contains('building') || t.contains('عمار') || t.contains('بناء') || t.contains('إنشاء')) {
+    if (t.contains('تەلارساز') ||
+        t.contains('بیناساز') ||
+        t.contains('شارستان') ||
+        t.contains('architecture') ||
+        t.contains('civil') ||
+        t.contains('construction') ||
+        t.contains('building') ||
+        t.contains('عمار') ||
+        t.contains('بناء') ||
+        t.contains('إنشاء')) {
       final images = [
         'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&auto=format&fit=crop&q=80', // Slide 1: Modern architectural skyscraper
         'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&auto=format&fit=crop&q=80', // Slide 2: Architectural blueprint drafting
@@ -147,7 +213,21 @@ class PptxGeneratorService {
     }
 
     // 8. Electrical, Mechanical, Energy & General Engineering
-    if (t.contains('ئەندازیار') || t.contains('کارەبا') || t.contains('میکانیک') || t.contains('وزە') || t.contains('خۆر') || t.contains('نەوت') || t.contains('engineer') || t.contains('electric') || t.contains('mechanic') || t.contains('energy') || t.contains('solar') || t.contains('هندس') || t.contains('كهرب') || t.contains('طاق') || t.contains('نفط')) {
+    if (t.contains('ئەندازیار') ||
+        t.contains('کارەبا') ||
+        t.contains('میکانیک') ||
+        t.contains('وزە') ||
+        t.contains('خۆر') ||
+        t.contains('نەوت') ||
+        t.contains('engineer') ||
+        t.contains('electric') ||
+        t.contains('mechanic') ||
+        t.contains('energy') ||
+        t.contains('solar') ||
+        t.contains('هندس') ||
+        t.contains('كهرب') ||
+        t.contains('طاق') ||
+        t.contains('نفط')) {
       final images = [
         'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80', // Slide 1: Industrial engineering precision
         'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=800&auto=format&fit=crop&q=80', // Slide 2: Solar panels & clean energy
@@ -162,7 +242,22 @@ class PptxGeneratorService {
     }
 
     // 9. Law, Legal Studies, Judiciary & Politics
-    if (t.contains('یاسا') || t.contains('داد') || t.contains('ماف') || t.contains('دەستوور') || t.contains('پەرلەمان') || t.contains('سیاسەت') || t.contains('قانون') || t.contains('عدال') || t.contains('حقوق') || t.contains('دستور') || t.contains('سياس') || t.contains('law') || t.contains('legal') || t.contains('justice') || t.contains('court') || t.contains('politic')) {
+    if (t.contains('یاسا') ||
+        t.contains('داد') ||
+        t.contains('ماف') ||
+        t.contains('دەستوور') ||
+        t.contains('پەرلەمان') ||
+        t.contains('سیاسەت') ||
+        t.contains('قانون') ||
+        t.contains('عدال') ||
+        t.contains('حقوق') ||
+        t.contains('دستور') ||
+        t.contains('سياس') ||
+        t.contains('law') ||
+        t.contains('legal') ||
+        t.contains('justice') ||
+        t.contains('court') ||
+        t.contains('politic')) {
       final images = [
         'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop&q=80', // Slide 1: Scales of justice & legal books
         'https://images.unsplash.com/photo-1505664194779-8beaceb93744?w=800&auto=format&fit=crop&q=80', // Slide 2: Classic law library & gavel
@@ -177,7 +272,21 @@ class PptxGeneratorService {
     }
 
     // 10. Business, Management, Economics & Accounting
-    if (t.contains('کارگێڕی') || t.contains('ئابووری') || t.contains('ژمێریاری') || t.contains('بازاڕ') || t.contains('دارایی') || t.contains('بانک') || t.contains('business') || t.contains('manage') || t.contains('econom') || t.contains('finance') || t.contains('account') || t.contains('إدارة') || t.contains('اقتصاد') || t.contains('محاسب') || t.contains('مالي')) {
+    if (t.contains('کارگێڕی') ||
+        t.contains('ئابووری') ||
+        t.contains('ژمێریاری') ||
+        t.contains('بازاڕ') ||
+        t.contains('دارایی') ||
+        t.contains('بانک') ||
+        t.contains('business') ||
+        t.contains('manage') ||
+        t.contains('econom') ||
+        t.contains('finance') ||
+        t.contains('account') ||
+        t.contains('إدارة') ||
+        t.contains('اقتصاد') ||
+        t.contains('محاسب') ||
+        t.contains('مالي')) {
       final images = [
         'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80', // Slide 1: Financial market analysis
         'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&auto=format&fit=crop&q=80', // Slide 2: Business executive strategy
@@ -192,7 +301,20 @@ class PptxGeneratorService {
     }
 
     // 11. Psychology, Education & Philosophy
-    if (t.contains('پەروەردە') || t.contains('دەروون') || t.contains('کۆمەڵناسی') || t.contains('فەلسەفە') || t.contains('فێرکاری') || t.contains('تربية') || t.contains('نفس') || t.contains('اجتماع') || t.contains('فلسفة') || t.contains('تعليم') || t.contains('psych') || t.contains('educat') || t.contains('socio') || t.contains('philosophy')) {
+    if (t.contains('پەروەردە') ||
+        t.contains('دەروون') ||
+        t.contains('کۆمەڵناسی') ||
+        t.contains('فەلسەفە') ||
+        t.contains('فێرکاری') ||
+        t.contains('تربية') ||
+        t.contains('نفس') ||
+        t.contains('اجتماع') ||
+        t.contains('فلسفة') ||
+        t.contains('تعليم') ||
+        t.contains('psych') ||
+        t.contains('educat') ||
+        t.contains('socio') ||
+        t.contains('philosophy')) {
       final images = [
         'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=800&auto=format&fit=crop&q=80', // Slide 1: University library & academic books
         'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop&q=80', // Slide 2: Interactive educational lecture
@@ -207,7 +329,21 @@ class PptxGeneratorService {
     }
 
     // 12. History, Archaeology, Culture & Kurdish Studies
-    if (t.contains('مێژوو') || t.contains('شوێنەوار') || t.contains('کورد') || t.contains('کەلتوور') || t.contains('کەلەپوور') || t.contains('شارستانیەت') || t.contains('تاريخ') || t.contains('آثار') || t.contains('حضار') || t.contains('تراث') || t.contains('کرد') || t.contains('history') || t.contains('archaeol') || t.contains('heritage') || t.contains('kurd')) {
+    if (t.contains('مێژوو') ||
+        t.contains('شوێنەوار') ||
+        t.contains('کورد') ||
+        t.contains('کەلتوور') ||
+        t.contains('کەلەپوور') ||
+        t.contains('شارستانیەت') ||
+        t.contains('تاريخ') ||
+        t.contains('آثار') ||
+        t.contains('حضار') ||
+        t.contains('تراث') ||
+        t.contains('کرد') ||
+        t.contains('history') ||
+        t.contains('archaeol') ||
+        t.contains('heritage') ||
+        t.contains('kurd')) {
       final images = [
         'https://images.unsplash.com/photo-1461360370896-922624d12aa1?w=800&auto=format&fit=crop&q=80', // Slide 1: Ancient historical parchment & map
         'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=800&auto=format&fit=crop&q=80', // Slide 2: Historical library archive
@@ -222,7 +358,21 @@ class PptxGeneratorService {
     }
 
     // 13. Languages, Literature, Poetry & Translation
-    if (t.contains('زمان') || t.contains('ئەدەب') || t.contains('شێعر') || t.contains('شیعر') || t.contains('ڕۆمان') || t.contains('وەرگێڕان') || t.contains('لغة') || t.contains('أدب') || t.contains('شعر') || t.contains('رواية') || t.contains('ترجم') || t.contains('language') || t.contains('literat') || t.contains('poem') || t.contains('translat')) {
+    if (t.contains('زمان') ||
+        t.contains('ئەدەب') ||
+        t.contains('شێعر') ||
+        t.contains('شیعر') ||
+        t.contains('ڕۆمان') ||
+        t.contains('وەرگێڕان') ||
+        t.contains('لغة') ||
+        t.contains('أدب') ||
+        t.contains('شعر') ||
+        t.contains('رواية') ||
+        t.contains('ترجم') ||
+        t.contains('language') ||
+        t.contains('literat') ||
+        t.contains('poem') ||
+        t.contains('translat')) {
       final images = [
         'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&auto=format&fit=crop&q=80', // Slide 1: Scholarly reading & open book
         'https://images.unsplash.com/photo-1474932430478-367dbb6832c1?w=800&auto=format&fit=crop&q=80', // Slide 2: Classical literature collection
@@ -237,7 +387,21 @@ class PptxGeneratorService {
     }
 
     // 14. Agriculture, Environment, Ecology & Nature
-    if (t.contains('کشتوکاڵ') || t.contains('ژینگە') || t.contains('ڕووەک') || t.contains('دارستان') || t.contains('ئاژەڵ') || t.contains('زەوی') || t.contains('زراعة') || t.contains('بيئة') || t.contains('نبات') || t.contains('غابات') || t.contains('agri') || t.contains('farm') || t.contains('environ') || t.contains('plant') || t.contains('ecolog')) {
+    if (t.contains('کشتوکاڵ') ||
+        t.contains('ژینگە') ||
+        t.contains('ڕووەک') ||
+        t.contains('دارستان') ||
+        t.contains('ئاژەڵ') ||
+        t.contains('زەوی') ||
+        t.contains('زراعة') ||
+        t.contains('بيئة') ||
+        t.contains('نبات') ||
+        t.contains('غابات') ||
+        t.contains('agri') ||
+        t.contains('farm') ||
+        t.contains('environ') ||
+        t.contains('plant') ||
+        t.contains('ecolog')) {
       final images = [
         'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&auto=format&fit=crop&q=80', // Slide 1: Modern agricultural wheat field
         'https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=800&auto=format&fit=crop&q=80', // Slide 2: Smart agronomy greenhouse
@@ -266,7 +430,10 @@ class PptxGeneratorService {
   }
 
   /// Parses markdown or plain text AI output into structured SlideModel items
-  static List<SlideModel> parseSlidesFromText(String rawText, {String? defaultTitle}) {
+  static List<SlideModel> parseSlidesFromText(
+    String rawText, {
+    String? defaultTitle,
+  }) {
     final List<SlideModel> slides = [];
     final lines = rawText.split('\n');
 
@@ -279,24 +446,40 @@ class PptxGeneratorService {
 
     void saveCurrentSlide() {
       if (currentTitle.isNotEmpty || currentBullets.isNotEmpty) {
-        String assignedTitle = currentTitle.isNotEmpty ? currentTitle : (defaultTitle ?? 'سلاید');
+        String assignedTitle = currentTitle.isNotEmpty
+            ? currentTitle
+            : (defaultTitle ?? 'سلاید');
         // If Slide 1 and defaultTitle is provided, make sure Slide 1 represents the exact chosen topic title
-        if (slideCounter == 1 && defaultTitle != null && defaultTitle.trim().isNotEmpty) {
+        if (slideCounter == 1 &&
+            defaultTitle != null &&
+            defaultTitle.trim().isNotEmpty) {
           final t = assignedTitle.trim();
-          if (t.contains('ناساندن') || t.contains('چەمک') || t.contains('گرنگی') || t.contains('Introduction') || t.contains('سلاید') || t.contains('Slide') || t.contains('سلايد') || t.isEmpty) {
+          if (t.contains('ناساندن') ||
+              t.contains('چەمک') ||
+              t.contains('گرنگی') ||
+              t.contains('Introduction') ||
+              t.contains('سلاید') ||
+              t.contains('Slide') ||
+              t.contains('سلايد') ||
+              t.isEmpty) {
             assignedTitle = defaultTitle.trim();
           }
         }
 
-        final assignedImg = getSlideSpecificImageUrl(defaultTitle ?? assignedTitle, slideCounter);
-        slides.add(SlideModel(
-          title: assignedTitle,
-          bulletPoints: List.from(currentBullets),
-          visualPrompt: currentVisual.isNotEmpty ? currentVisual : null,
-          speakerNotes: currentNotes.isNotEmpty ? currentNotes : null,
-          imageUrl: assignedImg,
-          categoryTag: 'Canva / PPT Template',
-        ));
+        final assignedImg = getSlideSpecificImageUrl(
+          defaultTitle ?? assignedTitle,
+          slideCounter,
+        );
+        slides.add(
+          SlideModel(
+            title: assignedTitle,
+            bulletPoints: List.from(currentBullets),
+            visualPrompt: currentVisual.isNotEmpty ? currentVisual : null,
+            speakerNotes: currentNotes.isNotEmpty ? currentNotes : null,
+            imageUrl: assignedImg,
+            categoryTag: 'Canva / PPT Template',
+          ),
+        );
         slideCounter++;
       }
       currentTitle = '';
@@ -310,18 +493,45 @@ class PptxGeneratorService {
       if (trimmed.isEmpty) continue;
 
       // Skip top-level document headers like "# 💡 بابەتی سیمینار" or "# Presentation Title"
-      if (trimmed.startsWith('# ') && !RegExp(r'(سلاید|سلايد|Slide|الشريحة|شريحة)', caseSensitive: false).hasMatch(trimmed)) {
+      if (trimmed.startsWith('# ') &&
+          !RegExp(
+            r'(سلاید|سلايد|Slide|الشريحة|شريحة)',
+            caseSensitive: false,
+          ).hasMatch(trimmed)) {
         continue;
       }
 
       // Detect explicit slide headers e.g. "### 🔹 سلایدی ١: ناساندن", "### Slide 1: Title", "1️⃣ سلایدی یەکەم:", "## Slide 1", "**سلایدی ١: ...**", "### 1. Title", "### ١. العنوان"
-      final isExplicitSlideKeyword = RegExp(
-        r'^(#{1,4}\s*)?(🔹|🔸|▪️|▫️|🔻|\d+️⃣)?\s*(\*\*)?(سلایدی|سلاید|سڵایدی|سڵاید|سلايد|سلايدي|Slide|الشريحة|شريحة|تەوەری|تەوەرەی|المحور|المبحث)\s*(?:رقم\s*)?[\(\[\{]?(\d+|[٠-٩]+|[١-٩]+|یەکەم|دووەم|سێیەم|چوارەم|پێنجەم|شەشەم|حەوتەم|هەشتەم|الأولى?|الأول|الثاني[ة]?|الثالث[ة]?|الرابع[ة]?|الخامس[ة]?|السادس[ة]?|السابع[ة]?|الثامن[ة]?)?[\)\]\}]?\s*[:\-–\.]?\s*',
-        caseSensitive: false,
-      ).hasMatch(trimmed) || RegExp(r'^#{2,3}\s*[\(\[\{]?(\d+|[٠-٩]+)[\)\]\}]?[\.:\-]\s+', caseSensitive: false).hasMatch(trimmed);
+      final isExplicitSlideKeyword =
+          RegExp(
+            r'^(#{1,4}\s*)?(🔹|🔸|▪️|▫️|🔻|\d+️⃣)?\s*(\*\*)?(سلایدی|سلاید|سڵایدی|سڵاید|سلايد|سلايدي|Slide|الشريحة|شريحة|تەوەری|تەوەرەی|المحور|المبحث)\s*(?:رقم\s*)?[\(\[\{]?(\d+|[٠-٩]+|[١-٩]+|یەکەم|دووەم|سێیەم|چوارەم|پێنجەم|شەشەم|حەوتەم|هەشتەم|الأولى?|الأول|الثاني[ة]?|الثالث[ة]?|الرابع[ة]?|الخامس[ة]?|السادس[ة]?|السابع[ة]?|الثامن[ة]?)?[\)\]\}]?\s*[:\-–\.]?\s*',
+            caseSensitive: false,
+          ).hasMatch(trimmed) ||
+          RegExp(
+            r'^#{2,3}\s*[\(\[\{]?(\d+|[٠-٩]+)[\)\]\}]?[\.:\-]\s+',
+            caseSensitive: false,
+          ).hasMatch(trimmed);
 
-      final isMarkdownSlideHeading = RegExp(r'^#{2,3}\s+', caseSensitive: false).hasMatch(trimmed) &&
-          (trimmed.contains('سلاید') || trimmed.contains('سڵاید') || trimmed.contains('Slide') || trimmed.contains('سلايد') || trimmed.contains('الشريحة') || trimmed.contains('شريحة') || trimmed.contains('المحور') || trimmed.contains('المبحث') || trimmed.contains('🔹') || trimmed.contains('🔸') || RegExp(r'\b(Slide\s*\d+)\b', caseSensitive: false).hasMatch(trimmed) || RegExp(r'^#{2,3}\s*(\d+|[٠-٩]+)[\.:\-]\s+', caseSensitive: false).hasMatch(trimmed));
+      final isMarkdownSlideHeading =
+          RegExp(r'^#{2,3}\s+', caseSensitive: false).hasMatch(trimmed) &&
+          (trimmed.contains('سلاید') ||
+              trimmed.contains('سڵاید') ||
+              trimmed.contains('Slide') ||
+              trimmed.contains('سلايد') ||
+              trimmed.contains('الشريحة') ||
+              trimmed.contains('شريحة') ||
+              trimmed.contains('المحور') ||
+              trimmed.contains('المبحث') ||
+              trimmed.contains('🔹') ||
+              trimmed.contains('🔸') ||
+              RegExp(
+                r'\b(Slide\s*\d+)\b',
+                caseSensitive: false,
+              ).hasMatch(trimmed) ||
+              RegExp(
+                r'^#{2,3}\s*(\d+|[٠-٩]+)[\.:\-]\s+',
+                caseSensitive: false,
+              ).hasMatch(trimmed));
 
       final isSlideHeader = isExplicitSlideKeyword || isMarkdownSlideHeading;
 
@@ -330,13 +540,22 @@ class PptxGeneratorService {
           saveCurrentSlide();
         }
         inSlide = true;
-        
+
         // Extract title
         String cleanTitle = trimmed
             .replaceAll(RegExp(r'^#+\s*'), '')
             .replaceAll(RegExp(r'^(🔹|🔸|▪️|▫️|🔻|\d+️⃣)\s*'), '')
-            .replaceAll(RegExp(r'^(سلایدی|سلاید|سڵایدی|سڵاید|سلايد|سلايدي|Slide|الشريحة|شريحة|تەوەری|تەوەرەی|المحور|المبحث)\s*(?:رقم\s*)?[\(\[\{]?(\d+|[٠-٩]+|[١-٩]+|یەکەم|دووەم|سێیەم|چوارەم|پێنجەم|شەشەم|حەوتەم|هەشتەم|الأولى?|الأول|الثاني[ة]?|الثالث[ة]?|الرابع[ة]?|الخامس[ة]?|السادس[ة]?|السابع[ة]?|الثامن[ة]?)?[\)\]\}]?[:\-–\.]?\s*', caseSensitive: false), '')
-            .replaceAll(RegExp(r'^[\(\[\{]?(\d+|[٠-٩]+)[\)\]\}]?[\.:\-]\s*'), '')
+            .replaceAll(
+              RegExp(
+                r'^(سلایدی|سلاید|سڵایدی|سڵاید|سلايد|سلايدي|Slide|الشريحة|شريحة|تەوەری|تەوەرەی|المحور|المبحث)\s*(?:رقم\s*)?[\(\[\{]?(\d+|[٠-٩]+|[١-٩]+|یەکەم|دووەم|سێیەم|چوارەم|پێنجەم|شەشەم|حەوتەم|هەشتەم|الأولى?|الأول|الثاني[ة]?|الثالث[ة]?|الرابع[ة]?|الخامس[ة]?|السادس[ة]?|السابع[ة]?|الثامن[ة]?)?[\)\]\}]?[:\-–\.]?\s*',
+                caseSensitive: false,
+              ),
+              '',
+            )
+            .replaceAll(
+              RegExp(r'^[\(\[\{]?(\d+|[٠-٩]+)[\)\]\}]?[\.:\-]\s*'),
+              '',
+            )
             .replaceAll('**', '')
             .replaceAll('*', '')
             .trim();
@@ -346,8 +565,18 @@ class PptxGeneratorService {
       }
 
       // Detect slide title explicit line
-      if (trimmed.startsWith('- **ناونیشان') || trimmed.startsWith('- **ناونیشانی سەرەکی**:') || trimmed.startsWith('- **Title**:') || trimmed.startsWith('- **العنوان**:') || trimmed.startsWith('- **عنوان الشريحة**:')) {
-        final titleVal = trimmed.split(':').sublist(1).join(':').replaceAll('**', '').replaceAll('*', '').trim();
+      if (trimmed.startsWith('- **ناونیشان') ||
+          trimmed.startsWith('- **ناونیشانی سەرەکی**:') ||
+          trimmed.startsWith('- **Title**:') ||
+          trimmed.startsWith('- **العنوان**:') ||
+          trimmed.startsWith('- **عنوان الشريحة**:')) {
+        final titleVal = trimmed
+            .split(':')
+            .sublist(1)
+            .join(':')
+            .replaceAll('**', '')
+            .replaceAll('*', '')
+            .trim();
         if (titleVal.isNotEmpty) {
           currentTitle = titleVal;
         }
@@ -355,13 +584,23 @@ class PptxGeneratorService {
       }
 
       // Detect Visual / Diagram / Image suggestion
-      if (trimmed.contains('🖼️') || trimmed.contains('وێنە') || trimmed.contains('دایەگرام') || trimmed.contains('Diagram') || trimmed.contains('Visual') || trimmed.contains('صورة') || trimmed.contains('مخطط') || trimmed.contains('التركيز البصري')) {
+      if (trimmed.contains('🖼️') ||
+          trimmed.contains('وێنە') ||
+          trimmed.contains('دایەگرام') ||
+          trimmed.contains('Diagram') ||
+          trimmed.contains('Visual') ||
+          trimmed.contains('صورة') ||
+          trimmed.contains('مخطط') ||
+          trimmed.contains('التركيز البصري')) {
         final visualVal = trimmed
             .replaceAll(RegExp(r'^[-*]\s*'), '')
             .replaceAll(RegExp(r'.*وێنە.*?:', caseSensitive: false), '')
             .replaceAll(RegExp(r'.*Visual.*?:', caseSensitive: false), '')
             .replaceAll(RegExp(r'.*صورة.*?:', caseSensitive: false), '')
-            .replaceAll(RegExp(r'.*التركيز البصري.*?:', caseSensitive: false), '')
+            .replaceAll(
+              RegExp(r'.*التركيز البصري.*?:', caseSensitive: false),
+              '',
+            )
             .replaceAll('🖼️', '')
             .replaceAll('**', '')
             .trim();
@@ -372,14 +611,31 @@ class PptxGeneratorService {
       }
 
       // Detect speaker notes
-      if (trimmed.contains('تێبینی پێشکەشکار') || trimmed.contains('Speaker Note') || trimmed.contains('ملاحظات المتحدث') || trimmed.contains('توجيهات المتحدث') || trimmed.contains('ملاحظات الإلقاء') || trimmed.contains('🎙️')) {
+      if (trimmed.contains('تێبینی پێشکەشکار') ||
+          trimmed.contains('Speaker Note') ||
+          trimmed.contains('ملاحظات المتحدث') ||
+          trimmed.contains('توجيهات المتحدث') ||
+          trimmed.contains('ملاحظات الإلقاء') ||
+          trimmed.contains('🎙️')) {
         final noteVal = trimmed
             .replaceAll(RegExp(r'^[-*]\s*'), '')
-            .replaceAll(RegExp(r'.*تێبینی پێشکەشکار.*?:', caseSensitive: false), '')
+            .replaceAll(
+              RegExp(r'.*تێبینی پێشکەشکار.*?:', caseSensitive: false),
+              '',
+            )
             .replaceAll(RegExp(r'.*Speaker Note.*?:', caseSensitive: false), '')
-            .replaceAll(RegExp(r'.*ملاحظات المتحدث.*?:', caseSensitive: false), '')
-            .replaceAll(RegExp(r'.*توجيهات المتحدث.*?:', caseSensitive: false), '')
-            .replaceAll(RegExp(r'.*ملاحظات الإلقاء.*?:', caseSensitive: false), '')
+            .replaceAll(
+              RegExp(r'.*ملاحظات المتحدث.*?:', caseSensitive: false),
+              '',
+            )
+            .replaceAll(
+              RegExp(r'.*توجيهات المتحدث.*?:', caseSensitive: false),
+              '',
+            )
+            .replaceAll(
+              RegExp(r'.*ملاحظات الإلقاء.*?:', caseSensitive: false),
+              '',
+            )
             .replaceAll('🎙️', '')
             .replaceAll('"', '')
             .replaceAll('**', '')
@@ -391,7 +647,11 @@ class PptxGeneratorService {
       }
 
       // Detect bullet points & sentences
-      if (trimmed.startsWith('-') || trimmed.startsWith('*') || trimmed.startsWith('•') || RegExp(r'^\d+\.').hasMatch(trimmed) || RegExp(r'^[٠-٩]+\.').hasMatch(trimmed)) {
+      if (trimmed.startsWith('-') ||
+          trimmed.startsWith('*') ||
+          trimmed.startsWith('•') ||
+          RegExp(r'^\d+\.').hasMatch(trimmed) ||
+          RegExp(r'^[٠-٩]+\.').hasMatch(trimmed)) {
         final bulletText = trimmed
             .replaceAll(RegExp(r'^[-*•]\s*'), '')
             .replaceAll(RegExp(r'^[\d+٠-٩]+\.\s*'), '')
@@ -416,17 +676,19 @@ class PptxGeneratorService {
     // Fallback if parsing didn't catch separate slides
     if (slides.isEmpty) {
       final safeTitle = defaultTitle ?? 'پرێزێنتەیشنی سیمینار';
-      slides.add(SlideModel(
-        title: safeTitle,
-        bulletPoints: [
-          'پێناسەی سەرەکی و گرنگیی زانستی بابەتەکە',
-          'ئامانجەکان و شیکاریی داتای توێژینەوە',
-          'دەرئەنجامەکان و پێشنیار بۆ ئاییندە',
-        ],
-        visualPrompt: 'وێنەی بەرگی سەرەکی و هێڵکاریی چەمکەکان',
-        speakerNotes: 'تێبینی دەستپێکی سیمینار بۆ پێشکەشکار',
-        imageUrl: getSlideSpecificImageUrl(safeTitle, 1),
-      ));
+      slides.add(
+        SlideModel(
+          title: safeTitle,
+          bulletPoints: [
+            'پێناسەی سەرەکی و گرنگیی زانستی بابەتەکە',
+            'ئامانجەکان و شیکاریی داتای توێژینەوە',
+            'دەرئەنجامەکان و پێشنیار بۆ ئاییندە',
+          ],
+          visualPrompt: 'وێنەی بەرگی سەرەکی و هێڵکاریی چەمکەکان',
+          speakerNotes: 'تێبینی دەستپێکی سیمینار بۆ پێشکەشکار',
+          imageUrl: getSlideSpecificImageUrl(safeTitle, 1),
+        ),
+      );
     }
 
     return slides;
@@ -441,9 +703,14 @@ class PptxGeneratorService {
       client.connectionTimeout = const Duration(seconds: 4);
       final uri = Uri.parse(url);
       final request = await client.getUrl(uri);
-      final response = await request.close().timeout(const Duration(seconds: 5));
+      final response = await request.close().timeout(
+        const Duration(seconds: 5),
+      );
       if (response.statusCode == 200) {
-        final bytes = await response.fold<List<int>>([], (prev, element) => prev..addAll(element));
+        final bytes = await response.fold<List<int>>(
+          [],
+          (prev, element) => prev..addAll(element),
+        );
         if (bytes.isNotEmpty) return bytes;
       }
     } catch (_) {
@@ -456,12 +723,73 @@ class PptxGeneratorService {
   /// Generates a valid 1x1 colored PNG pixel byte buffer as fallback
   static List<int> _getFallbackImageBytes() {
     return [
-      0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D,
-      0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
-      0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4, 0x89, 0x00, 0x00, 0x00,
-      0x0A, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9C, 0x63, 0x00, 0x01, 0x00, 0x00,
-      0x05, 0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4, 0x00, 0x00, 0x00, 0x00, 0x49,
-      0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82
+      0x89,
+      0x50,
+      0x4E,
+      0x47,
+      0x0D,
+      0x0A,
+      0x1A,
+      0x0A,
+      0x00,
+      0x00,
+      0x00,
+      0x0D,
+      0x49,
+      0x48,
+      0x44,
+      0x52,
+      0x00,
+      0x00,
+      0x00,
+      0x01,
+      0x00,
+      0x00,
+      0x00,
+      0x01,
+      0x08,
+      0x06,
+      0x00,
+      0x00,
+      0x00,
+      0x1F,
+      0x15,
+      0xC4,
+      0x89,
+      0x00,
+      0x00,
+      0x00,
+      0x0A,
+      0x49,
+      0x44,
+      0x41,
+      0x54,
+      0x78,
+      0x9C,
+      0x63,
+      0x00,
+      0x01,
+      0x00,
+      0x00,
+      0x05,
+      0x00,
+      0x01,
+      0x0D,
+      0x0A,
+      0x2D,
+      0xB4,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x49,
+      0x45,
+      0x4E,
+      0x44,
+      0xAE,
+      0x42,
+      0x60,
+      0x82,
     ];
   }
 
@@ -483,17 +811,27 @@ class PptxGeneratorService {
     // 1. [Content_Types].xml (including core/app/presProps/viewProps/tableStyles/slideLayouts 1..11)
     final contentTypesXml = _buildContentTypesXml(slides.length);
     final contentTypesBytes = toUtf8(contentTypesXml);
-    archive.addFile(ArchiveFile('[Content_Types].xml', contentTypesBytes.length, contentTypesBytes));
+    archive.addFile(
+      ArchiveFile(
+        '[Content_Types].xml',
+        contentTypesBytes.length,
+        contentTypesBytes,
+      ),
+    );
 
     // 2. _rels/.rels (with core-properties and extended-properties)
     final rootRelsXml = _buildRootRelsXml();
     final rootRelsBytes = toUtf8(rootRelsXml);
-    archive.addFile(ArchiveFile('_rels/.rels', rootRelsBytes.length, rootRelsBytes));
+    archive.addFile(
+      ArchiveFile('_rels/.rels', rootRelsBytes.length, rootRelsBytes),
+    );
 
     // 3. docProps/core.xml & docProps/app.xml (Required for Protected View)
     final coreXml = _buildDocPropsCoreXml(presentationTitle);
     final coreBytes = toUtf8(coreXml);
-    archive.addFile(ArchiveFile('docProps/core.xml', coreBytes.length, coreBytes));
+    archive.addFile(
+      ArchiveFile('docProps/core.xml', coreBytes.length, coreBytes),
+    );
 
     final appXml = _buildDocPropsAppXml(slides.length);
     final appBytes = toUtf8(appXml);
@@ -502,66 +840,151 @@ class PptxGeneratorService {
     // 4. ppt/_rels/presentation.xml.rels
     final presRelsXml = _buildPresentationRelsXml(slides.length);
     final presRelsBytes = toUtf8(presRelsXml);
-    archive.addFile(ArchiveFile('ppt/_rels/presentation.xml.rels', presRelsBytes.length, presRelsBytes));
+    archive.addFile(
+      ArchiveFile(
+        'ppt/_rels/presentation.xml.rels',
+        presRelsBytes.length,
+        presRelsBytes,
+      ),
+    );
 
     // 5. ppt/presentation.xml
     final presXml = _buildPresentationXml(slides.length);
     final presBytes = toUtf8(presXml);
-    archive.addFile(ArchiveFile('ppt/presentation.xml', presBytes.length, presBytes));
+    archive.addFile(
+      ArchiveFile('ppt/presentation.xml', presBytes.length, presBytes),
+    );
 
     // 6. Native Templates: presProps.xml, viewProps.xml, tableStyles.xml, theme1.xml
     final presPropsBytes = toUtf8(PptxTemplateData.ppt_presProps_xml);
-    archive.addFile(ArchiveFile('ppt/presProps.xml', presPropsBytes.length, presPropsBytes));
+    archive.addFile(
+      ArchiveFile('ppt/presProps.xml', presPropsBytes.length, presPropsBytes),
+    );
 
     final viewPropsBytes = toUtf8(PptxTemplateData.ppt_viewProps_xml);
-    archive.addFile(ArchiveFile('ppt/viewProps.xml', viewPropsBytes.length, viewPropsBytes));
+    archive.addFile(
+      ArchiveFile('ppt/viewProps.xml', viewPropsBytes.length, viewPropsBytes),
+    );
 
     final tableStylesBytes = toUtf8(PptxTemplateData.ppt_tableStyles_xml);
-    archive.addFile(ArchiveFile('ppt/tableStyles.xml', tableStylesBytes.length, tableStylesBytes));
+    archive.addFile(
+      ArchiveFile(
+        'ppt/tableStyles.xml',
+        tableStylesBytes.length,
+        tableStylesBytes,
+      ),
+    );
 
     final themeBytes = toUtf8(PptxTemplateData.ppt_theme_theme1_xml);
-    archive.addFile(ArchiveFile('ppt/theme/theme1.xml', themeBytes.length, themeBytes));
+    archive.addFile(
+      ArchiveFile('ppt/theme/theme1.xml', themeBytes.length, themeBytes),
+    );
 
     // 7. SlideMaster and its rels
-    final slideMasterBytes = toUtf8(PptxTemplateData.ppt_slideMasters_slideMaster1_xml);
-    archive.addFile(ArchiveFile('ppt/slideMasters/slideMaster1.xml', slideMasterBytes.length, slideMasterBytes));
+    final slideMasterBytes = toUtf8(
+      PptxTemplateData.ppt_slideMasters_slideMaster1_xml,
+    );
+    archive.addFile(
+      ArchiveFile(
+        'ppt/slideMasters/slideMaster1.xml',
+        slideMasterBytes.length,
+        slideMasterBytes,
+      ),
+    );
 
-    final slideMasterRelsBytes = toUtf8(PptxTemplateData.ppt_slideMasters__rels_slideMaster1_xml_rels);
-    archive.addFile(ArchiveFile('ppt/slideMasters/_rels/slideMaster1.xml.rels', slideMasterRelsBytes.length, slideMasterRelsBytes));
+    final slideMasterRelsBytes = toUtf8(
+      PptxTemplateData.ppt_slideMasters__rels_slideMaster1_xml_rels,
+    );
+    archive.addFile(
+      ArchiveFile(
+        'ppt/slideMasters/_rels/slideMaster1.xml.rels',
+        slideMasterRelsBytes.length,
+        slideMasterRelsBytes,
+      ),
+    );
 
     // 8. SlideLayouts 1..11 and their rels
     final layouts = [
-      (PptxTemplateData.ppt_slideLayouts_slideLayout1_xml, PptxTemplateData.ppt_slideLayouts__rels_slideLayout1_xml_rels),
-      (PptxTemplateData.ppt_slideLayouts_slideLayout2_xml, PptxTemplateData.ppt_slideLayouts__rels_slideLayout2_xml_rels),
-      (PptxTemplateData.ppt_slideLayouts_slideLayout3_xml, PptxTemplateData.ppt_slideLayouts__rels_slideLayout3_xml_rels),
-      (PptxTemplateData.ppt_slideLayouts_slideLayout4_xml, PptxTemplateData.ppt_slideLayouts__rels_slideLayout4_xml_rels),
-      (PptxTemplateData.ppt_slideLayouts_slideLayout5_xml, PptxTemplateData.ppt_slideLayouts__rels_slideLayout5_xml_rels),
-      (PptxTemplateData.ppt_slideLayouts_slideLayout6_xml, PptxTemplateData.ppt_slideLayouts__rels_slideLayout6_xml_rels),
-      (PptxTemplateData.ppt_slideLayouts_slideLayout7_xml, PptxTemplateData.ppt_slideLayouts__rels_slideLayout7_xml_rels),
-      (PptxTemplateData.ppt_slideLayouts_slideLayout8_xml, PptxTemplateData.ppt_slideLayouts__rels_slideLayout8_xml_rels),
-      (PptxTemplateData.ppt_slideLayouts_slideLayout9_xml, PptxTemplateData.ppt_slideLayouts__rels_slideLayout9_xml_rels),
-      (PptxTemplateData.ppt_slideLayouts_slideLayout10_xml, PptxTemplateData.ppt_slideLayouts__rels_slideLayout10_xml_rels),
-      (PptxTemplateData.ppt_slideLayouts_slideLayout11_xml, PptxTemplateData.ppt_slideLayouts__rels_slideLayout11_xml_rels),
+      (
+        PptxTemplateData.ppt_slideLayouts_slideLayout1_xml,
+        PptxTemplateData.ppt_slideLayouts__rels_slideLayout1_xml_rels,
+      ),
+      (
+        PptxTemplateData.ppt_slideLayouts_slideLayout2_xml,
+        PptxTemplateData.ppt_slideLayouts__rels_slideLayout2_xml_rels,
+      ),
+      (
+        PptxTemplateData.ppt_slideLayouts_slideLayout3_xml,
+        PptxTemplateData.ppt_slideLayouts__rels_slideLayout3_xml_rels,
+      ),
+      (
+        PptxTemplateData.ppt_slideLayouts_slideLayout4_xml,
+        PptxTemplateData.ppt_slideLayouts__rels_slideLayout4_xml_rels,
+      ),
+      (
+        PptxTemplateData.ppt_slideLayouts_slideLayout5_xml,
+        PptxTemplateData.ppt_slideLayouts__rels_slideLayout5_xml_rels,
+      ),
+      (
+        PptxTemplateData.ppt_slideLayouts_slideLayout6_xml,
+        PptxTemplateData.ppt_slideLayouts__rels_slideLayout6_xml_rels,
+      ),
+      (
+        PptxTemplateData.ppt_slideLayouts_slideLayout7_xml,
+        PptxTemplateData.ppt_slideLayouts__rels_slideLayout7_xml_rels,
+      ),
+      (
+        PptxTemplateData.ppt_slideLayouts_slideLayout8_xml,
+        PptxTemplateData.ppt_slideLayouts__rels_slideLayout8_xml_rels,
+      ),
+      (
+        PptxTemplateData.ppt_slideLayouts_slideLayout9_xml,
+        PptxTemplateData.ppt_slideLayouts__rels_slideLayout9_xml_rels,
+      ),
+      (
+        PptxTemplateData.ppt_slideLayouts_slideLayout10_xml,
+        PptxTemplateData.ppt_slideLayouts__rels_slideLayout10_xml_rels,
+      ),
+      (
+        PptxTemplateData.ppt_slideLayouts_slideLayout11_xml,
+        PptxTemplateData.ppt_slideLayouts__rels_slideLayout11_xml_rels,
+      ),
     ];
 
     for (int i = 0; i < layouts.length; i++) {
       final layoutNum = i + 1;
       final layoutXmlBytes = toUtf8(layouts[i].$1);
       final layoutRelsBytes = toUtf8(layouts[i].$2);
-      archive.addFile(ArchiveFile('ppt/slideLayouts/slideLayout$layoutNum.xml', layoutXmlBytes.length, layoutXmlBytes));
-      archive.addFile(ArchiveFile('ppt/slideLayouts/_rels/slideLayout$layoutNum.xml.rels', layoutRelsBytes.length, layoutRelsBytes));
+      archive.addFile(
+        ArchiveFile(
+          'ppt/slideLayouts/slideLayout$layoutNum.xml',
+          layoutXmlBytes.length,
+          layoutXmlBytes,
+        ),
+      );
+      archive.addFile(
+        ArchiveFile(
+          'ppt/slideLayouts/_rels/slideLayout$layoutNum.xml.rels',
+          layoutRelsBytes.length,
+          layoutRelsBytes,
+        ),
+      );
     }
 
     final hasCustomLogo = logoBytes != null && logoBytes.isNotEmpty;
     if (hasCustomLogo) {
-      archive.addFile(ArchiveFile('ppt/media/logo.png', logoBytes.length, logoBytes));
+      archive.addFile(
+        ArchiveFile('ppt/media/logo.png', logoBytes.length, logoBytes),
+      );
     }
 
     // 9. Fetch real images in parallel asynchronously and embed into PPTX media/ + slides/
     final imageFutures = slides.asMap().entries.map((entry) {
       final slideNum = entry.key + 1;
       final slide = entry.value;
-      final imgUrl = slide.imageUrl ?? getSlideSpecificImageUrl(presentationTitle, slideNum);
+      final imgUrl =
+          slide.imageUrl ??
+          getSlideSpecificImageUrl(presentationTitle, slideNum);
       return _fetchOrGenerateImageBytes(imgUrl);
     }).toList();
 
@@ -574,14 +997,21 @@ class PptxGeneratorService {
       final isFirst = i == 0;
 
       // Detect real MIME type by checking magic bytes
-      final isPng = imageBytes.length >= 8 &&
+      final isPng =
+          imageBytes.length >= 8 &&
           imageBytes[0] == 0x89 &&
           imageBytes[1] == 0x50 &&
           imageBytes[2] == 0x4E &&
           imageBytes[3] == 0x47;
       final imageExt = isPng ? 'png' : 'jpeg';
 
-      archive.addFile(ArchiveFile('ppt/media/image$slideNum.$imageExt', imageBytes.length, imageBytes));
+      archive.addFile(
+        ArchiveFile(
+          'ppt/media/image$slideNum.$imageExt',
+          imageBytes.length,
+          imageBytes,
+        ),
+      );
 
       // Build slide XML
       final slideXml = _buildSlideXml(
@@ -598,7 +1028,13 @@ class PptxGeneratorService {
         department: department,
       );
       final slideBytes = toUtf8(slideXml);
-      archive.addFile(ArchiveFile('ppt/slides/slide$slideNum.xml', slideBytes.length, slideBytes));
+      archive.addFile(
+        ArchiveFile(
+          'ppt/slides/slide$slideNum.xml',
+          slideBytes.length,
+          slideBytes,
+        ),
+      );
 
       // Build relationship linking slide to layout and embedded image
       final slideRelXml = _buildSlideRelsXml(
@@ -609,7 +1045,13 @@ class PptxGeneratorService {
         hasLogo: isFirst && hasCustomLogo,
       );
       final slideRelBytes = toUtf8(slideRelXml);
-      archive.addFile(ArchiveFile('ppt/slides/_rels/slide$slideNum.xml.rels', slideRelBytes.length, slideRelBytes));
+      archive.addFile(
+        ArchiveFile(
+          'ppt/slides/_rels/slide$slideNum.xml.rels',
+          slideRelBytes.length,
+          slideRelBytes,
+        ),
+      );
     }
 
     final zipEncoder = ZipEncoder();
@@ -630,7 +1072,9 @@ class PptxGeneratorService {
   }) async {
     final effectiveSlides = (slides != null && slides.isNotEmpty)
         ? slides
-        : (rawContent != null ? parseSlidesFromText(rawContent, defaultTitle: title) : <SlideModel>[]);
+        : (rawContent != null
+              ? parseSlidesFromText(rawContent, defaultTitle: title)
+              : <SlideModel>[]);
 
     final bytes = await createPptxBytes(
       effectiveSlides,
@@ -659,7 +1103,8 @@ class PptxGeneratorService {
     final truncated = cleanFileName.length > 35
         ? cleanFileName.substring(0, 35).replaceAll(RegExp(r'_+$'), '')
         : cleanFileName;
-    final fileName = '${truncated.isEmpty ? 'Seminar_Presentation' : truncated}.pptx';
+    final fileName =
+        '${truncated.isEmpty ? 'Seminar_Presentation' : truncated}.pptx';
     final filePath = '${targetDir.path}/$fileName';
 
     final file = File(filePath);
@@ -668,7 +1113,12 @@ class PptxGeneratorService {
     // On Windows, auto-open the PowerPoint presentation in Microsoft PowerPoint
     if (!kIsWeb && Platform.isWindows) {
       try {
-        await Process.run('cmd', ['/c', 'start', '""', filePath], runInShell: true);
+        await Process.run('cmd', [
+          '/c',
+          'start',
+          '""',
+          filePath,
+        ], runInShell: true);
       } catch (e) {
         debugPrint('Windows auto-launch info: $e');
       }
@@ -677,7 +1127,13 @@ class PptxGeneratorService {
     // On Mobile & Desktop, trigger the system Share/Open sheet
     try {
       await Share.shareXFiles(
-        [XFile(filePath, mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation')],
+        [
+          XFile(
+            filePath,
+            mimeType:
+                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+          ),
+        ],
         subject: title,
         text: 'فایلی پاوەرپۆینت بۆ سیمیناری: $title',
       );
@@ -691,7 +1147,10 @@ class PptxGeneratorService {
   // ─────────────────────────────────────────────────────────────────────────
 
   static String _escapeXml(String text) {
-    final cleaned = text.replaceAll(RegExp(r'[\x00-\x08\x0B\x0C\x0E-\x1F\uD800-\uDFFF]'), '');
+    final cleaned = text.replaceAll(
+      RegExp(r'[\x00-\x08\x0B\x0C\x0E-\x1F\uD800-\uDFFF]'),
+      '',
+    );
     return cleaned
         .replaceAll('&', '&amp;')
         .replaceAll('<', '&lt;')
@@ -749,34 +1208,58 @@ class PptxGeneratorService {
         '</Properties>';
   }
 
-
-
   static String _buildContentTypesXml(int slideCount) {
     final buffer = StringBuffer();
     buffer.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n');
-    buffer.write('<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">\n');
+    buffer.write(
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">\n',
+    );
     buffer.write('  <Default Extension="jpeg" ContentType="image/jpeg"/>\n');
     buffer.write('  <Default Extension="jpg" ContentType="image/jpeg"/>\n');
     buffer.write('  <Default Extension="png" ContentType="image/png"/>\n');
-    buffer.write('  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>\n');
-    buffer.write('  <Default Extension="xml" ContentType="application/xml"/>\n');
-    buffer.write('  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>\n');
-    buffer.write('  <Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/>\n');
-    buffer.write('  <Override PartName="/ppt/presProps.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presProps+xml"/>\n');
-    buffer.write('  <Override PartName="/ppt/viewProps.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.viewProps+xml"/>\n');
-    buffer.write('  <Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>\n');
-    buffer.write('  <Override PartName="/ppt/tableStyles.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.tableStyles+xml"/>\n');
+    buffer.write(
+      '  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>\n',
+    );
+    buffer.write(
+      '  <Default Extension="xml" ContentType="application/xml"/>\n',
+    );
+    buffer.write(
+      '  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>\n',
+    );
+    buffer.write(
+      '  <Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/>\n',
+    );
+    buffer.write(
+      '  <Override PartName="/ppt/presProps.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presProps+xml"/>\n',
+    );
+    buffer.write(
+      '  <Override PartName="/ppt/viewProps.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.viewProps+xml"/>\n',
+    );
+    buffer.write(
+      '  <Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>\n',
+    );
+    buffer.write(
+      '  <Override PartName="/ppt/tableStyles.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.tableStyles+xml"/>\n',
+    );
 
     for (int i = 1; i <= 11; i++) {
-      buffer.write('  <Override PartName="/ppt/slideLayouts/slideLayout$i.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/>\n');
+      buffer.write(
+        '  <Override PartName="/ppt/slideLayouts/slideLayout$i.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/>\n',
+      );
     }
 
     for (int i = 1; i <= slideCount; i++) {
-      buffer.write('  <Override PartName="/ppt/slides/slide$i.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>\n');
+      buffer.write(
+        '  <Override PartName="/ppt/slides/slide$i.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>\n',
+      );
     }
 
-    buffer.write('  <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>\n');
-    buffer.write('  <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>\n');
+    buffer.write(
+      '  <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>\n',
+    );
+    buffer.write(
+      '  <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>\n',
+    );
     buffer.write('</Types>');
     return buffer.toString();
   }
@@ -793,15 +1276,29 @@ class PptxGeneratorService {
   static String _buildPresentationRelsXml(int slideCount) {
     final buffer = StringBuffer();
     buffer.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n');
-    buffer.write('<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n');
-    buffer.write('  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="slideMasters/slideMaster1.xml"/>\n');
-    buffer.write('  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="theme/theme1.xml"/>\n');
-    buffer.write('  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/presProps" Target="presProps.xml"/>\n');
-    buffer.write('  <Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/viewProps" Target="viewProps.xml"/>\n');
-    buffer.write('  <Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/tableStyles" Target="tableStyles.xml"/>\n');
+    buffer.write(
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n',
+    );
+    buffer.write(
+      '  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="slideMasters/slideMaster1.xml"/>\n',
+    );
+    buffer.write(
+      '  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="theme/theme1.xml"/>\n',
+    );
+    buffer.write(
+      '  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/presProps" Target="presProps.xml"/>\n',
+    );
+    buffer.write(
+      '  <Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/viewProps" Target="viewProps.xml"/>\n',
+    );
+    buffer.write(
+      '  <Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/tableStyles" Target="tableStyles.xml"/>\n',
+    );
 
     for (int i = 1; i <= slideCount; i++) {
-      buffer.write('  <Relationship Id="rId${i + 5}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide$i.xml"/>\n');
+      buffer.write(
+        '  <Relationship Id="rId${i + 5}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide$i.xml"/>\n',
+      );
     }
 
     buffer.write('</Relationships>');
@@ -811,9 +1308,11 @@ class PptxGeneratorService {
   static String _buildPresentationXml(int slideCount) {
     final buffer = StringBuffer();
     buffer.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n');
-    buffer.write('<p:presentation xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" '
-        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" '
-        'xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" saveSubsetFonts="1">\n');
+    buffer.write(
+      '<p:presentation xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" '
+      'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" '
+      'xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" saveSubsetFonts="1">\n',
+    );
     buffer.write('  <p:sldMasterIdLst>\n');
     buffer.write('    <p:sldMasterId id="2147483648" r:id="rId1"/>\n');
     buffer.write('  </p:sldMasterIdLst>\n');
@@ -826,23 +1325,37 @@ class PptxGeneratorService {
     buffer.write('  </p:sldIdLst>\n');
     buffer.write('  <p:sldSz cx="12192000" cy="6858000"/>\n');
     buffer.write('  <p:notesSz cx="6858000" cy="9144000"/>\n');
-    buffer.write('  <p:defaultTextStyle><a:defPPr><a:defRPr lang="en-US"/></a:defPPr><a:lvl1pPr marL="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl1pPr><a:lvl2pPr marL="457200" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl2pPr><a:lvl3pPr marL="914400" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl3pPr><a:lvl4pPr marL="1371600" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl4pPr><a:lvl5pPr marL="1828800" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl5pPr><a:lvl6pPr marL="2286000" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl6pPr><a:lvl7pPr marL="2743200" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl7pPr><a:lvl8pPr marL="3200400" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl8pPr><a:lvl9pPr marL="3657600" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl9pPr></p:defaultTextStyle>\n');
+    buffer.write(
+      '  <p:defaultTextStyle><a:defPPr><a:defRPr lang="en-US"/></a:defPPr><a:lvl1pPr marL="0" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl1pPr><a:lvl2pPr marL="457200" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl2pPr><a:lvl3pPr marL="914400" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl3pPr><a:lvl4pPr marL="1371600" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl4pPr><a:lvl5pPr marL="1828800" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl5pPr><a:lvl6pPr marL="2286000" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl6pPr><a:lvl7pPr marL="2743200" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl7pPr><a:lvl8pPr marL="3200400" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl8pPr><a:lvl9pPr marL="3657600" algn="l" defTabSz="914400" rtl="0" eaLnBrk="1" latinLnBrk="0" hangingPunct="1"><a:defRPr sz="1800" kern="1200"><a:solidFill><a:schemeClr val="tx1"/></a:solidFill><a:latin typeface="+mn-lt"/><a:ea typeface="+mn-ea"/><a:cs typeface="+mn-cs"/></a:defRPr></a:lvl9pPr></p:defaultTextStyle>\n',
+    );
     buffer.write('</p:presentation>');
     return buffer.toString();
   }
 
-
-
-  static String _buildSlideRelsXml(int layoutIndex, {bool hasImage = false, int? imageIndex, String imageExt = 'jpeg', bool hasLogo = false}) {
+  static String _buildSlideRelsXml(
+    int layoutIndex, {
+    bool hasImage = false,
+    int? imageIndex,
+    String imageExt = 'jpeg',
+    bool hasLogo = false,
+  }) {
     final buffer = StringBuffer();
     buffer.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n');
-    buffer.write('<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n');
-    buffer.write('  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout$layoutIndex.xml"/>\n');
+    buffer.write(
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n',
+    );
+    buffer.write(
+      '  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout$layoutIndex.xml"/>\n',
+    );
     if (hasImage && imageIndex != null) {
-      buffer.write('  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image$imageIndex.$imageExt"/>\n');
+      buffer.write(
+        '  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image$imageIndex.$imageExt"/>\n',
+      );
     }
     if (hasLogo) {
-      buffer.write('  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/logo.png"/>\n');
+      buffer.write(
+        '  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/logo.png"/>\n',
+      );
     }
     buffer.write('</Relationships>');
     return buffer.toString();
@@ -875,22 +1388,32 @@ class PptxGeneratorService {
 
     final effectiveUniv = (university != null && university.trim().isNotEmpty)
         ? university.trim()
-        : (isEnglish ? 'Salahaddin University - Erbil' : 'زانکۆی سەڵاحەدین - هەولێر');
-    final effectiveDept = (department != null && department.trim().isNotEmpty) ? department.trim() : '';
+        : (isEnglish
+              ? 'Salahaddin University - Erbil'
+              : 'زانکۆی سەڵاحەدین - هەولێر');
+    final effectiveDept = (department != null && department.trim().isNotEmpty)
+        ? department.trim()
+        : '';
 
     final footerText = isEnglish
         ? 'ZankoAI Academic Presentation • Slide $slideIndex of $totalSlides'
         : (isArabic
-            ? 'ZankoAI العرض الأكاديمي • الشريحة $slideIndex من $totalSlides'
-            : 'ZankoAI پرێزێنتەیشنی ئەکادیمی • سلایدی $slideIndex لە $totalSlides');
+              ? 'ZankoAI العرض الأكاديمي • الشريحة $slideIndex من $totalSlides'
+              : 'ZankoAI پرێزێنتەیشنی ئەکادیمی • سلایدی $slideIndex لە $totalSlides');
 
     final buffer = StringBuffer();
     buffer.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n');
-    buffer.write('<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">\n');
+    buffer.write(
+      '<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">\n',
+    );
     buffer.write('  <p:cSld>\n');
     buffer.write('    <p:spTree>\n');
-    buffer.write('      <p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>\n');
-    buffer.write('      <p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>\n');
+    buffer.write(
+      '      <p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>\n',
+    );
+    buffer.write(
+      '      <p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>\n',
+    );
 
     if (isFirstSlide) {
       // ═════════════════════════════════════════════════════════════════════════
@@ -898,41 +1421,75 @@ class PptxGeneratorService {
       // ═════════════════════════════════════════════════════════════════════════
       // Background Canvas Card
       buffer.write('      <p:sp>\n');
-      buffer.write('        <p:nvSpPr><p:cNvPr id="2" name="TitleBackground"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n');
+      buffer.write(
+        '        <p:nvSpPr><p:cNvPr id="2" name="TitleBackground"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
+      );
       buffer.write('        <p:spPr>\n');
-      buffer.write('          <a:xfrm><a:off x="400000" y="400000"/><a:ext cx="11392000" cy="6058000"/></a:xfrm>\n');
-      buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
-      buffer.write('          <a:solidFill><a:srgbClr val="0F172A"/></a:solidFill>\n');
-      buffer.write('          <a:ln w="19050"><a:solidFill><a:srgbClr val="1E293B"/></a:solidFill></a:ln>\n');
+      buffer.write(
+        '          <a:xfrm><a:off x="400000" y="400000"/><a:ext cx="11392000" cy="6058000"/></a:xfrm>\n',
+      );
+      buffer.write(
+        '          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n',
+      );
+      buffer.write(
+        '          <a:solidFill><a:srgbClr val="0F172A"/></a:solidFill>\n',
+      );
+      buffer.write(
+        '          <a:ln w="19050"><a:solidFill><a:srgbClr val="1E293B"/></a:solidFill></a:ln>\n',
+      );
       buffer.write('        </p:spPr>\n');
       buffer.write('      </p:sp>\n');
 
       // Top Radiant Line
       buffer.write('      <p:sp>\n');
-      buffer.write('        <p:nvSpPr><p:cNvPr id="3" name="TopGlow"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n');
+      buffer.write(
+        '        <p:nvSpPr><p:cNvPr id="3" name="TopGlow"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
+      );
       buffer.write('        <p:spPr>\n');
-      buffer.write('          <a:xfrm><a:off x="400000" y="400000"/><a:ext cx="11392000" cy="90000"/></a:xfrm>\n');
-      buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
-      buffer.write('          <a:solidFill><a:srgbClr val="2563EB"/></a:solidFill>\n');
+      buffer.write(
+        '          <a:xfrm><a:off x="400000" y="400000"/><a:ext cx="11392000" cy="90000"/></a:xfrm>\n',
+      );
+      buffer.write(
+        '          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n',
+      );
+      buffer.write(
+        '          <a:solidFill><a:srgbClr val="2563EB"/></a:solidFill>\n',
+      );
       buffer.write('        </p:spPr>\n');
       buffer.write('      </p:sp>\n');
 
       // 1. UNIVERSITY LOGO / EMBLEM (Top Center)
       if (hasLogo) {
         buffer.write('      <p:pic>\n');
-        buffer.write('        <p:nvPicPr><p:cNvPr id="4" name="UniversityLogo"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr>\n');
-        buffer.write('        <p:blipFill><a:blip r:embed="rId3"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>\n');
-        buffer.write('        <p:spPr><a:xfrm><a:off x="5496000" y="600000"/><a:ext cx="1200000" cy="1200000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>\n');
+        buffer.write(
+          '        <p:nvPicPr><p:cNvPr id="4" name="UniversityLogo"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr>\n',
+        );
+        buffer.write(
+          '        <p:blipFill><a:blip r:embed="rId3"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>\n',
+        );
+        buffer.write(
+          '        <p:spPr><a:xfrm><a:off x="5496000" y="600000"/><a:ext cx="1200000" cy="1200000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>\n',
+        );
         buffer.write('      </p:pic>\n');
 
         // University Name under Logo
         buffer.write('      <p:sp>\n');
-        buffer.write('        <p:nvSpPr><p:cNvPr id="5" name="UnivName"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n');
+        buffer.write(
+          '        <p:nvSpPr><p:cNvPr id="5" name="UnivName"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
+        );
         buffer.write('        <p:spPr>\n');
-        buffer.write('          <a:xfrm><a:off x="2500000" y="1900000"/><a:ext cx="7192000" cy="380000"/></a:xfrm>\n');
-        buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
-        buffer.write('          <a:solidFill><a:srgbClr val="1E293B"/></a:solidFill>\n');
-        buffer.write('          <a:ln w="12700"><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill></a:ln>\n');
+        buffer.write(
+          '          <a:xfrm><a:off x="2500000" y="1900000"/><a:ext cx="7192000" cy="380000"/></a:xfrm>\n',
+        );
+        buffer.write(
+          '          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n',
+        );
+        buffer.write(
+          '          <a:solidFill><a:srgbClr val="1E293B"/></a:solidFill>\n',
+        );
+        buffer.write(
+          '          <a:ln w="12700"><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill></a:ln>\n',
+        );
         buffer.write('        </p:spPr>\n');
         buffer.write('        <p:txBody>\n');
         buffer.write('          <a:bodyPr anchor="ctr" rtlCol="0"/>\n');
@@ -940,7 +1497,9 @@ class PptxGeneratorService {
         buffer.write('          <a:p>\n');
         buffer.write('            <a:pPr algn="ctr"/>\n');
         buffer.write('            <a:r>\n');
-        buffer.write('              <a:rPr lang="$langAttr" sz="1300" b="1"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
+        buffer.write(
+          '              <a:rPr lang="$langAttr" sz="1300" b="1"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+        );
         buffer.write('              <a:t>${_escapeXml(effectiveUniv)}</a:t>\n');
         buffer.write('            </a:r>\n');
         buffer.write('          </a:p>\n');
@@ -949,12 +1508,22 @@ class PptxGeneratorService {
       } else {
         // University Emblem Badge Pill (Top Center)
         buffer.write('      <p:sp>\n');
-        buffer.write('        <p:nvSpPr><p:cNvPr id="4" name="UnivBadge"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n');
+        buffer.write(
+          '        <p:nvSpPr><p:cNvPr id="4" name="UnivBadge"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
+        );
         buffer.write('        <p:spPr>\n');
-        buffer.write('          <a:xfrm><a:off x="3100000" y="800000"/><a:ext cx="5992000" cy="450000"/></a:xfrm>\n');
-        buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
-        buffer.write('          <a:solidFill><a:srgbClr val="1E293B"/></a:solidFill>\n');
-        buffer.write('          <a:ln w="12700"><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill></a:ln>\n');
+        buffer.write(
+          '          <a:xfrm><a:off x="3100000" y="800000"/><a:ext cx="5992000" cy="450000"/></a:xfrm>\n',
+        );
+        buffer.write(
+          '          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n',
+        );
+        buffer.write(
+          '          <a:solidFill><a:srgbClr val="1E293B"/></a:solidFill>\n',
+        );
+        buffer.write(
+          '          <a:ln w="12700"><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill></a:ln>\n',
+        );
         buffer.write('        </p:spPr>\n');
         buffer.write('        <p:txBody>\n');
         buffer.write('          <a:bodyPr anchor="ctr" rtlCol="0"/>\n');
@@ -962,7 +1531,9 @@ class PptxGeneratorService {
         buffer.write('          <a:p>\n');
         buffer.write('            <a:pPr algn="ctr"/>\n');
         buffer.write('            <a:r>\n');
-        buffer.write('              <a:rPr lang="$langAttr" sz="1350" b="1"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
+        buffer.write(
+          '              <a:rPr lang="$langAttr" sz="1350" b="1"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+        );
         buffer.write('              <a:t>${_escapeXml(effectiveUniv)}</a:t>\n');
         buffer.write('            </a:r>\n');
         buffer.write('          </a:p>\n');
@@ -974,23 +1545,33 @@ class PptxGeneratorService {
       final titleY = hasLogo ? '2380000' : '1500000';
       final titleHeight = hasLogo ? '1600000' : '2200000';
       buffer.write('      <p:sp>\n');
-      buffer.write('        <p:nvSpPr><p:cNvPr id="6" name="Title"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr/></p:nvSpPr>\n');
-      buffer.write('        <p:spPr><a:xfrm><a:off x="900000" y="$titleY"/><a:ext cx="10392000" cy="$titleHeight"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>\n');
+      buffer.write(
+        '        <p:nvSpPr><p:cNvPr id="6" name="Title"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr/></p:nvSpPr>\n',
+      );
+      buffer.write(
+        '        <p:spPr><a:xfrm><a:off x="900000" y="$titleY"/><a:ext cx="10392000" cy="$titleHeight"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>\n',
+      );
       buffer.write('        <p:txBody>\n');
       buffer.write('          <a:bodyPr anchor="ctr" rtlCol="$rtlColVal"/>\n');
       buffer.write('          <a:lstStyle/>\n');
       buffer.write('          <a:p>\n');
       buffer.write('            <a:pPr algn="ctr" $rtlAttr/>\n');
       buffer.write('            <a:r>\n');
-      buffer.write('              <a:rPr lang="$langAttr" sz="3400" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
+      buffer.write(
+        '              <a:rPr lang="$langAttr" sz="3400" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+      );
       buffer.write('              <a:t>${_escapeXml(slide.title)}</a:t>\n');
       buffer.write('            </a:r>\n');
       buffer.write('          </a:p>\n');
       if (effectiveDept.isNotEmpty) {
         buffer.write('          <a:p>\n');
-        buffer.write('            <a:pPr algn="ctr" $rtlAttr><a:spcBef><a:spcPts val="1200"/></a:spcBef></a:pPr>\n');
+        buffer.write(
+          '            <a:pPr algn="ctr" $rtlAttr><a:spcBef><a:spcPts val="1200"/></a:spcBef></a:pPr>\n',
+        );
         buffer.write('            <a:r>\n');
-        buffer.write('              <a:rPr lang="$langAttr" sz="1500"><a:solidFill><a:srgbClr val="94A3B8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
+        buffer.write(
+          '              <a:rPr lang="$langAttr" sz="1500"><a:solidFill><a:srgbClr val="94A3B8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+        );
         buffer.write('              <a:t>${_escapeXml(effectiveDept)}</a:t>\n');
         buffer.write('            </a:r>\n');
         buffer.write('          </a:p>\n');
@@ -999,40 +1580,74 @@ class PptxGeneratorService {
       buffer.write('      </p:sp>\n');
 
       // 3. STUDENT & 4. SUPERVISOR CARDS (Bottom)
-      final effectiveStudent = (studentName != null && studentName.trim().isNotEmpty)
+      final effectiveStudent =
+          (studentName != null && studentName.trim().isNotEmpty)
           ? studentName.trim()
-          : (isEnglish ? 'Student / Research Team' : (isBad ? 'قوتابیێن بەشێ زانستی' : 'قوتابیانی بەش'));
-      final effectiveSupervisor = (supervisorName != null && supervisorName.trim().isNotEmpty)
+          : (isEnglish
+                ? 'Student / Research Team'
+                : (isBad ? 'قوتابیێن بەشێ زانستی' : 'قوتابیانی بەش'));
+      final effectiveSupervisor =
+          (supervisorName != null && supervisorName.trim().isNotEmpty)
           ? supervisorName.trim()
-          : (isEnglish ? 'Academic Supervisor' : (isBad ? 'مامۆستایێ سەرپەرشتیار' : 'مامۆستای سەرپەرشتیار'));
+          : (isEnglish
+                ? 'Academic Supervisor'
+                : (isBad ? 'مامۆستایێ سەرپەرشتیار' : 'مامۆستای سەرپەرشتیار'));
 
-      final studentLabel = isEnglish ? 'Prepared By:' : (isArabic ? 'إعداد الطالب / الفريق:' : (isBad ? 'ئامادەکرن ژ لایێ:' : 'ئامادەکردنی:'));
-      final supervisorLabel = isEnglish ? 'Supervised By:' : (isArabic ? 'إشراف الأستاذ المشرف:' : (isBad ? 'سەرپەرشتیار:' : 'مامۆستای سەرپەرشتیار:'));
+      final studentLabel = isEnglish
+          ? 'Prepared By:'
+          : (isArabic
+                ? 'إعداد الطالب / الفريق:'
+                : (isBad ? 'ئامادەکرن ژ لایێ:' : 'ئامادەکردنی:'));
+      final supervisorLabel = isEnglish
+          ? 'Supervised By:'
+          : (isArabic
+                ? 'إشراف الأستاذ المشرف:'
+                : (isBad ? 'سەرپەرشتیار:' : 'مامۆستای سەرپەرشتیار:'));
 
       // Card 1: Student (Left in LTR, Right in RTL)
       buffer.write('      <p:sp>\n');
-      buffer.write('        <p:nvSpPr><p:cNvPr id="7" name="StudentCard"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n');
+      buffer.write(
+        '        <p:nvSpPr><p:cNvPr id="7" name="StudentCard"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
+      );
       buffer.write('        <p:spPr>\n');
-      buffer.write('          <a:xfrm><a:off x="1000000" y="4200000"/><a:ext cx="4900000" cy="1800000"/></a:xfrm>\n');
-      buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
-      buffer.write('          <a:solidFill><a:srgbClr val="111827"/></a:solidFill>\n');
-      buffer.write('          <a:ln w="15875"><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill></a:ln>\n');
+      buffer.write(
+        '          <a:xfrm><a:off x="1000000" y="4200000"/><a:ext cx="4900000" cy="1800000"/></a:xfrm>\n',
+      );
+      buffer.write(
+        '          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n',
+      );
+      buffer.write(
+        '          <a:solidFill><a:srgbClr val="111827"/></a:solidFill>\n',
+      );
+      buffer.write(
+        '          <a:ln w="15875"><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill></a:ln>\n',
+      );
       buffer.write('        </p:spPr>\n');
       buffer.write('        <p:txBody>\n');
-      buffer.write('          <a:bodyPr anchor="ctr" rtlCol="$rtlColVal" lIns="200000" tIns="160000" rIns="200000" bIns="160000"/>\n');
+      buffer.write(
+        '          <a:bodyPr anchor="ctr" rtlCol="$rtlColVal" lIns="200000" tIns="160000" rIns="200000" bIns="160000"/>\n',
+      );
       buffer.write('          <a:lstStyle/>\n');
       buffer.write('          <a:p>\n');
       buffer.write('            <a:pPr algn="ctr" $rtlAttr/>\n');
       buffer.write('            <a:r>\n');
-      buffer.write('              <a:rPr lang="$langAttr" sz="1300" b="1"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
+      buffer.write(
+        '              <a:rPr lang="$langAttr" sz="1300" b="1"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+      );
       buffer.write('              <a:t>$studentLabel</a:t>\n');
       buffer.write('            </a:r>\n');
       buffer.write('          </a:p>\n');
       buffer.write('          <a:p>\n');
-      buffer.write('            <a:pPr algn="ctr" $rtlAttr><a:spcBef><a:spcPts val="800"/></a:spcBef></a:pPr>\n');
+      buffer.write(
+        '            <a:pPr algn="ctr" $rtlAttr><a:spcBef><a:spcPts val="800"/></a:spcBef></a:pPr>\n',
+      );
       buffer.write('            <a:r>\n');
-      buffer.write('              <a:rPr lang="$langAttr" sz="1800" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
-      buffer.write('              <a:t>${_escapeXml(effectiveStudent)}</a:t>\n');
+      buffer.write(
+        '              <a:rPr lang="$langAttr" sz="1800" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+      );
+      buffer.write(
+        '              <a:t>${_escapeXml(effectiveStudent)}</a:t>\n',
+      );
       buffer.write('            </a:r>\n');
       buffer.write('          </a:p>\n');
       buffer.write('        </p:txBody>\n');
@@ -1040,54 +1655,83 @@ class PptxGeneratorService {
 
       // Card 2: Supervisor (Right in LTR, Left in RTL)
       buffer.write('      <p:sp>\n');
-      buffer.write('        <p:nvSpPr><p:cNvPr id="8" name="SupervisorCard"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n');
+      buffer.write(
+        '        <p:nvSpPr><p:cNvPr id="8" name="SupervisorCard"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
+      );
       buffer.write('        <p:spPr>\n');
-      buffer.write('          <a:xfrm><a:off x="6292000" y="4200000"/><a:ext cx="4900000" cy="1800000"/></a:xfrm>\n');
-      buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
-      buffer.write('          <a:solidFill><a:srgbClr val="111827"/></a:solidFill>\n');
-      buffer.write('          <a:ln w="15875"><a:solidFill><a:srgbClr val="10B981"/></a:solidFill></a:ln>\n');
+      buffer.write(
+        '          <a:xfrm><a:off x="6292000" y="4200000"/><a:ext cx="4900000" cy="1800000"/></a:xfrm>\n',
+      );
+      buffer.write(
+        '          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n',
+      );
+      buffer.write(
+        '          <a:solidFill><a:srgbClr val="111827"/></a:solidFill>\n',
+      );
+      buffer.write(
+        '          <a:ln w="15875"><a:solidFill><a:srgbClr val="10B981"/></a:solidFill></a:ln>\n',
+      );
       buffer.write('        </p:spPr>\n');
       buffer.write('        <p:txBody>\n');
-      buffer.write('          <a:bodyPr anchor="ctr" rtlCol="$rtlColVal" lIns="200000" tIns="160000" rIns="200000" bIns="160000"/>\n');
+      buffer.write(
+        '          <a:bodyPr anchor="ctr" rtlCol="$rtlColVal" lIns="200000" tIns="160000" rIns="200000" bIns="160000"/>\n',
+      );
       buffer.write('          <a:lstStyle/>\n');
       buffer.write('          <a:p>\n');
       buffer.write('            <a:pPr algn="ctr" $rtlAttr/>\n');
       buffer.write('            <a:r>\n');
-      buffer.write('              <a:rPr lang="$langAttr" sz="1300" b="1"><a:solidFill><a:srgbClr val="34D399"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
+      buffer.write(
+        '              <a:rPr lang="$langAttr" sz="1300" b="1"><a:solidFill><a:srgbClr val="34D399"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+      );
       buffer.write('              <a:t>$supervisorLabel</a:t>\n');
       buffer.write('            </a:r>\n');
       buffer.write('          </a:p>\n');
       buffer.write('          <a:p>\n');
-      buffer.write('            <a:pPr algn="ctr" $rtlAttr><a:spcBef><a:spcPts val="800"/></a:spcBef></a:pPr>\n');
+      buffer.write(
+        '            <a:pPr algn="ctr" $rtlAttr><a:spcBef><a:spcPts val="800"/></a:spcBef></a:pPr>\n',
+      );
       buffer.write('            <a:r>\n');
-      buffer.write('              <a:rPr lang="$langAttr" sz="1800" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
-      buffer.write('              <a:t>${_escapeXml(effectiveSupervisor)}</a:t>\n');
+      buffer.write(
+        '              <a:rPr lang="$langAttr" sz="1800" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+      );
+      buffer.write(
+        '              <a:t>${_escapeXml(effectiveSupervisor)}</a:t>\n',
+      );
       buffer.write('            </a:r>\n');
       buffer.write('          </a:p>\n');
       buffer.write('        </p:txBody>\n');
       buffer.write('      </p:sp>\n');
-
     } else {
       // ═════════════════════════════════════════════════════════════════════════
       // SLIDES 2..N: ACADEMIC CONTENT SLIDES (TOP TITLE + SPLIT IMAGE & CONTENT)
       // ═════════════════════════════════════════════════════════════════════════
       // Top Gradient Accent Bar
       buffer.write('      <p:sp>\n');
-      buffer.write('        <p:nvSpPr><p:cNvPr id="2" name="TopAccent"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n');
-      buffer.write('        <p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="12192000" cy="120000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill></p:spPr>\n');
+      buffer.write(
+        '        <p:nvSpPr><p:cNvPr id="2" name="TopAccent"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
+      );
+      buffer.write(
+        '        <p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="12192000" cy="120000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill></p:spPr>\n',
+      );
       buffer.write('      </p:sp>\n');
 
       // Slide Title Box (Top)
       buffer.write('      <p:sp>\n');
-      buffer.write('        <p:nvSpPr><p:cNvPr id="3" name="Title"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr/></p:nvSpPr>\n');
-      buffer.write('        <p:spPr><a:xfrm><a:off x="600000" y="300000"/><a:ext cx="10992000" cy="850000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>\n');
+      buffer.write(
+        '        <p:nvSpPr><p:cNvPr id="3" name="Title"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr/></p:nvSpPr>\n',
+      );
+      buffer.write(
+        '        <p:spPr><a:xfrm><a:off x="600000" y="300000"/><a:ext cx="10992000" cy="850000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>\n',
+      );
       buffer.write('        <p:txBody>\n');
       buffer.write('          <a:bodyPr anchor="ctr" rtlCol="$rtlColVal"/>\n');
       buffer.write('          <a:lstStyle/>\n');
       buffer.write('          <a:p>\n');
       buffer.write('            <a:pPr algn="$algn" $rtlAttr/>\n');
       buffer.write('            <a:r>\n');
-      buffer.write('              <a:rPr lang="$langAttr" sz="2400" b="1"><a:solidFill><a:srgbClr val="0F172A"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
+      buffer.write(
+        '              <a:rPr lang="$langAttr" sz="2400" b="1"><a:solidFill><a:srgbClr val="0F172A"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+      );
       buffer.write('              <a:t>${_escapeXml(slide.title)}</a:t>\n');
       buffer.write('            </a:r>\n');
       buffer.write('          </a:p>\n');
@@ -1102,8 +1746,12 @@ class PptxGeneratorService {
       if (hasImage) {
         buffer.write('      <p:pic>\n');
         buffer.write('        <p:nvPicPr>\n');
-        buffer.write('          <p:cNvPr id="6" name="SlideImage$slideIndex"/>\n');
-        buffer.write('          <p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr>\n');
+        buffer.write(
+          '          <p:cNvPr id="6" name="SlideImage$slideIndex"/>\n',
+        );
+        buffer.write(
+          '          <p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr>\n',
+        );
         buffer.write('          <p:nvPr/>\n');
         buffer.write('        </p:nvPicPr>\n');
         buffer.write('        <p:blipFill>\n');
@@ -1111,33 +1759,57 @@ class PptxGeneratorService {
         buffer.write('          <a:stretch><a:fillRect/></a:stretch>\n');
         buffer.write('        </p:blipFill>\n');
         buffer.write('        <p:spPr>\n');
-        buffer.write('          <a:xfrm><a:off x="$picX" y="1300000"/><a:ext cx="4600000" cy="4900000"/></a:xfrm>\n');
-        buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
-        buffer.write('          <a:ln w="19050"><a:solidFill><a:srgbClr val="CBD5E1"/></a:solidFill></a:ln>\n');
+        buffer.write(
+          '          <a:xfrm><a:off x="$picX" y="1300000"/><a:ext cx="4600000" cy="4900000"/></a:xfrm>\n',
+        );
+        buffer.write(
+          '          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n',
+        );
+        buffer.write(
+          '          <a:ln w="19050"><a:solidFill><a:srgbClr val="CBD5E1"/></a:solidFill></a:ln>\n',
+        );
         buffer.write('        </p:spPr>\n');
         buffer.write('      </p:pic>\n');
       }
 
       // Content Card / Text & Points Box
       buffer.write('      <p:sp>\n');
-      buffer.write('        <p:nvSpPr><p:cNvPr id="4" name="ContentBox"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n');
+      buffer.write(
+        '        <p:nvSpPr><p:cNvPr id="4" name="ContentBox"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
+      );
       buffer.write('        <p:spPr>\n');
-      buffer.write('          <a:xfrm><a:off x="$textX" y="1300000"/><a:ext cx="$textWidth" cy="4900000"/></a:xfrm>\n');
-      buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
-      buffer.write('          <a:solidFill><a:srgbClr val="F8FAFC"/></a:solidFill>\n');
-      buffer.write('          <a:ln w="12700"><a:solidFill><a:srgbClr val="E2E8F0"/></a:solidFill></a:ln>\n');
+      buffer.write(
+        '          <a:xfrm><a:off x="$textX" y="1300000"/><a:ext cx="$textWidth" cy="4900000"/></a:xfrm>\n',
+      );
+      buffer.write(
+        '          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n',
+      );
+      buffer.write(
+        '          <a:solidFill><a:srgbClr val="F8FAFC"/></a:solidFill>\n',
+      );
+      buffer.write(
+        '          <a:ln w="12700"><a:solidFill><a:srgbClr val="E2E8F0"/></a:solidFill></a:ln>\n',
+      );
       buffer.write('        </p:spPr>\n');
       buffer.write('        <p:txBody>\n');
-      buffer.write('          <a:bodyPr anchor="t" rtlCol="$rtlColVal" lIns="250000" tIns="250000" rIns="250000" bIns="250000"/>\n');
+      buffer.write(
+        '          <a:bodyPr anchor="t" rtlCol="$rtlColVal" lIns="250000" tIns="250000" rIns="250000" bIns="250000"/>\n',
+      );
       buffer.write('          <a:lstStyle/>\n');
 
       for (var bullet in slide.bulletPoints) {
         final cleanBullet = bullet.trim();
-        final displayBullet = cleanBullet.startsWith('•') ? cleanBullet : '• $cleanBullet';
+        final displayBullet = cleanBullet.startsWith('•')
+            ? cleanBullet
+            : '• $cleanBullet';
         buffer.write('          <a:p>\n');
-        buffer.write('            <a:pPr algn="$algn" $rtlAttr><a:spcBef><a:spcPts val="600"/></a:spcBef></a:pPr>\n');
+        buffer.write(
+          '            <a:pPr algn="$algn" $rtlAttr><a:spcBef><a:spcPts val="600"/></a:spcBef></a:pPr>\n',
+        );
         buffer.write('            <a:r>\n');
-        buffer.write('              <a:rPr lang="$langAttr" sz="1600"><a:solidFill><a:srgbClr val="1E293B"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
+        buffer.write(
+          '              <a:rPr lang="$langAttr" sz="1600"><a:solidFill><a:srgbClr val="1E293B"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+        );
         buffer.write('              <a:t>${_escapeXml(displayBullet)}</a:t>\n');
         buffer.write('            </a:r>\n');
         buffer.write('          </a:p>\n');
@@ -1147,9 +1819,13 @@ class PptxGeneratorService {
       if (slideIndex == totalSlides) {
         final thankYou = getThankYouMessage(languageCode);
         buffer.write('          <a:p>\n');
-        buffer.write('            <a:pPr algn="ctr" $rtlAttr><a:spcBef><a:spcPts val="1200"/></a:spcBef></a:pPr>\n');
+        buffer.write(
+          '            <a:pPr algn="ctr" $rtlAttr><a:spcBef><a:spcPts val="1200"/></a:spcBef></a:pPr>\n',
+        );
         buffer.write('            <a:r>\n');
-        buffer.write('              <a:rPr lang="$langAttr" sz="2000" b="1"><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n');
+        buffer.write(
+          '              <a:rPr lang="$langAttr" sz="2000" b="1"><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+        );
         buffer.write('              <a:t>✨ ${_escapeXml(thankYou)} ✨</a:t>\n');
         buffer.write('            </a:r>\n');
         buffer.write('          </a:p>\n');
@@ -1160,14 +1836,20 @@ class PptxGeneratorService {
 
       // Slide Footer (Page Number & ZankoAI branding)
       buffer.write('      <p:sp>\n');
-      buffer.write('        <p:nvSpPr><p:cNvPr id="5" name="Footer"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n');
-      buffer.write('        <p:spPr><a:xfrm><a:off x="600000" y="6350000"/><a:ext cx="10992000" cy="350000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>\n');
+      buffer.write(
+        '        <p:nvSpPr><p:cNvPr id="5" name="Footer"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
+      );
+      buffer.write(
+        '        <p:spPr><a:xfrm><a:off x="600000" y="6350000"/><a:ext cx="10992000" cy="350000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>\n',
+      );
       buffer.write('        <p:txBody>\n');
       buffer.write('          <a:bodyPr anchor="b" rtlCol="$rtlColVal"/>\n');
       buffer.write('          <a:lstStyle/>\n');
       buffer.write('          <a:p>\n');
       buffer.write('            <a:pPr algn="$algn" $rtlAttr/>\n');
-      buffer.write('            <a:r><a:rPr lang="$langAttr" sz="1100"><a:solidFill><a:srgbClr val="94A3B8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr><a:t>$footerText</a:t></a:r>\n');
+      buffer.write(
+        '            <a:r><a:rPr lang="$langAttr" sz="1100"><a:solidFill><a:srgbClr val="94A3B8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr><a:t>$footerText</a:t></a:r>\n',
+      );
       buffer.write('          </a:p>\n');
       buffer.write('        </p:txBody>\n');
       buffer.write('      </p:sp>\n');

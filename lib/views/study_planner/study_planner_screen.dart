@@ -13,7 +13,9 @@ class StudyPlannerScreen extends StatefulWidget {
 
 class _StudyPlannerScreenState extends State<StudyPlannerScreen> {
   final TextEditingController _topicController = TextEditingController();
-  final TextEditingController _daysController = TextEditingController(text: '7');
+  final TextEditingController _daysController = TextEditingController(
+    text: '7',
+  );
   bool _isGenerating = false;
   List<StudyPlanDayModel> _studyPlan = [];
 
@@ -30,7 +32,15 @@ class _StudyPlannerScreenState extends State<StudyPlannerScreen> {
 
     if (topic.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(Provider.of<LanguageProvider>(context, listen: false).translate('snackbar_enter_subject'), style: const TextStyle())),
+        SnackBar(
+          content: Text(
+            Provider.of<LanguageProvider>(
+              context,
+              listen: false,
+            ).translate('snackbar_enter_subject'),
+            style: const TextStyle(),
+          ),
+        ),
       );
       return;
     }
@@ -53,7 +63,11 @@ class _StudyPlannerScreenState extends State<StudyPlannerScreen> {
       });
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${Provider.of<LanguageProvider>(context, listen: false).translate('failed_to_generate')}: $e')),
+        SnackBar(
+          content: Text(
+            '${Provider.of<LanguageProvider>(context, listen: false).translate('failed_to_generate')}: $e',
+          ),
+        ),
       );
     }
   }
@@ -76,9 +90,7 @@ class _StudyPlannerScreenState extends State<StudyPlannerScreen> {
     return Directionality(
       textDirection: langProvider.textDirection,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(title),
-        ),
+        appBar: AppBar(title: Text(title)),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -93,7 +105,10 @@ class _StudyPlannerScreenState extends State<StudyPlannerScreen> {
                     children: [
                       Text(
                         cardTitle,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       TextField(
@@ -124,7 +139,9 @@ class _StudyPlannerScreenState extends State<StudyPlannerScreen> {
                               onPressed: _generatePlan,
                               icon: const Icon(Icons.auto_awesome),
                               label: Text(generateBtn),
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.teal.shade700),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.teal.shade700,
+                              ),
                             ),
                     ],
                   ),
@@ -136,7 +153,10 @@ class _StudyPlannerScreenState extends State<StudyPlannerScreen> {
                 Center(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 40),
-                    child: Text(emptyState, style: const TextStyle(color: Colors.grey)),
+                    child: Text(
+                      emptyState,
+                      style: const TextStyle(color: Colors.grey),
+                    ),
                   ),
                 )
               else ...[
@@ -163,7 +183,11 @@ class _StudyPlannerScreenState extends State<StudyPlannerScreen> {
                                 child: Center(
                                   child: Text(
                                     (index + 1).toString(),
-                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -171,7 +195,9 @@ class _StudyPlannerScreenState extends State<StudyPlannerScreen> {
                                 Expanded(
                                   child: Container(
                                     width: 2.5,
-                                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                                    color: theme.colorScheme.primary.withValues(
+                                      alpha: 0.3,
+                                    ),
                                   ),
                                 ),
                             ],
@@ -186,7 +212,8 @@ class _StudyPlannerScreenState extends State<StudyPlannerScreen> {
                                 child: Padding(
                                   padding: const EdgeInsets.all(16.0),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         day.dayName,
@@ -199,7 +226,10 @@ class _StudyPlannerScreenState extends State<StudyPlannerScreen> {
                                       const SizedBox(height: 6),
                                       Text(
                                         day.taskDescription,
-                                        style: const TextStyle(height: 1.4, fontSize: 13),
+                                        style: const TextStyle(
+                                          height: 1.4,
+                                          fontSize: 13,
+                                        ),
                                       ),
                                     ],
                                   ),

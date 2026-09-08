@@ -20,7 +20,8 @@ class RegisterScreen extends StatefulWidget {
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProviderStateMixin {
+class _RegisterScreenState extends State<RegisterScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -186,20 +187,33 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
     } catch (e) {
       success = false;
       final errStr = e.toString().toLowerCase();
-      if (errStr.contains('ip-limit-exceeded') || errStr.contains('٣ ناونیشانی ip') || errStr.contains('ip limit')) {
-        _errorMessage = '⛔ ناتوانیت لە زیاتر لە ٣ ناونیشانی IP جیاواز ئەکاونت دروست بکەیت یان بەکاربهێنیت.';
-      } else if (errStr.contains('already registered') || errStr.contains('user already exists') || errStr.contains('email-already-in-use')) {
-        _errorMessage = 'ئەم ئیمەیڵە پێشتر تۆمار کراوە. تکایە چوونەژوورەوە بکە.';
-      } else if (errStr.contains('weak-password') || errStr.contains('password should be at least')) {
+      if (errStr.contains('ip-limit-exceeded') ||
+          errStr.contains('٣ ناونیشانی ip') ||
+          errStr.contains('ip limit')) {
+        _errorMessage =
+            '⛔ ناتوانیت لە زیاتر لە ٣ ناونیشانی IP جیاواز ئەکاونت دروست بکەیت یان بەکاربهێنیت.';
+      } else if (errStr.contains('already registered') ||
+          errStr.contains('user already exists') ||
+          errStr.contains('email-already-in-use')) {
+        _errorMessage =
+            'ئەم ئیمەیڵە پێشتر تۆمار کراوە. تکایە چوونەژوورەوە بکە.';
+      } else if (errStr.contains('weak-password') ||
+          errStr.contains('password should be at least')) {
         _errorMessage = 'وشەی نهێنی زۆر لاوازە (لانی کەم ٦ پیت).';
-      } else if (errStr.contains('invalid-email') || errStr.contains('invalid email')) {
+      } else if (errStr.contains('invalid-email') ||
+          errStr.contains('invalid email')) {
         _errorMessage = 'ئیمەیڵەکە شێوازێکی دروستی نییە.';
       } else if (errStr.contains('email not confirmed')) {
-        _errorMessage = 'ئیمەیڵەکەت دروست بوو! تکایە لە شاشەی Login بچۆ ژوورەوە.';
-      } else if (errStr.contains('email_provider_disabled') || errStr.contains('signups are disabled') || errStr.contains('logins are disabled')) {
-        _errorMessage = 'بژاردەی ئیمەیڵ لە سێرڤەر (Supabase) ناچالاکە. تکایە لە Authentication > Providers بەشی Email چالاک بکە.';
+        _errorMessage =
+            'ئیمەیڵەکەت دروست بوو! تکایە لە شاشەی Login بچۆ ژوورەوە.';
+      } else if (errStr.contains('email_provider_disabled') ||
+          errStr.contains('signups are disabled') ||
+          errStr.contains('logins are disabled')) {
+        _errorMessage =
+            'بژاردەی ئیمەیڵ لە سێرڤەر (Supabase) ناچالاکە. تکایە لە Authentication > Providers بەشی Email چالاک بکە.';
       } else {
-        _errorMessage = 'هەڵەیەک ڕوویدا: ${e.toString().replaceAll('Exception: ', '').replaceAll('AuthException: ', '').replaceAll('AuthApiException: ', '')}';
+        _errorMessage =
+            'هەڵەیەک ڕوویدا: ${e.toString().replaceAll('Exception: ', '').replaceAll('AuthException: ', '').replaceAll('AuthApiException: ', '')}';
       }
     } finally {
       if (mounted && !success) {
@@ -225,7 +239,8 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => EmailVerificationScreen(email: _emailController.text.trim()),
+            builder: (context) =>
+                EmailVerificationScreen(email: _emailController.text.trim()),
           ),
         );
       } else {
@@ -283,17 +298,22 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                           onTap: _pickImage,
                           child: CircleAvatar(
                             radius: 50,
-                            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                            backgroundColor: theme.colorScheme.primary
+                                .withValues(alpha: 0.1),
                             backgroundImage: _profileImage != null
                                 ? FileImage(_profileImage!)
-                                : const AssetImage('assets/images/student_avatar_3d.png') as ImageProvider,
+                                : const AssetImage(
+                                        'assets/images/student_avatar_3d.png',
+                                      )
+                                      as ImageProvider,
                             child: _profileImage == null
                                 ? Align(
                                     alignment: Alignment.center,
                                     child: Icon(
                                       Icons.person_rounded,
                                       size: 52,
-                                      color: theme.colorScheme.primary.withValues(alpha: 0.6),
+                                      color: theme.colorScheme.primary
+                                          .withValues(alpha: 0.6),
                                     ),
                                   )
                                 : null,
@@ -309,7 +329,10 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                               decoration: BoxDecoration(
                                 color: theme.colorScheme.primary,
                                 shape: BoxShape.circle,
-                                border: Border.all(color: theme.colorScheme.surface, width: 2.5),
+                                border: Border.all(
+                                  color: theme.colorScheme.surface,
+                                  width: 2.5,
+                                ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withValues(alpha: 0.2),
@@ -344,19 +367,27 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                   // Error Banner
                   if (_errorMessage != null) ...[
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.errorContainer,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline_rounded, color: theme.colorScheme.error),
+                          Icon(
+                            Icons.error_outline_rounded,
+                            color: theme.colorScheme.error,
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               _errorMessage!,
-                              style: TextStyle(color: theme.colorScheme.onErrorContainer),
+                              style: TextStyle(
+                                color: theme.colorScheme.onErrorContainer,
+                              ),
                             ),
                           ),
                         ],
@@ -381,8 +412,12 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                               decoration: InputDecoration(
                                 labelText: t('full_name'),
                                 hintText: t('full_name_hint'),
-                                prefixIcon: const Icon(Icons.person_outline_rounded),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                                prefixIcon: const Icon(
+                                  Icons.person_outline_rounded,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
                               ),
                               validator: (val) {
                                 if (val == null || val.trim().isEmpty) {
@@ -418,11 +453,16 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                                           });
                                         },
                                       ),
-                                    const Icon(Icons.arrow_drop_down_rounded, size: 28),
+                                    const Icon(
+                                      Icons.arrow_drop_down_rounded,
+                                      size: 28,
+                                    ),
                                     const SizedBox(width: 8),
                                   ],
                                 ),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
                               ),
                               validator: (val) {
                                 if (val == null || val.trim().isEmpty) {
@@ -443,7 +483,9 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                                 hintText: _universityController.text.isEmpty
                                     ? 'سەرەتا زانکۆ دیاریبکە یان کلیک بکە...'
                                     : 'کلیک بکە بۆ دیاریکردنی بەشی زانستی...',
-                                prefixIcon: const Icon(Icons.account_tree_outlined),
+                                prefixIcon: const Icon(
+                                  Icons.account_tree_outlined,
+                                ),
                                 suffixIcon: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -451,14 +493,21 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                                       IconButton(
                                         icon: const Icon(Icons.clear, size: 18),
                                         onPressed: () {
-                                          setState(() => _departmentController.clear());
+                                          setState(
+                                            () => _departmentController.clear(),
+                                          );
                                         },
                                       ),
-                                    const Icon(Icons.arrow_drop_down_rounded, size: 28),
+                                    const Icon(
+                                      Icons.arrow_drop_down_rounded,
+                                      size: 28,
+                                    ),
                                     const SizedBox(width: 8),
                                   ],
                                 ),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
                               ),
                               validator: (val) {
                                 if (val == null || val.trim().isEmpty) {
@@ -474,8 +523,12 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                               initialValue: _selectedCityKey,
                               decoration: InputDecoration(
                                 labelText: t('select_city'),
-                                prefixIcon: const Icon(Icons.location_city_outlined),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                                prefixIcon: const Icon(
+                                  Icons.location_city_outlined,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
                               ),
                               items: _kurdishCities.map((cityKey) {
                                 return DropdownMenuItem<String>(
@@ -500,13 +553,17 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                                 labelText: t('email'),
                                 hintText: 'student@zanko.edu',
                                 prefixIcon: const Icon(Icons.email_outlined),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
                               ),
                               validator: (val) {
                                 if (val == null || val.trim().isEmpty) {
                                   return 'تکایە ئیمەیڵ بنووسە';
                                 }
-                                final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+                                final emailRegex = RegExp(
+                                  r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                                );
                                 if (!emailRegex.hasMatch(val.trim())) {
                                   return 'تکایە ئیمەیڵێکی دروست بنووسە (نموونە: student@zanko.edu)';
                                 }
@@ -524,10 +581,18 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                                 labelText: t('password'),
                                 prefixIcon: const Icon(Icons.lock_outline),
                                 suffixIcon: IconButton(
-                                  icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-                                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                  ),
+                                  onPressed: () => setState(
+                                    () => _obscurePassword = !_obscurePassword,
+                                  ),
                                 ),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
                               ),
                               validator: (val) {
                                 if (val == null || val.isEmpty) {
@@ -548,12 +613,23 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                               textInputAction: TextInputAction.done,
                               decoration: InputDecoration(
                                 labelText: t('confirm_password'),
-                                prefixIcon: const Icon(Icons.lock_reset_rounded),
-                                suffixIcon: IconButton(
-                                  icon: Icon(_obscureConfirmPassword ? Icons.visibility_off : Icons.visibility),
-                                  onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                                prefixIcon: const Icon(
+                                  Icons.lock_reset_rounded,
                                 ),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscureConfirmPassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                  ),
+                                  onPressed: () => setState(
+                                    () => _obscureConfirmPassword =
+                                        !_obscureConfirmPassword,
+                                  ),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
                               ),
                               validator: (val) {
                                 if (val == null || val.isEmpty) {
@@ -572,18 +648,25 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                               children: [
                                 Checkbox(
                                   value: _agreedToTerms,
-                                  onChanged: (val) => setState(() => _agreedToTerms = val ?? false),
+                                  onChanged: (val) => setState(
+                                    () => _agreedToTerms = val ?? false,
+                                  ),
                                   activeColor: theme.colorScheme.primary,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
                                 ),
                                 Expanded(
                                   child: GestureDetector(
-                                    onTap: () => setState(() => _agreedToTerms = !_agreedToTerms),
+                                    onTap: () => setState(
+                                      () => _agreedToTerms = !_agreedToTerms,
+                                    ),
                                     child: Text(
                                       t('terms_agree'),
                                       style: TextStyle(
                                         fontSize: 13,
-                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                                        color: theme.colorScheme.onSurface
+                                            .withValues(alpha: 0.8),
                                       ),
                                     ),
                                   ),
@@ -610,11 +693,17 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                                     ? const SizedBox(
                                         width: 24,
                                         height: 24,
-                                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2.5,
+                                        ),
                                       )
                                     : const Text(
                                         'تۆمارکردن',
-                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                               ),
                             ),
@@ -626,13 +715,19 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                               children: [
                                 Text(
                                   'هەژمارت هەیە؟ ',
-                                  style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
+                                  style: TextStyle(
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.7),
+                                  ),
                                 ),
                                 TextButton(
                                   onPressed: () {
                                     Navigator.pushReplacement(
                                       context,
-                                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const LoginScreen(),
+                                      ),
                                     );
                                   },
                                   child: Text(

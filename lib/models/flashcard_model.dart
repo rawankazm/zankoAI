@@ -55,9 +55,10 @@ class FlashcardModel {
     // Support nested flashcard_progress join or direct progress fields
     final progressMap = map['flashcard_progress'] is Map<String, dynamic>
         ? map['flashcard_progress'] as Map<String, dynamic>
-        : (map['flashcard_progress'] is List && (map['flashcard_progress'] as List).isNotEmpty)
-            ? (map['flashcard_progress'] as List).first as Map<String, dynamic>
-            : map;
+        : (map['flashcard_progress'] is List &&
+              (map['flashcard_progress'] as List).isNotEmpty)
+        ? (map['flashcard_progress'] as List).first as Map<String, dynamic>
+        : map;
 
     return FlashcardModel(
       id: (map['id'] ?? '').toString(),

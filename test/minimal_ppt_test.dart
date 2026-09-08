@@ -16,12 +16,15 @@ void main() {
           file.name != 'ppt/presentation.xml' &&
           file.name != 'ppt/_rels/presentation.xml.rels' &&
           file.name != '[Content_Types].xml') {
-        newArchive.addFile(ArchiveFile(file.name, file.size, file.content as List<int>));
+        newArchive.addFile(
+          ArchiveFile(file.name, file.size, file.content as List<int>),
+        );
       }
     }
 
     // 2. Add [Content_Types].xml with slide1, slide2, and jpeg/png support
-    const contentTypesXml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    const contentTypesXml =
+        '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
   <Default Extension="jpeg" ContentType="image/jpeg"/>
   <Default Extension="png" ContentType="image/png"/>
@@ -50,7 +53,9 @@ void main() {
   <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
 </Types>''';
     final ctBytes = utf8.encode(contentTypesXml);
-    newArchive.addFile(ArchiveFile('[Content_Types].xml', ctBytes.length, ctBytes));
+    newArchive.addFile(
+      ArchiveFile('[Content_Types].xml', ctBytes.length, ctBytes),
+    );
 
     // 3. Add ppt/presentation.xml with 2 slides
     const presXml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -64,10 +69,13 @@ void main() {
   <p:notesSz cx="6858000" cy="9144000"/>
 </p:presentation>''';
     final presBytes = utf8.encode(presXml);
-    newArchive.addFile(ArchiveFile('ppt/presentation.xml', presBytes.length, presBytes));
+    newArchive.addFile(
+      ArchiveFile('ppt/presentation.xml', presBytes.length, presBytes),
+    );
 
     // 4. Add ppt/_rels/presentation.xml.rels
-    const presRelsXml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    const presRelsXml =
+        '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="slideMasters/slideMaster1.xml"/>
   <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/>
@@ -78,7 +86,13 @@ void main() {
   <Relationship Id="rId7" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide2.xml"/>
 </Relationships>''';
     final presRelsBytes = utf8.encode(presRelsXml);
-    newArchive.addFile(ArchiveFile('ppt/_rels/presentation.xml.rels', presRelsBytes.length, presRelsBytes));
+    newArchive.addFile(
+      ArchiveFile(
+        'ppt/_rels/presentation.xml.rels',
+        presRelsBytes.length,
+        presRelsBytes,
+      ),
+    );
 
     // 5. Add slide 1
     const slide1Xml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -122,18 +136,101 @@ void main() {
   <p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>
 </p:sld>''';
     final s1Bytes = utf8.encode(slide1Xml);
-    newArchive.addFile(ArchiveFile('ppt/slides/slide1.xml', s1Bytes.length, s1Bytes));
+    newArchive.addFile(
+      ArchiveFile('ppt/slides/slide1.xml', s1Bytes.length, s1Bytes),
+    );
 
-    const slide1Rels = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    const slide1Rels =
+        '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>
 </Relationships>''';
     final s1RelsBytes = utf8.encode(slide1Rels);
-    newArchive.addFile(ArchiveFile('ppt/slides/_rels/slide1.xml.rels', s1RelsBytes.length, s1RelsBytes));
+    newArchive.addFile(
+      ArchiveFile(
+        'ppt/slides/_rels/slide1.xml.rels',
+        s1RelsBytes.length,
+        s1RelsBytes,
+      ),
+    );
 
     // 6. Add slide 2 with image
-    final sampleImageBytes = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4, 0x89, 0x00, 0x00, 0x00, 0x0A, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9C, 0x63, 0x00, 0x01, 0x00, 0x00, 0x05, 0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82];
-    newArchive.addFile(ArchiveFile('ppt/media/image2.png', sampleImageBytes.length, sampleImageBytes));
+    final sampleImageBytes = [
+      0x89,
+      0x50,
+      0x4E,
+      0x47,
+      0x0D,
+      0x0A,
+      0x1A,
+      0x0A,
+      0x00,
+      0x00,
+      0x00,
+      0x0D,
+      0x49,
+      0x48,
+      0x44,
+      0x52,
+      0x00,
+      0x00,
+      0x00,
+      0x01,
+      0x00,
+      0x00,
+      0x00,
+      0x01,
+      0x08,
+      0x06,
+      0x00,
+      0x00,
+      0x00,
+      0x1F,
+      0x15,
+      0xC4,
+      0x89,
+      0x00,
+      0x00,
+      0x00,
+      0x0A,
+      0x49,
+      0x44,
+      0x41,
+      0x54,
+      0x78,
+      0x9C,
+      0x63,
+      0x00,
+      0x01,
+      0x00,
+      0x00,
+      0x05,
+      0x00,
+      0x01,
+      0x0D,
+      0x0A,
+      0x2D,
+      0xB4,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x49,
+      0x45,
+      0x4E,
+      0x44,
+      0xAE,
+      0x42,
+      0x60,
+      0x82,
+    ];
+    newArchive.addFile(
+      ArchiveFile(
+        'ppt/media/image2.png',
+        sampleImageBytes.length,
+        sampleImageBytes,
+      ),
+    );
 
     const slide2Xml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
@@ -188,15 +285,24 @@ void main() {
   <p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>
 </p:sld>''';
     final s2Bytes = utf8.encode(slide2Xml);
-    newArchive.addFile(ArchiveFile('ppt/slides/slide2.xml', s2Bytes.length, s2Bytes));
+    newArchive.addFile(
+      ArchiveFile('ppt/slides/slide2.xml', s2Bytes.length, s2Bytes),
+    );
 
-    const slide2Rels = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    const slide2Rels =
+        '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout2.xml"/>
   <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image2.png"/>
 </Relationships>''';
     final s2RelsBytes = utf8.encode(slide2Rels);
-    newArchive.addFile(ArchiveFile('ppt/slides/_rels/slide2.xml.rels', s2RelsBytes.length, s2RelsBytes));
+    newArchive.addFile(
+      ArchiveFile(
+        'ppt/slides/_rels/slide2.xml.rels',
+        s2RelsBytes.length,
+        s2RelsBytes,
+      ),
+    );
 
     final outBytes = ZipEncoder().encode(newArchive);
     File('scratch/test_presentation.pptx').writeAsBytesSync(outBytes);

@@ -206,7 +206,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               content: Text('Uploaded "$fileName" to ${widget.courseTitle}'),
               backgroundColor: ZankoColors.success,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           );
         }
@@ -308,7 +310,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               ),
               decoration: BoxDecoration(
                 color: isDark ? ZankoColors.darkCard : Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.2),
@@ -352,7 +356,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w800,
-                          color: isDark ? Colors.white : ZankoColors.textPrimary,
+                          color: isDark
+                              ? Colors.white
+                              : ZankoColors.textPrimary,
                         ),
                       ),
                     ],
@@ -363,10 +369,14 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   Container(
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-                      color: isDark ? ZankoColors.darkBackground : const Color(0xFFF8FAFC),
+                      color: isDark
+                          ? ZankoColors.darkBackground
+                          : const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
+                        color: isDark
+                            ? Colors.white10
+                            : const Color(0xFFE2E8F0),
                       ),
                     ),
                     child: Column(
@@ -376,7 +386,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                            color: isDark
+                                ? Colors.grey[400]
+                                : ZankoColors.textSecondary,
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -395,7 +407,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                             ),
                             const SizedBox(width: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 8,
+                              ),
                               decoration: BoxDecoration(
                                 color: accentColor.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(16),
@@ -414,7 +429,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                             ),
                             const SizedBox(width: 8),
                             IconButton(
-                              onPressed: () => setModalState(() => daysOffset++),
+                              onPressed: () =>
+                                  setModalState(() => daysOffset++),
                               icon: const HugeIcon(
                                 icon: HugeIcons.strokeRoundedAddCircleHalfDot,
                                 size: 34,
@@ -438,7 +454,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w800,
-                                color: isDark ? Colors.white : ZankoColors.textPrimary,
+                                color: isDark
+                                    ? Colors.white
+                                    : ZankoColors.textPrimary,
                               ),
                             ),
                           ],
@@ -455,7 +473,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                      color: isDark
+                          ? Colors.grey[400]
+                          : ZankoColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -468,7 +488,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                         label: Text('+$presetDays'),
                         selected: isSelected,
                         selectedColor: accentColor.withValues(alpha: 0.25),
-                        backgroundColor: isDark ? Colors.white10 : Colors.grey[100],
+                        backgroundColor: isDark
+                            ? Colors.white10
+                            : Colors.grey[100],
                         labelStyle: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
@@ -479,7 +501,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                           side: BorderSide(
-                            color: isSelected ? accentColor : Colors.transparent,
+                            color: isSelected
+                                ? accentColor
+                                : Colors.transparent,
                           ),
                         ),
                         onSelected: (selected) {
@@ -520,13 +544,17 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       lang.translate('pick_from_calendar'),
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white70 : ZankoColors.textPrimary,
+                        color: isDark
+                            ? Colors.white70
+                            : ZankoColors.textPrimary,
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 44),
                       side: BorderSide(
-                        color: isDark ? Colors.white24 : const Color(0xFFCBD5E1),
+                        color: isDark
+                            ? Colors.white24
+                            : const Color(0xFFCBD5E1),
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -567,7 +595,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                         flex: 2,
                         child: ElevatedButton(
                           onPressed: () {
-                            final resultDate = todayStart.add(Duration(days: daysOffset));
+                            final resultDate = todayStart.add(
+                              Duration(days: daysOffset),
+                            );
                             onSaved(resultDate);
                             Navigator.pop(context);
                           },
@@ -651,11 +681,15 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           color: isDark ? ZankoColors.darkCard : Colors.white,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF1F5F9),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : const Color(0xFFF1F5F9),
           ),
           boxShadow: [
             BoxShadow(
-              color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
+              color: isDark
+                  ? Colors.black26
+                  : Colors.black.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
@@ -743,11 +777,15 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             color: isDark ? ZankoColors.darkCard : Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF1F5F9),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : const Color(0xFFF1F5F9),
             ),
             boxShadow: [
               BoxShadow(
-                color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.03),
+                color: isDark
+                    ? Colors.black26
+                    : Colors.black.withValues(alpha: 0.03),
                 blurRadius: 10,
                 offset: const Offset(0, 3),
               ),
@@ -800,7 +838,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     final isRtl = lang.isRtl;
 
     return Scaffold(
-      backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
+      backgroundColor: isDark
+          ? ZankoColors.darkBackground
+          : ZankoColors.background,
       body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
@@ -808,7 +848,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             // Top App Bar
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 child: Row(
                   children: [
                     GlassButton(
@@ -842,7 +885,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                               fontSize: 18,
                               fontWeight: FontWeight.w900,
                               letterSpacing: -0.3,
-                              color: isDark ? Colors.white : ZankoColors.textPrimary,
+                              color: isDark
+                                  ? Colors.white
+                                  : ZankoColors.textPrimary,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -888,7 +933,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             // Modern Hero Card
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
                 child: Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -907,7 +955,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     ),
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(
-                      color: widget.themeColor.withValues(alpha: isDark ? 0.3 : 0.2),
+                      color: widget.themeColor.withValues(
+                        alpha: isDark ? 0.3 : 0.2,
+                      ),
                     ),
                     boxShadow: [
                       BoxShadow(
@@ -935,7 +985,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                               borderRadius: BorderRadius.circular(18),
                               boxShadow: [
                                 BoxShadow(
-                                  color: widget.themeColor.withValues(alpha: 0.3),
+                                  color: widget.themeColor.withValues(
+                                    alpha: 0.3,
+                                  ),
                                   blurRadius: 12,
                                   offset: const Offset(0, 4),
                                 ),
@@ -959,7 +1011,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w900,
-                                    color: isDark ? Colors.white : ZankoColors.textPrimary,
+                                    color: isDark
+                                        ? Colors.white
+                                        : ZankoColors.textPrimary,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -982,7 +1036,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
                             decoration: BoxDecoration(
                               color: widget.themeColor.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(10),
@@ -1009,16 +1066,22 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                           ),
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
                             decoration: BoxDecoration(
-                              color: ZankoColors.success.withValues(alpha: 0.12),
+                              color: ZankoColors.success.withValues(
+                                alpha: 0.12,
+                              ),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 HugeIcon(
-                                  icon: HugeIcons.strokeRoundedCheckmarkCircle02,
+                                  icon:
+                                      HugeIcons.strokeRoundedCheckmarkCircle02,
                                   size: 13,
                                   color: ZankoColors.success,
                                 ),
@@ -1047,7 +1110,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                           backgroundColor: isDark
                               ? Colors.white.withValues(alpha: 0.08)
                               : const Color(0xFFE2E8F0),
-                          valueColor: AlwaysStoppedAnimation<Color>(widget.themeColor),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            widget.themeColor,
+                          ),
                         ),
                       ),
                     ],
@@ -1078,7 +1143,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
-                            color: isDark ? Colors.white : ZankoColors.textPrimary,
+                            color: isDark
+                                ? Colors.white
+                                : ZankoColors.textPrimary,
                           ),
                         ),
                       ],
@@ -1104,7 +1171,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                   setState(() {
                                     _midtermDate = newDate;
                                   });
-                                  widget.onExamDatesChanged?.call(_midtermDate, _finalDate);
+                                  widget.onExamDatesChanged?.call(
+                                    _midtermDate,
+                                    _finalDate,
+                                  );
                                 },
                               );
                             },
@@ -1129,7 +1199,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                   setState(() {
                                     _finalDate = newDate;
                                   });
-                                  widget.onExamDatesChanged?.call(_midtermDate, _finalDate);
+                                  widget.onExamDatesChanged?.call(
+                                    _midtermDate,
+                                    _finalDate,
+                                  );
                                 },
                               );
                             },
@@ -1164,7 +1237,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
-                            color: isDark ? Colors.white : ZankoColors.textPrimary,
+                            color: isDark
+                                ? Colors.white
+                                : ZankoColors.textPrimary,
                           ),
                         ),
                       ],
@@ -1260,17 +1335,16 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF035EC2),
-                          Color(0xFF1E88E5),
-                        ],
+                        colors: [Color(0xFF035EC2), Color(0xFF1E88E5)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF035EC2).withValues(alpha: 0.25),
+                          color: const Color(
+                            0xFF035EC2,
+                          ).withValues(alpha: 0.25),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -1350,7 +1424,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
                             letterSpacing: -0.3,
-                            color: isDark ? Colors.white : ZankoColors.textPrimary,
+                            color: isDark
+                                ? Colors.white
+                                : ZankoColors.textPrimary,
                           ),
                         ),
                       ],
@@ -1358,7 +1434,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     GestureDetector(
                       onTap: _uploadPdfLecture,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
@@ -1369,7 +1448,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                           borderRadius: BorderRadius.circular(14),
                           boxShadow: [
                             BoxShadow(
-                              color: ZankoColors.primary.withValues(alpha: 0.25),
+                              color: ZankoColors.primary.withValues(
+                                alpha: 0.25,
+                              ),
                               blurRadius: 8,
                               offset: const Offset(0, 3),
                             ),
@@ -1424,7 +1505,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                             Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFF3B30).withValues(alpha: 0.1),
+                                color: const Color(
+                                  0xFFFF3B30,
+                                ).withValues(alpha: 0.1),
                                 shape: BoxShape.circle,
                               ),
                               child: const HugeIcon(
@@ -1439,7 +1522,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w800,
-                                color: isDark ? Colors.white : ZankoColors.textPrimary,
+                                color: isDark
+                                    ? Colors.white
+                                    : ZankoColors.textPrimary,
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -1487,7 +1572,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: isDark ? ZankoColors.darkCard : Colors.white,
+                                color: isDark
+                                    ? ZankoColors.darkCard
+                                    : Colors.white,
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
                                   color: isDark
@@ -1510,7 +1597,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                     onTap: () {
                                       final realContent = SamplePdfService()
                                           .getSampleLectureText(
-                                              pdf.fileName, widget.courseTitle);
+                                            pdf.fileName,
+                                            widget.courseTitle,
+                                          );
                                       Navigator.push(
                                         context,
                                         CupertinoPageRoute(
@@ -1528,13 +1617,17 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                           width: 44,
                                           height: 44,
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFFFF3B30)
-                                                .withValues(alpha: 0.12),
-                                            borderRadius: BorderRadius.circular(14),
+                                            color: const Color(
+                                              0xFFFF3B30,
+                                            ).withValues(alpha: 0.12),
+                                            borderRadius: BorderRadius.circular(
+                                              14,
+                                            ),
                                           ),
                                           child: const Center(
                                             child: HugeIcon(
-                                              icon: HugeIcons.strokeRoundedFile02,
+                                              icon:
+                                                  HugeIcons.strokeRoundedFile02,
                                               color: Color(0xFFFF3B30),
                                               size: 22,
                                             ),
@@ -1565,7 +1658,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                                     pdf.size,
                                                     style: const TextStyle(
                                                       fontSize: 11,
-                                                      fontWeight: FontWeight.w700,
+                                                      fontWeight:
+                                                          FontWeight.w700,
                                                       color: Color(0xFFFF3B30),
                                                     ),
                                                   ),
@@ -1581,14 +1675,19 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                                   const SizedBox(width: 6),
                                                   Expanded(
                                                     child: Text(
-                                                      lang.translate(pdf.dateAdded),
+                                                      lang.translate(
+                                                        pdf.dateAdded,
+                                                      ),
                                                       style: TextStyle(
                                                         fontSize: 11,
-                                                        fontWeight: FontWeight.w600,
-                                                        color: ZankoColors.textSecondary,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        color: ZankoColors
+                                                            .textSecondary,
                                                       ),
                                                       maxLines: 1,
-                                                      overflow: TextOverflow.ellipsis,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
                                                     ),
                                                   ),
                                                 ],
@@ -1599,7 +1698,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                         // Delete Button
                                         IconButton(
                                           icon: const HugeIcon(
-                                            icon: HugeIcons.strokeRoundedDelete02,
+                                            icon:
+                                                HugeIcons.strokeRoundedDelete02,
                                             size: 18,
                                             color: Colors.redAccent,
                                           ),
@@ -1615,26 +1715,34 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                       Expanded(
                                         child: GestureDetector(
                                           onTap: () {
-                                            final realContent = SamplePdfService()
-                                                .getSampleLectureText(
-                                                    pdf.fileName, widget.courseTitle);
+                                            final realContent =
+                                                SamplePdfService()
+                                                    .getSampleLectureText(
+                                                      pdf.fileName,
+                                                      widget.courseTitle,
+                                                    );
                                             Navigator.push(
                                               context,
                                               CupertinoPageRoute(
-                                                builder: (context) => PdfChatScreen(
-                                                  initialFileName: pdf.title,
-                                                  initialFileContent: realContent,
-                                                ),
+                                                builder: (context) =>
+                                                    PdfChatScreen(
+                                                      initialFileName:
+                                                          pdf.title,
+                                                      initialFileContent:
+                                                          realContent,
+                                                    ),
                                               ),
                                             );
                                           },
                                           child: Container(
-                                            padding:
-                                                const EdgeInsets.symmetric(vertical: 8),
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 8,
+                                            ),
                                             decoration: BoxDecoration(
                                               color: ZankoColors.primary
                                                   .withValues(alpha: 0.1),
-                                              borderRadius: BorderRadius.circular(12),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                             ),
                                             child: Row(
                                               mainAxisAlignment:
@@ -1648,7 +1756,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                                 ),
                                                 const SizedBox(width: 6),
                                                 Text(
-                                                  lang.translate('chat_with_lecture'),
+                                                  lang.translate(
+                                                    'chat_with_lecture',
+                                                  ),
                                                   style: TextStyle(
                                                     fontSize: 11,
                                                     fontWeight: FontWeight.w800,
@@ -1664,27 +1774,33 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                       Expanded(
                                         child: GestureDetector(
                                           onTap: () {
-                                            final realContent = SamplePdfService()
-                                                .getSampleLectureText(
-                                                    pdf.fileName, widget.courseTitle);
+                                            final realContent =
+                                                SamplePdfService()
+                                                    .getSampleLectureText(
+                                                      pdf.fileName,
+                                                      widget.courseTitle,
+                                                    );
                                             Navigator.push(
                                               context,
                                               CupertinoPageRoute(
                                                 builder: (context) =>
                                                     AiTeacherChatScreen(
-                                                  initialPrompt:
-                                                      'تکایە ئەم فایلی وانەیە (${pdf.title}) بەشێوەیەکی پوخت کورت بکەرەوە و خاڵە هەرە گرنگەکانی شیکار بکە:\n\n$realContent',
-                                                ),
+                                                      initialPrompt:
+                                                          'تکایە ئەم فایلی وانەیە (${pdf.title}) بەشێوەیەکی پوخت کورت بکەرەوە و خاڵە هەرە گرنگەکانی شیکار بکە:\n\n$realContent',
+                                                    ),
                                               ),
                                             );
                                           },
                                           child: Container(
-                                            padding:
-                                                const EdgeInsets.symmetric(vertical: 8),
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 8,
+                                            ),
                                             decoration: BoxDecoration(
-                                              color: const Color(0xFFAF52DE)
-                                                  .withValues(alpha: 0.1),
-                                              borderRadius: BorderRadius.circular(12),
+                                              color: const Color(
+                                                0xFFAF52DE,
+                                              ).withValues(alpha: 0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                             ),
                                             child: Row(
                                               mainAxisAlignment:
@@ -1698,7 +1814,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                                                 ),
                                                 const SizedBox(width: 6),
                                                 Text(
-                                                  lang.translate('summarize_lecture'),
+                                                  lang.translate(
+                                                    'summarize_lecture',
+                                                  ),
                                                   style: const TextStyle(
                                                     fontSize: 11,
                                                     fontWeight: FontWeight.w800,

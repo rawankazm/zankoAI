@@ -37,7 +37,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     }
 
     if (pass != confirm) {
-      setState(() => _errorMessage = 'وشەی نهێنی و دووبارەکردنەوەی یەکناگرنەوە.');
+      setState(
+        () => _errorMessage = 'وشەی نهێنی و دووبارەکردنەوەی یەکناگرنەوە.',
+      );
       return;
     }
 
@@ -68,7 +70,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         if (e is AuthException) {
           _errorMessage = e.message;
         } else {
-          _errorMessage = 'هەڵەیەک ڕوویدا لە نوێکردنەوەی وشەی نهێنی: ${e.toString().replaceAll('Exception: ', '').replaceAll('AuthException: ', '')}';
+          _errorMessage =
+              'هەڵەیەک ڕوویدا لە نوێکردنەوەی وشەی نهێنی: ${e.toString().replaceAll('Exception: ', '').replaceAll('AuthException: ', '')}';
         }
       });
     }
@@ -81,7 +84,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('دانانی وشەی نهێنی نوێ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text(
+          'دانانی وشەی نهێنی نوێ',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
         centerTitle: true,
         elevation: 0,
       ),
@@ -102,7 +108,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       color: theme.colorScheme.primary.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.vpn_key_rounded, size: 40, color: theme.colorScheme.primary),
+                    child: Icon(
+                      Icons.vpn_key_rounded,
+                      size: 40,
+                      color: theme.colorScheme.primary,
+                    ),
                   ),
                   const SizedBox(height: 20),
                   Text(
@@ -127,11 +137,16 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       decoration: BoxDecoration(
                         color: Colors.redAccent.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: Colors.redAccent.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Text(
                         _errorMessage!,
-                        style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                        style: const TextStyle(
+                          color: Colors.redAccent,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -143,10 +158,18 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       labelText: 'وشەی نهێنی نوێ',
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
                       ),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       filled: true,
                     ),
                   ),
@@ -158,10 +181,17 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       labelText: 'دووبارەکردنەوەی وشەی نهێنی نوێ',
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscureConfirm ? Icons.visibility_off : Icons.visibility),
-                        onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                        icon: Icon(
+                          _obscureConfirm
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed: () =>
+                            setState(() => _obscureConfirm = !_obscureConfirm),
                       ),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       filled: true,
                     ),
                   ),
@@ -170,7 +200,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     onPressed: _isLoading ? null : _handleUpdate,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       backgroundColor: theme.colorScheme.primary,
                       foregroundColor: Colors.white,
                     ),
@@ -178,11 +210,17 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         ? const SizedBox(
                             width: 22,
                             height: 22,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : const Text(
                             'پاشەکەوتکردنی وشەی نهێنی',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                   ),
                 ],

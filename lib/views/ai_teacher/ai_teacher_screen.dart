@@ -16,12 +16,13 @@ class AiTeacherScreen extends StatefulWidget {
 class _AiTeacherScreenState extends State<AiTeacherScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  
+
   final List<Map<String, String>> _messages = [
     {
       'role': 'assistant',
-      'content': 'سڵاو! من ZankoAI مامۆستای زیرەکی تۆم. لە کام بابەتدا دەتەوێت ئەمڕۆ یارمەتیت بدەم؟ دەتوانیت لەسەر لایەنی تیۆری یان کۆدنووسین پرسیار بکەیت.'
-    }
+      'content':
+          'سڵاو! من ZankoAI مامۆستای زیرەکی تۆم. لە کام بابەتدا دەتەوێت ئەمڕۆ یارمەتیت بدەم؟ دەتوانیت لەسەر لایەنی تیۆری یان کۆدنووسین پرسیار بکەیت.',
+    },
   ];
 
   bool _isTyping = false;
@@ -50,11 +51,13 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
         .replaceAll(RegExp(r'`[\s\S]*?`'), '');
 
     try {
-      final isCkbAvailable = await _flutterTts.isLanguageAvailable("ckb") ?? false;
+      final isCkbAvailable =
+          await _flutterTts.isLanguageAvailable("ckb") ?? false;
       if (isCkbAvailable) {
         await _flutterTts.setLanguage("ckb");
       } else {
-        final isKuAvailable = await _flutterTts.isLanguageAvailable("ku") ?? false;
+        final isKuAvailable =
+            await _flutterTts.isLanguageAvailable("ku") ?? false;
         if (isKuAvailable) {
           await _flutterTts.setLanguage("ku");
         } else {
@@ -83,13 +86,16 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
       _isListening = false;
       final lang = Provider.of<LanguageProvider>(context, listen: false);
       if (lang.currentLanguage == AppLanguage.english) {
-        _messageController.text = "What are the key concepts of memory management?";
+        _messageController.text =
+            "What are the key concepts of memory management?";
       } else if (lang.currentLanguage == AppLanguage.arabic) {
         _messageController.text = "ما هي المفاهيم الأساسية لإدارة الذاكرة؟";
       } else if (lang.currentLanguage == AppLanguage.kurdishBadini) {
-        _messageController.text = "بەحسا گرنگترین هزرێن ڕێڤەبرنا بیردانکێ (Memory Management) بکە.";
+        _messageController.text =
+            "بەحسا گرنگترین هزرێن ڕێڤەبرنا بیردانکێ (Memory Management) بکە.";
       } else {
-        _messageController.text = "باسی گرنگترین بیرۆکەکانی بەڕێوەبردنی یادگە (Memory Management) بکە.";
+        _messageController.text =
+            "باسی گرنگترین بیرۆکەکانی بەڕێوەبردنی یادگە (Memory Management) بکە.";
       }
     });
   }
@@ -112,7 +118,7 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
         'Explain Operating Systems.',
         'Explain this code snippet.',
         'How does Flutter work?',
-        'Summarize the OSI Model.'
+        'Summarize the OSI Model.',
       ];
     } else if (lang.currentLanguage == AppLanguage.arabic) {
       return [
@@ -126,14 +132,14 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
         'وانەیا Operating System بۆ من ڕوون بکە.',
         'ئەڤی کۆدی دیار بکە.',
         'بەرنامێ فلاتەر چەوا کار دکەت؟',
-        'مۆدێلا OSI کورت بکە.'
+        'مۆدێلا OSI کورت بکە.',
       ];
     } else {
       return [
         'وانەی Operating System بۆم فێر بکە.',
         'ئەم کۆدە ڕوون بکەرەوە.',
         'پڕۆگرامی فلاتەر چۆن کاردەکات؟',
-        'مۆدێلی OSI کورت بکەرەوە.'
+        'مۆدێلی OSI کورت بکەرەوە.',
       ];
     }
   }
@@ -152,12 +158,12 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
 
   Future<void> _sendMessage(String text) async {
     if (text.trim().isEmpty) return;
-    
+
     setState(() {
       _messages.add({'role': 'user', 'content': text});
       _isTyping = true;
     });
-    
+
     _messageController.clear();
     _scrollToBottom();
 
@@ -172,7 +178,7 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
         isVip: isVip,
         isPendingVip: isPendingVip,
       );
-      
+
       setState(() {
         _messages.add({'role': 'assistant', 'content': response});
         _isTyping = false;
@@ -180,11 +186,15 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
       _speak(response);
     } catch (e) {
       setState(() {
-        _messages.add({'role': 'assistant', 'content': 'ببوورە، ناتوانم وەڵامت بدەمەوە لەم کاتەدا. هەڵەیەک لە تۆڕدا هەیە.'});
+        _messages.add({
+          'role': 'assistant',
+          'content':
+              'ببوورە، ناتوانم وەڵامت بدەمەوە لەم کاتەدا. هەڵەیەک لە تۆڕدا هەیە.',
+        });
         _isTyping = false;
       });
     }
-    
+
     _scrollToBottom();
   }
 
@@ -203,7 +213,9 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
     String t(String key) => langProvider.translate(key);
 
     // Update greeting dynamically in place
-    if (_messages.isNotEmpty && _messages[0]['role'] == 'assistant' && _messages.length == 1) {
+    if (_messages.isNotEmpty &&
+        _messages[0]['role'] == 'assistant' &&
+        _messages.length == 1) {
       _messages[0]['content'] = _getGreetingText(langProvider);
     }
 
@@ -230,7 +242,11 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
           ),
           actions: [
             IconButton(
-              icon: Icon(_isTtsEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded),
+              icon: Icon(
+                _isTtsEnabled
+                    ? Icons.volume_up_rounded
+                    : Icons.volume_off_rounded,
+              ),
               tooltip: t('tts_tooltip'),
               onPressed: () {
                 setState(() {
@@ -240,7 +256,8 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
                   _stopTts();
                 } else {
                   // Speak last message if possible
-                  if (_messages.isNotEmpty && _messages.last['role'] == 'assistant') {
+                  if (_messages.isNotEmpty &&
+                      _messages.last['role'] == 'assistant') {
                     _speak(_messages.last['content']!);
                   }
                 }
@@ -259,15 +276,17 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
                 itemBuilder: (context, index) {
                   final message = _messages[index];
                   final isUser = message['role'] == 'user';
-                  
+
                   return Align(
-                    alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                    alignment: isUser
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: isUser 
-                            ? theme.colorScheme.primary 
+                        color: isUser
+                            ? theme.colorScheme.primary
                             : theme.colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.only(
                           topLeft: const Radius.circular(16),
@@ -286,8 +305,8 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
                           Text(
                             cleanMathAndDollarSigns(message['content']!),
                             style: TextStyle(
-                              color: isUser 
-                                  ? Colors.white 
+                              color: isUser
+                                  ? Colors.white
                                   : theme.colorScheme.onSurfaceVariant,
                               height: 1.4,
                             ),
@@ -303,33 +322,61 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
                                       context: context,
                                       builder: (context) {
                                         return AlertDialog(
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              24,
+                                            ),
+                                          ),
                                           content: Column(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              const Icon(Icons.record_voice_over_rounded, size: 60, color: Colors.blue),
+                                              const Icon(
+                                                Icons.record_voice_over_rounded,
+                                                size: 60,
+                                                color: Colors.blue,
+                                              ),
                                               const SizedBox(height: 16),
                                               Text(
                                                 t('ai_teacher_voice_active'),
-                                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
                                               const SizedBox(height: 12),
                                               Row(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: List.generate(5, (index) => Container(
-                                                  width: 6,
-                                                  height: 20.0 + (index % 2 == 0 ? 15.0 : 0.0),
-                                                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.blueAccent,
-                                                    borderRadius: BorderRadius.circular(3),
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: List.generate(
+                                                  5,
+                                                  (index) => Container(
+                                                    width: 6,
+                                                    height:
+                                                        20.0 +
+                                                        (index % 2 == 0
+                                                            ? 15.0
+                                                            : 0.0),
+                                                    margin:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 3,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.blueAccent,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            3,
+                                                          ),
+                                                    ),
                                                   ),
-                                                )),
+                                                ),
                                               ),
                                               const SizedBox(height: 16),
                                               ElevatedButton(
-                                                onPressed: () => Navigator.pop(context),
-                                                child: Text(t('ai_teacher_voice_stop'), style: const TextStyle()),
+                                                onPressed: () =>
+                                                    Navigator.pop(context),
+                                                child: Text(
+                                                  t('ai_teacher_voice_stop'),
+                                                  style: const TextStyle(),
+                                                ),
                                               ),
                                             ],
                                           ),
@@ -340,11 +387,19 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.volume_up_rounded, size: 16, color: theme.colorScheme.primary),
+                                      Icon(
+                                        Icons.volume_up_rounded,
+                                        size: 16,
+                                        color: theme.colorScheme.primary,
+                                      ),
                                       const SizedBox(width: 4),
                                       Text(
                                         t('ai_teacher_read_aloud'),
-                                        style: TextStyle(fontSize: 10, color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: theme.colorScheme.primary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -363,7 +418,10 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
             // Typing state indicator
             if (_isTyping)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -399,7 +457,7 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
                   },
                 ),
               ),
-              
+
             const SizedBox(height: 8),
 
             // Message Input bar
@@ -413,7 +471,10 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
                       decoration: InputDecoration(
                         hintText: t('ask_teacher_hint'),
                         hintStyle: const TextStyle(fontSize: 13),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                         ),
@@ -428,12 +489,16 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: _isListening ? Colors.red.withValues(alpha: 0.2) : theme.colorScheme.primary.withValues(alpha: 0.1),
+                        color: _isListening
+                            ? Colors.red.withValues(alpha: 0.2)
+                            : theme.colorScheme.primary.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         _isListening ? Icons.mic : Icons.mic_none_rounded,
-                        color: _isListening ? Colors.red : theme.colorScheme.primary,
+                        color: _isListening
+                            ? Colors.red
+                            : theme.colorScheme.primary,
                         size: 24,
                       ),
                     ),

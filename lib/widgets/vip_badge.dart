@@ -22,8 +22,7 @@ class VipBadge extends StatefulWidget {
 
 enum VipBadgeSize { small, medium, large }
 
-class _VipBadgeState extends State<VipBadge>
-    with TickerProviderStateMixin {
+class _VipBadgeState extends State<VipBadge> with TickerProviderStateMixin {
   late AnimationController _shimmerCtrl;
   late AnimationController _glowCtrl;
   late AnimationController _scaleCtrl;
@@ -58,21 +57,25 @@ class _VipBadgeState extends State<VipBadge>
       duration: const Duration(milliseconds: 3000),
     )..repeat();
 
-    _shimmerAnim = Tween<double>(begin: -2, end: 2).animate(
-      CurvedAnimation(parent: _shimmerCtrl, curve: Curves.easeInOut),
-    );
+    _shimmerAnim = Tween<double>(
+      begin: -2,
+      end: 2,
+    ).animate(CurvedAnimation(parent: _shimmerCtrl, curve: Curves.easeInOut));
 
-    _glowAnim = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _glowCtrl, curve: Curves.easeInOut),
-    );
+    _glowAnim = Tween<double>(
+      begin: 0.5,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _glowCtrl, curve: Curves.easeInOut));
 
-    _scaleAnim = Tween<double>(begin: 1.0, end: 1.06).animate(
-      CurvedAnimation(parent: _scaleCtrl, curve: Curves.easeInOut),
-    );
+    _scaleAnim = Tween<double>(
+      begin: 1.0,
+      end: 1.06,
+    ).animate(CurvedAnimation(parent: _scaleCtrl, curve: Curves.easeInOut));
 
-    _sparkleAnim = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _sparkleCtrl, curve: Curves.linear),
-    );
+    _sparkleAnim = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _sparkleCtrl, curve: Curves.linear));
   }
 
   @override
@@ -150,14 +153,16 @@ class _VipBadgeState extends State<VipBadge>
                     borderRadius: BorderRadius.circular(100),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF10B981)
-                            .withValues(alpha: 0.55 * _glowAnim.value),
+                        color: const Color(
+                          0xFF10B981,
+                        ).withValues(alpha: 0.55 * _glowAnim.value),
                         blurRadius: 16,
                         spreadRadius: 2,
                       ),
                       BoxShadow(
-                        color: const Color(0xFF059669)
-                            .withValues(alpha: 0.3 * _glowAnim.value),
+                        color: const Color(
+                          0xFF059669,
+                        ).withValues(alpha: 0.3 * _glowAnim.value),
                         blurRadius: 28,
                         spreadRadius: 4,
                       ),
@@ -197,14 +202,12 @@ class _VipBadgeState extends State<VipBadge>
                       // Crown icon
                       Text(
                         '👑',
-                        style: TextStyle(
-                          fontSize: _crownSize,
-                          height: 1.0,
-                        ),
+                        style: TextStyle(fontSize: _crownSize, height: 1.0),
                       ),
                       if (widget.showLabel) ...[
                         SizedBox(
-                            width: widget.size == VipBadgeSize.small ? 3 : 5),
+                          width: widget.size == VipBadgeSize.small ? 3 : 5,
+                        ),
                         Text(
                           'VIP',
                           style: TextStyle(
@@ -242,8 +245,7 @@ class _VipBadgeState extends State<VipBadge>
               ),
 
               // ── Sparkle particles (small) ──
-              if (widget.size != VipBadgeSize.small)
-                ..._buildSparkles(),
+              if (widget.size != VipBadgeSize.small) ..._buildSparkles(),
             ],
           ),
         );
@@ -308,16 +310,13 @@ class _ShimmerPainter extends CustomPainter {
         stops: const [0.0, 0.5, 1.0],
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
-      ).createShader(
-        Rect.fromLTWH(sweepX - 30, 0, 60, size.height),
-      );
+      ).createShader(Rect.fromLTWH(sweepX - 30, 0, 60, size.height));
 
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
   }
 
   @override
-  bool shouldRepaint(covariant _ShimmerPainter old) =>
-      old.progress != progress;
+  bool shouldRepaint(covariant _ShimmerPainter old) => old.progress != progress;
 }
 
 /// ─────────────────────────────────────────────────────────────
@@ -350,9 +349,10 @@ class _VipMembershipCardState extends State<VipMembershipCard>
       duration: const Duration(milliseconds: 2400),
     )..repeat();
 
-    _shimmer = Tween<double>(begin: -1.5, end: 2.5).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
+    _shimmer = Tween<double>(
+      begin: -1.5,
+      end: 2.5,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
   }
 
   @override
@@ -451,7 +451,9 @@ class _VipMembershipCardState extends State<VipMembershipCard>
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: const Color(0xFF10B981).withValues(alpha: 0.45),
+                          color: const Color(
+                            0xFF10B981,
+                          ).withValues(alpha: 0.45),
                           width: 1.5,
                         ),
                       ),
@@ -500,7 +502,9 @@ class _VipMembershipCardState extends State<VipMembershipCard>
                       ),
                       const SizedBox(width: 8),
                       const VipBadge(
-                          size: VipBadgeSize.small, showLabel: false),
+                        size: VipBadgeSize.small,
+                        showLabel: false,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 2),
@@ -536,9 +540,10 @@ class _VipMembershipCardState extends State<VipMembershipCard>
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                            color: Color(0xFF10B981),
-                            blurRadius: 5,
-                            spreadRadius: 1)
+                          color: Color(0xFF10B981),
+                          blurRadius: 5,
+                          spreadRadius: 1,
+                        ),
                       ],
                     ),
                   ),
@@ -729,10 +734,7 @@ class _CardShimmerPainter extends CustomPainter {
         stops: const [0.0, 0.5, 1.0],
       ).createShader(rect);
 
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      paint,
-    );
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
   }
 
   @override

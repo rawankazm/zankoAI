@@ -9,14 +9,17 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('DocumentParserService Tests', () {
-    test('Allowed extensions list contains all Word and PowerPoint formats', () {
-      expect(DocumentParserService.allowedExtensions, contains('docx'));
-      expect(DocumentParserService.allowedExtensions, contains('doc'));
-      expect(DocumentParserService.allowedExtensions, contains('pptx'));
-      expect(DocumentParserService.allowedExtensions, contains('ppt'));
-      expect(DocumentParserService.allowedExtensions, contains('pdf'));
-      expect(DocumentParserService.allowedExtensions, contains('txt'));
-    });
+    test(
+      'Allowed extensions list contains all Word and PowerPoint formats',
+      () {
+        expect(DocumentParserService.allowedExtensions, contains('docx'));
+        expect(DocumentParserService.allowedExtensions, contains('doc'));
+        expect(DocumentParserService.allowedExtensions, contains('pptx'));
+        expect(DocumentParserService.allowedExtensions, contains('ppt'));
+        expect(DocumentParserService.allowedExtensions, contains('pdf'));
+        expect(DocumentParserService.allowedExtensions, contains('txt'));
+      },
+    );
 
     test('Parses plain text document correctly', () {
       final textContent = 'سڵاو لە زانکۆ ئای ئەی! ئەمە تاقیکردنەوەی دەقە.';
@@ -35,7 +38,8 @@ void main() {
 
     test('Parses generated DOCX document correctly', () async {
       final report = DocxGeneratorService.parseReportFromText(
-        rawText: 'تەوەرەی ١: پێناسە و چەمکەکان\nئەمە ناوەڕۆکی بەشی یەکەمە لەسەر زیرەکی دەستکرد.',
+        rawText:
+            'تەوەرەی ١: پێناسە و چەمکەکان\nئەمە ناوەڕۆکی بەشی یەکەمە لەسەر زیرەکی دەستکرد.',
         title: 'شیکاری سیستەمە ژیرەکان',
         studentName: 'قوتابی تاقیکردنەوە',
         supervisorName: 'سەرپەرشتیار',
@@ -99,7 +103,8 @@ void main() {
     });
 
     test('Parses legacy RTF .doc document correctly', () {
-      final rtfContent = r'{\rtf1\ansi\deff0 {\fonttbl {\f0 Calibri;}}\f0\fs24 Kurdish Academic Lecture on Database Systems\par Section 1: Relational Modeling\par}';
+      final rtfContent =
+          r'{\rtf1\ansi\deff0 {\fonttbl {\f0 Calibri;}}\f0\fs24 Kurdish Academic Lecture on Database Systems\par Section 1: Relational Modeling\par}';
       final bytes = Uint8List.fromList(utf8.encode(rtfContent));
 
       final result = DocumentParserService.parseDocumentBytes(
@@ -108,7 +113,10 @@ void main() {
       );
 
       expect(result.isWord, isTrue);
-      expect(result.content, contains('Kurdish Academic Lecture on Database Systems'));
+      expect(
+        result.content,
+        contains('Kurdish Academic Lecture on Database Systems'),
+      );
       expect(result.content, contains('Relational Modeling'));
       expect(result.extension, equals('doc'));
     });

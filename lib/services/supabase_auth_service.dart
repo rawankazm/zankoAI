@@ -37,14 +37,15 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
     final prefs = await SharedPreferences.getInstance();
     String? id = prefs.getString('zanko_device_id');
     if (id == null || id.isEmpty) {
-      id = 'dev_${DateTime.now().millisecondsSinceEpoch}_${(1000 + (DateTime.now().microsecond % 9000))}';
+      id =
+          'dev_${DateTime.now().millisecondsSinceEpoch}_${(1000 + (DateTime.now().microsecond % 9000))}';
       await prefs.setString('zanko_device_id', id);
     }
     return id;
   }
 
   SupabaseAuthService({AuthRepository? repository})
-      : _repository = repository ?? SupabaseAuthRepository() {
+    : _repository = repository ?? SupabaseAuthRepository() {
     _init();
   }
 
@@ -63,14 +64,23 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
     // Check if a session is already cached
     final currentSession = _repository.currentSession;
     if (currentSession != null) {
-      _repository.fetchUserProfile(currentSession.user.id, currentSession.user.email, currentSession.user).then((profile) {
-        if (profile != null) {
-          _currentUser = profile;
-          _authState = Authenticated(user: profile, session: currentSession);
-          _syncUserAndVipStatus(profile);
-          notifyListeners();
-        }
-      });
+      _repository
+          .fetchUserProfile(
+            currentSession.user.id,
+            currentSession.user.email,
+            currentSession.user,
+          )
+          .then((profile) {
+            if (profile != null) {
+              _currentUser = profile;
+              _authState = Authenticated(
+                user: profile,
+                session: currentSession,
+              );
+              _syncUserAndVipStatus(profile);
+              notifyListeners();
+            }
+          });
     }
   }
 
@@ -104,20 +114,27 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
 
   void _syncUserAndVipStatus(UserModel profile) {
     VipFirestoreService.checkAndSyncVipStatus(
-      userId: profile.id,
-      userEmail: profile.email,
-    ).then((isVip) {
-      if (isVip && _currentUser != null && !_currentUser!.isVip) {
-        _currentUser = _currentUser!.copyWith(isVip: true, vipStatus: 'active');
-        _vipWatcherTimer?.cancel();
-        notifyListeners();
-      } else if (!isVip) {
-        _startVipWatcher();
-      }
-      VipFirestoreService.syncUserToFirestore(_currentUser ?? profile).ignore();
-    }).catchError((_) {
-      _startVipWatcher();
-    });
+          userId: profile.id,
+          userEmail: profile.email,
+        )
+        .then((isVip) {
+          if (isVip && _currentUser != null && !_currentUser!.isVip) {
+            _currentUser = _currentUser!.copyWith(
+              isVip: true,
+              vipStatus: 'active',
+            );
+            _vipWatcherTimer?.cancel();
+            notifyListeners();
+          } else if (!isVip) {
+            _startVipWatcher();
+          }
+          VipFirestoreService.syncUserToFirestore(
+            _currentUser ?? profile,
+          ).ignore();
+        })
+        .catchError((_) {
+          _startVipWatcher();
+        });
   }
 
   @override
@@ -132,13 +149,20 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
       );
 
       if (res.user != null) {
-        final profile = await _repository.fetchUserProfile(res.user!.id, res.user!.email, res.user);
+        final profile = await _repository.fetchUserProfile(
+          res.user!.id,
+          res.user!.email,
+          res.user,
+        );
         if (profile != null) {
           _currentUser = profile;
           if (res.session != null) {
             _authState = Authenticated(user: profile, session: res.session!);
           } else {
-            _authState = EmailUnconfirmedState(email: res.user!.email ?? email, userId: res.user!.id);
+            _authState = EmailUnconfirmedState(
+              email: res.user!.email ?? email,
+              userId: res.user!.id,
+            );
           }
           _syncUserAndVipStatus(profile);
           notifyListeners();
@@ -156,7 +180,11 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
   }
 
   @override
-  Future<bool> loginWithRole(String email, String password, UserRole role) async {
+  Future<bool> loginWithRole(
+    String email,
+    String password,
+    UserRole role,
+  ) async {
     return login(email, password);
   }
 
@@ -187,19 +215,28 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
       final user = res.user;
       if (user != null) {
         if (res.session != null) {
-          final profile = await _repository.fetchUserProfile(user.id, email, user);
-          _currentUser = profile ?? UserModel(
-            id: user.id,
-            name: name,
-            email: email,
-            role: role,
-            universityName: universityName,
-            departmentName: departmentName,
-            cityName: cityName,
-            isVip: false,
-            vipStatus: 'none',
+          final profile = await _repository.fetchUserProfile(
+            user.id,
+            email,
+            user,
           );
-          _authState = Authenticated(user: _currentUser!, session: res.session!);
+          _currentUser =
+              profile ??
+              UserModel(
+                id: user.id,
+                name: name,
+                email: email,
+                role: role,
+                universityName: universityName,
+                departmentName: departmentName,
+                cityName: cityName,
+                isVip: false,
+                vipStatus: 'none',
+              );
+          _authState = Authenticated(
+            user: _currentUser!,
+            session: res.session!,
+          );
           notifyListeners();
           return true;
         } else {
@@ -245,7 +282,11 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
       }
 
       if (res.user != null) {
-        final profile = await _repository.fetchUserProfile(res.user!.id, res.user!.email, res.user);
+        final profile = await _repository.fetchUserProfile(
+          res.user!.id,
+          res.user!.email,
+          res.user,
+        );
         if (profile != null) {
           _currentUser = profile;
           if (res.session != null) {
@@ -281,7 +322,11 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
       }
 
       if (res.user != null) {
-        final profile = await _repository.fetchUserProfile(res.user!.id, res.user!.email, res.user);
+        final profile = await _repository.fetchUserProfile(
+          res.user!.id,
+          res.user!.email,
+          res.user,
+        );
         if (profile != null) {
           _currentUser = profile;
           if (res.session != null) {
@@ -373,15 +418,23 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
           userEmail: cleanEmail,
         );
         if (firestoreIsVip && _currentUser != null && !_currentUser!.isVip) {
-          _currentUser = _currentUser!.copyWith(isVip: true, vipStatus: 'active');
+          _currentUser = _currentUser!.copyWith(
+            isVip: true,
+            vipStatus: 'active',
+          );
           _vipWatcherTimer?.cancel();
           notifyListeners();
         }
       } catch (_) {}
 
-      final profile = await _repository.fetchUserProfile(user.id, user.email, user);
+      final profile = await _repository.fetchUserProfile(
+        user.id,
+        user.email,
+        user,
+      );
       if (profile != null) {
-        final shouldBeVip = firestoreIsVip || (_currentUser?.isVip == true) || profile.isVip;
+        final shouldBeVip =
+            firestoreIsVip || (_currentUser?.isVip == true) || profile.isVip;
         _currentUser = (shouldBeVip && !profile.isVip)
             ? profile.copyWith(isVip: true, vipStatus: 'active')
             : profile;
@@ -429,7 +482,9 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
       final client = Supabase.instance.client;
       final authUser = client.auth.currentUser;
       final targetId = authUser?.id ?? _currentUser!.id;
-      final userEmail = (authUser?.email ?? _currentUser?.email ?? '').trim().toLowerCase();
+      final userEmail = (authUser?.email ?? _currentUser?.email ?? '')
+          .trim()
+          .toLowerCase();
 
       // 1. Persist to local device SharedPreferences immediately with multiple keys (ID, email, active)
       try {
@@ -442,22 +497,50 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
         if (cityName != null && cityName.trim().isNotEmpty) {
           await prefs.setString('zanko_user_city_$targetId', cityName.trim());
           await prefs.setString('zanko_active_user_city', cityName.trim());
-          if (userEmail.isNotEmpty) await prefs.setString('zanko_user_city_$userEmail', cityName.trim());
+          if (userEmail.isNotEmpty)
+            await prefs.setString(
+              'zanko_user_city_$userEmail',
+              cityName.trim(),
+            );
         }
         if (universityName != null && universityName.trim().isNotEmpty) {
-          await prefs.setString('zanko_user_uni_$targetId', universityName.trim());
+          await prefs.setString(
+            'zanko_user_uni_$targetId',
+            universityName.trim(),
+          );
           await prefs.setString('zanko_active_user_uni', universityName.trim());
-          if (userEmail.isNotEmpty) await prefs.setString('zanko_user_uni_$userEmail', universityName.trim());
+          if (userEmail.isNotEmpty)
+            await prefs.setString(
+              'zanko_user_uni_$userEmail',
+              universityName.trim(),
+            );
         }
         if (departmentName != null && departmentName.trim().isNotEmpty) {
-          await prefs.setString('zanko_user_dept_$targetId', departmentName.trim());
-          await prefs.setString('zanko_active_user_dept', departmentName.trim());
-          if (userEmail.isNotEmpty) await prefs.setString('zanko_user_dept_$userEmail', departmentName.trim());
+          await prefs.setString(
+            'zanko_user_dept_$targetId',
+            departmentName.trim(),
+          );
+          await prefs.setString(
+            'zanko_active_user_dept',
+            departmentName.trim(),
+          );
+          if (userEmail.isNotEmpty)
+            await prefs.setString(
+              'zanko_user_dept_$userEmail',
+              departmentName.trim(),
+            );
         }
         if (avatarUrl != null && avatarUrl.trim().isNotEmpty) {
-          await prefs.setString('zanko_user_avatar_$targetId', avatarUrl.trim());
+          await prefs.setString(
+            'zanko_user_avatar_$targetId',
+            avatarUrl.trim(),
+          );
           await prefs.setString('zanko_active_user_avatar', avatarUrl.trim());
-          if (userEmail.isNotEmpty) await prefs.setString('zanko_user_avatar_$userEmail', avatarUrl.trim());
+          if (userEmail.isNotEmpty)
+            await prefs.setString(
+              'zanko_user_avatar_$userEmail',
+              avatarUrl.trim(),
+            );
         }
       } catch (prefErr) {
         debugPrint('Local profile cache notice: $prefErr');
@@ -466,15 +549,21 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
       // 2. Keep Supabase Auth User metadata updated (persists across sessions and is RLS-independent)
       try {
         await client.auth.updateUser(
-          UserAttributes(data: {
-            'full_name': trimmedName,
-            'name': trimmedName,
-            if (cityName != null && cityName.trim().isNotEmpty) 'city_name': cityName.trim(),
-            if (universityName != null && universityName.trim().isNotEmpty) 'university_name': universityName.trim(),
-            if (departmentName != null && departmentName.trim().isNotEmpty) 'department_name': departmentName.trim(),
-            if (bio != null && bio.trim().isNotEmpty) 'bio': bio.trim(),
-            if (avatarUrl != null && avatarUrl.trim().isNotEmpty) 'avatar_url': avatarUrl.trim(),
-          }),
+          UserAttributes(
+            data: {
+              'full_name': trimmedName,
+              'name': trimmedName,
+              if (cityName != null && cityName.trim().isNotEmpty)
+                'city_name': cityName.trim(),
+              if (universityName != null && universityName.trim().isNotEmpty)
+                'university_name': universityName.trim(),
+              if (departmentName != null && departmentName.trim().isNotEmpty)
+                'department_name': departmentName.trim(),
+              if (bio != null && bio.trim().isNotEmpty) 'bio': bio.trim(),
+              if (avatarUrl != null && avatarUrl.trim().isNotEmpty)
+                'avatar_url': avatarUrl.trim(),
+            },
+          ),
         );
       } catch (metaErr) {
         debugPrint('Auth metadata sync notice: $metaErr');
@@ -483,11 +572,15 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
       // 3. Update public.profiles database table (if row exists)
       final updatePayload = <String, dynamic>{
         'full_name': trimmedName,
-        if (cityName != null && cityName.trim().isNotEmpty) 'city_name': cityName.trim(),
-        if (universityName != null && universityName.trim().isNotEmpty) 'university_name': universityName.trim(),
-        if (departmentName != null && departmentName.trim().isNotEmpty) 'department_name': departmentName.trim(),
+        if (cityName != null && cityName.trim().isNotEmpty)
+          'city_name': cityName.trim(),
+        if (universityName != null && universityName.trim().isNotEmpty)
+          'university_name': universityName.trim(),
+        if (departmentName != null && departmentName.trim().isNotEmpty)
+          'department_name': departmentName.trim(),
         if (bio != null && bio.trim().isNotEmpty) 'bio': bio.trim(),
-        if (avatarUrl != null && avatarUrl.trim().isNotEmpty) 'avatar_url': avatarUrl.trim(),
+        if (avatarUrl != null && avatarUrl.trim().isNotEmpty)
+          'avatar_url': avatarUrl.trim(),
       };
 
       try {
@@ -495,11 +588,16 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
       } catch (e) {
         debugPrint('Full profile table update warning: $e');
         try {
-          await client.from('profiles').update({
-            'full_name': trimmedName,
-            if (cityName != null && cityName.trim().isNotEmpty) 'city_name': cityName.trim(),
-            if (avatarUrl != null && avatarUrl.trim().isNotEmpty) 'avatar_url': avatarUrl.trim(),
-          }).eq('id', targetId);
+          await client
+              .from('profiles')
+              .update({
+                'full_name': trimmedName,
+                if (cityName != null && cityName.trim().isNotEmpty)
+                  'city_name': cityName.trim(),
+                if (avatarUrl != null && avatarUrl.trim().isNotEmpty)
+                  'avatar_url': avatarUrl.trim(),
+              })
+              .eq('id', targetId);
         } catch (innerError) {
           debugPrint('Core profile table update warning: $innerError');
         }
@@ -509,8 +607,10 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
         _currentUser = _currentUser!.copyWith(
           name: trimmedName,
           cityName: cityName?.trim() ?? _currentUser!.cityName,
-          universityName: universityName?.trim() ?? _currentUser!.universityName,
-          departmentName: departmentName?.trim() ?? _currentUser!.departmentName,
+          universityName:
+              universityName?.trim() ?? _currentUser!.universityName,
+          departmentName:
+              departmentName?.trim() ?? _currentUser!.departmentName,
           photoUrl: avatarUrl?.trim() ?? _currentUser!.photoUrl,
         );
         VipFirestoreService.syncUserToFirestore(_currentUser!).ignore();
@@ -522,7 +622,6 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
       rethrow;
     }
   }
-
 
   @override
   Future<void> deleteAccount() async {
@@ -537,7 +636,11 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
     try {
       final res = await _repository.refreshSession();
       if (res.session != null && res.user != null) {
-        final profile = await _repository.fetchUserProfile(res.user!.id, res.user!.email, res.user);
+        final profile = await _repository.fetchUserProfile(
+          res.user!.id,
+          res.user!.email,
+          res.user,
+        );
         if (profile != null) {
           _currentUser = profile;
           _authState = Authenticated(user: profile, session: res.session!);

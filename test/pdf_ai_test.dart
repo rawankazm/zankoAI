@@ -16,7 +16,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:zanko_ai/models/pdf_job_model.dart';
 
-
 // ─── Mock Dio ─────────────────────────────────────────────────────────────────
 
 class MockDio extends Mock implements Dio {}
@@ -40,8 +39,7 @@ Response<Map<String, dynamic>> _buildResponse({
   );
 }
 
-RequestOptions _opts(String path) =>
-    RequestOptions(path: path, method: 'POST');
+RequestOptions _opts(String path) => RequestOptions(path: path, method: 'POST');
 
 RequestOptions _optsGet(String path) =>
     RequestOptions(path: path, method: 'GET');
@@ -70,7 +68,11 @@ Map<String, dynamic> _buildJobPayload({
       'updatedAt': '2026-09-07T12:00:05.000Z',
       // ignore: use_null_aware_elements
       if (result != null) 'result': result,
-      'usage': {'remaining': 4, 'limit': 5, 'resetAt': '2026-09-30T00:00:00.000Z'},
+      'usage': {
+        'remaining': 4,
+        'limit': 5,
+        'resetAt': '2026-09-30T00:00:00.000Z',
+      },
     },
   };
 }
@@ -95,15 +97,19 @@ void main() {
       // Arrange
       final submitPayload = _buildJobPayload(jobId: jobId, status: 'queued');
 
-      when(() => mockDio.post<Map<String, dynamic>>(
-            '/ai/pdf',
-            data: any(named: 'data'),
-            options: any(named: 'options'),
-          )).thenAnswer((_) async => _buildResponse(
-            statusCode: 202,
-            data: submitPayload,
-            requestOptions: _opts('/ai/pdf'),
-          ));
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/ai/pdf',
+          data: any(named: 'data'),
+          options: any(named: 'options'),
+        ),
+      ).thenAnswer(
+        (_) async => _buildResponse(
+          statusCode: 202,
+          data: submitPayload,
+          requestOptions: _opts('/ai/pdf'),
+        ),
+      );
 
       // Act — parse the response as the service would
       final data = submitPayload['data'] as Map<String, dynamic>;
@@ -128,7 +134,11 @@ void main() {
           'summary': 'This document covers database normalization...',
           'extractedTextLength': 15000,
           'questions': [
-            {'question': 'What is 3NF?', 'answer': 'Third Normal Form requires...', 'type': 'short_answer'},
+            {
+              'question': 'What is 3NF?',
+              'answer': 'Third Normal Form requires...',
+              'type': 'short_answer',
+            },
           ],
           'quiz': {
             'title': 'Database Quiz',
@@ -139,21 +149,27 @@ void main() {
                 'options': ['A', 'B', 'C', 'D'],
                 'correctAnswer': 'A',
                 'explanation': '...',
-              }
+              },
             ],
           },
           'flashcards': [
-            {'front': 'Normalization', 'back': 'Process of organizing a database...'},
+            {
+              'front': 'Normalization',
+              'back': 'Process of organizing a database...',
+            },
           ],
         },
       );
 
-      when(() => mockDio.get<Map<String, dynamic>>('/ai/pdf/$jobId'))
-          .thenAnswer((_) async => _buildResponse(
-                statusCode: 200,
-                data: resultPayload,
-                requestOptions: _optsGet('/ai/pdf/$jobId'),
-              ));
+      when(
+        () => mockDio.get<Map<String, dynamic>>('/ai/pdf/$jobId'),
+      ).thenAnswer(
+        (_) async => _buildResponse(
+          statusCode: 200,
+          data: resultPayload,
+          requestOptions: _optsGet('/ai/pdf/$jobId'),
+        ),
+      );
 
       // Act
       final data = resultPayload['data'] as Map<String, dynamic>;
@@ -197,26 +213,30 @@ void main() {
   // ── 3. Invalid PDF — Magic Bytes Rejection ────────────────────────────────
   group('3. Invalid PDF — rejected at upload', () {
     test('non-PDF file gets 400 BAD_REQUEST from backend', () async {
-      when(() => mockDio.post<Map<String, dynamic>>(
-            '/ai/pdf',
-            data: any(named: 'data'),
-            options: any(named: 'options'),
-          )).thenThrow(DioException(
-        requestOptions: _opts('/ai/pdf'),
-        response: Response(
-          statusCode: 400,
-          data: {
-            'success': false,
-            'error': {
-              'code': 'BAD_REQUEST',
-              'message':
-                  'Security check failed: File content does not match a genuine PDF document.',
-            },
-          },
-          requestOptions: _opts('/ai/pdf'),
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/ai/pdf',
+          data: any(named: 'data'),
+          options: any(named: 'options'),
         ),
-        type: DioExceptionType.badResponse,
-      ));
+      ).thenThrow(
+        DioException(
+          requestOptions: _opts('/ai/pdf'),
+          response: Response(
+            statusCode: 400,
+            data: {
+              'success': false,
+              'error': {
+                'code': 'BAD_REQUEST',
+                'message':
+                    'Security check failed: File content does not match a genuine PDF document.',
+              },
+            },
+            requestOptions: _opts('/ai/pdf'),
+          ),
+          type: DioExceptionType.badResponse,
+        ),
+      );
 
       expect(
         () => mockDio.post<Map<String, dynamic>>(
@@ -224,11 +244,13 @@ void main() {
           data: FormData(),
           options: Options(),
         ),
-        throwsA(isA<DioException>().having(
-          (e) => e.response?.statusCode,
-          'statusCode',
-          equals(400),
-        )),
+        throwsA(
+          isA<DioException>().having(
+            (e) => e.response?.statusCode,
+            'statusCode',
+            equals(400),
+          ),
+        ),
       );
     });
   });
@@ -257,47 +279,62 @@ void main() {
   group('5. Duplicate request — idempotency key returns same jobId', () {
     const sharedJobId = 'idempotent-job-005';
 
-    test('second upload with same Idempotency-Key returns existing jobId', () async {
-      // Both calls return identical response — same jobId
-      final payload = _buildJobPayload(jobId: sharedJobId, status: 'queued');
+    test(
+      'second upload with same Idempotency-Key returns existing jobId',
+      () async {
+        // Both calls return identical response — same jobId
+        final payload = _buildJobPayload(jobId: sharedJobId, status: 'queued');
 
-      // First call
-      final job1 = PdfJobModel.fromJson(payload['data'] as Map<String, dynamic>);
+        // First call
+        final job1 = PdfJobModel.fromJson(
+          payload['data'] as Map<String, dynamic>,
+        );
 
-      // Second call (simulating retry with same key) — server returns same job
-      final job2 = PdfJobModel.fromJson(payload['data'] as Map<String, dynamic>);
+        // Second call (simulating retry with same key) — server returns same job
+        final job2 = PdfJobModel.fromJson(
+          payload['data'] as Map<String, dynamic>,
+        );
 
-      expect(job1.jobId, equals(job2.jobId),
-          reason: 'Idempotent requests must return the same jobId');
-      expect(job1.status, equals(job2.status));
-    });
+        expect(
+          job1.jobId,
+          equals(job2.jobId),
+          reason: 'Idempotent requests must return the same jobId',
+        );
+        expect(job1.status, equals(job2.status));
+      },
+    );
   });
 
   // ── 6. Quota Exceeded — 429 ───────────────────────────────────────────────
   group('6. Usage limit exceeded', () {
     test('returns 429 with QUOTA_EXCEEDED error code', () async {
-      when(() => mockDio.post<Map<String, dynamic>>(
-            '/ai/pdf',
-            data: any(named: 'data'),
-            options: any(named: 'options'),
-          )).thenThrow(DioException(
-        requestOptions: _opts('/ai/pdf'),
-        response: Response(
-          statusCode: 429,
-          data: {
-            'success': false,
-            'error': {
-              'code': 'QUOTA_EXCEEDED',
-              'message': 'Monthly PDF processing limit reached (3/3). Please upgrade your plan.',
-              'feature': 'pdf',
-              'remaining': 0,
-              'limit': 3,
-            },
-          },
-          requestOptions: _opts('/ai/pdf'),
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/ai/pdf',
+          data: any(named: 'data'),
+          options: any(named: 'options'),
         ),
-        type: DioExceptionType.badResponse,
-      ));
+      ).thenThrow(
+        DioException(
+          requestOptions: _opts('/ai/pdf'),
+          response: Response(
+            statusCode: 429,
+            data: {
+              'success': false,
+              'error': {
+                'code': 'QUOTA_EXCEEDED',
+                'message':
+                    'Monthly PDF processing limit reached (3/3). Please upgrade your plan.',
+                'feature': 'pdf',
+                'remaining': 0,
+                'limit': 3,
+              },
+            },
+            requestOptions: _opts('/ai/pdf'),
+          ),
+          type: DioExceptionType.badResponse,
+        ),
+      );
 
       await expectLater(
         () async => mockDio.post<Map<String, dynamic>>(
@@ -305,11 +342,13 @@ void main() {
           data: FormData(),
           options: Options(),
         ),
-        throwsA(isA<DioException>().having(
-          (e) => e.response?.statusCode,
-          'statusCode',
-          equals(429),
-        )),
+        throwsA(
+          isA<DioException>().having(
+            (e) => e.response?.statusCode,
+            'statusCode',
+            equals(429),
+          ),
+        ),
       );
     });
   });
@@ -317,58 +356,69 @@ void main() {
   // ── 7. Unauthorized Access ────────────────────────────────────────────────
   group('7. Unauthorized access', () {
     test('missing JWT returns 401 from GET status endpoint', () async {
-      when(() => mockDio.get<Map<String, dynamic>>('/ai/pdf/some-job-id'))
-          .thenThrow(DioException(
-        requestOptions: _optsGet('/ai/pdf/some-job-id'),
-        response: Response(
-          statusCode: 401,
-          data: {
-            'success': false,
-            'error': {
-              'code': 'UNAUTHORIZED',
-              'message': 'Missing or malformed Authorization header.',
-            },
-          },
+      when(
+        () => mockDio.get<Map<String, dynamic>>('/ai/pdf/some-job-id'),
+      ).thenThrow(
+        DioException(
           requestOptions: _optsGet('/ai/pdf/some-job-id'),
+          response: Response(
+            statusCode: 401,
+            data: {
+              'success': false,
+              'error': {
+                'code': 'UNAUTHORIZED',
+                'message': 'Missing or malformed Authorization header.',
+              },
+            },
+            requestOptions: _optsGet('/ai/pdf/some-job-id'),
+          ),
+          type: DioExceptionType.badResponse,
         ),
-        type: DioExceptionType.badResponse,
-      ));
+      );
 
       await expectLater(
         () async => mockDio.get<Map<String, dynamic>>('/ai/pdf/some-job-id'),
-        throwsA(isA<DioException>().having(
-          (e) => e.response?.statusCode,
-          'statusCode',
-          equals(401),
-        )),
+        throwsA(
+          isA<DioException>().having(
+            (e) => e.response?.statusCode,
+            'statusCode',
+            equals(401),
+          ),
+        ),
       );
     });
 
     test('accessing another user\'s job returns 403 FORBIDDEN', () async {
-      when(() => mockDio.get<Map<String, dynamic>>('/ai/pdf/other-user-job'))
-          .thenThrow(DioException(
-        requestOptions: _optsGet('/ai/pdf/other-user-job'),
-        response: Response(
-          statusCode: 403,
-          data: {
-            'success': false,
-            'error': {
-              'code': 'FORBIDDEN',
-              'message': 'Access denied: You can only access your own PDF processing jobs.',
-            },
-          },
+      when(
+        () => mockDio.get<Map<String, dynamic>>('/ai/pdf/other-user-job'),
+      ).thenThrow(
+        DioException(
           requestOptions: _optsGet('/ai/pdf/other-user-job'),
+          response: Response(
+            statusCode: 403,
+            data: {
+              'success': false,
+              'error': {
+                'code': 'FORBIDDEN',
+                'message':
+                    'Access denied: You can only access your own PDF processing jobs.',
+              },
+            },
+            requestOptions: _optsGet('/ai/pdf/other-user-job'),
+          ),
+          type: DioExceptionType.badResponse,
         ),
-        type: DioExceptionType.badResponse,
-      ));
+      );
 
       await expectLater(
         () async => mockDio.get<Map<String, dynamic>>('/ai/pdf/other-user-job'),
-        throwsA(isA<DioException>().having(
-          (e) => e.response?.statusCode,
-          'statusCode',
-          equals(403),
-        )),
+        throwsA(
+          isA<DioException>().having(
+            (e) => e.response?.statusCode,
+            'statusCode',
+            equals(403),
+          ),
+        ),
       );
     });
   });
@@ -376,40 +426,45 @@ void main() {
   // ── Model: PdfJobModel helpers ────────────────────────────────────────────
   group('PdfJobModel helpers', () {
     test('fileSizeLabel formats correctly', () {
-      final smallJob = PdfJobModel.fromJson(_buildJobPayload(
-        fileSizeBytes: 512,
-      )['data'] as Map<String, dynamic>);
+      final smallJob = PdfJobModel.fromJson(
+        _buildJobPayload(fileSizeBytes: 512)['data'] as Map<String, dynamic>,
+      );
       expect(smallJob.fileSizeLabel, equals('512 B'));
 
-      final kbJob = PdfJobModel.fromJson(_buildJobPayload(
-        fileSizeBytes: 1536,
-      )['data'] as Map<String, dynamic>);
+      final kbJob = PdfJobModel.fromJson(
+        _buildJobPayload(fileSizeBytes: 1536)['data'] as Map<String, dynamic>,
+      );
       expect(kbJob.fileSizeLabel, equals('1.5 KB'));
 
-      final mbJob = PdfJobModel.fromJson(_buildJobPayload(
-        fileSizeBytes: 2 * 1024 * 1024,
-      )['data'] as Map<String, dynamic>);
+      final mbJob = PdfJobModel.fromJson(
+        _buildJobPayload(fileSizeBytes: 2 * 1024 * 1024)['data']
+            as Map<String, dynamic>,
+      );
       expect(mbJob.fileSizeLabel, equals('2.0 MB'));
     });
 
     test('status predicates are correct', () {
       final queuedJob = PdfJobModel.fromJson(
-          _buildJobPayload(status: 'queued')['data'] as Map<String, dynamic>);
+        _buildJobPayload(status: 'queued')['data'] as Map<String, dynamic>,
+      );
       expect(queuedJob.isPending, isTrue);
       expect(queuedJob.isCompleted, isFalse);
       expect(queuedJob.isFailed, isFalse);
 
       final processingJob = PdfJobModel.fromJson(
-          _buildJobPayload(status: 'processing')['data'] as Map<String, dynamic>);
+        _buildJobPayload(status: 'processing')['data'] as Map<String, dynamic>,
+      );
       expect(processingJob.isPending, isTrue);
 
       final completedJob = PdfJobModel.fromJson(
-          _buildJobPayload(status: 'completed')['data'] as Map<String, dynamic>);
+        _buildJobPayload(status: 'completed')['data'] as Map<String, dynamic>,
+      );
       expect(completedJob.isCompleted, isTrue);
       expect(completedJob.isPending, isFalse);
 
       final failedJob = PdfJobModel.fromJson(
-          _buildJobPayload(status: 'failed')['data'] as Map<String, dynamic>);
+        _buildJobPayload(status: 'failed')['data'] as Map<String, dynamic>,
+      );
       expect(failedJob.isFailed, isTrue);
       expect(failedJob.isPending, isFalse);
     });

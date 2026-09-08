@@ -34,7 +34,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _entranceController;
 
   @override
@@ -93,7 +94,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -104,7 +104,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
     final langProvider = Provider.of<LanguageProvider>(context);
     final user = authService.currentUser;
-    final isGuest = user == null ||
+    final isGuest =
+        user == null ||
         user.isGuest ||
         user.name == 'مێوان' ||
         user.name == 'مێڤان' ||
@@ -113,20 +114,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
     final userName = isGuest
         ? langProvider.translate('guest')
-        : (user.name.trim().isNotEmpty && user.name.trim().toLowerCase() != 'student'
-            ? user.name
-            : langProvider.translate('student_role'));
+        : (user.name.trim().isNotEmpty &&
+                  user.name.trim().toLowerCase() != 'student'
+              ? user.name
+              : langProvider.translate('student_role'));
 
     final userSubtitle = isGuest
         ? langProvider.translate('guest_account')
         : (user.universityName != null &&
-                user.universityName!.trim().isNotEmpty &&
-                user.universityName!.trim().toLowerCase() != 'zankoai student'
-            ? KurdistanUniversitiesData.getLocalizedUniversityName(
-                user.universityName!,
-                langProvider.languageCode,
-              )
-            : langProvider.translate('zankoai_student_role'));
+                  user.universityName!.trim().isNotEmpty &&
+                  user.universityName!.trim().toLowerCase() != 'zankoai student'
+              ? KurdistanUniversitiesData.getLocalizedUniversityName(
+                  user.universityName!,
+                  langProvider.languageCode,
+                )
+              : langProvider.translate('zankoai_student_role'));
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: isDark
@@ -141,7 +143,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               statusBarColor: Colors.transparent,
             ),
       child: Scaffold(
-        backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
+        backgroundColor: isDark
+            ? ZankoColors.darkBackground
+            : ZankoColors.background,
         body: SafeArea(
           bottom: false,
           child: CustomScrollView(
@@ -166,7 +170,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             GestureDetector(
                               onTap: () => Navigator.push(
                                 context,
-                                CupertinoPageRoute(builder: (_) => const ProfileScreen()),
+                                CupertinoPageRoute(
+                                  builder: (_) => const ProfileScreen(),
+                                ),
                               ),
                               child: Container(
                                 width: 46,
@@ -174,35 +180,52 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2),
+                                    color: isDark
+                                        ? const Color(0xFF262C36)
+                                        : const Color(0xFFECEEF2),
                                     width: 2,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+                                      color: Colors.black.withValues(
+                                        alpha: isDark ? 0.3 : 0.05,
+                                      ),
                                       blurRadius: 10,
                                       offset: const Offset(0, 3),
                                     ),
                                   ],
                                 ),
                                 child: ClipOval(
-                                  child: (user?.photoUrl != null &&
+                                  child:
+                                      (user?.photoUrl != null &&
                                           user!.photoUrl!.isNotEmpty &&
-                                          !user.photoUrl!.contains('student_avatar_3d.png'))
+                                          !user.photoUrl!.contains(
+                                            'student_avatar_3d.png',
+                                          ))
                                       ? (user.photoUrl!.startsWith('http')
-                                          ? Image.network(
-                                              user.photoUrl!,
-                                              width: 46,
-                                              height: 46,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (ctx, err, stack) => Image.asset(
-                                                'assets/images/student_avatar_3d.png',
+                                            ? Image.network(
+                                                user.photoUrl!,
                                                 width: 46,
                                                 height: 46,
                                                 fit: BoxFit.cover,
-                                              ),
-                                            )
-                                          : Image.asset(user.photoUrl!, width: 46, height: 46, fit: BoxFit.cover))
+                                                errorBuilder:
+                                                    (
+                                                      ctx,
+                                                      err,
+                                                      stack,
+                                                    ) => Image.asset(
+                                                      'assets/images/student_avatar_3d.png',
+                                                      width: 46,
+                                                      height: 46,
+                                                      fit: BoxFit.cover,
+                                                    ),
+                                              )
+                                            : Image.asset(
+                                                user.photoUrl!,
+                                                width: 46,
+                                                height: 46,
+                                                fit: BoxFit.cover,
+                                              ))
                                       : Image.asset(
                                           'assets/images/student_avatar_3d.png',
                                           width: 46,
@@ -212,68 +235,77 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                 ),
                               ),
                             ),
-                              const SizedBox(width: 12),
-                              // User Name & Academic Info
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Flexible(
-                                          child: Text(
-                                            userName,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w800,
-                                              color: isDark ? Colors.white : const Color(0xFF17191F),
-                                              letterSpacing: -0.3,
-                                            ),
+                            const SizedBox(width: 12),
+                            // User Name & Academic Info
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          userName,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w800,
+                                            color: isDark
+                                                ? Colors.white
+                                                : const Color(0xFF17191F),
+                                            letterSpacing: -0.3,
                                           ),
                                         ),
-                                        if (!isGuest && user.isVip) ...[
-                                          const SizedBox(width: 5),
-                                          const Text('👑', style: TextStyle(fontSize: 15)),
-                                        ],
-                                      ],
-                                    ),
-                                    const SizedBox(height: 2),
-                                      Text(
-                                        userSubtitle,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontSize: 12.5,
-                                        fontWeight: FontWeight.w500,
-                                        color: isDark ? const Color(0xFFA6ACB8) : const Color(0xFF6B7280),
                                       ),
+                                      if (!isGuest && user.isVip) ...[
+                                        const SizedBox(width: 5),
+                                        const Text(
+                                          '👑',
+                                          style: TextStyle(fontSize: 15),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    userSubtitle,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w500,
+                                      color: isDark
+                                          ? const Color(0xFFA6ACB8)
+                                          : const Color(0xFF6B7280),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 8),
-                              // Notification bell
-                              _NotificationBellButton(isDark: isDark),
-                              const SizedBox(width: 8),
-                              // Search button
-                              _SearchButton(isDark: isDark),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(width: 8),
+                            // Notification bell
+                            _NotificationBellButton(isDark: isDark),
+                            const SizedBox(width: 8),
+                            // Search button
+                            _SearchButton(isDark: isDark),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
+              ),
 
               // ── Main Scrollable Content ────────────────────────────────────
               SliverList(
                 delegate: SliverChildListDelegate([
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -284,23 +316,31 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           AIHeroCard(
                             onStartLearning: () => Navigator.push(
                               context,
-                              CupertinoPageRoute(builder: (_) => const AiTeacherChatScreen()),
+                              CupertinoPageRoute(
+                                builder: (_) => const AiTeacherChatScreen(),
+                              ),
                             ),
                             onQuickAction: (action) {
                               if (action == 'Voice Tutor') {
                                 Navigator.push(
                                   context,
-                                  CupertinoPageRoute(builder: (_) => const AudioSummarizerView()),
+                                  CupertinoPageRoute(
+                                    builder: (_) => const AudioSummarizerView(),
+                                  ),
                                 );
                               } else if (action == 'PDF Chat') {
                                 Navigator.push(
                                   context,
-                                  CupertinoPageRoute(builder: (_) => const PdfChatScreen()),
+                                  CupertinoPageRoute(
+                                    builder: (_) => const PdfChatScreen(),
+                                  ),
                                 );
                               } else {
                                 Navigator.push(
                                   context,
-                                  CupertinoPageRoute(builder: (_) => const AiTeacherChatScreen()),
+                                  CupertinoPageRoute(
+                                    builder: (_) => const AiTeacherChatScreen(),
+                                  ),
                                 );
                               }
                             },
@@ -309,31 +349,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         const SizedBox(height: 24),
 
                         // ── 2. Continue Learning Section ───────────────────────
-                        _staggered(
-                          2,
-                          _ContinueLearningSection(isDark: isDark),
-                        ),
+                        _staggered(2, _ContinueLearningSection(isDark: isDark)),
                         const SizedBox(height: 24),
 
                         // ── 3. Today's Progress Section ────────────────────────
-                        _staggered(
-                          3,
-                          _TodayProgressSection(isDark: isDark),
-                        ),
+                        _staggered(3, _TodayProgressSection(isDark: isDark)),
                         const SizedBox(height: 24),
 
                         // ── 4. Quick Tools Grid ────────────────────────────────
-                        _staggered(
-                          4,
-                          _HomeQuickToolsSection(isDark: isDark),
-                        ),
+                        _staggered(4, _HomeQuickToolsSection(isDark: isDark)),
                         const SizedBox(height: 24),
 
                         // ── 5. Upcoming Tasks Section ──────────────────────────
-                        _staggered(
-                          5,
-                          _UpcomingTasksSection(isDark: isDark),
-                        ),
+                        _staggered(5, _UpcomingTasksSection(isDark: isDark)),
                         const SizedBox(height: 100),
                       ],
                     ),
@@ -372,7 +400,9 @@ class _NotificationBellButton extends StatelessWidget {
           color: isDark ? ZankoColors.darkCard : Colors.white,
           shape: BoxShape.circle,
           border: Border.all(
-            color: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFEFEFF7),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.1)
+                : const Color(0xFFEFEFF7),
             width: 1,
           ),
           boxShadow: isDark
@@ -476,56 +506,82 @@ class _HomeQuickToolsSection extends StatelessWidget {
         'subtitle': lang.translate('voice_tutor_sub'),
         'icon': HugeIcons.strokeRoundedMic01,
         'gradient': [const Color(0xFF035EC2), const Color(0xFF1E88E5)],
-        'onTap': () => Navigator.push(context, CupertinoPageRoute(builder: (_) => const AudioSummarizerView())),
+        'onTap': () => Navigator.push(
+          context,
+          CupertinoPageRoute(builder: (_) => const AudioSummarizerView()),
+        ),
       },
       {
         'title': lang.translate('pdf_chat'),
         'subtitle': lang.translate('pdf_chat_sub'),
         'icon': HugeIcons.strokeRoundedFile02,
         'gradient': [const Color(0xFF4F46E5), const Color(0xFF7C3AED)],
-        'onTap': () => Navigator.push(context, CupertinoPageRoute(builder: (_) => const PdfChatScreen())),
+        'onTap': () => Navigator.push(
+          context,
+          CupertinoPageRoute(builder: (_) => const PdfChatScreen()),
+        ),
       },
       {
         'title': lang.translate('nav_gpa'),
         'subtitle': lang.translate('gpa_sub'),
         'icon': HugeIcons.strokeRoundedAnalytics01,
         'gradient': [const Color(0xFFD97706), const Color(0xFFF59E0B)],
-        'onTap': () => Navigator.push(context, CupertinoPageRoute(builder: (_) => const GpaTrackerScreen())),
+        'onTap': () => Navigator.push(
+          context,
+          CupertinoPageRoute(builder: (_) => const GpaTrackerScreen()),
+        ),
       },
       {
         'title': lang.translate('nav_quiz'),
         'subtitle': lang.translate('quiz_sub'),
         'icon': HugeIcons.strokeRoundedFlash,
         'gradient': [const Color(0xFF0284C7), const Color(0xFF38BDF8)],
-        'onTap': () => Navigator.push(context, CupertinoPageRoute(builder: (_) => const AiExamGeneratorScreen())),
+        'onTap': () => Navigator.push(
+          context,
+          CupertinoPageRoute(builder: (_) => const AiExamGeneratorScreen()),
+        ),
       },
       {
         'title': lang.translate('flashcards'),
         'subtitle': lang.translate('flashcards_sub'),
         'icon': HugeIcons.strokeRoundedLayers01,
         'gradient': [const Color(0xFF059669), const Color(0xFF10B981)],
-        'onTap': () => Navigator.push(context, CupertinoPageRoute(builder: (_) => const FlashcardsScreen())),
+        'onTap': () => Navigator.push(
+          context,
+          CupertinoPageRoute(builder: (_) => const FlashcardsScreen()),
+        ),
       },
       {
         'title': lang.translate('pomodoro_focus'),
         'subtitle': lang.translate('pomodoro_sub'),
         'icon': HugeIcons.strokeRoundedClock01,
         'gradient': [const Color(0xFFEA580C), const Color(0xFFFB923C)],
-        'onTap': () => Navigator.push(context, CupertinoPageRoute(builder: (_) => const PomodoroTimerScreen())),
+        'onTap': () => Navigator.push(
+          context,
+          CupertinoPageRoute(builder: (_) => const PomodoroTimerScreen()),
+        ),
       },
       {
         'title': lang.translate('academic_dictionary'),
         'subtitle': lang.translate('academic_dictionary_sub'),
         'icon': HugeIcons.strokeRoundedBook02,
         'gradient': [const Color(0xFF0D9488), const Color(0xFF14B8A6)],
-        'onTap': () => Navigator.push(context, CupertinoPageRoute(builder: (_) => const AcademicDictionaryScreen())),
+        'onTap': () => Navigator.push(
+          context,
+          CupertinoPageRoute(builder: (_) => const AcademicDictionaryScreen()),
+        ),
       },
       {
         'title': lang.translate('seminar_thesis_assistant'),
         'subtitle': lang.translate('seminar_thesis_sub'),
         'icon': HugeIcons.strokeRoundedNoteEdit,
         'gradient': [const Color(0xFF2563EB), const Color(0xFF60A5FA)],
-        'onTap': () => Navigator.push(context, CupertinoPageRoute(builder: (_) => const SeminarThesisAssistantScreen())),
+        'onTap': () => Navigator.push(
+          context,
+          CupertinoPageRoute(
+            builder: (_) => const SeminarThesisAssistantScreen(),
+          ),
+        ),
       },
     ];
 
@@ -553,7 +609,9 @@ class _HomeQuickToolsSection extends StatelessWidget {
                   lang.translate('all_ai_tools_subtitle'),
                   style: TextStyle(
                     fontSize: 12,
-                    color: isDark ? ZankoColors.darkTextSecondary : ZankoColors.textSecondary,
+                    color: isDark
+                        ? ZankoColors.darkTextSecondary
+                        : ZankoColors.textSecondary,
                   ),
                 ),
               ],
@@ -561,7 +619,9 @@ class _HomeQuickToolsSection extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: ZankoColors.primary.withValues(alpha: isDark ? 0.20 : 0.10),
+                color: ZankoColors.primary.withValues(
+                  alpha: isDark ? 0.20 : 0.10,
+                ),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: ZankoColors.primary.withValues(alpha: 0.25),
@@ -623,12 +683,16 @@ class _HomeQuickToolsSection extends StatelessWidget {
                     color: isDark ? ZankoColors.darkCard : Colors.white,
                     borderRadius: BorderRadius.circular(22),
                     border: Border.all(
-                      color: isDark ? ZankoColors.darkBorder : const Color(0xFFE5EBF4),
+                      color: isDark
+                          ? ZankoColors.darkBorder
+                          : const Color(0xFFE5EBF4),
                       width: 1.2,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+                        color: Colors.black.withValues(
+                          alpha: isDark ? 0.25 : 0.04,
+                        ),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -651,7 +715,9 @@ class _HomeQuickToolsSection extends StatelessWidget {
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: isDark
-                                    ? grad.map((c) => c.withValues(alpha: 0.90)).toList()
+                                    ? grad
+                                          .map((c) => c.withValues(alpha: 0.90))
+                                          .toList()
                                     : grad,
                               ),
                               borderRadius: BorderRadius.circular(14),
@@ -664,20 +730,28 @@ class _HomeQuickToolsSection extends StatelessWidget {
                               ],
                             ),
                             child: Center(
-                              child: appIcon(t['icon'], color: Colors.white, size: 22),
+                              child: appIcon(
+                                t['icon'],
+                                color: Colors.white,
+                                size: 22,
+                              ),
                             ),
                           ),
                           Container(
                             width: 26,
                             height: 26,
                             decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF1E2430) : const Color(0xFFF1F4F9),
+                              color: isDark
+                                  ? const Color(0xFF1E2430)
+                                  : const Color(0xFFF1F4F9),
                               shape: BoxShape.circle,
                             ),
                             child: Center(
                               child: HugeIcon(
                                 icon: HugeIcons.strokeRoundedArrowRight01,
-                                color: isDark ? Colors.white38 : const Color(0xFF9CA3AF),
+                                color: isDark
+                                    ? Colors.white38
+                                    : const Color(0xFF9CA3AF),
                                 size: 14,
                               ),
                             ),
@@ -698,7 +772,9 @@ class _HomeQuickToolsSection extends StatelessWidget {
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
                               letterSpacing: -0.2,
-                              color: isDark ? Colors.white : const Color(0xFF151821),
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF151821),
                             ),
                           ),
                           const SizedBox(height: 3),
@@ -709,7 +785,9 @@ class _HomeQuickToolsSection extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 11,
                               height: 1.25,
-                              color: isDark ? ZankoColors.darkTextSecondary : ZankoColors.textSecondary,
+                              color: isDark
+                                  ? ZankoColors.darkTextSecondary
+                                  : ZankoColors.textSecondary,
                             ),
                           ),
                         ],
@@ -840,12 +918,16 @@ class _ContinueLearningSection extends StatelessWidget {
                     color: isDark ? const Color(0xFF171B23) : Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2),
+                      color: isDark
+                          ? const Color(0xFF262C36)
+                          : const Color(0xFFECEEF2),
                       width: 1.2,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
+                        color: Colors.black.withValues(
+                          alpha: isDark ? 0.25 : 0.03,
+                        ),
                         blurRadius: 16,
                         offset: const Offset(0, 4),
                       ),
@@ -863,19 +945,30 @@ class _ContinueLearningSection extends StatelessWidget {
                             height: 38,
                             decoration: BoxDecoration(
                               color: isDark
-                                  ? const Color(0xFF035EC2).withValues(alpha: 0.2)
+                                  ? const Color(
+                                      0xFF035EC2,
+                                    ).withValues(alpha: 0.2)
                                   : const Color(0xFFE2EDFB),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Center(
-                              child: appIcon(icon, color: const Color(0xFF035EC2), size: 18),
+                              child: appIcon(
+                                icon,
+                                color: const Color(0xFF035EC2),
+                                size: 18,
+                              ),
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
                               color: isDark
-                                  ? const Color(0xFF035EC2).withValues(alpha: 0.2)
+                                  ? const Color(
+                                      0xFF035EC2,
+                                    ).withValues(alpha: 0.2)
                                   : const Color(0xFFE2EDFB),
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -897,7 +990,9 @@ class _ContinueLearningSection extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: isDark ? Colors.white : const Color(0xFF17191F),
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF17191F),
                         ),
                       ),
                       Column(
@@ -942,7 +1037,9 @@ class _ContinueLearningSection extends StatelessWidget {
                                 child: HugeIcon(
                                   icon: HugeIcons.strokeRoundedArrowRight01,
                                   size: 12,
-                                  color: isDark ? Colors.white : const Color(0xFF17191F),
+                                  color: isDark
+                                      ? Colors.white
+                                      : const Color(0xFF17191F),
                                 ),
                               ),
                             ],
@@ -1053,7 +1150,8 @@ class _TodayProgressSection extends StatelessWidget {
                     _buildVerticalDivider(isDark),
                     // Stat 3: Day streak
                     _buildStatCol(
-                      value: '🔥 ${scoreService.streakCount > 0 ? scoreService.streakCount : 7}',
+                      value:
+                          '🔥 ${scoreService.streakCount > 0 ? scoreService.streakCount : 7}',
                       label: langProvider.translate('day_streak'),
                       isDark: isDark,
                     ),
@@ -1124,7 +1222,9 @@ class _TodayProgressSection extends StatelessWidget {
                 fontSize: 10,
                 height: 1.15,
                 fontWeight: FontWeight.w500,
-                color: isDark ? const Color(0xFFA6ACB8) : const Color(0xFF6B7280),
+                color: isDark
+                    ? const Color(0xFFA6ACB8)
+                    : const Color(0xFF6B7280),
               ),
             ),
           ),
@@ -1229,7 +1329,9 @@ class _UpcomingTasksSection extends StatelessWidget {
                 color: isDark ? const Color(0xFF171B23) : Colors.white,
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
-                  color: isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2),
+                  color: isDark
+                      ? const Color(0xFF262C36)
+                      : const Color(0xFFECEEF2),
                   width: 1.2,
                 ),
                 boxShadow: [
@@ -1248,17 +1350,19 @@ class _UpcomingTasksSection extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: isHigh
                           ? (isDark
-                              ? const Color(0xFF035EC2).withValues(alpha: 0.2)
-                              : const Color(0xFFE2EDFB))
+                                ? const Color(0xFF035EC2).withValues(alpha: 0.2)
+                                : const Color(0xFFE2EDFB))
                           : (isDark
-                              ? const Color(0xFFE4D27D).withValues(alpha: 0.2)
-                              : const Color(0xFFFEF9E7)),
+                                ? const Color(0xFFE4D27D).withValues(alpha: 0.2)
+                                : const Color(0xFFFEF9E7)),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Center(
                       child: appIcon(
                         icon,
-                        color: isHigh ? const Color(0xFF035EC2) : const Color(0xFFB8860B),
+                        color: isHigh
+                            ? const Color(0xFF035EC2)
+                            : const Color(0xFFB8860B),
                         size: 20,
                       ),
                     ),
@@ -1273,7 +1377,9 @@ class _UpcomingTasksSection extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 14.5,
                             fontWeight: FontWeight.w700,
-                            color: isDark ? Colors.white : const Color(0xFF17191F),
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF17191F),
                           ),
                         ),
                         const SizedBox(height: 3),
@@ -1282,7 +1388,9 @@ class _UpcomingTasksSection extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: isDark ? const Color(0xFFA6ACB8) : const Color(0xFF6B7280),
+                            color: isDark
+                                ? const Color(0xFFA6ACB8)
+                                : const Color(0xFF6B7280),
                           ),
                         ),
                       ],
@@ -1290,7 +1398,10 @@ class _UpcomingTasksSection extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: isHigh
                           ? const Color(0xFFE2EDFB)
@@ -1302,7 +1413,9 @@ class _UpcomingTasksSection extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: isHigh ? const Color(0xFF035EC2) : const Color(0xFFB8860B),
+                        color: isHigh
+                            ? const Color(0xFF035EC2)
+                            : const Color(0xFFB8860B),
                       ),
                     ),
                   ),
@@ -1310,7 +1423,9 @@ class _UpcomingTasksSection extends StatelessWidget {
                   HugeIcon(
                     icon: HugeIcons.strokeRoundedArrowRight01,
                     size: 14,
-                    color: isDark ? const Color(0xFFA6ACB8) : const Color(0xFF6B7280),
+                    color: isDark
+                        ? const Color(0xFFA6ACB8)
+                        : const Color(0xFF6B7280),
                   ),
                 ],
               ),

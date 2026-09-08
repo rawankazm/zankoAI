@@ -22,7 +22,11 @@ enum AppNotificationType {
 
   static AppNotificationType fromString(String? val) {
     if (val == null) return AppNotificationType.systemNotification;
-    final clean = val.toLowerCase().trim().replaceAll('-', '_').replaceAll(' ', '_');
+    final clean = val
+        .toLowerCase()
+        .trim()
+        .replaceAll('-', '_')
+        .replaceAll(' ', '_');
     switch (clean) {
       case 'assignment_reminder':
       case 'assignmentreminder':
@@ -226,13 +230,21 @@ class AppNotificationModel {
       title: (map['title'] ?? '').toString(),
       body: (map['body'] ?? '').toString(),
       type: AppNotificationType.fromString(map['type']?.toString()),
-      data: map['data'] is Map<String, dynamic> ? map['data'] as Map<String, dynamic> : null,
+      data: map['data'] is Map<String, dynamic>
+          ? map['data'] as Map<String, dynamic>
+          : null,
       isRead: map['is_read'] == true || map['isRead'] == true,
-      readAt: map['read_at'] != null ? DateTime.tryParse(map['read_at'].toString()) : null,
+      readAt: map['read_at'] != null
+          ? DateTime.tryParse(map['read_at'].toString())
+          : null,
       idempotencyKey: map['idempotency_key']?.toString(),
       referenceId: map['reference_id']?.toString(),
-      scheduledFor: map['scheduled_for'] != null ? DateTime.tryParse(map['scheduled_for'].toString()) : null,
-      createdAt: DateTime.tryParse(map['created_at']?.toString() ?? '') ?? DateTime.now(),
+      scheduledFor: map['scheduled_for'] != null
+          ? DateTime.tryParse(map['scheduled_for'].toString())
+          : null,
+      createdAt:
+          DateTime.tryParse(map['created_at']?.toString() ?? '') ??
+          DateTime.now(),
     );
   }
 
@@ -293,7 +305,8 @@ class NotificationPreferencesModel {
       teacherAnnouncements: teacherAnnouncements ?? this.teacherAnnouncements,
       announcements: announcements ?? this.announcements,
       aiJobCompletion: aiJobCompletion ?? this.aiJobCompletion,
-      subscriptionNotifications: subscriptionNotifications ?? this.subscriptionNotifications,
+      subscriptionNotifications:
+          subscriptionNotifications ?? this.subscriptionNotifications,
       paymentUpdates: paymentUpdates ?? this.paymentUpdates,
       systemNotifications: systemNotifications ?? this.systemNotifications,
       pushEnabled: pushEnabled ?? this.pushEnabled,
@@ -324,17 +337,27 @@ class NotificationPreferencesModel {
   factory NotificationPreferencesModel.fromMap(Map<String, dynamic> map) {
     return NotificationPreferencesModel(
       userId: (map['user_id'] ?? map['userId'] ?? '').toString(),
-      assignmentReminders: map['assignment_reminders'] ?? map['assignmentReminders'] ?? true,
+      assignmentReminders:
+          map['assignment_reminders'] ?? map['assignmentReminders'] ?? true,
       examReminders: map['exam_reminders'] ?? map['examReminders'] ?? true,
-      teacherAnnouncements: map['teacher_announcements'] ?? map['teacherAnnouncements'] ?? true,
+      teacherAnnouncements:
+          map['teacher_announcements'] ?? map['teacherAnnouncements'] ?? true,
       announcements: map['announcements'] ?? true,
-      aiJobCompletion: map['ai_job_completion'] ?? map['aiJobCompletion'] ?? true,
-      subscriptionNotifications: map['subscription_notifications'] ?? map['subscriptionNotifications'] ?? true,
+      aiJobCompletion:
+          map['ai_job_completion'] ?? map['aiJobCompletion'] ?? true,
+      subscriptionNotifications:
+          map['subscription_notifications'] ??
+          map['subscriptionNotifications'] ??
+          true,
       paymentUpdates: map['payment_updates'] ?? map['paymentUpdates'] ?? true,
-      systemNotifications: map['system_notifications'] ?? map['systemNotifications'] ?? true,
+      systemNotifications:
+          map['system_notifications'] ?? map['systemNotifications'] ?? true,
       pushEnabled: map['push_enabled'] ?? map['pushEnabled'] ?? true,
       emailEnabled: map['email_enabled'] ?? map['emailEnabled'] ?? false,
-      leadTimeMinutes: (map['lead_time_minutes'] ?? map['leadTimeMinutes'] as num?)?.toInt() ?? 60,
+      leadTimeMinutes:
+          (map['lead_time_minutes'] ?? map['leadTimeMinutes'] as num?)
+              ?.toInt() ??
+          60,
       timezone: (map['timezone'] ?? 'Asia/Baghdad').toString(),
     );
   }

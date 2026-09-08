@@ -55,7 +55,11 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
   }) async {
     final auth = Provider.of<AuthService>(context, listen: false);
     final adminEmail = auth.currentUser?.email ?? 'admin';
-    final reasonCtrl = TextEditingController(text: customReason ?? 'بلۆک کرایت بەهۆی تێپەڕاندنی سنووری ٣ ناونیشانی IP و هاوبەشکردنی ئەکاونت.');
+    final reasonCtrl = TextEditingController(
+      text:
+          customReason ??
+          'بلۆک کرایت بەهۆی تێپەڕاندنی سنووری ٣ ناونیشانی IP و هاوبەشکردنی ئەکاونت.',
+    );
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -69,7 +73,11 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
             Expanded(
               child: Text(
                 'بلۆککردنی بەکارهێنەر ⛔',
-                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -80,7 +88,11 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
           children: [
             Text(
               'ئایا دڵنیایت دەتەوێت هەژماری "$userName" بلۆک بکەیت؟ چیتر ناتوانێت هیچ بەشێکی ئەپەکە بەکاربهێنێت.',
-              style: const TextStyle(color: Colors.white70, fontSize: 13.5, height: 1.5),
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 13.5,
+                height: 1.5,
+              ),
             ),
             const SizedBox(height: 14),
             TextField(
@@ -89,10 +101,16 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
               style: const TextStyle(color: Colors.white, fontSize: 13),
               decoration: InputDecoration(
                 labelText: 'هۆکاری بلۆککردن',
-                labelStyle: const TextStyle(color: Colors.redAccent, fontSize: 12),
+                labelStyle: const TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: 12,
+                ),
                 filled: true,
                 fillColor: Colors.black26,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
           ],
@@ -100,12 +118,21 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('پاشگەزبوونەوە', style: TextStyle(color: Colors.grey)),
+            child: const Text(
+              'پاشگەزبوونەوە',
+              style: TextStyle(color: Colors.grey),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white),
-            child: const Text('بەڵێ، بلۆکی بکە', style: TextStyle(fontWeight: FontWeight.bold)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text(
+              'بەڵێ، بلۆکی بکە',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -120,9 +147,10 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
       final reason = reasonCtrl.text.trim();
 
       // 1. Update user document
-      await Supabase.instance.client.from('profiles').update({
-        'status': 'suspended',
-      }).eq('id', userId);
+      await Supabase.instance.client
+          .from('profiles')
+          .update({'status': 'suspended'})
+          .eq('id', userId);
 
       // 2. Log audit event
       await Supabase.instance.client.from('audit_logs').insert({
@@ -145,7 +173,10 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('⚠️ کێشەیەک ڕوویدا لە بلۆککردن: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('⚠️ کێشەیەک ڕوویدا لە بلۆککردن: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -166,9 +197,10 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
       final auth = Provider.of<AuthService>(context, listen: false);
       final adminEmail = auth.currentUser?.email ?? 'admin';
 
-      await Supabase.instance.client.from('profiles').update({
-        'status': 'active',
-      }).eq('id', userId);
+      await Supabase.instance.client
+          .from('profiles')
+          .update({'status': 'active'})
+          .eq('id', userId);
 
       await Supabase.instance.client.from('audit_logs').insert({
         'user_id': userId,
@@ -190,7 +222,10 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('⚠️ کێشەیەک ڕوویدا: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('⚠️ کێشەیەک ڕوویدا: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -212,9 +247,10 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
       final adminEmail = auth.currentUser?.email ?? 'admin';
 
       // 1. Reset user blocked status
-      await Supabase.instance.client.from('profiles').update({
-        'status': 'active',
-      }).eq('id', userId);
+      await Supabase.instance.client
+          .from('profiles')
+          .update({'status': 'active'})
+          .eq('id', userId);
 
       // 2. Mark audit log
       await Supabase.instance.client.from('audit_logs').insert({
@@ -229,14 +265,17 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
       await Supabase.instance.client.from('notifications').insert({
         'user_id': userId,
         'title': '✅ داواکاریی IP پەسەندکرا',
-        'body': 'داواکارییەکەت لەلایەن بەڕێوەبەرەوە پەسەندکرا و ناونیشانی IP نوێکرایەوە. دەتوانیت ئێستا بە ئاسایی بچیتە ژوورەوە.',
+        'body':
+            'داواکارییەکەت لەلایەن بەڕێوەبەرەوە پەسەندکرا و ناونیشانی IP نوێکرایەوە. دەتوانیت ئێستا بە ئاسایی بچیتە ژوورەوە.',
         'type': 'security_approved',
       });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✅ ناونیشانی IPی $userName پاککرایەوە و ڕێگەی پێدرا.'),
+            content: Text(
+              '✅ ناونیشانی IPی $userName پاککرایەوە و ڕێگەی پێدرا.',
+            ),
             backgroundColor: const Color(0xFF10B981),
             behavior: SnackBarBehavior.floating,
           ),
@@ -245,7 +284,10 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('⚠️ کێشەیەک ڕوویدا: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('⚠️ کێشەیەک ڕوویدا: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -256,10 +298,16 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
   /// Dismiss / Delete security alert
   Future<void> _dismissAlert(String alertId) async {
     try {
-      await Supabase.instance.client.from('audit_logs').delete().eq('id', alertId);
+      await Supabase.instance.client
+          .from('audit_logs')
+          .delete()
+          .eq('id', alertId);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('داواکارییەکە سڕایەوە.'), duration: Duration(seconds: 2)),
+          const SnackBar(
+            content: Text('داواکارییەکە سڕایەوە.'),
+            duration: Duration(seconds: 2),
+          ),
         );
       }
     } catch (_) {}
@@ -284,9 +332,15 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E222B) : Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2)),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
                 ],
               ),
               child: Column(
@@ -310,7 +364,11 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
                           color: Colors.redAccent.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.shield_rounded, color: Colors.redAccent, size: 24),
+                        child: const Icon(
+                          Icons.shield_rounded,
+                          color: Colors.redAccent,
+                          size: 24,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       const Expanded(
@@ -319,19 +377,28 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
                           children: [
                             Text(
                               'داواکارییەکانی ئاسایش و بلۆککردنی IP 🛡️',
-                              style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w800),
+                              style: TextStyle(
+                                fontSize: 16.5,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                             SizedBox(height: 2),
                             Text(
                               'بەڕێوەبردنی سەرپێچییەکانی ٣ IP، مۆبایلی جیاواز و بلۆککردن',
-                              style: TextStyle(fontSize: 11.5, color: Colors.grey),
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: Colors.grey,
+                              ),
                             ),
                           ],
                         ),
                       ),
                       IconButton(
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(CupertinoIcons.xmark_circle_fill, color: Colors.grey),
+                        icon: const Icon(
+                          CupertinoIcons.xmark_circle_fill,
+                          color: Colors.grey,
+                        ),
                       ),
                     ],
                   ),
@@ -340,9 +407,17 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
                   // ─── Tab Switcher ──────────────────────────────────────────
                   Row(
                     children: [
-                      _buildTabButton('alerts', '🚨 داواکاری و ئاگادارییەکان', isDark),
+                      _buildTabButton(
+                        'alerts',
+                        '🚨 داواکاری و ئاگادارییەکان',
+                        isDark,
+                      ),
                       const SizedBox(width: 8),
-                      _buildTabButton('blocked', '⛔ بەکارهێنەرە بلۆککراوەکان', isDark),
+                      _buildTabButton(
+                        'blocked',
+                        '⛔ بەکارهێنەرە بلۆککراوەکان',
+                        isDark,
+                      ),
                       const SizedBox(width: 8),
                       _buildTabButton('search', '🔍 گەڕانی بەکارهێنەر', isDark),
                     ],
@@ -355,7 +430,9 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
             Expanded(
               child: _activeTab == 'alerts'
                   ? _buildAlertsTab(isDark)
-                  : (_activeTab == 'blocked' ? _buildBlockedUsersTab(isDark) : _buildSearchTab(isDark)),
+                  : (_activeTab == 'blocked'
+                        ? _buildBlockedUsersTab(isDark)
+                        : _buildSearchTab(isDark)),
             ),
           ],
         ),
@@ -373,7 +450,9 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
           padding: const EdgeInsets.symmetric(vertical: 9),
           decoration: BoxDecoration(
             color: isSelected
-                ? (tabKey == 'blocked' ? Colors.redAccent : const Color(0xFF7D2AE8))
+                ? (tabKey == 'blocked'
+                      ? Colors.redAccent
+                      : const Color(0xFF7D2AE8))
                 : (isDark ? const Color(0xFF282E3A) : Colors.grey[200]),
             borderRadius: BorderRadius.circular(12),
           ),
@@ -385,7 +464,9 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
             style: TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
-              color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+              color: isSelected
+                  ? Colors.white
+                  : (isDark ? Colors.white70 : Colors.black87),
             ),
           ),
         ),
@@ -407,7 +488,10 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
 
         if (snapshot.hasError) {
           return Center(
-            child: Text('کێشەیەک لە بارکردنی زانیارییەکان ڕوویدا: ${snapshot.error}', style: const TextStyle(color: Colors.grey)),
+            child: Text(
+              'کێشەیەک لە بارکردنی زانیارییەکان ڕوویدا: ${snapshot.error}',
+              style: const TextStyle(color: Colors.grey),
+            ),
           );
         }
 
@@ -418,7 +502,11 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.verified_user_rounded, size: 64, color: Colors.green.withValues(alpha: 0.6)),
+                Icon(
+                  Icons.verified_user_rounded,
+                  size: 64,
+                  color: Colors.green.withValues(alpha: 0.6),
+                ),
                 const SizedBox(height: 14),
                 const Text(
                   'هیچ داواکاری یان سەرپێچییەکی نوێی ئاسایش نییە 🎉',
@@ -441,11 +529,13 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
             final data = pendingDocs[index];
             final payload = (data['payload'] as Map<String, dynamic>?) ?? {};
             final alertId = data['id']?.toString() ?? '';
-            final userId = (data['user_id'] ?? payload['userId'] ?? '').toString();
+            final userId = (data['user_id'] ?? payload['userId'] ?? '')
+                .toString();
             final userName = (payload['name'] ?? 'خوێندکار').toString();
             final email = (payload['email'] ?? '').toString();
             final attemptedIp = (payload['attemptedIp'] ?? '').toString();
-            final reason = (payload['reason'] ?? 'تێپەڕاندنی سنووری ٣ IP').toString();
+            final reason = (payload['reason'] ?? 'تێپەڕاندنی سنووری ٣ IP')
+                .toString();
             final userNote = payload['userNote'] as String?;
             final dateStr = _formatDate(data['created_at']);
             final rawKnownIps = data['knownIps'];
@@ -462,9 +552,15 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E222B) : Colors.white,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: Colors.redAccent.withValues(alpha: 0.35)),
+                border: Border.all(
+                  color: Colors.redAccent.withValues(alpha: 0.35),
+                ),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2)),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
                 ],
               ),
               child: Column(
@@ -479,7 +575,11 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
                           color: Colors.amber.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(CupertinoIcons.person_crop_circle_badge_exclam, color: Colors.amber, size: 22),
+                        child: const Icon(
+                          CupertinoIcons.person_crop_circle_badge_exclam,
+                          color: Colors.amber,
+                          size: 22,
+                        ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
@@ -488,24 +588,37 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
                           children: [
                             Text(
                               userName,
-                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Text(
                               email,
-                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
                             ),
                           ],
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.redAccent.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Text(
                           'تێپەڕاندنی 3 IP ⛔',
-                          style: TextStyle(fontSize: 11, color: Colors.redAccent, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.redAccent,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],
@@ -517,9 +630,20 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
                     padding: const EdgeInsets.only(bottom: 6),
                     child: Row(
                       children: [
-                        const Icon(Icons.warning_amber_rounded, size: 16, color: Colors.amber),
+                        const Icon(
+                          Icons.warning_amber_rounded,
+                          size: 16,
+                          color: Colors.amber,
+                        ),
                         const SizedBox(width: 6),
-                        Text('هۆکار: $reason', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amber)),
+                        Text(
+                          'هۆکار: $reason',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.amber,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -530,10 +654,24 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
                       padding: const EdgeInsets.only(bottom: 6),
                       child: Row(
                         children: [
-                          const Icon(Icons.location_on_outlined, size: 16, color: Colors.redAccent),
+                          const Icon(
+                            Icons.location_on_outlined,
+                            size: 16,
+                            color: Colors.redAccent,
+                          ),
                           const SizedBox(width: 6),
-                          const Text('IPی چوارەم (هەوڵدراو): ', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                          Text(attemptedIp, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.redAccent)),
+                          const Text(
+                            'IPی چوارەم (هەوڵدراو): ',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                          Text(
+                            attemptedIp,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.redAccent,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -546,15 +684,34 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
                         runSpacing: 4,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          const Text('IPە تۆمارکراوەکان: ', style: TextStyle(fontSize: 11.5, color: Colors.grey)),
-                          ...knownIps.map((ip) => Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: isDark ? Colors.white10 : Colors.grey[200],
-                                  borderRadius: BorderRadius.circular(6),
+                          const Text(
+                            'IPە تۆمارکراوەکان: ',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          ...knownIps.map(
+                            (ip) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? Colors.white10
+                                    : Colors.grey[200],
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                ip,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontFamily: 'monospace',
                                 ),
-                                child: Text(ip, style: const TextStyle(fontSize: 11, fontFamily: 'monospace')),
-                              )),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -564,18 +721,28 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
                       margin: const EdgeInsets.only(top: 8),
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF282E3A) : Colors.grey[100],
+                        color: isDark
+                            ? const Color(0xFF282E3A)
+                            : Colors.grey[100],
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.chat_bubble_outline_rounded, size: 15, color: Colors.blueAccent),
+                          const Icon(
+                            Icons.chat_bubble_outline_rounded,
+                            size: 15,
+                            color: Colors.blueAccent,
+                          ),
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
                               'داواکاریی خوێندکار: $userNote',
-                              style: const TextStyle(fontSize: 12, color: Colors.blueAccent, height: 1.4),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.blueAccent,
+                                height: 1.4,
+                              ),
                             ),
                           ),
                         ],
@@ -585,14 +752,25 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
                   if (dateStr.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
-                      child: Text('📅 کات: $dateStr', style: const TextStyle(fontSize: 10.5, color: Colors.grey)),
+                      child: Text(
+                        '📅 کات: $dateStr',
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          color: Colors.grey,
+                        ),
+                      ),
                     ),
 
                   const SizedBox(height: 14),
 
                   // Action Buttons
                   if (isProcessing)
-                    const Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator()))
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(8),
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
                   else
                     Row(
                       children: [
@@ -603,16 +781,25 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
                               userId: userId,
                               userName: userName,
                               alertId: alertId,
-                              customReason: 'بلۆک کرایت بەهۆی هەوڵدان بۆ تێپەڕاندنی سنووری ٣ IP و هاوبەشکردنی ئەکاونت.',
+                              customReason:
+                                  'بلۆک کرایت بەهۆی هەوڵدان بۆ تێپەڕاندنی سنووری ٣ IP و هاوبەشکردنی ئەکاونت.',
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.redAccent,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 10),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                             ),
                             icon: const Icon(Icons.block_rounded, size: 16),
-                            label: const Text('بلۆککردن ⛔', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
+                            label: const Text(
+                              'بلۆککردن ⛔',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -630,10 +817,21 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
                               backgroundColor: const Color(0xFF10B981),
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 10),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                             ),
-                            icon: const Icon(Icons.check_circle_rounded, size: 16),
-                            label: const Text('پاککردنەوەی IP ✅', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
+                            icon: const Icon(
+                              Icons.check_circle_rounded,
+                              size: 16,
+                            ),
+                            label: const Text(
+                              'پاککردنەوەی IP ✅',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -641,7 +839,11 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
                         // 3. Delete Alert Button
                         IconButton(
                           onPressed: () => _dismissAlert(alertId),
-                          icon: const Icon(Icons.delete_outline_rounded, color: Colors.grey, size: 20),
+                          icon: const Icon(
+                            Icons.delete_outline_rounded,
+                            color: Colors.grey,
+                            size: 20,
+                          ),
                           tooltip: 'سڕینەوەی داواکاری',
                         ),
                       ],
@@ -673,9 +875,16 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.check_circle_outline_rounded, size: 60, color: Colors.grey),
+                Icon(
+                  Icons.check_circle_outline_rounded,
+                  size: 60,
+                  color: Colors.grey,
+                ),
                 SizedBox(height: 12),
-                Text('هیچ بەکارهێنەرێکی بلۆککراو نییە', style: TextStyle(fontSize: 15, color: Colors.grey)),
+                Text(
+                  'هیچ بەکارهێنەرێکی بلۆککراو نییە',
+                  style: TextStyle(fontSize: 15, color: Colors.grey),
+                ),
               ],
             ),
           );
@@ -699,7 +908,9 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E222B) : Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: Colors.redAccent.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 children: [
@@ -709,35 +920,79 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
                       color: Colors.redAccent.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.block_rounded, color: Colors.redAccent, size: 20),
+                    child: const Icon(
+                      Icons.block_rounded,
+                      color: Colors.redAccent,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(userName, style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.bold)),
-                        Text(email, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                        Text(
+                          userName,
+                          style: const TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          email,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
                         const SizedBox(height: 4),
-                        Text('هۆکار: $blockReason', style: const TextStyle(fontSize: 11.5, color: Colors.redAccent)),
+                        Text(
+                          'هۆکار: $blockReason',
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            color: Colors.redAccent,
+                          ),
+                        ),
                         if (blockedAtStr.isNotEmpty)
-                          Text('📅 $blockedAtStr', style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                          Text(
+                            '📅 $blockedAtStr',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey,
+                            ),
+                          ),
                       ],
                     ),
                   ),
                   const SizedBox(width: 8),
                   if (isProcessing)
-                    const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+                    const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   else
                     ElevatedButton(
-                      onPressed: () => _unblockUser(userId: userId, userName: userName),
+                      onPressed: () =>
+                          _unblockUser(userId: userId, userName: userName),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF10B981),
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                      child: const Text('لابردنی بلۆک 🔓', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'لابردنی بلۆک 🔓',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                 ],
               ),
@@ -756,21 +1011,31 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
           padding: const EdgeInsets.all(16),
           child: TextField(
             controller: _searchController,
-            onChanged: (v) => setState(() => _searchQuery = v.trim().toLowerCase()),
-            style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 13.5),
+            onChanged: (v) =>
+                setState(() => _searchQuery = v.trim().toLowerCase()),
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+              fontSize: 13.5,
+            ),
             decoration: InputDecoration(
               hintText: 'گەڕان بەپێی ناوی خوێندکار یان ئیمەیڵ...',
               hintStyle: const TextStyle(fontSize: 12.5, color: Colors.grey),
               prefixIcon: const Icon(Icons.search, color: Color(0xFF7D2AE8)),
               filled: true,
               fillColor: isDark ? const Color(0xFF1E222B) : Colors.white,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none,
+              ),
             ),
           ),
         ),
         Expanded(
           child: StreamBuilder<List<Map<String, dynamic>>>(
-            stream: Supabase.instance.client.from('profiles').stream(primaryKey: ['id']).limit(40),
+            stream: Supabase.instance.client
+                .from('profiles')
+                .stream(primaryKey: ['id'])
+                .limit(40),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -781,12 +1046,16 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
                 if (_searchQuery.isEmpty) return true;
                 final name = (data['name'] as String? ?? '').toLowerCase();
                 final email = (data['email'] as String? ?? '').toLowerCase();
-                return name.contains(_searchQuery) || email.contains(_searchQuery);
+                return name.contains(_searchQuery) ||
+                    email.contains(_searchQuery);
               }).toList();
 
               if (filteredDocs.isEmpty) {
                 return const Center(
-                  child: Text('هیچ بەکارهێنەرێک نەدۆزرایەوە.', style: TextStyle(color: Colors.grey)),
+                  child: Text(
+                    'هیچ بەکارهێنەرێک نەدۆزرایەوە.',
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 );
               }
 
@@ -812,7 +1081,9 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
                       color: isDark ? const Color(0xFF1E222B) : Colors.white,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: isBlocked ? Colors.redAccent.withValues(alpha: 0.4) : Colors.transparent,
+                        color: isBlocked
+                            ? Colors.redAccent.withValues(alpha: 0.4)
+                            : Colors.transparent,
                       ),
                     ),
                     child: Row(
@@ -820,10 +1091,22 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
                         CircleAvatar(
                           backgroundColor: isBlocked
                               ? Colors.redAccent.withValues(alpha: 0.2)
-                              : (isVip ? Colors.amber.withValues(alpha: 0.2) : const Color(0xFF7D2AE8).withValues(alpha: 0.15)),
+                              : (isVip
+                                    ? Colors.amber.withValues(alpha: 0.2)
+                                    : const Color(
+                                        0xFF7D2AE8,
+                                      ).withValues(alpha: 0.15)),
                           child: Icon(
-                            isBlocked ? Icons.block : (isVip ? Icons.star_rounded : Icons.person_rounded),
-                            color: isBlocked ? Colors.redAccent : (isVip ? Colors.amber : const Color(0xFF7D2AE8)),
+                            isBlocked
+                                ? Icons.block
+                                : (isVip
+                                      ? Icons.star_rounded
+                                      : Icons.person_rounded),
+                            color: isBlocked
+                                ? Colors.redAccent
+                                : (isVip
+                                      ? Colors.amber
+                                      : const Color(0xFF7D2AE8)),
                             size: 20,
                           ),
                         ),
@@ -834,47 +1117,104 @@ class _AdminSecuritySheetState extends State<AdminSecuritySheet> {
                             children: [
                               Row(
                                 children: [
-                                  Text(userName, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
+                                  Text(
+                                    userName,
+                                    style: const TextStyle(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                   if (role == 'admin') ...[
                                     const SizedBox(width: 6),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                      decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(4)),
-                                      child: const Text('Admin', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.black)),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 5,
+                                        vertical: 1,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.amber,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: const Text(
+                                        'Admin',
+                                        style: TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black,
+                                        ),
+                                      ),
                                     ),
                                   ],
                                 ],
                               ),
-                              Text(email, style: const TextStyle(fontSize: 11.5, color: Colors.grey)),
+                              Text(
+                                email,
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  color: Colors.grey,
+                                ),
+                              ),
                               const SizedBox(height: 2),
-                              Text('🌐 ناونیشانی IP بەکارهاتوو: $ipCount / 3', style: const TextStyle(fontSize: 10.5, color: Colors.blueGrey)),
+                              Text(
+                                '🌐 ناونیشانی IP بەکارهاتوو: $ipCount / 3',
+                                style: const TextStyle(
+                                  fontSize: 10.5,
+                                  color: Colors.blueGrey,
+                                ),
+                              ),
                             ],
                           ),
                         ),
                         if (isProcessing)
-                          const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+                          const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
                         else if (role != 'admin') ...[
                           if (isBlocked)
                             ElevatedButton(
-                              onPressed: () => _unblockUser(userId: userId, userName: userName),
+                              onPressed: () => _unblockUser(
+                                userId: userId,
+                                userName: userName,
+                              ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF10B981),
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
-                              child: const Text('لابردنی بلۆک', style: TextStyle(fontSize: 11)),
+                              child: const Text(
+                                'لابردنی بلۆک',
+                                style: TextStyle(fontSize: 11),
+                              ),
                             )
                           else
                             ElevatedButton(
-                              onPressed: () => _blockUser(userId: userId, userName: userName),
+                              onPressed: () => _blockUser(
+                                userId: userId,
+                                userName: userName,
+                              ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.redAccent,
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
-                              child: const Text('بلۆککردن ⛔', style: TextStyle(fontSize: 11)),
+                              child: const Text(
+                                'بلۆککردن ⛔',
+                                style: TextStyle(fontSize: 11),
+                              ),
                             ),
                         ],
                       ],

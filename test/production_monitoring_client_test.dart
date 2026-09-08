@@ -51,7 +51,8 @@ class ProductionReadinessResponse {
   }
 
   bool get isReady => status == 'ready';
-  bool get isDatabaseOk => dependencies['supabaseDatabase']?['status'] == 'connected';
+  bool get isDatabaseOk =>
+      dependencies['supabaseDatabase']?['status'] == 'connected';
   bool get isRedisOk => dependencies['redisCache']?['status'] == 'connected';
   bool get isDiskOk => dependencies['disk']?['status'] == 'ok';
 }
@@ -119,7 +120,8 @@ class ProductionMetricsReport {
       paymentErrors: (incidents['paymentErrors'] as num?)?.toInt() ?? 0,
       failedJobs: (incidents['failedJobs'] as num?)?.toInt() ?? 0,
       totalQueueLength: (workers['totalQueueLength'] as num?)?.toInt() ?? 0,
-      subscriptionFailures: (incidents['subscriptionFailures'] as num?)?.toInt() ?? 0,
+      subscriptionFailures:
+          (incidents['subscriptionFailures'] as num?)?.toInt() ?? 0,
     );
   }
 }
@@ -141,12 +143,24 @@ class StructuredLogSanitizer {
       } else if (entry.value is String) {
         String str = entry.value as String;
         // Scrub Bearer tokens
-        str = str.replaceAll(RegExp(r'Bearer\s+[A-Za-z0-9\-_.]+', caseSensitive: false), 'Bearer [REDACTED]');
+        str = str.replaceAll(
+          RegExp(r'Bearer\s+[A-Za-z0-9\-_.]+', caseSensitive: false),
+          'Bearer [REDACTED]',
+        );
         // Scrub AI Keys
-        str = str.replaceAll(RegExp(r'AIzaSy[A-Za-z0-9\-_]{33}'), '[REDACTED_GEMINI_KEY]');
-        str = str.replaceAll(RegExp(r'sk-[A-Za-z0-9\-_]{20,}'), '[REDACTED_API_KEY]');
+        str = str.replaceAll(
+          RegExp(r'AIzaSy[A-Za-z0-9\-_]{33}'),
+          '[REDACTED_GEMINI_KEY]',
+        );
+        str = str.replaceAll(
+          RegExp(r'sk-[A-Za-z0-9\-_]{20,}'),
+          '[REDACTED_API_KEY]',
+        );
         // Scrub card numbers
-        str = str.replaceAll(RegExp(r'\b(?:\d[ -]*?){13,16}\b'), '[REDACTED_CARD]');
+        str = str.replaceAll(
+          RegExp(r'\b(?:\d[ -]*?){13,16}\b'),
+          '[REDACTED_CARD]',
+        );
         result[entry.key] = str;
       } else {
         result[entry.key] = entry.value;
@@ -167,7 +181,7 @@ void main() {
           'version': '1.0.0',
           'uptime': 3456.78,
           'timestamp': '2026-09-08T18:00:00.000Z',
-        }
+        },
       };
 
       final response = ProductionHealthResponse.fromJson(json);
@@ -187,7 +201,7 @@ void main() {
           'redisCache': {'status': 'connected', 'latencyMs': 4},
           'disk': {'status': 'ok', 'usedPercent': 42.1},
           'memory': {'status': 'ok', 'usedPercent': 61.5},
-        }
+        },
       };
 
       final ready = ProductionReadinessResponse.fromJson(json);
@@ -203,7 +217,7 @@ void main() {
         'dependencies': {
           'supabaseDatabase': {'status': 'disconnected'},
           'redisCache': {'status': 'connected'},
-        }
+        },
       };
 
       final ready = ProductionReadinessResponse.fromJson(json);
@@ -232,17 +246,22 @@ void main() {
               'pdf': {'waiting': 2},
               'ocr': {'waiting': 1},
               'ai': {'waiting': 4},
-            }
+            },
           },
-          'apiLatency': {'avgMs': 85.0, 'p50Ms': 60.0, 'p95Ms': 210.0, 'p99Ms': 450.0},
+          'apiLatency': {
+            'avgMs': 85.0,
+            'p50Ms': 60.0,
+            'p95Ms': 210.0,
+            'p99Ms': 450.0,
+          },
           'httpErrors': {'totalRequests': 50000, 'errorRatePercent': 0.12},
           'incidents': {
             'aiErrors': 3,
             'paymentErrors': 1,
             'failedJobs': 0,
             'subscriptionFailures': 0,
-          }
-        }
+          },
+        },
       };
 
       final report = ProductionMetricsReport.fromJson(json);
@@ -286,47 +305,54 @@ void main() {
       expect(accessLog['duration_ms'], isA<num>());
     });
 
-    test('sanitizes passwords, tokens, cards, CVV, and AI keys unconditionally', () {
-      final dirtyLog = {
-        'request_id': 'req_xyz789',
-        'user_id': 'usr_safe123',
-        'route': '/api/payment/checkout',
-        'method': 'POST',
-        'status': 200,
-        'duration_ms': 120.5,
-        'password': 'PlainTextSecretPassword123!',
-        'cvv': '789',
-        'card_number': '4532 0150 9823 4511',
-        'security_code': '999',
-        'gemini_api_key': 'AIzaSyA0123456789012345678901234567890',
-        'openai_api_key': 'sk-proj-0123456789abcdef0123456789abcdef',
-        'auth_header': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ',
-        'nested': {
-          'refresh_token': 'secret_refresh_jwt',
-          'pan': '5500 0000 0000 0004',
-        }
-      };
+    test(
+      'sanitizes passwords, tokens, cards, CVV, and AI keys unconditionally',
+      () {
+        final dirtyLog = {
+          'request_id': 'req_xyz789',
+          'user_id': 'usr_safe123',
+          'route': '/api/payment/checkout',
+          'method': 'POST',
+          'status': 200,
+          'duration_ms': 120.5,
+          'password': 'PlainTextSecretPassword123!',
+          'cvv': '789',
+          'card_number': '4532 0150 9823 4511',
+          'security_code': '999',
+          'gemini_api_key': 'AIzaSyA0123456789012345678901234567890',
+          'openai_api_key': 'sk-proj-0123456789abcdef0123456789abcdef',
+          'auth_header':
+              'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ',
+          'nested': {
+            'refresh_token': 'secret_refresh_jwt',
+            'pan': '5500 0000 0000 0004',
+          },
+        };
 
-      final cleanLog = StructuredLogSanitizer.sanitize(dirtyLog);
+        final cleanLog = StructuredLogSanitizer.sanitize(dirtyLog);
 
-      // Verify safe keys are intact
-      expect(cleanLog['request_id'], equals('req_xyz789'));
-      expect(cleanLog['user_id'], equals('usr_safe123'));
-      expect(cleanLog['route'], equals('/api/payment/checkout'));
-      expect(cleanLog['method'], equals('POST'));
-      expect(cleanLog['status'], equals(200));
-      expect(cleanLog['duration_ms'], equals(120.5));
+        // Verify safe keys are intact
+        expect(cleanLog['request_id'], equals('req_xyz789'));
+        expect(cleanLog['user_id'], equals('usr_safe123'));
+        expect(cleanLog['route'], equals('/api/payment/checkout'));
+        expect(cleanLog['method'], equals('POST'));
+        expect(cleanLog['status'], equals(200));
+        expect(cleanLog['duration_ms'], equals(120.5));
 
-      // Verify all sensitive keys are redacted
-      expect(cleanLog['password'], equals('[REDACTED]'));
-      expect(cleanLog['cvv'], equals('[REDACTED]'));
-      expect(cleanLog['card_number'], equals('[REDACTED]'));
-      expect(cleanLog['security_code'], equals('[REDACTED]'));
-      expect(cleanLog['gemini_api_key'], equals('[REDACTED]'));
-      expect(cleanLog['openai_api_key'], equals('[REDACTED]'));
-      expect(cleanLog['auth_header'], equals('[REDACTED]'));
-      expect((cleanLog['nested'] as Map)['refresh_token'], equals('[REDACTED]'));
-      expect((cleanLog['nested'] as Map)['pan'], equals('[REDACTED]'));
-    });
+        // Verify all sensitive keys are redacted
+        expect(cleanLog['password'], equals('[REDACTED]'));
+        expect(cleanLog['cvv'], equals('[REDACTED]'));
+        expect(cleanLog['card_number'], equals('[REDACTED]'));
+        expect(cleanLog['security_code'], equals('[REDACTED]'));
+        expect(cleanLog['gemini_api_key'], equals('[REDACTED]'));
+        expect(cleanLog['openai_api_key'], equals('[REDACTED]'));
+        expect(cleanLog['auth_header'], equals('[REDACTED]'));
+        expect(
+          (cleanLog['nested'] as Map)['refresh_token'],
+          equals('[REDACTED]'),
+        );
+        expect((cleanLog['nested'] as Map)['pan'], equals('[REDACTED]'));
+      },
+    );
   });
 }

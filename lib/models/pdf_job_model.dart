@@ -53,10 +53,10 @@ class PdfQuestion {
   }
 
   Map<String, dynamic> toJson() => {
-        'question': question,
-        'answer': answer,
-        'type': type,
-      };
+    'question': question,
+    'answer': answer,
+    'type': type,
+  };
 }
 
 class PdfQuizItem {
@@ -85,12 +85,12 @@ class PdfQuizItem {
   }
 
   Map<String, dynamic> toJson() => {
-        'questionText': questionText,
-        'type': type,
-        'options': options,
-        'correctAnswer': correctAnswer,
-        'explanation': explanation,
-      };
+    'questionText': questionText,
+    'type': type,
+    'options': options,
+    'correctAnswer': correctAnswer,
+    'explanation': explanation,
+  };
 }
 
 class PdfQuiz {
@@ -109,9 +109,9 @@ class PdfQuiz {
   }
 
   Map<String, dynamic> toJson() => {
-        'title': title,
-        'questions': questions.map((q) => q.toJson()).toList(),
-      };
+    'title': title,
+    'questions': questions.map((q) => q.toJson()).toList(),
+  };
 }
 
 class PdfFlashcard {
@@ -201,11 +201,16 @@ class PdfJobModel {
       originalFilename: json['originalFilename'] as String? ?? '',
       fileSizeBytes: json['fileSizeBytes'] as int? ?? 0,
       pageCount: json['pageCount'] as int? ?? 0,
-      processingType:
-          PdfProcessingType.fromString(json['processingType'] as String? ?? 'all'),
+      processingType: PdfProcessingType.fromString(
+        json['processingType'] as String? ?? 'all',
+      ),
       errorMessage: json['errorMessage'] as String?,
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? DateTime.now(),
+      createdAt:
+          DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+          DateTime.now(),
+      updatedAt:
+          DateTime.tryParse(json['updatedAt'] as String? ?? '') ??
+          DateTime.now(),
       result: resultJson != null ? PdfJobResult.fromJson(resultJson) : null,
       usage: json['usage'] as Map<String, dynamic>?,
     );
@@ -219,7 +224,8 @@ class PdfJobModel {
   /// Human-readable file size (e.g. "2.3 MB")
   String get fileSizeLabel {
     if (fileSizeBytes < 1024) return '$fileSizeBytes B';
-    if (fileSizeBytes < 1024 * 1024) return '${(fileSizeBytes / 1024).toStringAsFixed(1)} KB';
+    if (fileSizeBytes < 1024 * 1024)
+      return '${(fileSizeBytes / 1024).toStringAsFixed(1)} KB';
     return '${(fileSizeBytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 }

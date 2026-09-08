@@ -59,11 +59,7 @@ class AudioFlashcard {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'front': front,
-        'back': back,
-      };
+  Map<String, dynamic> toJson() => {'id': id, 'front': front, 'back': back};
 }
 
 class AudioQuizQuestion {
@@ -82,7 +78,8 @@ class AudioQuizQuestion {
   factory AudioQuizQuestion.fromJson(Map<String, dynamic> json) {
     return AudioQuizQuestion(
       question: json['question'] as String? ?? '',
-      options: (json['options'] as List<dynamic>?)
+      options:
+          (json['options'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
@@ -92,36 +89,36 @@ class AudioQuizQuestion {
   }
 
   Map<String, dynamic> toJson() => {
-        'question': question,
-        'options': options,
-        'correctAnswer': correctAnswer,
-        'explanation': explanation,
-      };
+    'question': question,
+    'options': options,
+    'correctAnswer': correctAnswer,
+    'explanation': explanation,
+  };
 }
 
 class AudioQuiz {
   final String title;
   final List<AudioQuizQuestion> questions;
 
-  const AudioQuiz({
-    required this.title,
-    required this.questions,
-  });
+  const AudioQuiz({required this.title, required this.questions});
 
   factory AudioQuiz.fromJson(Map<String, dynamic> json) {
     return AudioQuiz(
       title: json['title'] as String? ?? 'Lecture Quiz',
-      questions: (json['questions'] as List<dynamic>?)
-              ?.map((q) => AudioQuizQuestion.fromJson(q as Map<String, dynamic>))
+      questions:
+          (json['questions'] as List<dynamic>?)
+              ?.map(
+                (q) => AudioQuizQuestion.fromJson(q as Map<String, dynamic>),
+              )
               .toList() ??
           [],
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'title': title,
-        'questions': questions.map((q) => q.toJson()).toList(),
-      };
+    'title': title,
+    'questions': questions.map((q) => q.toJson()).toList(),
+  };
 }
 
 // ─── Result Model ─────────────────────────────────────────────────────────────
@@ -147,11 +144,13 @@ class LectureAudioResultModel {
     return LectureAudioResultModel(
       transcript: json['transcript'] as String? ?? '',
       summary: json['summary'] as String? ?? '',
-      keyTakeaways: (json['keyTakeaways'] as List<dynamic>?)
+      keyTakeaways:
+          (json['keyTakeaways'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
-      flashcards: (json['flashcards'] as List<dynamic>?)
+      flashcards:
+          (json['flashcards'] as List<dynamic>?)
               ?.map((f) => AudioFlashcard.fromJson(f as Map<String, dynamic>))
               .toList() ??
           [],
@@ -215,7 +214,9 @@ class LectureAudioJobModel {
           : DateTime.now(),
       errorMessage: json['errorMessage'] as String?,
       result: json['result'] != null
-          ? LectureAudioResultModel.fromJson(json['result'] as Map<String, dynamic>)
+          ? LectureAudioResultModel.fromJson(
+              json['result'] as Map<String, dynamic>,
+            )
           : null,
     );
   }

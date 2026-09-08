@@ -84,24 +84,18 @@ String cleanMathAndDollarSigns(String text) {
   result = result.replaceAll(r'\Leftrightarrow', '⇔');
 
   // 5. Clean exponent brackets: ^{n-1} -> ^(n-1), ^{2} -> ^2
-  result = result.replaceAllMapped(
-    RegExp(r'\^\{([^{}]+)\}'),
-    (match) {
-      final inner = match.group(1)?.trim() ?? '';
-      if (inner.length == 1) return '^$inner';
-      return '^($inner)';
-    },
-  );
+  result = result.replaceAllMapped(RegExp(r'\^\{([^{}]+)\}'), (match) {
+    final inner = match.group(1)?.trim() ?? '';
+    if (inner.length == 1) return '^$inner';
+    return '^($inner)';
+  });
 
   // 6. Clean subscript brackets: _{i} -> _i, _{1} -> _1
-  result = result.replaceAllMapped(
-    RegExp(r'_\{([^{}]+)\}'),
-    (match) {
-      final inner = match.group(1)?.trim() ?? '';
-      if (inner.length == 1) return '_$inner';
-      return '_($inner)';
-    },
-  );
+  result = result.replaceAllMapped(RegExp(r'_\{([^{}]+)\}'), (match) {
+    final inner = match.group(1)?.trim() ?? '';
+    if (inner.length == 1) return '_$inner';
+    return '_($inner)';
+  });
 
   // 7. Clean \text{...}, \mathrm{...}, \mathbf{...}, \mathit{...}, etc.
   result = result.replaceAllMapped(

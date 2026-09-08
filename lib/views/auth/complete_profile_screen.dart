@@ -101,13 +101,16 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       try {
         final userId = authService.currentUser?.id;
         if (userId != null) {
-          await Supabase.instance.client.from('profiles').update({
-            'status': 'active',
-            'full_name': _nameController.text.trim(),
-            'university_name': _universityController.text.trim(),
-            'department_name': _departmentController.text.trim(),
-            'city_name': langProvider.translate(_selectedCityKey),
-          }).eq('id', userId);
+          await Supabase.instance.client
+              .from('profiles')
+              .update({
+                'status': 'active',
+                'full_name': _nameController.text.trim(),
+                'university_name': _universityController.text.trim(),
+                'department_name': _departmentController.text.trim(),
+                'city_name': langProvider.translate(_selectedCityKey),
+              })
+              .eq('id', userId);
         }
       } catch (_) {}
 
@@ -141,7 +144,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     String t(String k) => langProvider.translate(k);
 
     return Scaffold(
-      backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
+      backgroundColor: isDark
+          ? ZankoColors.darkBackground
+          : ZankoColors.background,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -186,7 +191,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 13,
-                      color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                      color: isDark
+                          ? Colors.grey[400]
+                          : ZankoColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -197,11 +204,16 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       decoration: BoxDecoration(
                         color: ZankoColors.error.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: ZankoColors.error.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: ZankoColors.error.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Text(
                         _errorMessage!,
-                        style: TextStyle(color: ZankoColors.error, fontSize: 12.5),
+                        style: TextStyle(
+                          color: ZankoColors.error,
+                          fontSize: 12.5,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -216,7 +228,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       labelText: t('full_name'),
                       hintText: t('full_name_hint'),
                       prefixIcon: const Icon(Icons.person_outline_rounded),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                     validator: (val) {
                       if (val == null || val.trim().isEmpty) {
@@ -233,7 +247,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     decoration: InputDecoration(
                       labelText: t('select_city'),
                       prefixIcon: const Icon(Icons.location_city_outlined),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                     items: _kurdishCities.map((cityKey) {
                       return DropdownMenuItem<String>(
@@ -258,8 +274,13 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       labelText: t('select_university'),
                       hintText: 'کلیک بکە بۆ هەڵبژاردنی زانکۆ...',
                       prefixIcon: const Icon(Icons.account_balance_outlined),
-                      suffixIcon: const Icon(Icons.arrow_drop_down_rounded, size: 28),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      suffixIcon: const Icon(
+                        Icons.arrow_drop_down_rounded,
+                        size: 28,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                     validator: (val) {
                       if (val == null || val.trim().isEmpty) {
@@ -279,8 +300,13 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       labelText: t('select_department'),
                       hintText: 'کلیک بکە بۆ دیاریکردنی بەشی زانستی...',
                       prefixIcon: const Icon(Icons.account_tree_outlined),
-                      suffixIcon: const Icon(Icons.arrow_drop_down_rounded, size: 28),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      suffixIcon: const Icon(
+                        Icons.arrow_drop_down_rounded,
+                        size: 28,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                     validator: (val) {
                       if (val == null || val.trim().isEmpty) {
@@ -299,18 +325,26 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: ZankoColors.primary,
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                         elevation: 0,
                       ),
                       child: _isLoading
                           ? const SizedBox(
                               width: 24,
                               height: 24,
-                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2.5,
+                              ),
                             )
                           : const Text(
                               'تەواوکردن و بەردەوامبوون ✓',
-                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                     ),
                   ),

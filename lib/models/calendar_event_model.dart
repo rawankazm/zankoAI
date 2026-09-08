@@ -18,7 +18,11 @@ enum CalendarEventType {
 
   static CalendarEventType fromString(String? val) {
     if (val == null) return CalendarEventType.personalStudyEvent;
-    final clean = val.toLowerCase().trim().replaceAll('-', '_').replaceAll(' ', '_');
+    final clean = val
+        .toLowerCase()
+        .trim()
+        .replaceAll('-', '_')
+        .replaceAll(' ', '_');
     switch (clean) {
       case 'class':
       case 'classevent':
@@ -139,7 +143,7 @@ class CalendarEventModel {
   final String? description;
   final CalendarEventType eventType;
   final DateTime startTime; // UTC
-  final DateTime endTime;   // UTC
+  final DateTime endTime; // UTC
   final bool isAllDay;
   final String? location;
   final String timezone;
@@ -170,7 +174,8 @@ class CalendarEventModel {
 
   bool get isUpcoming => DateTime.now().isBefore(localStartTime);
   bool get isOngoing =>
-      DateTime.now().isAfter(localStartTime) && DateTime.now().isBefore(localEndTime);
+      DateTime.now().isAfter(localStartTime) &&
+      DateTime.now().isBefore(localEndTime);
   bool get isPast => DateTime.now().isAfter(localEndTime);
 
   CalendarEventModel copyWith({
@@ -201,7 +206,8 @@ class CalendarEventModel {
       isAllDay: isAllDay ?? this.isAllDay,
       location: location ?? this.location,
       timezone: timezone ?? this.timezone,
-      notificationLeadMinutes: notificationLeadMinutes ?? this.notificationLeadMinutes,
+      notificationLeadMinutes:
+          notificationLeadMinutes ?? this.notificationLeadMinutes,
       recurrenceRule: recurrenceRule ?? this.recurrenceRule,
       isCompleted: isCompleted ?? this.isCompleted,
     );
@@ -229,8 +235,12 @@ class CalendarEventModel {
   factory CalendarEventModel.fromMap(Map<String, dynamic> map) {
     final rawStart = map['start_time'] ?? map['startTime'];
     final rawEnd = map['end_time'] ?? map['endTime'];
-    final parsedStart = DateTime.tryParse(rawStart?.toString() ?? '')?.toUtc() ?? DateTime.now().toUtc();
-    final parsedEnd = DateTime.tryParse(rawEnd?.toString() ?? '')?.toUtc() ?? parsedStart.add(const Duration(hours: 1));
+    final parsedStart =
+        DateTime.tryParse(rawStart?.toString() ?? '')?.toUtc() ??
+        DateTime.now().toUtc();
+    final parsedEnd =
+        DateTime.tryParse(rawEnd?.toString() ?? '')?.toUtc() ??
+        parsedStart.add(const Duration(hours: 1));
 
     return CalendarEventModel(
       id: (map['id'] ?? '').toString(),
@@ -238,13 +248,16 @@ class CalendarEventModel {
       courseId: map['course_id']?.toString() ?? map['courseId']?.toString(),
       title: (map['title'] ?? '').toString(),
       description: map['description']?.toString(),
-      eventType: CalendarEventType.fromString(map['event_type']?.toString() ?? map['eventType']?.toString()),
+      eventType: CalendarEventType.fromString(
+        map['event_type']?.toString() ?? map['eventType']?.toString(),
+      ),
       startTime: parsedStart,
       endTime: parsedEnd,
       isAllDay: map['is_all_day'] == true || map['isAllDay'] == true,
       location: map['location']?.toString(),
       timezone: (map['timezone'] ?? 'Asia/Baghdad').toString(),
-      notificationLeadMinutes: (map['notification_lead_minutes'] as num?)?.toInt() ?? 30,
+      notificationLeadMinutes:
+          (map['notification_lead_minutes'] as num?)?.toInt() ?? 30,
       recurrenceRule: map['recurrence_rule']?.toString(),
       isCompleted: map['is_completed'] == true || map['isCompleted'] == true,
     );

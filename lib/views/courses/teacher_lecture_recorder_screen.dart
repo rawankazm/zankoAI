@@ -172,7 +172,8 @@ class _TeacherLectureRecorderScreenState
           _audioBytes = bytes;
           _audioFileName = file.name;
           _recordedFilePath = file.path;
-          _recordDurationSeconds = 60; // default estimated duration if file pick
+          _recordDurationSeconds =
+              60; // default estimated duration if file pick
           _errorMessage = null;
         });
       }
@@ -191,7 +192,9 @@ class _TeacherLectureRecorderScreenState
     }
 
     if (_audioBytes == null && _recordedFilePath == null) {
-      _showErrorSnackBar('تکایە سەرەتا وانەکە تۆماربکە یان فایلێکی دەنگی هەڵبژێرە');
+      _showErrorSnackBar(
+        'تکایە سەرەتا وانەکە تۆماربکە یان فایلێکی دەنگی هەڵبژێرە',
+      );
       return;
     }
 
@@ -292,7 +295,10 @@ class _TeacherLectureRecorderScreenState
             children: [
               // Course Badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: ZankoColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(14),
@@ -325,7 +331,9 @@ class _TeacherLectureRecorderScreenState
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
-                              color: isDark ? Colors.white : ZankoColors.textPrimary,
+                              color: isDark
+                                  ? Colors.white
+                                  : ZankoColors.textPrimary,
                             ),
                           ),
                         ],
@@ -414,7 +422,9 @@ class _TeacherLectureRecorderScreenState
                         fontSize: 36,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 2,
-                        color: _isRecording ? Colors.redAccent : ZankoColors.primary,
+                        color: _isRecording
+                            ? Colors.redAccent
+                            : ZankoColors.primary,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -422,11 +432,13 @@ class _TeacherLectureRecorderScreenState
                       _isRecording
                           ? 'تۆمارکردنی دەنگ بەردەوامە...'
                           : (_audioFileName != null
-                              ? 'فایلی ئامادەکراو: $_audioFileName'
-                              : 'دەستبەکاربە بە تۆمارکردن یان هەڵبژاردنی فایل'),
+                                ? 'فایلی ئامادەکراو: $_audioFileName'
+                                : 'دەستبەکاربە بە تۆمارکردن یان هەڵبژاردنی فایل'),
                       style: TextStyle(
                         fontSize: 12,
-                        color: isDark ? Colors.white60 : ZankoColors.textSecondary,
+                        color: isDark
+                            ? Colors.white60
+                            : ZankoColors.textSecondary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -440,7 +452,9 @@ class _TeacherLectureRecorderScreenState
                         ElevatedButton.icon(
                           onPressed: _isSubmitting
                               ? null
-                              : (_isRecording ? _stopRecording : _startRecording),
+                              : (_isRecording
+                                    ? _stopRecording
+                                    : _startRecording),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _isRecording
                                 ? Colors.redAccent
@@ -454,7 +468,9 @@ class _TeacherLectureRecorderScreenState
                             ),
                           ),
                           icon: Icon(
-                            _isRecording ? Icons.stop_rounded : Icons.mic_rounded,
+                            _isRecording
+                                ? Icons.stop_rounded
+                                : Icons.mic_rounded,
                             color: Colors.white,
                           ),
                           label: Text(
@@ -496,7 +512,9 @@ class _TeacherLectureRecorderScreenState
 
               // Submit Button
               ElevatedButton(
-                onPressed: (_isRecording || _isSubmitting) ? null : _submitLecture,
+                onPressed: (_isRecording || _isSubmitting)
+                    ? null
+                    : _submitLecture,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: ZankoColors.primary,
                   minimumSize: const Size(double.infinity, 50),
@@ -514,8 +532,9 @@ class _TeacherLectureRecorderScreenState
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           ),
                           SizedBox(width: 10),
@@ -666,7 +685,11 @@ class _TeacherLectureRecorderScreenState
                       ),
                       child: Center(
                         child: isPassed
-                            ? const Icon(Icons.check, size: 13, color: Colors.white)
+                            ? const Icon(
+                                Icons.check,
+                                size: 13,
+                                color: Colors.white,
+                              )
                             : Text(
                                 '${idx + 1}',
                                 style: const TextStyle(
@@ -683,7 +706,9 @@ class _TeacherLectureRecorderScreenState
                           height: 3,
                           color: currentIndex > idx
                               ? ZankoColors.primary
-                              : (isDark ? Colors.white12 : Colors.grey.shade300),
+                              : (isDark
+                                    ? Colors.white12
+                                    : Colors.grey.shade300),
                         ),
                       ),
                   ],
@@ -740,8 +765,10 @@ class _TeacherLectureRecorderScreenState
                       const SizedBox(height: 16),
                       const Text(
                         'خاڵە سەرەکییەکان:',
-                        style:
-                            TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       ...res.keyTakeaways.map(
@@ -750,14 +777,19 @@ class _TeacherLectureRecorderScreenState
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.star,
-                                  color: Colors.amber, size: 18),
+                              const Icon(
+                                Icons.star,
+                                color: Colors.amber,
+                                size: 18,
+                              ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   point,
                                   style: const TextStyle(
-                                      fontSize: 13, height: 1.4),
+                                    fontSize: 13,
+                                    height: 1.4,
+                                  ),
                                 ),
                               ),
                             ],
@@ -791,10 +823,12 @@ class _TeacherLectureRecorderScreenState
                             icon: const Icon(Icons.copy_rounded, size: 18),
                             onPressed: () {
                               Clipboard.setData(
-                                  ClipboardData(text: res.transcript));
+                                ClipboardData(text: res.transcript),
+                              );
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                    content: Text('دەق لەبەرگیرایەوە! 📋')),
+                                  content: Text('دەق لەبەرگیرایەوە! 📋'),
+                                ),
                               );
                             },
                           ),
@@ -831,13 +865,15 @@ class _TeacherLectureRecorderScreenState
                                   colors: _showFlashcardBack
                                       ? [
                                           ZankoColors.success,
-                                          ZankoColors.success
-                                              .withValues(alpha: 0.8)
+                                          ZankoColors.success.withValues(
+                                            alpha: 0.8,
+                                          ),
                                         ]
                                       : [
                                           ZankoColors.primary,
-                                          ZankoColors.primary
-                                              .withValues(alpha: 0.8)
+                                          ZankoColors.primary.withValues(
+                                            alpha: 0.8,
+                                          ),
                                         ],
                                 ),
                                 borderRadius: BorderRadius.circular(20),
@@ -845,10 +881,12 @@ class _TeacherLectureRecorderScreenState
                               child: Center(
                                 child: Text(
                                   _showFlashcardBack
-                                      ? res.flashcards[_currentFlashcardIndex]
-                                          .back
-                                      : res.flashcards[_currentFlashcardIndex]
-                                          .front,
+                                      ? res
+                                            .flashcards[_currentFlashcardIndex]
+                                            .back
+                                      : res
+                                            .flashcards[_currentFlashcardIndex]
+                                            .front,
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
                                     color: Colors.white,
@@ -863,7 +901,9 @@ class _TeacherLectureRecorderScreenState
                         Text(
                           'کارت: ${_currentFlashcardIndex + 1} لە ${res.flashcards.length} (کرتە بکە بۆ پێچەوانەکردنەوە)',
                           style: const TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.bold),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -880,7 +920,8 @@ class _TeacherLectureRecorderScreenState
                               icon: const Icon(Icons.arrow_back),
                             ),
                             IconButton(
-                              onPressed: _currentFlashcardIndex <
+                              onPressed:
+                                  _currentFlashcardIndex <
                                       res.flashcards.length - 1
                                   ? () {
                                       setState(() {

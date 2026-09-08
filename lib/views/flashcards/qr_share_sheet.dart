@@ -28,9 +28,7 @@ class QrShareSheet extends StatelessWidget {
     final String title = t('qr_share_title');
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-      ),
+      appBar: AppBar(title: Text(title)),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -40,7 +38,9 @@ class QrShareSheet extends StatelessWidget {
             children: [
               Card(
                 elevation: 4,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
@@ -61,7 +61,14 @@ class QrShareSheet extends StatelessWidget {
                         size: 260.0,
                         backgroundColor: Colors.white,
                         errorStateBuilder: (cxt, err) {
-                          return Center(child: Text(Provider.of<LanguageProvider>(context, listen: false).translate('qr_data_too_large')));
+                          return Center(
+                            child: Text(
+                              Provider.of<LanguageProvider>(
+                                context,
+                                listen: false,
+                              ).translate('qr_data_too_large'),
+                            ),
+                          );
                         },
                       ),
                       const SizedBox(height: 16),
@@ -84,7 +91,9 @@ class QrShareSheet extends StatelessWidget {
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(0, 50),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: Text(t('close'), style: const TextStyle()),
                 ),
@@ -129,8 +138,11 @@ class _QrScannerViewState extends State<QrScannerView> {
           final Map<String, dynamic> data = json.decode(rawValue);
           if (data['type'] == 'zanko_deck' && data['cards'] != null) {
             final List<dynamic> cardsList = data['cards'];
-            final dbService = Provider.of<DatabaseService>(context, listen: false);
-            
+            final dbService = Provider.of<DatabaseService>(
+              context,
+              listen: false,
+            );
+
             // Re-import deck
             await dbService.clearFlashcards();
             final uuid = const Uuid();
@@ -146,13 +158,23 @@ class _QrScannerViewState extends State<QrScannerView> {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(Provider.of<LanguageProvider>(context, listen: false).translate('deck_imported')),
+                  content: Text(
+                    Provider.of<LanguageProvider>(
+                      context,
+                      listen: false,
+                    ).translate('deck_imported'),
+                  ),
                 ),
               );
               Navigator.pop(context, true); // Return success
             }
           } else {
-            throw Exception(Provider.of<LanguageProvider>(context, listen: false).translate('invalid_qr_format'));
+            throw Exception(
+              Provider.of<LanguageProvider>(
+                context,
+                listen: false,
+              ).translate('invalid_qr_format'),
+            );
           }
         } catch (e) {
           setState(() {
@@ -160,7 +182,11 @@ class _QrScannerViewState extends State<QrScannerView> {
           });
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('${Provider.of<LanguageProvider>(context, listen: false).translate('scan_error')}: $e')),
+              SnackBar(
+                content: Text(
+                  '${Provider.of<LanguageProvider>(context, listen: false).translate('scan_error')}: $e',
+                ),
+              ),
             );
           }
         }
@@ -192,10 +218,7 @@ class _QrScannerViewState extends State<QrScannerView> {
       ),
       body: Stack(
         children: [
-          MobileScanner(
-            controller: _controller,
-            onDetect: _onDetect,
-          ),
+          MobileScanner(controller: _controller, onDetect: _onDetect),
           // Scanner Overlay Frame
           Center(
             child: Container(
@@ -220,7 +243,7 @@ class _QrScannerViewState extends State<QrScannerView> {
               child: Text(
                 t('qr_scan_instructions'),
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white, fontSize: 13, ),
+                style: const TextStyle(color: Colors.white, fontSize: 13),
               ),
             ),
           ),

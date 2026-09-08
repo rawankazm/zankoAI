@@ -10,7 +10,8 @@ class SubscriptionClientService {
   final Dio? _customDio;
   SubscriptionClientService({Dio? dio}) : _customDio = dio;
   SubscriptionClientService._() : _customDio = null;
-  static final SubscriptionClientService instance = SubscriptionClientService._();
+  static final SubscriptionClientService instance =
+      SubscriptionClientService._();
 
   Dio get _dio => _customDio ?? ApiClient().dio;
 
@@ -48,9 +49,7 @@ class SubscriptionClientService {
   Future<Map<String, dynamic>> cancelSubscription({String? reason}) async {
     final response = await _dio.post<Map<String, dynamic>>(
       '/subscription/cancel',
-      data: {
-        'reason': ?reason,
-      },
+      data: {'reason': ?reason},
     );
 
     final body = response.data ?? {};
@@ -60,7 +59,9 @@ class SubscriptionClientService {
   /// Restores subscription through direct server-to-server provider verification.
   /// Flutter claims of payment are never trusted.
   Future<UserSubscriptionModel> restoreSubscription() async {
-    final response = await _dio.post<Map<String, dynamic>>('/subscription/restore');
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/subscription/restore',
+    );
     final body = response.data ?? {};
     final data = body['data'] as Map<String, dynamic>? ?? body;
     return UserSubscriptionModel.fromJson(data);
@@ -68,7 +69,9 @@ class SubscriptionClientService {
 
   /// Fetches subscription history, payment history, and event audit history
   Future<Map<String, dynamic>> getHistory() async {
-    final response = await _dio.get<Map<String, dynamic>>('/subscription/history');
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/subscription/history',
+    );
     final body = response.data ?? {};
     return (body['data'] as Map<String, dynamic>?) ?? body;
   }

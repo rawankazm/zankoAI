@@ -19,7 +19,12 @@ class KurdishArabicReshaper {
     0x062F: [0xFEA9, 0xFEAA, 0xFEA9, 0xFEAA], // د
     0x0630: [0xFEAB, 0xFEAC, 0xFEAB, 0xFEAC], // ذ
     0x0631: [0xFEAD, 0xFEAE, 0xFEAD, 0xFEAE], // ر
-    0x0695: [0x0695, 0x0695, 0x0695, 0x0695], // ڕ (Kurdish Reh - preserves small V below)
+    0x0695: [
+      0x0695,
+      0x0695,
+      0x0695,
+      0x0695,
+    ], // ڕ (Kurdish Reh - preserves small V below)
     0x0632: [0xFEAF, 0xFEB0, 0xFEAF, 0xFEB0], // ز
     0x0698: [0xFB8A, 0xFB8B, 0xFB8A, 0xFB8B], // ژ
     0x0633: [0xFEB1, 0xFEB2, 0xFEB3, 0xFEB4], // س
@@ -37,12 +42,22 @@ class KurdishArabicReshaper {
     0x06A9: [0xFB8E, 0xFB8F, 0xFB90, 0xFB91], // ک (Kurdish/Farsi Kaf)
     0x06AF: [0xFB92, 0xFB93, 0xFB94, 0xFB95], // گ
     0x0644: [0xFEDD, 0xFEDE, 0xFEDF, 0xFEE0], // ل
-    0x06B5: [0x06B5, 0x06B5, 0x06B5, 0x06B5], // ڵ (Kurdish Ll - preserves small V)
+    0x06B5: [
+      0x06B5,
+      0x06B5,
+      0x06B5,
+      0x06B5,
+    ], // ڵ (Kurdish Ll - preserves small V)
     0x0645: [0xFEE1, 0xFEE2, 0xFEE3, 0xFEE4], // م
     0x0646: [0xFEE5, 0xFEE6, 0xFEE7, 0xFEE8], // ن
     0x0647: [0xFEE9, 0xFEEA, 0xFEEB, 0xFEEC], // ه (Arabic Heh)
     0x06BE: [0xFBAA, 0xFBAB, 0xFBAC, 0xFBAD], // ھ (Kurdish Heh Do-Chashmee)
-    0x06D5: [0x06D5, 0x06D5, 0x06D5, 0x06D5], // ە (Kurdish Ae - preserves authentic Kurdish Ae)
+    0x06D5: [
+      0x06D5,
+      0x06D5,
+      0x06D5,
+      0x06D5,
+    ], // ە (Kurdish Ae - preserves authentic Kurdish Ae)
     0x0629: [0xFE93, 0xFE94, 0xFE93, 0xFE94], // ة (Ta Marbuta)
     0x0648: [0xFEED, 0xFEEE, 0xFEED, 0xFEEE], // و
     0x06C6: [0xFBD9, 0xFBDA, 0xFBD9, 0xFBDA], // ۆ (Kurdish Oe)
@@ -98,7 +113,9 @@ class KurdishArabicReshaper {
   }
 
   static bool _connectsToNext(int code) {
-    return _glyphForms.containsKey(code) && !_rightJoinersOnly.contains(code) && code != 0x200C;
+    return _glyphForms.containsKey(code) &&
+        !_rightJoinersOnly.contains(code) &&
+        code != 0x200C;
   }
 
   static bool _connectsToPrev(int code) {
@@ -157,7 +174,8 @@ class KurdishArabicReshaper {
       }
 
       final prevConnects = i > 0 && _connectsToNext(runes[i - 1]);
-      final nextConnects = i + 1 < runes.length && _connectsToPrev(runes[i + 1]);
+      final nextConnects =
+          i + 1 < runes.length && _connectsToPrev(runes[i + 1]);
 
       final forms = _glyphForms[current]!;
       int glyph;
@@ -216,20 +234,27 @@ class KurdishArabicReshaper {
       if (_isLtrSequenceStart(runes, i)) {
         // Parse entire continuous LTR expression (e.g. "45.8%", "2024 - 2025", "O(log n)", "p < 0.001", "Stage : One")
         final start = i;
-        while (i < runes.length && (_isLtrChar(runes[i]) || _isLtrJoiner(runes, i))) {
+        while (i < runes.length &&
+            (_isLtrChar(runes[i]) || _isLtrJoiner(runes, i))) {
           i++;
         }
-        tokens.add(_TextToken(String.fromCharCodes(runes.sublist(start, i)), false));
+        tokens.add(
+          _TextToken(String.fromCharCodes(runes.sublist(start, i)), false),
+        );
       } else if (code == 0x0020) {
         tokens.add(_TextToken(' ', false, isSpace: true));
         i++;
       } else {
         // RTL Arabic / Kurdish / Punctuation token
         final start = i;
-        while (i < runes.length && !_isLtrSequenceStart(runes, i) && runes[i] != 0x0020) {
+        while (i < runes.length &&
+            !_isLtrSequenceStart(runes, i) &&
+            runes[i] != 0x0020) {
           i++;
         }
-        tokens.add(_TextToken(String.fromCharCodes(runes.sublist(start, i)), true));
+        tokens.add(
+          _TextToken(String.fromCharCodes(runes.sublist(start, i)), true),
+        );
       }
     }
 
@@ -275,11 +300,18 @@ class KurdishArabicReshaper {
   static bool _isLtrJoiner(List<int> runes, int index) {
     final code = runes[index];
     // Decimals, hyphens, colons, or spaces between LTR numbers/words (e.g. "2024 - 2025" or "45.8%")
-    if (code == 0x002E || code == 0x002C || code == 0x003A || code == 0x002D || code == 0x0020) {
+    if (code == 0x002E ||
+        code == 0x002C ||
+        code == 0x003A ||
+        code == 0x002D ||
+        code == 0x0020) {
       if (index + 1 < runes.length && _isLtrChar(runes[index + 1])) {
         return true;
       }
-      if (code == 0x0020 && index + 2 < runes.length && runes[index + 1] == 0x002D && _isLtrChar(runes[index + 2])) {
+      if (code == 0x0020 &&
+          index + 2 < runes.length &&
+          runes[index + 1] == 0x002D &&
+          _isLtrChar(runes[index + 2])) {
         return true; // space before hyphen in "2024 - 2025"
       }
     }

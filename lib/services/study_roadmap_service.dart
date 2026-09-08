@@ -82,7 +82,8 @@ class StudyRoadmapModel {
   }
 
   factory StudyRoadmapModel.fromJson(Map<String, dynamic> json) {
-    final taskList = (json['tasks'] as List<dynamic>?)
+    final taskList =
+        (json['tasks'] as List<dynamic>?)
             ?.map((e) => StudyTaskModel.fromJson(Map<String, dynamic>.from(e)))
             .toList() ??
         [];
@@ -90,7 +91,9 @@ class StudyRoadmapModel {
     return StudyRoadmapModel(
       id: json['id'] ?? '',
       subjectName: json['subjectName'] ?? '',
-      examDate: DateTime.tryParse(json['examDate'] ?? '') ?? DateTime.now().add(const Duration(days: 7)),
+      examDate:
+          DateTime.tryParse(json['examDate'] ?? '') ??
+          DateTime.now().add(const Duration(days: 7)),
       totalChapters: json['totalChapters'] ?? 1,
       hoursPerDay: json['hoursPerDay'] ?? 2,
       tasks: taskList,
@@ -114,7 +117,11 @@ class StudyRoadmapService extends ChangeNotifier {
       final jsonStr = prefs.getString(_storageKey);
       if (jsonStr != null && jsonStr.isNotEmpty) {
         final List<dynamic> list = jsonDecode(jsonStr);
-        _roadmaps = list.map((e) => StudyRoadmapModel.fromJson(Map<String, dynamic>.from(e))).toList();
+        _roadmaps = list
+            .map(
+              (e) => StudyRoadmapModel.fromJson(Map<String, dynamic>.from(e)),
+            )
+            .toList();
       } else {
         _roadmaps = _getMockInitialRoadmaps();
       }
@@ -140,7 +147,9 @@ class StudyRoadmapService extends ChangeNotifier {
     }
     final roadmapIdx = _roadmaps.indexWhere((r) => r.id == roadmapId);
     if (roadmapIdx != -1) {
-      final taskIdx = _roadmaps[roadmapIdx].tasks.indexWhere((t) => t.id == taskId);
+      final taskIdx = _roadmaps[roadmapIdx].tasks.indexWhere(
+        (t) => t.id == taskId,
+      );
       if (taskIdx != -1) {
         final task = _roadmaps[roadmapIdx].tasks[taskIdx];
         task.isCompleted = !task.isCompleted;
@@ -173,13 +182,15 @@ class StudyRoadmapService extends ChangeNotifier {
         examDate: DateTime.now().add(const Duration(days: 5)),
         totalChapters: 6,
         hoursPerDay: 3,
-        advice: 'پێویستە زۆرتر جەخت لەسەر Memory Management و Deadlocks بکەیتەوە چونکە بەردەوام لە تاقیکردنەوەدا دێن.',
+        advice:
+            'پێویستە زۆرتر جەخت لەسەر Memory Management و Deadlocks بکەیتەوە چونکە بەردەوام لە تاقیکردنەوەدا دێن.',
         tasks: [
           StudyTaskModel(
             id: 't1',
             dayIndex: 1,
             title: 'خوێندنی بەشی ١ و ٢ (Processes & Threads)',
-            description: 'تێگەیشتن لە جیاوازی نێوان Process و Thread لەگەڵ CPU Scheduling.',
+            description:
+                'تێگەیشتن لە جیاوازی نێوان Process و Thread لەگەڵ CPU Scheduling.',
             suggestedPomodoros: 4,
             isCompleted: true,
           ),
@@ -187,7 +198,8 @@ class StudyRoadmapService extends ChangeNotifier {
             id: 't2',
             dayIndex: 2,
             title: 'خوێندنی بەشی ٣ (Process Synchronization)',
-            description: 'تێگەیشتن لە Semaphores و Mutex و Critical Section Problem.',
+            description:
+                'تێگەیشتن لە Semaphores و Mutex و Critical Section Problem.',
             suggestedPomodoros: 3,
             isCompleted: true,
           ),
@@ -203,7 +215,8 @@ class StudyRoadmapService extends ChangeNotifier {
             id: 't4',
             dayIndex: 4,
             title: 'پێداچوونەوەی تاقیکردنەوەکانی ساڵانی پێشوو',
-            description: 'حەلکردنی پرسیارە کردارەکییەکانی پۆما و کات و بیرکاری OS.',
+            description:
+                'حەلکردنی پرسیارە کردارەکییەکانی پۆما و کات و بیرکاری OS.',
             suggestedPomodoros: 3,
             isCompleted: false,
           ),

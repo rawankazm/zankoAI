@@ -131,7 +131,8 @@ class OfflineArchiveService extends ChangeNotifier {
         title: 'کورتەی وانەی سیستەمی کارپێکردن',
         courseName: 'سیستەمی کارپێکردن',
         payload: {
-          'summaryText': 'سیستەمی کارپێکردن (OS) نەرمەکاڵای سەرەکی کۆمپیوتەرە بەشەکانی بریتیین لە Kernel, Memory Management, Process Scheduling.\n\nخاڵە گرنگەکان:\n١. بەڕێوەبردنی میمۆری\n٢. پرۆسێس و تریدەکان\n٣. بەرگری و ئاسایش',
+          'summaryText':
+              'سیستەمی کارپێکردن (OS) نەرمەکاڵای سەرەکی کۆمپیوتەرە بەشەکانی بریتیین لە Kernel, Memory Management, Process Scheduling.\n\nخاڵە گرنگەکان:\n١. بەڕێوەبردنی میمۆری\n٢. پرۆسێس و تریدەکان\n٣. بەرگری و ئاسایش',
         },
         createdAt: DateTime.now().subtract(const Duration(days: 1)),
         fileSizeKB: 12,
@@ -143,9 +144,20 @@ class OfflineArchiveService extends ChangeNotifier {
         courseName: 'داتابەیس',
         payload: {
           'cards': [
-            {'front': 'Primary Key چییە؟', 'back': 'کلیلێکی دەستنیشانکەری ناوازەیە لە خشتەی داتابەیسدا.'},
-            {'front': 'Foreign Key چییە؟', 'back': 'کلیلێکە لە خشتەیەکدا بەسترابێت بە Primary Key خشتەیەکی ترەوە.'},
-            {'front': 'SQL چییە؟', 'back': 'زمانی پرسیارکاریی دارێژراو بۆ داتابەیس (Structured Query Language).'},
+            {
+              'front': 'Primary Key چییە؟',
+              'back': 'کلیلێکی دەستنیشانکەری ناوازەیە لە خشتەی داتابەیسدا.',
+            },
+            {
+              'front': 'Foreign Key چییە؟',
+              'back':
+                  'کلیلێکە لە خشتەیەکدا بەسترابێت بە Primary Key خشتەیەکی ترەوە.',
+            },
+            {
+              'front': 'SQL چییە؟',
+              'back':
+                  'زمانی پرسیارکاریی دارێژراو بۆ داتابەیس (Structured Query Language).',
+            },
           ],
         },
         createdAt: DateTime.now().subtract(const Duration(days: 2)),
@@ -160,12 +172,22 @@ class OfflineArchiveService extends ChangeNotifier {
           'questions': [
             {
               'question': 'چینی چوارەمی مودێلی OSI چییە؟',
-              'options': ['Physical Layer', 'Transport Layer', 'Network Layer', 'Application Layer'],
+              'options': [
+                'Physical Layer',
+                'Transport Layer',
+                'Network Layer',
+                'Application Layer',
+              ],
               'correctIndex': 1,
             },
             {
               'question': 'IP Address لە چەند بەش پێکدێت؟',
-              'options': ['4 Octets (32-bits)', '2 Octets', '8 Octets', '128 Octets'],
+              'options': [
+                '4 Octets (32-bits)',
+                '2 Octets',
+                '8 Octets',
+                '128 Octets',
+              ],
               'correctIndex': 0,
             },
           ],

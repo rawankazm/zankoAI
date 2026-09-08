@@ -44,13 +44,19 @@ void main() {
 - **شكراً لحضوركم**
 ''';
 
-    final slides = PptxGeneratorService.parseSlidesFromText(arabicAiSeminar, defaultTitle: 'الذكاء الاصطناعي');
+    final slides = PptxGeneratorService.parseSlidesFromText(
+      arabicAiSeminar,
+      defaultTitle: 'الذكاء الاصطناعي',
+    );
     expect(slides.length, 8);
     expect(slides[0].title.contains('الذكاء الاصطناعي'), true);
     expect(slides[1].title.contains('الأسس النظرية'), true);
     expect(slides[2].title.contains('إشكالية'), true);
     expect(slides[3].title.contains('الأهداف'), true);
-    expect(slides[7].bulletPoints.any((b) => b.contains('شكراً لحضوركم')), true);
+    expect(
+      slides[7].bulletPoints.any((b) => b.contains('شكراً لحضوركم')),
+      true,
+    );
   });
 
   test('Test Arabic Report Parsing with textual headers', () {

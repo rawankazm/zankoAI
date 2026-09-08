@@ -19,7 +19,12 @@ class AppExitDialog extends StatelessWidget {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 28),
       child: Container(
-        padding: const EdgeInsets.only(top: 28, left: 24, right: 24, bottom: 20),
+        padding: const EdgeInsets.only(
+          top: 28,
+          left: 24,
+          right: 24,
+          bottom: 20,
+        ),
         decoration: BoxDecoration(
           color: const Color(0xFF1E2435),
           borderRadius: BorderRadius.circular(24),
@@ -69,7 +74,10 @@ class AppExitDialog extends StatelessWidget {
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                   ),
                   child: Text(
                     'پاشگەزبوونەوە',
@@ -84,7 +92,10 @@ class AppExitDialog extends StatelessWidget {
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(true),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                   ),
                   child: Text(
                     'چوونەدەرەوە',

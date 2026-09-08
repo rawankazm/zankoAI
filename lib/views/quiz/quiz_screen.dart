@@ -9,8 +9,6 @@ import '../../services/score_service.dart';
 import '../../models/quiz_model.dart';
 import '../../theme.dart';
 
-
-
 class QuizScreen extends StatefulWidget {
   final String? initialTopic;
   final String? initialFileName;
@@ -40,14 +38,54 @@ class _QuizScreenState extends State<QuizScreen> {
   ];
 
   final Map<String, List<String>> _courseTopics = {
-    'Operating Systems': ['Memory Management', 'Process Scheduling', 'Deadlocks & Threads', 'File Systems'],
-    'Calculus & Linear Algebra': ['Derivatives & Integrals', 'Matrix Multiplication', 'Vector Spaces', 'Eigenvalues'],
-    'Machine Learning Fundamentals': ['Neural Networks', 'Supervised Learning', 'Regression & Classification', 'Deep Learning'],
-    'Data Structures & Algorithms': ['Trees & Binary Search', 'Graph Algorithms', 'Sorting & Searching', 'Dynamic Programming'],
-    'Python & Data Science': ['Pandas & DataFrames', 'NumPy Arrays', 'Data Visualization', 'Scikit-Learn ML'],
-    'Computer Networks & Security': ['TCP/IP Protocol Stack', 'IP Addressing & Subnetting', 'Network Security & Firewalls', 'HTTP/HTTPS Protocols'],
-    'Database Systems & SQL': ['Relational Database Design', 'SQL Queries & Joins', 'Indexing & Transactions', 'Normalization'],
-    'Software Engineering': ['Agile & Scrum', 'Design Patterns', 'Git Version Control', 'Software Testing & QA'],
+    'Operating Systems': [
+      'Memory Management',
+      'Process Scheduling',
+      'Deadlocks & Threads',
+      'File Systems',
+    ],
+    'Calculus & Linear Algebra': [
+      'Derivatives & Integrals',
+      'Matrix Multiplication',
+      'Vector Spaces',
+      'Eigenvalues',
+    ],
+    'Machine Learning Fundamentals': [
+      'Neural Networks',
+      'Supervised Learning',
+      'Regression & Classification',
+      'Deep Learning',
+    ],
+    'Data Structures & Algorithms': [
+      'Trees & Binary Search',
+      'Graph Algorithms',
+      'Sorting & Searching',
+      'Dynamic Programming',
+    ],
+    'Python & Data Science': [
+      'Pandas & DataFrames',
+      'NumPy Arrays',
+      'Data Visualization',
+      'Scikit-Learn ML',
+    ],
+    'Computer Networks & Security': [
+      'TCP/IP Protocol Stack',
+      'IP Addressing & Subnetting',
+      'Network Security & Firewalls',
+      'HTTP/HTTPS Protocols',
+    ],
+    'Database Systems & SQL': [
+      'Relational Database Design',
+      'SQL Queries & Joins',
+      'Indexing & Transactions',
+      'Normalization',
+    ],
+    'Software Engineering': [
+      'Agile & Scrum',
+      'Design Patterns',
+      'Git Version Control',
+      'Software Testing & QA',
+    ],
   };
 
   @override
@@ -70,13 +108,13 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
-
   String? _quizFileName;
   String? _quizFileContent;
   bool _isGenerating = false;
   QuizModel? _activeQuiz;
   int _currentQuestionIndex = 0;
-  final Map<int, String> _userAnswers = {}; // Maps question index to selected answer
+  final Map<int, String> _userAnswers =
+      {}; // Maps question index to selected answer
   bool _quizCompleted = false;
   int _score = 0;
 
@@ -106,7 +144,11 @@ class _QuizScreenState extends State<QuizScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${Provider.of<LanguageProvider>(context, listen: false).translate('failed_to_load')}: $e')),
+        SnackBar(
+          content: Text(
+            '${Provider.of<LanguageProvider>(context, listen: false).translate('failed_to_load')}: $e',
+          ),
+        ),
       );
     }
   }
@@ -114,17 +156,27 @@ class _QuizScreenState extends State<QuizScreen> {
   Future<void> _generateQuiz() async {
     final topic = _topicController.text.trim();
     final course = _courseController.text.trim();
-    
+
     if (course.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('تکایە ناوی وانە بنووسە', style: TextStyle(fontFamily: 'DroidKufi'))),
+        SnackBar(
+          content: Text(
+            'تکایە ناوی وانە بنووسە',
+            style: TextStyle(fontFamily: 'DroidKufi'),
+          ),
+        ),
       );
       return;
     }
 
     if (topic.isEmpty && _quizFileContent == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('تکایە بابەت یان فایلێک دیاری بکە', style: TextStyle(fontFamily: 'DroidKufi'))),
+        SnackBar(
+          content: Text(
+            'تکایە بابەت یان فایلێک دیاری بکە',
+            style: TextStyle(fontFamily: 'DroidKufi'),
+          ),
+        ),
       );
       return;
     }
@@ -150,7 +202,7 @@ class _QuizScreenState extends State<QuizScreen> {
       }
 
       await dbService.addQuiz(quiz);
-      
+
       // Initialize text controllers for fill-in-the-blank questions
       for (int i = 0; i < quiz.questions.length; i++) {
         if (quiz.questions[i].type == QuestionType.fillInBlank) {
@@ -168,26 +220,35 @@ class _QuizScreenState extends State<QuizScreen> {
       });
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('هەڵەیەک ڕوویدا لە دروستکردنی کویز: $e', style: const TextStyle(fontFamily: 'DroidKufi'))),
+        SnackBar(
+          content: Text(
+            'هەڵەیەک ڕوویدا لە دروستکردنی کویز: $e',
+            style: const TextStyle(fontFamily: 'DroidKufi'),
+          ),
+        ),
       );
     }
   }
 
   void _submitQuiz() {
     if (_activeQuiz == null) return;
-    
+
     int score = 0;
     for (int i = 0; i < _activeQuiz!.questions.length; i++) {
       final q = _activeQuiz!.questions[i];
       String userAnswer = '';
-      
+
       if (q.type == QuestionType.fillInBlank) {
         userAnswer = _blankControllers[i]?.text.trim() ?? '';
       } else {
         userAnswer = _userAnswers[i] ?? '';
       }
 
-      if (AiService.isAnswerCorrect(userAnswer, q.correctAnswer, options: q.options)) {
+      if (AiService.isAnswerCorrect(
+        userAnswer,
+        q.correctAnswer,
+        options: q.options,
+      )) {
         score++;
       }
     }
@@ -205,13 +266,13 @@ class _QuizScreenState extends State<QuizScreen> {
 
   void _exportQuizText() {
     if (_activeQuiz == null) return;
-    
+
     StringBuffer buffer = StringBuffer();
     buffer.writeln('==============================');
     buffer.writeln('ZankoAI - ${_activeQuiz!.title}');
     buffer.writeln('وانە: ${_activeQuiz!.courseName}');
     buffer.writeln('==============================\n');
-    
+
     for (int i = 0; i < _activeQuiz!.questions.length; i++) {
       final q = _activeQuiz!.questions[i];
       buffer.writeln('${i + 1}. ${q.questionText}');
@@ -227,17 +288,23 @@ class _QuizScreenState extends State<QuizScreen> {
       }
       buffer.writeln('   وەڵامی ڕاست (Correct Answer): ${q.correctAnswer}\n');
     }
-    
+
     showDialog(
       context: context,
       builder: (context) {
         final text = buffer.toString();
         return AlertDialog(
-          title: const Text('تاقیکردنەوەی ئامادەکراو بۆ چاپ', style: TextStyle(fontFamily: 'DroidKufi', fontSize: 16)),
+          title: const Text(
+            'تاقیکردنەوەی ئامادەکراو بۆ چاپ',
+            style: TextStyle(fontFamily: 'DroidKufi', fontSize: 16),
+          ),
           content: SizedBox(
             width: double.maxFinite,
             child: SingleChildScrollView(
-              child: SelectableText(text, style: const TextStyle(fontFamily: 'Courier', fontSize: 11)),
+              child: SelectableText(
+                text,
+                style: const TextStyle(fontFamily: 'Courier', fontSize: 11),
+              ),
             ),
           ),
           actions: [
@@ -245,15 +312,26 @@ class _QuizScreenState extends State<QuizScreen> {
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: text));
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('کۆپیکرا بۆ Clipboard!', style: TextStyle(fontFamily: 'DroidKufi'))),
+                  SnackBar(
+                    content: Text(
+                      'کۆپیکرا بۆ Clipboard!',
+                      style: TextStyle(fontFamily: 'DroidKufi'),
+                    ),
+                  ),
                 );
                 Navigator.pop(context);
               },
-              child: const Text('کۆپیکردن', style: TextStyle(fontFamily: 'DroidKufi')),
+              child: const Text(
+                'کۆپیکردن',
+                style: TextStyle(fontFamily: 'DroidKufi'),
+              ),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('داخستن', style: TextStyle(fontFamily: 'DroidKufi')),
+              child: const Text(
+                'داخستن',
+                style: TextStyle(fontFamily: 'DroidKufi'),
+              ),
             ),
           ],
         );
@@ -284,7 +362,12 @@ class _QuizScreenState extends State<QuizScreen> {
       textDirection: langProvider.textDirection,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(Provider.of<LanguageProvider>(context, listen: false).translate('quiz_title')),
+          title: Text(
+            Provider.of<LanguageProvider>(
+              context,
+              listen: false,
+            ).translate('quiz_title'),
+          ),
           centerTitle: true,
         ),
         body: SingleChildScrollView(
@@ -295,20 +378,35 @@ class _QuizScreenState extends State<QuizScreen> {
               if (_activeQuiz == null && !_isGenerating) ...[
                 // Quiz Generator Form
                 Card(
-
                   child: Padding(
                     padding: const EdgeInsets.all(20.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          Provider.of<LanguageProvider>(context, listen: false).translate('generate_quiz_title'),
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'DroidKufi'),
+                          Provider.of<LanguageProvider>(
+                            context,
+                            listen: false,
+                          ).translate('generate_quiz_title'),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            fontFamily: 'DroidKufi',
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          Provider.of<LanguageProvider>(context, listen: false).translate('generate_quiz_desc'),
-                          style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontFamily: 'DroidKufi'),
+                          Provider.of<LanguageProvider>(
+                            context,
+                            listen: false,
+                          ).translate('generate_quiz_desc'),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
+                            fontFamily: 'DroidKufi',
+                          ),
                         ),
                         const SizedBox(height: 20),
                         // Course Selection Dropdown
@@ -316,17 +414,31 @@ class _QuizScreenState extends State<QuizScreen> {
                           initialValue: _selectedCourse,
                           isExpanded: true,
                           decoration: InputDecoration(
-                            labelText: Provider.of<LanguageProvider>(context, listen: false).translate('course_name_field'),
-                            prefixIcon: const Icon(Icons.school_rounded, color: Colors.blueAccent),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            labelText: Provider.of<LanguageProvider>(
+                              context,
+                              listen: false,
+                            ).translate('course_name_field'),
+                            prefixIcon: const Icon(
+                              Icons.school_rounded,
+                              color: Colors.blueAccent,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
                           ),
                           items: _courses.map((c) {
                             return DropdownMenuItem<String>(
                               value: c,
                               child: Text(
                                 c,
-                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             );
@@ -336,7 +448,8 @@ class _QuizScreenState extends State<QuizScreen> {
                               setState(() {
                                 _selectedCourse = val;
                                 _courseController.text = val;
-                                final topics = _courseTopics[val] ?? [t('general_topics')];
+                                final topics =
+                                    _courseTopics[val] ?? [t('general_topics')];
                                 _selectedTopic = topics.first;
                                 _topicController.text = _selectedTopic;
                               });
@@ -344,21 +457,36 @@ class _QuizScreenState extends State<QuizScreen> {
                           },
                         ),
                         const SizedBox(height: 16),
-                        
+
                         // Option 1: File Pick
                         SizedBox(
                           width: double.maxFinite,
                           child: OutlinedButton.icon(
                             onPressed: _pickQuizFile,
-                            icon: Icon(_quizFileName != null ? Icons.check_circle_rounded : Icons.picture_as_pdf, color: _quizFileName != null ? Colors.green : Colors.purpleAccent),
+                            icon: Icon(
+                              _quizFileName != null
+                                  ? Icons.check_circle_rounded
+                                  : Icons.picture_as_pdf,
+                              color: _quizFileName != null
+                                  ? Colors.green
+                                  : Colors.purpleAccent,
+                            ),
                             label: Text(
-                              _quizFileName != null ? '📄 $_quizFileName (تایبەتمەند بۆ کویز)' : 'بارکردنی پەڕگە / فایل (PDF, TXT)',
+                              _quizFileName != null
+                                  ? '📄 $_quizFileName (تایبەتمەند بۆ کویز)'
+                                  : 'بارکردنی پەڕگە / فایل (PDF, TXT)',
                               overflow: TextOverflow.ellipsis,
                             ),
                             style: OutlinedButton.styleFrom(
                               minimumSize: const Size(0, 50),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              side: BorderSide(color: _quizFileName != null ? Colors.green : theme.colorScheme.outline),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              side: BorderSide(
+                                color: _quizFileName != null
+                                    ? Colors.green
+                                    : theme.colorScheme.outline,
+                              ),
                             ),
                           ),
                         ),
@@ -373,38 +501,75 @@ class _QuizScreenState extends State<QuizScreen> {
                                   _quizFileContent = null;
                                 });
                               },
-                              icon: const Icon(Icons.close, size: 16, color: Colors.redAccent),
-                              label: const Text('لادانی فایلی بارکراو', style: TextStyle(color: Colors.redAccent, fontSize: 12)),
+                              icon: const Icon(
+                                Icons.close,
+                                size: 16,
+                                color: Colors.redAccent,
+                              ),
+                              label: const Text(
+                                'لادانی فایلی بارکراو',
+                                style: TextStyle(
+                                  color: Colors.redAccent,
+                                  fontSize: 12,
+                                ),
+                              ),
                             ),
                           ),
                         ],
-                        
+
                         const SizedBox(height: 12),
-                        const Center(child: Text('یان / Or', style: TextStyle(fontSize: 12, color: Colors.grey))),
+                        const Center(
+                          child: Text(
+                            'یان / Or',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ),
                         const SizedBox(height: 12),
-                        
+
                         // Topic Dropdown Selection
                         DropdownButtonFormField<String>(
-                          initialValue: (_courseTopics[_selectedCourse]?.contains(_selectedTopic) == true)
+                          initialValue:
+                              (_courseTopics[_selectedCourse]?.contains(
+                                    _selectedTopic,
+                                  ) ==
+                                  true)
                               ? _selectedTopic
                               : _courseTopics[_selectedCourse]?.first,
                           isExpanded: true,
                           decoration: InputDecoration(
-                            labelText: Provider.of<LanguageProvider>(context, listen: false).translate('topic_field'),
-                            prefixIcon: const Icon(Icons.topic_rounded, color: Colors.blueAccent),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            labelText: Provider.of<LanguageProvider>(
+                              context,
+                              listen: false,
+                            ).translate('topic_field'),
+                            prefixIcon: const Icon(
+                              Icons.topic_rounded,
+                              color: Colors.blueAccent,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
                           ),
-                          items: (_courseTopics[_selectedCourse] ?? [t('general_topics')]).map((top) {
-                            return DropdownMenuItem<String>(
-                              value: top,
-                              child: Text(
-                                top,
-                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            );
-                          }).toList(),
+                          items:
+                              (_courseTopics[_selectedCourse] ??
+                                      [t('general_topics')])
+                                  .map((top) {
+                                    return DropdownMenuItem<String>(
+                                      value: top,
+                                      child: Text(
+                                        top,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    );
+                                  })
+                                  .toList(),
                           onChanged: _quizFileContent != null
                               ? null
                               : (val) {
@@ -421,7 +586,12 @@ class _QuizScreenState extends State<QuizScreen> {
                           width: double.maxFinite,
                           child: ElevatedButton(
                             onPressed: _generateQuiz,
-                            child: Text(Provider.of<LanguageProvider>(context, listen: false).translate('generate_quiz_btn')),
+                            child: Text(
+                              Provider.of<LanguageProvider>(
+                                context,
+                                listen: false,
+                              ).translate('generate_quiz_btn'),
+                            ),
                           ),
                         ),
                       ],
@@ -432,7 +602,10 @@ class _QuizScreenState extends State<QuizScreen> {
 
                 // Quiz History
                 Text(
-                  Provider.of<LanguageProvider>(context, listen: false).translate('previous_quizzes'),
+                  Provider.of<LanguageProvider>(
+                    context,
+                    listen: false,
+                  ).translate('previous_quizzes'),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     fontFamily: 'DroidKufi',
@@ -443,7 +616,10 @@ class _QuizScreenState extends State<QuizScreen> {
                   const Center(
                     child: Padding(
                       padding: EdgeInsets.all(16.0),
-                      child: Text('هیچ کویزێکی پێشوو نییە', style: TextStyle(fontFamily: 'DroidKufi')),
+                      child: Text(
+                        'هیچ کویزێکی پێشوو نییە',
+                        style: TextStyle(fontFamily: 'DroidKufi'),
+                      ),
                     ),
                   )
                 else
@@ -455,9 +631,25 @@ class _QuizScreenState extends State<QuizScreen> {
                           backgroundColor: Colors.blueAccent,
                           child: Icon(Icons.assignment, color: Colors.white),
                         ),
-                        title: Text(quiz.title, style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'DroidKufi', fontSize: 13)),
-                        subtitle: Text(quiz.courseName, style: const TextStyle(fontFamily: 'DroidKufi', fontSize: 11)),
-                        trailing: const Icon(Icons.play_arrow, color: Colors.green),
+                        title: Text(
+                          quiz.title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'DroidKufi',
+                            fontSize: 13,
+                          ),
+                        ),
+                        subtitle: Text(
+                          quiz.courseName,
+                          style: const TextStyle(
+                            fontFamily: 'DroidKufi',
+                            fontSize: 11,
+                          ),
+                        ),
+                        trailing: const Icon(
+                          Icons.play_arrow,
+                          color: Colors.green,
+                        ),
                         onTap: () {
                           setState(() {
                             _activeQuiz = quiz;
@@ -466,7 +658,8 @@ class _QuizScreenState extends State<QuizScreen> {
                             _userAnswers.clear();
                             _blankControllers.clear();
                             for (int i = 0; i < quiz.questions.length; i++) {
-                              if (quiz.questions[i].type == QuestionType.fillInBlank) {
+                              if (quiz.questions[i].type ==
+                                  QuestionType.fillInBlank) {
                                 _blankControllers[i] = TextEditingController();
                               }
                             }
@@ -486,7 +679,10 @@ class _QuizScreenState extends State<QuizScreen> {
                         const CircularProgressIndicator(),
                         const SizedBox(height: 16),
                         Text(
-                          Provider.of<LanguageProvider>(context, listen: false).translate('generating_quiz_wait'),
+                          Provider.of<LanguageProvider>(
+                            context,
+                            listen: false,
+                          ).translate('generating_quiz_wait'),
                           style: const TextStyle(fontFamily: 'DroidKufi'),
                         ),
                       ],
@@ -502,7 +698,11 @@ class _QuizScreenState extends State<QuizScreen> {
                     Expanded(
                       child: Text(
                         _activeQuiz!.title,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'DroidKufi'),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          fontFamily: 'DroidKufi',
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -510,17 +710,22 @@ class _QuizScreenState extends State<QuizScreen> {
                     const SizedBox(width: 8),
                     Text(
                       '${Provider.of<LanguageProvider>(context, listen: false).translate('question_progress')} ${_currentQuestionIndex + 1} / ${_activeQuiz!.questions.length}',
-                      style: const TextStyle(fontSize: 12, fontFamily: 'DroidKufi'),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontFamily: 'DroidKufi',
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
                 LinearProgressIndicator(
-                  value: (_currentQuestionIndex + 1) / _activeQuiz!.questions.length,
+                  value:
+                      (_currentQuestionIndex + 1) /
+                      _activeQuiz!.questions.length,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Question Card
                 Card(
                   child: Padding(
@@ -529,19 +734,28 @@ class _QuizScreenState extends State<QuizScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _activeQuiz!.questions[_currentQuestionIndex].questionText,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'DroidKufi'),
+                          _activeQuiz!
+                              .questions[_currentQuestionIndex]
+                              .questionText,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'DroidKufi',
+                          ),
                         ),
                         const SizedBox(height: 20),
-                        
+
                         // Question Options
-                        ..._buildQuestionInputs(_activeQuiz!.questions[_currentQuestionIndex], _currentQuestionIndex),
+                        ..._buildQuestionInputs(
+                          _activeQuiz!.questions[_currentQuestionIndex],
+                          _currentQuestionIndex,
+                        ),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Navigation Buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -554,15 +768,21 @@ class _QuizScreenState extends State<QuizScreen> {
                               _currentQuestionIndex--;
                             });
                           },
-                          child: Text(Provider.of<LanguageProvider>(context, listen: false).translate('previous_btn')),
+                          child: Text(
+                            Provider.of<LanguageProvider>(
+                              context,
+                              listen: false,
+                            ).translate('previous_btn'),
+                          ),
                         ),
                       )
                     else
                       const Spacer(),
-                      
+
                     const SizedBox(width: 12),
-                    
-                    if (_currentQuestionIndex < _activeQuiz!.questions.length - 1)
+
+                    if (_currentQuestionIndex <
+                        _activeQuiz!.questions.length - 1)
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
@@ -570,15 +790,27 @@ class _QuizScreenState extends State<QuizScreen> {
                               _currentQuestionIndex++;
                             });
                           },
-                          child: Text(Provider.of<LanguageProvider>(context, listen: false).translate('next_btn')),
+                          child: Text(
+                            Provider.of<LanguageProvider>(
+                              context,
+                              listen: false,
+                            ).translate('next_btn'),
+                          ),
                         ),
                       )
                     else
                       Expanded(
                         child: ElevatedButton(
                           onPressed: _submitQuiz,
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                          child: Text(Provider.of<LanguageProvider>(context, listen: false).translate('submit_btn')),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                          ),
+                          child: Text(
+                            Provider.of<LanguageProvider>(
+                              context,
+                              listen: false,
+                            ).translate('submit_btn'),
+                          ),
                         ),
                       ),
                   ],
@@ -592,17 +824,30 @@ class _QuizScreenState extends State<QuizScreen> {
                     padding: const EdgeInsets.all(24.0),
                     child: Column(
                       children: [
-                        const Icon(Icons.workspace_premium_rounded, size: 80, color: Colors.orange),
+                        const Icon(
+                          Icons.workspace_premium_rounded,
+                          size: 80,
+                          color: Colors.orange,
+                        ),
                         const SizedBox(height: 16),
                         Text(
-                          Provider.of<LanguageProvider>(context, listen: false).translate('quiz_completed'),
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'DroidKufi'),
+                          Provider.of<LanguageProvider>(
+                            context,
+                            listen: false,
+                          ).translate('quiz_completed'),
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'DroidKufi',
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Builder(
                           builder: (context) {
                             final total = _activeQuiz!.questions.length;
-                            final percent = total > 0 ? ((_score / total) * 100).round() : 0;
+                            final percent = total > 0
+                                ? ((_score / total) * 100).round()
+                                : 0;
                             return Column(
                               children: [
                                 Text(
@@ -610,7 +855,11 @@ class _QuizScreenState extends State<QuizScreen> {
                                   style: TextStyle(
                                     fontSize: 34,
                                     fontWeight: FontWeight.w900,
-                                    color: percent >= 80 ? const Color(0xFF10B981) : (percent >= 50 ? Colors.orange : Colors.red),
+                                    color: percent >= 80
+                                        ? const Color(0xFF10B981)
+                                        : (percent >= 50
+                                              ? Colors.orange
+                                              : Colors.red),
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -619,7 +868,8 @@ class _QuizScreenState extends State<QuizScreen> {
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
-                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.6),
                                   ),
                                 ),
                               ],
@@ -629,10 +879,21 @@ class _QuizScreenState extends State<QuizScreen> {
                         const SizedBox(height: 8),
                         Text(
                           _score == _activeQuiz!.questions.length
-                              ? Provider.of<LanguageProvider>(context, listen: false).translate('score_perfect')
-                              : Provider.of<LanguageProvider>(context, listen: false).translate('score_good'),
+                              ? Provider.of<LanguageProvider>(
+                                  context,
+                                  listen: false,
+                                ).translate('score_perfect')
+                              : Provider.of<LanguageProvider>(
+                                  context,
+                                  listen: false,
+                                ).translate('score_good'),
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontFamily: 'DroidKufi', color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
+                          style: TextStyle(
+                            fontFamily: 'DroidKufi',
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.7,
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 24),
                         Row(
@@ -641,7 +902,10 @@ class _QuizScreenState extends State<QuizScreen> {
                               child: OutlinedButton.icon(
                                 onPressed: _exportQuizText,
                                 icon: const Icon(Icons.print_rounded, size: 18),
-                                label: const Text('چاپ / Export', style: TextStyle(fontSize: 12)),
+                                label: const Text(
+                                  'چاپ / Export',
+                                  style: TextStyle(fontSize: 12),
+                                ),
                               ),
                             ),
                             const SizedBox(width: 10),
@@ -653,16 +917,21 @@ class _QuizScreenState extends State<QuizScreen> {
                                   foregroundColor: Colors.white,
                                 ),
                                 child: Text(
-                                  Provider.of<LanguageProvider>(context, listen: false).translate('back_to_quiz_home'),
+                                  Provider.of<LanguageProvider>(
+                                    context,
+                                    listen: false,
+                                  ).translate('back_to_quiz_home'),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
                           ],
                         ),
-
                       ],
                     ),
                   ),
@@ -682,11 +951,15 @@ class _QuizScreenState extends State<QuizScreen> {
           children: [
             Card(
               elevation: 0,
-              color: _userAnswers[questionIndex] == 'ڕاستە' ? Colors.green.withValues(alpha: 0.12) : null,
+              color: _userAnswers[questionIndex] == 'ڕاستە'
+                  ? Colors.green.withValues(alpha: 0.12)
+                  : null,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
                 side: BorderSide(
-                  color: _userAnswers[questionIndex] == 'ڕاستە' ? Colors.green : Theme.of(context).dividerColor,
+                  color: _userAnswers[questionIndex] == 'ڕاستە'
+                      ? Colors.green
+                      : Theme.of(context).dividerColor,
                   width: _userAnswers[questionIndex] == 'ڕاستە' ? 1.5 : 1.0,
                 ),
               ),
@@ -696,21 +969,35 @@ class _QuizScreenState extends State<QuizScreen> {
                     _userAnswers[questionIndex] = 'ڕاستە';
                   });
                 },
-                title: const Text('ڕاستە / True', style: TextStyle(fontFamily: 'DroidKufi', fontWeight: FontWeight.w600)),
+                title: const Text(
+                  'ڕاستە / True',
+                  style: TextStyle(
+                    fontFamily: 'DroidKufi',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 leading: Icon(
-                  _userAnswers[questionIndex] == 'ڕاستە' ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                  color: _userAnswers[questionIndex] == 'ڕاستە' ? Colors.green : Colors.grey,
+                  _userAnswers[questionIndex] == 'ڕاستە'
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  color: _userAnswers[questionIndex] == 'ڕاستە'
+                      ? Colors.green
+                      : Colors.grey,
                 ),
               ),
             ),
             const SizedBox(height: 8),
             Card(
               elevation: 0,
-              color: _userAnswers[questionIndex] == 'هەڵەیە' ? Colors.red.withValues(alpha: 0.12) : null,
+              color: _userAnswers[questionIndex] == 'هەڵەیە'
+                  ? Colors.red.withValues(alpha: 0.12)
+                  : null,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
                 side: BorderSide(
-                  color: _userAnswers[questionIndex] == 'هەڵەیە' ? Colors.red : Theme.of(context).dividerColor,
+                  color: _userAnswers[questionIndex] == 'هەڵەیە'
+                      ? Colors.red
+                      : Theme.of(context).dividerColor,
                   width: _userAnswers[questionIndex] == 'هەڵەیە' ? 1.5 : 1.0,
                 ),
               ),
@@ -720,17 +1007,28 @@ class _QuizScreenState extends State<QuizScreen> {
                     _userAnswers[questionIndex] = 'هەڵەیە';
                   });
                 },
-                title: const Text('هەڵەیە / False', style: TextStyle(fontFamily: 'DroidKufi', fontWeight: FontWeight.w600)),
+                title: const Text(
+                  'هەڵەیە / False',
+                  style: TextStyle(
+                    fontFamily: 'DroidKufi',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 leading: Icon(
-                  _userAnswers[questionIndex] == 'هەڵەیە' ? Icons.cancel_rounded : Icons.radio_button_unchecked_rounded,
-                  color: _userAnswers[questionIndex] == 'هەڵەیە' ? Colors.red : Colors.grey,
+                  _userAnswers[questionIndex] == 'هەڵەیە'
+                      ? Icons.cancel_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  color: _userAnswers[questionIndex] == 'هەڵەیە'
+                      ? Colors.red
+                      : Colors.grey,
                 ),
               ),
             ),
           ],
         ),
       ];
-    } else if (question.type == QuestionType.multipleChoice && question.options != null) {
+    } else if (question.type == QuestionType.multipleChoice &&
+        question.options != null) {
       return [
         Column(
           children: question.options!.map((opt) {
@@ -739,11 +1037,17 @@ class _QuizScreenState extends State<QuizScreen> {
               padding: const EdgeInsets.only(bottom: 8.0),
               child: Card(
                 elevation: 0,
-                color: isSelected ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.12) : null,
+                color: isSelected
+                    ? Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.12)
+                    : null,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                   side: BorderSide(
-                    color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).dividerColor,
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).dividerColor,
                     width: isSelected ? 1.5 : 1.0,
                   ),
                 ),
@@ -753,10 +1057,22 @@ class _QuizScreenState extends State<QuizScreen> {
                       _userAnswers[questionIndex] = opt;
                     });
                   },
-                  title: Text(opt, style: TextStyle(fontFamily: 'DroidKufi', fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+                  title: Text(
+                    opt,
+                    style: TextStyle(
+                      fontFamily: 'DroidKufi',
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                  ),
                   leading: Icon(
-                    isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                    color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey,
+                    isSelected
+                        ? Icons.check_circle_rounded
+                        : Icons.radio_button_unchecked_rounded,
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.grey,
                   ),
                 ),
               ),
@@ -765,12 +1081,16 @@ class _QuizScreenState extends State<QuizScreen> {
         ),
       ];
     } else if (question.type == QuestionType.fillInBlank) {
-      final controller = _blankControllers[questionIndex] ?? TextEditingController();
+      final controller =
+          _blankControllers[questionIndex] ?? TextEditingController();
       return [
         TextField(
           controller: controller,
           decoration: InputDecoration(
-            hintText: Provider.of<LanguageProvider>(context, listen: false).translate('type_answer'),
+            hintText: Provider.of<LanguageProvider>(
+              context,
+              listen: false,
+            ).translate('type_answer'),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             prefixIcon: const Icon(Icons.edit_note_rounded),
           ),
@@ -780,7 +1100,7 @@ class _QuizScreenState extends State<QuizScreen> {
         ),
       ];
     }
-    
+
     return [const SizedBox()];
   }
 }

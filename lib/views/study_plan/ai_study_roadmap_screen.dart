@@ -37,14 +37,19 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
       listenable: roadmapService,
       builder: (context, _) {
         final roadmaps = roadmapService.roadmaps;
-        final currentRoadmap = roadmaps.isNotEmpty && _selectedRoadmapIndex < roadmaps.length
+        final currentRoadmap =
+            roadmaps.isNotEmpty && _selectedRoadmapIndex < roadmaps.length
             ? roadmaps[_selectedRoadmapIndex]
             : null;
 
         return Scaffold(
-          backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
+          backgroundColor: isDark
+              ? ZankoColors.darkBackground
+              : ZankoColors.background,
           appBar: AppBar(
-            backgroundColor: (isDark ? ZankoColors.darkBackground : ZankoColors.background).withValues(alpha: 0.9),
+            backgroundColor:
+                (isDark ? ZankoColors.darkBackground : ZankoColors.background)
+                    .withValues(alpha: 0.9),
             elevation: 0,
             title: Text(
               langProvider.translate('study_roadmap'),
@@ -57,7 +62,11 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
             actions: [
               if (roadmaps.isNotEmpty)
                 IconButton(
-                  icon: Icon(CupertinoIcons.arrow_down_doc_fill, color: ZankoColors.primary, size: 24),
+                  icon: Icon(
+                    CupertinoIcons.arrow_down_doc_fill,
+                    color: ZankoColors.primary,
+                    size: 24,
+                  ),
                   tooltip: 'Word (.docx)',
                   onPressed: () {
                     final current = roadmaps[_selectedRoadmapIndex];
@@ -65,13 +74,23 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                       subjectName: current.subjectName,
                       daysLeft: current.daysLeft,
                       tasks: current.tasks
-                          .map((t) => {'day': t.dayIndex, 'title': t.title, 'desc': t.description})
+                          .map(
+                            (t) => {
+                              'day': t.dayIndex,
+                              'title': t.title,
+                              'desc': t.description,
+                            },
+                          )
                           .toList(),
                     );
                   },
                 ),
               IconButton(
-                icon: Icon(CupertinoIcons.add_circled_solid, color: ZankoColors.primary, size: 26),
+                icon: Icon(
+                  CupertinoIcons.add_circled_solid,
+                  color: ZankoColors.primary,
+                  size: 26,
+                ),
                 tooltip: langProvider.translate('create_roadmap'),
                 onPressed: () => _openCreateRoadmapModal(context),
               ),
@@ -94,28 +113,48 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                               scrollDirection: Axis.horizontal,
                               physics: const BouncingScrollPhysics(),
                               itemCount: roadmaps.length,
-                              separatorBuilder: (_, _) => const SizedBox(width: 8),
+                              separatorBuilder: (_, _) =>
+                                  const SizedBox(width: 8),
                               itemBuilder: (context, idx) {
                                 final rm = roadmaps[idx];
                                 final isSelected = idx == _selectedRoadmapIndex;
                                 return GestureDetector(
-                                  onTap: () => setState(() => _selectedRoadmapIndex = idx),
+                                  onTap: () => setState(
+                                    () => _selectedRoadmapIndex = idx,
+                                  ),
                                   child: AnimatedContainer(
                                     duration: const Duration(milliseconds: 200),
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 8,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: isSelected ? ZankoColors.primary : (isDark ? const Color(0xFF1E222A) : Colors.white),
+                                      color: isSelected
+                                          ? ZankoColors.primary
+                                          : (isDark
+                                                ? const Color(0xFF1E222A)
+                                                : Colors.white),
                                       borderRadius: BorderRadius.circular(18),
                                       border: Border.all(
-                                        color: isSelected ? ZankoColors.primary : (isDark ? Colors.white10 : Colors.grey[300]!),
+                                        color: isSelected
+                                            ? ZankoColors.primary
+                                            : (isDark
+                                                  ? Colors.white10
+                                                  : Colors.grey[300]!),
                                       ),
                                     ),
                                     child: Text(
                                       rm.subjectName,
                                       style: TextStyle(
                                         fontSize: 12,
-                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                                        color: isSelected ? Colors.white : (isDark ? Colors.grey[300] : ZankoColors.textPrimary),
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.w500,
+                                        color: isSelected
+                                            ? Colors.white
+                                            : (isDark
+                                                  ? Colors.grey[300]
+                                                  : ZankoColors.textPrimary),
                                       ),
                                     ),
                                   ),
@@ -128,7 +167,11 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
 
                         if (currentRoadmap != null) ...[
                           // ── Active Exam Countdown & Progress Header ──
-                          _buildExamCountdownHeader(context, currentRoadmap, isDark),
+                          _buildExamCountdownHeader(
+                            context,
+                            currentRoadmap,
+                            isDark,
+                          ),
 
                           const SizedBox(height: 20),
 
@@ -137,13 +180,22 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                             Container(
                               padding: const EdgeInsets.all(14),
                               decoration: BoxDecoration(
-                                color: ZankoColors.primary.withValues(alpha: 0.12),
+                                color: ZankoColors.primary.withValues(
+                                  alpha: 0.12,
+                                ),
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.3)),
+                                border: Border.all(
+                                  color: ZankoColors.primary.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                ),
                               ),
                               child: Row(
                                 children: [
-                                  const Text('💡', style: TextStyle(fontSize: 22)),
+                                  const Text(
+                                    '💡',
+                                    style: TextStyle(fontSize: 22),
+                                  ),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Text(
@@ -151,7 +203,9 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                                       style: TextStyle(
                                         fontSize: 12,
                                         height: 1.4,
-                                        color: isDark ? Colors.purple[100] : const Color(0xFF5B21B6),
+                                        color: isDark
+                                            ? Colors.purple[100]
+                                            : const Color(0xFF5B21B6),
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -167,7 +221,10 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                             children: [
                               const Text(
                                 '📋 نەخشەڕێگای ڕۆژانە',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               Text(
                                 '${(currentRoadmap.progressPercentage * 100).toInt()}% تەواوکراوە',
@@ -187,10 +244,17 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: currentRoadmap.tasks.length,
-                            separatorBuilder: (_, _) => const SizedBox(height: 12),
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 12),
                             itemBuilder: (context, idx) {
                               final task = currentRoadmap.tasks[idx];
-                              return _buildTaskTimelineTile(context, currentRoadmap.id, task, isDark, roadmapService);
+                              return _buildTaskTimelineTile(
+                                context,
+                                currentRoadmap.id,
+                                task,
+                                isDark,
+                                roadmapService,
+                              );
                             },
                           ),
                         ],
@@ -203,14 +267,22 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, bool isDark, LanguageProvider langProvider) {
+  Widget _buildEmptyState(
+    BuildContext context,
+    bool isDark,
+    LanguageProvider langProvider,
+  ) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(CupertinoIcons.calendar_badge_plus, size: 64, color: ZankoColors.primary),
+            Icon(
+              CupertinoIcons.calendar_badge_plus,
+              size: 64,
+              color: ZankoColors.primary,
+            ),
             const SizedBox(height: 16),
             Text(
               'هیچ نەخشەڕێگایەک دروست نەکراوە',
@@ -235,8 +307,13 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: ZankoColors.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
               icon: const Icon(CupertinoIcons.sparkles),
               label: Text(
@@ -250,7 +327,11 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
     );
   }
 
-  Widget _buildExamCountdownHeader(BuildContext context, StudyRoadmapModel rm, bool isDark) {
+  Widget _buildExamCountdownHeader(
+    BuildContext context,
+    StudyRoadmapModel rm,
+    bool isDark,
+  ) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -261,16 +342,15 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                   ZankoColors.darkCardSecondary,
                   const Color(0xFF064E3B).withValues(alpha: 0.4),
                 ]
-              : [
-                  Colors.white,
-                  const Color(0xFFF0FDF4),
-                ],
+              : [Colors.white, const Color(0xFFF0FDF4)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isDark ? ZankoColors.primary.withValues(alpha: 0.3) : ZankoColors.primary.withValues(alpha: 0.25),
+          color: isDark
+              ? ZankoColors.primary.withValues(alpha: 0.3)
+              : ZankoColors.primary.withValues(alpha: 0.25),
           width: 1.5,
         ),
         boxShadow: [
@@ -286,7 +366,10 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEF4444).withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(12),
@@ -294,7 +377,11 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(CupertinoIcons.flame_fill, color: Color(0xFFEF4444), size: 14),
+                    const Icon(
+                      CupertinoIcons.flame_fill,
+                      color: Color(0xFFEF4444),
+                      size: 14,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '🔥 ${rm.daysLeft} ڕۆژ ماوە بۆ تاقیکردنەوە',
@@ -309,7 +396,11 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
               ),
               const Spacer(),
               IconButton(
-                icon: const Icon(CupertinoIcons.trash, color: Colors.white54, size: 18),
+                icon: const Icon(
+                  CupertinoIcons.trash,
+                  color: Colors.white54,
+                  size: 18,
+                ),
                 onPressed: () async {
                   await StudyRoadmapService.instance.deleteRoadmap(rm.id);
                   if (mounted) setState(() => _selectedRoadmapIndex = 0);
@@ -353,7 +444,9 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                       value: rm.progressPercentage,
                       strokeWidth: 6,
                       backgroundColor: Colors.white24,
-                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        Color(0xFF10B981),
+                      ),
                     ),
                   ),
                   Text(
@@ -388,7 +481,9 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
           Checkbox(
             value: task.isCompleted,
             activeColor: const Color(0xFF10B981),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
             onChanged: (_) async {
               await service.toggleTaskCompleted(roadmapId, task.id);
             },
@@ -401,7 +496,10 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: ZankoColors.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(6),
@@ -422,8 +520,12 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : ZankoColors.textPrimary,
-                          decoration: task.isCompleted ? TextDecoration.lineThrough : null,
+                          color: isDark
+                              ? Colors.white
+                              : ZankoColors.textPrimary,
+                          decoration: task.isCompleted
+                              ? TextDecoration.lineThrough
+                              : null,
                         ),
                       ),
                     ),
@@ -434,41 +536,65 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                   task.description,
                   style: TextStyle(
                     fontSize: 12,
-                    color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                    color: isDark
+                        ? Colors.grey[400]
+                        : ZankoColors.textSecondary,
                     height: 1.4,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Icon(CupertinoIcons.timer, size: 14, color: Color(0xFFFF9F0A)),
+                    const Icon(
+                      CupertinoIcons.timer,
+                      size: 14,
+                      color: Color(0xFFFF9F0A),
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '${task.suggestedPomodoros} سێشنی فۆکەس (Pomodoro)',
-                      style: const TextStyle(fontSize: 11, color: Color(0xFFFF9F0A), fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFFFF9F0A),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const Spacer(),
                     GestureDetector(
                       onTap: () {
-                        final db = Provider.of<DatabaseService>(context, listen: false);
+                        final db = Provider.of<DatabaseService>(
+                          context,
+                          listen: false,
+                        );
                         db.incrementPomodoros();
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('سێشنی فۆکەسی Pomodoro (٢٥ خولەک) دەستی پێکرد! ⏱️'),
+                            content: Text(
+                              'سێشنی فۆکەسی Pomodoro (٢٥ خولەک) دەستی پێکرد! ⏱️',
+                            ),
                             backgroundColor: Color(0xFFFF9F0A),
                             duration: Duration(seconds: 2),
                           ),
                         );
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFF9F0A).withValues(alpha: 0.15),
+                          color: const Color(
+                            0xFFFF9F0A,
+                          ).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Text(
                           'دەستپێکردن ⏱️',
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFFF9F0A)),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFFF9F0A),
+                          ),
                         ),
                       ),
                     ),
@@ -516,10 +642,17 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                       children: [
                         const Text(
                           '🪄 دروستکردنی پلانی خوێندن',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                         IconButton(
-                          icon: const Icon(CupertinoIcons.xmark_circle_fill, color: Colors.white54),
+                          icon: const Icon(
+                            CupertinoIcons.xmark_circle_fill,
+                            color: Colors.white54,
+                          ),
                           onPressed: () => Navigator.pop(ctx),
                         ),
                       ],
@@ -530,18 +663,32 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         labelText: 'ناوی وانە / بابەت (نموونە: داتابەیس)',
-                        labelStyle: const TextStyle(color: Colors.white70, fontSize: 13),
+                        labelStyle: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
                         filled: true,
                         fillColor: const Color(0xFF1E222A),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('ژمارەی بەشەکان (Chapters):', style: TextStyle(color: Colors.white70, fontSize: 13)),
-                        Text('$totalChapters بەش', style: TextStyle(color: ZankoColors.primary, fontWeight: FontWeight.bold)),
+                        const Text(
+                          'ژمارەی بەشەکان (Chapters):',
+                          style: TextStyle(color: Colors.white70, fontSize: 13),
+                        ),
+                        Text(
+                          '$totalChapters بەش',
+                          style: TextStyle(
+                            color: ZankoColors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ],
                     ),
                     Slider(
@@ -550,14 +697,24 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                       max: 20,
                       divisions: 19,
                       activeColor: ZankoColors.primary,
-                      onChanged: (val) => setModalState(() => totalChapters = val.toInt()),
+                      onChanged: (val) =>
+                          setModalState(() => totalChapters = val.toInt()),
                     ),
                     const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('ڕۆژانی ماوە بۆ تاقیکردنەوە:', style: TextStyle(color: Colors.white70, fontSize: 13)),
-                        Text('$daysRemaining ڕۆژ', style: const TextStyle(color: Color(0xFFEF4444), fontWeight: FontWeight.bold)),
+                        const Text(
+                          'ڕۆژانی ماوە بۆ تاقیکردنەوە:',
+                          style: TextStyle(color: Colors.white70, fontSize: 13),
+                        ),
+                        Text(
+                          '$daysRemaining ڕۆژ',
+                          style: const TextStyle(
+                            color: Color(0xFFEF4444),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ],
                     ),
                     Slider(
@@ -566,14 +723,24 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                       max: 30,
                       divisions: 29,
                       activeColor: const Color(0xFFEF4444),
-                      onChanged: (val) => setModalState(() => daysRemaining = val.toInt()),
+                      onChanged: (val) =>
+                          setModalState(() => daysRemaining = val.toInt()),
                     ),
                     const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('کاتژمێری خوێندن لە ڕۆژێکدا:', style: TextStyle(color: Colors.white70, fontSize: 13)),
-                        Text('$hoursPerDay کاتژمێر', style: const TextStyle(color: Color(0xFFFF9F0A), fontWeight: FontWeight.bold)),
+                        const Text(
+                          'کاتژمێری خوێندن لە ڕۆژێکدا:',
+                          style: TextStyle(color: Colors.white70, fontSize: 13),
+                        ),
+                        Text(
+                          '$hoursPerDay کاتژمێر',
+                          style: const TextStyle(
+                            color: Color(0xFFFF9F0A),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ],
                     ),
                     Slider(
@@ -582,7 +749,8 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                       max: 8,
                       divisions: 7,
                       activeColor: const Color(0xFFFF9F0A),
-                      onChanged: (val) => setModalState(() => hoursPerDay = val.toInt()),
+                      onChanged: (val) =>
+                          setModalState(() => hoursPerDay = val.toInt()),
                     ),
                     const SizedBox(height: 20),
                     ElevatedButton(
@@ -593,38 +761,48 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                               if (name.isEmpty) return;
 
                               setModalState(() => isGenerating = true);
-                              final aiService = Provider.of<AiService>(context, listen: false);
+                              final aiService = Provider.of<AiService>(
+                                context,
+                                listen: false,
+                              );
 
                               try {
-                                final res = await aiService.generateStudyRoadmap(
-                                  subjectName: name,
-                                  totalChapters: totalChapters,
-                                  daysRemaining: daysRemaining,
-                                  hoursPerDay: hoursPerDay,
-                                );
+                                final res = await aiService
+                                    .generateStudyRoadmap(
+                                      subjectName: name,
+                                      totalChapters: totalChapters,
+                                      daysRemaining: daysRemaining,
+                                      hoursPerDay: hoursPerDay,
+                                    );
 
-                                final List<dynamic> rawTasks = res['tasks'] ?? [];
+                                final List<dynamic> rawTasks =
+                                    res['tasks'] ?? [];
                                 final tasks = rawTasks.map((t) {
                                   return StudyTaskModel(
                                     id: 't_${DateTime.now().millisecondsSinceEpoch}_${t['dayIndex']}',
                                     dayIndex: t['dayIndex'] ?? 1,
                                     title: t['title'] ?? '',
                                     description: t['description'] ?? '',
-                                    suggestedPomodoros: t['suggestedPomodoros'] ?? 2,
+                                    suggestedPomodoros:
+                                        t['suggestedPomodoros'] ?? 2,
                                   );
                                 }).toList();
 
                                 final newRoadmap = StudyRoadmapModel(
                                   id: 'rm_${DateTime.now().millisecondsSinceEpoch}',
                                   subjectName: name,
-                                  examDate: DateTime.now().add(Duration(days: daysRemaining)),
+                                  examDate: DateTime.now().add(
+                                    Duration(days: daysRemaining),
+                                  ),
                                   totalChapters: totalChapters,
                                   hoursPerDay: hoursPerDay,
                                   tasks: tasks,
                                   advice: res['advice'] ?? '',
                                 );
 
-                                await StudyRoadmapService.instance.saveRoadmap(newRoadmap);
+                                await StudyRoadmapService.instance.saveRoadmap(
+                                  newRoadmap,
+                                );
 
                                 if (ctx.mounted) {
                                   Navigator.pop(ctx);
@@ -637,13 +815,21 @@ class _AiStudyRoadmapScreenState extends State<AiStudyRoadmapScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: ZankoColors.primary,
                         minimumSize: const Size(double.infinity, 48),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
                       child: isGenerating
-                          ? const CupertinoActivityIndicator(color: Colors.white)
+                          ? const CupertinoActivityIndicator(
+                              color: Colors.white,
+                            )
                           : const Text(
                               'داڕشتنی پلانی خوێندن 🪄',
-                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                     ),
                   ],

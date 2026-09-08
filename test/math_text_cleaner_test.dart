@@ -4,7 +4,8 @@ import 'package:zanko_ai/utils/math_text_cleaner.dart';
 void main() {
   group('cleanMathAndDollarSigns', () {
     test('removes raw dollar signs and escaped dollar signs', () {
-      final input = r'بۆ بەشی یەکەم ($3x^2$): frac{d}{dx}(3x^2) = 3 \cdot (2x^{2-1}) =\$$ $$6x';
+      final input =
+          r'بۆ بەشی یەکەم ($3x^2$): frac{d}{dx}(3x^2) = 3 \cdot (2x^{2-1}) =\$$ $$6x';
       final cleaned = cleanMathAndDollarSigns(input);
 
       expect(cleaned.contains(r'$'), isFalse);
@@ -20,10 +21,14 @@ void main() {
       expect(cleaned1.contains(r'$'), isFalse);
       expect(cleaned1, equals('* یاسای گشتی: d/dx(x^n) = n · x^(n-1)'));
 
-      final input2 = r'* بۆ بەشی دووەم ($5x$): frac{d}{dx}(5x) = 5 \cdot (1x^{1-1}) = 5\$$ \cdot x^0 = 5$$';
+      final input2 =
+          r'* بۆ بەشی دووەم ($5x$): frac{d}{dx}(5x) = 5 \cdot (1x^{1-1}) = 5\$$ \cdot x^0 = 5$$';
       final cleaned2 = cleanMathAndDollarSigns(input2);
       expect(cleaned2.contains(r'$'), isFalse);
-      expect(cleaned2, equals('* بۆ بەشی دووەم (5x): d/dx(5x) = 5 · (1x^(1-1)) = 5 · x^0 = 5'));
+      expect(
+        cleaned2,
+        equals('* بۆ بەشی دووەم (5x): d/dx(5x) = 5 · (1x^(1-1)) = 5 · x^0 = 5'),
+      );
 
       final input3 = r'* بۆ بەشی سێیەم ($-2$): frac{d}{dx}(-2) = 0$$\$$';
       final cleaned3 = cleanMathAndDollarSigns(input3);

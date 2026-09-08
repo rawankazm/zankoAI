@@ -73,14 +73,38 @@ void main() {
     });
 
     test('supports string parsing including legacy aliases', () {
-      expect(BackgroundQueueTypeExt.fromString('pdf'), equals(BackgroundQueueType.pdf));
-      expect(BackgroundQueueTypeExt.fromString('pdf-ai-processing'), equals(BackgroundQueueType.pdf));
-      expect(BackgroundQueueTypeExt.fromString('ocr'), equals(BackgroundQueueType.ocr));
-      expect(BackgroundQueueTypeExt.fromString('ocr-processing'), equals(BackgroundQueueType.ocr));
-      expect(BackgroundQueueTypeExt.fromString('audio'), equals(BackgroundQueueType.audio));
-      expect(BackgroundQueueTypeExt.fromString('audio-transcription'), equals(BackgroundQueueType.audio));
-      expect(BackgroundQueueTypeExt.fromString('ai'), equals(BackgroundQueueType.ai));
-      expect(BackgroundQueueTypeExt.fromString('notifications'), equals(BackgroundQueueType.notifications));
+      expect(
+        BackgroundQueueTypeExt.fromString('pdf'),
+        equals(BackgroundQueueType.pdf),
+      );
+      expect(
+        BackgroundQueueTypeExt.fromString('pdf-ai-processing'),
+        equals(BackgroundQueueType.pdf),
+      );
+      expect(
+        BackgroundQueueTypeExt.fromString('ocr'),
+        equals(BackgroundQueueType.ocr),
+      );
+      expect(
+        BackgroundQueueTypeExt.fromString('ocr-processing'),
+        equals(BackgroundQueueType.ocr),
+      );
+      expect(
+        BackgroundQueueTypeExt.fromString('audio'),
+        equals(BackgroundQueueType.audio),
+      );
+      expect(
+        BackgroundQueueTypeExt.fromString('audio-transcription'),
+        equals(BackgroundQueueType.audio),
+      );
+      expect(
+        BackgroundQueueTypeExt.fromString('ai'),
+        equals(BackgroundQueueType.ai),
+      );
+      expect(
+        BackgroundQueueTypeExt.fromString('notifications'),
+        equals(BackgroundQueueType.notifications),
+      );
     });
   });
 
@@ -101,52 +125,73 @@ void main() {
     });
 
     test('state string parsing supports BullMQ status synonyms', () {
-      expect(BackgroundJobStateExt.fromString('queued'), equals(BackgroundJobState.queued));
-      expect(BackgroundJobStateExt.fromString('waiting'), equals(BackgroundJobState.queued));
-      expect(BackgroundJobStateExt.fromString('processing'), equals(BackgroundJobState.processing));
-      expect(BackgroundJobStateExt.fromString('active'), equals(BackgroundJobState.processing));
-      expect(BackgroundJobStateExt.fromString('completed'), equals(BackgroundJobState.completed));
-      expect(BackgroundJobStateExt.fromString('failed'), equals(BackgroundJobState.failed));
+      expect(
+        BackgroundJobStateExt.fromString('queued'),
+        equals(BackgroundJobState.queued),
+      );
+      expect(
+        BackgroundJobStateExt.fromString('waiting'),
+        equals(BackgroundJobState.queued),
+      );
+      expect(
+        BackgroundJobStateExt.fromString('processing'),
+        equals(BackgroundJobState.processing),
+      );
+      expect(
+        BackgroundJobStateExt.fromString('active'),
+        equals(BackgroundJobState.processing),
+      );
+      expect(
+        BackgroundJobStateExt.fromString('completed'),
+        equals(BackgroundJobState.completed),
+      );
+      expect(
+        BackgroundJobStateExt.fromString('failed'),
+        equals(BackgroundJobState.failed),
+      );
     });
   });
 
   group('3. Job Metadata Lifecycle Tracking', () {
-    test('tracks created_at, started_at, completed_at, failed_at, attempts and duration', () {
-      final now = DateTime.now().toUtc();
-      final started = now.add(const Duration(milliseconds: 250));
-      final completed = started.add(const Duration(milliseconds: 1750));
+    test(
+      'tracks created_at, started_at, completed_at, failed_at, attempts and duration',
+      () {
+        final now = DateTime.now().toUtc();
+        final started = now.add(const Duration(milliseconds: 250));
+        final completed = started.add(const Duration(milliseconds: 1750));
 
-      final metadata = BackgroundJobMetadata(
-        jobId: 'job_pdf_98765',
-        queueName: BackgroundQueueType.pdf,
-        jobName: 'process-pdf-ai',
-        state: BackgroundJobState.completed,
-        createdAt: now,
-        startedAt: started,
-        completedAt: completed,
-        attempts: 1,
-        maxAttempts: 3,
-        idempotencyKey: 'idem_pdf_unique_123',
-        executionDurationMs: 1750,
-        result: {'pages': 14, 'processed': true},
-      );
+        final metadata = BackgroundJobMetadata(
+          jobId: 'job_pdf_98765',
+          queueName: BackgroundQueueType.pdf,
+          jobName: 'process-pdf-ai',
+          state: BackgroundJobState.completed,
+          createdAt: now,
+          startedAt: started,
+          completedAt: completed,
+          attempts: 1,
+          maxAttempts: 3,
+          idempotencyKey: 'idem_pdf_unique_123',
+          executionDurationMs: 1750,
+          result: {'pages': 14, 'processed': true},
+        );
 
-      expect(metadata.jobId, equals('job_pdf_98765'));
-      expect(metadata.queueName, equals(BackgroundQueueType.pdf));
-      expect(metadata.state, equals(BackgroundJobState.completed));
-      expect(metadata.isTerminal, isTrue);
-      expect(metadata.canRetry, isFalse);
-      expect(metadata.attempts, equals(1));
-      expect(metadata.idempotencyKey, equals('idem_pdf_unique_123'));
-      expect(metadata.executionDurationMs, equals(1750));
-      expect(metadata.duration?.inMilliseconds, equals(1750));
+        expect(metadata.jobId, equals('job_pdf_98765'));
+        expect(metadata.queueName, equals(BackgroundQueueType.pdf));
+        expect(metadata.state, equals(BackgroundJobState.completed));
+        expect(metadata.isTerminal, isTrue);
+        expect(metadata.canRetry, isFalse);
+        expect(metadata.attempts, equals(1));
+        expect(metadata.idempotencyKey, equals('idem_pdf_unique_123'));
+        expect(metadata.executionDurationMs, equals(1750));
+        expect(metadata.duration?.inMilliseconds, equals(1750));
 
-      final json = metadata.toJson();
-      expect(json['job_id'], equals('job_pdf_98765'));
-      expect(json['queue_name'], equals('pdf'));
-      expect(json['state'], equals('completed'));
-      expect(json['execution_duration_ms'], equals(1750));
-    });
+        final json = metadata.toJson();
+        expect(json['job_id'], equals('job_pdf_98765'));
+        expect(json['queue_name'], equals('pdf'));
+        expect(json['state'], equals('completed'));
+        expect(json['execution_duration_ms'], equals(1750));
+      },
+    );
 
     test('parses metadata from backend JSON response accurately', () {
       final rawJson = {
@@ -203,11 +248,7 @@ void main() {
           'executions': 1,
         };
 
-        return {
-          'deduplicated': false,
-          'result': result,
-          'executions': 1,
-        };
+        return {'deduplicated': false, 'result': result, 'executions': 1};
       }
 
       const testKey = 'idem_notification_user_99';
@@ -243,23 +284,38 @@ void main() {
       // Attempt 4: 16,000 ms
       // Attempt 5: 32,000 ms
       expect(
-        ExponentialBackoffCalculator.calculateDelayMs(attempt: 1, baseDelayMs: 2000),
+        ExponentialBackoffCalculator.calculateDelayMs(
+          attempt: 1,
+          baseDelayMs: 2000,
+        ),
         equals(2000),
       );
       expect(
-        ExponentialBackoffCalculator.calculateDelayMs(attempt: 2, baseDelayMs: 2000),
+        ExponentialBackoffCalculator.calculateDelayMs(
+          attempt: 2,
+          baseDelayMs: 2000,
+        ),
         equals(4000),
       );
       expect(
-        ExponentialBackoffCalculator.calculateDelayMs(attempt: 3, baseDelayMs: 2000),
+        ExponentialBackoffCalculator.calculateDelayMs(
+          attempt: 3,
+          baseDelayMs: 2000,
+        ),
         equals(8000),
       );
       expect(
-        ExponentialBackoffCalculator.calculateDelayMs(attempt: 4, baseDelayMs: 2000),
+        ExponentialBackoffCalculator.calculateDelayMs(
+          attempt: 4,
+          baseDelayMs: 2000,
+        ),
         equals(16000),
       );
       expect(
-        ExponentialBackoffCalculator.calculateDelayMs(attempt: 5, baseDelayMs: 2000),
+        ExponentialBackoffCalculator.calculateDelayMs(
+          attempt: 5,
+          baseDelayMs: 2000,
+        ),
         equals(32000),
       );
     });
@@ -315,13 +371,21 @@ void main() {
 
   group('7. Timeout Handling', () {
     test('aborts and flags job when timeout is exceeded', () async {
-      Future<String> simulateTimedJob(Duration timeout, Duration actualWork) async {
-        return await Future<String>.delayed(actualWork, () => 'done')
-            .timeout(timeout, onTimeout: () => throw TimeoutException('Job exceeded timeout limit'));
+      Future<String> simulateTimedJob(
+        Duration timeout,
+        Duration actualWork,
+      ) async {
+        return await Future<String>.delayed(actualWork, () => 'done').timeout(
+          timeout,
+          onTimeout: () => throw TimeoutException('Job exceeded timeout limit'),
+        );
       }
 
       expect(
-        () => simulateTimedJob(const Duration(milliseconds: 50), const Duration(milliseconds: 200)),
+        () => simulateTimedJob(
+          const Duration(milliseconds: 50),
+          const Duration(milliseconds: 200),
+        ),
         throwsA(isA<TimeoutException>()),
       );
 
@@ -343,15 +407,52 @@ void main() {
         'dead_letter_count': 2,
         'timestamp': '2026-09-07T20:00:00.000Z',
         'queues': {
-          'pdf': {'waiting': 1, 'active': 1, 'completed': 45, 'failed': 0, 'delayed': 0, 'paused': false},
-          'ocr': {'waiting': 0, 'active': 0, 'completed': 120, 'failed': 1, 'delayed': 0, 'paused': false},
-          'audio': {'waiting': 2, 'active': 1, 'completed': 18, 'failed': 0, 'delayed': 0, 'paused': false},
-          'ai': {'waiting': 3, 'active': 2, 'completed': 340, 'failed': 1, 'delayed': 0, 'paused': false},
-          'notifications': {'waiting': 0, 'active': 0, 'completed': 890, 'failed': 0, 'delayed': 5, 'paused': false},
+          'pdf': {
+            'waiting': 1,
+            'active': 1,
+            'completed': 45,
+            'failed': 0,
+            'delayed': 0,
+            'paused': false,
+          },
+          'ocr': {
+            'waiting': 0,
+            'active': 0,
+            'completed': 120,
+            'failed': 1,
+            'delayed': 0,
+            'paused': false,
+          },
+          'audio': {
+            'waiting': 2,
+            'active': 1,
+            'completed': 18,
+            'failed': 0,
+            'delayed': 0,
+            'paused': false,
+          },
+          'ai': {
+            'waiting': 3,
+            'active': 2,
+            'completed': 340,
+            'failed': 1,
+            'delayed': 0,
+            'paused': false,
+          },
+          'notifications': {
+            'waiting': 0,
+            'active': 0,
+            'completed': 890,
+            'failed': 0,
+            'delayed': 5,
+            'paused': false,
+          },
         },
       };
 
-      when(() => mockDio.get<Map<String, dynamic>>('/health/worker')).thenAnswer(
+      when(
+        () => mockDio.get<Map<String, dynamic>>('/health/worker'),
+      ).thenAnswer(
         (_) async => _buildResponse(
           statusCode: 200,
           data: {'success': true, 'data': mockPayload},
@@ -379,56 +480,77 @@ void main() {
       expect(report.queues['notifications']?.delayed, equals(5));
     });
 
-    test('isQueueOperational returns true when Redis is connected and queue is not paused', () async {
-      final mockPayload = {
-        'status': 'healthy',
-        'redis_connected': true,
-        'uptime_seconds': 500,
-        'active_workers': 5,
-        'dead_letter_count': 0,
-        'timestamp': DateTime.now().toIso8601String(),
-        'queues': {
-          'ai': {'waiting': 0, 'active': 0, 'completed': 10, 'failed': 0, 'delayed': 0, 'paused': false},
-        },
-      };
+    test(
+      'isQueueOperational returns true when Redis is connected and queue is not paused',
+      () async {
+        final mockPayload = {
+          'status': 'healthy',
+          'redis_connected': true,
+          'uptime_seconds': 500,
+          'active_workers': 5,
+          'dead_letter_count': 0,
+          'timestamp': DateTime.now().toIso8601String(),
+          'queues': {
+            'ai': {
+              'waiting': 0,
+              'active': 0,
+              'completed': 10,
+              'failed': 0,
+              'delayed': 0,
+              'paused': false,
+            },
+          },
+        };
 
-      when(() => mockDio.get<Map<String, dynamic>>('/health/worker')).thenAnswer(
-        (_) async => _buildResponse(
-          statusCode: 200,
-          data: {'success': true, 'data': mockPayload},
-          requestOptions: _opts('/health/worker'),
-        ),
-      );
+        when(
+          () => mockDio.get<Map<String, dynamic>>('/health/worker'),
+        ).thenAnswer(
+          (_) async => _buildResponse(
+            statusCode: 200,
+            data: {'success': true, 'data': mockPayload},
+            requestOptions: _opts('/health/worker'),
+          ),
+        );
 
-      final isOk = await workerService.isQueueOperational(BackgroundQueueType.ai);
-      expect(isOk, isTrue);
-    });
+        final isOk = await workerService.isQueueOperational(
+          BackgroundQueueType.ai,
+        );
+        expect(isOk, isTrue);
+      },
+    );
   });
 
   group('9. Graceful Shutdown & Zero-Loss Restart Verification', () {
-    test('simulates graceful worker shutdown stopping new jobs and flushing in-flight', () {
-      bool isWorkerAcceptingNewJobs = true;
-      final inFlightJobs = <String>{'job_pdf_1', 'job_audio_2'};
+    test(
+      'simulates graceful worker shutdown stopping new jobs and flushing in-flight',
+      () {
+        bool isWorkerAcceptingNewJobs = true;
+        final inFlightJobs = <String>{'job_pdf_1', 'job_audio_2'};
 
-      void initiateGracefulShutdown() {
-        // Step 1: Stop accepting new jobs
-        isWorkerAcceptingNewJobs = false;
-        // Step 2: Complete all in-flight jobs
-        inFlightJobs.clear();
-      }
+        void initiateGracefulShutdown() {
+          // Step 1: Stop accepting new jobs
+          isWorkerAcceptingNewJobs = false;
+          // Step 2: Complete all in-flight jobs
+          inFlightJobs.clear();
+        }
 
-      initiateGracefulShutdown();
+        initiateGracefulShutdown();
 
-      expect(isWorkerAcceptingNewJobs, isFalse);
-      expect(inFlightJobs.isEmpty, isTrue);
-    });
+        expect(isWorkerAcceptingNewJobs, isFalse);
+        expect(inFlightJobs.isEmpty, isTrue);
+      },
+    );
 
-    test('Redis configuration guarantees durability: appendonly yes and appendfsync everysec', () {
-      const dockerRedisCommand = 'redis-server --appendonly yes --appendfsync everysec --requirepass zanko_secure_redis_2026';
-      expect(dockerRedisCommand, contains('--appendonly yes'));
-      expect(dockerRedisCommand, contains('--appendfsync everysec'));
-      expect(dockerRedisCommand, contains('--requirepass'));
-      // Verifies jobs persisted to disk survive container restart
-    });
+    test(
+      'Redis configuration guarantees durability: appendonly yes and appendfsync everysec',
+      () {
+        const dockerRedisCommand =
+            'redis-server --appendonly yes --appendfsync everysec --requirepass zanko_secure_redis_2026';
+        expect(dockerRedisCommand, contains('--appendonly yes'));
+        expect(dockerRedisCommand, contains('--appendfsync everysec'));
+        expect(dockerRedisCommand, contains('--requirepass'));
+        // Verifies jobs persisted to disk survive container restart
+      },
+    );
   });
 }

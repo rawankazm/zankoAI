@@ -16,7 +16,8 @@ class NotificationItem {
   final String title;
   final String body;
   final DateTime time;
-  final String category; // Admin Direct, Announcement, AI Tutor, Course, Quiz, Reminder
+  final String
+  category; // Admin Direct, Announcement, AI Tutor, Course, Quiz, Reminder
   final IconData icon;
   final Color color;
   bool isRead;
@@ -49,10 +50,29 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   final Set<String> _deletedDocIds = {};
 
   static const String _prefReadNotificationsKey = 'zanko_read_notifications_v1';
-  static const String _prefDeletedNotificationsKey = 'zanko_deleted_notifications_v1';
+  static const String _prefDeletedNotificationsKey =
+      'zanko_deleted_notifications_v1';
 
-  static const _filterKeys = ['all', 'unread', 'Admin Direct', 'Announcement', 'AI Tutor', 'Course', 'Quiz', 'Reminder'];
-  static const _filterLabels = ['هەموو', 'نەخوێنراو', '✉️ پەیامی ئەدمین', '🔔 ئاگاداری گشتی', '🤖 مامۆستا AI', '📚 وانە', '✏️ کویز', '⏰ بیرخستنەوە'];
+  static const _filterKeys = [
+    'all',
+    'unread',
+    'Admin Direct',
+    'Announcement',
+    'AI Tutor',
+    'Course',
+    'Quiz',
+    'Reminder',
+  ];
+  static const _filterLabels = [
+    'هەموو',
+    'نەخوێنراو',
+    '✉️ پەیامی ئەدمین',
+    '🔔 ئاگاداری گشتی',
+    '🤖 مامۆستا AI',
+    '📚 وانە',
+    '✏️ کویز',
+    '⏰ بیرخستنەوە',
+  ];
 
   @override
   void initState() {
@@ -66,7 +86,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       _readDocIds.addAll(prefs.getStringList(_prefReadNotificationsKey) ?? []);
-      _deletedDocIds.addAll(prefs.getStringList(_prefDeletedNotificationsKey) ?? []);
+      _deletedDocIds.addAll(
+        prefs.getStringList(_prefDeletedNotificationsKey) ?? [],
+      );
     } catch (_) {}
   }
 
@@ -99,7 +121,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           .limit(60);
       combinedList.addAll(sbData);
     } catch (e) {
-      debugPrint('[NotificationsScreen] Notice fetching Supabase notifications: $e');
+      debugPrint(
+        '[NotificationsScreen] Notice fetching Supabase notifications: $e',
+      );
     }
 
     // 2. Fetch from Firebase Firestore admin notifications & direct messages
@@ -110,15 +134,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       );
       combinedList.addAll(fsData);
     } catch (e) {
-      debugPrint('[NotificationsScreen] Notice fetching Firestore notifications: $e');
+      debugPrint(
+        '[NotificationsScreen] Notice fetching Firestore notifications: $e',
+      );
     }
 
-    debugPrint('[NotificationsScreen] Loaded ${combinedList.length} total notifications across sources');
+    debugPrint(
+      '[NotificationsScreen] Loaded ${combinedList.length} total notifications across sources',
+    );
     _processNotificationRows(combinedList, currentUserId);
   }
 
   void _listenToNotifications() {
-
     // 1. Instantly fetch current notifications across Supabase and Firestore
     _fetchInitialNotifications();
 
@@ -132,13 +159,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             _fetchInitialNotifications();
           },
           onError: (err) {
-            debugPrint('[NotificationsScreen] Supabase realtime stream notice: $err');
+            debugPrint(
+              '[NotificationsScreen] Supabase realtime stream notice: $err',
+            );
           },
         );
 
     // 3. Subscribe to Firestore admin panel live updates
     _firestoreUpdateSub?.cancel();
-    _firestoreUpdateSub = NotificationService().onNotificationsUpdated.listen((_) {
+    _firestoreUpdateSub = NotificationService().onNotificationsUpdated.listen((
+      _,
+    ) {
       _fetchInitialNotifications();
     });
   }
@@ -154,10 +185,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       final targetUserId = (row['user_id'] ?? row['userId'] ?? '').toString();
       if (targetUserId.isNotEmpty && targetUserId != currentUserId) continue;
 
-      final title = fixNotificationEncoding(row['title'] ?? '🔔 ئاگادارکردنەوە');
+      final title = fixNotificationEncoding(
+        row['title'] ?? '🔔 ئاگادارکردنەوە',
+      );
       final body = fixNotificationEncoding(row['body'] ?? row['message'] ?? '');
       final time = _parseTimestamp(row['created_at']);
-      final rawCat = (row['type'] ?? row['category'] ?? 'Announcement').toString().toLowerCase();
+      final rawCat = (row['type'] ?? row['category'] ?? 'Announcement')
+          .toString()
+          .toLowerCase();
 
       // Deduplicate identical title + body
       final dedupeKey = "${title.trim()}|||${body.trim()}";
@@ -190,18 +225,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         color = ZankoColors.primary;
       }
 
-      final isRead = row['is_read'] == true || (id.isNotEmpty && _readDocIds.contains(id));
+      final isRead =
+          row['is_read'] == true || (id.isNotEmpty && _readDocIds.contains(id));
 
-      _notifications.add(NotificationItem(
-        id: id.isNotEmpty ? id : dedupeKey,
-        title: title.toString(),
-        body: body.toString(),
-        time: time,
-        category: category,
-        icon: icon,
-        color: color,
-        isRead: isRead,
-      ));
+      _notifications.add(
+        NotificationItem(
+          id: id.isNotEmpty ? id : dedupeKey,
+          title: title.toString(),
+          body: body.toString(),
+          time: time,
+          category: category,
+          icon: icon,
+          color: color,
+          isRead: isRead,
+        ),
+      );
     }
 
     _notifications.sort((a, b) => b.time.compareTo(a.time));
@@ -235,7 +273,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     setState(() {});
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList(_prefReadNotificationsKey, _readDocIds.toList());
+      await prefs.setStringList(
+        _prefReadNotificationsKey,
+        _readDocIds.toList(),
+      );
     } catch (_) {}
   }
 
@@ -248,7 +289,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   String _formatDetailDate(DateTime time) {
-    final hour = time.hour == 0 ? 12 : (time.hour > 12 ? time.hour - 12 : time.hour);
+    final hour = time.hour == 0
+        ? 12
+        : (time.hour > 12 ? time.hour - 12 : time.hour);
     final minute = time.minute.toString().padLeft(2, '0');
     final period = time.hour >= 12 ? 'PM' : 'AM';
     return '${time.year}/${time.month.toString().padLeft(2, '0')}/${time.day.toString().padLeft(2, '0')} • $hour:$minute $period';
@@ -261,7 +304,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     _deletedDocIds.add(item.id);
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList(_prefDeletedNotificationsKey, _deletedDocIds.toList());
+      await prefs.setStringList(
+        _prefDeletedNotificationsKey,
+        _deletedDocIds.toList(),
+      );
     } catch (_) {}
 
     Supabase.instance.client
@@ -284,7 +330,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           .catchError((_) {});
       try {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setStringList(_prefReadNotificationsKey, _readDocIds.toList());
+        await prefs.setStringList(
+          _prefReadNotificationsKey,
+          _readDocIds.toList(),
+        );
       } catch (_) {}
     }
 
@@ -336,11 +385,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: item.color.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: item.color.withValues(alpha: 0.3)),
+                          border: Border.all(
+                            color: item.color.withValues(alpha: 0.3),
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -348,7 +402,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             Icon(item.icon, size: 16, color: item.color),
                             const SizedBox(width: 6),
                             Text(
-                              item.category == 'Admin Direct' ? 'پەیامی فەرمی ئەدمین' : item.category,
+                              item.category == 'Admin Direct'
+                                  ? 'پەیامی فەرمی ئەدمین'
+                                  : item.category,
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
@@ -365,7 +421,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                          color: isDark
+                              ? Colors.grey[400]
+                              : ZankoColors.textSecondary,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -374,7 +432,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.08)
+                                : Colors.black.withValues(alpha: 0.05),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -406,7 +466,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
                             height: 1.4,
-                            color: isDark ? Colors.white : ZankoColors.textPrimary,
+                            color: isDark
+                                ? Colors.white
+                                : ZankoColors.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -416,19 +478,27 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           width: double.infinity,
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF14171D) : const Color(0xFFF7F8FA),
+                            color: isDark
+                                ? const Color(0xFF14171D)
+                                : const Color(0xFFF7F8FA),
                             borderRadius: BorderRadius.circular(18),
                             border: Border.all(
-                              color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.05),
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.06)
+                                  : Colors.black.withValues(alpha: 0.05),
                             ),
                           ),
                           child: SelectableText(
-                            item.body.isNotEmpty ? item.body : 'هیچ دەقێکی زیادە نییە.',
+                            item.body.isNotEmpty
+                                ? item.body
+                                : 'هیچ دەقێکی زیادە نییە.',
                             style: TextStyle(
                               fontSize: 15,
                               height: 1.6,
                               fontWeight: FontWeight.w400,
-                              color: isDark ? Colors.grey[200] : const Color(0xFF222831),
+                              color: isDark
+                                  ? Colors.grey[200]
+                                  : const Color(0xFF222831),
                             ),
                           ),
                         ),
@@ -441,14 +511,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
                 // Action Toolbar (Copy, Delete)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 14,
+                  ),
                   child: Row(
                     children: [
                       // 1. Copy
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: () {
-                            Clipboard.setData(ClipboardData(text: "${item.title}\n\n${item.body}"));
+                            Clipboard.setData(
+                              ClipboardData(
+                                text: "${item.title}\n\n${item.body}",
+                              ),
+                            );
                             HapticFeedback.lightImpact();
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -461,13 +538,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           icon: const Icon(CupertinoIcons.doc_on_doc, size: 17),
                           label: const Text(
                             'کۆپیکردنی دەق',
-                            style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: ZankoColors.primary,
                             foregroundColor: Colors.white,
                             elevation: 0,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                         ),
@@ -489,11 +571,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             );
                           }
                         },
-                        icon: const Icon(CupertinoIcons.trash, color: Colors.redAccent, size: 20),
+                        icon: const Icon(
+                          CupertinoIcons.trash,
+                          color: Colors.redAccent,
+                          size: 20,
+                        ),
                         tooltip: 'سڕینەوە',
                         style: IconButton.styleFrom(
-                          backgroundColor: Colors.redAccent.withValues(alpha: 0.12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          backgroundColor: Colors.redAccent.withValues(
+                            alpha: 0.12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                           padding: const EdgeInsets.all(12),
                         ),
                       ),
@@ -521,7 +611,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
+      backgroundColor: isDark
+          ? ZankoColors.darkBackground
+          : ZankoColors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -583,7 +675,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       onTap: () => setState(() => _selectedCategory = key),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: isSelected
                               ? ZankoColors.primary
@@ -593,17 +688,23 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           border: Border.all(
                             color: isSelected
                                 ? ZankoColors.primary
-                                : (isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFEFEFF5)),
+                                : (isDark
+                                      ? Colors.white.withValues(alpha: 0.08)
+                                      : const Color(0xFFEFEFF5)),
                           ),
                         ),
                         child: Text(
                           label,
                           style: TextStyle(
                             fontSize: 12,
-                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w600,
                             color: isSelected
                                 ? Colors.white
-                                : (isDark ? Colors.grey[300] : ZankoColors.textPrimary),
+                                : (isDark
+                                      ? Colors.grey[300]
+                                      : ZankoColors.textPrimary),
                           ),
                         ),
                       ),
@@ -625,9 +726,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 },
                 child: filtered.isEmpty
                     ? ListView(
-                        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                        physics: const AlwaysScrollableScrollPhysics(
+                          parent: BouncingScrollPhysics(),
+                        ),
                         children: [
-                          SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.2,
+                          ),
                           Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -635,7 +740,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                 Icon(
                                   CupertinoIcons.bell_slash,
                                   size: 54,
-                                  color: isDark ? Colors.grey[700] : Colors.grey[300],
+                                  color: isDark
+                                      ? Colors.grey[700]
+                                      : Colors.grey[300],
                                 ),
                                 const SizedBox(height: 14),
                                 Text(
@@ -643,7 +750,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w700,
-                                    color: isDark ? Colors.grey[400] : ZankoColors.textPrimary,
+                                    color: isDark
+                                        ? Colors.grey[400]
+                                        : ZankoColors.textPrimary,
                                   ),
                                 ),
                                 const SizedBox(height: 6),
@@ -651,7 +760,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                   'پەیامە فەرمییەکان و ئاگادارییەکان لێرەدا ڕاستەوخۆ دەردەکەون',
                                   style: TextStyle(
                                     fontSize: 13,
-                                    color: isDark ? Colors.grey[600] : Colors.grey[500],
+                                    color: isDark
+                                        ? Colors.grey[600]
+                                        : Colors.grey[500],
                                   ),
                                 ),
                               ],
@@ -660,8 +771,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         ],
                       )
                     : ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                        physics: const AlwaysScrollableScrollPhysics(
+                          parent: BouncingScrollPhysics(),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 6,
+                        ),
                         itemCount: filtered.length,
                         itemBuilder: (context, index) {
                           final item = filtered[index];
@@ -670,20 +786,31 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             direction: DismissDirection.endToStart,
                             background: Container(
                               alignment: Alignment.centerRight,
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
                               margin: const EdgeInsets.only(bottom: 12),
                               decoration: BoxDecoration(
-                                color: ZankoColors.error.withValues(alpha: 0.85),
+                                color: ZankoColors.error.withValues(
+                                  alpha: 0.85,
+                                ),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: const Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-                                  Icon(CupertinoIcons.delete, color: Colors.white, size: 22),
+                                  Icon(
+                                    CupertinoIcons.delete,
+                                    color: Colors.white,
+                                    size: 22,
+                                  ),
                                   SizedBox(width: 8),
                                   Text(
                                     'سڕینەوە',
-                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -696,114 +823,120 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               child: AppCard(
                                 padding: const EdgeInsets.all(16),
                                 onTap: () => _showNotificationDetail(item),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Category Icon Avatar
-                                  Container(
-                                    width: 44,
-                                    height: 44,
-                                    decoration: BoxDecoration(
-                                      color: item.color.withValues(alpha: 0.12),
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
-                                    child: Icon(
-                                      item.icon,
-                                      color: item.color,
-                                      size: 22,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 14),
-
-                                  // Details
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                item.title,
-                                                style: TextStyle(
-                                                  fontSize: 14.5,
-                                                  fontWeight: item.isRead
-                                                      ? FontWeight.w600
-                                                      : FontWeight.w800,
-                                                  color: isDark
-                                                      ? Colors.white
-                                                      : ZankoColors.textPrimary,
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 6),
-                                            Text(
-                                              _formatTime(item.time),
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w500,
-                                                color: ZankoColors.textSecondary,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          item.body,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontSize: 12.5,
-                                            height: 1.38,
-                                            color: isDark
-                                                ? Colors.grey[400]
-                                                : ZankoColors.textSecondary,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Row(
-                                          children: [
-                                            Text(
-                                              'بۆ خوێندنەوەی تەواو لێبدە',
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w600,
-                                                color: ZankoColors.primary,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Icon(
-                                              CupertinoIcons.chevron_left,
-                                              size: 11,
-                                              color: ZankoColors.primary,
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  // Unread Dot Indicator
-                                  if (!item.isRead) ...[
-                                    const SizedBox(width: 8),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Category Icon Avatar
                                     Container(
-                                      width: 8,
-                                      height: 8,
-                                      margin: const EdgeInsets.only(top: 4),
+                                      width: 44,
+                                      height: 44,
                                       decoration: BoxDecoration(
-                                        color: ZankoColors.primary,
-                                        shape: BoxShape.circle,
+                                        color: item.color.withValues(
+                                          alpha: 0.12,
+                                        ),
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      child: Icon(
+                                        item.icon,
+                                        color: item.color,
+                                        size: 22,
                                       ),
                                     ),
+                                    const SizedBox(width: 14),
+
+                                    // Details
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  item.title,
+                                                  style: TextStyle(
+                                                    fontSize: 14.5,
+                                                    fontWeight: item.isRead
+                                                        ? FontWeight.w600
+                                                        : FontWeight.w800,
+                                                    color: isDark
+                                                        ? Colors.white
+                                                        : ZankoColors
+                                                              .textPrimary,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                _formatTime(item.time),
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w500,
+                                                  color:
+                                                      ZankoColors.textSecondary,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            item.body,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: 12.5,
+                                              height: 1.38,
+                                              color: isDark
+                                                  ? Colors.grey[400]
+                                                  : ZankoColors.textSecondary,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Row(
+                                            children: [
+                                              Text(
+                                                'بۆ خوێندنەوەی تەواو لێبدە',
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: ZankoColors.primary,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Icon(
+                                                CupertinoIcons.chevron_left,
+                                                size: 11,
+                                                color: ZankoColors.primary,
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    // Unread Dot Indicator
+                                    if (!item.isRead) ...[
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        margin: const EdgeInsets.only(top: 4),
+                                        decoration: BoxDecoration(
+                                          color: ZankoColors.primary,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                    ],
                                   ],
-                                ],
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
+                          );
+                        },
+                      ),
               ),
             ),
           ],

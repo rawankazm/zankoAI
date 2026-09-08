@@ -50,7 +50,8 @@ class HomeworkService {
       if (course != null && course.isNotEmpty) 'course': course,
     };
 
-    final hasImage = (kIsWeb && imageBytes != null) || (!kIsWeb && imageFile != null);
+    final hasImage =
+        (kIsWeb && imageBytes != null) || (!kIsWeb && imageFile != null);
     dynamic bodyData;
 
     if (hasImage) {
@@ -109,7 +110,8 @@ class HomeworkService {
       }
       if (dioErr.response?.statusCode == 429) {
         throw Exception(
-            'بەشی ڕۆژانەی پرسیارەکانت (Homework) تەواو بووە. تکایە پاشتر تاقی بکەرەوە.');
+          'بەشی ڕۆژانەی پرسیارەکانت (Homework) تەواو بووە. تکایە پاشتر تاقی بکەرەوە.',
+        );
       }
       throw Exception('هەڵەی پەیوەندی بە سێرڤەر: ${dioErr.message}');
     }

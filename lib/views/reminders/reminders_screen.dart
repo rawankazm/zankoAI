@@ -54,9 +54,17 @@ class _RemindersScreenState extends State<RemindersScreen> {
     final title = _taskController.text.trim();
     final course = _courseController.text.trim();
 
-    if (title.isEmpty || course.isEmpty || _selectedDate == null || _selectedTime == null) {
+    if (title.isEmpty ||
+        course.isEmpty ||
+        _selectedDate == null ||
+        _selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t('snackbar_fill_all_fields'), style: const TextStyle())),
+        SnackBar(
+          content: Text(
+            t('snackbar_fill_all_fields'),
+            style: const TextStyle(),
+          ),
+        ),
       );
       return;
     }
@@ -92,11 +100,16 @@ class _RemindersScreenState extends State<RemindersScreen> {
       _selectedDate = null;
       _selectedTime = null;
     });
-    
+
     Navigator.pop(context);
   }
 
-  void _showAddTaskSheet(BuildContext context, DatabaseService dbService, String Function(String) t, LanguageProvider lang) {
+  void _showAddTaskSheet(
+    BuildContext context,
+    DatabaseService dbService,
+    String Function(String) t,
+    LanguageProvider lang,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -119,25 +132,38 @@ class _RemindersScreenState extends State<RemindersScreen> {
                     children: [
                       Text(
                         t('reminders_add_title'),
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       TextField(
                         controller: _taskController,
-                        decoration: InputDecoration(labelText: Provider.of<LanguageProvider>(context, listen: false).translate('task_subject_label')),
+                        decoration: InputDecoration(
+                          labelText: Provider.of<LanguageProvider>(
+                            context,
+                            listen: false,
+                          ).translate('task_subject_label'),
+                        ),
                       ),
                       const SizedBox(height: 12),
                       TextField(
                         controller: _courseController,
-                        decoration: InputDecoration(labelText: Provider.of<LanguageProvider>(context, listen: false).translate('course_name_label')),
+                        decoration: InputDecoration(
+                          labelText: Provider.of<LanguageProvider>(
+                            context,
+                            listen: false,
+                          ).translate('course_name_label'),
+                        ),
                       ),
                       const SizedBox(height: 16),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            _selectedDate == null 
-                                ? t('reminders_no_deadline') 
+                            _selectedDate == null
+                                ? t('reminders_no_deadline')
                                 : '${t('add')}: ${_selectedDate!.year}-${_selectedDate!.month}-${_selectedDate!.day}  ${_selectedTime?.format(context) ?? ""}',
                             style: const TextStyle(fontSize: 13),
                           ),
@@ -190,7 +216,8 @@ class _RemindersScreenState extends State<RemindersScreen> {
     final days = diff.inDays;
     final hours = diff.inHours % 24;
 
-    return lang.translate('reminders_time_left')
+    return lang
+        .translate('reminders_time_left')
         .replaceAll('{days}', days.toString())
         .replaceAll('{hours}', hours.toString());
   }
@@ -211,8 +238,12 @@ class _RemindersScreenState extends State<RemindersScreen> {
     String t(String key) => langProvider.translate(key);
 
     // Filter active and completed
-    final activeTasks = dbService.reminders.where((r) => !r.isCompleted).toList();
-    final completedTasks = dbService.reminders.where((r) => r.isCompleted).toList();
+    final activeTasks = dbService.reminders
+        .where((r) => !r.isCompleted)
+        .toList();
+    final completedTasks = dbService.reminders
+        .where((r) => r.isCompleted)
+        .toList();
 
     // Translations
     final String title = t('reminders_title');
@@ -223,9 +254,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
     return Directionality(
       textDirection: langProvider.textDirection,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(title),
-        ),
+        appBar: AppBar(title: Text(title)),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -249,7 +278,10 @@ class _RemindersScreenState extends State<RemindersScreen> {
                 )
               else
                 ...activeTasks.map((reminder) {
-                  final countdown = _formatCountdown(reminder.deadline, langProvider);
+                  final countdown = _formatCountdown(
+                    reminder.deadline,
+                    langProvider,
+                  );
                   final color = _getCountdownColor(reminder.deadline);
 
                   return Card(
@@ -263,7 +295,10 @@ class _RemindersScreenState extends State<RemindersScreen> {
                       ),
                       title: Text(
                         reminder.title,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
                       ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -274,7 +309,10 @@ class _RemindersScreenState extends State<RemindersScreen> {
                           ),
                           const SizedBox(height: 4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: color.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(6),
@@ -284,14 +322,19 @@ class _RemindersScreenState extends State<RemindersScreen> {
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
-                                color: theme.brightness == Brightness.dark ? color : color.withRed(150),
+                                color: theme.brightness == Brightness.dark
+                                    ? color
+                                    : color.withRed(150),
                               ),
                             ),
                           ),
                         ],
                       ),
                       trailing: IconButton(
-                        icon: const Icon(Icons.delete_outline, color: Colors.red),
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.red,
+                        ),
                         onPressed: () {
                           dbService.deleteReminder(reminder.id);
                         },
@@ -299,7 +342,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
                     ),
                   );
                 }),
-              
+
               const SizedBox(height: 24),
 
               // Completed Tasks Header
@@ -334,7 +377,10 @@ class _RemindersScreenState extends State<RemindersScreen> {
                         style: const TextStyle(fontSize: 11),
                       ),
                       trailing: IconButton(
-                        icon: const Icon(Icons.delete_outline, color: Colors.red),
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.red,
+                        ),
                         onPressed: () {
                           dbService.deleteReminder(reminder.id);
                         },
@@ -348,7 +394,8 @@ class _RemindersScreenState extends State<RemindersScreen> {
         ),
         floatingActionButton: FloatingActionButton(
           heroTag: 'fab_reminders_unique',
-          onPressed: () => _showAddTaskSheet(context, dbService, t, langProvider),
+          onPressed: () =>
+              _showAddTaskSheet(context, dbService, t, langProvider),
           child: const Icon(Icons.add),
         ),
       ),

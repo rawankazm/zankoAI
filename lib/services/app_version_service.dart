@@ -42,15 +42,18 @@ class AppVersionService extends ChangeNotifier {
           .eq('key', 'version_config')
           .maybeSingle()
           .then((data) {
-        if (data != null) {
-          final info = _evaluateVersion(data);
-          _updateInfo = info;
-          notifyListeners();
-          if (info.isUpdateAvailable && info.isForced && onUpdateRequired != null) {
-            onUpdateRequired(info);
-          }
-        }
-      }).catchError((_) {});
+            if (data != null) {
+              final info = _evaluateVersion(data);
+              _updateInfo = info;
+              notifyListeners();
+              if (info.isUpdateAvailable &&
+                  info.isForced &&
+                  onUpdateRequired != null) {
+                onUpdateRequired(info);
+              }
+            }
+          })
+          .catchError((_) {});
     } catch (e) {
       debugPrint('AppVersionService startListening error: $e');
     }
@@ -86,12 +89,24 @@ class AppVersionService extends ChangeNotifier {
   }
 
   AppUpdateInfo _evaluateVersion(Map<String, dynamic> data) {
-    final remoteVersion = (data['app_version'] ?? data['latest_version'] ?? currentAppVersion).toString().trim();
-    final minRequired = (data['min_required_version'] ?? '1.0.0').toString().trim();
+    final remoteVersion =
+        (data['app_version'] ?? data['latest_version'] ?? currentAppVersion)
+            .toString()
+            .trim();
+    final minRequired = (data['min_required_version'] ?? '1.0.0')
+        .toString()
+        .trim();
     final forceUpdateFlag = data['force_update'] == true;
-    final updateUrl = (data['update_url'] ?? 'https://play.google.com/store/apps/details?id=com.zankoai.app').toString();
-    final title = (data['update_title'] ?? '🚀 نوێکارییەکی نوێ بەردەستە!').toString();
-    final notes = (data['update_notes'] ?? 'تایبەتمەندی نوێ زیادکراوە و خێرایی ئەپەکە بەرزکراوەتەوە.').toString();
+    final updateUrl =
+        (data['update_url'] ??
+                'https://play.google.com/store/apps/details?id=com.zankoai.app')
+            .toString();
+    final title = (data['update_title'] ?? '🚀 نوێکارییەکی نوێ بەردەستە!')
+        .toString();
+    final notes =
+        (data['update_notes'] ??
+                'تایبەتمەندی نوێ زیادکراوە و خێرایی ئەپەکە بەرزکراوەتەوە.')
+            .toString();
 
     final isNewer = _isVersionGreater(remoteVersion, currentAppVersion);
     final isBelowMin = _isVersionGreater(minRequired, currentAppVersion);
@@ -129,5 +144,4 @@ class AppVersionService extends ChangeNotifier {
     } catch (_) {}
     return false;
   }
-
 }

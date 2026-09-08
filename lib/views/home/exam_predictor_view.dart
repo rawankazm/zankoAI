@@ -30,7 +30,11 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${Provider.of<LanguageProvider>(context, listen: false).translate('error')}: $e')),
+        SnackBar(
+          content: Text(
+            '${Provider.of<LanguageProvider>(context, listen: false).translate('error')}: $e',
+          ),
+        ),
       );
     }
   }
@@ -39,7 +43,14 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
     final notes = _textController.text.trim();
     if (notes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(Provider.of<LanguageProvider>(context, listen: false).translate('please_enter_notes'))),
+        SnackBar(
+          content: Text(
+            Provider.of<LanguageProvider>(
+              context,
+              listen: false,
+            ).translate('please_enter_notes'),
+          ),
+        ),
       );
       return;
     }
@@ -51,7 +62,10 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
 
     try {
       final aiService = Provider.of<AiService>(context, listen: false);
-      final res = await aiService.predictExam(_fileName.isNotEmpty ? _fileName : 'CustomNotes.txt', notes);
+      final res = await aiService.predictExam(
+        _fileName.isNotEmpty ? _fileName : 'CustomNotes.txt',
+        notes,
+      );
       setState(() {
         _predictionResult = res['prediction'] ?? '';
       });
@@ -86,9 +100,7 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
     return Directionality(
       textDirection: langProvider.textDirection,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(title),
-        ),
+        appBar: AppBar(title: Text(title)),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -96,20 +108,26 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
             children: [
               // Info Card
               Card(
-                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.2),
+                color: theme.colorScheme.primaryContainer.withValues(
+                  alpha: 0.2,
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Row(
                     children: [
-                      Icon(Icons.psychology_outlined, color: theme.colorScheme.primary, size: 36),
+                      Icon(
+                        Icons.psychology_outlined,
+                        color: theme.colorScheme.primary,
+                        size: 36,
+                      ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Text(
                           t('exam_predictor_info'),
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          color: theme.colorScheme.onSurfaceVariant,
-                          height: 1.5,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: theme.colorScheme.onSurfaceVariant,
+                            height: 1.5,
                           ),
                         ),
                       ),
@@ -122,7 +140,10 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
               // Text Field Input
               Text(
                 inputLabel,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, ),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
               ),
               const SizedBox(height: 8),
               TextField(
@@ -130,7 +151,7 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
                 maxLines: 8,
                 decoration: InputDecoration(
                   hintText: t('exam_predictor_hint'),
-                  hintStyle: const TextStyle(fontSize: 13, ),
+                  hintStyle: const TextStyle(fontSize: 13),
                 ),
                 style: const TextStyle(fontSize: 14),
               ),
@@ -139,7 +160,10 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
               Center(
                 child: Text(
                   orLabel,
-                  style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.primary.withValues(alpha: 0.6)),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary.withValues(alpha: 0.6),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -153,7 +177,9 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
                   label: Text(uploadButton, style: const TextStyle()),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(0, 50),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -161,7 +187,11 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
                 const SizedBox(height: 8),
                 Text(
                   '📂 $_fileName',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.teal),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.teal,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -176,15 +206,23 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
                     backgroundColor: theme.colorScheme.primary,
                     foregroundColor: Colors.white,
                     minimumSize: const Size(0, 52),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: _isLoading
                       ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
                         )
-                      : Text(predictButton, style: const TextStyle(fontSize: 15, )),
+                      : Text(
+                          predictButton,
+                          style: const TextStyle(fontSize: 15),
+                        ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -198,7 +236,10 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
                       const SizedBox(height: 16),
                       Text(
                         loadingText,
-                        style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic, ),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -210,21 +251,23 @@ class _ExamPredictorViewState extends State<ExamPredictorView> {
               if (_predictionResult.isNotEmpty) ...[
                 Text(
                   resultLabel,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, ),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
                 ),
                 const SizedBox(height: 10),
                 Card(
                   elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: SelectionArea(
                       child: Text(
                         _predictionResult,
-                        style: const TextStyle(
-                          fontSize: 13.5,
-                          height: 1.6,
-                        ),
+                        style: const TextStyle(fontSize: 13.5, height: 1.6),
                       ),
                     ),
                   ),

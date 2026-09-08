@@ -10,7 +10,8 @@ class NotificationBackendService {
   final Dio? _customDio;
   NotificationBackendService({Dio? dio}) : _customDio = dio;
   NotificationBackendService._() : _customDio = null;
-  static final NotificationBackendService instance = NotificationBackendService._();
+  static final NotificationBackendService instance =
+      NotificationBackendService._();
 
   Dio get _dio => _customDio ?? ApiClient().dio;
 
@@ -52,7 +53,9 @@ class NotificationBackendService {
 
   /// Marks a specific notification as read.
   Future<AppNotificationModel> markAsRead(String id) async {
-    final response = await _dio.patch<Map<String, dynamic>>('/notifications/$id/read');
+    final response = await _dio.patch<Map<String, dynamic>>(
+      '/notifications/$id/read',
+    );
     final data = response.data!['data'] as Map<String, dynamic>;
     return AppNotificationModel.fromJson(data);
   }
@@ -69,7 +72,9 @@ class NotificationBackendService {
 
   /// Retrieves user notification preferences.
   Future<NotificationPreferencesModel> getPreferences() async {
-    final response = await _dio.get<Map<String, dynamic>>('/notifications/preferences');
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/notifications/preferences',
+    );
     final data = response.data!['data'] as Map<String, dynamic>;
     return NotificationPreferencesModel.fromJson(data);
   }
@@ -100,7 +105,10 @@ class NotificationBackendService {
       'app_version': ?appVersion,
     };
 
-    final response = await _dio.post<Map<String, dynamic>>('/devices', data: payload);
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/devices',
+      data: payload,
+    );
     return response.data?['data'] as Map<String, dynamic>? ?? {};
   }
 
@@ -118,7 +126,10 @@ class NotificationBackendService {
       'app_version': ?appVersion,
     };
 
-    await _dio.post<Map<String, dynamic>>('/notifications/devices', data: payload);
+    await _dio.post<Map<String, dynamic>>(
+      '/notifications/devices',
+      data: payload,
+    );
   }
 
   /// Unregisters or deletes a device by its record ID, device_id, or token (DELETE /devices/:id).

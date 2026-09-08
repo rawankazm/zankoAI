@@ -30,7 +30,8 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
   int _getPlanDays(String? plan) {
     if (plan == '9_months' || plan == '9months') return 270;
     if (plan == 'yearly' || plan == 'annual') return 365;
-    if (plan == '3_months' || plan == 'semester' || plan == '3months') return 90;
+    if (plan == '3_months' || plan == 'semester' || plan == '3months')
+      return 90;
     return 30; // default 1_month / monthly
   }
 
@@ -64,7 +65,8 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
       final planDays = _getPlanDays(plan);
 
       DateTime baseDate = DateTime.now();
-      if (existingExpiresAt is DateTime && existingExpiresAt.isAfter(DateTime.now())) {
+      if (existingExpiresAt is DateTime &&
+          existingExpiresAt.isAfter(DateTime.now())) {
         baseDate = existingExpiresAt;
       } else if (existingExpiresAt is String) {
         final parsed = DateTime.tryParse(existingExpiresAt);
@@ -75,34 +77,36 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
       final expiresAt = baseDate.add(Duration(days: planDays));
 
       // 1. Update payment_transactions doc
-      await Supabase.instance.client.from('payment_transactions').update({
-        'status': 'COMPLETED',
-        'metadata': {
-          'approvedBy': adminEmail,
-          'approvedAt': DateTime.now().toIso8601String(),
-          'expiresAt': expiresAt.toIso8601String(),
-          'planDays': planDays,
-        },
-      }).eq('id', requestId);
+      await Supabase.instance.client
+          .from('payment_transactions')
+          .update({
+            'status': 'COMPLETED',
+            'metadata': {
+              'approvedBy': adminEmail,
+              'approvedAt': DateTime.now().toIso8601String(),
+              'expiresAt': expiresAt.toIso8601String(),
+              'planDays': planDays,
+            },
+          })
+          .eq('id', requestId);
 
       // 2. Immediately update user document so auth stream instantly grants VIP
-      await Supabase.instance.client.from('profiles').update({
-        'is_vip': true,
-        'vip_status': 'active',
-        'vip_expiry': expiresAt.toIso8601String(),
-        'plan': 'premium',
-      }).eq('id', userId);
+      await Supabase.instance.client
+          .from('profiles')
+          .update({
+            'is_vip': true,
+            'vip_status': 'active',
+            'vip_expiry': expiresAt.toIso8601String(),
+            'plan': 'premium',
+          })
+          .eq('id', userId);
 
       // 3. Sync through RPC to update subscriptions table
       try {
         final dbPlan = planDays >= 250 ? 'PREMIUM_YEARLY' : 'PREMIUM_MONTHLY';
         await Supabase.instance.client.rpc(
           'sync_admin_approved_vip',
-          params: {
-            'p_user_id': userId,
-            'p_plan': dbPlan,
-            'p_days': planDays,
-          },
+          params: {'p_user_id': userId, 'p_plan': dbPlan, 'p_days': planDays},
         );
       } catch (_) {}
 
@@ -110,7 +114,8 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
       await Supabase.instance.client.from('notifications').insert({
         'user_id': userId,
         'title': '🎉 پیرۆزە! هەژمارەکەت بوو بە VIP',
-        'body': 'داواکاری بەشداریکردنی VIPەکەت لەلایەن بەڕێوەبەرەوە پەسەندکرا. ئێستا دەتوانیت لە هەموو تایبەتمەندییە بێسنوورەکانی ZankoAI سوودمەند بیت!',
+        'body':
+            'داواکاری بەشداریکردنی VIPەکەت لەلایەن بەڕێوەبەرەوە پەسەندکرا. ئێستا دەتوانیت لە هەموو تایبەتمەندییە بێسنوورەکانی ZankoAI سوودمەند بیت!',
         'type': 'vip_approved',
       });
 
@@ -128,7 +133,9 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
             ),
             backgroundColor: ZankoColors.success,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -181,8 +188,13 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
               decoration: InputDecoration(
                 hintText: 'هۆکاری ڕەتکردنەوە (ئارەزوومەندانە)...',
                 hintStyle: const TextStyle(fontSize: 12),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
               ),
             ),
           ],
@@ -190,15 +202,23 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('پاشگەزبوونەوە', style: TextStyle(color: Colors.grey)),
+            child: const Text(
+              'پاشگەزبوونەوە',
+              style: TextStyle(color: Colors.grey),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-            child: const Text('ڕەتکردنەوە', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'ڕەتکردنەوە',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -207,26 +227,29 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
     if (confirmed != true) return;
 
     setState(() => _processingIds[requestId] = true);
-    final reason = reasonController.text.trim().isNotEmpty ? reasonController.text.trim() : 'وەسڵی پارەدان یان ژمارەی حەواڵە نادروستە';
+    final reason = reasonController.text.trim().isNotEmpty
+        ? reasonController.text.trim()
+        : 'وەسڵی پارەدان یان ژمارەی حەواڵە نادروستە';
 
     try {
-
       // 1. Update payment_transactions doc
-      await Supabase.instance.client.from('payment_transactions').update({
-        'status': 'FAILED',
-        'metadata': {
-          'rejectedBy': adminEmail,
-          'rejectedAt': DateTime.now().toIso8601String(),
-          'rejectionReason': reason,
-        },
-      }).eq('id', requestId);
+      await Supabase.instance.client
+          .from('payment_transactions')
+          .update({
+            'status': 'FAILED',
+            'metadata': {
+              'rejectedBy': adminEmail,
+              'rejectedAt': DateTime.now().toIso8601String(),
+              'rejectionReason': reason,
+            },
+          })
+          .eq('id', requestId);
 
       // 2. Update user doc
-      await Supabase.instance.client.from('profiles').update({
-        'is_vip': false,
-        'vip_status': 'none',
-        'plan': 'free',
-      }).eq('id', userId);
+      await Supabase.instance.client
+          .from('profiles')
+          .update({'is_vip': false, 'vip_status': 'none', 'plan': 'free'})
+          .eq('id', userId);
 
       // 3. Send notification to user
       await Supabase.instance.client.from('notifications').insert({
@@ -275,7 +298,10 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
                 children: [
                   Text(
                     'وەسڵی پارەدانی $userName',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close_rounded),
@@ -288,14 +314,27 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
                 borderRadius: BorderRadius.circular(16),
                 child: InteractiveViewer(
                   maxScale: 4.0,
-                  child: imageUrl.startsWith('data:image/') || !imageUrl.startsWith('http')
+                  child:
+                      imageUrl.startsWith('data:image/') ||
+                          !imageUrl.startsWith('http')
                       ? (() {
                           try {
-                            final base64Clean = imageUrl.contains(',') ? imageUrl.split(',').last : imageUrl;
+                            final base64Clean = imageUrl.contains(',')
+                                ? imageUrl.split(',').last
+                                : imageUrl;
                             final bytes = base64Decode(base64Clean);
-                            return Image.memory(bytes, fit: BoxFit.contain, height: 400);
+                            return Image.memory(
+                              bytes,
+                              fit: BoxFit.contain,
+                              height: 400,
+                            );
                           } catch (_) {
-                            return const SizedBox(height: 150, child: Center(child: Text('⚠️ وێنەی وەسڵ نەکرایەوە')));
+                            return const SizedBox(
+                              height: 150,
+                              child: Center(
+                                child: Text('⚠️ وێنەی وەسڵ نەکرایەوە'),
+                              ),
+                            );
                           }
                         })()
                       : Image.network(
@@ -306,15 +345,18 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
                             if (progress == null) return child;
                             return const SizedBox(
                               height: 200,
-                              child: Center(child: CupertinoActivityIndicator()),
+                              child: Center(
+                                child: CupertinoActivityIndicator(),
+                              ),
                             );
                           },
-                          errorBuilder: (context, error, stackTrace) => const SizedBox(
-                            height: 150,
-                            child: Center(
-                              child: Text('⚠️ وێنەی وەسڵ نەکرایەوە'),
-                            ),
-                          ),
+                          errorBuilder: (context, error, stackTrace) =>
+                              const SizedBox(
+                                height: 150,
+                                child: Center(
+                                  child: Text('⚠️ وێنەی وەسڵ نەکرایەوە'),
+                                ),
+                              ),
                         ),
                 ),
               ),
@@ -344,16 +386,22 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         ),
         child: StreamBuilder<List<Map<String, dynamic>>>(
-          stream: Supabase.instance.client.from('payment_transactions').stream(primaryKey: ['id']),
+          stream: Supabase.instance.client
+              .from('payment_transactions')
+              .stream(primaryKey: ['id']),
           builder: (context, snapshot) {
-            final allDocs = List<Map<String, dynamic>>.from(snapshot.data ?? []);
-            
+            final allDocs = List<Map<String, dynamic>>.from(
+              snapshot.data ?? [],
+            );
+
             final pendingDocs = allDocs.where((d) {
-              return (d['status'] as String? ?? 'pending').toLowerCase() == 'pending';
+              return (d['status'] as String? ?? 'pending').toLowerCase() ==
+                  'pending';
             }).toList();
 
             final approvedDocs = allDocs.where((d) {
-              return (d['status'] as String? ?? '').toLowerCase() == 'completed';
+              return (d['status'] as String? ?? '').toLowerCase() ==
+                  'completed';
             }).toList();
 
             final rejectedDocs = allDocs.where((d) {
@@ -372,8 +420,12 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
             }
 
             displayedDocs.sort((a, b) {
-              final aTime = DateTime.tryParse(a['created_at']?.toString() ?? '') ?? DateTime.now();
-              final bTime = DateTime.tryParse(b['created_at']?.toString() ?? '') ?? DateTime.now();
+              final aTime =
+                  DateTime.tryParse(a['created_at']?.toString() ?? '') ??
+                  DateTime.now();
+              final bTime =
+                  DateTime.tryParse(b['created_at']?.toString() ?? '') ??
+                  DateTime.now();
               return bTime.compareTo(aTime);
             });
 
@@ -401,7 +453,9 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFD700).withValues(alpha: 0.18),
+                          color: const Color(
+                            0xFFFFD700,
+                          ).withValues(alpha: 0.18),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: const Text('👑', style: TextStyle(fontSize: 22)),
@@ -416,19 +470,29 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
                               style: TextStyle(
                                 fontSize: 17,
                                 fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white : ZankoColors.textPrimary,
+                                color: isDark
+                                    ? Colors.white
+                                    : ZankoColors.textPrimary,
                               ),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               'پەسەندکردنی ڕاستەوخۆی بەشداریکردنی قوتابیان',
-                              style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : ZankoColors.textSecondary),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark
+                                    ? Colors.grey[400]
+                                    : ZankoColors.textSecondary,
+                              ),
                             ),
                           ],
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(CupertinoIcons.xmark_circle_fill, color: Colors.grey),
+                        icon: const Icon(
+                          CupertinoIcons.xmark_circle_fill,
+                          color: Colors.grey,
+                        ),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ],
@@ -442,13 +506,33 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     children: [
-                      _buildFilterChip('pending', 'چاوەڕوانکراو (${pendingDocs.length})', Icons.hourglass_top_rounded, Colors.orange),
+                      _buildFilterChip(
+                        'pending',
+                        'چاوەڕوانکراو (${pendingDocs.length})',
+                        Icons.hourglass_top_rounded,
+                        Colors.orange,
+                      ),
                       const SizedBox(width: 8),
-                      _buildFilterChip('approved', 'پەسەندکراو (${approvedDocs.length})', Icons.check_circle_rounded, Colors.green),
+                      _buildFilterChip(
+                        'approved',
+                        'پەسەندکراو (${approvedDocs.length})',
+                        Icons.check_circle_rounded,
+                        Colors.green,
+                      ),
                       const SizedBox(width: 8),
-                      _buildFilterChip('rejected', 'ڕەتکراوە (${rejectedDocs.length})', Icons.cancel_rounded, Colors.red),
+                      _buildFilterChip(
+                        'rejected',
+                        'ڕەتکراوە (${rejectedDocs.length})',
+                        Icons.cancel_rounded,
+                        Colors.red,
+                      ),
                       const SizedBox(width: 8),
-                      _buildFilterChip('all', 'سەرجەم (${allDocs.length})', Icons.list_alt_rounded, Colors.blue),
+                      _buildFilterChip(
+                        'all',
+                        'سەرجەم (${allDocs.length})',
+                        Icons.list_alt_rounded,
+                        Colors.blue,
+                      ),
                     ],
                   ),
                 ),
@@ -462,13 +546,19 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
                         return Center(
                           child: Padding(
                             padding: const EdgeInsets.all(20),
-                            child: Text('کێشەیەک هاتە: ${snapshot.error}', textAlign: TextAlign.center),
+                            child: Text(
+                              'کێشەیەک هاتە: ${snapshot.error}',
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                         );
                       }
 
-                      if (snapshot.connectionState == ConnectionState.waiting && allDocs.isEmpty) {
-                        return const Center(child: CupertinoActivityIndicator());
+                      if (snapshot.connectionState == ConnectionState.waiting &&
+                          allDocs.isEmpty) {
+                        return const Center(
+                          child: CupertinoActivityIndicator(),
+                        );
                       }
 
                       if (displayedDocs.isEmpty) {
@@ -477,7 +567,9 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                _filterStatus == 'pending' ? Icons.task_alt_rounded : Icons.inbox_rounded,
+                                _filterStatus == 'pending'
+                                    ? Icons.task_alt_rounded
+                                    : Icons.inbox_rounded,
                                 size: 56,
                                 color: Colors.grey[400],
                               ),
@@ -486,12 +578,18 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
                                 _filterStatus == 'pending'
                                     ? 'هیچ داواکارییەکی چاوەڕوانکراو نییە 🎉'
                                     : 'هیچ داواکارییەک نەدۆزرایەوە',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 'داواکاری نوێی VIP لێرە پیشان دەدرێت',
-                                style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[500],
+                                ),
                               ),
                             ],
                           ),
@@ -499,58 +597,81 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
                       }
 
                       return ListView.separated(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         itemCount: displayedDocs.length,
-                        separatorBuilder: (context, index) => const SizedBox(height: 12),
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 12),
                         itemBuilder: (context, index) {
                           final data = displayedDocs[index];
                           final requestId = data['id']?.toString() ?? '';
-                          final userId = (data['user_id'] ?? data['userId'] ?? '').toString();
-                          final userName = (data['userName'] ?? 'خوێندکار').toString();
-                          final userEmail = (data['userEmail'] ?? '').toString();
-                      final plan = data['plan'] as String? ?? 'monthly';
-                      final planTitle = data['planTitle'] as String? ?? 'پلان مانگانە';
-                      final paymentMethod = data['paymentMethod'] as String? ?? 'FastPay';
-                      final transactionId = data['transactionId'] as String? ?? '---';
-                      final amount = data['amount'] as String? ?? (data['price'] != null ? '${data['price']} د.ع' : '5,000 د.ع');
-                      final receiptImageUrl = data['receiptImageUrl'] as String?;
-                      final notes = data['notes'] as String?;
-                      final status = data['status'] as String? ?? 'pending';
-                      final requestedAt = data['requestedAt'] ?? data['createdAt'];
-                      final isProcessing = _processingIds[requestId] == true;
+                          final userId =
+                              (data['user_id'] ?? data['userId'] ?? '')
+                                  .toString();
+                          final userName = (data['userName'] ?? 'خوێندکار')
+                              .toString();
+                          final userEmail = (data['userEmail'] ?? '')
+                              .toString();
+                          final plan = data['plan'] as String? ?? 'monthly';
+                          final planTitle =
+                              data['planTitle'] as String? ?? 'پلان مانگانە';
+                          final paymentMethod =
+                              data['paymentMethod'] as String? ?? 'FastPay';
+                          final transactionId =
+                              data['transactionId'] as String? ?? '---';
+                          final amount =
+                              data['amount'] as String? ??
+                              (data['price'] != null
+                                  ? '${data['price']} د.ع'
+                                  : '5,000 د.ع');
+                          final receiptImageUrl =
+                              data['receiptImageUrl'] as String?;
+                          final notes = data['notes'] as String?;
+                          final status = data['status'] as String? ?? 'pending';
+                          final requestedAt =
+                              data['requestedAt'] ?? data['createdAt'];
+                          final isProcessing =
+                              _processingIds[requestId] == true;
 
-                      return _buildRequestCard(
-                        isDark: isDark,
-                        requestId: requestId,
-                        userId: userId,
-                        userName: userName,
-                        userEmail: userEmail,
-                        plan: plan,
-                        planTitle: planTitle,
-                        paymentMethod: paymentMethod,
-                        transactionId: transactionId,
-                        notes: notes,
-                        amount: amount,
-                        receiptImageUrl: receiptImageUrl,
-                        status: status,
-                        requestedAt: requestedAt,
-                        isProcessing: isProcessing,
-                        expiresAt: data['expiresAt'],
+                          return _buildRequestCard(
+                            isDark: isDark,
+                            requestId: requestId,
+                            userId: userId,
+                            userName: userName,
+                            userEmail: userEmail,
+                            plan: plan,
+                            planTitle: planTitle,
+                            paymentMethod: paymentMethod,
+                            transactionId: transactionId,
+                            notes: notes,
+                            amount: amount,
+                            receiptImageUrl: receiptImageUrl,
+                            status: status,
+                            requestedAt: requestedAt,
+                            isProcessing: isProcessing,
+                            expiresAt: data['expiresAt'],
+                          );
+                        },
                       );
                     },
-                  );
-                },
-              ),
-            ),
-          ],
-        );
-      },
-    ),
-  ),
-);
-}
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
 
-  Widget _buildFilterChip(String statusKey, String label, IconData icon, Color color) {
+  Widget _buildFilterChip(
+    String statusKey,
+    String label,
+    IconData icon,
+    Color color,
+  ) {
     final isSelected = _filterStatus == statusKey;
     return InkWell(
       onTap: () => setState(() => _filterStatus = statusKey),
@@ -559,7 +680,9 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.18) : Colors.grey.withValues(alpha: 0.08),
+          color: isSelected
+              ? color.withValues(alpha: 0.18)
+              : Colors.grey.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? color : Colors.transparent,
@@ -669,18 +792,27 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
                   children: [
                     Text(
                       userName,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14.5,
+                      ),
                     ),
                     if (userEmail.isNotEmpty)
                       Text(
                         userEmail,
-                        style: const TextStyle(fontSize: 11.5, color: Colors.grey),
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          color: Colors.grey,
+                        ),
                       ),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
@@ -693,7 +825,11 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
                     const SizedBox(width: 4),
                     Text(
                       statusText,
-                      style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: statusColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -718,7 +854,9 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.grey[50],
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.04)
+                  : Colors.grey[50],
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -728,7 +866,10 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
                 Expanded(
                   child: Text(
                     'ژمارەی حەواڵە: $transactionId',
-                    style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'monospace',
+                    ),
                   ),
                 ),
                 Text(
@@ -744,13 +885,18 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: isDark ? Colors.black.withValues(alpha: 0.2) : Colors.amber.withValues(alpha: 0.08),
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.2)
+                    : Colors.amber.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: Colors.amber.withValues(alpha: 0.25)),
               ),
               child: Text(
                 '📝 تێبینی خوێندکار: $notes',
-                style: TextStyle(fontSize: 11.5, color: isDark ? Colors.amber[200] : const Color(0xFF9A5B00)),
+                style: TextStyle(
+                  fontSize: 11.5,
+                  color: isDark ? Colors.amber[200] : const Color(0xFF9A5B00),
+                ),
               ),
             ),
           ],
@@ -765,14 +911,25 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
             children: [
               if (receiptImageUrl != null && receiptImageUrl.isNotEmpty)
                 OutlinedButton.icon(
-                  onPressed: () => _showReceiptDialog(receiptImageUrl, userName),
+                  onPressed: () =>
+                      _showReceiptDialog(receiptImageUrl, userName),
                   icon: const Icon(Icons.receipt_long_rounded, size: 16),
-                  label: const Text('بینینی وەسڵ 🧾', style: TextStyle(fontSize: 12)),
+                  label: const Text(
+                    'بینینی وەسڵ 🧾',
+                    style: TextStyle(fontSize: 12),
+                  ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: ZankoColors.primary,
-                    side: BorderSide(color: ZankoColors.primary.withValues(alpha: 0.5)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    side: BorderSide(
+                      color: ZankoColors.primary.withValues(alpha: 0.5),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                   ),
                 ),
 
@@ -780,47 +937,83 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
                 OutlinedButton(
                   onPressed: isProcessing
                       ? null
-                      : () => _rejectVipRequest(requestId: requestId, userId: userId, userName: userName),
+                      : () => _rejectVipRequest(
+                          requestId: requestId,
+                          userId: userId,
+                          userName: userName,
+                        ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.red,
                     side: const BorderSide(color: Colors.red),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                   ),
-                  child: const Text('ڕەتکردنەوە', style: TextStyle(fontSize: 12)),
+                  child: const Text(
+                    'ڕەتکردنەوە',
+                    style: TextStyle(fontSize: 12),
+                  ),
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton.icon(
                   onPressed: isProcessing
                       ? null
                       : () => _approveVipRequest(
-                            requestId: requestId,
-                            userId: userId,
-                            userName: userName,
-                            plan: plan,
-                            existingExpiresAt: expiresAt,
-                          ),
+                          requestId: requestId,
+                          userId: userId,
+                          userName: userName,
+                          plan: plan,
+                          existingExpiresAt: expiresAt,
+                        ),
                   icon: isProcessing
                       ? const CupertinoActivityIndicator(color: Colors.white)
-                      : const Icon(Icons.verified_rounded, color: Colors.white, size: 16),
+                      : const Icon(
+                          Icons.verified_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
                   label: Text(
                     isProcessing ? 'پەسەندکردن...' : 'پەسەندکردنی VIP ⚡',
-                    style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF059669),
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                   ),
                 ),
               ] else if (status == 'approved') ...[
                 TextButton.icon(
                   onPressed: isProcessing
                       ? null
-                      : () => _rejectVipRequest(requestId: requestId, userId: userId, userName: userName),
-                  icon: const Icon(Icons.undo_rounded, size: 14, color: Colors.grey),
-                  label: const Text('هەڵوەشاندنەوەی VIP', style: TextStyle(fontSize: 11.5, color: Colors.grey)),
+                      : () => _rejectVipRequest(
+                          requestId: requestId,
+                          userId: userId,
+                          userName: userName,
+                        ),
+                  icon: const Icon(
+                    Icons.undo_rounded,
+                    size: 14,
+                    color: Colors.grey,
+                  ),
+                  label: const Text(
+                    'هەڵوەشاندنەوەی VIP',
+                    style: TextStyle(fontSize: 11.5, color: Colors.grey),
+                  ),
                 ),
               ],
             ],
@@ -840,7 +1033,11 @@ class _AdminVipRequestsSheetState extends State<AdminVipRequestsSheet> {
       ),
       child: Text(
         text,
-        style: TextStyle(color: color, fontSize: 11.5, fontWeight: FontWeight.w600),
+        style: TextStyle(
+          color: color,
+          fontSize: 11.5,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

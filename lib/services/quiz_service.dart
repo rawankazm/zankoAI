@@ -43,7 +43,10 @@ class QuizService {
       'ai_generation': ?aiGeneration,
     };
 
-    final response = await _dio.post<Map<String, dynamic>>('/quizzes', data: payload);
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/quizzes',
+      data: payload,
+    );
     final data = response.data!['data'] as Map<String, dynamic>;
     return QuizModel.fromJson(data);
   }
@@ -60,7 +63,9 @@ class QuizService {
   /// Starts or resumes a quiz attempt.
   /// Returns attemptId and sanitized questions (without correct answers).
   Future<Map<String, dynamic>> startQuiz(String quizId) async {
-    final response = await _dio.post<Map<String, dynamic>>('/quizzes/$quizId/start');
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/quizzes/$quizId/start',
+    );
     return response.data!['data'] as Map<String, dynamic>;
   }
 
@@ -78,14 +83,19 @@ class QuizService {
       'answers': answers,
     };
 
-    final response = await _dio.post<Map<String, dynamic>>('/quizzes/$quizId/submit', data: payload);
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/quizzes/$quizId/submit',
+      data: payload,
+    );
     final data = response.data!['data'] as Map<String, dynamic>;
     return QuizSubmissionResultModel.fromJson(data);
   }
 
   /// Lists quizzes for a course.
   Future<List<QuizModel>> listCourseQuizzes(String courseId) async {
-    final response = await _dio.get<Map<String, dynamic>>('/courses/$courseId/quizzes');
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/courses/$courseId/quizzes',
+    );
     final items = response.data!['data']['items'] as List<dynamic>? ?? [];
     return items
         .whereType<Map<String, dynamic>>()
@@ -97,10 +107,11 @@ class QuizService {
 
   /// Lists flashcards with optional course filter.
   Future<List<FlashcardModel>> listFlashcards({String? courseId}) async {
-    final queryParams = <String, dynamic>{
-      'course_id': ?courseId,
-    };
-    final response = await _dio.get<Map<String, dynamic>>('/flashcards', queryParameters: queryParams);
+    final queryParams = <String, dynamic>{'course_id': ?courseId};
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/flashcards',
+      queryParameters: queryParams,
+    );
     final items = response.data!['data']['items'] as List<dynamic>? ?? [];
     return items
         .whereType<Map<String, dynamic>>()
@@ -110,10 +121,11 @@ class QuizService {
 
   /// Fetches flashcards currently due for review under SM-2 spaced repetition.
   Future<List<FlashcardModel>> getDueFlashcards({String? courseId}) async {
-    final queryParams = <String, dynamic>{
-      'course_id': ?courseId,
-    };
-    final response = await _dio.get<Map<String, dynamic>>('/flashcards/due', queryParameters: queryParams);
+    final queryParams = <String, dynamic>{'course_id': ?courseId};
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/flashcards/due',
+      queryParameters: queryParams,
+    );
     final items = response.data!['data'] as List<dynamic>? ?? [];
     return items
         .whereType<Map<String, dynamic>>()
@@ -122,7 +134,10 @@ class QuizService {
   }
 
   /// Records an SM-2 review rating (0 to 5) for a flashcard.
-  Future<Map<String, dynamic>> reviewFlashcard(String cardId, int rating) async {
+  Future<Map<String, dynamic>> reviewFlashcard(
+    String cardId,
+    int rating,
+  ) async {
     final response = await _dio.post<Map<String, dynamic>>(
       '/flashcards/$cardId/review',
       data: {'rating': rating},

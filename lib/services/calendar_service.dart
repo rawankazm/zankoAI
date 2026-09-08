@@ -42,7 +42,9 @@ class CalendarService {
 
   /// Fetches a single event by ID.
   Future<CalendarEventModel> getEvent(String id) async {
-    final response = await _dio.get<Map<String, dynamic>>('/calendar/events/$id');
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/calendar/events/$id',
+    );
     final data = response.data!['data'] as Map<String, dynamic>;
     return CalendarEventModel.fromJson(data);
   }

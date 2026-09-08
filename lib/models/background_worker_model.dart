@@ -3,13 +3,7 @@
 // ==============================================================================
 
 /// The 5 official background processing queues in ZankoAI
-enum BackgroundQueueType {
-  pdf,
-  ocr,
-  audio,
-  ai,
-  notifications,
-}
+enum BackgroundQueueType { pdf, ocr, audio, ai, notifications }
 
 extension BackgroundQueueTypeExt on BackgroundQueueType {
   String get queueName {
@@ -50,12 +44,7 @@ extension BackgroundQueueTypeExt on BackgroundQueueType {
 }
 
 /// The 4 official job lifecycle states
-enum BackgroundJobState {
-  queued,
-  processing,
-  completed,
-  failed,
-}
+enum BackgroundJobState { queued, processing, completed, failed }
 
 extension BackgroundJobStateExt on BackgroundJobState {
   String get value {

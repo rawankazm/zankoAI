@@ -34,7 +34,9 @@ class _AdminBroadcastSheetState extends State<AdminBroadcastSheet> {
 
   Future<void> _loadSavedSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    final url = prefs.getString('cf_worker_url') ?? 'https://zankoai.rawankurdi181.workers.dev';
+    final url =
+        prefs.getString('cf_worker_url') ??
+        'https://zankoai.rawankurdi181.workers.dev';
     final secret = prefs.getString('cf_worker_secret') ?? '';
     if (mounted) {
       setState(() {
@@ -89,24 +91,30 @@ class _AdminBroadcastSheetState extends State<AdminBroadcastSheet> {
       // 2. Trigger Cloudflare Worker Push Notification (wakes up closed/locked phones)
       final workerUrl = _workerUrlController.text.trim();
       if (workerUrl.isNotEmpty) {
-        final cleanUrl = workerUrl.endsWith('/') ? workerUrl.substring(0, workerUrl.length - 1) : workerUrl;
+        final cleanUrl = workerUrl.endsWith('/')
+            ? workerUrl.substring(0, workerUrl.length - 1)
+            : workerUrl;
         final targetUri = Uri.parse('$cleanUrl/send');
-        final topic = _selectedTarget == 'vip' ? 'vip_students' : 'all_students';
+        final topic = _selectedTarget == 'vip'
+            ? 'vip_students'
+            : 'all_students';
 
         final client = HttpClient();
         try {
           final req = await client.postUrl(targetUri);
           req.headers.set('Content-Type', 'application/json; charset=UTF-8');
           req.headers.set('X-Secret-Key', _secretController.text.trim());
-          req.add(utf8.encode(jsonEncode({
-            'title': title,
-            'body': body,
-            'topic': topic,
-          })));
+          req.add(
+            utf8.encode(
+              jsonEncode({'title': title, 'body': body, 'topic': topic}),
+            ),
+          );
           final resp = await req.close();
           final respBody = await resp.transform(utf8.decoder).join();
           if (resp.statusCode != 200) {
-            throw Exception('سێرڤەر وەڵامی دایەوە بە (${resp.statusCode}): $respBody');
+            throw Exception(
+              'سێرڤەر وەڵامی دایەوە بە (${resp.statusCode}): $respBody',
+            );
           }
         } finally {
           client.close();
@@ -118,7 +126,8 @@ class _AdminBroadcastSheetState extends State<AdminBroadcastSheet> {
         setState(() {
           _isSending = false;
           _isSuccess = true;
-          _statusMessage = 'پەیامەکە بە سەرکەوتوویی بۆ هەموو خوێندکاران نێردرا! 🚀';
+          _statusMessage =
+              'پەیامەکە بە سەرکەوتوویی بۆ هەموو خوێندکاران نێردرا! 🚀';
           _titleController.clear();
           _bodyController.clear();
         });
@@ -183,7 +192,9 @@ class _AdminBroadcastSheetState extends State<AdminBroadcastSheet> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
-                    color: widget.isDark ? Colors.white : ZankoColors.textPrimary,
+                    color: widget.isDark
+                        ? Colors.white
+                        : ZankoColors.textPrimary,
                   ),
                 ),
               ],
@@ -196,7 +207,9 @@ class _AdminBroadcastSheetState extends State<AdminBroadcastSheet> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: widget.isDark ? Colors.grey[300] : ZankoColors.textSecondary,
+                color: widget.isDark
+                    ? Colors.grey[300]
+                    : ZankoColors.textSecondary,
               ),
             ),
             const SizedBox(height: 8),
@@ -215,7 +228,9 @@ class _AdminBroadcastSheetState extends State<AdminBroadcastSheet> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: widget.isDark ? Colors.grey[300] : ZankoColors.textSecondary,
+                color: widget.isDark
+                    ? Colors.grey[300]
+                    : ZankoColors.textSecondary,
               ),
             ),
             const SizedBox(height: 6),
@@ -231,20 +246,25 @@ class _AdminBroadcastSheetState extends State<AdminBroadcastSheet> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: widget.isDark ? Colors.grey[300] : ZankoColors.textSecondary,
+                color: widget.isDark
+                    ? Colors.grey[300]
+                    : ZankoColors.textSecondary,
               ),
             ),
             const SizedBox(height: 6),
             _buildTextField(
               controller: _bodyController,
-              hint: 'دەقی ئەو پەیامەی کە لەسەر شاشەی مۆبایلەکەیان دەردەکەوێت بنووسە...',
+              hint:
+                  'دەقی ئەو پەیامەی کە لەسەر شاشەی مۆبایلەکەیان دەردەکەوێت بنووسە...',
               maxLines: 3,
             ),
             const SizedBox(height: 16),
 
             // Cloudflare Worker URL (Optional Settings)
             Theme(
-              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              data: Theme.of(
+                context,
+              ).copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
                 tilePadding: EdgeInsets.zero,
                 title: Text(
@@ -252,7 +272,9 @@ class _AdminBroadcastSheetState extends State<AdminBroadcastSheet> {
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
-                    color: widget.isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                    color: widget.isDark
+                        ? Colors.grey[400]
+                        : ZankoColors.textSecondary,
                   ),
                 ),
                 children: [
@@ -286,7 +308,9 @@ class _AdminBroadcastSheetState extends State<AdminBroadcastSheet> {
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,
-                    color: _isSuccess ? const Color(0xFF10B981) : ZankoColors.error,
+                    color: _isSuccess
+                        ? const Color(0xFF10B981)
+                        : ZankoColors.error,
                   ),
                 ),
               ),
@@ -302,7 +326,9 @@ class _AdminBroadcastSheetState extends State<AdminBroadcastSheet> {
                 onPressed: _isSending ? null : _sendNotification,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: ZankoColors.primary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   elevation: 0,
                 ),
                 child: _isSending
@@ -310,7 +336,11 @@ class _AdminBroadcastSheetState extends State<AdminBroadcastSheet> {
                     : const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(CupertinoIcons.paperplane_fill, size: 18, color: Colors.white),
+                          Icon(
+                            CupertinoIcons.paperplane_fill,
+                            size: 18,
+                            color: Colors.white,
+                          ),
                           SizedBox(width: 8),
                           Text(
                             'ناردنی دەستبەجێ بۆ هەمووان',
@@ -340,7 +370,9 @@ class _AdminBroadcastSheetState extends State<AdminBroadcastSheet> {
           decoration: BoxDecoration(
             color: isSelected
                 ? ZankoColors.primary.withValues(alpha: 0.15)
-                : (widget.isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFF5F5FA)),
+                : (widget.isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : const Color(0xFFF5F5FA)),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected ? ZankoColors.primary : Colors.transparent,
@@ -355,7 +387,9 @@ class _AdminBroadcastSheetState extends State<AdminBroadcastSheet> {
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                 color: isSelected
                     ? ZankoColors.primary
-                    : (widget.isDark ? Colors.white70 : ZankoColors.textPrimary),
+                    : (widget.isDark
+                          ? Colors.white70
+                          : ZankoColors.textPrimary),
               ),
             ),
           ),
@@ -371,10 +405,14 @@ class _AdminBroadcastSheetState extends State<AdminBroadcastSheet> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: widget.isDark ? Colors.white.withValues(alpha: 0.06) : const Color(0xFFF5F5FA),
+        color: widget.isDark
+            ? Colors.white.withValues(alpha: 0.06)
+            : const Color(0xFFF5F5FA),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: widget.isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFE5E5EA),
+          color: widget.isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : const Color(0xFFE5E5EA),
         ),
       ),
       child: TextField(
@@ -390,7 +428,10 @@ class _AdminBroadcastSheetState extends State<AdminBroadcastSheet> {
             fontSize: 12,
             color: widget.isDark ? Colors.grey[500] : Colors.grey[400],
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: 12,
+          ),
           border: InputBorder.none,
         ),
       ),

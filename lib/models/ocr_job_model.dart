@@ -107,10 +107,10 @@ class OcrQuestion {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'question': question,
-        'answer': answer,
-      };
+    'id': id,
+    'question': question,
+    'answer': answer,
+  };
 }
 
 class OcrQuizQuestion {
@@ -129,7 +129,8 @@ class OcrQuizQuestion {
   factory OcrQuizQuestion.fromJson(Map<String, dynamic> json) {
     return OcrQuizQuestion(
       question: json['question'] as String? ?? '',
-      options: (json['options'] as List<dynamic>?)
+      options:
+          (json['options'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
@@ -139,26 +140,24 @@ class OcrQuizQuestion {
   }
 
   Map<String, dynamic> toJson() => {
-        'question': question,
-        'options': options,
-        'correctAnswer': correctAnswer,
-        'explanation': explanation,
-      };
+    'question': question,
+    'options': options,
+    'correctAnswer': correctAnswer,
+    'explanation': explanation,
+  };
 }
 
 class OcrQuiz {
   final String title;
   final List<OcrQuizQuestion> questions;
 
-  const OcrQuiz({
-    required this.title,
-    required this.questions,
-  });
+  const OcrQuiz({required this.title, required this.questions});
 
   factory OcrQuiz.fromJson(Map<String, dynamic> json) {
     return OcrQuiz(
       title: json['title'] as String? ?? 'OCR Academic Quiz',
-      questions: (json['questions'] as List<dynamic>?)
+      questions:
+          (json['questions'] as List<dynamic>?)
               ?.map((q) => OcrQuizQuestion.fromJson(q as Map<String, dynamic>))
               .toList() ??
           [],
@@ -166,9 +165,9 @@ class OcrQuiz {
   }
 
   Map<String, dynamic> toJson() => {
-        'title': title,
-        'questions': questions.map((q) => q.toJson()).toList(),
-      };
+    'title': title,
+    'questions': questions.map((q) => q.toJson()).toList(),
+  };
 }
 
 class OcrFlashcard {
@@ -190,11 +189,7 @@ class OcrFlashcard {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'front': front,
-        'back': back,
-      };
+  Map<String, dynamic> toJson() => {'id': id, 'front': front, 'back': back};
 }
 
 // ─── OCR Result Model ─────────────────────────────────────────────────────────
@@ -307,7 +302,8 @@ class OcrJobModel {
   bool get isProcessing => status == OcrJobStatus.processing;
   bool get isCompleted => status == OcrJobStatus.completed;
   bool get isFailed => status == OcrJobStatus.failed;
-  bool get isHandwriting => result?.detectedTextType == DetectedTextType.handwriting;
+  bool get isHandwriting =>
+      result?.detectedTextType == DetectedTextType.handwriting;
 
   String get fileSizeLabel {
     if (fileSizeBytes < 1024) return '$fileSizeBytes B';

@@ -74,16 +74,26 @@ class DocxGeneratorService {
   static String cleanTopicTitle(String title) {
     var clean = title.trim();
     // 1. Strip full prefixes like "ڕاپۆرت دەربارەی", "تەوەری ١: ", "بەشی ١: ", "Section 1: ", etc.
-    clean = clean.replaceAll(
-      RegExp(r'^(?:ڕاپۆرت لەبارەی|ڕاپۆرت دەربارەی|ڕاپۆرتی|ڕاپۆرت|تەوەری|تەوەر|بەشی|بەش|بابەتی|بابەت|تقرير عن|تقرير حول|تقرير في|تقرير|المحور|المبحث|الفصل|موضوع|عنوان التقرير|عنوان|Report on|Report about|Report|Section|Chapter|Part|Topic)\s*[\d+٠-٩\-]*\s*[:\.\-]\s*', caseSensitive: false),
-      '',
-    ).trim();
+    clean = clean
+        .replaceAll(
+          RegExp(
+            r'^(?:ڕاپۆرت لەبارەی|ڕاپۆرت دەربارەی|ڕاپۆرتی|ڕاپۆرت|تەوەری|تەوەر|بەشی|بەش|بابەتی|بابەت|تقرير عن|تقرير حول|تقرير في|تقرير|المحور|المبحث|الفصل|موضوع|عنوان التقرير|عنوان|Report on|Report about|Report|Section|Chapter|Part|Topic)\s*[\d+٠-٩\-]*\s*[:\.\-]\s*',
+            caseSensitive: false,
+          ),
+          '',
+        )
+        .trim();
 
     // 2. Strip leftover single letters followed by numbers like "ی ١: " or "ب ١: "
-    clean = clean.replaceAll(
-      RegExp(r'^[ابپتثجچحخدڕرزژسشصضطظعغفقڤکگلمنوهی]\s*[\d+٠-٩\-]+\s*[:\.\-]\s*', caseSensitive: false),
-      '',
-    ).trim();
+    clean = clean
+        .replaceAll(
+          RegExp(
+            r'^[ابپتثجچحخدڕرزژسشصضطظعغفقڤکگلمنوهی]\s*[\d+٠-٩\-]+\s*[:\.\-]\s*',
+            caseSensitive: false,
+          ),
+          '',
+        )
+        .trim();
 
     return clean.isNotEmpty ? clean : title.trim();
   }
@@ -102,7 +112,9 @@ class DocxGeneratorService {
         .replaceAll('٧', '7')
         .replaceAll('٨', '8')
         .replaceAll('٩', '9');
-    final num = int.tryParse(RegExp(r'\d+').firstMatch(standardNumStr)?.group(0) ?? '');
+    final num = int.tryParse(
+      RegExp(r'\d+').firstMatch(standardNumStr)?.group(0) ?? '',
+    );
     if (num != null && num >= 1 && num <= 20) return num;
 
     // Arabic ordinal words (masculine and feminine)
@@ -115,7 +127,11 @@ class DocxGeneratorService {
     if (clean.contains('رابع') || clean.contains('رابعاً')) return 4;
     if (clean.contains('ثالث') || clean.contains('ثالثاً')) return 3;
     if (clean.contains('ثاني') || clean.contains('ثانياً')) return 2;
-    if (clean.contains('أول') || clean.contains('اول') || clean.contains('أولاً') || clean.contains('اولاً')) return 1;
+    if (clean.contains('أول') ||
+        clean.contains('اول') ||
+        clean.contains('أولاً') ||
+        clean.contains('اولاً'))
+      return 1;
 
     // Kurdish ordinal words
     if (clean.contains('دەهەم') || clean.contains('دەیەم')) return 10;
@@ -143,7 +159,10 @@ class DocxGeneratorService {
       final request = await client.getUrl(uri);
       final response = await request.close();
       if (response.statusCode == 200) {
-        final bytes = await response.fold<List<int>>([], (prev, elem) => prev..addAll(elem));
+        final bytes = await response.fold<List<int>>(
+          [],
+          (prev, elem) => prev..addAll(elem),
+        );
         if (bytes.isNotEmpty) {
           return Uint8List.fromList(bytes);
         }
@@ -472,9 +491,17 @@ class DocxGeneratorService {
     String languageCode = 'ku',
   }) {
     var detectedTitle = title;
-    final titleMatch = RegExp(r'^(?:#+\s*)?(?:Title|ناونیشان|العنوان|عنوان التقرير|تقرير عن|تقرير حول|تقرير في|تقرير|بابەت)\s*:\s*(.+)$', multiLine: true, caseSensitive: false).firstMatch(rawText);
+    final titleMatch = RegExp(
+      r'^(?:#+\s*)?(?:Title|ناونیشان|العنوان|عنوان التقرير|تقرير عن|تقرير حول|تقرير في|تقرير|بابەت)\s*:\s*(.+)$',
+      multiLine: true,
+      caseSensitive: false,
+    ).firstMatch(rawText);
     if (titleMatch != null && titleMatch.group(1)!.trim().isNotEmpty) {
-      detectedTitle = titleMatch.group(1)!.trim().replaceAll('**', '').replaceAll('"', '');
+      detectedTitle = titleMatch
+          .group(1)!
+          .trim()
+          .replaceAll('**', '')
+          .replaceAll('"', '');
     }
     final effectiveTitle = cleanTopicTitle(detectedTitle);
     final cleanYear = academicYear.isNotEmpty ? academicYear : '2024 - 2025';
@@ -494,12 +521,14 @@ class DocxGeneratorService {
 
     void saveCurrentSection() {
       if (currentSecNum > 0 && currentSecTitle.isNotEmpty) {
-        parsedSections.add(ReportSectionItem(
-          sectionNumber: currentSecNum,
-          title: currentSecTitle,
-          content: currentSecContent.toString().trim(),
-          bulletPoints: List.from(currentSecBullets),
-        ));
+        parsedSections.add(
+          ReportSectionItem(
+            sectionNumber: currentSecNum,
+            title: currentSecTitle,
+            content: currentSecContent.toString().trim(),
+            bulletPoints: List.from(currentSecBullets),
+          ),
+        );
       }
       currentSecTitle = '';
       currentSecContent.clear();
@@ -513,7 +542,9 @@ class DocxGeneratorService {
       // Detect Table of Contents block
       final lower = trimmed.toLowerCase();
       if (trimmed.startsWith('#') || trimmed.startsWith('**')) {
-        if (lower.contains('table of contents') || trimmed.contains('پێڕست') || trimmed.contains('فهرس')) {
+        if (lower.contains('table of contents') ||
+            trimmed.contains('پێڕست') ||
+            trimmed.contains('فهرس')) {
           saveCurrentSection();
           inTableOfContents = true;
           continue;
@@ -521,7 +552,10 @@ class DocxGeneratorService {
       }
 
       // Detect References Header
-      if (RegExp(r'^(?:#+\s*)?(?:References|سەرچاوەکان|سەرچاوە زانستییەکان|المراجع|المصادر|المراجع والمصادر)', caseSensitive: false).hasMatch(trimmed)) {
+      if (RegExp(
+        r'^(?:#+\s*)?(?:References|سەرچاوەکان|سەرچاوە زانستییەکان|المراجع|المصادر|المراجع والمصادر)',
+        caseSensitive: false,
+      ).hasMatch(trimmed)) {
         saveCurrentSection();
         isParsingReferences = true;
         inTableOfContents = false;
@@ -530,7 +564,10 @@ class DocxGeneratorService {
 
       if (isParsingReferences) {
         if (trimmed.startsWith('#')) continue;
-        final refText = trimmed.replaceAll(RegExp(r'^[-* \d+.]\s*'), '').replaceAll('**', '').trim();
+        final refText = trimmed
+            .replaceAll(RegExp(r'^[-* \d+.]\s*'), '')
+            .replaceAll('**', '')
+            .trim();
         if (refText.isNotEmpty) {
           parsedReferences.add(refText);
         }
@@ -551,12 +588,24 @@ class DocxGeneratorService {
         final parsed = parseSectionNumber(rawNum);
         if (parsed != null) {
           detectedSecNum = parsed;
-          detectedSecTitle = secMatch.group(2)!.replaceAll('**', '').replaceAll('*', '').trim();
+          detectedSecTitle = secMatch
+              .group(2)!
+              .replaceAll('**', '')
+              .replaceAll('*', '')
+              .trim();
         }
-      } else if (RegExp(r'^#{2,4}\s*(\d+|[٠-٩]+)[\.:\-]\s+(.+)$').hasMatch(trimmed)) {
-        final m = RegExp(r'^#{2,4}\s*(\d+|[٠-٩]+)[\.:\-]\s+(.+)$').firstMatch(trimmed)!;
+      } else if (RegExp(
+        r'^#{2,4}\s*(\d+|[٠-٩]+)[\.:\-]\s+(.+)$',
+      ).hasMatch(trimmed)) {
+        final m = RegExp(
+          r'^#{2,4}\s*(\d+|[٠-٩]+)[\.:\-]\s+(.+)$',
+        ).firstMatch(trimmed)!;
         detectedSecNum = parseSectionNumber(m.group(1)!);
-        detectedSecTitle = m.group(2)!.replaceAll('**', '').replaceAll('*', '').trim();
+        detectedSecTitle = m
+            .group(2)!
+            .replaceAll('**', '')
+            .replaceAll('*', '')
+            .trim();
       }
 
       if (detectedSecNum != null) {
@@ -570,7 +619,11 @@ class DocxGeneratorService {
 
         saveCurrentSection();
         currentSecNum = detectedSecNum;
-        currentSecTitle = detectedSecTitle ?? (languageCode == 'ar' ? 'المحور $detectedSecNum' : 'Section $detectedSecNum');
+        currentSecTitle =
+            detectedSecTitle ??
+            (languageCode == 'ar'
+                ? 'المحور $detectedSecNum'
+                : 'Section $detectedSecNum');
         continue;
       }
 
@@ -579,11 +632,20 @@ class DocxGeneratorService {
       }
 
       if (currentSecNum > 0) {
-        if (trimmed.startsWith('-') || trimmed.startsWith('*') || trimmed.startsWith('•') || RegExp(r'^\d+\.\s+').hasMatch(trimmed) || RegExp(r'^[٠-٩]+\.\s+').hasMatch(trimmed)) {
-          final bullet = trimmed.replaceAll(RegExp(r'^[-*• \d+٠-٩.]\s*'), '').replaceAll('**', '').trim();
+        if (trimmed.startsWith('-') ||
+            trimmed.startsWith('*') ||
+            trimmed.startsWith('•') ||
+            RegExp(r'^\d+\.\s+').hasMatch(trimmed) ||
+            RegExp(r'^[٠-٩]+\.\s+').hasMatch(trimmed)) {
+          final bullet = trimmed
+              .replaceAll(RegExp(r'^[-*• \d+٠-٩.]\s*'), '')
+              .replaceAll('**', '')
+              .trim();
           if (bullet.isNotEmpty) currentSecBullets.add(bullet);
         } else {
-          currentSecContent.writeln(trimmed.replaceAll('**', '').replaceAll('*', ''));
+          currentSecContent.writeln(
+            trimmed.replaceAll('**', '').replaceAll('*', ''),
+          );
         }
       }
     }
@@ -595,124 +657,190 @@ class DocxGeneratorService {
     final List<ReportSectionItem> finalSections = [];
 
     for (int i = 1; i <= 10; i++) {
-      final matchingWithContent = parsedSections.where((s) => s.sectionNumber == i && s.content.trim().length > 30).toList();
+      final matchingWithContent = parsedSections
+          .where((s) => s.sectionNumber == i && s.content.trim().length > 30)
+          .toList();
       final existing = matchingWithContent.isNotEmpty
           ? matchingWithContent.last
           : parsedSections.firstWhere(
               (s) => s.sectionNumber == i,
-              orElse: () => (i <= parsedSections.length ? parsedSections[i - 1] : defaultSections[i - 1]),
+              orElse: () => (i <= parsedSections.length
+                  ? parsedSections[i - 1]
+                  : defaultSections[i - 1]),
             );
 
       final def = defaultSections[i - 1];
-      final content = existing.content.length > 30 ? existing.content : def.content;
-      final bullets = existing.bulletPoints.isNotEmpty ? existing.bulletPoints : def.bulletPoints;
+      final content = existing.content.length > 30
+          ? existing.content
+          : def.content;
+      final bullets = existing.bulletPoints.isNotEmpty
+          ? existing.bulletPoints
+          : def.bulletPoints;
       final secTitle = existing.title.isNotEmpty ? existing.title : def.title;
 
-      finalSections.add(ReportSectionItem(
-        sectionNumber: i,
-        title: secTitle,
-        content: content,
-        bulletPoints: bullets,
-      ));
+      finalSections.add(
+        ReportSectionItem(
+          sectionNumber: i,
+          title: secTitle,
+          content: content,
+          bulletPoints: bullets,
+        ),
+      );
     }
 
     // References list
     final defaultRefs = getDefaultReferences(effectiveTitle, languageCode);
-    final List<String> finalReferences = parsedReferences.length >= 2 ? parsedReferences : defaultRefs;
+    final List<String> finalReferences = parsedReferences.length >= 2
+        ? parsedReferences
+        : defaultRefs;
 
     // ── Build Exactly 8 Pages matching Academic Standard with Images on Pages 3-7 ──
     final List<ReportPageModel> pages = [];
 
     // Page 1: Cover Page
-    pages.add(ReportPageModel(
-      pageNumber: 1,
-      pageTitle: isRtl ? (languageCode == 'ar' ? 'صفحة الغلاف' : 'بەرگی ڕاپۆرت') : 'Cover Page',
-      pageType: 'cover',
-      content: effectiveTitle,
-    ));
+    pages.add(
+      ReportPageModel(
+        pageNumber: 1,
+        pageTitle: isRtl
+            ? (languageCode == 'ar' ? 'صفحة الغلاف' : 'بەرگی ڕاپۆرت')
+            : 'Cover Page',
+        pageType: 'cover',
+        content: effectiveTitle,
+      ),
+    );
 
     // Page 2: Table of Contents
-    pages.add(ReportPageModel(
-      pageNumber: 2,
-      pageTitle: isRtl ? (languageCode == 'ar' ? 'فهرس المحتويات' : 'پێڕستی ناوەڕۆک') : 'Table of Contents',
-      pageType: 'toc',
-      bulletPoints: finalSections.map((s) => '${s.sectionNumber}. ${s.title}').toList(),
-    ));
+    pages.add(
+      ReportPageModel(
+        pageNumber: 2,
+        pageTitle: isRtl
+            ? (languageCode == 'ar' ? 'فهرس المحتويات' : 'پێڕستی ناوەڕۆک')
+            : 'Table of Contents',
+        pageType: 'toc',
+        bulletPoints: finalSections
+            .map((s) => '${s.sectionNumber}. ${s.title}')
+            .toList(),
+      ),
+    );
 
     // Page 3: Sections 1 & 2 + Diagram 1
-    pages.add(ReportPageModel(
-      pageNumber: 3,
-      pageTitle: '${finalSections[0].title} & ${finalSections[1].title}',
-      pageType: 'content',
-      sections: [finalSections[0], finalSections[1]],
-      imageUrl: getReportPageImageUrl(effectiveTitle, 1),
-      figureCaption: isRtl
-          ? (languageCode == 'ar' ? 'الشكل العلمي (١): ${finalSections[0].title}' : 'شێوەی زانستی (١): ${finalSections[0].title}')
-          : 'Figure (1): ${finalSections[0].title}',
-    ));
+    pages.add(
+      ReportPageModel(
+        pageNumber: 3,
+        pageTitle: '${finalSections[0].title} & ${finalSections[1].title}',
+        pageType: 'content',
+        sections: [finalSections[0], finalSections[1]],
+        imageUrl: getReportPageImageUrl(effectiveTitle, 1),
+        figureCaption: isRtl
+            ? (languageCode == 'ar'
+                  ? 'الشكل العلمي (١): ${finalSections[0].title}'
+                  : 'شێوەی زانستی (١): ${finalSections[0].title}')
+            : 'Figure (1): ${finalSections[0].title}',
+      ),
+    );
 
     // Page 4: Sections 3 & 4 + Diagram 2
-    pages.add(ReportPageModel(
-      pageNumber: 4,
-      pageTitle: '${finalSections[2].title} & ${finalSections[3].title}',
-      pageType: 'content',
-      sections: [finalSections[2], finalSections[3]],
-      imageUrl: getReportPageImageUrl(effectiveTitle, 2),
-      figureCaption: isRtl
-          ? (languageCode == 'ar' ? 'الشكل العلمي (٢): ${finalSections[2].title}' : 'شێوەی زانستی (٢): ${finalSections[2].title}')
-          : 'Figure (2): ${finalSections[2].title}',
-    ));
+    pages.add(
+      ReportPageModel(
+        pageNumber: 4,
+        pageTitle: '${finalSections[2].title} & ${finalSections[3].title}',
+        pageType: 'content',
+        sections: [finalSections[2], finalSections[3]],
+        imageUrl: getReportPageImageUrl(effectiveTitle, 2),
+        figureCaption: isRtl
+            ? (languageCode == 'ar'
+                  ? 'الشكل العلمي (٢): ${finalSections[2].title}'
+                  : 'شێوەی زانستی (٢): ${finalSections[2].title}')
+            : 'Figure (2): ${finalSections[2].title}',
+      ),
+    );
 
     // Page 5: Sections 5 & 6 + Diagram 3
-    pages.add(ReportPageModel(
-      pageNumber: 5,
-      pageTitle: '${finalSections[4].title} & ${finalSections[5].title}',
-      pageType: 'content',
-      sections: [finalSections[4], finalSections[5]],
-      imageUrl: getReportPageImageUrl(effectiveTitle, 3),
-      figureCaption: isRtl
-          ? (languageCode == 'ar' ? 'الشكل العلمي (٣): ${finalSections[4].title}' : 'شێوەی زانستی (٣): ${finalSections[4].title}')
-          : 'Figure (3): ${finalSections[4].title}',
-    ));
+    pages.add(
+      ReportPageModel(
+        pageNumber: 5,
+        pageTitle: '${finalSections[4].title} & ${finalSections[5].title}',
+        pageType: 'content',
+        sections: [finalSections[4], finalSections[5]],
+        imageUrl: getReportPageImageUrl(effectiveTitle, 3),
+        figureCaption: isRtl
+            ? (languageCode == 'ar'
+                  ? 'الشكل العلمي (٣): ${finalSections[4].title}'
+                  : 'شێوەی زانستی (٣): ${finalSections[4].title}')
+            : 'Figure (3): ${finalSections[4].title}',
+      ),
+    );
 
     // Page 6: Sections 7 & 8 + Diagram 4
-    pages.add(ReportPageModel(
-      pageNumber: 6,
-      pageTitle: '${finalSections[6].title} & ${finalSections[7].title}',
-      pageType: 'content',
-      sections: [finalSections[6], finalSections[7]],
-      imageUrl: getReportPageImageUrl(effectiveTitle, 4),
-      figureCaption: isRtl
-          ? (languageCode == 'ar' ? 'الشكل العلمي (٤): ${finalSections[6].title}' : 'شێوەی زانستی (٤): ${finalSections[6].title}')
-          : 'Figure (4): ${finalSections[6].title}',
-    ));
+    pages.add(
+      ReportPageModel(
+        pageNumber: 6,
+        pageTitle: '${finalSections[6].title} & ${finalSections[7].title}',
+        pageType: 'content',
+        sections: [finalSections[6], finalSections[7]],
+        imageUrl: getReportPageImageUrl(effectiveTitle, 4),
+        figureCaption: isRtl
+            ? (languageCode == 'ar'
+                  ? 'الشكل العلمي (٤): ${finalSections[6].title}'
+                  : 'شێوەی زانستی (٤): ${finalSections[6].title}')
+            : 'Figure (4): ${finalSections[6].title}',
+      ),
+    );
 
     // Page 7: Sections 9 & 10 + Diagram 5
-    pages.add(ReportPageModel(
-      pageNumber: 7,
-      pageTitle: '${finalSections[8].title} & ${finalSections[9].title}',
-      pageType: 'content',
-      sections: [finalSections[8], finalSections[9]],
-      imageUrl: getReportPageImageUrl(effectiveTitle, 5),
-      figureCaption: isRtl
-          ? (languageCode == 'ar' ? 'الشكل العلمي (٥): ${finalSections[8].title}' : 'شێوەی زانستی (٥): ${finalSections[8].title}')
-          : 'Figure (5): ${finalSections[8].title}',
-    ));
+    pages.add(
+      ReportPageModel(
+        pageNumber: 7,
+        pageTitle: '${finalSections[8].title} & ${finalSections[9].title}',
+        pageType: 'content',
+        sections: [finalSections[8], finalSections[9]],
+        imageUrl: getReportPageImageUrl(effectiveTitle, 5),
+        figureCaption: isRtl
+            ? (languageCode == 'ar'
+                  ? 'الشكل العلمي (٥): ${finalSections[8].title}'
+                  : 'شێوەی زانستی (٥): ${finalSections[8].title}')
+            : 'Figure (5): ${finalSections[8].title}',
+      ),
+    );
 
     // Page 8: References
-    pages.add(ReportPageModel(
-      pageNumber: 8,
-      pageTitle: isRtl ? (languageCode == 'ar' ? 'المراجع العلمية' : 'سەرچاوە زانستییەکان') : 'References & Bibliography',
-      pageType: 'references',
-      bulletPoints: finalReferences,
-    ));
+    pages.add(
+      ReportPageModel(
+        pageNumber: 8,
+        pageTitle: isRtl
+            ? (languageCode == 'ar' ? 'المراجع العلمية' : 'سەرچاوە زانستییەکان')
+            : 'References & Bibliography',
+        pageType: 'references',
+        bulletPoints: finalReferences,
+      ),
+    );
 
     return AcademicReportModel(
       title: effectiveTitle,
-      studentName: studentName.trim().isNotEmpty ? studentName.trim() : (languageCode == 'ar' ? 'اسم الطالب' : (isRtl ? 'ناوی قوتابی' : 'Student Name')),
-      supervisorName: supervisorName.trim().isNotEmpty ? supervisorName.trim() : (languageCode == 'ar' ? 'اسم المشرف' : (isRtl ? 'ناوی سەرپەرشتیار' : 'Supervisor Name')),
-      universityName: universityName.trim().isNotEmpty ? universityName.trim() : (languageCode == 'ar' ? 'جامعة أربيل التقنية' : (isRtl ? 'زانکۆی پۆلیتەکنیکی هەولێر' : 'Erbil Polytechnic University')),
-      departmentName: departmentName.trim().isNotEmpty ? departmentName.trim() : (languageCode == 'ar' ? 'الكلية التقنية - قسم الهندسة والعلوم' : (isRtl ? 'کۆلێژی تەکنیکی - بەشی ئەندازیاری و زانست' : 'Faculty of Engineering & Science')),
+      studentName: studentName.trim().isNotEmpty
+          ? studentName.trim()
+          : (languageCode == 'ar'
+                ? 'اسم الطالب'
+                : (isRtl ? 'ناوی قوتابی' : 'Student Name')),
+      supervisorName: supervisorName.trim().isNotEmpty
+          ? supervisorName.trim()
+          : (languageCode == 'ar'
+                ? 'اسم المشرف'
+                : (isRtl ? 'ناوی سەرپەرشتیار' : 'Supervisor Name')),
+      universityName: universityName.trim().isNotEmpty
+          ? universityName.trim()
+          : (languageCode == 'ar'
+                ? 'جامعة أربيل التقنية'
+                : (isRtl
+                      ? 'زانکۆی پۆلیتەکنیکی هەولێر'
+                      : 'Erbil Polytechnic University')),
+      departmentName: departmentName.trim().isNotEmpty
+          ? departmentName.trim()
+          : (languageCode == 'ar'
+                ? 'الكلية التقنية - قسم الهندسة والعلوم'
+                : (isRtl
+                      ? 'کۆلێژی تەکنیکی - بەشی ئەندازیاری و زانست'
+                      : 'Faculty of Engineering & Science')),
       academicYear: cleanYear,
       logoBytes: logoBytes,
       pages: pages,
@@ -731,7 +859,8 @@ class DocxGeneratorService {
         ReportSectionItem(
           sectionNumber: 1,
           title: 'ناساندن و چوارچێوەیا زانستی یا «$title»',
-          content: 'ڤەکۆلین ل دۆر «$title» ئێک ژ گرنگترین تەوەرێن زانستی و ئەکادیمی یە د سەردەمێ نوکە دا. ئەڤ بابەتە بنەمایەکێ موکوم بۆ تێگەهشتنێ ژ چەمکێن سەرەکی، ڕێبازێن نێڤدەولەتی و گوهۆڕینێن سەردەم دابین دکەت.\n\nژ ڕوانگەها مێژوویی و تیۆری ڤە، ڤەکۆلینێن نوو دیارکرینە کو پێشڤەچوونا ڤی بواری دبیتە ئەگەرێ دیتنا چارەسەریێن پراکتیکی بۆ ئاستەنگێن ئاڵۆز و بلندکرنا کوالیتییا کارکرنێ د ناڤەندێن زانستی و زانکۆیان دا.',
+          content:
+              'ڤەکۆلین ل دۆر «$title» ئێک ژ گرنگترین تەوەرێن زانستی و ئەکادیمی یە د سەردەمێ نوکە دا. ئەڤ بابەتە بنەمایەکێ موکوم بۆ تێگەهشتنێ ژ چەمکێن سەرەکی، ڕێبازێن نێڤدەولەتی و گوهۆڕینێن سەردەم دابین دکەت.\n\nژ ڕوانگەها مێژوویی و تیۆری ڤە، ڤەکۆلینێن نوو دیارکرینە کو پێشڤەچوونا ڤی بواری دبیتە ئەگەرێ دیتنا چارەسەریێن پراکتیکی بۆ ئاستەنگێن ئاڵۆز و بلندکرنا کوالیتییا کارکرنێ د ناڤەندێن زانستی و زانکۆیان دا.',
           bulletPoints: [
             'پێناسە و چەمکێن بنەڕەتی یێن گرێدای ب $title',
             'گرنگی و پانتاییا زانستی ژ ڕوانگەها ڤەکۆلینێن سەردەم',
@@ -741,47 +870,56 @@ class DocxGeneratorService {
         ReportSectionItem(
           sectionNumber: 2,
           title: 'بنیاتێن تیۆری و مێژوویا پێشڤەچوونا «$title»',
-          content: 'چوارچێوەیێ گشتی و تیۆری یێ «$title» ژ چەندین کۆڵەکە و پێکهاتێن بنەڕەتی پێکدهێت کو ب شێوازەکێ هەڤبەش کار دکەن. هەر پشکەک ژ ڤی سیستەمی ئەرک و فەرمانێن دیارکری یێن خۆ هەنە و تەواوکەرێ پشکێن دی یە.\n\nتێگەهشتن ژ پەیوەندییا د ناڤبەرا ڤان پێکهاتان دا ڕێکخۆشکەرە بۆ شیکارییەکا هویربینانە ل دۆر میکانیزمێن کارایی و چەوانییا کۆنترۆلکرنا پرۆسەیان.',
+          content:
+              'چوارچێوەیێ گشتی و تیۆری یێ «$title» ژ چەندین کۆڵەکە و پێکهاتێن بنەڕەتی پێکدهێت کو ب شێوازەکێ هەڤبەش کار دکەن. هەر پشکەک ژ ڤی سیستەمی ئەرک و فەرمانێن دیارکری یێن خۆ هەنە و تەواوکەرێ پشکێن دی یە.\n\nتێگەهشتن ژ پەیوەندییا د ناڤبەرا ڤان پێکهاتان دا ڕێکخۆشکەرە بۆ شیکارییەکا هویربینانە ل دۆر میکانیزمێن کارایی و چەوانییا کۆنترۆلکرنا پرۆسەیان.',
         ),
         ReportSectionItem(
           sectionNumber: 3,
           title: 'پێکهاتێن بنەڕەتی و تەلارسازیا سیستەمی',
-          content: 'قۆناغا دەستپێکی یا کارکرنا «$title» پێدڤی ب دابینکرنا مەرج و کەرەستەیێن سەرەکی هەیە. د ڤێ قۆناغێ دا داتا و پێکهاتە دهێنە کۆمکرن و ب شێوازەکێ زانستی دهێنە دابەشکرن ب سەر کەنالێن گونجای دا.\n\nپرۆسەیا دەستپێکێ ڕۆڵەکێ گرنگ و سەرەکی دگێڕیت د پاراستنا سەقامگیرییا سیستەمی و کێمکرنا شاشیێن چاڤەڕێکری دا.',
+          content:
+              'قۆناغا دەستپێکی یا کارکرنا «$title» پێدڤی ب دابینکرنا مەرج و کەرەستەیێن سەرەکی هەیە. د ڤێ قۆناغێ دا داتا و پێکهاتە دهێنە کۆمکرن و ب شێوازەکێ زانستی دهێنە دابەشکرن ب سەر کەنالێن گونجای دا.\n\nپرۆسەیا دەستپێکێ ڕۆڵەکێ گرنگ و سەرەکی دگێڕیت د پاراستنا سەقامگیرییا سیستەمی و کێمکرنا شاشیێن چاڤەڕێکری دا.',
         ),
         ReportSectionItem(
           sectionNumber: 4,
           title: 'میکانیزمێن کارکرنێ و میتۆدۆلۆجیا جێبەجێکرنێ',
-          content: 'سیستەمێ کارکرن و پەیوەندییێ د «$title» دا ل دیف ڕێسایەکا پێشکەفتی ب ڕێڤەدچیت کو مسۆگەرییا گەهشتنا ڕێکخستی یا زانیاری و وزەیێ دکەت بۆ جهێ مەبەست.\n\nمۆدێلێن زانستی و ژمێریاری دیاردکەن کو کۆنترۆلکرنا لەزاتی و پەستانێ د ڤان کەنالان دا کارتێکرنا ڕاستەوخۆ هەیە ل سەر پاراستنا هەڤسەنگییا گشتی.',
+          content:
+              'سیستەمێ کارکرن و پەیوەندییێ د «$title» دا ل دیف ڕێسایەکا پێشکەفتی ب ڕێڤەدچیت کو مسۆگەرییا گەهشتنا ڕێکخستی یا زانیاری و وزەیێ دکەت بۆ جهێ مەبەست.\n\nمۆدێلێن زانستی و ژمێریاری دیاردکەن کو کۆنترۆلکرنا لەزاتی و پەستانێ د ڤان کەنالان دا کارتێکرنا ڕاستەوخۆ هەیە ل سەر پاراستنا هەڤسەنگییا گشتی.',
         ),
         ReportSectionItem(
           sectionNumber: 5,
           title: 'شیکاریا زانستیا کویر و فەرمانێن سەرەکی',
-          content: 'ناڤەندا سەرەکی یا کارکرنا «$title» بەرپرسیارە ژ هویرکرن، شیکاریکرن و بکارئینانا ژێدەران. د ڤێ ناڤەندێ دا کارلێکێن هویر دهێنە ئەنجامدان و بڕیارێن گرنگ دهێنە وەرگرتن.\n\nژ بەر هەبوونا ڕێکارێن تایبەتمەند و پارێزەر، ناڤەند ب شێوەیەکێ بەردەوام شیانا بڕێڤەبرنا بارگرانیێن گوهۆڕ هەیە.',
+          content:
+              'ناڤەندا سەرەکی یا کارکرنا «$title» بەرپرسیارە ژ هویرکرن، شیکاریکرن و بکارئینانا ژێدەران. د ڤێ ناڤەندێ دا کارلێکێن هویر دهێنە ئەنجامدان و بڕیارێن گرنگ دهێنە وەرگرتن.\n\nژ بەر هەبوونا ڕێکارێن تایبەتمەند و پارێزەر، ناڤەند ب شێوەیەکێ بەردەوام شیانا بڕێڤەبرنا بارگرانیێن گوهۆڕ هەیە.',
         ),
         ReportSectionItem(
           sectionNumber: 6,
           title: 'جێبەجێکرنا پراکتیکی و بکارئینانێن سەردەم',
-          content: 'پشتی ئەنجامدانا پرۆسێسکرنێ، سیستەم پێکهاتێن ب مفای ژێک جودا دکەت و ب شێوازەکێ یەکسان دابەشی سەر پشکێن جودا دکەت دا کو زۆرترین مفا ژ ژێدەران بهێتە وەرگرتن.\n\nئەڤ پشکە ژ چەندین میکانیزمێن هویر پێکدهێت کو ڕێگریێ ل ب هەدەردانا شیانان دکەن.',
+          content:
+              'پشتی ئەنجامدانا پرۆسێسکرنێ، سیستەم پێکهاتێن ب مفای ژێک جودا دکەت و ب شێوازەکێ یەکسان دابەشی سەر پشکێن جودا دکەت دا کو زۆرترین مفا ژ ژێدەران بهێتە وەرگرتن.\n\nئەڤ پشکە ژ چەندین میکانیزمێن هویر پێکدهێت کو ڕێگریێ ل ب هەدەردانا شیانان دکەن.',
         ),
         ReportSectionItem(
           sectionNumber: 7,
           title: 'هەڤبەرکرن، پێوەرێن کاراییێ و گرێدانا سیستەمی',
-          content: 'پەیوەندییا د ناڤبەرا «$title» و دەوروبەران دا ئێک ژ تایبەتمەندیێن هەرە گرنگە. سیستەم بەردەوام کارلێکێ دگەل ژینگەها دەرڤە دکەت و خۆ دگەل گوهۆڕینان بگونجینیت.\n\nهەر جۆرە تێکچوونەک د ڤێ هەڤسەنگیێ دا دشێت کارتێکرنا نەرێنی ل سەر بەرهەمداری و سەقامگیرییا گشتی دروست بکەت.',
+          content:
+              'پەیوەندییا د ناڤبەرا «$title» و دەوروبەران دا ئێک ژ تایبەتمەندیێن هەرە گرنگە. سیستەم بەردەوام کارلێکێ دگەل ژینگەها دەرڤە دکەت و خۆ دگەل گوهۆڕینان بگونجینیت.\n\nهەر جۆرە تێکچوونەک د ڤێ هەڤسەنگیێ دا دشێت کارتێکرنا نەرێنی ل سەر بەرهەمداری و سەقامگیرییا گشتی دروست بکەت.',
         ),
         ReportSectionItem(
           sectionNumber: 8,
           title: 'ئاستەنگێن سەرەکی و ڕەهەندێن ئەخلاقی و تەکنیکی',
-          content: 'د پاڵ پێکهاتێن سەرەکی دا، چەندین ئاستەنگ و ڕەهەندێن ئەخلاقی و تەکنیکی هەنە کو پێدڤی ب چاڤدێری و ڕێکخستنا بەردەوام هەیە.\n\nئەڤ پشکە بەردەوام بەرسڤدەرە بۆ کێمکرنا فشارێ و پاراستنا کوالیتییا بلندا ئەنجامان.',
+          content:
+              'د پاڵ پێکهاتێن سەرەکی دا، چەندین ئاستەنگ و ڕەهەندێن ئەخلاقی و تەکنیکی هەنە کو پێدڤی ب چاڤدێری و ڕێکخستنا بەردەوام هەیە.\n\nئەڤ پشکە بەردەوام بەرسڤدەرە بۆ کێمکرنا فشارێ و پاراستنا کوالیتییا بلندا ئەنجامان.',
         ),
         ReportSectionItem(
           sectionNumber: 9,
           title: 'ئاسۆیێ پاشەڕۆژێ و گوهۆڕینێن پێشکەفتی',
-          content: 'هەمی چالاکیێن «$title» ب ڕێکا تۆڕەکا هۆشیار و پێشکەفتی دهێنە چاڤدێریکرن کو ئاسۆیەکێ بەرفرەهـ بۆ پاشەڕۆژێ و گەشەپێدانا بەردەوام ڤەدکەت.\n\nهەبوونا داهێنانێن نوو گرەنتیێ ددەت کو سیستەم د ڕەوشێن نەئاسایی ژی دا کارایییا خۆ ژ دەست نەدەت.',
+          content:
+              'هەمی چالاکیێن «$title» ب ڕێکا تۆڕەکا هۆشیار و پێشکەفتی دهێنە چاڤدێریکرن کو ئاسۆیەکێ بەرفرەهـ بۆ پاشەڕۆژێ و گەشەپێدانا بەردەوام ڤەدکەت.\n\nهەبوونا داهێنانێن نوو گرەنتیێ ددەت کو سیستەم د ڕەوشێن نەئاسایی ژی دا کارایییا خۆ ژ دەست نەدەت.',
         ),
         ReportSectionItem(
           sectionNumber: 10,
           title: 'دەرئەنجامێن زانستی، پێشنیار و دوماهیک',
-          content: 'ل دوماهیێ، کارکرن د بواری «$title» دا ئەنجامێن ئەرێنی یێن مەزن دیار دکەت. ڤەکۆلینێن سەردەم پێشنیارا بکارئینانا تەکنۆلۆژیایا نوو و ستانداردێن جیهانی دکەن بۆ پەرەپێدانا زێدەتر.\n\nپوختەیا ڕاپۆرتێ دیار دکەت کو بەردەوامییا ڤەکۆلینا ئەکادیمی دبیتە ئەگەرێ گەشەپێدانا زێدەتر یا ڤی سیستەمی د پاشەڕۆژێ دا.',
+          content:
+              'ل دوماهیێ، کارکرن د بواری «$title» دا ئەنجامێن ئەرێنی یێن مەزن دیار دکەت. ڤەکۆلینێن سەردەم پێشنیارا بکارئینانا تەکنۆلۆژیایا نوو و ستانداردێن جیهانی دکەن بۆ پەرەپێدانا زێدەتر.\n\nپوختەیا ڕاپۆرتێ دیار دکەت کو بەردەوامییا ڤەکۆلینا ئەکادیمی دبیتە ئەگەرێ گەشەپێدانا زێدەتر یا ڤی سیستەمی د پاشەڕۆژێ دا.',
         ),
       ];
     } else if (isKu) {
@@ -789,7 +927,8 @@ class DocxGeneratorService {
         ReportSectionItem(
           sectionNumber: 1,
           title: 'ناساندن و چوارچێوەی زانستیی «$title»',
-          content: 'لێکۆڵینەوە لەبارەی «$title» یەکێکە لە گرنگترین تەوەرە زانستی و ئەکادیمییەکان لە سەردەمی ئێستادا. ئەم بابەتە بنەمایەکی تۆکمە بۆ تێگەیشتن لە چەمکە سەرەکییەکان، ڕێبازە نێودەوڵەتییەکان و گۆڕانکارییە هاوچەرخەکان دابین دەکات.\n\nلە ڕوانگەی مێژوویی و تیۆرییەوە، توێژینەوە نوێیەکان دەریانخستووە کە پێشکەوتنی ئەم بوارە دەبێتە هۆی دۆزینەوەی چارەسەری پراکتیکی بۆ ئاستەنگە ئاڵۆزەکان و بەرزکردنەوەی کوالیتی کارکردن لە ناوەندە زانستی و زانکۆییەکاندا.',
+          content:
+              'لێکۆڵینەوە لەبارەی «$title» یەکێکە لە گرنگترین تەوەرە زانستی و ئەکادیمییەکان لە سەردەمی ئێستادا. ئەم بابەتە بنەمایەکی تۆکمە بۆ تێگەیشتن لە چەمکە سەرەکییەکان، ڕێبازە نێودەوڵەتییەکان و گۆڕانکارییە هاوچەرخەکان دابین دەکات.\n\nلە ڕوانگەی مێژوویی و تیۆرییەوە، توێژینەوە نوێیەکان دەریانخستووە کە پێشکەوتنی ئەم بوارە دەبێتە هۆی دۆزینەوەی چارەسەری پراکتیکی بۆ ئاستەنگە ئاڵۆزەکان و بەرزکردنەوەی کوالیتی کارکردن لە ناوەندە زانستی و زانکۆییەکاندا.',
           bulletPoints: [
             'پێناسە و چەمکە بنەڕەتییەکانی پەیوەست بە $title',
             'گرنگی و پانتایی زانستی لە ڕوانگەی لێکۆڵینەوە هاوچەرخەکان',
@@ -799,47 +938,56 @@ class DocxGeneratorService {
         ReportSectionItem(
           sectionNumber: 2,
           title: 'بنەما تیۆرییەکان و مێژووی پەرەسەندنی «$title»',
-          content: 'چوارچێوەی گشتی و تیۆری «$title» لە کۆمەڵێک کۆڵەکە و پێکهاتەی بنەڕەتی پێکدێت کە بە شێوازێکی هاوئاهەنگ کار دەکەن. هەر بەشێک لەم سیستمە ئەرک و فەرمانی دیاریکراوی خۆی هەیە و تەواوکەری بەشەکانی دیکەیە.\n\nتێگەیشتن لە پەیوەندی نێوان ئەم پێکهاتانە ڕێگەخۆشکەرە بۆ شیکارییەکی وردبینانەتر سەبارەت بە میکانیزمە کاراییەکان و چۆنیەتی کۆنترۆڵکردنی پرۆسەکان.',
+          content:
+              'چوارچێوەی گشتی و تیۆری «$title» لە کۆمەڵێک کۆڵەکە و پێکهاتەی بنەڕەتی پێکدێت کە بە شێوازێکی هاوئاهەنگ کار دەکەن. هەر بەشێک لەم سیستمە ئەرک و فەرمانی دیاریکراوی خۆی هەیە و تەواوکەری بەشەکانی دیکەیە.\n\nتێگەیشتن لە پەیوەندی نێوان ئەم پێکهاتانە ڕێگەخۆشکەرە بۆ شیکارییەکی وردبینانەتر سەبارەت بە میکانیزمە کاراییەکان و چۆنیەتی کۆنترۆڵکردنی پرۆسەکان.',
         ),
         ReportSectionItem(
           sectionNumber: 3,
           title: 'پێکهاتە بنەڕەتییەکان و تەلارسازیی سیستەم',
-          content: 'قۆناغی سەرەتایی کارکردنی «$title» پێویستی بە دابینکردنی مەرج و کەرەستە سەرەکییەکان هەیە. لەم قۆناغەدا داتاکان و پێکهاتەکان کۆدەکرێنەوە و بە شێوازێکی زانستی دابەش دەکرێن بەسەر کەناڵە گونجاوەکاندا.\n\nپڕۆسەی دەستپێک ڕۆڵێکی چارەنووسساز دەگێڕێت لە مسۆگەرکردنی سەقامگیری سیستمەکە و کەمکردنەوەی هەڵە ئەگەرییەکان.',
+          content:
+              'قۆناغی سەرەتایی کارکردنی «$title» پێویستی بە دابینکردنی مەرج و کەرەستە سەرەکییەکان هەیە. لەم قۆناغەدا داتاکان و پێکهاتەکان کۆدەکرێنەوە و بە شێوازێکی زانستی دابەش دەکرێن بەسەر کەناڵە گونجاوەکاندا.\n\nپڕۆسەی دەستپێک ڕۆڵێکی چارەنووسساز دەگێڕێت لە مسۆگەرکردنی سەقامگیری سیستمەکە و کەمکردنەوەی هەڵە ئەگەرییەکان.',
         ),
         ReportSectionItem(
           sectionNumber: 4,
           title: 'میکانیزمەکانی کارکردن و میتۆدۆلۆجیای جێبەجێکردن',
-          content: 'سیستەمی کارکردن و پەیوەندی لە «$title» بە پێی ڕێسایەکی پێشکەوتوو بەڕێوەدەچێت کە گرەنتی گەیشتنی ڕێکخراوی زانیاری و وزە دەکات بۆ شوێنی مەبەست.\n\nمۆدێلە زانستی و ژمێریارییەکان دەری دەخەن کە کۆنترۆڵکردنی خێرایی و پەستان لەم کەناڵانەدا کاریگەری ڕاستەوخۆی هەیە لەسەر پاراستنی هاوسەنگی گشتی.',
+          content:
+              'سیستەمی کارکردن و پەیوەندی لە «$title» بە پێی ڕێسایەکی پێشکەوتوو بەڕێوەدەچێت کە گرەنتی گەیشتنی ڕێکخراوی زانیاری و وزە دەکات بۆ شوێنی مەبەست.\n\nمۆدێلە زانستی و ژمێریارییەکان دەری دەخەن کە کۆنترۆڵکردنی خێرایی و پەستان لەم کەناڵانەدا کاریگەری ڕاستەوخۆی هەیە لەسەر پاراستنی هاوسەنگی گشتی.',
         ),
         ReportSectionItem(
           sectionNumber: 5,
           title: 'شیکاریی زانستیی قووڵ و فەرمانە سەرەکییەکان',
-          content: 'ناوەندی سەرەکی کارکردنی «$title» بەرپرسە لە شیتاڵکردن، شیکاریکردن و وەبەرهێنانی سەرچاوەکان. لەم ناوەندەدا کارلێکە وردەکان ئەنجام دەدرێن و بڕیارە گرنگەکان وەردەگیرێن.\n\nبەهۆی بوونی ڕێکاری تایبەتمەند و پارێزەر، ناوەندەکە بە شێوەیەکی بەردەوام توانای بەڕێوەبردنی بارگرانییە گۆڕاوەکانی هەیە.',
+          content:
+              'ناوەندی سەرەکی کارکردنی «$title» بەرپرسە لە شیتاڵکردن، شیکاریکردن و وەبەرهێنانی سەرچاوەکان. لەم ناوەندەدا کارلێکە وردەکان ئەنجام دەدرێن و بڕیارە گرنگەکان وەردەگیرێن.\n\nبەهۆی بوونی ڕێکاری تایبەتمەند و پارێزەر، ناوەندەکە بە شێوەیەکی بەردەوام توانای بەڕێوەبردنی بارگرانییە گۆڕاوەکانی هەیە.',
         ),
         ReportSectionItem(
           sectionNumber: 6,
           title: 'جێبەجێکردنی پراکتیکی و بەکارهێنانە هاوچەرخەکان',
-          content: 'لە پاش ئەنجامدانی پرۆسێسکردن، سیستمەکە پێکهاتە بەسوودەکان جیا دەکاتەوە و بە شێوازێکی یەکسان دابەشی دەکات بەسەر بەشە جیاوازەکاندا تاوەکو زۆرترین سوود لە سەرچاوەکان وەربگیرێت.\n\nئەم بەشە پێکهاتووە لە کۆمەڵێک میکانیزمی ورد کە ڕێگری لە بەفیڕۆچوونی تواناکان دەکەن.',
+          content:
+              'لە پاش ئەنجامدانی پرۆسێسکردن، سیستمەکە پێکهاتە بەسوودەکان جیا دەکاتەوە و بە شێوازێکی یەکسان دابەشی دەکات بەسەر بەشە جیاوازەکاندا تاوەکو زۆرترین سوود لە سەرچاوەکان وەربگیرێت.\n\nئەم بەشە پێکهاتووە لە کۆمەڵێک میکانیزمی ورد کە ڕێگری لە بەفیڕۆچوونی تواناکان دەکەن.',
         ),
         ReportSectionItem(
           sectionNumber: 7,
           title: 'بەراوردکاری، پێوەرەکانی کارایی و پێکەوەبەستن',
-          content: 'پەیوەندی نێوان «$title» و دەوروبەر یەکێکە لە تایبەتمەندییە هەرە گرنگەکان. سیستمەکە بەردەوام کارلێک لەگەڵ ژینگەی دەرەکی دەکات و خۆی لەگەڵ گۆڕانکارییەکاندا دەگونجێنێت.\n\nهەر جۆرە تێکچوونێک لەم هاوسەنگییەدا دەکرێت کاریگەری نەرێنی لەسەر بەرهەمداری و سەقامگیری گشتی دروست بکات.',
+          content:
+              'پەیوەندی نێوان «$title» و دەوروبەر یەکێکە لە تایبەتمەندییە هەرە گرنگەکان. سیستمەکە بەردەوام کارلێک لەگەڵ ژینگەی دەرەکی دەکات و خۆی لەگەڵ گۆڕانکارییەکاندا دەگونجێنێت.\n\nهەر جۆرە تێکچوونێک لەم هاوسەنگییەدا دەکرێت کاریگەری نەرێنی لەسەر بەرهەمداری و سەقامگیری گشتی دروست بکات.',
         ),
         ReportSectionItem(
           sectionNumber: 8,
           title: 'ئاستەنگە سەرەکییەکان و ڕەهەندە ئەخلاقی/تەکنیکییەکان',
-          content: 'لە پاڵ پێکهاتە سەرەکییەکاندا، کۆمەڵێک ئاستەنگ و ڕەهەندی ئەخلاقی و تەکنیکی هەن کە پێویستیان بە چاودێری و ڕێکخستنی بەردەوام هەیە.\n\nئەم بەشە بەردەوام وەڵامدەرەوەی خێرایە بۆ کەمکردنەوەی فشار و پاراستنی کوالیتی بەرزی ئەنجامەکان.',
+          content:
+              'لە پاڵ پێکهاتە سەرەکییەکاندا، کۆمەڵێک ئاستەنگ و ڕەهەندی ئەخلاقی و تەکنیکی هەن کە پێویستیان بە چاودێری و ڕێکخستنی بەردەوام هەیە.\n\nئەم بەشە بەردەوام وەڵامدەرەوەی خێرایە بۆ کەمکردنەوەی فشار و پاراستنی کوالیتی بەرزی ئەنجامەکان.',
         ),
         ReportSectionItem(
           sectionNumber: 9,
           title: 'ئاسۆی داهاتوو و گۆڕانکارییە پێشکەوتووەکان',
-          content: 'تەواوی چالاکییەکانی «$title» لە ڕێگەی تۆڕێکی هۆشیار و پێشکەوتووەوە چاودێری دەکرێن کە ئاسۆیەکی فراوان بۆ داهاتوو و گەشەپێدانی بەردەوام دەکەنەوە.\n\nبوونی داهێنانی نوێ گرەنتی دەدات کە سیستم لە بارودۆخە نائاساییەکانیشدا کارایی خۆی لەدەست نەدات.',
+          content:
+              'تەواوی چالاکییەکانی «$title» لە ڕێگەی تۆڕێکی هۆشیار و پێشکەوتووەوە چاودێری دەکرێن کە ئاسۆیەکی فراوان بۆ داهاتوو و گەشەپێدانی بەردەوام دەکەنەوە.\n\nبوونی داهێنانی نوێ گرەنتی دەدات کە سیستم لە بارودۆخە نائاساییەکانیشدا کارایی خۆی لەدەست نەدات.',
         ),
         ReportSectionItem(
           sectionNumber: 10,
           title: 'دەرئەنجامە زانستییەکان، پێشنیارەکان و کۆتایی',
-          content: 'لە کۆتاییدا، کارکردن لە بواری «$title» بەرەنجامی ئەرێنی گەورە دەخاتە ڕوو. توێژینەوە هاوچەرخەکان پێشنیاری بەکارهێنانی تەکنۆلۆژیای نوێ و ستانداردە جیهانییەکان دەکەن بۆ پەرەپێدانی زیاتر.\n\nکورتەی ڕاپۆرتەکە دەری دەخات کە بەردەوامی توێژینەوەی ئەکادیمی دەبێتە هۆی گەشەپێدانی زیاتری ئەم سیستمە لە ئاییندەدا.',
+          content:
+              'لە کۆتاییدا، کارکردن لە بواری «$title» بەرەنجامی ئەرێنی گەورە دەخاتە ڕوو. توێژینەوە هاوچەرخەکان پێشنیاری بەکارهێنانی تەکنۆلۆژیای نوێ و ستانداردە جیهانییەکان دەکەن بۆ پەرەپێدانی زیاتر.\n\nکورتەی ڕاپۆرتەکە دەری دەخات کە بەردەوامی توێژینەوەی ئەکادیمی دەبێتە هۆی گەشەپێدانی زیاتری ئەم سیستمە لە ئاییندەدا.',
         ),
       ];
     } else if (isAr) {
@@ -847,52 +995,62 @@ class DocxGeneratorService {
         ReportSectionItem(
           sectionNumber: 1,
           title: 'المقدمة والإطار العلمي لـ «$title»',
-          content: 'تعد دراسة «$title» من الموضوعات العلمية والأكاديمية البارزة في العصر الحديث. يوفر هذا التقرير أساساً نظرياً وعملياً لفهم المفاهيم الجوهرية والآليات التشغيلية الحديثة.\n\nأظهرت الأبحاث الأكاديمية المتقدمة أن التطوير المستمر في هذا المجال يسهم بشكل مباشر في إيجاد حلول منهجية للتحديات المعقدة والارتقاء بالأداء الأكاديمي.',
+          content:
+              'تعد دراسة «$title» من الموضوعات العلمية والأكاديمية البارزة في العصر الحديث. يوفر هذا التقرير أساساً نظرياً وعملياً لفهم المفاهيم الجوهرية والآليات التشغيلية الحديثة.\n\nأظهرت الأبحاث الأكاديمية المتقدمة أن التطوير المستمر في هذا المجال يسهم بشكل مباشر في إيجاد حلول منهجية للتحديات المعقدة والارتقاء بالأداء الأكاديمي.',
         ),
         ReportSectionItem(
           sectionNumber: 2,
           title: 'الأسس النظرية والتطور التاريخي',
-          content: 'يقوم الإطار العام لـ «$title» على منظومة متكاملة من العناصر التخصصية التي تعمل بتناسق دقيق لتحقيق الأهداف المنشودة بكفاءة عالية.',
+          content:
+              'يقوم الإطار العام لـ «$title» على منظومة متكاملة من العناصر التخصصية التي تعمل بتناسق دقيق لتحقيق الأهداف المنشودة بكفاءة عالية.',
         ),
         ReportSectionItem(
           sectionNumber: 3,
           title: 'المكونات الأساسية والبنية الهيكلية',
-          content: 'تتطلب المراحل التشغيلية الأولى معايير دقيقة لفرز وتنظيم المدخلات وضمان تدفقها بالشكل الأمثل عبر المسارات المحددة.',
+          content:
+              'تتطلب المراحل التشغيلية الأولى معايير دقيقة لفرز وتنظيم المدخلات وضمان تدفقها بالشكل الأمثل عبر المسارات المحددة.',
         ),
         ReportSectionItem(
           sectionNumber: 4,
           title: 'آليات العمل والمنهجيات المتبعة',
-          content: 'تعتمد منظومة العمل في «$title» على بروتوكولات متطورة تضمن حركة المخرجات بدقة ودون فقدان للطاقة أو اضطراب في المسار.',
+          content:
+              'تعتمد منظومة العمل في «$title» على بروتوكولات متطورة تضمن حركة المخرجات بدقة ودون فقدان للطاقة أو اضطراب في المسار.',
         ),
         ReportSectionItem(
           sectionNumber: 5,
           title: 'التحليل العلمي المعمق والوظائف الحيوية',
-          content: 'يمثل المركز التشغيلي لـ «$title» بيئة تفاعلية عالية الكفاءة تتم فيها إعادة الهيكلة والتحليل المتقدم لجميع العناصر.',
+          content:
+              'يمثل المركز التشغيلي لـ «$title» بيئة تفاعلية عالية الكفاءة تتم فيها إعادة الهيكلة والتحليل المتقدم لجميع العناصر.',
         ),
         ReportSectionItem(
           sectionNumber: 6,
           title: 'التطبيقات العملية والابتكارات المعاصرة',
-          content: 'تعمل آليات الاستيعاب على استخلاص الفوائد القصوى وإعادة توزيعها بشكل منهجي على الوحدات التابعة لضمان الاستدامة.',
+          content:
+              'تعمل آليات الاستيعاب على استخلاص الفوائد القصوى وإعادة توزيعها بشكل منهجي على الوحدات التابعة لضمان الاستدامة.',
         ),
         ReportSectionItem(
           sectionNumber: 7,
           title: 'المقارنة المعيارية ومؤشرات الأداء',
-          content: 'يتفاعل «$title» باستمرار مع البيئة المحيطة لتأمين التوازن الشامل والتكيف مع التغيرات والمتغيرات الخارجية.',
+          content:
+              'يتفاعل «$title» باستمرار مع البيئة المحيطة لتأمين التوازن الشامل والتكيف مع التغيرات والمتغيرات الخارجية.',
         ),
         ReportSectionItem(
           sectionNumber: 8,
           title: 'التحديات والاعتبارات الأخلاقية والتقنية',
-          content: 'تسهم الوحدات المساندة في تنظيم العمليات وتوفير بيئة عمل مستقرة تحافظ على الأداء المتميز في مختلف الظروف.',
+          content:
+              'تسهم الوحدات المساندة في تنظيم العمليات وتوفير بيئة عمل مستقرة تحافظ على الأداء المتميز في مختلف الظروف.',
         ),
         ReportSectionItem(
           sectionNumber: 9,
           title: 'الآفاق المستقبلية والاتجاهات الحديثة',
-          content: 'تتم مراقبة الأداء عبر شبكة تنظيمية تقرأ المؤشرات الآنية وتتدخل لتصحيح المسارات والحفاظ على المعايير المستهدفة.',
+          content:
+              'تتم مراقبة الأداء عبر شبكة تنظيمية تقرأ المؤشرات الآنية وتتدخل لتصحيح المسارات والحفاظ على المعايير المستهدفة.',
         ),
         ReportSectionItem(
           sectionNumber: 10,
           title: 'النتائج والتوصيات والخاتمة الشاملة',
-          content: 'في الختام، يمثل «$title» نموذجاً بحثياً حيوياً يتطلب المزيد من التطوير الأكاديمي لمواكبة التطورات المتسارعة وتحقيق أقصى درجات الفائدة العلمية.',
+          content:
+              'في الختام، يمثل «$title» نموذجاً بحثياً حيوياً يتطلب المزيد من التطوير الأكاديمي لمواكبة التطورات المتسارعة وتحقيق أقصى درجات الفائدة العلمية.',
         ),
       ];
     } else {
@@ -900,7 +1058,8 @@ class DocxGeneratorService {
         ReportSectionItem(
           sectionNumber: 1,
           title: 'Introduction & Scientific Scope of $title',
-          content: 'The comprehensive examination of "$title" constitutes a critical area of scientific inquiry and academic research. This report provides a rigorous theoretical foundation, evaluating foundational principles, methodological advancements, and contemporary frameworks.\n\nRecent academic literature underscores that continuous innovation in this field facilitates evidence-based solutions to multidimensional challenges across modern academic and professional domains.',
+          content:
+              'The comprehensive examination of "$title" constitutes a critical area of scientific inquiry and academic research. This report provides a rigorous theoretical foundation, evaluating foundational principles, methodological advancements, and contemporary frameworks.\n\nRecent academic literature underscores that continuous innovation in this field facilitates evidence-based solutions to multidimensional challenges across modern academic and professional domains.',
           bulletPoints: [
             'Core definitions and foundational theoretical scope of $title',
             'Empirical significance in contemporary scientific and technological research',
@@ -910,47 +1069,56 @@ class DocxGeneratorService {
         ReportSectionItem(
           sectionNumber: 2,
           title: 'Theoretical Foundations & Historical Evolution',
-          content: 'The architectural framework of "$title" is built upon robust modular subsystems that operate in synchronized harmony. Each individual unit performs specialized operations while contributing directly to overall systemic stability and performance metrics.',
+          content:
+              'The architectural framework of "$title" is built upon robust modular subsystems that operate in synchronized harmony. Each individual unit performs specialized operations while contributing directly to overall systemic stability and performance metrics.',
         ),
         ReportSectionItem(
           sectionNumber: 3,
           title: 'Primary Structural Components & System Architecture',
-          content: 'Initial operational stages within "$title" demand rigorous calibration and data acquisition protocols. Structured preprocessing pipelines ensure that input variables are validated, minimizing downstream latency and anomalous behaviors.',
+          content:
+              'Initial operational stages within "$title" demand rigorous calibration and data acquisition protocols. Structured preprocessing pipelines ensure that input variables are validated, minimizing downstream latency and anomalous behaviors.',
         ),
         ReportSectionItem(
           sectionNumber: 4,
           title: 'Operational Mechanisms & Core Methodologies',
-          content: 'Directional propagation throughout the pathways of "$title" is governed by precision-engineered feedback loops. These regulatory controllers sustain optimal flow velocity and maintain systemic equilibrium under variable load demands.',
+          content:
+              'Directional propagation throughout the pathways of "$title" is governed by precision-engineered feedback loops. These regulatory controllers sustain optimal flow velocity and maintain systemic equilibrium under variable load demands.',
         ),
         ReportSectionItem(
           sectionNumber: 5,
           title: 'In-Depth Scientific Analysis & Functional Dynamics',
-          content: 'The core operational engine of "$title" serves as the primary locus for data restructuring, catalytic computation, and complex synthesis, supported by resilient fault-tolerant architectural design.',
+          content:
+              'The core operational engine of "$title" serves as the primary locus for data restructuring, catalytic computation, and complex synthesis, supported by resilient fault-tolerant architectural design.',
         ),
         ReportSectionItem(
           sectionNumber: 6,
           title: 'Practical Implementations & Contemporary Innovations',
-          content: 'Following intermediate transformations, specialized distribution matrices route outputs efficiently across target consumer modules, maximizing resource efficiency and throughput.',
+          content:
+              'Following intermediate transformations, specialized distribution matrices route outputs efficiently across target consumer modules, maximizing resource efficiency and throughput.',
         ),
         ReportSectionItem(
           sectionNumber: 7,
           title: 'Comparative Benchmark & System Performance Metrics',
-          content: 'The external boundary interfaces of "$title" maintain dynamic coupling with surrounding contextual environments, facilitating adaptive realignment when boundary conditions fluctuate.',
+          content:
+              'The external boundary interfaces of "$title" maintain dynamic coupling with surrounding contextual environments, facilitating adaptive realignment when boundary conditions fluctuate.',
         ),
         ReportSectionItem(
           sectionNumber: 8,
           title: 'Challenges, Ethical Considerations & Risk Mitigation',
-          content: 'Supporting secondary subsystems provide indispensable buffering, load balancing, and synchronization services to sustain high-availability operation during peak processing cycles.',
+          content:
+              'Supporting secondary subsystems provide indispensable buffering, load balancing, and synchronization services to sustain high-availability operation during peak processing cycles.',
         ),
         ReportSectionItem(
           sectionNumber: 9,
           title: 'Future Horizons & Next-Generation Paradigms',
-          content: 'Continuous operational monitoring is executed via an intelligent telemetry network that captures real-time diagnostic signals and applies proactive corrective adjustments.',
+          content:
+              'Continuous operational monitoring is executed via an intelligent telemetry network that captures real-time diagnostic signals and applies proactive corrective adjustments.',
         ),
         ReportSectionItem(
           sectionNumber: 10,
           title: 'Academic Findings, Recommendations & Conclusion',
-          content: 'In conclusion, "$title" represents a pivotal paradigm in modern academic research. Continued interdisciplinary collaboration and technological innovation will unlock transformative breakthroughs in future implementations.',
+          content:
+              'In conclusion, "$title" represents a pivotal paradigm in modern academic research. Continued interdisciplinary collaboration and technological innovation will unlock transformative breakthroughs in future implementations.',
         ),
       ];
     }
@@ -994,36 +1162,76 @@ class DocxGeneratorService {
 
     // 1. [Content_Types].xml
     final contentTypesXml = _buildContentTypesXml();
-    archive.addFile(ArchiveFile('[Content_Types].xml', contentTypesXml.length, utf8.encode(contentTypesXml)));
+    archive.addFile(
+      ArchiveFile(
+        '[Content_Types].xml',
+        contentTypesXml.length,
+        utf8.encode(contentTypesXml),
+      ),
+    );
 
     // 2. _rels/.rels
     final rootRelsXml = _buildRootRelsXml();
-    archive.addFile(ArchiveFile('_rels/.rels', rootRelsXml.length, utf8.encode(rootRelsXml)));
+    archive.addFile(
+      ArchiveFile('_rels/.rels', rootRelsXml.length, utf8.encode(rootRelsXml)),
+    );
 
     // 3. word/_rels/document.xml.rels
     final hasLogo = report.logoBytes != null && report.logoBytes!.isNotEmpty;
     final docRelsXml = _buildDocumentRelsXml(hasLogo);
-    archive.addFile(ArchiveFile('word/_rels/document.xml.rels', docRelsXml.length, utf8.encode(docRelsXml)));
+    archive.addFile(
+      ArchiveFile(
+        'word/_rels/document.xml.rels',
+        docRelsXml.length,
+        utf8.encode(docRelsXml),
+      ),
+    );
 
     if (hasLogo) {
-      archive.addFile(ArchiveFile('word/media/logo.png', report.logoBytes!.length, report.logoBytes!));
+      archive.addFile(
+        ArchiveFile(
+          'word/media/logo.png',
+          report.logoBytes!.length,
+          report.logoBytes!,
+        ),
+      );
     }
 
     // 4. word/fontTable.xml
     final fontTableXml = _buildFontTableXml();
-    archive.addFile(ArchiveFile('word/fontTable.xml', fontTableXml.length, utf8.encode(fontTableXml)));
+    archive.addFile(
+      ArchiveFile(
+        'word/fontTable.xml',
+        fontTableXml.length,
+        utf8.encode(fontTableXml),
+      ),
+    );
 
     // 5. word/settings.xml
     final settingsXml = _buildSettingsXml();
-    archive.addFile(ArchiveFile('word/settings.xml', settingsXml.length, utf8.encode(settingsXml)));
+    archive.addFile(
+      ArchiveFile(
+        'word/settings.xml',
+        settingsXml.length,
+        utf8.encode(settingsXml),
+      ),
+    );
 
     // 6. word/styles.xml
     final stylesXml = _buildStylesXml();
-    archive.addFile(ArchiveFile('word/styles.xml', stylesXml.length, utf8.encode(stylesXml)));
+    archive.addFile(
+      ArchiveFile('word/styles.xml', stylesXml.length, utf8.encode(stylesXml)),
+    );
 
     // 7. word/document.xml
     final documentXml = _buildDocumentXml(report);
-    archive.addFile(ArchiveFile('word/document.xml', documentXml.length, utf8.encode(documentXml)));
+    archive.addFile(
+      ArchiveFile(
+        'word/document.xml',
+        documentXml.length,
+        utf8.encode(documentXml),
+      ),
+    );
 
     final zipEncoder = ZipEncoder();
     return zipEncoder.encode(archive);
@@ -1048,7 +1256,8 @@ class DocxGeneratorService {
     final truncated = cleanFileName.length > 35
         ? cleanFileName.substring(0, 35).replaceAll(RegExp(r'_+$'), '')
         : cleanFileName;
-    final fileName = '${truncated.isEmpty ? 'Academic_Report' : truncated}.docx';
+    final fileName =
+        '${truncated.isEmpty ? 'Academic_Report' : truncated}.docx';
     final filePath = '${targetDir.path}/$fileName';
 
     final file = File(filePath);
@@ -1057,7 +1266,12 @@ class DocxGeneratorService {
     // On Windows, auto-open the Word document in Microsoft Word
     if (!kIsWeb && Platform.isWindows) {
       try {
-        await Process.run('cmd', ['/c', 'start', '""', filePath], runInShell: true);
+        await Process.run('cmd', [
+          '/c',
+          'start',
+          '""',
+          filePath,
+        ], runInShell: true);
       } catch (e) {
         debugPrint('Windows auto-launch info: $e');
       }
@@ -1066,7 +1280,13 @@ class DocxGeneratorService {
     // On Mobile & Desktop, trigger the system Share/Open sheet
     try {
       await Share.shareXFiles(
-        [XFile(filePath, mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')],
+        [
+          XFile(
+            filePath,
+            mimeType:
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          ),
+        ],
         subject: report.title,
         text: 'فایلی Word بۆ ڕاپۆرتی: ${report.title}',
       );
@@ -1076,7 +1296,10 @@ class DocxGeneratorService {
   }
 
   static String _escapeXml(String text) {
-    final cleaned = text.replaceAll(RegExp(r'[\x00-\x08\x0B\x0C\x0E-\x1F\uD800-\uDFFF]'), '');
+    final cleaned = text.replaceAll(
+      RegExp(r'[\x00-\x08\x0B\x0C\x0E-\x1F\uD800-\uDFFF]'),
+      '',
+    );
     return cleaned
         .replaceAll('&', '&amp;')
         .replaceAll('<', '&lt;')
@@ -1211,43 +1434,45 @@ class DocxGeneratorService {
     final ministryLine1 = report.languageCode == 'en'
         ? 'Kurdistan Regional Government - Iraq'
         : (report.languageCode == 'ar'
-            ? 'حكومة إقليم كوردستان - العراق'
-            : (report.languageCode == 'badini'
-                ? 'حکومەتا هەرێما کوردستانێ - عیراق'
-                : 'حکومەتی هەرێمی کوردستان - عێراق'));
+              ? 'حكومة إقليم كوردستان - العراق'
+              : (report.languageCode == 'badini'
+                    ? 'حکومەتا هەرێما کوردستانێ - عیراق'
+                    : 'حکومەتی هەرێمی کوردستان - عێراق'));
     final ministryLine2 = report.languageCode == 'en'
         ? 'Ministry of Higher Education & Scientific Research'
         : (report.languageCode == 'ar'
-            ? 'وزارة التعليم العالي والبحث العلمي'
-            : (report.languageCode == 'badini'
-                ? 'وەزارەتا خوێندنا باڵا و ڤەکۆلینێن زانستی'
-                : 'وەزارەتی خوێندنی باڵا و توێژینەوەی زانستی'));
+              ? 'وزارة التعليم العالي والبحث العلمي'
+              : (report.languageCode == 'badini'
+                    ? 'وەزارەتا خوێندنا باڵا و ڤەکۆلینێن زانستی'
+                    : 'وەزارەتی خوێندنی باڵا و توێژینەوەی زانستی'));
 
     final preparedLabel = report.languageCode == 'en'
         ? 'Prepared by:'
         : (report.languageCode == 'ar'
-            ? 'إعداد:'
-            : (report.languageCode == 'badini'
-                ? 'ئامادەکرن ژ لایێ:'
-                : 'ئامادەکردنی:'));
+              ? 'إعداد:'
+              : (report.languageCode == 'badini'
+                    ? 'ئامادەکرن ژ لایێ:'
+                    : 'ئامادەکردنی:'));
 
     final supervisorLabel = report.languageCode == 'en'
         ? 'Supervised by:'
         : (report.languageCode == 'ar'
-            ? 'بإشراف:'
-            : (report.languageCode == 'badini'
-                ? 'ب سەرپەرشتیا:'
-                : 'بەسەرپەرشتیی:'));
+              ? 'بإشراف:'
+              : (report.languageCode == 'badini'
+                    ? 'ب سەرپەرشتیا:'
+                    : 'بەسەرپەرشتیی:'));
 
     final academicYearLabel = report.languageCode == 'en'
         ? 'Academic Year:'
         : (report.languageCode == 'ar'
-            ? 'العام الدراسي:'
-            : (report.languageCode == 'badini'
-                ? 'ساڵا خوێندنا ئەکادیمی:'
-                : 'ساڵی خوێندنی ئەکادیمی:'));
+              ? 'العام الدراسي:'
+              : (report.languageCode == 'badini'
+                    ? 'ساڵا خوێندنا ئەکادیمی:'
+                    : 'ساڵی خوێندنی ئەکادیمی:'));
 
-    final yearDisplay = report.academicYear.isNotEmpty ? report.academicYear : '2025 - 2026';
+    final yearDisplay = report.academicYear.isNotEmpty
+        ? report.academicYear
+        : '2025 - 2026';
 
     // Logo Image if present
     if (report.logoBytes != null && report.logoBytes!.isNotEmpty) {
@@ -1284,7 +1509,12 @@ class DocxGeneratorService {
     }
 
     // Header Lines (Solid Black - CENTERED on Page 1)
-    for (var hLine in [ministryLine1, ministryLine2, report.universityName, report.departmentName]) {
+    for (var hLine in [
+      ministryLine1,
+      ministryLine2,
+      report.universityName,
+      report.departmentName,
+    ]) {
       if (hLine.trim().isEmpty) continue;
       sb.write('''
     <w:p>
@@ -1359,10 +1589,18 @@ class DocxGeneratorService {
 
         for (int b = 0; b < page.bulletPoints.length; b++) {
           final item = page.bulletPoints[b];
-          final cleanItem = item.startsWith(RegExp(r'^\d+\.')) ? item : '${b + 1}. $item';
+          final cleanItem = item.startsWith(RegExp(r'^\d+\.'))
+              ? item
+              : '${b + 1}. $item';
           final targetPage = 3 + (b ~/ 2);
           final pageStr = isRtl
-              ? (targetPage.toString().replaceAll('3', '٣').replaceAll('4', '٤').replaceAll('5', '٥').replaceAll('6', '٦').replaceAll('7', '٧'))
+              ? (targetPage
+                    .toString()
+                    .replaceAll('3', '٣')
+                    .replaceAll('4', '٤')
+                    .replaceAll('5', '٥')
+                    .replaceAll('6', '٦')
+                    .replaceAll('7', '٧'))
               : targetPage.toString();
 
           sb.write('''
@@ -1480,8 +1718,11 @@ class DocxGeneratorService {
           pageNumber: 1,
           pageTitle: 'پوختەی خشتەی خوێندن',
           pageType: 'cover',
-          content: 'پوختەی خشتەی ئامادەکاری بۆ تاقیکردنەوەی وانەی $subjectName.\nماوەی پێویست: $daysLeft ڕۆژ.',
-          bulletPoints: tasks.map((t) => 'ڕۆژی ${t['day']}: ${t['title']} - ${t['desc']}').toList(),
+          content:
+              'پوختەی خشتەی ئامادەکاری بۆ تاقیکردنەوەی وانەی $subjectName.\nماوەی پێویست: $daysLeft ڕۆژ.',
+          bulletPoints: tasks
+              .map((t) => 'ڕۆژی ${t['day']}: ${t['title']} - ${t['desc']}')
+              .toList(),
         ),
       ],
     );

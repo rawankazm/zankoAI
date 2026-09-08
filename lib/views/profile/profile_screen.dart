@@ -56,7 +56,9 @@ class ProfileScreen extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: isDark ? ZankoColors.darkCard : Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(32),
+                ),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -75,14 +77,20 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                   Row(
                     children: [
-                      Icon(CupertinoIcons.chat_bubble_text_fill, color: ZankoColors.primary, size: 24),
+                      Icon(
+                        CupertinoIcons.chat_bubble_text_fill,
+                        color: ZankoColors.primary,
+                        size: 24,
+                      ),
                       const SizedBox(width: 10),
                       Text(
                         t('feedback_suggestions'),
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
-                          color: isDark ? Colors.white : ZankoColors.textPrimary,
+                          color: isDark
+                              ? Colors.white
+                              : ZankoColors.textPrimary,
                         ),
                       ),
                     ],
@@ -90,7 +98,12 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     t('feedback_dialog_desc'),
-                    style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : ZankoColors.textSecondary),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark
+                          ? Colors.grey[400]
+                          : ZankoColors.textSecondary,
+                    ),
                   ),
                   const SizedBox(height: 20),
 
@@ -104,7 +117,9 @@ class ProfileScreen extends StatelessWidget {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: Icon(
-                            starIndex <= rating ? CupertinoIcons.star_fill : CupertinoIcons.star,
+                            starIndex <= rating
+                                ? CupertinoIcons.star_fill
+                                : CupertinoIcons.star,
                             color: ZankoColors.primary,
                             size: 32,
                           ),
@@ -127,7 +142,11 @@ class ProfileScreen extends StatelessWidget {
                             selected: isSelected,
                             selectedColor: ZankoColors.primary,
                             labelStyle: TextStyle(
-                              color: isSelected ? Colors.white : (isDark ? Colors.grey[300] : ZankoColors.textPrimary),
+                              color: isSelected
+                                  ? Colors.white
+                                  : (isDark
+                                        ? Colors.grey[300]
+                                        : ZankoColors.textPrimary),
                               fontWeight: FontWeight.w700,
                               fontSize: 12,
                             ),
@@ -145,12 +164,19 @@ class ProfileScreen extends StatelessWidget {
                   TextField(
                     controller: textController,
                     maxLines: 4,
-                    style: TextStyle(color: isDark ? Colors.white : ZankoColors.textPrimary, fontSize: 14),
+                    style: TextStyle(
+                      color: isDark ? Colors.white : ZankoColors.textPrimary,
+                      fontSize: 14,
+                    ),
                     decoration: InputDecoration(
                       hintText: t('feedback_input_hint'),
-                      hintStyle: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[400]),
+                      hintStyle: TextStyle(
+                        color: isDark ? Colors.grey[500] : Colors.grey[400],
+                      ),
                       filled: true,
-                      fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[100],
+                      fillColor: isDark
+                          ? ZankoColors.darkBackground
+                          : Colors.grey[100],
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
@@ -164,52 +190,64 @@ class ProfileScreen extends StatelessWidget {
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: isSubmitting ? null : () async {
-                        final msg = textController.text.trim();
-                        if (msg.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(t('feedback_input_empty'))),
-                          );
-                          return;
-                        }
+                      onPressed: isSubmitting
+                          ? null
+                          : () async {
+                              final msg = textController.text.trim();
+                              if (msg.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(t('feedback_input_empty')),
+                                  ),
+                                );
+                                return;
+                              }
 
-                        setModalState(() => isSubmitting = true);
+                              setModalState(() => isSubmitting = true);
 
-                        try {
-                          await Supabase.instance.client.from('audit_logs').insert({
-                            'user_id': user?.id,
-                            'action': 'USER_FEEDBACK',
-                            'entity_type': feedbackType,
-                            'payload': {
-                              'message': msg,
-                              'rating': rating,
-                              'userName': user?.name ?? 'خوێندکار',
-                              'userEmail': user?.email ?? '',
+                              try {
+                                await Supabase.instance.client
+                                    .from('audit_logs')
+                                    .insert({
+                                      'user_id': user?.id,
+                                      'action': 'USER_FEEDBACK',
+                                      'entity_type': feedbackType,
+                                      'payload': {
+                                        'message': msg,
+                                        'rating': rating,
+                                        'userName': user?.name ?? 'خوێندکار',
+                                        'userEmail': user?.email ?? '',
+                                      },
+                                    });
+
+                                if (context.mounted) {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(t('feedback_sent_success')),
+                                      backgroundColor: const Color(0xFF10B981),
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                setModalState(() => isSubmitting = false);
+                              }
                             },
-                          });
-
-                          if (context.mounted) {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(t('feedback_sent_success')),
-                                backgroundColor: const Color(0xFF10B981),
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          setModalState(() => isSubmitting = false);
-                        }
-                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: ZankoColors.primary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
                       child: isSubmitting
                           ? const CircularProgressIndicator(color: Colors.white)
                           : Text(
                               t('send_feedback'),
-                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                     ),
                   ),
@@ -222,9 +260,15 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  void _showUniversityIdModal(BuildContext context, dynamic user, String name, String email, String uniName, String deptName) {
+  void _showUniversityIdModal(
+    BuildContext context,
+    dynamic user,
+    String name,
+    String email,
+    String uniName,
+    String deptName,
+  ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
 
     showModalBottomSheet(
       context: context,
@@ -257,7 +301,11 @@ class ProfileScreen extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(CupertinoIcons.checkmark_seal_fill, color: ZankoColors.primary, size: 24),
+                    Icon(
+                      CupertinoIcons.checkmark_seal_fill,
+                      color: ZankoColors.primary,
+                      size: 24,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       t('official_student_verification'),
@@ -278,9 +326,14 @@ class ProfileScreen extends StatelessWidget {
                     padding: const EdgeInsets.all(16),
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: isDark ? ZankoColors.darkBackground : const Color(0xFFF8FAFC),
+                      color: isDark
+                          ? ZankoColors.darkBackground
+                          : const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.3), width: 1.5),
+                      border: Border.all(
+                        color: ZankoColors.primary.withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
                       boxShadow: ZankoShadows.card,
                     ),
                     child: Column(
@@ -294,11 +347,16 @@ class ProfileScreen extends StatelessWidget {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 gradient: LinearGradient(
-                                  colors: [ZankoColors.primary, ZankoColors.accent],
+                                  colors: [
+                                    ZankoColors.primary,
+                                    ZankoColors.accent,
+                                  ],
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: ZankoColors.primary.withValues(alpha: 0.3),
+                                    color: ZankoColors.primary.withValues(
+                                      alpha: 0.3,
+                                    ),
                                     blurRadius: 12,
                                     offset: const Offset(0, 4),
                                   ),
@@ -306,28 +364,58 @@ class ProfileScreen extends StatelessWidget {
                               ),
                               padding: const EdgeInsets.all(3),
                               child: ClipOval(
-                                child: (user?.photoUrl != null &&
+                                child:
+                                    (user?.photoUrl != null &&
                                         user!.photoUrl!.isNotEmpty &&
-                                        !user.photoUrl!.contains('student_avatar_3d.png'))
+                                        !user.photoUrl!.contains(
+                                          'student_avatar_3d.png',
+                                        ))
                                     ? (user.photoUrl!.startsWith('http')
-                                        ? Image.network(
-                                            user.photoUrl!,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (_, _, _) => Image.asset('assets/images/student_avatar_3d.png', fit: BoxFit.cover),
-                                          )
-                                        : (user.photoUrl!.startsWith('assets/')
-                                            ? Image.asset(user.photoUrl!, fit: BoxFit.cover)
-                                            : (kIsWeb
-                                                ? Image.network(
+                                          ? Image.network(
+                                              user.photoUrl!,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, _, _) =>
+                                                  Image.asset(
+                                                    'assets/images/student_avatar_3d.png',
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                            )
+                                          : (user.photoUrl!.startsWith(
+                                                  'assets/',
+                                                )
+                                                ? Image.asset(
                                                     user.photoUrl!,
                                                     fit: BoxFit.cover,
-                                                    errorBuilder: (_, _, _) => Image.asset('assets/images/student_avatar_3d.png', fit: BoxFit.cover),
                                                   )
-                                                : Image.file(
-                                                    File(user.photoUrl!),
-                                                    fit: BoxFit.cover,
-                                                    errorBuilder: (_, _, _) => Image.asset('assets/images/student_avatar_3d.png', fit: BoxFit.cover),
-                                                  ))))
+                                                : (kIsWeb
+                                                      ? Image.network(
+                                                          user.photoUrl!,
+                                                          fit: BoxFit.cover,
+                                                          errorBuilder:
+                                                              (
+                                                                _,
+                                                                _,
+                                                                _,
+                                                              ) => Image.asset(
+                                                                'assets/images/student_avatar_3d.png',
+                                                                fit: BoxFit
+                                                                    .cover,
+                                                              ),
+                                                        )
+                                                      : Image.file(
+                                                          File(user.photoUrl!),
+                                                          fit: BoxFit.cover,
+                                                          errorBuilder:
+                                                              (
+                                                                _,
+                                                                _,
+                                                                _,
+                                                              ) => Image.asset(
+                                                                'assets/images/student_avatar_3d.png',
+                                                                fit: BoxFit
+                                                                    .cover,
+                                                              ),
+                                                        ))))
                                     : Image.asset(
                                         'assets/images/student_avatar_3d.png',
                                         fit: BoxFit.cover,
@@ -340,7 +428,11 @@ class ProfileScreen extends StatelessWidget {
                                 color: ZankoColors.primary,
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(CupertinoIcons.camera_fill, color: Colors.white, size: 16),
+                              child: const Icon(
+                                CupertinoIcons.camera_fill,
+                                color: Colors.white,
+                                size: 16,
+                              ),
                             ),
                           ],
                         ),
@@ -357,7 +449,11 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           '📷 کلیک بکە بۆ گۆڕینی وێنەی مۆبایل',
-                          style: TextStyle(fontSize: 11, color: ZankoColors.primary, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: ZankoColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
@@ -366,14 +462,38 @@ class ProfileScreen extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 // Academic Record List
-                _buildDetailRow(context, t('full_name'), name.isEmpty ? t('student_role') : name),
+                _buildDetailRow(
+                  context,
+                  t('full_name'),
+                  name.isEmpty ? t('student_role') : name,
+                ),
                 _buildDetailRow(context, t('university_email'), email),
-                _buildDetailRow(context, t('university'), uniName.isEmpty ? 'Zanko University' : uniName),
-                _buildDetailRow(context, t('faculty_major'), deptName.isEmpty ? 'Computer Science & AI' : deptName),
-                _buildDetailRow(context, t('academic_stage'), 'Year 3 • Semester 6'),
+                _buildDetailRow(
+                  context,
+                  t('university'),
+                  uniName.isEmpty ? 'Zanko University' : uniName,
+                ),
+                _buildDetailRow(
+                  context,
+                  t('faculty_major'),
+                  deptName.isEmpty ? 'Computer Science & AI' : deptName,
+                ),
+                _buildDetailRow(
+                  context,
+                  t('academic_stage'),
+                  'Year 3 • Semester 6',
+                ),
                 _buildDetailRow(context, t('cumulative_gpa'), '0 / 100'),
-                _buildDetailRow(context, t('credits_completed'), '96 / 120 ECTS'),
-                _buildDetailRow(context, t('campus_status'), 'Active • Good Standing 🟢'),
+                _buildDetailRow(
+                  context,
+                  t('credits_completed'),
+                  '96 / 120 ECTS',
+                ),
+                _buildDetailRow(
+                  context,
+                  t('campus_status'),
+                  'Active • Good Standing 🟢',
+                ),
 
                 const SizedBox(height: 24),
 
@@ -384,17 +504,33 @@ class ProfileScreen extends StatelessWidget {
                       child: ElevatedButton.icon(
                         onPressed: () {
                           Navigator.pop(context);
-                          _showEditProfileModal(context, user, name, uniName, deptName);
+                          _showEditProfileModal(
+                            context,
+                            user,
+                            name,
+                            uniName,
+                            deptName,
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: ZankoColors.primary,
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
-                        icon: const HugeIcon(icon: HugeIcons.strokeRoundedPencilEdit02, color: Colors.white, size: 18),
+                        icon: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedPencilEdit02,
+                          color: Colors.white,
+                          size: 18,
+                        ),
                         label: const Text(
                           'دەستکاریکردنی زانیاری',
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ),
@@ -404,14 +540,22 @@ class ProfileScreen extends StatelessWidget {
                         onPressed: () => Navigator.pop(context),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          side: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          side: BorderSide(
+                            color: isDark
+                                ? Colors.grey[700]!
+                                : Colors.grey[300]!,
+                          ),
                         ),
                         child: Text(
                           t('done'),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : ZankoColors.textPrimary,
+                            color: isDark
+                                ? Colors.white
+                                : ZankoColors.textPrimary,
                             fontSize: 13,
                           ),
                         ),
@@ -428,15 +572,21 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  void _showEditProfileModal(BuildContext context, dynamic user, String name, String uniName, String deptName) {
+  void _showEditProfileModal(
+    BuildContext context,
+    dynamic user,
+    String name,
+    String uniName,
+    String deptName,
+  ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final langProvider = Provider.of<LanguageProvider>(context, listen: false);
     String t(String k) => langProvider.translate(k);
     final nameCtrl = TextEditingController(text: name);
-    final uniCtrl  = TextEditingController(text: uniName);
+    final uniCtrl = TextEditingController(text: uniName);
     final deptCtrl = TextEditingController(text: deptName);
     final cityCtrl = TextEditingController(text: user?.cityName ?? 'سلێمانی');
-    bool isSaving  = false;
+    bool isSaving = false;
 
     showModalBottomSheet(
       context: context,
@@ -454,7 +604,9 @@ class ProfileScreen extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: isDark ? ZankoColors.darkCard : Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(32),
+                ),
               ),
               child: SingleChildScrollView(
                 child: Column(
@@ -474,14 +626,20 @@ class ProfileScreen extends StatelessWidget {
                     const SizedBox(height: 20),
                     Row(
                       children: [
-                        Icon(CupertinoIcons.pencil_circle_fill, color: ZankoColors.primary, size: 26),
+                        Icon(
+                          CupertinoIcons.pencil_circle_fill,
+                          color: ZankoColors.primary,
+                          size: 26,
+                        ),
                         const SizedBox(width: 10),
                         Text(
                           t('edit_profile'),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
-                            color: isDark ? Colors.white : ZankoColors.textPrimary,
+                            color: isDark
+                                ? Colors.white
+                                : ZankoColors.textPrimary,
                           ),
                         ),
                       ],
@@ -489,20 +647,33 @@ class ProfileScreen extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       t('edit_profile_desc'),
-                      style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : ZankoColors.textSecondary),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark
+                            ? Colors.grey[400]
+                            : ZankoColors.textSecondary,
+                      ),
                     ),
                     const SizedBox(height: 20),
 
                     // Name
                     TextField(
                       controller: nameCtrl,
-                      style: TextStyle(color: isDark ? Colors.white : ZankoColors.textPrimary, fontSize: 14),
+                      style: TextStyle(
+                        color: isDark ? Colors.white : ZankoColors.textPrimary,
+                        fontSize: 14,
+                      ),
                       decoration: InputDecoration(
                         labelText: t('full_name'),
                         labelStyle: TextStyle(color: ZankoColors.primary),
                         filled: true,
-                        fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[100],
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                        fillColor: isDark
+                            ? ZankoColors.darkBackground
+                            : Colors.grey[100],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -512,29 +683,42 @@ class ProfileScreen extends StatelessWidget {
                       controller: uniCtrl,
                       readOnly: true,
                       onTap: () async {
-                        final chosenUni = await UniversityDepartmentPicker.showUniversityPicker(
-                          context,
-                          selectedUniversityName: uniCtrl.text.trim(),
-                        );
+                        final chosenUni =
+                            await UniversityDepartmentPicker.showUniversityPicker(
+                              context,
+                              selectedUniversityName: uniCtrl.text.trim(),
+                            );
                         if (chosenUni != null) {
                           setModalState(() {
                             uniCtrl.text = chosenUni.nameKu;
-                            if (cityCtrl.text.isEmpty || cityCtrl.text.trim() == 'کوردستان') {
+                            if (cityCtrl.text.isEmpty ||
+                                cityCtrl.text.trim() == 'کوردستان') {
                               cityCtrl.text = chosenUni.cityNameKu;
                             }
                             deptCtrl.clear();
                           });
                         }
                       },
-                      style: TextStyle(color: isDark ? Colors.white : ZankoColors.textPrimary, fontSize: 14),
+                      style: TextStyle(
+                        color: isDark ? Colors.white : ZankoColors.textPrimary,
+                        fontSize: 14,
+                      ),
                       decoration: InputDecoration(
                         labelText: t('select_university'),
                         labelStyle: TextStyle(color: ZankoColors.primary),
                         hintText: '...',
-                        suffixIcon: const Icon(Icons.arrow_drop_down_rounded, size: 28),
+                        suffixIcon: const Icon(
+                          Icons.arrow_drop_down_rounded,
+                          size: 28,
+                        ),
                         filled: true,
-                        fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[100],
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                        fillColor: isDark
+                            ? ZankoColors.darkBackground
+                            : Colors.grey[100],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -544,27 +728,41 @@ class ProfileScreen extends StatelessWidget {
                       controller: deptCtrl,
                       readOnly: true,
                       onTap: () async {
-                        final currentUni = uniCtrl.text.trim().isNotEmpty ? uniCtrl.text.trim() : 'گشت زانکۆکان';
-                        final chosenDept = await UniversityDepartmentPicker.showDepartmentPicker(
-                          context,
-                          universityName: currentUni,
-                          selectedDepartmentName: deptCtrl.text.trim(),
-                        );
+                        final currentUni = uniCtrl.text.trim().isNotEmpty
+                            ? uniCtrl.text.trim()
+                            : 'گشت زانکۆکان';
+                        final chosenDept =
+                            await UniversityDepartmentPicker.showDepartmentPicker(
+                              context,
+                              universityName: currentUni,
+                              selectedDepartmentName: deptCtrl.text.trim(),
+                            );
                         if (chosenDept != null) {
                           setModalState(() {
                             deptCtrl.text = chosenDept;
                           });
                         }
                       },
-                      style: TextStyle(color: isDark ? Colors.white : ZankoColors.textPrimary, fontSize: 14),
+                      style: TextStyle(
+                        color: isDark ? Colors.white : ZankoColors.textPrimary,
+                        fontSize: 14,
+                      ),
                       decoration: InputDecoration(
                         labelText: t('select_department'),
                         labelStyle: TextStyle(color: ZankoColors.primary),
                         hintText: '...',
-                        suffixIcon: const Icon(Icons.arrow_drop_down_rounded, size: 28),
+                        suffixIcon: const Icon(
+                          Icons.arrow_drop_down_rounded,
+                          size: 28,
+                        ),
                         filled: true,
-                        fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[100],
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                        fillColor: isDark
+                            ? ZankoColors.darkBackground
+                            : Colors.grey[100],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -572,13 +770,21 @@ class ProfileScreen extends StatelessWidget {
                     // City
                     TextField(
                       controller: cityCtrl,
-                      style: TextStyle(color: isDark ? Colors.white : ZankoColors.textPrimary, fontSize: 14),
+                      style: TextStyle(
+                        color: isDark ? Colors.white : ZankoColors.textPrimary,
+                        fontSize: 14,
+                      ),
                       decoration: InputDecoration(
                         labelText: t('select_city'),
                         labelStyle: TextStyle(color: ZankoColors.primary),
                         filled: true,
-                        fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[100],
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                        fillColor: isDark
+                            ? ZankoColors.darkBackground
+                            : Colors.grey[100],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -587,7 +793,9 @@ class ProfileScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: isDark ? ZankoColors.darkBackground : Colors.blue.shade50.withValues(alpha: 0.5),
+                        color: isDark
+                            ? ZankoColors.darkBackground
+                            : Colors.blue.shade50.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: isDark ? Colors.white10 : Colors.blue.shade100,
@@ -601,13 +809,27 @@ class ProfileScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.grey[400] : ZankoColors.primary,
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : ZankoColors.primary,
                             ),
                           ),
                           const SizedBox(height: 8),
-                          _buildLockedDetailRow('🔒 تێکڕای گشتی نمرە:', '${user?.gpa ?? 0} / 100', isDark),
-                          _buildLockedDetailRow('🔒 کرێدیتی تەواوبوو:', '96 / 120 ECTS', isDark),
-                          _buildLockedDetailRow('🔒 بارودۆخی کامپس:', 'Active • Good Standing 🟢', isDark),
+                          _buildLockedDetailRow(
+                            '🔒 تێکڕای گشتی نمرە:',
+                            '${user?.gpa ?? 0} / 100',
+                            isDark,
+                          ),
+                          _buildLockedDetailRow(
+                            '🔒 کرێدیتی تەواوبوو:',
+                            '96 / 120 ECTS',
+                            isDark,
+                          ),
+                          _buildLockedDetailRow(
+                            '🔒 بارودۆخی کامپس:',
+                            'Active • Good Standing 🟢',
+                            isDark,
+                          ),
                         ],
                       ),
                     ),
@@ -618,61 +840,84 @@ class ProfileScreen extends StatelessWidget {
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton(
-                        onPressed: isSaving ? null : () async {
-                          final newName = nameCtrl.text.trim();
-                          final newCity = cityCtrl.text.trim();
-                          final newUni = uniCtrl.text.trim();
-                          final newDept = deptCtrl.text.trim();
+                        onPressed: isSaving
+                            ? null
+                            : () async {
+                                final newName = nameCtrl.text.trim();
+                                final newCity = cityCtrl.text.trim();
+                                final newUni = uniCtrl.text.trim();
+                                final newDept = deptCtrl.text.trim();
 
-                          if (newName.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(t('please_enter_full_name'))),
-                            );
-                            return;
-                          }
+                                if (newName.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        t('please_enter_full_name'),
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
 
-                          setModalState(() => isSaving = true);
+                                setModalState(() => isSaving = true);
 
-                          try {
-                            final authService = Provider.of<AuthService>(context, listen: false);
-                            await authService.updateProfile(
-                              fullName: newName,
-                              cityName: newCity,
-                              universityName: newUni,
-                              departmentName: newDept,
-                            );
+                                try {
+                                  final authService = Provider.of<AuthService>(
+                                    context,
+                                    listen: false,
+                                  );
+                                  await authService.updateProfile(
+                                    fullName: newName,
+                                    cityName: newCity,
+                                    universityName: newUni,
+                                    departmentName: newDept,
+                                  );
 
-                            if (context.mounted) {
-                              Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(t('profile_updated_success')),
-                                  backgroundColor: const Color(0xFF10B981),
-                                ),
-                              );
-                            }
-                          } catch (e) {
-                            debugPrint('Error saving profile: $e');
-                            setModalState(() => isSaving = false);
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('هەڵە لە پاشەکەوتکردن: ${e.toString().replaceAll('Exception: ', '')}'),
-                                  backgroundColor: Colors.redAccent,
-                                ),
-                              );
-                            }
-                          }
-                        },
+                                  if (context.mounted) {
+                                    Navigator.pop(context);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          t('profile_updated_success'),
+                                        ),
+                                        backgroundColor: const Color(
+                                          0xFF10B981,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  debugPrint('Error saving profile: $e');
+                                  setModalState(() => isSaving = false);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'هەڵە لە پاشەکەوتکردن: ${e.toString().replaceAll('Exception: ', '')}',
+                                        ),
+                                        backgroundColor: Colors.redAccent,
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: ZankoColors.primary,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
                         child: isSaving
-                            ? const CircularProgressIndicator(color: Colors.white)
+                            ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
                             : Text(
                                 t('save_profile_data'),
-                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
                       ),
                     ),
@@ -695,17 +940,26 @@ class ProfileScreen extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : ZankoColors.textSecondary),
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+              ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
           const SizedBox(width: 8),
-          Text(val, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black87)),
+          Text(
+            val,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white70 : Colors.black87,
+            ),
+          ),
         ],
       ),
     );
   }
-
 
   void _showNotificationsModal(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -727,7 +981,9 @@ class ProfileScreen extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: isDark ? ZankoColors.darkCard : Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -735,7 +991,8 @@ class ProfileScreen extends StatelessWidget {
                 children: [
                   Center(
                     child: Container(
-                      width: 40, height: 5,
+                      width: 40,
+                      height: 5,
                       decoration: BoxDecoration(
                         color: isDark ? Colors.grey[700] : Colors.grey[300],
                         borderRadius: BorderRadius.circular(10),
@@ -745,14 +1002,20 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                   Row(
                     children: [
-                      Icon(CupertinoIcons.bell_fill, color: ZankoColors.primary, size: 24),
+                      Icon(
+                        CupertinoIcons.bell_fill,
+                        color: ZankoColors.primary,
+                        size: 24,
+                      ),
                       const SizedBox(width: 10),
                       Text(
                         t('notification_settings'),
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
-                          color: isDark ? Colors.white : ZankoColors.textPrimary,
+                          color: isDark
+                              ? Colors.white
+                              : ZankoColors.textPrimary,
                         ),
                       ),
                     ],
@@ -760,32 +1023,70 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                   SwitchListTile(
                     activeThumbColor: ZankoColors.primary,
-                    title: Text(t('exam_alerts'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                    subtitle: Text(t('exam_alerts_desc'), style: const TextStyle(fontSize: 12)),
+                    title: Text(
+                      t('exam_alerts'),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: Text(
+                      t('exam_alerts_desc'),
+                      style: const TextStyle(fontSize: 12),
+                    ),
                     value: dailyExamAlert,
-                    onChanged: (val) => setModalState(() => dailyExamAlert = val),
+                    onChanged: (val) =>
+                        setModalState(() => dailyExamAlert = val),
                   ),
                   const Divider(),
                   SwitchListTile(
                     activeThumbColor: ZankoColors.primary,
-                    title: Text(t('study_streak_reminder'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                    subtitle: Text(t('study_streak_desc'), style: const TextStyle(fontSize: 12)),
+                    title: Text(
+                      t('study_streak_reminder'),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: Text(
+                      t('study_streak_desc'),
+                      style: const TextStyle(fontSize: 12),
+                    ),
                     value: studyReminder,
-                    onChanged: (val) => setModalState(() => studyReminder = val),
+                    onChanged: (val) =>
+                        setModalState(() => studyReminder = val),
                   ),
                   const Divider(),
                   SwitchListTile(
                     activeThumbColor: ZankoColors.primary,
-                    title: Text(t('campus_news'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                    subtitle: Text(t('campus_news_desc'), style: const TextStyle(fontSize: 12)),
+                    title: Text(
+                      t('campus_news'),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: Text(
+                      t('campus_news_desc'),
+                      style: const TextStyle(fontSize: 12),
+                    ),
                     value: campusNews,
                     onChanged: (val) => setModalState(() => campusNews = val),
                   ),
                   const Divider(),
                   SwitchListTile(
                     activeThumbColor: ZankoColors.primary,
-                    title: Text(t('vip_alerts'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                    subtitle: Text(t('vip_alerts_desc'), style: const TextStyle(fontSize: 12)),
+                    title: Text(
+                      t('vip_alerts'),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: Text(
+                      t('vip_alerts_desc'),
+                      style: const TextStyle(fontSize: 12),
+                    ),
                     value: vipAlerts,
                     onChanged: (val) => setModalState(() => vipAlerts = val),
                   ),
@@ -805,9 +1106,17 @@ class ProfileScreen extends StatelessWidget {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: ZankoColors.primary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
-                      child: Text(t('save'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                      child: Text(
+                        t('save'),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -831,10 +1140,17 @@ class ProfileScreen extends StatelessWidget {
         return FractionallySizedBox(
           heightFactor: 0.88,
           child: Container(
-            padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 20),
+            padding: const EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 16,
+              bottom: 20,
+            ),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF131824) : Colors.white,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -858,7 +1174,11 @@ class ProfileScreen extends StatelessWidget {
                         color: ZankoColors.primary.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(CupertinoIcons.shield_lefthalf_fill, color: ZankoColors.primary, size: 20),
+                      child: Icon(
+                        CupertinoIcons.shield_lefthalf_fill,
+                        color: ZankoColors.primary,
+                        size: 20,
+                      ),
                     ),
                     const SizedBox(width: 10),
                     const Expanded(
@@ -867,7 +1187,10 @@ class ProfileScreen extends StatelessWidget {
                         children: [
                           Text(
                             'سیاسەتی پاراستنی نهێنی ZankoAI',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           Text(
                             'Privacy Policy & Terms of Service',
@@ -877,7 +1200,11 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                      icon: const HugeIcon(icon: HugeIcons.strokeRoundedCancelCircle, color: Colors.grey, size: 22),
+                      icon: const HugeIcon(
+                        icon: HugeIcons.strokeRoundedCancelCircle,
+                        color: Colors.grey,
+                        size: 22,
+                      ),
                       onPressed: () => Navigator.pop(ctx),
                     ),
                   ],
@@ -891,7 +1218,11 @@ class ProfileScreen extends StatelessWidget {
                       children: [
                         Text(
                           '🛡️ پێشەکی',
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: ZankoColors.primary),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: ZankoColors.primary,
+                          ),
                         ),
                         const SizedBox(height: 6),
                         const Text(
@@ -901,7 +1232,11 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                         Text(
                           '📋 ئەو زانیارییانەی کۆدەکرێنەوە',
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: ZankoColors.primary),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: ZankoColors.primary,
+                          ),
                         ),
                         const SizedBox(height: 6),
                         const Text(
@@ -913,7 +1248,11 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                         Text(
                           '🤖 بەکارهێنانی ژیریی دەستکرد (AI)',
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: ZankoColors.primary),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: ZankoColors.primary,
+                          ),
                         ),
                         const SizedBox(height: 6),
                         const Text(
@@ -923,7 +1262,11 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                         Text(
                           '📞 پەیوەندی و تیمی گەشەپێدەر (birdev)',
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: ZankoColors.primary),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: ZankoColors.primary,
+                          ),
                         ),
                         const SizedBox(height: 6),
                         InkWell(
@@ -931,14 +1274,21 @@ class ProfileScreen extends StatelessWidget {
                           onTap: () async {
                             final uri = Uri.parse('https://www.birdev.tech/');
                             if (await canLaunchUrl(uri)) {
-                              await launchUrl(uri, mode: LaunchMode.externalApplication);
+                              await launchUrl(
+                                uri,
+                                mode: LaunchMode.externalApplication,
+                              );
                             }
                           },
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 4),
                             child: Row(
                               children: [
-                                Icon(CupertinoIcons.globe, size: 15, color: ZankoColors.primary),
+                                Icon(
+                                  CupertinoIcons.globe,
+                                  size: 15,
+                                  color: ZankoColors.primary,
+                                ),
                                 const SizedBox(width: 6),
                                 Text(
                                   'ماڵپەڕی فەرمی: www.birdev.tech',
@@ -962,17 +1312,34 @@ class ProfileScreen extends StatelessWidget {
                         const Divider(),
                         Builder(
                           builder: (tileCtx) {
-                            final lp = Provider.of<LanguageProvider>(tileCtx, listen: false);
+                            final lp = Provider.of<LanguageProvider>(
+                              tileCtx,
+                              listen: false,
+                            );
                             return ListTile(
                               contentPadding: EdgeInsets.zero,
-                              leading: const Icon(CupertinoIcons.trash_fill, color: ZankoColors.error),
-                              title: Text(lp.translate('clear_cache'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-                              subtitle: Text(lp.translate('clear_cache_desc'), style: const TextStyle(fontSize: 11.5)),
+                              leading: const Icon(
+                                CupertinoIcons.trash_fill,
+                                color: ZankoColors.error,
+                              ),
+                              title: Text(
+                                lp.translate('clear_cache'),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13.5,
+                                ),
+                              ),
+                              subtitle: Text(
+                                lp.translate('clear_cache_desc'),
+                                style: const TextStyle(fontSize: 11.5),
+                              ),
                               onTap: () {
                                 Navigator.pop(ctx);
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text(lp.translate('cache_cleared_success')),
+                                    content: Text(
+                                      lp.translate('cache_cleared_success'),
+                                    ),
                                     backgroundColor: ZankoColors.success,
                                   ),
                                 );
@@ -988,15 +1355,26 @@ class ProfileScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 Builder(
                   builder: (btnCtx) {
-                    final lp = Provider.of<LanguageProvider>(btnCtx, listen: false);
+                    final lp = Provider.of<LanguageProvider>(
+                      btnCtx,
+                      listen: false,
+                    );
                     return ElevatedButton(
                       onPressed: () => Navigator.pop(ctx),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: ZankoColors.primary,
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
-                      child: Text(lp.translate('understood'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      child: Text(
+                        lp.translate('understood'),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     );
                   },
                 ),
@@ -1026,7 +1404,8 @@ class ProfileScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 40, height: 5,
+                width: 40,
+                height: 5,
                 decoration: BoxDecoration(
                   color: isDark ? Colors.grey[700] : Colors.grey[300],
                   borderRadius: BorderRadius.circular(10),
@@ -1052,7 +1431,11 @@ class ProfileScreen extends StatelessWidget {
                   child: Image.asset(
                     'assets/images/logo.png',
                     fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => Icon(CupertinoIcons.sparkles, color: ZankoColors.primary, size: 50),
+                    errorBuilder: (_, _, _) => Icon(
+                      CupertinoIcons.sparkles,
+                      color: ZankoColors.primary,
+                      size: 50,
+                    ),
                   ),
                 ),
               ),
@@ -1068,7 +1451,11 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 'وەشانی v${AppVersionService.currentAppVersion} • Official Kurdistan Student AI Companion',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ZankoColors.primary),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: ZankoColors.primary,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
@@ -1088,52 +1475,77 @@ class ProfileScreen extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: () async {
                     Navigator.pop(context);
-                    final updateInfo = await AppVersionService().checkForUpdate();
+                    final updateInfo = await AppVersionService()
+                        .checkForUpdate();
                     if (context.mounted) {
                       if (updateInfo.isUpdateAvailable) {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => ForceUpdateScreen(updateInfo: updateInfo),
+                            builder: (_) =>
+                                ForceUpdateScreen(updateInfo: updateInfo),
                           ),
                         );
                       } else {
-                        final lp = Provider.of<LanguageProvider>(context, listen: false);
+                        final lp = Provider.of<LanguageProvider>(
+                          context,
+                          listen: false,
+                        );
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Row(
                               children: [
-                                const HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkBadge01, color: Colors.white, size: 20),
+                                const HugeIcon(
+                                  icon: HugeIcons.strokeRoundedCheckmarkBadge01,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
                                     '${lp.translate('you_have_latest_version')} (v${AppVersionService.currentAppVersion})',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                             backgroundColor: const Color(0xFF34C759),
                             behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         );
                       }
                     }
                   },
-                  icon: const HugeIcon(icon: HugeIcons.strokeRoundedRefresh, size: 18, color: Colors.white),
+                  icon: const HugeIcon(
+                    icon: HugeIcons.strokeRoundedRefresh,
+                    size: 18,
+                    color: Colors.white,
+                  ),
                   label: Builder(
                     builder: (btnCtx) {
-                      final lp = Provider.of<LanguageProvider>(btnCtx, listen: false);
+                      final lp = Provider.of<LanguageProvider>(
+                        btnCtx,
+                        listen: false,
+                      );
                       return Text(
                         lp.translate('check_updates'),
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       );
                     },
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ZankoColors.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
@@ -1147,20 +1559,32 @@ class ProfileScreen extends StatelessWidget {
                   }
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.black.withValues(alpha: 0.2) : Colors.grey[100],
+                    color: isDark
+                        ? Colors.black.withValues(alpha: 0.2)
+                        : Colors.grey[100],
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(CupertinoIcons.heart_fill, color: ZankoColors.error, size: 16),
+                      Icon(
+                        CupertinoIcons.heart_fill,
+                        color: ZankoColors.error,
+                        size: 16,
+                      ),
                       SizedBox(width: 8),
                       Flexible(
                         child: Text(
                           'گەشەپێدراوە لەلایەن تیمی birdev ★ (birdev.tech)',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -1174,18 +1598,27 @@ class ProfileScreen extends StatelessWidget {
                 height: 48,
                 child: Builder(
                   builder: (closeCtx) {
-                    final lp = Provider.of<LanguageProvider>(closeCtx, listen: false);
+                    final lp = Provider.of<LanguageProvider>(
+                      closeCtx,
+                      listen: false,
+                    );
                     return OutlinedButton(
                       onPressed: () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        side: BorderSide(
+                          color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
                       child: Text(
                         lp.translate('close'),
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : ZankoColors.textPrimary,
+                          color: isDark
+                              ? Colors.white
+                              : ZankoColors.textPrimary,
                         ),
                       ),
                     );
@@ -1204,7 +1637,8 @@ class ProfileScreen extends StatelessWidget {
     final langProvider = Provider.of<LanguageProvider>(context, listen: false);
     String t(String k) => langProvider.translate(k);
     final urlCtrl = TextEditingController(text: user?.photoUrl ?? '');
-    String selectedAvatar = user?.photoUrl ?? 'assets/images/student_avatar_3d.png';
+    String selectedAvatar =
+        user?.photoUrl ?? 'assets/images/student_avatar_3d.png';
     bool isSaving = false;
 
     final presetAvatars = [
@@ -1225,12 +1659,16 @@ class ProfileScreen extends StatelessWidget {
           builder: (context, setModalState) {
             return Container(
               padding: EdgeInsets.only(
-                top: 24, left: 20, right: 20,
+                top: 24,
+                left: 20,
+                right: 20,
                 bottom: MediaQuery.of(context).viewInsets.bottom + 24,
               ),
               decoration: BoxDecoration(
                 color: isDark ? ZankoColors.darkCard : Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(32),
+                ),
               ),
               child: SingleChildScrollView(
                 child: Column(
@@ -1239,7 +1677,8 @@ class ProfileScreen extends StatelessWidget {
                   children: [
                     Center(
                       child: Container(
-                        width: 40, height: 5,
+                        width: 40,
+                        height: 5,
                         decoration: BoxDecoration(
                           color: isDark ? Colors.grey[700] : Colors.grey[300],
                           borderRadius: BorderRadius.circular(10),
@@ -1249,14 +1688,20 @@ class ProfileScreen extends StatelessWidget {
                     const SizedBox(height: 20),
                     Row(
                       children: [
-                        Icon(CupertinoIcons.camera_fill, color: ZankoColors.primary, size: 26),
+                        Icon(
+                          CupertinoIcons.camera_fill,
+                          color: ZankoColors.primary,
+                          size: 26,
+                        ),
                         const SizedBox(width: 10),
                         Text(
                           t('change_profile_photo'),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
-                            color: isDark ? Colors.white : ZankoColors.textPrimary,
+                            color: isDark
+                                ? Colors.white
+                                : ZankoColors.textPrimary,
                           ),
                         ),
                       ],
@@ -1264,7 +1709,12 @@ class ProfileScreen extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       t('choose_avatar_or_url'),
-                      style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : ZankoColors.textSecondary),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark
+                            ? Colors.grey[400]
+                            : ZankoColors.textSecondary,
+                      ),
                     ),
                     const SizedBox(height: 20),
 
@@ -1273,7 +1723,10 @@ class ProfileScreen extends StatelessWidget {
                       child: GestureDetector(
                         onTap: () async {
                           final picker = ImagePicker();
-                          final XFile? picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+                          final XFile? picked = await picker.pickImage(
+                            source: ImageSource.gallery,
+                            imageQuality: 85,
+                          );
                           if (picked != null) {
                             setModalState(() {
                               selectedAvatar = picked.path;
@@ -1288,10 +1741,15 @@ class ProfileScreen extends StatelessWidget {
                               height: 106,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                border: Border.all(color: ZankoColors.primary, width: 3),
+                                border: Border.all(
+                                  color: ZankoColors.primary,
+                                  width: 3,
+                                ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: ZankoColors.primary.withValues(alpha: 0.35),
+                                    color: ZankoColors.primary.withValues(
+                                      alpha: 0.35,
+                                    ),
                                     blurRadius: 18,
                                     offset: const Offset(0, 4),
                                   ),
@@ -1299,12 +1757,41 @@ class ProfileScreen extends StatelessWidget {
                               ),
                               child: ClipOval(
                                 child: selectedAvatar.startsWith('http')
-                                    ? Image.network(selectedAvatar, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(Icons.person, size: 55))
+                                    ? Image.network(
+                                        selectedAvatar,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, _, _) =>
+                                            const Icon(Icons.person, size: 55),
+                                      )
                                     : (selectedAvatar.startsWith('assets/')
-                                        ? Image.asset(selectedAvatar, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(Icons.person, size: 55))
-                                        : (kIsWeb
-                                            ? Image.network(selectedAvatar, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(Icons.person, size: 55))
-                                            : Image.file(File(selectedAvatar), fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(Icons.person, size: 55)))),
+                                          ? Image.asset(
+                                              selectedAvatar,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, _, _) =>
+                                                  const Icon(
+                                                    Icons.person,
+                                                    size: 55,
+                                                  ),
+                                            )
+                                          : (kIsWeb
+                                                ? Image.network(
+                                                    selectedAvatar,
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder: (_, _, _) =>
+                                                        const Icon(
+                                                          Icons.person,
+                                                          size: 55,
+                                                        ),
+                                                  )
+                                                : Image.file(
+                                                    File(selectedAvatar),
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder: (_, _, _) =>
+                                                        const Icon(
+                                                          Icons.person,
+                                                          size: 55,
+                                                        ),
+                                                  ))),
                               ),
                             ),
                             Positioned(
@@ -1316,7 +1803,11 @@ class ProfileScreen extends StatelessWidget {
                                   color: ZankoColors.primary,
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(CupertinoIcons.camera_fill, color: Colors.white, size: 16),
+                                child: const Icon(
+                                  CupertinoIcons.camera_fill,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
                               ),
                             ),
                           ],
@@ -1332,7 +1823,10 @@ class ProfileScreen extends StatelessWidget {
                           child: ElevatedButton.icon(
                             onPressed: () async {
                               final picker = ImagePicker();
-                              final XFile? picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+                              final XFile? picked = await picker.pickImage(
+                                source: ImageSource.gallery,
+                                imageQuality: 85,
+                              );
                               if (picked != null) {
                                 setModalState(() {
                                   selectedAvatar = picked.path;
@@ -1340,13 +1834,25 @@ class ProfileScreen extends StatelessWidget {
                                 });
                               }
                             },
-                            icon: const HugeIcon(icon: HugeIcons.strokeRoundedImage01, size: 18, color: Colors.white),
-                            label: Text(t('phone_gallery'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            icon: const HugeIcon(
+                              icon: HugeIcons.strokeRoundedImage01,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                            label: Text(
+                              t('phone_gallery'),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: ZankoColors.primary,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 13),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
                             ),
                           ),
                         ),
@@ -1355,7 +1861,10 @@ class ProfileScreen extends StatelessWidget {
                           child: OutlinedButton.icon(
                             onPressed: () async {
                               final picker = ImagePicker();
-                              final XFile? picked = await picker.pickImage(source: ImageSource.camera, imageQuality: 85);
+                              final XFile? picked = await picker.pickImage(
+                                source: ImageSource.camera,
+                                imageQuality: 85,
+                              );
                               if (picked != null) {
                                 setModalState(() {
                                   selectedAvatar = picked.path;
@@ -1363,13 +1872,34 @@ class ProfileScreen extends StatelessWidget {
                                 });
                               }
                             },
-                            icon: HugeIcon(icon: HugeIcons.strokeRoundedCamera01, size: 18, color: isDark ? Colors.white : ZankoColors.textPrimary),
-                            label: Text(t('camera_photo'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            icon: HugeIcon(
+                              icon: HugeIcons.strokeRoundedCamera01,
+                              size: 18,
+                              color: isDark
+                                  ? Colors.white
+                                  : ZankoColors.textPrimary,
+                            ),
+                            label: Text(
+                              t('camera_photo'),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: isDark ? Colors.white : ZankoColors.textPrimary,
-                              side: BorderSide(color: isDark ? Colors.white30 : Colors.grey[300]!, width: 1.5),
+                              foregroundColor: isDark
+                                  ? Colors.white
+                                  : ZankoColors.textPrimary,
+                              side: BorderSide(
+                                color: isDark
+                                    ? Colors.white30
+                                    : Colors.grey[300]!,
+                                width: 1.5,
+                              ),
                               padding: const EdgeInsets.symmetric(vertical: 13),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
                             ),
                           ),
                         ),
@@ -1380,7 +1910,11 @@ class ProfileScreen extends StatelessWidget {
                     // Preset Avatars Grid
                     Text(
                       t('suggested_avatars'),
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? Colors.white : ZankoColors.textPrimary),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : ZankoColors.textPrimary,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     Row(
@@ -1400,7 +1934,9 @@ class ProfileScreen extends StatelessWidget {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: isSel ? ZankoColors.primary : Colors.transparent,
+                                color: isSel
+                                    ? ZankoColors.primary
+                                    : Colors.transparent,
                                 width: 2.5,
                               ),
                             ),
@@ -1423,15 +1959,26 @@ class ProfileScreen extends StatelessWidget {
                           setModalState(() => selectedAvatar = val.trim());
                         }
                       },
-                      style: TextStyle(color: isDark ? Colors.white : ZankoColors.textPrimary, fontSize: 13),
+                      style: TextStyle(
+                        color: isDark ? Colors.white : ZankoColors.textPrimary,
+                        fontSize: 13,
+                      ),
                       decoration: InputDecoration(
                         labelText: t('custom_image_url'),
                         labelStyle: TextStyle(color: ZankoColors.primary),
                         hintText: 'https://...',
                         filled: true,
-                        fillColor: isDark ? ZankoColors.darkBackground : Colors.grey[100],
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                        prefixIcon: Icon(CupertinoIcons.link, color: ZankoColors.primary),
+                        fillColor: isDark
+                            ? ZankoColors.darkBackground
+                            : Colors.grey[100],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                        prefixIcon: Icon(
+                          CupertinoIcons.link,
+                          color: ZankoColors.primary,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -1441,52 +1988,75 @@ class ProfileScreen extends StatelessWidget {
                       width: double.infinity,
                       height: 48,
                       child: ElevatedButton(
-                        onPressed: isSaving ? null : () async {
-                          setModalState(() => isSaving = true);
+                        onPressed: isSaving
+                            ? null
+                            : () async {
+                                setModalState(() => isSaving = true);
 
-                          try {
-                            final authService = Provider.of<AuthService>(context, listen: false);
-                            await authService.updateProfile(
-                              fullName: user?.name ?? 'Student',
-                              avatarUrl: selectedAvatar,
-                            );
+                                try {
+                                  final authService = Provider.of<AuthService>(
+                                    context,
+                                    listen: false,
+                                  );
+                                  await authService.updateProfile(
+                                    fullName: user?.name ?? 'Student',
+                                    avatarUrl: selectedAvatar,
+                                  );
 
-                            try {
-                              final prefs = await SharedPreferences.getInstance();
-                              await prefs.setString('local_avatar_path', selectedAvatar);
-                            } catch (_) {}
+                                  try {
+                                    final prefs =
+                                        await SharedPreferences.getInstance();
+                                    await prefs.setString(
+                                      'local_avatar_path',
+                                      selectedAvatar,
+                                    );
+                                  } catch (_) {}
 
-                            if (context.mounted) {
-                              Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(t('avatar_updated_success')),
-                                  backgroundColor: const Color(0xFF10B981),
-                                ),
-                              );
-                            }
-                          } catch (e) {
-                            debugPrint('Error saving avatar: $e');
-                            setModalState(() => isSaving = false);
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('هەڵە لە نوێکردنەوەی وێنە: ${e.toString().replaceAll('Exception: ', '')}'),
-                                  backgroundColor: Colors.redAccent,
-                                ),
-                              );
-                            }
-                          }
-                        },
+                                  if (context.mounted) {
+                                    Navigator.pop(context);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          t('avatar_updated_success'),
+                                        ),
+                                        backgroundColor: const Color(
+                                          0xFF10B981,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  debugPrint('Error saving avatar: $e');
+                                  setModalState(() => isSaving = false);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'هەڵە لە نوێکردنەوەی وێنە: ${e.toString().replaceAll('Exception: ', '')}',
+                                        ),
+                                        backgroundColor: Colors.redAccent,
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: ZankoColors.primary,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
                         child: isSaving
-                            ? const CircularProgressIndicator(color: Colors.white)
+                            ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
                             : Text(
                                 t('save_avatar'),
-                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
                       ),
                     ),
@@ -1499,8 +2069,6 @@ class ProfileScreen extends StatelessWidget {
       },
     );
   }
-
-
 
   Widget _buildDetailRow(BuildContext context, String label, String value) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1519,11 +2087,12 @@ class ProfileScreen extends StatelessWidget {
           Flexible(
             child: Text(
               value,
-              textAlign: TextAlign.end,                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : ZankoColors.textPrimary,
-                ),
+              textAlign: TextAlign.end,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : ZankoColors.textPrimary,
+              ),
             ),
           ),
         ],
@@ -1531,7 +2100,10 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  void _showLanguagePickerModal(BuildContext context, LanguageProvider langProvider) {
+  void _showLanguagePickerModal(
+    BuildContext context,
+    LanguageProvider langProvider,
+  ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showModalBottomSheet(
@@ -1596,7 +2168,8 @@ class ProfileScreen extends StatelessWidget {
                 title: langProvider.translate('badini_name'),
                 subtitle: langProvider.translate('badini_desc'),
                 flag: '☀️',
-                isSelected: langProvider.currentLanguage == AppLanguage.kurdishBadini,
+                isSelected:
+                    langProvider.currentLanguage == AppLanguage.kurdishBadini,
                 onTap: () {
                   langProvider.setLanguage(AppLanguage.kurdishBadini);
                   Navigator.pop(context);
@@ -1644,7 +2217,9 @@ class ProfileScreen extends StatelessWidget {
           border: Border.all(
             color: isSelected
                 ? ZankoColors.primary
-                : (isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFEFEFF5)),
+                : (isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : const Color(0xFFEFEFF5)),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -1660,7 +2235,9 @@ class ProfileScreen extends StatelessWidget {
                     title,
                     style: TextStyle(
                       fontSize: 15,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w600,
                       color: isDark ? Colors.white : ZankoColors.textPrimary,
                     ),
                   ),
@@ -1668,14 +2245,20 @@ class ProfileScreen extends StatelessWidget {
                     subtitle,
                     style: TextStyle(
                       fontSize: 12,
-                      color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                      color: isDark
+                          ? Colors.grey[400]
+                          : ZankoColors.textSecondary,
                     ),
                   ),
                 ],
               ),
             ),
             if (isSelected)
-              Icon(CupertinoIcons.checkmark_circle_fill, color: ZankoColors.primary, size: 20),
+              Icon(
+                CupertinoIcons.checkmark_circle_fill,
+                color: ZankoColors.primary,
+                size: 20,
+              ),
           ],
         ),
       ),
@@ -1691,7 +2274,8 @@ class ProfileScreen extends StatelessWidget {
     String t(String key) => langProvider.translate(key);
 
     final user = authService.currentUser;
-    final isGuest = user == null ||
+    final isGuest =
+        user == null ||
         user.isGuest ||
         user.name == 'مێوان' ||
         user.name == 'مێڤان' ||
@@ -1701,19 +2285,31 @@ class ProfileScreen extends StatelessWidget {
     final userEmail = isGuest ? 'guest@zanko.edu' : user.email;
     final uniName = isGuest
         ? t('university_not_set')
-        : ((user.universityName != null && user.universityName!.trim().isNotEmpty)
-            ? KurdistanUniversitiesData.getLocalizedUniversityName(user.universityName!, langProvider.languageCode)
-            : t('university_not_set'));
+        : ((user.universityName != null &&
+                  user.universityName!.trim().isNotEmpty)
+              ? KurdistanUniversitiesData.getLocalizedUniversityName(
+                  user.universityName!,
+                  langProvider.languageCode,
+                )
+              : t('university_not_set'));
     final deptName = isGuest
         ? t('zankoai_student_role')
-        : ((user.departmentName != null && user.departmentName!.trim().isNotEmpty)
-            ? KurdistanUniversitiesData.getLocalizedDepartmentName(user.departmentName!, langProvider.languageCode)
-            : t('zankoai_student_role'));
+        : ((user.departmentName != null &&
+                  user.departmentName!.trim().isNotEmpty)
+              ? KurdistanUniversitiesData.getLocalizedDepartmentName(
+                  user.departmentName!,
+                  langProvider.languageCode,
+                )
+              : t('zankoai_student_role'));
 
     return Scaffold(
-      backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
+      backgroundColor: isDark
+          ? ZankoColors.darkBackground
+          : ZankoColors.background,
       appBar: AppBar(
-        backgroundColor: (isDark ? ZankoColors.darkBackground : ZankoColors.background).withValues(alpha: 0.9),
+        backgroundColor:
+            (isDark ? ZankoColors.darkBackground : ZankoColors.background)
+                .withValues(alpha: 0.9),
         elevation: 0,
         centerTitle: false,
         title: Text(
@@ -1754,11 +2350,19 @@ class ProfileScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14),
               child: GestureDetector(
-                onTap: () => _showEditProfileModal(context, user, userName, uniName, deptName),
+                onTap: () => _showEditProfileModal(
+                  context,
+                  user,
+                  userName,
+                  uniName,
+                  deptName,
+                ),
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: ZankoColors.primary.withValues(alpha: isDark ? 0.2 : 0.1),
+                    color: ZankoColors.primary.withValues(
+                      alpha: isDark ? 0.2 : 0.1,
+                    ),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -1778,719 +2382,854 @@ class ProfileScreen extends StatelessWidget {
             await authService.reloadUser();
           },
           child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             children: [
-            // ─── 1. Modern Hero Identity Card (App Color Gradient) ───
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: isDark
-                      ? [
-                          const Color(0xFF0F2038),
-                          ZankoColors.primary.withValues(alpha: 0.75),
-                        ]
-                      : [
-                          ZankoColors.primary,
-                          const Color(0xFF024A9B),
-                        ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(26),
-                border: Border.all(
-                  color: isDark
-                      ? ZankoColors.primary.withValues(alpha: 0.4)
-                      : const Color(0xFF388BF2),
-                  width: 1.2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: ZankoColors.primary.withValues(alpha: isDark ? 0.25 : 0.3),
-                    blurRadius: 22,
-                    offset: const Offset(0, 8),
+              // ─── 1. Modern Hero Identity Card (App Color Gradient) ───
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isDark
+                        ? [
+                            const Color(0xFF0F2038),
+                            ZankoColors.primary.withValues(alpha: 0.75),
+                          ]
+                        : [ZankoColors.primary, const Color(0xFF024A9B)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(26),
-                child: Stack(
-                  children: [
-                    // Ambient light ring 1
-                    Positioned(
-                      top: -40,
-                      right: -30,
-                      child: Container(
-                        width: 160,
-                        height: 160,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(26),
+                  border: Border.all(
+                    color: isDark
+                        ? ZankoColors.primary.withValues(alpha: 0.4)
+                        : const Color(0xFF388BF2),
+                    width: 1.2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: ZankoColors.primary.withValues(
+                        alpha: isDark ? 0.25 : 0.3,
+                      ),
+                      blurRadius: 22,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(26),
+                  child: Stack(
+                    children: [
+                      // Ambient light ring 1
+                      Positioned(
+                        top: -40,
+                        right: -30,
+                        child: Container(
+                          width: 160,
+                          height: 160,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.08),
+                          ),
                         ),
                       ),
-                    ),
-                    // Ambient light ring 2
-                    Positioned(
-                      bottom: -50,
-                      left: -20,
-                      child: Container(
-                        width: 130,
-                        height: 130,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.05),
+                      // Ambient light ring 2
+                      Positioned(
+                        bottom: -50,
+                        left: -20,
+                        child: Container(
+                          width: 130,
+                          height: 130,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.05),
+                          ),
                         ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              // Avatar with camera tap
-                              GestureDetector(
-                                onTap: () => _showPhotoChooserModal(context, user),
-                                child: Stack(
-                                  children: [
-                                    Container(
-                                      width: 72,
-                                      height: 72,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: Colors.white.withValues(alpha: 0.85),
-                                          width: 2.5,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(alpha: 0.2),
-                                            blurRadius: 10,
-                                            offset: const Offset(0, 4),
-                                          ),
-                                        ],
-                                      ),
-                                      child: ClipOval(
-                                        child: (user != null &&
-                                                user.photoUrl != null &&
-                                                user.photoUrl!.isNotEmpty)
-                                            ? (user.photoUrl!.startsWith('http')
-                                                ? Image.network(user.photoUrl!,
-                                                    fit: BoxFit.cover,
-                                                    errorBuilder: (ctx, err, stack) => Image.asset(
-                                                        'assets/images/student_avatar_3d.png',
-                                                        fit: BoxFit.cover))
-                                                : (user.photoUrl!.startsWith('assets/')
-                                                    ? Image.asset(user.photoUrl!,
-                                                        fit: BoxFit.cover,
-                                                        errorBuilder: (ctx, err, stack) => Image.asset(
-                                                            'assets/images/student_avatar_3d.png',
-                                                            fit: BoxFit.cover))
-                                                    : (kIsWeb
-                                                        ? Image.network(user.photoUrl!,
-                                                            fit: BoxFit.cover,
-                                                            errorBuilder: (ctx, err, stack) => Image.asset(
-                                                                'assets/images/student_avatar_3d.png',
-                                                                fit: BoxFit.cover))
-                                                        : Image.file(File(user.photoUrl!),
-                                                            fit: BoxFit.cover,
-                                                            errorBuilder: (ctx, err, stack) => Image.asset(
-                                                                'assets/images/student_avatar_3d.png',
-                                                                fit: BoxFit.cover)))))
-                                            : Image.asset(
-                                                'assets/images/student_avatar_3d.png',
-                                                fit: BoxFit.cover,
-                                              ),
-                                      ),
-                                    ),
-                                    Positioned(
-                                      bottom: 0,
-                                      right: 0,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(5),
-                                        decoration: const BoxDecoration(
-                                          color: Colors.white,
+                      Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                // Avatar with camera tap
+                                GestureDetector(
+                                  onTap: () =>
+                                      _showPhotoChooserModal(context, user),
+                                  child: Stack(
+                                    children: [
+                                      Container(
+                                        width: 72,
+                                        height: 72,
+                                        decoration: BoxDecoration(
                                           shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.85,
+                                            ),
+                                            width: 2.5,
+                                          ),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: Colors.black26,
-                                              blurRadius: 4,
+                                              color: Colors.black.withValues(
+                                                alpha: 0.2,
+                                              ),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 4),
                                             ),
                                           ],
                                         ),
-                                        child: Icon(
-                                          Icons.camera_alt_rounded,
-                                          size: 13,
-                                          color: ZankoColors.primary,
+                                        child: ClipOval(
+                                          child:
+                                              (user != null &&
+                                                  user.photoUrl != null &&
+                                                  user.photoUrl!.isNotEmpty)
+                                              ? (user.photoUrl!.startsWith(
+                                                      'http',
+                                                    )
+                                                    ? Image.network(
+                                                        user.photoUrl!,
+                                                        fit: BoxFit.cover,
+                                                        errorBuilder:
+                                                            (
+                                                              ctx,
+                                                              err,
+                                                              stack,
+                                                            ) => Image.asset(
+                                                              'assets/images/student_avatar_3d.png',
+                                                              fit: BoxFit.cover,
+                                                            ),
+                                                      )
+                                                    : (user.photoUrl!
+                                                              .startsWith(
+                                                                'assets/',
+                                                              )
+                                                          ? Image.asset(
+                                                              user.photoUrl!,
+                                                              fit: BoxFit.cover,
+                                                              errorBuilder:
+                                                                  (
+                                                                    ctx,
+                                                                    err,
+                                                                    stack,
+                                                                  ) => Image.asset(
+                                                                    'assets/images/student_avatar_3d.png',
+                                                                    fit: BoxFit
+                                                                        .cover,
+                                                                  ),
+                                                            )
+                                                          : (kIsWeb
+                                                                ? Image.network(
+                                                                    user.photoUrl!,
+                                                                    fit: BoxFit
+                                                                        .cover,
+                                                                    errorBuilder:
+                                                                        (
+                                                                          ctx,
+                                                                          err,
+                                                                          stack,
+                                                                        ) => Image.asset(
+                                                                          'assets/images/student_avatar_3d.png',
+                                                                          fit: BoxFit
+                                                                              .cover,
+                                                                        ),
+                                                                  )
+                                                                : Image.file(
+                                                                    File(
+                                                                      user.photoUrl!,
+                                                                    ),
+                                                                    fit: BoxFit
+                                                                        .cover,
+                                                                    errorBuilder:
+                                                                        (
+                                                                          ctx,
+                                                                          err,
+                                                                          stack,
+                                                                        ) => Image.asset(
+                                                                          'assets/images/student_avatar_3d.png',
+                                                                          fit: BoxFit
+                                                                              .cover,
+                                                                        ),
+                                                                  ))))
+                                              : Image.asset(
+                                                  'assets/images/student_avatar_3d.png',
+                                                  fit: BoxFit.cover,
+                                                ),
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Flexible(
-                                          child: Text(
-                                            userName,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w800,
-                                              color: Colors.white,
-                                              letterSpacing: -0.4,
-                                            ),
-                                          ),
-                                        ),
-                                        if (!isGuest && user.isVip) ...[
-                                          const SizedBox(width: 6),
-                                          const Text('👑', style: TextStyle(fontSize: 16)),
-                                        ],
-                                      ],
-                                    ),
-                                    const SizedBox(height: 5),
-                                    // Status Badge Pill
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 9, vertical: 3.5),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.18),
-                                        borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(
-                                          color: Colors.white.withValues(alpha: 0.25),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            isGuest
-                                                ? Icons.person_outline_rounded
-                                                : Icons.verified_user_rounded,
-                                            size: 12,
-                                            color: Colors.white,
-                                          ),
-                                          const SizedBox(width: 5),
-                                          Text(
-                                            isGuest
-                                                ? t('guest_account')
-                                                : (user.isVip
-                                                    ? 'VIP Member'
-                                                    : t('zankoai_student_role')),
-                                            style: const TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w700,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(height: 7),
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          Icons.school_rounded,
-                                          size: 13,
-                                          color: Colors.white.withValues(alpha: 0.8),
-                                        ),
-                                        const SizedBox(width: 5),
-                                        Expanded(
-                                          child: Text(
-                                            uniName,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w500,
-                                              color: Colors.white.withValues(alpha: 0.9),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          // Card bottom bar with actions
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.16),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.12),
-                              ),
-                            ),
-                            child: isGuest
-                                ? Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          t('guest_banner_title'),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white.withValues(alpha: 0.95),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      GestureDetector(
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (_) => const LoginScreen()),
-                                          );
-                                        },
+                                      Positioned(
+                                        bottom: 0,
+                                        right: 0,
                                         child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 14, vertical: 7),
-                                          decoration: BoxDecoration(
+                                          padding: const EdgeInsets.all(5),
+                                          decoration: const BoxDecoration(
                                             color: Colors.white,
-                                            borderRadius: BorderRadius.circular(10),
-                                            boxShadow: const [
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black12,
-                                                blurRadius: 6,
+                                                color: Colors.black26,
+                                                blurRadius: 4,
                                               ),
                                             ],
                                           ),
-                                          child: Text(
-                                            t('login'),
-                                            style: TextStyle(
-                                              fontSize: 11.5,
-                                              fontWeight: FontWeight.w800,
-                                              color: ZankoColors.primary,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                : Row(
-                                    children: [
-                                      Expanded(
-                                        child: GestureDetector(
-                                          onTap: () => _showUniversityIdModal(
-                                              context,
-                                              user,
-                                              userName,
-                                              userEmail,
-                                              uniName,
-                                              deptName),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              const Icon(Icons.qr_code_rounded,
-                                                  size: 15, color: Colors.white),
-                                              const SizedBox(width: 4),
-                                              Flexible(
-                                                child: Text(
-                                                  t('digital_id'),
-                                                  maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
-                                                  style: const TextStyle(
-                                                    fontSize: 11.5,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      Container(
-                                        width: 1,
-                                        height: 16,
-                                        color: Colors.white.withValues(alpha: 0.2),
-                                      ),
-                                      Expanded(
-                                        child: GestureDetector(
-                                          onTap: () => _showEditProfileModal(
-                                              context,
-                                              user,
-                                              userName,
-                                              uniName,
-                                              deptName),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              const Icon(Icons.edit_outlined,
-                                                  size: 14, color: Colors.white),
-                                              const SizedBox(width: 4),
-                                              Flexible(
-                                                child: Text(
-                                                  t('edit_profile'),
-                                                  maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
-                                                  style: const TextStyle(
-                                                    fontSize: 11.5,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
+                                          child: Icon(
+                                            Icons.camera_alt_rounded,
+                                            size: 13,
+                                            color: ZankoColors.primary,
                                           ),
                                         ),
                                       ),
                                     ],
                                   ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // ─── 2. VIP Membership Status Banner ───
-            Container(
-              margin: const EdgeInsets.only(top: 14),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: isDark ? ZankoColors.darkCard : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: ZankoColors.primary
-                      .withValues(alpha: user?.isVip == true ? 0.6 : 0.25),
-                  width: 1.3,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: ZankoColors.primary
-                        .withValues(alpha: isDark ? 0.15 : 0.05),
-                    blurRadius: 14,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: ZankoColors.primary.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Center(
-                      child: Icon(
-                        CupertinoIcons.sparkles,
-                        color: ZankoColors.primary,
-                        size: 22,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          user?.isVip == true
-                              ? t('vip_banner_title_active')
-                              : t('vip_banner_title_guest'),
-                          style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14,
-                            color: isDark ? Colors.white : ZankoColors.primary,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          user?.isVip == true
-                              ? (user != null && user.vipDaysLeft > 0
-                                  ? ('ئەندامێتی VIP چالاکە (' + user.vipDaysLeft.toString() + ' ڕۆژ ماوە)')
-                                  : t('vip_banner_desc_active'))
-                              : t('vip_banner_desc_guest'),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            color: isDark
-                                ? const Color(0xFFA6ACB8)
-                                : ZankoColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () => VipUpgradeSheet.show(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: ZankoColors.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 9),
-                    ),
-                    child: Text(
-                      user?.isVip == true ? t('vip_renew_btn') : t('vip_upgrade_btn'),
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w800, fontSize: 11.5),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-
-            const SizedBox(height: 16),
-            const AdBannerWidget(screenName: 'profile'),
-
-            // ─── 3. Preferences Group ───
-            _buildSettingsGroup(
-              context,
-              title: langProvider.translate('preferences'),
-              children: [
-                _buildSettingsTile(
-                  context,
-                  icon: HugeIcons.strokeRoundedMoon02,
-                  iconColor: ZankoColors.primary,
-                  title: langProvider.translate('dark_mode'),
-                  trailing: CupertinoSwitch(
-                    value: themeProvider.isDarkMode,
-                    activeTrackColor: ZankoColors.primary,
-                    onChanged: (val) => themeProvider.toggleTheme(val),
-                  ),
-                ),
-                const Divider(height: 1, indent: 56),
-                _buildSettingsTile(
-                  context,
-                  icon: HugeIcons.strokeRoundedGlobe,
-                  iconColor: ZankoColors.primary,
-                  title: langProvider.translate('app_language'),
-                  subtitle: langProvider.currentLanguage == AppLanguage.english
-                      ? 'English'
-                      : (langProvider.currentLanguage == AppLanguage.kurdish
-                          ? 'کوردی (سۆرانی)'
-                          : (langProvider.currentLanguage == AppLanguage.kurdishBadini
-                              ? 'کوردی (بادینی)'
-                              : 'العربية')),
-                  onTap: () => _showLanguagePickerModal(context, langProvider),
-                ),
-                const Divider(height: 1, indent: 56),
-                _buildSettingsTile(
-                  context,
-                  icon: HugeIcons.strokeRoundedNotification01,
-                  iconColor: ZankoColors.primary,
-                  title: langProvider.translate('notifications'),
-                  subtitle: langProvider.translate('daily_reminders'),
-                  onTap: () => _showNotificationsModal(context),
-                ),
-              ],
-            ),
-
-            // ─── 4. Support & Feedback Group ───
-            _buildSettingsGroup(
-              context,
-              title: langProvider.translate('support_and_info'),
-              children: [
-                _buildSettingsTile(
-                  context,
-                  icon: HugeIcons.strokeRoundedChatting01,
-                  iconColor: ZankoColors.primary,
-                  title: langProvider.translate('feedback_suggestions'),
-                  subtitle: langProvider.translate('feedback_subtitle'),
-                  onTap: () => _showFeedbackModal(context, user),
-                ),
-                const Divider(height: 1, indent: 56),
-                _buildSettingsTile(
-                  context,
-                  icon: HugeIcons.strokeRoundedLockPassword,
-                  iconColor: ZankoColors.primary,
-                  title: langProvider.translate('privacy_security'),
-                  onTap: () => _showPrivacySecurityModal(context),
-                ),
-                const Divider(height: 1, indent: 56),
-                _buildSettingsTile(
-                  context,
-                  icon: HugeIcons.strokeRoundedInformationCircle,
-                  iconColor: ZankoColors.primary,
-                  title: langProvider.translate('about_zanko'),
-                  subtitle: langProvider.translate('version'),
-                  onTap: () => _showAboutZankoModal(context),
-                ),
-              ],
-            ),
-
-            // ─── 5. Account Actions Group ───
-            _buildSettingsGroup(
-              context,
-              title: langProvider.translate('account'),
-              children: [
-                _buildSettingsTile(
-                  context,
-                  icon: isGuest
-                      ? HugeIcons.strokeRoundedLogin01
-                      : HugeIcons.strokeRoundedLogout01,
-                  iconColor: isGuest
-                      ? ZankoColors.primary
-                      : const Color(0xFFE11D48),
-                  title: isGuest ? t('login_or_register') : t('logout'),
-                  subtitle: isGuest ? t('login_register_desc') : t('logout_desc'),
-                  isDestructive: !isGuest,
-                  onTap: () async {
-                    if (isGuest) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      );
-                    } else {
-                      await authService.logout();
-                      if (context.mounted) {
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(builder: (_) => const LoginScreen()),
-                          (route) => false,
-                        );
-                      }
-                    }
-                  },
-                ),
-                if (!isGuest) ...[
-                  const Divider(height: 1, indent: 56),
-                  _buildSettingsTile(
-                    context,
-                    icon: HugeIcons.strokeRoundedDelete02,
-                    iconColor: const Color(0xFFDC2626),
-                    title: t('delete_account'),
-                    subtitle: t('delete_account_desc'),
-                    isDestructive: true,
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (dialogCtx) => AlertDialog(
-                          backgroundColor: isDark ? ZankoColors.darkCard : Colors.white,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20)),
-                          title: Row(
-                            children: [
-                              const HugeIcon(
-                                  icon: HugeIcons.strokeRoundedAlert02,
-                                  color: Colors.redAccent,
-                                  size: 24),
-                              const SizedBox(width: 8),
-                              Text(
-                                t('delete_account_confirm_title'),
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 17),
-                              ),
-                            ],
-                          ),
-                          content: Text(
-                            t('delete_account_confirm_desc'),
-                            style: const TextStyle(fontSize: 14, height: 1.5),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(dialogCtx),
-                              child: Text(t('cancel')),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              userName,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.w800,
+                                                color: Colors.white,
+                                                letterSpacing: -0.4,
+                                              ),
+                                            ),
+                                          ),
+                                          if (!isGuest && user.isVip) ...[
+                                            const SizedBox(width: 6),
+                                            const Text(
+                                              '👑',
+                                              style: TextStyle(fontSize: 16),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                      const SizedBox(height: 5),
+                                      // Status Badge Pill
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 9,
+                                          vertical: 3.5,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.18,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                          border: Border.all(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.25,
+                                            ),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              isGuest
+                                                  ? Icons.person_outline_rounded
+                                                  : Icons.verified_user_rounded,
+                                              size: 12,
+                                              color: Colors.white,
+                                            ),
+                                            const SizedBox(width: 5),
+                                            Text(
+                                              isGuest
+                                                  ? t('guest_account')
+                                                  : (user.isVip
+                                                        ? 'VIP Member'
+                                                        : t(
+                                                            'zankoai_student_role',
+                                                          )),
+                                              style: const TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w700,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 7),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.school_rounded,
+                                            size: 13,
+                                            color: Colors.white.withValues(
+                                              alpha: 0.8,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 5),
+                                          Expanded(
+                                            child: Text(
+                                              uniName,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w500,
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.9,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.redAccent,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
+                            const SizedBox(height: 16),
+                            // Card bottom bar with actions
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 8,
                               ),
-                              onPressed: () async {
-                                Navigator.pop(dialogCtx);
-                                await authService.deleteAccount();
-                                if (context.mounted) {
-                                  Navigator.pushAndRemoveUntil(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (_) => const LoginScreen()),
-                                    (route) => false,
-                                  );
-                                }
-                              },
-                              child: Text(t('yes_delete')),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.16),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.12),
+                                ),
+                              ),
+                              child: isGuest
+                                  ? Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            t('guest_banner_title'),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.white.withValues(
+                                                alpha: 0.95,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        GestureDetector(
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    const LoginScreen(),
+                                              ),
+                                            );
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 14,
+                                              vertical: 7,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              boxShadow: const [
+                                                BoxShadow(
+                                                  color: Colors.black12,
+                                                  blurRadius: 6,
+                                                ),
+                                              ],
+                                            ),
+                                            child: Text(
+                                              t('login'),
+                                              style: TextStyle(
+                                                fontSize: 11.5,
+                                                fontWeight: FontWeight.w800,
+                                                color: ZankoColors.primary,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  : Row(
+                                      children: [
+                                        Expanded(
+                                          child: GestureDetector(
+                                            onTap: () => _showUniversityIdModal(
+                                              context,
+                                              user,
+                                              userName,
+                                              userEmail,
+                                              uniName,
+                                              deptName,
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                const Icon(
+                                                  Icons.qr_code_rounded,
+                                                  size: 15,
+                                                  color: Colors.white,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Flexible(
+                                                  child: Text(
+                                                    t('digital_id'),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: const TextStyle(
+                                                      fontSize: 11.5,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          width: 1,
+                                          height: 16,
+                                          color: Colors.white.withValues(
+                                            alpha: 0.2,
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: GestureDetector(
+                                            onTap: () => _showEditProfileModal(
+                                              context,
+                                              user,
+                                              userName,
+                                              uniName,
+                                              deptName,
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                const Icon(
+                                                  Icons.edit_outlined,
+                                                  size: 14,
+                                                  color: Colors.white,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Flexible(
+                                                  child: Text(
+                                                    t('edit_profile'),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: const TextStyle(
+                                                      fontSize: 11.5,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                             ),
                           ],
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // birdev footer & copyright
-            Center(
-              child: InkWell(
-                borderRadius: BorderRadius.circular(16),
-                onTap: () async {
-                  final uri = Uri.parse('https://www.birdev.tech/');
-                  if (await canLaunchUrl(uri)) {
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
-                  }
-                },
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(CupertinoIcons.sparkles,
-                              size: 14, color: ZankoColors.primary),
-                          const SizedBox(width: 6),
-                          Text(
-                            t('developed_by'),
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color:
-                                  isDark ? Colors.grey[300] : Colors.grey[800],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${t('all_rights_reserved')} © ${DateTime.now().year}',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          color: isDark ? Colors.grey[500] : Colors.grey[600],
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-            ),
 
-            const SizedBox(height: 80),
-          ],
-        ),
+              // ─── 2. VIP Membership Status Banner ───
+              Container(
+                margin: const EdgeInsets.only(top: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                decoration: BoxDecoration(
+                  color: isDark ? ZankoColors.darkCard : Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: ZankoColors.primary.withValues(
+                      alpha: user?.isVip == true ? 0.6 : 0.25,
+                    ),
+                    width: 1.3,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: ZankoColors.primary.withValues(
+                        alpha: isDark ? 0.15 : 0.05,
+                      ),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: ZankoColors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          CupertinoIcons.sparkles,
+                          color: ZankoColors.primary,
+                          size: 22,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user?.isVip == true
+                                ? t('vip_banner_title_active')
+                                : t('vip_banner_title_guest'),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
+                              color: isDark
+                                  ? Colors.white
+                                  : ZankoColors.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            user?.isVip == true
+                                ? (user != null && user.vipDaysLeft > 0
+                                      ? ('ئەندامێتی VIP چالاکە (' +
+                                            user.vipDaysLeft.toString() +
+                                            ' ڕۆژ ماوە)')
+                                      : t('vip_banner_desc_active'))
+                                : t('vip_banner_desc_guest'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: isDark
+                                  ? const Color(0xFFA6ACB8)
+                                  : ZankoColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () => VipUpgradeSheet.show(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: ZankoColors.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 9,
+                        ),
+                      ),
+                      child: Text(
+                        user?.isVip == true
+                            ? t('vip_renew_btn')
+                            : t('vip_upgrade_btn'),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 11.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+              const AdBannerWidget(screenName: 'profile'),
+
+              // ─── 3. Preferences Group ───
+              _buildSettingsGroup(
+                context,
+                title: langProvider.translate('preferences'),
+                children: [
+                  _buildSettingsTile(
+                    context,
+                    icon: HugeIcons.strokeRoundedMoon02,
+                    iconColor: ZankoColors.primary,
+                    title: langProvider.translate('dark_mode'),
+                    trailing: CupertinoSwitch(
+                      value: themeProvider.isDarkMode,
+                      activeTrackColor: ZankoColors.primary,
+                      onChanged: (val) => themeProvider.toggleTheme(val),
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  _buildSettingsTile(
+                    context,
+                    icon: HugeIcons.strokeRoundedGlobe,
+                    iconColor: ZankoColors.primary,
+                    title: langProvider.translate('app_language'),
+                    subtitle:
+                        langProvider.currentLanguage == AppLanguage.english
+                        ? 'English'
+                        : (langProvider.currentLanguage == AppLanguage.kurdish
+                              ? 'کوردی (سۆرانی)'
+                              : (langProvider.currentLanguage ==
+                                        AppLanguage.kurdishBadini
+                                    ? 'کوردی (بادینی)'
+                                    : 'العربية')),
+                    onTap: () =>
+                        _showLanguagePickerModal(context, langProvider),
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  _buildSettingsTile(
+                    context,
+                    icon: HugeIcons.strokeRoundedNotification01,
+                    iconColor: ZankoColors.primary,
+                    title: langProvider.translate('notifications'),
+                    subtitle: langProvider.translate('daily_reminders'),
+                    onTap: () => _showNotificationsModal(context),
+                  ),
+                ],
+              ),
+
+              // ─── 4. Support & Feedback Group ───
+              _buildSettingsGroup(
+                context,
+                title: langProvider.translate('support_and_info'),
+                children: [
+                  _buildSettingsTile(
+                    context,
+                    icon: HugeIcons.strokeRoundedChatting01,
+                    iconColor: ZankoColors.primary,
+                    title: langProvider.translate('feedback_suggestions'),
+                    subtitle: langProvider.translate('feedback_subtitle'),
+                    onTap: () => _showFeedbackModal(context, user),
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  _buildSettingsTile(
+                    context,
+                    icon: HugeIcons.strokeRoundedLockPassword,
+                    iconColor: ZankoColors.primary,
+                    title: langProvider.translate('privacy_security'),
+                    onTap: () => _showPrivacySecurityModal(context),
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  _buildSettingsTile(
+                    context,
+                    icon: HugeIcons.strokeRoundedInformationCircle,
+                    iconColor: ZankoColors.primary,
+                    title: langProvider.translate('about_zanko'),
+                    subtitle: langProvider.translate('version'),
+                    onTap: () => _showAboutZankoModal(context),
+                  ),
+                ],
+              ),
+
+              // ─── 5. Account Actions Group ───
+              _buildSettingsGroup(
+                context,
+                title: langProvider.translate('account'),
+                children: [
+                  _buildSettingsTile(
+                    context,
+                    icon: isGuest
+                        ? HugeIcons.strokeRoundedLogin01
+                        : HugeIcons.strokeRoundedLogout01,
+                    iconColor: isGuest
+                        ? ZankoColors.primary
+                        : const Color(0xFFE11D48),
+                    title: isGuest ? t('login_or_register') : t('logout'),
+                    subtitle: isGuest
+                        ? t('login_register_desc')
+                        : t('logout_desc'),
+                    isDestructive: !isGuest,
+                    onTap: () async {
+                      if (isGuest) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const LoginScreen(),
+                          ),
+                        );
+                      } else {
+                        await authService.logout();
+                        if (context.mounted) {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LoginScreen(),
+                            ),
+                            (route) => false,
+                          );
+                        }
+                      }
+                    },
+                  ),
+                  if (!isGuest) ...[
+                    const Divider(height: 1, indent: 56),
+                    _buildSettingsTile(
+                      context,
+                      icon: HugeIcons.strokeRoundedDelete02,
+                      iconColor: const Color(0xFFDC2626),
+                      title: t('delete_account'),
+                      subtitle: t('delete_account_desc'),
+                      isDestructive: true,
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (dialogCtx) => AlertDialog(
+                            backgroundColor: isDark
+                                ? ZankoColors.darkCard
+                                : Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            title: Row(
+                              children: [
+                                const HugeIcon(
+                                  icon: HugeIcons.strokeRoundedAlert02,
+                                  color: Colors.redAccent,
+                                  size: 24,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  t('delete_account_confirm_title'),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 17,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            content: Text(
+                              t('delete_account_confirm_desc'),
+                              style: const TextStyle(fontSize: 14, height: 1.5),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(dialogCtx),
+                                child: Text(t('cancel')),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.redAccent,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                onPressed: () async {
+                                  Navigator.pop(dialogCtx);
+                                  await authService.deleteAccount();
+                                  if (context.mounted) {
+                                    Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const LoginScreen(),
+                                      ),
+                                      (route) => false,
+                                    );
+                                  }
+                                },
+                                child: Text(t('yes_delete')),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              // birdev footer & copyright
+              Center(
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () async {
+                    final uri = Uri.parse('https://www.birdev.tech/');
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(
+                        uri,
+                        mode: LaunchMode.externalApplication,
+                      );
+                    }
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              CupertinoIcons.sparkles,
+                              size: 14,
+                              color: ZankoColors.primary,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              t('developed_by'),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: isDark
+                                    ? Colors.grey[300]
+                                    : Colors.grey[800],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${t('all_rights_reserved')} © ${DateTime.now().year}',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: isDark ? Colors.grey[500] : Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 80),
+            ],
+          ),
         ),
       ),
     );
@@ -2535,9 +3274,7 @@ class ProfileScreen extends StatelessWidget {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(20),
-            child: Column(
-              children: children,
-            ),
+            child: Column(children: children),
           ),
         ),
       ],
@@ -2583,11 +3320,14 @@ class ProfileScreen extends StatelessWidget {
               subtitle,
               style: TextStyle(
                 fontSize: 12,
-                color: isDark ? const Color(0xFFA6ACB8) : ZankoColors.textSecondary,
+                color: isDark
+                    ? const Color(0xFFA6ACB8)
+                    : ZankoColors.textSecondary,
               ),
             )
           : null,
-      trailing: trailing ??
+      trailing:
+          trailing ??
           Icon(
             CupertinoIcons.chevron_forward,
             size: 16,

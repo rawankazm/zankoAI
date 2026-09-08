@@ -45,7 +45,10 @@ class KurdishTtsService {
         .replaceAll(RegExp(r'```[\s\S]*?```'), '')
         .replaceAll(RegExp(r'`[\s\S]*?`'), '')
         .replaceAll(RegExp(r'\[([^\]]+)\]\([^\)]+\)'), r'$1')
-        .replaceAll(RegExp(r'[\*\#\_~>\-\🔹\🔸\🎯\⭐\👑\💡\📌\⚡\✅\❌\🎧\🎓\🔴\💬]'), ' ')
+        .replaceAll(
+          RegExp(r'[\*\#\_~>\-\🔹\🔸\🎯\⭐\👑\💡\📌\⚡\✅\❌\🎧\🎓\🔴\💬]'),
+          ' ',
+        )
         .replaceAll(RegExp(r'\\\[[\s\S]*?\\\]'), '')
         .replaceAll(RegExp(r'\\\([\s\S]*?\\\)'), '')
         .replaceAll(RegExp(r'\s+'), ' ')
@@ -59,18 +62,51 @@ class KurdishTtsService {
     String result = text;
 
     // 1. Convert technical acronyms into clear spoken syllables
-    result = result.replaceAll(RegExp(r'\bPDF\b', caseSensitive: false), 'پی دی ئێف');
-    result = result.replaceAll(RegExp(r'\bAI\b', caseSensitive: false), 'ئەی ئای');
-    result = result.replaceAll(RegExp(r'\bIT\b', caseSensitive: false), 'ئای تی');
+    result = result.replaceAll(
+      RegExp(r'\bPDF\b', caseSensitive: false),
+      'پی دی ئێف',
+    );
+    result = result.replaceAll(
+      RegExp(r'\bAI\b', caseSensitive: false),
+      'ئەی ئای',
+    );
+    result = result.replaceAll(
+      RegExp(r'\bIT\b', caseSensitive: false),
+      'ئای تی',
+    );
     result = result.replaceAll(RegExp(r'\bRAM\b', caseSensitive: false), 'ڕام');
-    result = result.replaceAll(RegExp(r'\bCPU\b', caseSensitive: false), 'سی پی یو');
-    result = result.replaceAll(RegExp(r'\bOS\b', caseSensitive: false), 'ئۆ ئێس');
-    result = result.replaceAll(RegExp(r'\bUI\b', caseSensitive: false), 'یوو ئای');
-    result = result.replaceAll(RegExp(r'\bUX\b', caseSensitive: false), 'یوو ئێکس');
-    result = result.replaceAll(RegExp(r'\bAPI\b', caseSensitive: false), 'ئەی پی ئای');
-    result = result.replaceAll(RegExp(r'\bHTML\b', caseSensitive: false), 'ئێچ تی ئێم ئێڵ');
-    result = result.replaceAll(RegExp(r'\bCSS\b', caseSensitive: false), 'سی ئێس ئێس');
-    result = result.replaceAll(RegExp(r'\bSQL\b', caseSensitive: false), 'ئێس کیوو ئێڵ');
+    result = result.replaceAll(
+      RegExp(r'\bCPU\b', caseSensitive: false),
+      'سی پی یو',
+    );
+    result = result.replaceAll(
+      RegExp(r'\bOS\b', caseSensitive: false),
+      'ئۆ ئێس',
+    );
+    result = result.replaceAll(
+      RegExp(r'\bUI\b', caseSensitive: false),
+      'یوو ئای',
+    );
+    result = result.replaceAll(
+      RegExp(r'\bUX\b', caseSensitive: false),
+      'یوو ئێکس',
+    );
+    result = result.replaceAll(
+      RegExp(r'\bAPI\b', caseSensitive: false),
+      'ئەی پی ئای',
+    );
+    result = result.replaceAll(
+      RegExp(r'\bHTML\b', caseSensitive: false),
+      'ئێچ تی ئێم ئێڵ',
+    );
+    result = result.replaceAll(
+      RegExp(r'\bCSS\b', caseSensitive: false),
+      'سی ئێس ئێس',
+    );
+    result = result.replaceAll(
+      RegExp(r'\bSQL\b', caseSensitive: false),
+      'ئێس کیوو ئێڵ',
+    );
 
     // 2. Convert digits into smooth spoken Kurdish words
     result = result.replaceAll('0', ' صفر ').replaceAll('٠', ' صفر ');
@@ -147,7 +183,10 @@ class KurdishTtsService {
     if (preferredLang != null && preferredLang.isNotEmpty) {
       if (preferredLang == 'ar') return 'ar';
       if (preferredLang == 'en') return 'en';
-      if (preferredLang == 'ckb' || preferredLang == 'ku' || preferredLang == 'kmr') return 'ku';
+      if (preferredLang == 'ckb' ||
+          preferredLang == 'ku' ||
+          preferredLang == 'kmr')
+        return 'ku';
     }
 
     // Kurdish specific letters
@@ -169,12 +208,16 @@ class KurdishTtsService {
   double _playbackSpeed = 1.0;
 
   /// Fetch HD Neural AI Voice audio (Wavenet) from Google Cloud TTS API
-  Future<Uint8List?> _fetchGoogleCloudNeuralAudio(String text, {String? apiKey}) async {
+  Future<Uint8List?> _fetchGoogleCloudNeuralAudio(
+    String text, {
+    String? apiKey,
+  }) async {
     if (kIsWeb) return null;
 
     final keysToTry = <String>[
       if (apiKey != null && apiKey.trim().isNotEmpty) apiKey.trim(),
-      if (_customApiKey != null && _customApiKey!.trim().isNotEmpty) _customApiKey!.trim(),
+      if (_customApiKey != null && _customApiKey!.trim().isNotEmpty)
+        _customApiKey!.trim(),
     ];
 
     if (keysToTry.isEmpty) return null;
@@ -187,7 +230,9 @@ class KurdishTtsService {
       for (final key in keysToTry) {
         if (key.trim().isEmpty) continue;
         try {
-          final uri = Uri.parse('https://texttospeech.googleapis.com/v1/text:synthesize?key=$key');
+          final uri = Uri.parse(
+            'https://texttospeech.googleapis.com/v1/text:synthesize?key=$key',
+          );
           final request = await client.postUrl(uri);
           request.headers.set('content-type', 'application/json');
 
@@ -197,17 +242,19 @@ class KurdishTtsService {
             'voice': {
               'languageCode': isEn ? 'en-US' : 'ar-XA',
               'name': isEn ? 'en-US-Neural2-D' : 'ar-XA-Wavenet-B',
-              'ssmlGender': 'MALE'
+              'ssmlGender': 'MALE',
             },
             'audioConfig': {
               'audioEncoding': 'MP3',
               'speakingRate': (0.92 * _playbackSpeed).clamp(0.5, 2.0),
-              'pitch': -0.5
-            }
+              'pitch': -0.5,
+            },
           };
 
           request.add(utf8.encode(jsonEncode(bodyMap)));
-          final response = await request.close().timeout(const Duration(seconds: 6));
+          final response = await request.close().timeout(
+            const Duration(seconds: 6),
+          );
           final respStr = await response.transform(utf8.decoder).join();
 
           if (response.statusCode == 200) {
@@ -230,7 +277,10 @@ class KurdishTtsService {
     return null;
   }
 
-  static const String _defaultElevenLabsKey = String.fromEnvironment('ELEVEN_LABS_API_KEY', defaultValue: '');
+  static const String _defaultElevenLabsKey = String.fromEnvironment(
+    'ELEVEN_LABS_API_KEY',
+    defaultValue: '',
+  );
 
   String? _elevenLabsApiKey;
   String _elevenLabsVoiceId = 'CwhRBWXzGAHq8TQ4Fs17'; // Roger (ElevenLabs)
@@ -246,14 +296,18 @@ class KurdishTtsService {
   }
 
   /// Fetch ultra-realistic studio voice audio from ElevenLabs (Eleven Multilingual v2)
-  Future<Uint8List?> _fetchElevenLabsAudio(String text, {String? apiKey, String? voiceId}) async {
+  Future<Uint8List?> _fetchElevenLabsAudio(
+    String text, {
+    String? apiKey,
+    String? voiceId,
+  }) async {
     if (kIsWeb) return null;
 
     final key = (apiKey != null && apiKey.trim().isNotEmpty)
         ? apiKey.trim()
         : (_elevenLabsApiKey != null && _elevenLabsApiKey!.trim().isNotEmpty)
-            ? _elevenLabsApiKey!.trim()
-            : _defaultElevenLabsKey;
+        ? _elevenLabsApiKey!.trim()
+        : _defaultElevenLabsKey;
 
     if (key.isEmpty) return null;
 
@@ -265,7 +319,9 @@ class KurdishTtsService {
     client.connectionTimeout = const Duration(seconds: 8);
 
     try {
-      final uri = Uri.parse('https://api.elevenlabs.io/v1/text-to-speech/$targetVoice');
+      final uri = Uri.parse(
+        'https://api.elevenlabs.io/v1/text-to-speech/$targetVoice',
+      );
       final request = await client.postUrl(uri);
       request.headers.set('xi-api-key', key);
       request.headers.set('content-type', 'application/json');
@@ -278,12 +334,14 @@ class KurdishTtsService {
           'stability': 0.5,
           'similarity_boost': 0.75,
           'style': 0.0,
-          'use_speaker_boost': true
-        }
+          'use_speaker_boost': true,
+        },
       };
 
       request.add(utf8.encode(jsonEncode(bodyMap)));
-      final response = await request.close().timeout(const Duration(seconds: 12));
+      final response = await request.close().timeout(
+        const Duration(seconds: 12),
+      );
 
       if (response.statusCode == 200) {
         final builder = BytesBuilder();
@@ -296,7 +354,9 @@ class KurdishTtsService {
         }
       } else {
         final errBody = await response.transform(utf8.decoder).join();
-        debugPrint('ElevenLabs API response (${response.statusCode}): $errBody');
+        debugPrint(
+          'ElevenLabs API response (${response.statusCode}): $errBody',
+        );
       }
     } catch (e) {
       debugPrint('ElevenLabs audio fetch error: $e');
@@ -378,7 +438,10 @@ class KurdishTtsService {
 
     // 2. Try High-Quality Google Cloud Neural Voice with Enhanced Kurdish Phonetics
     try {
-      final neuralBytes = await _fetchGoogleCloudNeuralAudio(chunk, apiKey: _customApiKey);
+      final neuralBytes = await _fetchGoogleCloudNeuralAudio(
+        chunk,
+        apiKey: _customApiKey,
+      );
       if (neuralBytes != null && neuralBytes.isNotEmpty) {
         await _audioPlayer.stop();
         await _audioPlayer.setPlaybackRate(_playbackSpeed);
@@ -395,14 +458,14 @@ class KurdishTtsService {
     // 2. Fallback to enhanced Google Translate Audio endpoint
     try {
       final encodedText = Uri.encodeComponent(chunk);
-      final ttsLang = (_currentLangCode == 'ku' || _currentLangCode == 'ckb') ? 'ar' : _currentLangCode;
-      final url = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=$ttsLang&q=$encodedText';
+      final ttsLang = (_currentLangCode == 'ku' || _currentLangCode == 'ckb')
+          ? 'ar'
+          : _currentLangCode;
+      final url =
+          'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=$ttsLang&q=$encodedText';
 
       await _audioPlayer.stop();
-      await _audioPlayer.play(
-        UrlSource(url),
-        mode: PlayerMode.mediaPlayer,
-      );
+      await _audioPlayer.play(UrlSource(url), mode: PlayerMode.mediaPlayer);
     } catch (e) {
       debugPrint('Error playing TTS chunk via Google online endpoint: $e');
       await _fallbackToLocalTts(chunk, _currentLangCode);
@@ -463,4 +526,3 @@ class KurdishTtsService {
     } catch (_) {}
   }
 }
-

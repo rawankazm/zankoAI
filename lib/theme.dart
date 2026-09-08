@@ -46,8 +46,12 @@ class ZankoColors {
     _darkBackground = colors.darkBackground;
     _darkCard = colors.darkCard;
     _darkCardSecondary = colors.darkCardSecondary;
-    _gradientStart = colors.gradientColors.isNotEmpty ? colors.gradientColors.first : colors.primary;
-    _gradientEnd = colors.gradientColors.length > 1 ? colors.gradientColors.last : colors.accent;
+    _gradientStart = colors.gradientColors.isNotEmpty
+        ? colors.gradientColors.first
+        : colors.primary;
+    _gradientEnd = colors.gradientColors.length > 1
+        ? colors.gradientColors.last
+        : colors.accent;
   }
 }
 
@@ -185,12 +189,17 @@ class ZankoTheme {
     );
   }
 
-  static ThemeData getLightTheme(AppThemeType type, {String? languageFontFamily}) {
+  static ThemeData getLightTheme(
+    AppThemeType type, {
+    String? languageFontFamily,
+  }) {
     final colors = getColors(type);
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarBrightness: Brightness.light,
-      statusBarIconBrightness: Brightness.dark,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.dark,
+      ),
+    );
 
     final base = ThemeData(
       useMaterial3: true,
@@ -214,14 +223,58 @@ class ZankoTheme {
 
     return base.copyWith(
       textTheme: base.textTheme.copyWith(
-        displayLarge: _ts(size: 34, weight: FontWeight.w800, color: ZankoColors.textPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.6),
-        displayMedium: _ts(size: 28, weight: FontWeight.w700, color: ZankoColors.textPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.4),
-        titleLarge: _ts(size: 22, weight: FontWeight.w700, color: ZankoColors.textPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.3),
-        titleMedium: _ts(size: 17, weight: FontWeight.w600, color: ZankoColors.textPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.2),
-        bodyLarge: _ts(size: 17, weight: FontWeight.w400, color: ZankoColors.textPrimary, languageFontFamily: languageFontFamily),
-        bodyMedium: _ts(size: 15, weight: FontWeight.w400, color: ZankoColors.textPrimary, languageFontFamily: languageFontFamily),
-        bodySmall: _ts(size: 13, weight: FontWeight.w500, color: ZankoColors.textSecondary, languageFontFamily: languageFontFamily),
-        labelLarge: _ts(size: 15, weight: FontWeight.w600, color: ZankoColors.textPrimary, languageFontFamily: languageFontFamily),
+        displayLarge: _ts(
+          size: 34,
+          weight: FontWeight.w800,
+          color: ZankoColors.textPrimary,
+          languageFontFamily: languageFontFamily,
+          letterSpacing: -0.6,
+        ),
+        displayMedium: _ts(
+          size: 28,
+          weight: FontWeight.w700,
+          color: ZankoColors.textPrimary,
+          languageFontFamily: languageFontFamily,
+          letterSpacing: -0.4,
+        ),
+        titleLarge: _ts(
+          size: 22,
+          weight: FontWeight.w700,
+          color: ZankoColors.textPrimary,
+          languageFontFamily: languageFontFamily,
+          letterSpacing: -0.3,
+        ),
+        titleMedium: _ts(
+          size: 17,
+          weight: FontWeight.w600,
+          color: ZankoColors.textPrimary,
+          languageFontFamily: languageFontFamily,
+          letterSpacing: -0.2,
+        ),
+        bodyLarge: _ts(
+          size: 17,
+          weight: FontWeight.w400,
+          color: ZankoColors.textPrimary,
+          languageFontFamily: languageFontFamily,
+        ),
+        bodyMedium: _ts(
+          size: 15,
+          weight: FontWeight.w400,
+          color: ZankoColors.textPrimary,
+          languageFontFamily: languageFontFamily,
+        ),
+        bodySmall: _ts(
+          size: 13,
+          weight: FontWeight.w500,
+          color: ZankoColors.textSecondary,
+          languageFontFamily: languageFontFamily,
+        ),
+        labelLarge: _ts(
+          size: 15,
+          weight: FontWeight.w600,
+          color: ZankoColors.textPrimary,
+          languageFontFamily: languageFontFamily,
+        ),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: colors.background.withValues(alpha: 0.85),
@@ -229,13 +282,20 @@ class ZankoTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
-        titleTextStyle: _ts(size: 17, weight: FontWeight.w600, color: ZankoColors.textPrimary, languageFontFamily: languageFontFamily),
+        titleTextStyle: _ts(
+          size: 17,
+          weight: FontWeight.w600,
+          color: ZankoColors.textPrimary,
+          languageFontFamily: languageFontFamily,
+        ),
         iconTheme: const IconThemeData(color: ZankoColors.textPrimary),
       ),
       cardTheme: CardThemeData(
         color: colors.card,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ZankoRadius.card)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(ZankoRadius.card),
+        ),
         margin: EdgeInsets.zero,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -245,28 +305,57 @@ class ZankoTheme {
           minimumSize: const Size(0, 52),
           elevation: 0,
           shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ZankoRadius.button)),
-          textStyle: _ts(size: 16, weight: FontWeight.w700, color: Colors.white, languageFontFamily: languageFontFamily),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ZankoRadius.button),
+          ),
+          textStyle: _ts(
+            size: 16,
+            weight: FontWeight.w700,
+            color: Colors.white,
+            languageFontFamily: languageFontFamily,
+          ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colors.card,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(ZankoRadius.input), borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(ZankoRadius.input), borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(ZankoRadius.input), borderSide: BorderSide(color: colors.primary, width: 2)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        hintStyle: _ts(size: 15, weight: FontWeight.w400, color: ZankoColors.textSecondary, languageFontFamily: languageFontFamily),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(ZankoRadius.input),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(ZankoRadius.input),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(ZankoRadius.input),
+          borderSide: BorderSide(color: colors.primary, width: 2),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
+        hintStyle: _ts(
+          size: 15,
+          weight: FontWeight.w400,
+          color: ZankoColors.textSecondary,
+          languageFontFamily: languageFontFamily,
+        ),
       ),
     );
   }
 
-  static ThemeData getDarkTheme(AppThemeType type, {String? languageFontFamily}) {
+  static ThemeData getDarkTheme(
+    AppThemeType type, {
+    String? languageFontFamily,
+  }) {
     final colors = getColors(type);
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarBrightness: Brightness.dark,
-      statusBarIconBrightness: Brightness.light,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarBrightness: Brightness.dark,
+        statusBarIconBrightness: Brightness.light,
+      ),
+    );
 
     final base = ThemeData(
       useMaterial3: true,
@@ -294,14 +383,58 @@ class ZankoTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       ),
       textTheme: base.textTheme.copyWith(
-        displayLarge: _ts(size: 34, weight: FontWeight.w800, color: colors.darkTextPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.6),
-        displayMedium: _ts(size: 28, weight: FontWeight.w700, color: colors.darkTextPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.4),
-        titleLarge: _ts(size: 22, weight: FontWeight.w700, color: colors.darkTextPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.3),
-        titleMedium: _ts(size: 17, weight: FontWeight.w600, color: colors.darkTextPrimary, languageFontFamily: languageFontFamily, letterSpacing: -0.2),
-        bodyLarge: _ts(size: 17, weight: FontWeight.w400, color: colors.darkTextPrimary, languageFontFamily: languageFontFamily),
-        bodyMedium: _ts(size: 15, weight: FontWeight.w400, color: colors.darkTextPrimary, languageFontFamily: languageFontFamily),
-        bodySmall: _ts(size: 13, weight: FontWeight.w500, color: colors.darkTextSecondary, languageFontFamily: languageFontFamily),
-        labelLarge: _ts(size: 15, weight: FontWeight.w600, color: colors.darkTextPrimary, languageFontFamily: languageFontFamily),
+        displayLarge: _ts(
+          size: 34,
+          weight: FontWeight.w800,
+          color: colors.darkTextPrimary,
+          languageFontFamily: languageFontFamily,
+          letterSpacing: -0.6,
+        ),
+        displayMedium: _ts(
+          size: 28,
+          weight: FontWeight.w700,
+          color: colors.darkTextPrimary,
+          languageFontFamily: languageFontFamily,
+          letterSpacing: -0.4,
+        ),
+        titleLarge: _ts(
+          size: 22,
+          weight: FontWeight.w700,
+          color: colors.darkTextPrimary,
+          languageFontFamily: languageFontFamily,
+          letterSpacing: -0.3,
+        ),
+        titleMedium: _ts(
+          size: 17,
+          weight: FontWeight.w600,
+          color: colors.darkTextPrimary,
+          languageFontFamily: languageFontFamily,
+          letterSpacing: -0.2,
+        ),
+        bodyLarge: _ts(
+          size: 17,
+          weight: FontWeight.w400,
+          color: colors.darkTextPrimary,
+          languageFontFamily: languageFontFamily,
+        ),
+        bodyMedium: _ts(
+          size: 15,
+          weight: FontWeight.w400,
+          color: colors.darkTextPrimary,
+          languageFontFamily: languageFontFamily,
+        ),
+        bodySmall: _ts(
+          size: 13,
+          weight: FontWeight.w500,
+          color: colors.darkTextSecondary,
+          languageFontFamily: languageFontFamily,
+        ),
+        labelLarge: _ts(
+          size: 15,
+          weight: FontWeight.w600,
+          color: colors.darkTextPrimary,
+          languageFontFamily: languageFontFamily,
+        ),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: colors.darkBackground.withValues(alpha: 0.9),
@@ -309,13 +442,20 @@ class ZankoTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
-        titleTextStyle: _ts(size: 17, weight: FontWeight.w600, color: colors.darkTextPrimary, languageFontFamily: languageFontFamily),
+        titleTextStyle: _ts(
+          size: 17,
+          weight: FontWeight.w600,
+          color: colors.darkTextPrimary,
+          languageFontFamily: languageFontFamily,
+        ),
         iconTheme: IconThemeData(color: colors.darkTextPrimary),
       ),
       cardTheme: CardThemeData(
         color: colors.darkCard,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ZankoRadius.card)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(ZankoRadius.card),
+        ),
         margin: EdgeInsets.zero,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -325,18 +465,42 @@ class ZankoTheme {
           minimumSize: const Size(0, 52),
           elevation: 0,
           shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(ZankoRadius.button)),
-          textStyle: _ts(size: 16, weight: FontWeight.w700, color: Colors.white, languageFontFamily: languageFontFamily),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ZankoRadius.button),
+          ),
+          textStyle: _ts(
+            size: 16,
+            weight: FontWeight.w700,
+            color: Colors.white,
+            languageFontFamily: languageFontFamily,
+          ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colors.darkCardSecondary,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(ZankoRadius.input), borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(ZankoRadius.input), borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(ZankoRadius.input), borderSide: BorderSide(color: colors.primary, width: 2)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        hintStyle: _ts(size: 15, weight: FontWeight.w400, color: colors.darkTextSecondary, languageFontFamily: languageFontFamily),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(ZankoRadius.input),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(ZankoRadius.input),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(ZankoRadius.input),
+          borderSide: BorderSide(color: colors.primary, width: 2),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
+        hintStyle: _ts(
+          size: 15,
+          weight: FontWeight.w400,
+          color: colors.darkTextSecondary,
+          languageFontFamily: languageFontFamily,
+        ),
       ),
     );
   }
@@ -364,7 +528,11 @@ class ZankoGradientButton extends StatelessWidget {
     return Container(
       height: height,
       decoration: BoxDecoration(
-        gradient: onPressed != null ? ZankoGradients.primary : const LinearGradient(colors: [Color(0xFF64748B), Color(0xFF94A3B8)]),
+        gradient: onPressed != null
+            ? ZankoGradients.primary
+            : const LinearGradient(
+                colors: [Color(0xFF64748B), Color(0xFF94A3B8)],
+              ),
         borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: onPressed != null ? ZankoShadows.gradientButton : [],
       ),
@@ -381,7 +549,14 @@ class ZankoGradientButton extends StatelessWidget {
                   Icon(icon, color: Colors.white, size: 20),
                   const SizedBox(width: 8),
                 ],
-                Text(label, style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+                Text(
+                  label,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
               ],
             ),
           ),

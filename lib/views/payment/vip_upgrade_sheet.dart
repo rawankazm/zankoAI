@@ -103,7 +103,9 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
               children: [
                 Icon(Icons.workspace_premium, color: Colors.amber),
                 SizedBox(width: 8),
-                Text('🎉 پیرۆزە! بەشداربوونی VIPی تۆ بە سەرکەوتوویی چالاککرا 👑'),
+                Text(
+                  '🎉 پیرۆزە! بەشداربوونی VIPی تۆ بە سەرکەوتوویی چالاککرا 👑',
+                ),
               ],
             ),
             backgroundColor: Color(0xFF1E293B),
@@ -118,7 +120,8 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
     void parseData(Map<String, dynamic>? data) {
       if (data == null || !mounted) return;
       setState(() {
-        final whatsapp = data['whatsappNumber'] ??
+        final whatsapp =
+            data['whatsappNumber'] ??
             data['whatsAppNumber'] ??
             data['whatsapp'] ??
             data['whatsapp_number'];
@@ -126,7 +129,8 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
           _whatsappNumber = whatsapp.toString().trim();
         }
 
-        final telegram = data['telegramUsername'] ??
+        final telegram =
+            data['telegramUsername'] ??
             data['telegram'] ??
             data['telegramUser'] ??
             data['telegram_username'];
@@ -139,7 +143,8 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
           _fibNumber = fib.toString().trim();
         }
 
-        final fastpay = data['fastPayNumber'] ??
+        final fastpay =
+            data['fastPayNumber'] ??
             data['fastpay'] ??
             data['fastPay'] ??
             data['fastpay_number'];
@@ -147,13 +152,22 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
           _fastPayNumber = fastpay.toString().trim();
         }
 
-        final p1 = data['monthlyVipPrice'] ?? data['price_1_month'] ?? data['price1Month'];
+        final p1 =
+            data['monthlyVipPrice'] ??
+            data['price_1_month'] ??
+            data['price1Month'];
         if (p1 is num && p1 > 0) _price1Month = p1.toInt();
 
-        final p3 = data['semesterVipPrice'] ?? data['price_3_months'] ?? data['price3Months'];
+        final p3 =
+            data['semesterVipPrice'] ??
+            data['price_3_months'] ??
+            data['price3Months'];
         if (p3 is num && p3 > 0) _price3Months = p3.toInt();
 
-        final p9 = data['annualVipPrice'] ?? data['price_9_months'] ?? data['price9Months'];
+        final p9 =
+            data['annualVipPrice'] ??
+            data['price_9_months'] ??
+            data['price9Months'];
         if (p9 is num && p9 > 0) _price9Months = p9.toInt();
       });
     }
@@ -164,8 +178,9 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
         .eq('key', 'payment_config')
         .maybeSingle()
         .then((data) {
-      if (data != null) parseData(data);
-    }).catchError((_) {});
+          if (data != null) parseData(data);
+        })
+        .catchError((_) {});
   }
 
   String _formatPrice(int price) {
@@ -185,7 +200,9 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
       if (mounted) {
         ScaffoldMessenger.of(ctx).showSnackBar(
           SnackBar(
-            content: const Text('تکایە سەرەتا بچۆ ژوورەوە (Login) بۆ ئەوەی داواکارییەکەت لە سیستەم تۆمار بکرێت'),
+            content: const Text(
+              'تکایە سەرەتا بچۆ ژوورەوە (Login) بۆ ئەوەی داواکارییەکەت لە سیستەم تۆمار بکرێت',
+            ),
             backgroundColor: Colors.orange[800],
             action: SnackBarAction(
               label: 'داخیلبوون',
@@ -237,7 +254,8 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
     final userId = user?.id ?? '';
 
     final priceStr = _formatPrice(_planPrice);
-    final message = '''
+    final message =
+        '''
 سڵاو بەڕێزم 👑
 دەمەوێت بەشداری VIP لە Zanko AI چالاک بکەم:
 
@@ -248,7 +266,8 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
 • ئایدی هەژمار: $userId
 
 (وێنەی وەسڵی پارەدانەکەم لە خوارەوە هاوپێچ کردووە 🧾👇)
-'''.trim();
+'''
+            .trim();
 
     String cleanPhone = _whatsappNumber.replaceAll(RegExp(r'[^0-9]'), '');
     if (cleanPhone.startsWith('07')) {
@@ -257,7 +276,8 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
       cleanPhone = '964$cleanPhone';
     }
 
-    final urlString = 'https://wa.me/$cleanPhone?text=${Uri.encodeComponent(message)}';
+    final urlString =
+        'https://wa.me/$cleanPhone?text=${Uri.encodeComponent(message)}';
     final uri = Uri.parse(urlString);
 
     try {
@@ -295,7 +315,8 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
     final userId = user?.id ?? '';
 
     final priceStr = _formatPrice(_planPrice);
-    final message = '''
+    final message =
+        '''
 سڵاو بەڕێزم 👑
 دەمەوێت بەشداری VIP لە Zanko AI چالاک بکەم:
 
@@ -306,14 +327,16 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
 • ئایدی هەژمار: $userId
 
 (وێنەی وەسڵی پارەدانەکەم لە خوارەوە هاوپێچ کردووە 🧾👇)
-'''.trim();
+'''
+            .trim();
 
     String cleanUsername = _telegramUsername
         .replaceAll('@', '')
         .replaceAll('https://t.me/', '')
         .trim();
 
-    final urlString = 'https://t.me/$cleanUsername?text=${Uri.encodeComponent(message)}';
+    final urlString =
+        'https://t.me/$cleanUsername?text=${Uri.encodeComponent(message)}';
     final uri = Uri.parse(urlString);
 
     try {
@@ -427,7 +450,10 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
               // ── Header Banner ─────────────────────────────────────────────
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 16,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: isDark
@@ -436,10 +462,7 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                             ZankoColors.darkCardSecondary,
                             const Color(0xFF064E3B).withValues(alpha: 0.5),
                           ]
-                        : [
-                            Colors.white,
-                            const Color(0xFFF0FDF4),
-                          ],
+                        : [Colors.white, const Color(0xFFF0FDF4)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -463,11 +486,19 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                         color: ZankoColors.primary.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
-                      child: Text('👑', style: TextStyle(fontSize: 32, color: ZankoColors.primary)),
+                      child: Text(
+                        '👑',
+                        style: TextStyle(
+                          fontSize: 32,
+                          color: ZankoColors.primary,
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      isVip ? 'ئەندامی نایابی VIP (چالاکە 👑)' : 'بەشداریکردنی نایابی VIP',
+                      isVip
+                          ? 'ئەندامی نایابی VIP (چالاکە 👑)'
+                          : 'بەشداریکردنی نایابی VIP',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w900,
@@ -512,7 +543,9 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                           fontSize: 11.5,
                           height: 1.45,
                           fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.amber[200] : const Color(0xFF9A5B00),
+                          color: isDark
+                              ? Colors.amber[200]
+                              : const Color(0xFF9A5B00),
                         ),
                       ),
                     ),
@@ -604,10 +637,14 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                 child: Column(
                   children: [
                     InkWell(
-                      onTap: () => setState(() => _showAccounts = !_showAccounts),
+                      onTap: () =>
+                          setState(() => _showAccounts = !_showAccounts),
                       borderRadius: BorderRadius.circular(16),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
                         child: Row(
                           children: [
                             const Icon(
@@ -622,12 +659,16 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                                 style: TextStyle(
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w700,
-                                  color: isDark ? Colors.white : ZankoColors.textPrimary,
+                                  color: isDark
+                                      ? Colors.white
+                                      : ZankoColors.textPrimary,
                                 ),
                               ),
                             ),
                             Icon(
-                              _showAccounts ? CupertinoIcons.chevron_up : CupertinoIcons.chevron_down,
+                              _showAccounts
+                                  ? CupertinoIcons.chevron_up
+                                  : CupertinoIcons.chevron_down,
                               size: 16,
                               color: Colors.grey,
                             ),
@@ -661,7 +702,9 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                               '📌 دوای ناردنی پارەکە، لە خوارەوە لە ڕێگەی واتسئاپ یان تەلەگرام وێنەی وەسڵەکە بنێرە.',
                               style: TextStyle(
                                 fontSize: 11,
-                                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                color: isDark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
                                 height: 1.4,
                               ),
                             ),
@@ -707,7 +750,9 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                         Container(
                           padding: const EdgeInsets.all(7),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF10B981).withValues(alpha: 0.18),
+                            color: const Color(
+                              0xFF10B981,
+                            ).withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Icon(
@@ -723,7 +768,9 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : ZankoColors.textPrimary,
+                              color: isDark
+                                  ? Colors.white
+                                  : ZankoColors.textPrimary,
                             ),
                           ),
                         ),
@@ -733,9 +780,13 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: isDark ? Colors.black.withValues(alpha: 0.25) : Colors.white,
+                        color: isDark
+                            ? Colors.black.withValues(alpha: 0.25)
+                            : Colors.white,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: isDark ? Colors.white10 : Colors.grey[200]!),
+                        border: Border.all(
+                          color: isDark ? Colors.white10 : Colors.grey[200]!,
+                        ),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -748,7 +799,9 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                               style: TextStyle(
                                 fontSize: 11.5,
                                 height: 1.45,
-                                color: isDark ? Colors.grey[300] : Colors.grey[700],
+                                color: isDark
+                                    ? Colors.grey[300]
+                                    : Colors.grey[700],
                               ),
                             ),
                           ),
@@ -769,7 +822,10 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                         ),
                         elevation: 2,
                       ),
-                      icon: const Icon(CupertinoIcons.chat_bubble_fill, size: 20),
+                      icon: const Icon(
+                        CupertinoIcons.chat_bubble_fill,
+                        size: 20,
+                      ),
                       label: const Text(
                         'ناردنی وێنەی وەسڵ لە واتسئاپ (WhatsApp) 💬',
                         style: TextStyle(
@@ -792,7 +848,10 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                         ),
                         elevation: 2,
                       ),
-                      icon: const Icon(CupertinoIcons.paperplane_fill, size: 20),
+                      icon: const Icon(
+                        CupertinoIcons.paperplane_fill,
+                        size: 20,
+                      ),
                       label: const Text(
                         'ناردنی وێنەی وەسڵ لە تەلەگرام (Telegram) ✈️',
                         style: TextStyle(
@@ -990,7 +1049,10 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
             if (discount != null) ...[
               const SizedBox(height: 4),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 4,
+                  vertical: 1.5,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF10B981).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(4),
@@ -1065,9 +1127,7 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
       decoration: BoxDecoration(
         color: isDark ? Colors.black.withValues(alpha: 0.25) : Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.grey[300]!,
-        ),
+        border: Border.all(color: isDark ? Colors.white10 : Colors.grey[300]!),
       ),
       child: Row(
         children: [

@@ -54,194 +54,216 @@ void main() {
   });
 
   group('1. Successful Payment & Premium Activation', () {
-    test('activates subscription and grants premium access upon verified payment', () async {
-      final now = DateTime.now().toUtc();
-      final periodEnd = now.add(const Duration(days: 30));
+    test(
+      'activates subscription and grants premium access upon verified payment',
+      () async {
+        final now = DateTime.now().toUtc();
+        final periodEnd = now.add(const Duration(days: 30));
 
-      final mockPayload = {
-        'hasActiveSubscription': true,
-        'isPremium': true,
-        'plan': 'PREMIUM_MONTHLY',
-        'status': 'active',
-        'currentPeriodStart': now.toIso8601String(),
-        'currentPeriodEnd': periodEnd.toIso8601String(),
-        'cancelAtPeriodEnd': false,
-        'provider': 'fib',
-        'daysRemaining': 30,
-      };
+        final mockPayload = {
+          'hasActiveSubscription': true,
+          'isPremium': true,
+          'plan': 'PREMIUM_MONTHLY',
+          'status': 'active',
+          'currentPeriodStart': now.toIso8601String(),
+          'currentPeriodEnd': periodEnd.toIso8601String(),
+          'cancelAtPeriodEnd': false,
+          'provider': 'fib',
+          'daysRemaining': 30,
+        };
 
-      when(() => mockDio.get<Map<String, dynamic>>('/subscription')).thenAnswer(
-        (_) async => _buildResponse(
-          statusCode: 200,
-          data: {'success': true, 'data': mockPayload},
-          requestOptions: _opts('/subscription'),
-        ),
-      );
+        when(
+          () => mockDio.get<Map<String, dynamic>>('/subscription'),
+        ).thenAnswer(
+          (_) async => _buildResponse(
+            statusCode: 200,
+            data: {'success': true, 'data': mockPayload},
+            requestOptions: _opts('/subscription'),
+          ),
+        );
 
-      final subscription = await subscriptionService.getSubscription();
+        final subscription = await subscriptionService.getSubscription();
 
-      expect(subscription.hasActiveSubscription, isTrue);
-      expect(subscription.isPremium, isTrue);
-      expect(subscription.plan, equals(SubscriptionPlanType.premiumMonthly));
-      expect(subscription.status, equals(SubscriptionStatusType.active));
-      expect(subscription.canAccessPremiumFeatures, isTrue);
-      expect(subscription.isExpired, isFalse);
-      expect(subscription.daysRemaining, equals(30));
-      expect(subscription.provider, equals('fib'));
-    });
+        expect(subscription.hasActiveSubscription, isTrue);
+        expect(subscription.isPremium, isTrue);
+        expect(subscription.plan, equals(SubscriptionPlanType.premiumMonthly));
+        expect(subscription.status, equals(SubscriptionStatusType.active));
+        expect(subscription.canAccessPremiumFeatures, isTrue);
+        expect(subscription.isExpired, isFalse);
+        expect(subscription.daysRemaining, equals(30));
+        expect(subscription.provider, equals('fib'));
+      },
+    );
   });
 
   group('2. Failed Payment Handling', () {
-    test('transitions subscription to past_due and denies premium access', () async {
-      final now = DateTime.now().toUtc();
+    test(
+      'transitions subscription to past_due and denies premium access',
+      () async {
+        final now = DateTime.now().toUtc();
 
-      final mockPayload = {
-        'hasActiveSubscription': false,
-        'isPremium': false,
-        'plan': 'PREMIUM_MONTHLY',
-        'status': 'past_due',
-        'currentPeriodStart': now.toIso8601String(),
-        'currentPeriodEnd': now.toIso8601String(),
-        'cancelAtPeriodEnd': false,
-        'provider': 'fastpay',
-        'daysRemaining': 0,
-      };
+        final mockPayload = {
+          'hasActiveSubscription': false,
+          'isPremium': false,
+          'plan': 'PREMIUM_MONTHLY',
+          'status': 'past_due',
+          'currentPeriodStart': now.toIso8601String(),
+          'currentPeriodEnd': now.toIso8601String(),
+          'cancelAtPeriodEnd': false,
+          'provider': 'fastpay',
+          'daysRemaining': 0,
+        };
 
-      when(() => mockDio.get<Map<String, dynamic>>('/subscription')).thenAnswer(
-        (_) async => _buildResponse(
-          statusCode: 200,
-          data: {'success': true, 'data': mockPayload},
-          requestOptions: _opts('/subscription'),
-        ),
-      );
+        when(
+          () => mockDio.get<Map<String, dynamic>>('/subscription'),
+        ).thenAnswer(
+          (_) async => _buildResponse(
+            statusCode: 200,
+            data: {'success': true, 'data': mockPayload},
+            requestOptions: _opts('/subscription'),
+          ),
+        );
 
-      final subscription = await subscriptionService.getSubscription();
+        final subscription = await subscriptionService.getSubscription();
 
-      expect(subscription.status, equals(SubscriptionStatusType.pastDue));
-      expect(subscription.isPremium, isFalse);
-      expect(subscription.canAccessPremiumFeatures, isFalse);
-    });
+        expect(subscription.status, equals(SubscriptionStatusType.pastDue));
+        expect(subscription.isPremium, isFalse);
+        expect(subscription.canAccessPremiumFeatures, isFalse);
+      },
+    );
   });
 
   group('3. Expired Subscription & Server Clock Verification', () {
-    test('server-side check detects expired period end and downgrades to FREE', () async {
-      final pastDate = DateTime.now().toUtc().subtract(const Duration(days: 2));
+    test(
+      'server-side check detects expired period end and downgrades to FREE',
+      () async {
+        final pastDate = DateTime.now().toUtc().subtract(
+          const Duration(days: 2),
+        );
 
-      final mockPayload = {
-        'hasActiveSubscription': false,
-        'isPremium': false,
-        'plan': 'FREE',
-        'status': 'expired',
-        'currentPeriodEnd': pastDate.toIso8601String(),
-        'cancelAtPeriodEnd': false,
-        'daysRemaining': 0,
-      };
+        final mockPayload = {
+          'hasActiveSubscription': false,
+          'isPremium': false,
+          'plan': 'FREE',
+          'status': 'expired',
+          'currentPeriodEnd': pastDate.toIso8601String(),
+          'cancelAtPeriodEnd': false,
+          'daysRemaining': 0,
+        };
 
-      when(() => mockDio.get<Map<String, dynamic>>('/subscription')).thenAnswer(
-        (_) async => _buildResponse(
-          statusCode: 200,
-          data: {'success': true, 'data': mockPayload},
-          requestOptions: _opts('/subscription'),
-        ),
-      );
+        when(
+          () => mockDio.get<Map<String, dynamic>>('/subscription'),
+        ).thenAnswer(
+          (_) async => _buildResponse(
+            statusCode: 200,
+            data: {'success': true, 'data': mockPayload},
+            requestOptions: _opts('/subscription'),
+          ),
+        );
 
-      final subscription = await subscriptionService.getSubscription();
+        final subscription = await subscriptionService.getSubscription();
 
-      expect(subscription.hasActiveSubscription, isFalse);
-      expect(subscription.isPremium, isFalse);
-      expect(subscription.plan, equals(SubscriptionPlanType.free));
-      expect(subscription.status, equals(SubscriptionStatusType.expired));
-      expect(subscription.isExpired, isTrue);
-      expect(subscription.canAccessPremiumFeatures, isFalse);
-    });
+        expect(subscription.hasActiveSubscription, isFalse);
+        expect(subscription.isPremium, isFalse);
+        expect(subscription.plan, equals(SubscriptionPlanType.free));
+        expect(subscription.status, equals(SubscriptionStatusType.expired));
+        expect(subscription.isExpired, isTrue);
+        expect(subscription.canAccessPremiumFeatures, isFalse);
+      },
+    );
   });
 
   group('4. Cancelled Subscription', () {
-    test('cancels recurring billing while keeping access active until period end', () async {
-      final now = DateTime.now().toUtc();
-      final periodEnd = now.add(const Duration(days: 12));
+    test(
+      'cancels recurring billing while keeping access active until period end',
+      () async {
+        final now = DateTime.now().toUtc();
+        final periodEnd = now.add(const Duration(days: 12));
 
-      when(() => mockDio.post<Map<String, dynamic>>(
+        when(
+          () => mockDio.post<Map<String, dynamic>>(
             '/subscription/cancel',
             data: any(named: 'data'),
-          )).thenAnswer(
-        (_) async => _buildResponse(
-          statusCode: 200,
-          data: {
-            'success': true,
-            'data': {
+          ),
+        ).thenAnswer(
+          (_) async => _buildResponse(
+            statusCode: 200,
+            data: {
               'success': true,
-              'message': 'Subscription will cancel at end of billing period',
+              'data': {
+                'success': true,
+                'message': 'Subscription will cancel at end of billing period',
+              },
             },
-          },
-          requestOptions: _opts('/subscription/cancel', method: 'POST'),
-        ),
-      );
+            requestOptions: _opts('/subscription/cancel', method: 'POST'),
+          ),
+        );
 
-      final cancelRes = await subscriptionService.cancelSubscription(reason: 'Too expensive');
-      expect(cancelRes['success'], isTrue);
+        final cancelRes = await subscriptionService.cancelSubscription(
+          reason: 'Too expensive',
+        );
+        expect(cancelRes['success'], isTrue);
 
-      final model = UserSubscriptionModel(
-        hasActiveSubscription: true,
-        isPremium: true,
-        plan: SubscriptionPlanType.premiumMonthly,
-        status: SubscriptionStatusType.active,
-        currentPeriodStart: now,
-        currentPeriodEnd: periodEnd,
-        cancelAtPeriodEnd: true,
-        daysRemaining: 12,
-      );
+        final model = UserSubscriptionModel(
+          hasActiveSubscription: true,
+          isPremium: true,
+          plan: SubscriptionPlanType.premiumMonthly,
+          status: SubscriptionStatusType.active,
+          currentPeriodStart: now,
+          currentPeriodEnd: periodEnd,
+          cancelAtPeriodEnd: true,
+          daysRemaining: 12,
+        );
 
-      expect(model.cancelAtPeriodEnd, isTrue);
-      expect(model.canAccessPremiumFeatures, isTrue); // still active until periodEnd!
-    });
+        expect(model.cancelAtPeriodEnd, isTrue);
+        expect(
+          model.canAccessPremiumFeatures,
+          isTrue,
+        ); // still active until periodEnd!
+      },
+    );
   });
 
   group('5. Duplicate Webhook Idempotency', () {
-    test('protects against duplicate and replayed webhooks using idempotency key', () {
-      final processedWebhookKeys = <String>{};
+    test(
+      'protects against duplicate and replayed webhooks using idempotency key',
+      () {
+        final processedWebhookKeys = <String>{};
 
-      Map<String, dynamic> simulateWebhookProcessing({
-        required String idempotencyKey,
-        required String eventType,
-        required String userId,
-      }) {
-        if (processedWebhookKeys.contains(idempotencyKey)) {
-          return {
-            'handled': true,
-            'duplicate': true,
-            'eventType': eventType,
-          };
+        Map<String, dynamic> simulateWebhookProcessing({
+          required String idempotencyKey,
+          required String eventType,
+          required String userId,
+        }) {
+          if (processedWebhookKeys.contains(idempotencyKey)) {
+            return {'handled': true, 'duplicate': true, 'eventType': eventType};
+          }
+
+          processedWebhookKeys.add(idempotencyKey);
+          return {'handled': true, 'duplicate': false, 'eventType': eventType};
         }
 
-        processedWebhookKeys.add(idempotencyKey);
-        return {
-          'handled': true,
-          'duplicate': false,
-          'eventType': eventType,
-        };
-      }
+        const testKey = 'fib_pay_998877_paid';
 
-      const testKey = 'fib_pay_998877_paid';
+        // First webhook delivery
+        final first = simulateWebhookProcessing(
+          idempotencyKey: testKey,
+          eventType: 'payment.succeeded',
+          userId: 'user_123',
+        );
+        expect(first['handled'], isTrue);
+        expect(first['duplicate'], isFalse);
 
-      // First webhook delivery
-      final first = simulateWebhookProcessing(
-        idempotencyKey: testKey,
-        eventType: 'payment.succeeded',
-        userId: 'user_123',
-      );
-      expect(first['handled'], isTrue);
-      expect(first['duplicate'], isFalse);
-
-      // Replayed duplicate webhook
-      final second = simulateWebhookProcessing(
-        idempotencyKey: testKey,
-        eventType: 'payment.succeeded',
-        userId: 'user_123',
-      );
-      expect(second['handled'], isTrue);
-      expect(second['duplicate'], isTrue);
-    });
+        // Replayed duplicate webhook
+        final second = simulateWebhookProcessing(
+          idempotencyKey: testKey,
+          eventType: 'payment.succeeded',
+          userId: 'user_123',
+        );
+        expect(second['handled'], isTrue);
+        expect(second['duplicate'], isTrue);
+      },
+    );
   });
 
   group('6. Invalid Webhook Signature Rejection', () {
@@ -288,8 +310,13 @@ void main() {
     test('renews subscription and pushes current_period_end forward', () {
       final initialEnd = DateTime.now().toUtc().add(const Duration(days: 2));
 
-      UserSubscriptionModel applyRenewal(UserSubscriptionModel current, int additionalDays) {
-        final newEnd = current.currentPeriodEnd!.add(Duration(days: additionalDays));
+      UserSubscriptionModel applyRenewal(
+        UserSubscriptionModel current,
+        int additionalDays,
+      ) {
+        final newEnd = current.currentPeriodEnd!.add(
+          Duration(days: additionalDays),
+        );
         return UserSubscriptionModel(
           hasActiveSubscription: true,
           isPremium: true,
@@ -319,69 +346,93 @@ void main() {
   });
 
   group('9. Zero Client Trust Security', () {
-    test('client claims of payment are disregarded without verified server check', () async {
-      // Client calls /subscription/restore
-      final serverVerifiedSub = {
-        'hasActiveSubscription': true,
-        'isPremium': true,
-        'plan': 'PREMIUM_MONTHLY',
-        'status': 'active',
-        'currentPeriodEnd': DateTime.now().add(const Duration(days: 25)).toIso8601String(),
-      };
+    test(
+      'client claims of payment are disregarded without verified server check',
+      () async {
+        // Client calls /subscription/restore
+        final serverVerifiedSub = {
+          'hasActiveSubscription': true,
+          'isPremium': true,
+          'plan': 'PREMIUM_MONTHLY',
+          'status': 'active',
+          'currentPeriodEnd': DateTime.now()
+              .add(const Duration(days: 25))
+              .toIso8601String(),
+        };
 
-      when(() => mockDio.post<Map<String, dynamic>>('/subscription/restore')).thenAnswer(
-        (_) async => _buildResponse(
-          statusCode: 200,
-          data: {'success': true, 'data': serverVerifiedSub},
-          requestOptions: _opts('/subscription/restore', method: 'POST'),
-        ),
-      );
+        when(
+          () => mockDio.post<Map<String, dynamic>>('/subscription/restore'),
+        ).thenAnswer(
+          (_) async => _buildResponse(
+            statusCode: 200,
+            data: {'success': true, 'data': serverVerifiedSub},
+            requestOptions: _opts('/subscription/restore', method: 'POST'),
+          ),
+        );
 
-      final restored = await subscriptionService.restoreSubscription();
-      expect(restored.isPremium, isTrue);
-      expect(restored.status, equals(SubscriptionStatusType.active));
-    });
+        final restored = await subscriptionService.restoreSubscription();
+        expect(restored.isPremium, isTrue);
+        expect(restored.status, equals(SubscriptionStatusType.active));
+      },
+    );
   });
 
   group('10. Pluggable Payment Providers & Extensible Plans', () {
-    test('creates checkout for FIB, FastPay, ZainCash with proper plan enum mapping', () async {
-      final mockCheckout = {
-        'checkoutId': 'order_fib_8822',
-        'checkoutUrl': 'https://fib.iq/pay/order_fib_8822',
-        'qrPayload': 'fib://pay?ref=order_fib_8822',
-        'provider': 'fib',
-        'plan': 'PREMIUM_MONTHLY',
-        'amount': 15000,
-        'currency': 'IQD',
-      };
+    test(
+      'creates checkout for FIB, FastPay, ZainCash with proper plan enum mapping',
+      () async {
+        final mockCheckout = {
+          'checkoutId': 'order_fib_8822',
+          'checkoutUrl': 'https://fib.iq/pay/order_fib_8822',
+          'qrPayload': 'fib://pay?ref=order_fib_8822',
+          'provider': 'fib',
+          'plan': 'PREMIUM_MONTHLY',
+          'amount': 15000,
+          'currency': 'IQD',
+        };
 
-      when(() => mockDio.post<Map<String, dynamic>>(
+        when(
+          () => mockDio.post<Map<String, dynamic>>(
             '/subscription/checkout',
             data: any(named: 'data'),
-          )).thenAnswer(
-        (_) async => _buildResponse(
-          statusCode: 201,
-          data: {'success': true, 'data': mockCheckout},
-          requestOptions: _opts('/subscription/checkout', method: 'POST'),
-        ),
-      );
+          ),
+        ).thenAnswer(
+          (_) async => _buildResponse(
+            statusCode: 201,
+            data: {'success': true, 'data': mockCheckout},
+            requestOptions: _opts('/subscription/checkout', method: 'POST'),
+          ),
+        );
 
-      final checkout = await subscriptionService.createCheckout(
-        plan: SubscriptionPlanType.premiumMonthly,
-        provider: 'fib',
-      );
+        final checkout = await subscriptionService.createCheckout(
+          plan: SubscriptionPlanType.premiumMonthly,
+          provider: 'fib',
+        );
 
-      expect(checkout.checkoutId, equals('order_fib_8822'));
-      expect(checkout.provider, equals('fib'));
-      expect(checkout.amount, equals(15000));
-      expect(checkout.currency, equals('IQD'));
-      expect(checkout.qrPayload, contains('fib://'));
+        expect(checkout.checkoutId, equals('order_fib_8822'));
+        expect(checkout.provider, equals('fib'));
+        expect(checkout.amount, equals(15000));
+        expect(checkout.currency, equals('IQD'));
+        expect(checkout.qrPayload, contains('fib://'));
 
-      // Extensible plans check
-      expect(SubscriptionPlanTypeExt.fromString('PREMIUM_YEARLY'), equals(SubscriptionPlanType.premiumYearly));
-      expect(SubscriptionPlanTypeExt.fromString('STUDENT'), equals(SubscriptionPlanType.student));
-      expect(SubscriptionPlanTypeExt.fromString('UNIVERSITY'), equals(SubscriptionPlanType.university));
-      expect(SubscriptionPlanTypeExt.fromString('TEAM'), equals(SubscriptionPlanType.team));
-    });
+        // Extensible plans check
+        expect(
+          SubscriptionPlanTypeExt.fromString('PREMIUM_YEARLY'),
+          equals(SubscriptionPlanType.premiumYearly),
+        );
+        expect(
+          SubscriptionPlanTypeExt.fromString('STUDENT'),
+          equals(SubscriptionPlanType.student),
+        );
+        expect(
+          SubscriptionPlanTypeExt.fromString('UNIVERSITY'),
+          equals(SubscriptionPlanType.university),
+        );
+        expect(
+          SubscriptionPlanTypeExt.fromString('TEAM'),
+          equals(SubscriptionPlanType.team),
+        );
+      },
+    );
   });
 }

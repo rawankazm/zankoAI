@@ -184,7 +184,20 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final now = DateTime.now();
     final dayName = _translateDay(_getTodayKurdishDay(), lang);
     if (lang.currentLanguage == AppLanguage.english) {
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
       return '$dayName, ${months[now.month - 1]} ${now.day}';
     } else {
       return '$dayName، ${now.day}/${now.month}';
@@ -195,7 +208,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     return _cardColors[index % _cardColors.length];
   }
 
-  Future<void> _pickCustomTime(BuildContext context, StateSetter setModalState) async {
+  Future<void> _pickCustomTime(
+    BuildContext context,
+    StateSetter setModalState,
+  ) async {
     HapticFeedback.lightImpact();
     final startTime = await showTimePicker(
       context: context,
@@ -206,13 +222,18 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
     final endTime = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay(hour: (startTime.hour + 1) % 24, minute: (startTime.minute + 30) % 60),
+      initialTime: TimeOfDay(
+        hour: (startTime.hour + 1) % 24,
+        minute: (startTime.minute + 30) % 60,
+      ),
       helpText: 'کاتی کۆتایی (End Time)',
     );
     if (endTime == null || !context.mounted) return;
 
-    final formattedStart = '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}';
-    final formattedEnd = '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}';
+    final formattedStart =
+        '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}';
+    final formattedEnd =
+        '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}';
 
     setModalState(() {
       _timeController.text = '$formattedStart - $formattedEnd';
@@ -251,7 +272,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             return Container(
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF161B22) : Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(32),
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.35),
@@ -281,7 +304,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                           height: 5,
                           margin: const EdgeInsets.only(bottom: 18),
                           decoration: BoxDecoration(
-                            color: isDark ? Colors.grey[700] : const Color(0xFFE2E8F0),
+                            color: isDark
+                                ? Colors.grey[700]
+                                : const Color(0xFFE2E8F0),
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
@@ -292,11 +317,15 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: ZankoColors.primary.withValues(alpha: 0.15),
+                              color: ZankoColors.primary.withValues(
+                                alpha: 0.15,
+                              ),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              isEditing ? CupertinoIcons.pencil_ellipsis_rectangle : CupertinoIcons.add_circled_solid,
+                              isEditing
+                                  ? CupertinoIcons.pencil_ellipsis_rectangle
+                                  : CupertinoIcons.add_circled_solid,
                               color: ZankoColors.primary,
                               size: 22,
                             ),
@@ -308,14 +337,18 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                               style: TextStyle(
                                 fontWeight: FontWeight.w900,
                                 fontSize: 18,
-                                color: isDark ? Colors.white : ZankoColors.textPrimary,
+                                color: isDark
+                                    ? Colors.white
+                                    : ZankoColors.textPrimary,
                               ),
                             ),
                           ),
                           IconButton(
                             icon: Icon(
                               CupertinoIcons.xmark_circle_fill,
-                              color: isDark ? Colors.grey[500] : const Color(0xFF94A3B8),
+                              color: isDark
+                                  ? Colors.grey[500]
+                                  : const Color(0xFF94A3B8),
                               size: 26,
                             ),
                             onPressed: () => Navigator.pop(ctx),
@@ -344,7 +377,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                           scrollDirection: Axis.horizontal,
                           physics: const BouncingScrollPhysics(),
                           itemCount: _kurdishDays.length,
-                          separatorBuilder: (_, index) => const SizedBox(width: 8),
+                          separatorBuilder: (_, index) =>
+                              const SizedBox(width: 8),
                           itemBuilder: (context, index) {
                             final day = _kurdishDays[index];
                             final isSelected = _isSameDay(day, sheetDay);
@@ -355,16 +389,23 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                               },
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 200),
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 8,
+                                ),
                                 decoration: BoxDecoration(
                                   color: isSelected
                                       ? ZankoColors.primary
-                                      : (isDark ? const Color(0xFF21262D) : const Color(0xFFF1F5F9)),
+                                      : (isDark
+                                            ? const Color(0xFF21262D)
+                                            : const Color(0xFFF1F5F9)),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: isSelected
                                         ? ZankoColors.primary
-                                        : (isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+                                        : (isDark
+                                              ? Colors.white10
+                                              : const Color(0xFFE2E8F0)),
                                   ),
                                 ),
                                 child: Center(
@@ -372,10 +413,14 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                     _translateDay(day, lang),
                                     style: TextStyle(
                                       fontSize: 12,
-                                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                      fontWeight: isSelected
+                                          ? FontWeight.w800
+                                          : FontWeight.w600,
                                       color: isSelected
                                           ? Colors.white
-                                          : (isDark ? Colors.grey[300] : const Color(0xFF475569)),
+                                          : (isDark
+                                                ? Colors.grey[300]
+                                                : const Color(0xFF475569)),
                                     ),
                                   ),
                                 ),
@@ -395,7 +440,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                             onTap: () => _pickCustomTime(ctx, setModalState),
                             child: Row(
                               children: [
-                                Icon(CupertinoIcons.stopwatch, color: ZankoColors.primary, size: 14),
+                                Icon(
+                                  CupertinoIcons.stopwatch,
+                                  color: ZankoColors.primary,
+                                  size: 14,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   t('custom_time'),
@@ -423,7 +472,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         physics: const BouncingScrollPhysics(),
                         child: Row(
                           children: _timePresets.map((preset) {
-                            final isSelected = _timeController.text.trim() == preset;
+                            final isSelected =
+                                _timeController.text.trim() == preset;
                             return Padding(
                               padding: const EdgeInsets.only(left: 6),
                               child: ChoiceChip(
@@ -431,22 +481,34 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                   preset,
                                   style: TextStyle(
                                     fontSize: 11,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.w500,
                                   ),
                                 ),
                                 selected: isSelected,
                                 onSelected: (_) {
                                   HapticFeedback.selectionClick();
-                                  setModalState(() => _timeController.text = preset);
+                                  setModalState(
+                                    () => _timeController.text = preset,
+                                  );
                                 },
-                                selectedColor: ZankoColors.primary.withValues(alpha: 0.2),
-                                backgroundColor: isDark ? const Color(0xFF21262D) : const Color(0xFFF1F5F9),
+                                selectedColor: ZankoColors.primary.withValues(
+                                  alpha: 0.2,
+                                ),
+                                backgroundColor: isDark
+                                    ? const Color(0xFF21262D)
+                                    : const Color(0xFFF1F5F9),
                                 labelStyle: TextStyle(
                                   color: isSelected
                                       ? ZankoColors.primary
-                                      : (isDark ? Colors.grey[300] : const Color(0xFF64748B)),
+                                      : (isDark
+                                            ? Colors.grey[300]
+                                            : const Color(0xFF64748B)),
                                 ),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
                               ),
                             );
                           }).toList(),
@@ -486,22 +548,34 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: ZankoColors.primary,
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
                                 elevation: 3,
-                                shadowColor: ZankoColors.primary.withValues(alpha: 0.4),
+                                shadowColor: ZankoColors.primary.withValues(
+                                  alpha: 0.4,
+                                ),
                               ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
-                                    isEditing ? CupertinoIcons.checkmark_alt_circle_fill : CupertinoIcons.add_circled_solid,
+                                    isEditing
+                                        ? CupertinoIcons
+                                              .checkmark_alt_circle_fill
+                                        : CupertinoIcons.add_circled_solid,
                                     size: 19,
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
                                     isEditing ? t('update_lecture') : t('save'),
-                                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 15,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -513,17 +587,25 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                             child: OutlinedButton(
                               onPressed: () => Navigator.pop(ctx),
                               style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
                                 side: BorderSide(
-                                  color: isDark ? const Color(0xFF30363D) : const Color(0xFFCBD5E1),
+                                  color: isDark
+                                      ? const Color(0xFF30363D)
+                                      : const Color(0xFFCBD5E1),
                                 ),
                               ),
                               child: Text(
                                 t('close'),
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.grey[300] : const Color(0xFF475569),
+                                  color: isDark
+                                      ? Colors.grey[300]
+                                      : const Color(0xFF475569),
                                 ),
                               ),
                             ),
@@ -563,7 +645,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         color: isDark ? const Color(0xFF21262D) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFE2E8F0),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : const Color(0xFFE2E8F0),
         ),
       ),
       child: TextField(
@@ -581,7 +665,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           ),
           prefixIcon: Icon(icon, color: ZankoColors.primary, size: 19),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
         ),
       ),
     );
@@ -599,7 +686,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           content: Text(t('snackbar_fill_all_fields')),
           backgroundColor: ZankoColors.error,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
         ),
       );
       return;
@@ -631,7 +720,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(CupertinoIcons.checkmark_alt_circle_fill, color: Colors.white, size: 20),
+            const Icon(
+              CupertinoIcons.checkmark_alt_circle_fill,
+              color: Colors.white,
+              size: 20,
+            ),
             const SizedBox(width: 8),
             Expanded(child: Text(t('lecture_save_success'))),
           ],
@@ -662,7 +755,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             isDestructiveAction: true,
             onPressed: () {
               Navigator.pop(ctx);
-              final dbService = Provider.of<DatabaseService>(context, listen: false);
+              final dbService = Provider.of<DatabaseService>(
+                context,
+                listen: false,
+              );
               dbService.deleteScheduleItem(id);
               HapticFeedback.mediumImpact();
               ScaffoldMessenger.of(context).showSnackBar(
@@ -670,7 +766,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   content: Text(t('lecture_delete_success')),
                   backgroundColor: ZankoColors.error,
                   behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
               );
             },
@@ -689,15 +787,23 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     String t(String key) => langProvider.translate(key);
 
     final todayKurdish = _getTodayKurdishDay();
-    final todayLectures = dbService.schedule.where((item) => _isSameDay(item.dayName, todayKurdish)).toList();
-    final activeDayLectures = dbService.schedule.where((item) => _isSameDay(item.dayName, _selectedDay)).toList();
+    final todayLectures = dbService.schedule
+        .where((item) => _isSameDay(item.dayName, todayKurdish))
+        .toList();
+    final activeDayLectures = dbService.schedule
+        .where((item) => _isSameDay(item.dayName, _selectedDay))
+        .toList();
 
     return Directionality(
       textDirection: langProvider.textDirection,
       child: Scaffold(
-        backgroundColor: isDark ? const Color(0xFF0D1117) : const Color(0xFFF8FAFC),
+        backgroundColor: isDark
+            ? const Color(0xFF0D1117)
+            : const Color(0xFFF8FAFC),
         appBar: AppBar(
-          backgroundColor: isDark ? const Color(0xFF0D1117) : const Color(0xFFF8FAFC),
+          backgroundColor: isDark
+              ? const Color(0xFF0D1117)
+              : const Color(0xFFF8FAFC),
           elevation: 0,
           leading: IconButton(
             icon: const Icon(CupertinoIcons.back),
@@ -712,7 +818,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   color: ZankoColors.primary.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(CupertinoIcons.calendar, color: ZankoColors.primary, size: 18),
+                child: Icon(
+                  CupertinoIcons.calendar,
+                  color: ZankoColors.primary,
+                  size: 18,
+                ),
               ),
               const SizedBox(width: 8),
               Text(
@@ -738,11 +848,15 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               ),
               child: IconButton(
                 icon: Icon(
-                  _viewAllDays ? CupertinoIcons.square_grid_2x2_fill : CupertinoIcons.calendar_today,
+                  _viewAllDays
+                      ? CupertinoIcons.square_grid_2x2_fill
+                      : CupertinoIcons.calendar_today,
                   color: ZankoColors.primary,
                   size: 20,
                 ),
-                tooltip: _viewAllDays ? t('schedule_view_daily') : t('schedule_view_weekly'),
+                tooltip: _viewAllDays
+                    ? t('schedule_view_daily')
+                    : t('schedule_view_weekly'),
                 onPressed: () {
                   HapticFeedback.selectionClick();
                   setState(() => _viewAllDays = !_viewAllDays);
@@ -757,7 +871,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               // Apple-Style Hero Status Card
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
-                child: _buildHeroCard(todayLectures, todayKurdish, langProvider, isDark, t),
+                child: _buildHeroCard(
+                  todayLectures,
+                  todayKurdish,
+                  langProvider,
+                  isDark,
+                  t,
+                ),
               ),
 
               // Horizontal Day Selector (shown in Daily View)
@@ -774,7 +894,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       final day = _kurdishDays[index];
                       final isSelected = _isSameDay(day, _selectedDay);
                       final isToday = _isSameDay(day, todayKurdish);
-                      final lectureCount = dbService.schedule.where((l) => _isSameDay(l.dayName, day)).length;
+                      final lectureCount = dbService.schedule
+                          .where((l) => _isSameDay(l.dayName, day))
+                          .length;
 
                       return GestureDetector(
                         onTap: () {
@@ -783,31 +905,46 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         },
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 220),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? ZankoColors.primary
-                                : (isDark ? const Color(0xFF161B22) : Colors.white),
+                                : (isDark
+                                      ? const Color(0xFF161B22)
+                                      : Colors.white),
                             borderRadius: BorderRadius.circular(18),
                             border: Border.all(
                               color: isSelected
                                   ? ZankoColors.primary
                                   : (isToday
-                                      ? ZankoColors.primary.withValues(alpha: 0.6)
-                                      : (isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0))),
+                                        ? ZankoColors.primary.withValues(
+                                            alpha: 0.6,
+                                          )
+                                        : (isDark
+                                              ? Colors.white.withValues(
+                                                  alpha: 0.08,
+                                                )
+                                              : const Color(0xFFE2E8F0))),
                               width: isToday && !isSelected ? 1.5 : 1.0,
                             ),
                             boxShadow: isSelected
                                 ? [
                                     BoxShadow(
-                                      color: ZankoColors.primary.withValues(alpha: 0.35),
+                                      color: ZankoColors.primary.withValues(
+                                        alpha: 0.35,
+                                      ),
                                       blurRadius: 12,
                                       offset: const Offset(0, 4),
                                     ),
                                   ]
                                 : [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+                                      color: Colors.black.withValues(
+                                        alpha: isDark ? 0.2 : 0.03,
+                                      ),
                                       blurRadius: 6,
                                       offset: const Offset(0, 2),
                                     ),
@@ -819,21 +956,30 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                               Text(
                                 _translateDay(day, langProvider),
                                 style: TextStyle(
-                                  fontWeight: isSelected ? FontWeight.w900 : FontWeight.bold,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w900
+                                      : FontWeight.bold,
                                   fontSize: 13,
                                   color: isSelected
                                       ? Colors.white
-                                      : (isDark ? Colors.white : ZankoColors.textPrimary),
+                                      : (isDark
+                                            ? Colors.white
+                                            : ZankoColors.textPrimary),
                                 ),
                               ),
                               if (lectureCount > 0) ...[
                                 const SizedBox(width: 6),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: isSelected
                                         ? Colors.white.withValues(alpha: 0.25)
-                                        : ZankoColors.primary.withValues(alpha: 0.15),
+                                        : ZankoColors.primary.withValues(
+                                            alpha: 0.15,
+                                          ),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
@@ -841,7 +987,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w900,
-                                      color: isSelected ? Colors.white : ZankoColors.primary,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : ZankoColors.primary,
                                     ),
                                   ),
                                 ),
@@ -860,7 +1008,12 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               Expanded(
                 child: _viewAllDays
                     ? _buildAllDaysView(dbService, langProvider, isDark, t)
-                    : _buildSingleDayView(activeDayLectures, langProvider, isDark, t),
+                    : _buildSingleDayView(
+                        activeDayLectures,
+                        langProvider,
+                        isDark,
+                        t,
+                      ),
               ),
             ],
           ),
@@ -872,10 +1025,17 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 onPressed: () => _openLectureSheet(defaultDay: _selectedDay),
                 backgroundColor: ZankoColors.primary,
                 elevation: 6,
-                icon: const Icon(CupertinoIcons.plus_circle_fill, color: Colors.white, size: 20),
+                icon: const Icon(
+                  CupertinoIcons.plus_circle_fill,
+                  color: Colors.white,
+                  size: 20,
+                ),
                 label: Text(
                   t('add_lecture'),
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
       ),
@@ -903,12 +1063,16 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         ),
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.2),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.white.withValues(alpha: 0.2),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black.withValues(alpha: 0.4) : ZankoColors.primary.withValues(alpha: 0.25),
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.4)
+                : ZankoColors.primary.withValues(alpha: 0.25),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -921,7 +1085,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
@@ -1023,7 +1190,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     width: 1.5,
                   ),
                 ),
-                child: Icon(CupertinoIcons.calendar_badge_plus, color: ZankoColors.primary, size: 42),
+                child: Icon(
+                  CupertinoIcons.calendar_badge_plus,
+                  color: ZankoColors.primary,
+                  size: 42,
+                ),
               ),
               const SizedBox(height: 18),
               Text(
@@ -1052,8 +1223,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: ZankoColors.primary,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   elevation: 2,
                 ),
               ),
@@ -1087,7 +1263,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       itemCount: _kurdishDays.length,
       itemBuilder: (context, dayIndex) {
         final day = _kurdishDays[dayIndex];
-        final dayLectures = dbService.schedule.where((item) => _isSameDay(item.dayName, day)).toList();
+        final dayLectures = dbService.schedule
+            .where((item) => _isSameDay(item.dayName, day))
+            .toList();
         final isToday = _isSameDay(day, _getTodayKurdishDay());
 
         return Container(
@@ -1098,7 +1276,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             border: Border.all(
               color: isToday
                   ? ZankoColors.primary.withValues(alpha: 0.6)
-                  : (isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0)),
+                  : (isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : const Color(0xFFE2E8F0)),
               width: isToday ? 2.0 : 1.0,
             ),
             boxShadow: [
@@ -1116,12 +1296,18 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: (isToday ? ZankoColors.primary : _cardColors[dayIndex % _cardColors.length]).withValues(alpha: 0.15),
+                  color:
+                      (isToday
+                              ? ZankoColors.primary
+                              : _cardColors[dayIndex % _cardColors.length])
+                          .withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   isToday ? CupertinoIcons.star_fill : CupertinoIcons.calendar,
-                  color: isToday ? ZankoColors.primary : _cardColors[dayIndex % _cardColors.length],
+                  color: isToday
+                      ? ZankoColors.primary
+                      : _cardColors[dayIndex % _cardColors.length],
                   size: 20,
                 ),
               ),
@@ -1132,20 +1318,29 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 15,
-                      color: isToday ? ZankoColors.primary : (isDark ? Colors.white : ZankoColors.textPrimary),
+                      color: isToday
+                          ? ZankoColors.primary
+                          : (isDark ? Colors.white : ZankoColors.textPrimary),
                     ),
                   ),
                   if (isToday) ...[
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: ZankoColors.primary,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         t('today'),
-                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -1167,7 +1362,12 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       children: [
                         Text(
                           t('no_lectures_day'),
-                          style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[500] : const Color(0xFF94A3B8)),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark
+                                ? Colors.grey[500]
+                                : const Color(0xFF94A3B8),
+                          ),
                         ),
                         TextButton.icon(
                           onPressed: () {
@@ -1175,7 +1375,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                             _openLectureSheet(defaultDay: day);
                           },
                           icon: const Icon(CupertinoIcons.plus, size: 14),
-                          label: Text(t('add_lecture'), style: const TextStyle(fontSize: 12)),
+                          label: Text(
+                            t('add_lecture'),
+                            style: const TextStyle(fontSize: 12),
+                          ),
                         ),
                       ],
                     ),
@@ -1186,7 +1389,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     final cardColor = _getLectureColor(index);
                     return Padding(
                       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                      child: _buildLectureCard(lecture, cardColor, index, isDark, t),
+                      child: _buildLectureCard(
+                        lecture,
+                        cardColor,
+                        index,
+                        isDark,
+                        t,
+                      ),
                     );
                   }),
               ],
@@ -1210,7 +1419,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         color: isDark ? const Color(0xFF161B22) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : const Color(0xFFE2E8F0),
           width: 1,
         ),
         boxShadow: [
@@ -1248,9 +1459,14 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
                             decoration: BoxDecoration(
-                              color: accentColor.withValues(alpha: isDark ? 0.2 : 0.1),
+                              color: accentColor.withValues(
+                                alpha: isDark ? 0.2 : 0.1,
+                              ),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Row(
@@ -1276,19 +1492,24 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                           const Spacer(),
                           // Edit Button
                           GestureDetector(
-                            onTap: () => _openLectureSheet(lectureToEdit: lecture),
+                            onTap: () =>
+                                _openLectureSheet(lectureToEdit: lecture),
                             child: Container(
                               width: 32,
                               height: 32,
                               decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF21262D) : const Color(0xFFF1F5F9),
+                                color: isDark
+                                    ? const Color(0xFF21262D)
+                                    : const Color(0xFFF1F5F9),
                                 shape: BoxShape.circle,
                               ),
                               child: Center(
                                 child: HugeIcon(
                                   icon: HugeIcons.strokeRoundedPencilEdit02,
                                   size: 15,
-                                  color: isDark ? Colors.grey[300]! : const Color(0xFF475569),
+                                  color: isDark
+                                      ? Colors.grey[300]!
+                                      : const Color(0xFF475569),
                                 ),
                               ),
                             ),
@@ -1301,7 +1522,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                               width: 32,
                               height: 32,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFEF4444).withValues(alpha: 0.12),
+                                color: const Color(
+                                  0xFFEF4444,
+                                ).withValues(alpha: 0.12),
                                 shape: BoxShape.circle,
                               ),
                               child: const Center(
@@ -1322,10 +1545,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF0F172A),
                         ),
                       ),
-                      if (lecture.location.isNotEmpty || lecture.teacherName.isNotEmpty) ...[
+                      if (lecture.location.isNotEmpty ||
+                          lecture.teacherName.isNotEmpty) ...[
                         const SizedBox(height: 10),
                         Wrap(
                           spacing: 8,
@@ -1357,7 +1583,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     );
   }
 
-  Widget _infoChip({required dynamic icon, required String label, required bool isDark}) {
+  Widget _infoChip({
+    required dynamic icon,
+    required String label,
+    required bool isDark,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(

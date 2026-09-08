@@ -22,10 +22,10 @@ class HomeworkStep {
   }
 
   Map<String, dynamic> toJson() => {
-        'stepNumber': stepNumber,
-        'title': title,
-        'content': content,
-      };
+    'stepNumber': stepNumber,
+    'title': title,
+    'content': content,
+  };
 }
 
 class HomeworkSolutionModel {
@@ -67,19 +67,23 @@ class HomeworkSolutionModel {
       difficulty: json['difficulty'] as String? ?? 'medium',
       answer: json['answer'] as String? ?? '',
       explanation: json['explanation'] as String? ?? '',
-      stepByStepReasoning: (json['stepByStepReasoning'] as List<dynamic>?)
+      stepByStepReasoning:
+          (json['stepByStepReasoning'] as List<dynamic>?)
               ?.map((e) => HomeworkStep.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      mistakesIdentified: (json['mistakesIdentified'] as List<dynamic>?)
+      mistakesIdentified:
+          (json['mistakesIdentified'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
-      hints: (json['hints'] as List<dynamic>?)
+      hints:
+          (json['hints'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
-      relatedConcepts: (json['relatedConcepts'] as List<dynamic>?)
+      relatedConcepts:
+          (json['relatedConcepts'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
@@ -92,21 +96,20 @@ class HomeworkSolutionModel {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'subject': subject,
-        'course': course,
-        'difficulty': difficulty,
-        'answer': answer,
-        'explanation': explanation,
-        'stepByStepReasoning':
-            stepByStepReasoning.map((s) => s.toJson()).toList(),
-        'mistakesIdentified': mistakesIdentified,
-        'hints': hints,
-        'relatedConcepts': relatedConcepts,
-        'language': language,
-        'hasImage': hasImage,
-        'createdAt': createdAt.toIso8601String(),
-      };
+    'id': id,
+    'subject': subject,
+    'course': course,
+    'difficulty': difficulty,
+    'answer': answer,
+    'explanation': explanation,
+    'stepByStepReasoning': stepByStepReasoning.map((s) => s.toJson()).toList(),
+    'mistakesIdentified': mistakesIdentified,
+    'hints': hints,
+    'relatedConcepts': relatedConcepts,
+    'language': language,
+    'hasImage': hasImage,
+    'createdAt': createdAt.toIso8601String(),
+  };
 
   String get difficultyLabelKu {
     switch (difficulty.toLowerCase()) {

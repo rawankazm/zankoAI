@@ -16,7 +16,10 @@ class VoiceDictationSheet extends StatefulWidget {
     this.title = 'تۆمارکردنی دەنگ بۆ زیرەکی دەستکرد',
   });
 
-  static Future<void> show(BuildContext context, {required Function(String audioPath) onAudioRecorded}) {
+  static Future<void> show(
+    BuildContext context, {
+    required Function(String audioPath) onAudioRecorded,
+  }) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -29,7 +32,8 @@ class VoiceDictationSheet extends StatefulWidget {
   State<VoiceDictationSheet> createState() => _VoiceDictationSheetState();
 }
 
-class _VoiceDictationSheetState extends State<VoiceDictationSheet> with SingleTickerProviderStateMixin {
+class _VoiceDictationSheetState extends State<VoiceDictationSheet>
+    with SingleTickerProviderStateMixin {
   late final AudioRecorder _audioRecorder;
   bool _isRecording = false;
   int _recordDurationSeconds = 0;
@@ -66,7 +70,8 @@ class _VoiceDictationSheetState extends State<VoiceDictationSheet> with SingleTi
     try {
       if (await _audioRecorder.hasPermission()) {
         final dir = await getTemporaryDirectory();
-        final filePath = '${dir.path}/zanko_voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        final filePath =
+            '${dir.path}/zanko_voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
 
         await _audioRecorder.start(
           const RecordConfig(encoder: AudioEncoder.aacLc),
@@ -89,7 +94,9 @@ class _VoiceDictationSheetState extends State<VoiceDictationSheet> with SingleTi
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('تکایە ڕێگەپێدانی مایکڕۆفۆن پێمبەخشە')),
+            const SnackBar(
+              content: Text('تکایە ڕێگەپێدانی مایکڕۆفۆن پێمبەخشە'),
+            ),
           );
           Navigator.pop(context);
         }
@@ -186,7 +193,9 @@ class _VoiceDictationSheetState extends State<VoiceDictationSheet> with SingleTi
 
           // Animated Microphone Pulse Button
           ScaleTransition(
-            scale: _isRecording ? _pulseAnimation : const AlwaysStoppedAnimation(1.0),
+            scale: _isRecording
+                ? _pulseAnimation
+                : const AlwaysStoppedAnimation(1.0),
             child: Container(
               width: 90,
               height: 90,
@@ -233,11 +242,18 @@ class _VoiceDictationSheetState extends State<VoiceDictationSheet> with SingleTi
                 child: OutlinedButton(
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    side: BorderSide(color: isDark ? Colors.white24 : Colors.grey[300]!),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    side: BorderSide(
+                      color: isDark ? Colors.white24 : Colors.grey[300]!,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                   onPressed: _cancelRecording,
-                  child: const Text('پاشگەزبوونەوە', style: TextStyle(color: Colors.grey)),
+                  child: const Text(
+                    'پاشگەزبوونەوە',
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
@@ -246,11 +262,23 @@ class _VoiceDictationSheetState extends State<VoiceDictationSheet> with SingleTi
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     backgroundColor: ZankoColors.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                   onPressed: _stopAndSubmitRecording,
-                  icon: const Icon(CupertinoIcons.paperplane_fill, color: Colors.white, size: 18),
-                  label: const Text('ناردن بۆ AI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  icon: const Icon(
+                    CupertinoIcons.paperplane_fill,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  label: const Text(
+                    'ناردن بۆ AI',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ],

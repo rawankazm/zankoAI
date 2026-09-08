@@ -61,7 +61,9 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
     HapticFeedback.mediumImpact();
     FocusScope.of(context).unfocus();
 
-    if (_hasSearched && _matchedDepartments.isNotEmpty && _activeTab != 'departments') {
+    if (_hasSearched &&
+        _matchedDepartments.isNotEmpty &&
+        _activeTab != 'departments') {
       setState(() {
         _activeTab = 'departments';
       });
@@ -69,7 +71,10 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
     }
 
     final track = _isScientific ? 'scientific' : 'literary';
-    final zankolineService = Provider.of<ZankolineService>(context, listen: false);
+    final zankolineService = Provider.of<ZankolineService>(
+      context,
+      listen: false,
+    );
     final matched = await zankolineService.filterMatchingDepartments(
       mark,
       track,
@@ -111,7 +116,10 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
     }
 
     final track = _isScientific ? 'scientific' : 'literary';
-    final zankolineService = Provider.of<ZankolineService>(context, listen: false);
+    final zankolineService = Provider.of<ZankolineService>(
+      context,
+      listen: false,
+    );
 
     setState(() {
       _hasSearched = true;
@@ -181,11 +189,17 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
     for (final urlStr in urls) {
       final uri = Uri.parse(urlStr);
       try {
-        final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+        final launched = await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
         if (launched) return;
       } catch (_) {
         try {
-          final launchedFallback = await launchUrl(uri, mode: LaunchMode.platformDefault);
+          final launchedFallback = await launchUrl(
+            uri,
+            mode: LaunchMode.platformDefault,
+          );
           if (launchedFallback) return;
         } catch (_) {}
       }
@@ -193,16 +207,21 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
   }
 
   String _localizedCity(String rawCity, LanguageProvider lang) {
-    if (rawCity.contains('هەولێر') || rawCity.toLowerCase().contains('erbil') || rawCity.toLowerCase().contains('hawler')) {
+    if (rawCity.contains('هەولێر') ||
+        rawCity.toLowerCase().contains('erbil') ||
+        rawCity.toLowerCase().contains('hawler')) {
       return lang.translate('city_erbil');
     }
-    if (rawCity.contains('سلێمانی') || rawCity.toLowerCase().contains('slemani') || rawCity.toLowerCase().contains('sulaymaniyah')) {
+    if (rawCity.contains('سلێمانی') ||
+        rawCity.toLowerCase().contains('slemani') ||
+        rawCity.toLowerCase().contains('sulaymaniyah')) {
       return lang.translate('city_slemani');
     }
     if (rawCity.contains('دهۆک') || rawCity.toLowerCase().contains('duhok')) {
       return lang.translate('city_duhok');
     }
-    if (rawCity.contains('هەڵەبجە') || rawCity.toLowerCase().contains('halabja')) {
+    if (rawCity.contains('هەڵەبجە') ||
+        rawCity.toLowerCase().contains('halabja')) {
       return lang.translate('city_halabja');
     }
     return rawCity;
@@ -217,14 +236,22 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
     const primaryBlue = Color(0xFF035EC2);
     const warmGold = Color(0xFFE4D27D);
     final cardBg = isDark ? const Color(0xFF171B23) : Colors.white;
-    final borderColor = isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2);
+    final borderColor = isDark
+        ? const Color(0xFF262C36)
+        : const Color(0xFFECEEF2);
     final textPrimary = isDark ? Colors.white : const Color(0xFF17191F);
-    final textSecondary = isDark ? const Color(0xFFA6ACB8) : const Color(0xFF6B7280);
+    final textSecondary = isDark
+        ? const Color(0xFFA6ACB8)
+        : const Color(0xFF6B7280);
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0E1117) : const Color(0xFFFAFAFB),
+      backgroundColor: isDark
+          ? const Color(0xFF0E1117)
+          : const Color(0xFFFAFAFB),
       appBar: AppBar(
-        backgroundColor: (isDark ? const Color(0xFF0E1117) : const Color(0xFFFAFAFB)).withValues(alpha: 0.95),
+        backgroundColor:
+            (isDark ? const Color(0xFF0E1117) : const Color(0xFFFAFAFB))
+                .withValues(alpha: 0.95),
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         title: Text(
@@ -243,9 +270,14 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
             child: GestureDetector(
               onTap: _openZankolinePortal,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF171B23) : const Color(0xFFE2EDFB),
+                  color: isDark
+                      ? const Color(0xFF171B23)
+                      : const Color(0xFFE2EDFB),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: primaryBlue.withValues(alpha: 0.3),
@@ -347,10 +379,14 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF11151D) : const Color(0xFFF1F4F8),
+                      color: isDark
+                          ? const Color(0xFF11151D)
+                          : const Color(0xFFF1F4F8),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isDark ? const Color(0xFF202734) : const Color(0xFFE1E7EF),
+                        color: isDark
+                            ? const Color(0xFF202734)
+                            : const Color(0xFFE1E7EF),
                         width: 1,
                       ),
                     ),
@@ -361,7 +397,8 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                             label: t('zankoline_track_scientific'),
                             icon: HugeIcons.strokeRoundedAtom01,
                             isSelected: _isScientific,
-                            onTap: () => _onModeOrTrackChanged(isScientific: true),
+                            onTap: () =>
+                                _onModeOrTrackChanged(isScientific: true),
                             isDark: isDark,
                           ),
                         ),
@@ -371,7 +408,8 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                             label: t('zankoline_track_literary'),
                             icon: HugeIcons.strokeRoundedBook02,
                             isSelected: !_isScientific,
-                            onTap: () => _onModeOrTrackChanged(isScientific: false),
+                            onTap: () =>
+                                _onModeOrTrackChanged(isScientific: false),
                             isDark: isDark,
                           ),
                         ),
@@ -384,10 +422,14 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF11151D) : const Color(0xFFF1F4F8),
+                      color: isDark
+                          ? const Color(0xFF11151D)
+                          : const Color(0xFFF1F4F8),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isDark ? const Color(0xFF202734) : const Color(0xFFE1E7EF),
+                        color: isDark
+                            ? const Color(0xFF202734)
+                            : const Color(0xFFE1E7EF),
                         width: 1,
                       ),
                     ),
@@ -398,7 +440,8 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                             label: t('zankoline_mode_general'),
                             icon: HugeIcons.strokeRoundedMortarboard02,
                             isSelected: !_isParallel,
-                            onTap: () => _onModeOrTrackChanged(isParallel: false),
+                            onTap: () =>
+                                _onModeOrTrackChanged(isParallel: false),
                             isDark: isDark,
                           ),
                         ),
@@ -409,7 +452,8 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                             icon: HugeIcons.strokeRoundedCoins01,
                             isSelected: _isParallel,
                             badge: '45%',
-                            onTap: () => _onModeOrTrackChanged(isParallel: true),
+                            onTap: () =>
+                                _onModeOrTrackChanged(isParallel: true),
                             isDark: isDark,
                           ),
                         ),
@@ -431,14 +475,19 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
 
                   Container(
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF0E1117) : const Color(0xFFF8FAFD),
+                      color: isDark
+                          ? const Color(0xFF0E1117)
+                          : const Color(0xFFF8FAFD),
                       borderRadius: BorderRadius.circular(18),
                       border: Border.all(
                         color: primaryBlue.withValues(alpha: 0.3),
                         width: 1.5,
                       ),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
                     child: Row(
                       children: [
                         Container(
@@ -457,7 +506,9 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                         Expanded(
                           child: TextField(
                             controller: _markController,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontSize: 26,
@@ -470,7 +521,9 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                               hintStyle: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w500,
-                                color: isDark ? Colors.grey[600] : const Color(0xFFA6ACB8),
+                                color: isDark
+                                    ? Colors.grey[600]
+                                    : const Color(0xFFA6ACB8),
                               ),
                               border: InputBorder.none,
                               contentPadding: EdgeInsets.zero,
@@ -510,36 +563,51 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: _quickPresets.map((preset) {
-                      final currentVal = double.tryParse(_markController.text.trim());
-                      final isSelected = currentVal != null && (currentVal == preset);
+                      final currentVal = double.tryParse(
+                        _markController.text.trim(),
+                      );
+                      final isSelected =
+                          currentVal != null && (currentVal == preset);
 
                       return GestureDetector(
                         onTap: () => _setPresetMark(preset),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 180),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 7,
+                          ),
                           decoration: BoxDecoration(
                             gradient: isSelected
                                 ? const LinearGradient(
-                                    colors: [Color(0xFF035EC2), Color(0xFF024A9B)],
+                                    colors: [
+                                      Color(0xFF035EC2),
+                                      Color(0xFF024A9B),
+                                    ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                   )
                                 : null,
                             color: isSelected
                                 ? null
-                                : (isDark ? const Color(0xFF111620) : const Color(0xFFF1F5F9)),
+                                : (isDark
+                                      ? const Color(0xFF111620)
+                                      : const Color(0xFFF1F5F9)),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: isSelected
                                   ? primaryBlue
-                                  : (isDark ? const Color(0xFF232B3A) : const Color(0xFFE2E8F0)),
+                                  : (isDark
+                                        ? const Color(0xFF232B3A)
+                                        : const Color(0xFFE2E8F0)),
                               width: 1.2,
                             ),
                             boxShadow: isSelected
                                 ? [
                                     BoxShadow(
-                                      color: primaryBlue.withValues(alpha: 0.35),
+                                      color: primaryBlue.withValues(
+                                        alpha: 0.35,
+                                      ),
                                       blurRadius: 10,
                                       offset: const Offset(0, 3),
                                     ),
@@ -550,10 +618,14 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                             '${preset.toStringAsFixed(0)}%',
                             style: TextStyle(
                               fontSize: 12,
-                              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,
+                              fontWeight: isSelected
+                                  ? FontWeight.w800
+                                  : FontWeight.w700,
                               color: isSelected
                                   ? Colors.white
-                                  : (isDark ? const Color(0xFFA6ACB8) : const Color(0xFF475569)),
+                                  : (isDark
+                                        ? const Color(0xFFA6ACB8)
+                                        : const Color(0xFF475569)),
                             ),
                           ),
                         ),
@@ -573,27 +645,39 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                             duration: const Duration(milliseconds: 200),
                             height: 52,
                             decoration: BoxDecoration(
-                              gradient: (!_hasSearched || _activeTab == 'departments')
+                              gradient:
+                                  (!_hasSearched || _activeTab == 'departments')
                                   ? const LinearGradient(
-                                      colors: [Color(0xFF035EC2), Color(0xFF024A9B)],
+                                      colors: [
+                                        Color(0xFF035EC2),
+                                        Color(0xFF024A9B),
+                                      ],
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                     )
                                   : null,
-                              color: (_hasSearched && _activeTab != 'departments')
-                                  ? (isDark ? const Color(0xFF141D2B) : const Color(0xFFEAF2FD))
+                              color:
+                                  (_hasSearched && _activeTab != 'departments')
+                                  ? (isDark
+                                        ? const Color(0xFF141D2B)
+                                        : const Color(0xFFEAF2FD))
                                   : null,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: (!_hasSearched || _activeTab == 'departments')
+                                color:
+                                    (!_hasSearched ||
+                                        _activeTab == 'departments')
                                     ? Colors.white.withValues(alpha: 0.2)
                                     : primaryBlue.withValues(alpha: 0.35),
                                 width: 1.2,
                               ),
-                              boxShadow: (!_hasSearched || _activeTab == 'departments')
+                              boxShadow:
+                                  (!_hasSearched || _activeTab == 'departments')
                                   ? [
                                       BoxShadow(
-                                        color: primaryBlue.withValues(alpha: isDark ? 0.45 : 0.3),
+                                        color: primaryBlue.withValues(
+                                          alpha: isDark ? 0.45 : 0.3,
+                                        ),
                                         blurRadius: 16,
                                         offset: const Offset(0, 5),
                                       ),
@@ -606,7 +690,9 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                                 children: [
                                   HugeIcon(
                                     icon: HugeIcons.strokeRoundedSearch01,
-                                    color: (!_hasSearched || _activeTab == 'departments')
+                                    color:
+                                        (!_hasSearched ||
+                                            _activeTab == 'departments')
                                         ? Colors.white
                                         : primaryBlue,
                                     size: 18,
@@ -614,7 +700,8 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                                   const SizedBox(width: 7),
                                   Flexible(
                                     child: Text(
-                                      _hasSearched && _matchedDepartments.isNotEmpty
+                                      _hasSearched &&
+                                              _matchedDepartments.isNotEmpty
                                           ? '${t('zankoline_find_btn')} (${_matchedDepartments.length})'
                                           : t('zankoline_find_btn'),
                                       maxLines: 1,
@@ -622,7 +709,9 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                                       style: TextStyle(
                                         fontSize: 13.5,
                                         fontWeight: FontWeight.w800,
-                                        color: (!_hasSearched || _activeTab == 'departments')
+                                        color:
+                                            (!_hasSearched ||
+                                                _activeTab == 'departments')
                                             ? Colors.white
                                             : primaryBlue,
                                         letterSpacing: -0.2,
@@ -648,26 +737,39 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                               gradient: (!_hasSearched || _activeTab == 'ai')
                                   ? LinearGradient(
                                       colors: isDark
-                                          ? [const Color(0xFF0D47A1), const Color(0xFF0284C7)]
-                                          : [const Color(0xFF0250A8), const Color(0xFF0EA5E9)],
+                                          ? [
+                                              const Color(0xFF0D47A1),
+                                              const Color(0xFF0284C7),
+                                            ]
+                                          : [
+                                              const Color(0xFF0250A8),
+                                              const Color(0xFF0EA5E9),
+                                            ],
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                     )
                                   : null,
                               color: (_hasSearched && _activeTab != 'ai')
-                                  ? (isDark ? const Color(0xFF132238) : const Color(0xFFE8F6FD))
+                                  ? (isDark
+                                        ? const Color(0xFF132238)
+                                        : const Color(0xFFE8F6FD))
                                   : null,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
                                 color: (!_hasSearched || _activeTab == 'ai')
                                     ? Colors.white.withValues(alpha: 0.25)
-                                    : const Color(0xFF0284C7).withValues(alpha: 0.35),
+                                    : const Color(
+                                        0xFF0284C7,
+                                      ).withValues(alpha: 0.35),
                                 width: 1.2,
                               ),
                               boxShadow: (!_hasSearched || _activeTab == 'ai')
                                   ? [
                                       BoxShadow(
-                                        color: const Color(0xFF0284C7).withValues(alpha: isDark ? 0.4 : 0.28),
+                                        color: const Color(0xFF0284C7)
+                                            .withValues(
+                                              alpha: isDark ? 0.4 : 0.28,
+                                            ),
                                         blurRadius: 16,
                                         offset: const Offset(0, 5),
                                       ),
@@ -686,7 +788,9 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                                       fit: BoxFit.contain,
                                       errorBuilder: (c, e, s) => HugeIcon(
                                         icon: HugeIcons.strokeRoundedAiMagic,
-                                        color: (!_hasSearched || _activeTab == 'ai')
+                                        color:
+                                            (!_hasSearched ||
+                                                _activeTab == 'ai')
                                             ? Colors.white
                                             : const Color(0xFF0284C7),
                                         size: 18,
@@ -702,9 +806,13 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                                       style: TextStyle(
                                         fontSize: 13.5,
                                         fontWeight: FontWeight.w800,
-                                        color: (!_hasSearched || _activeTab == 'ai')
+                                        color:
+                                            (!_hasSearched ||
+                                                _activeTab == 'ai')
                                             ? Colors.white
-                                            : (isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7)),
+                                            : (isDark
+                                                  ? const Color(0xFF38BDF8)
+                                                  : const Color(0xFF0284C7)),
                                         letterSpacing: -0.2,
                                       ),
                                     ),
@@ -756,11 +864,16 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                                 child: Image.asset(
                                   'assets/images/robot.png',
                                   fit: BoxFit.contain,
-                                  errorBuilder: (c, e, s) => const CupertinoActivityIndicator(color: primaryBlue),
+                                  errorBuilder: (c, e, s) =>
+                                      const CupertinoActivityIndicator(
+                                        color: primaryBlue,
+                                      ),
                                 ),
                               ),
                               const SizedBox(height: 14),
-                              const CupertinoActivityIndicator(color: primaryBlue),
+                              const CupertinoActivityIndicator(
+                                color: primaryBlue,
+                              ),
                               const SizedBox(height: 12),
                               Text(
                                 t('ai_analyzing'),
@@ -808,7 +921,10 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                                   ),
                                 ),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: warmGold.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(10),
@@ -825,14 +941,13 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                               ],
                             ),
                             const SizedBox(height: 14),
-                            Container(
-                              height: 1,
-                              color: borderColor,
-                            ),
+                            Container(height: 1, color: borderColor),
                             const SizedBox(height: 14),
                             Text(
                               _aiAdvice ?? '',
-                              textAlign: langProvider.currentLanguage == AppLanguage.english
+                              textAlign:
+                                  langProvider.currentLanguage ==
+                                      AppLanguage.english
                                   ? TextAlign.left
                                   : TextAlign.right,
                               textDirection: langProvider.textDirection,
@@ -851,10 +966,13 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                                   child: OutlinedButton.icon(
                                     onPressed: () {
                                       HapticFeedback.selectionClick();
-                                      setState(() => _activeTab = 'departments');
+                                      setState(
+                                        () => _activeTab = 'departments',
+                                      );
                                     },
                                     icon: const HugeIcon(
-                                      icon: HugeIcons.strokeRoundedMortarboard02,
+                                      icon:
+                                          HugeIcons.strokeRoundedMortarboard02,
                                       color: primaryBlue,
                                       size: 16,
                                     ),
@@ -867,20 +985,30 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                                       ),
                                     ),
                                     style: OutlinedButton.styleFrom(
-                                      side: BorderSide(color: primaryBlue.withValues(alpha: 0.4)),
+                                      side: BorderSide(
+                                        color: primaryBlue.withValues(
+                                          alpha: 0.4,
+                                        ),
+                                      ),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(12),
                                       ),
-                                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 10,
+                                        horizontal: 8,
+                                      ),
                                     ),
                                   ),
                                 ),
                                 const SizedBox(width: 8),
                                 IconButton(
-                                  onPressed: () => _getAiAdvice(forceRegenerate: true),
+                                  onPressed: () =>
+                                      _getAiAdvice(forceRegenerate: true),
                                   tooltip: t('regenerate_advice'),
                                   style: IconButton.styleFrom(
-                                    backgroundColor: isDark ? const Color(0xFF1E2634) : const Color(0xFFE2EDFB),
+                                    backgroundColor: isDark
+                                        ? const Color(0xFF1E2634)
+                                        : const Color(0xFFE2EDFB),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -914,7 +1042,10 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFE2EDFB),
                           borderRadius: BorderRadius.circular(12),
@@ -955,7 +1086,8 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                         _buildAppleCityChip(
                           label: t('city_slemani'),
                           isSelected: _selectedCity == 'سلێمانی',
-                          onTap: () => setState(() => _selectedCity = 'سلێمانی'),
+                          onTap: () =>
+                              setState(() => _selectedCity = 'سلێمانی'),
                           isDark: isDark,
                         ),
                         const SizedBox(width: 8),
@@ -969,7 +1101,8 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                         _buildAppleCityChip(
                           label: t('city_halabja'),
                           isSelected: _selectedCity == 'هەڵەبجە',
-                          onTap: () => setState(() => _selectedCity = 'هەڵەبجە'),
+                          onTap: () =>
+                              setState(() => _selectedCity = 'هەڵەبجە'),
                           isDark: isDark,
                         ),
                       ],
@@ -980,181 +1113,218 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                   // Department Cards
                   ...(_selectedCity == null
                           ? _matchedDepartments
-                          : _matchedDepartments.where((d) => d.city.contains(_selectedCity!)).toList())
+                          : _matchedDepartments
+                                .where((d) => d.city.contains(_selectedCity!))
+                                .toList())
                       .map((dept) {
-                    final cutoff = _isParallel ? dept.parallelMinMark : dept.minMark;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: cardBg,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: borderColor, width: 1.2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
-                              blurRadius: 14,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Directionality(
-                          textDirection: langProvider.textDirection,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  // Min Cutoff Badge
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                    decoration: BoxDecoration(
-                                      color: _isParallel
-                                          ? warmGold.withValues(alpha: 0.2)
-                                          : const Color(0xFFE2EDFB),
-                                      borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(
-                                        color: _isParallel
-                                            ? const Color(0xFFB59300).withValues(alpha: 0.3)
-                                            : primaryBlue.withValues(alpha: 0.25),
-                                        width: 1,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      _isParallel
-                                          ? '${t('parallel_label')}: %$cutoff (${t('general_label')}: %${dept.minMark})'
-                                          : '${t('min_mark_label')}: %$cutoff',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 11.5,
-                                        color: _isParallel ? const Color(0xFF8A6C00) : primaryBlue,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  // City Pin
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: isDark ? const Color(0xFF0E1117) : const Color(0xFFF1F3F6),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        HugeIcon(
-                                          icon: HugeIcons.strokeRoundedLocation01,
-                                          size: 11,
-                                          color: textSecondary,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          _localizedCity(dept.city, langProvider),
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w600,
-                                            color: textSecondary,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+                        final cutoff = _isParallel
+                            ? dept.parallelMinMark
+                            : dept.minMark;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: cardBg,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: borderColor,
+                                width: 1.2,
                               ),
-                              const SizedBox(height: 12),
-                              // Department / College Name
-                              Text(
-                                dept.college,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 15.5,
-                                  color: textPrimary,
-                                  letterSpacing: -0.2,
-                                ),
-                              ),
-                              const SizedBox(height: 3),
-                              // University Name
-                              Row(
-                                children: [
-                                  const HugeIcon(
-                                    icon: HugeIcons.strokeRoundedBuilding03,
-                                    size: 13,
-                                    color: primaryBlue,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(
+                                    alpha: isDark ? 0.25 : 0.03,
                                   ),
-                                  const SizedBox(width: 5),
-                                  Expanded(
-                                    child: Text(
-                                      dept.university,
-                                      style: const TextStyle(
-                                        fontSize: 12.5,
-                                        fontWeight: FontWeight.w600,
-                                        color: primaryBlue,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              if (dept.description.isNotEmpty) ...[
-                                const SizedBox(height: 8),
-                                Text(
-                                  dept.description,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    height: 1.4,
-                                    color: textSecondary,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
+                                  blurRadius: 14,
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
-                              if (_isParallel) ...[
-                                const SizedBox(height: 12),
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-                                  decoration: BoxDecoration(
-                                    color: warmGold.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: warmGold.withValues(alpha: 0.4),
-                                      width: 1,
+                            ),
+                            child: Directionality(
+                              textDirection: langProvider.textDirection,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      // Min Cutoff Badge
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 5,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: _isParallel
+                                              ? warmGold.withValues(alpha: 0.2)
+                                              : const Color(0xFFE2EDFB),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                          border: Border.all(
+                                            color: _isParallel
+                                                ? const Color(
+                                                    0xFFB59300,
+                                                  ).withValues(alpha: 0.3)
+                                                : primaryBlue.withValues(
+                                                    alpha: 0.25,
+                                                  ),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          _isParallel
+                                              ? '${t('parallel_label')}: %$cutoff (${t('general_label')}: %${dept.minMark})'
+                                              : '${t('min_mark_label')}: %$cutoff',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 11.5,
+                                            color: _isParallel
+                                                ? const Color(0xFF8A6C00)
+                                                : primaryBlue,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      // City Pin
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 9,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isDark
+                                              ? const Color(0xFF0E1117)
+                                              : const Color(0xFFF1F3F6),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            HugeIcon(
+                                              icon: HugeIcons
+                                                  .strokeRoundedLocation01,
+                                              size: 11,
+                                              color: textSecondary,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              _localizedCity(
+                                                dept.city,
+                                                langProvider,
+                                              ),
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600,
+                                                color: textSecondary,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  // Department / College Name
+                                  Text(
+                                    dept.college,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 15.5,
+                                      color: textPrimary,
+                                      letterSpacing: -0.2,
                                     ),
                                   ),
-                                  child: Row(
+                                  const SizedBox(height: 3),
+                                  // University Name
+                                  Row(
                                     children: [
                                       const HugeIcon(
-                                        icon: HugeIcons.strokeRoundedCoins01,
-                                        color: Color(0xFF8A6C00),
-                                        size: 16,
+                                        icon: HugeIcons.strokeRoundedBuilding03,
+                                        size: 13,
+                                        color: primaryBlue,
                                       ),
-                                      const SizedBox(width: 8),
+                                      const SizedBox(width: 5),
                                       Expanded(
                                         child: Text(
-                                          '${t('zankoline_fee_discount_tag')}: ${dept.formattedParallelFeeLocalized(isEnglish: langProvider.currentLanguage == AppLanguage.english)}',
+                                          dept.university,
                                           style: const TextStyle(
-                                            fontSize: 11.5,
-                                            fontWeight: FontWeight.w700,
-                                            color: Color(0xFF8A6C00),
+                                            fontSize: 12.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: primaryBlue,
                                           ),
-                                          maxLines: 2,
+                                          maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                     ],
                                   ),
-                                ),
-                              ],
-                            ],
+                                  if (dept.description.isNotEmpty) ...[
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      dept.description,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        height: 1.4,
+                                        color: textSecondary,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                  if (_isParallel) ...[
+                                    const SizedBox(height: 12),
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 9,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: warmGold.withValues(alpha: 0.12),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: warmGold.withValues(
+                                            alpha: 0.4,
+                                          ),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          const HugeIcon(
+                                            icon:
+                                                HugeIcons.strokeRoundedCoins01,
+                                            color: Color(0xFF8A6C00),
+                                            size: 16,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              '${t('zankoline_fee_discount_tag')}: ${dept.formattedParallelFeeLocalized(isEnglish: langProvider.currentLanguage == AppLanguage.english)}',
+                                              style: const TextStyle(
+                                                fontSize: 11.5,
+                                                fontWeight: FontWeight.w700,
+                                                color: Color(0xFF8A6C00),
+                                              ),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    );
-                  }),
+                        );
+                      }),
                 ] else ...[
                   Container(
                     padding: const EdgeInsets.all(24),
@@ -1182,10 +1352,7 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                         const SizedBox(height: 4),
                         Text(
                           t('try_another_mark_or_parallel'),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: textSecondary,
-                          ),
+                          style: TextStyle(fontSize: 12, color: textSecondary),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -1247,7 +1414,9 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
               size: 16,
               color: isSelected
                   ? primaryBlue
-                  : (isDark ? const Color(0xFF7A8494) : const Color(0xFF64748B)),
+                  : (isDark
+                        ? const Color(0xFF7A8494)
+                        : const Color(0xFF64748B)),
             ),
             const SizedBox(width: 7),
             Flexible(
@@ -1258,7 +1427,9 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                   fontSize: 13,
                   color: isSelected
                       ? (isDark ? Colors.white : const Color(0xFF17191F))
-                      : (isDark ? const Color(0xFF8E97A8) : const Color(0xFF64748B)),
+                      : (isDark
+                            ? const Color(0xFF8E97A8)
+                            : const Color(0xFF64748B)),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

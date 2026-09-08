@@ -25,10 +25,16 @@ class ZankolineDepartmentModel {
     required this.parallelFeeIqd,
   });
 
-  factory ZankolineDepartmentModel.fromJson(Map<String, dynamic> json, {String? docId}) {
-    final collegeName = (json['department'] ?? json['college'] ?? '').toString();
+  factory ZankolineDepartmentModel.fromJson(
+    Map<String, dynamic> json, {
+    String? docId,
+  }) {
+    final collegeName = (json['department'] ?? json['college'] ?? '')
+        .toString();
     final rawMinMark = json['minScoreGeneral'] ?? json['min_mark'];
-    final double minMarkVal = rawMinMark != null ? (rawMinMark as num).toDouble() : 50.0;
+    final double minMarkVal = rawMinMark != null
+        ? (rawMinMark as num).toDouble()
+        : 50.0;
 
     int defaultFee = 1000000;
     if (collegeName.contains('پزیشکی گشتی')) {
@@ -37,13 +43,24 @@ class ZankolineDepartmentModel {
       defaultFee = 4500000;
     } else if (collegeName.contains('دەرمانسازی')) {
       defaultFee = 4000000;
-    } else if (collegeName.contains('تەلارسازی') || collegeName.contains('ISE') || collegeName.contains('نەوت') || collegeName.contains('سوفتوێر')) {
+    } else if (collegeName.contains('تەلارسازی') ||
+        collegeName.contains('ISE') ||
+        collegeName.contains('نەوت') ||
+        collegeName.contains('سوفتوێر')) {
       defaultFee = 2750000;
-    } else if (collegeName.contains('ئەندازیاری') || collegeName.contains('پەرستاری') || collegeName.contains('بێهۆشکاری') || collegeName.contains('تەندروستی') || collegeName.contains('شیکاری')) {
+    } else if (collegeName.contains('ئەندازیاری') ||
+        collegeName.contains('پەرستاری') ||
+        collegeName.contains('بێهۆشکاری') ||
+        collegeName.contains('تەندروستی') ||
+        collegeName.contains('شیکاری')) {
       defaultFee = 2200000;
-    } else if (collegeName.contains('کۆمپیوتەر') || collegeName.contains('IT') || collegeName.contains('زانست')) {
+    } else if (collegeName.contains('کۆمپیوتەر') ||
+        collegeName.contains('IT') ||
+        collegeName.contains('زانست')) {
       defaultFee = 1650000;
-    } else if (collegeName.contains('یاسا') || collegeName.contains('بازرگانی') || collegeName.contains('سیاسی')) {
+    } else if (collegeName.contains('یاسا') ||
+        collegeName.contains('بازرگانی') ||
+        collegeName.contains('سیاسی')) {
       defaultFee = 1350000;
     } else if (collegeName.contains('پەیمانگەی')) {
       defaultFee = 750000;
@@ -64,7 +81,8 @@ class ZankolineDepartmentModel {
     );
   }
 
-  double get parallelMinMark => double.parse((minMark - 4.5).clamp(50.0, 100.0).toStringAsFixed(1));
+  double get parallelMinMark =>
+      double.parse((minMark - 4.5).clamp(50.0, 100.0).toStringAsFixed(1));
 
   int get discountedParallelFeeIqd => (parallelFeeIqd * 0.55).round();
 
@@ -74,17 +92,22 @@ class ZankolineDepartmentModel {
     if (isEnglish) {
       String formatValEn(double val) {
         if (val >= 1) {
-          return val % 1 == 0 ? '${val.toStringAsFixed(0)}M' : '${val.toStringAsFixed(2)}M';
+          return val % 1 == 0
+              ? '${val.toStringAsFixed(0)}M'
+              : '${val.toStringAsFixed(2)}M';
         }
         final thousands = (val * 1000).round();
         return '${thousands}K';
       }
+
       return '${formatValEn(discountedMillions)} IQD (after 45% discount)';
     }
 
     String formatValKu(double val) {
       if (val >= 1) {
-        return val % 1 == 0 ? '${val.toStringAsFixed(0)} ملیۆن' : '${val.toStringAsFixed(2)} ملیۆن';
+        return val % 1 == 0
+            ? '${val.toStringAsFixed(0)} ملیۆن'
+            : '${val.toStringAsFixed(2)} ملیۆن';
       }
       final thousands = (val * 1000).round();
       return '$thousands هەزار';
@@ -120,15 +143,19 @@ class ZankolineService extends ChangeNotifier {
           .from('departments')
           .select()
           .then((data) {
-        if (data.isNotEmpty) {
-          for (var item in data) {
-            final dept = ZankolineDepartmentModel.fromJson(item, docId: item['id'].toString());
-            _deptMap[item['id'].toString()] = dept;
-          }
-          _departments = _deptMap.values.toList();
-          notifyListeners();
-        }
-      }).catchError((_) {});
+            if (data.isNotEmpty) {
+              for (var item in data) {
+                final dept = ZankolineDepartmentModel.fromJson(
+                  item,
+                  docId: item['id'].toString(),
+                );
+                _deptMap[item['id'].toString()] = dept;
+              }
+              _departments = _deptMap.values.toList();
+              notifyListeners();
+            }
+          })
+          .catchError((_) {});
     } catch (_) {}
   }
 
@@ -136,7 +163,9 @@ class ZankolineService extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      final jsonStr = await rootBundle.loadString('assets/data/krg_zankoline.json');
+      final jsonStr = await rootBundle.loadString(
+        'assets/data/krg_zankoline.json',
+      );
       final List<dynamic> jsonList = jsonDecode(jsonStr);
       for (var e in jsonList) {
         final item = ZankolineDepartmentModel.fromJson(e);
@@ -155,14 +184,19 @@ class ZankolineService extends ChangeNotifier {
     }
   }
 
-  Future<List<ZankolineDepartmentModel>> filterMatchingDepartments(double mark, String track, {bool isParallel = false}) async {
+  Future<List<ZankolineDepartmentModel>> filterMatchingDepartments(
+    double mark,
+    String track, {
+    bool isParallel = false,
+  }) async {
     if (_departments.isEmpty) {
       await loadDepartments();
     }
     return _departments.where((dept) {
       final deptTrack = dept.track.toLowerCase().trim();
       final targetTrack = track.toLowerCase().trim();
-      final isTrackMatch = deptTrack == targetTrack ||
+      final isTrackMatch =
+          deptTrack == targetTrack ||
           deptTrack == 'all' ||
           deptTrack == 'common' ||
           deptTrack == 'both' ||
@@ -176,8 +210,7 @@ class ZankolineService extends ChangeNotifier {
       } else {
         return mark >= dept.minMark;
       }
-    }).toList()
-      ..sort((a, b) => b.minMark.compareTo(a.minMark));
+    }).toList()..sort((a, b) => b.minMark.compareTo(a.minMark));
   }
 
   Future<String> askZankolineAiAdvisor(
@@ -191,8 +224,12 @@ class ZankolineService extends ChangeNotifier {
         ? (track == 'scientific' ? 'Scientific' : 'Literary')
         : (track == 'scientific' ? 'زانستی' : 'وێژەیی');
     final systemModeName = isEnglish
-        ? (isParallel ? 'Parallel Admission (45% Tuition Discount)' : 'General Admission (Free Tuition)')
-        : (isParallel ? 'پاڕاڵێڵ (%45 داشکاندنی فەرمی)' : 'خوێندنی گشتی (بەخۆڕایی)');
+        ? (isParallel
+              ? 'Parallel Admission (45% Tuition Discount)'
+              : 'General Admission (Free Tuition)')
+        : (isParallel
+              ? 'پاڕاڵێڵ (%45 داشکاندنی فەرمی)'
+              : 'خوێندنی گشتی (بەخۆڕایی)');
 
     if (matchedDepts.isEmpty) {
       if (isEnglish) {
@@ -211,13 +248,13 @@ class ZankolineService extends ChangeNotifier {
 
         final prompt = isEnglish
             ? 'Act as an expert Kurdistan University admission advisor (Zankoline). '
-              'A 12th-grade student with score $studentMark% in $trackName track is exploring options in $systemModeName. '
-              'They qualify for ${matchedDepts.length} departments. Key matches: $topDeptsList. '
-              'Provide 3-4 concise, highly practical academic bullet points in clean English advising their application strategy, competition, and priority choices.'
+                  'A 12th-grade student with score $studentMark% in $trackName track is exploring options in $systemModeName. '
+                  'They qualify for ${matchedDepts.length} departments. Key matches: $topDeptsList. '
+                  'Provide 3-4 concise, highly practical academic bullet points in clean English advising their application strategy, competition, and priority choices.'
             : 'تۆ ڕاوێژکاری ئەکادیمی ژیری دەستکردی زانکۆلاینیت. '
-              'قوتابییەکی پۆلی ١٢ بە تێکڕای %$studentMark لە لقی $trackName داواکاری پێشکەش دەکات لە سیستەمی $systemModeName. '
-              'بۆ ${matchedDepts.length} بەش شایستەیە. لە دیارترینیان: $topDeptsList. '
-              'بە زمانی کوردی (سۆرانی)، ٣ بۆ ٤ خاڵی زۆر بەسوود و کرداری و دڵسۆزانە پێشکەش بکە بۆ چۆنیەتی پڕکردنەوەی فۆڕمی زانکۆلاین و هەڵسەنگاندنی شایستەیی بەشەکان. کورت و ڕوون بێت.';
+                  'قوتابییەکی پۆلی ١٢ بە تێکڕای %$studentMark لە لقی $trackName داواکاری پێشکەش دەکات لە سیستەمی $systemModeName. '
+                  'بۆ ${matchedDepts.length} بەش شایستەیە. لە دیارترینیان: $topDeptsList. '
+                  'بە زمانی کوردی (سۆرانی)، ٣ بۆ ٤ خاڵی زۆر بەسوود و کرداری و دڵسۆزانە پێشکەش بکە بۆ چۆنیەتی پڕکردنەوەی فۆڕمی زانکۆلاین و هەڵسەنگاندنی شایستەیی بەشەکان. کورت و ڕوون بێت.';
 
         final response = await _aiService!.askTeacher(prompt, []);
         if (response.trim().isNotEmpty &&
@@ -231,50 +268,97 @@ class ZankolineService extends ChangeNotifier {
     }
 
     if (isEnglish) {
-      return _buildLocalEnglishAdvisorSummary(studentMark, trackName, matchedDepts, isParallel: isParallel);
+      return _buildLocalEnglishAdvisorSummary(
+        studentMark,
+        trackName,
+        matchedDepts,
+        isParallel: isParallel,
+      );
     }
-    return _buildLocalKurdishAdvisorSummary(studentMark, trackName, matchedDepts, isParallel: isParallel);
+    return _buildLocalKurdishAdvisorSummary(
+      studentMark,
+      trackName,
+      matchedDepts,
+      isParallel: isParallel,
+    );
   }
 
-  String _buildLocalEnglishAdvisorSummary(double studentMark, String trackName, List<ZankolineDepartmentModel> matchedDepts, {bool isParallel = false}) {
+  String _buildLocalEnglishAdvisorSummary(
+    double studentMark,
+    String trackName,
+    List<ZankolineDepartmentModel> matchedDepts, {
+    bool isParallel = false,
+  }) {
     final buffer = StringBuffer();
-    final systemLabel = isParallel ? 'Parallel Admission (45% Official Ministry Discount)' : 'General Admission (Free Tuition)';
+    final systemLabel = isParallel
+        ? 'Parallel Admission (45% Official Ministry Discount)'
+        : 'General Admission (Free Tuition)';
     final topDepts = matchedDepts.take(3).map((d) => d.college).join(', ');
 
-    buffer.writeln('Based on your grade ($studentMark%) in the $trackName track under ($systemLabel), you have competitive qualification chances across Kurdistan universities.');
-    buffer.writeln('A total of ${matchedDepts.length} matching departments were found. Notable options: $topDepts.\n');
+    buffer.writeln(
+      'Based on your grade ($studentMark%) in the $trackName track under ($systemLabel), you have competitive qualification chances across Kurdistan universities.',
+    );
+    buffer.writeln(
+      'A total of ${matchedDepts.length} matching departments were found. Notable options: $topDepts.\n',
+    );
 
     buffer.writeln('💡 Advisor Guidance:');
     if (isParallel) {
-      buffer.writeln('• Parallel admission allows admission into high-demand colleges with lower minimum cutoff scores.');
-      buffer.writeln('• The KRG Ministry of Higher Education applies an official 45% discount on all annual parallel tuition fees.');
+      buffer.writeln(
+        '• Parallel admission allows admission into high-demand colleges with lower minimum cutoff scores.',
+      );
+      buffer.writeln(
+        '• The KRG Ministry of Higher Education applies an official 45% discount on all annual parallel tuition fees.',
+      );
     } else {
-      buffer.writeln('• Prioritize departments in your ZankoLine top 50 choices based on your academic interests and city location.');
+      buffer.writeln(
+        '• Prioritize departments in your ZankoLine top 50 choices based on your academic interests and city location.',
+      );
     }
     buffer.writeln('• Explore the full list of matching departments below.');
 
     return buffer.toString();
   }
 
-  String _buildLocalKurdishAdvisorSummary(double studentMark, String trackName, List<ZankolineDepartmentModel> matchedDepts, {bool isParallel = false}) {
+  String _buildLocalKurdishAdvisorSummary(
+    double studentMark,
+    String trackName,
+    List<ZankolineDepartmentModel> matchedDepts, {
+    bool isParallel = false,
+  }) {
     final buffer = StringBuffer();
-    final systemLabel = isParallel ? 'سیستەمی پاڕاڵێڵ (%45 داشکاندنی فەرمی)' : 'خوێندنی گشتی (بەخۆڕایی)';
+    final systemLabel = isParallel
+        ? 'سیستەمی پاڕاڵێڵ (%45 داشکاندنی فەرمی)'
+        : 'خوێندنی گشتی (بەخۆڕایی)';
     final topDepts = matchedDepts.take(3).map((d) => d.college).join('، ');
 
-    buffer.writeln('بەپێی تێکڕای نمرەکەت (%$studentMark) لە لقی $trackName لە ($systemLabel)، نمرەکەت هەلێکی زۆر باش دەبەخشێت بۆ وەرگرتن لە زانکۆکانی هەرێمی کوردستان.');
-    buffer.writeln('کۆی ${_matchedDepartmentsCount(matchedDepts)} بەشی گونجاو دۆزرانەوە. لە دیارترینیان: $topDepts.\n');
+    buffer.writeln(
+      'بەپێی تێکڕای نمرەکەت (%$studentMark) لە لقی $trackName لە ($systemLabel)، نمرەکەت هەلێکی زۆر باش دەبەخشێت بۆ وەرگرتن لە زانکۆکانی هەرێمی کوردستان.',
+    );
+    buffer.writeln(
+      'کۆی ${_matchedDepartmentsCount(matchedDepts)} بەشی گونجاو دۆزرانەوە. لە دیارترینیان: $topDepts.\n',
+    );
 
     buffer.writeln('💡 ڕێنمایی ڕاوێژکار:');
     if (isParallel) {
-      buffer.writeln('• بەکارهێنانی پاڕاڵێڵ ڕێگەت پێدەدات لە بەشە بەرزەکان (بە نمرەی کەمتر) وەربگیرێیت.');
-      buffer.writeln('• وەزارەتی خوێندنی باڵا %45 داشکاندنی فەرمی بۆ تێچووی ساڵانەی پاڕاڵێڵ دەستنیشان کردووە.');
+      buffer.writeln(
+        '• بەکارهێنانی پاڕاڵێڵ ڕێگەت پێدەدات لە بەشە بەرزەکان (بە نمرەی کەمتر) وەربگیرێیت.',
+      );
+      buffer.writeln(
+        '• وەزارەتی خوێندنی باڵا %45 داشکاندنی فەرمی بۆ تێچووی ساڵانەی پاڕاڵێڵ دەستنیشان کردووە.',
+      );
     } else {
-      buffer.writeln('• بەپێی ئارەزووی خۆت و نزیکی شارەکەت، بەشەکان لە پێشینەی ٥٠ بەشەکەی زانکۆلاین بڕێزێنە.');
+      buffer.writeln(
+        '• بەپێی ئارەزووی خۆت و نزیکی شارەکەت، بەشەکان لە پێشینەی ٥٠ بەشەکەی زانکۆلاین بڕێزێنە.',
+      );
     }
-    buffer.writeln('• تێبینی: دەتوانیت بەشەکان لە لیستی خوارەوە بە وردی بپشکنیت.');
+    buffer.writeln(
+      '• تێبینی: دەتوانیت بەشەکان لە لیستی خوارەوە بە وردی بپشکنیت.',
+    );
 
     return buffer.toString();
   }
 
-  int _matchedDepartmentsCount(List<ZankolineDepartmentModel> list) => list.length;
+  int _matchedDepartmentsCount(List<ZankolineDepartmentModel> list) =>
+      list.length;
 }

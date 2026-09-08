@@ -20,7 +20,8 @@ class AppEnv {
   // Web Client ID is used as serverClientId for native Google Sign-In verification
   static const String googleWebClientId = String.fromEnvironment(
     'GOOGLE_WEB_CLIENT_ID',
-    defaultValue: '437131075344-rj6c49slq5sm6k7qc7sm6hkhahq6p06n.apps.googleusercontent.com',
+    defaultValue:
+        '437131075344-rj6c49slq5sm6k7qc7sm6hkhahq6p06n.apps.googleusercontent.com',
   );
 
   static const String googleIosClientId = String.fromEnvironment(
@@ -31,6 +32,6 @@ class AppEnv {
   // Secure Deep Link Redirects
   static const String authRedirectScheme = 'io.supabase.zankoai';
   static const String authRedirectUrl = '$authRedirectScheme://login-callback';
-  static const String passwordResetRedirectUrl = '$authRedirectScheme://reset-password';
+  static const String passwordResetRedirectUrl =
+      '$authRedirectScheme://reset-password';
 }
-

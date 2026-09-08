@@ -49,10 +49,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   Future<void> _loadDepartments() async {
     final authService = Provider.of<AuthService>(context, listen: false);
     final currentUser = authService.currentUser;
-    final depts = await LeaderboardService.instance.getRegisteredDepartments(currentUser: currentUser);
+    final depts = await LeaderboardService.instance.getRegisteredDepartments(
+      currentUser: currentUser,
+    );
 
     if (mounted) {
-      final initialDept = currentUser?.departmentName ?? (depts.isNotEmpty ? depts.first : 'ئەندازیاری سیستەمی زانیاری');
+      final initialDept =
+          currentUser?.departmentName ??
+          (depts.isNotEmpty ? depts.first : 'ئەندازیاری سیستەمی زانیاری');
       _departmentList = depts;
       _selectedDepartment = initialDept;
       _refreshLeaderboard(dept: initialDept);
@@ -69,9 +73,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     final badges = leaderboardService.getBadges(scoreService);
 
     return Scaffold(
-      backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
+      backgroundColor: isDark
+          ? ZankoColors.darkBackground
+          : ZankoColors.background,
       appBar: AppBar(
-        backgroundColor: (isDark ? ZankoColors.darkBackground : ZankoColors.background).withValues(alpha: 0.9),
+        backgroundColor:
+            (isDark ? ZankoColors.darkBackground : ZankoColors.background)
+                .withValues(alpha: 0.9),
         elevation: 0,
         title: Text(
           langProvider.translate('leaderboard_title'),
@@ -95,7 +103,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             final top1 = rankings.isNotEmpty ? rankings[0] : null;
             final top2 = rankings.length > 1 ? rankings[1] : null;
             final top3 = rankings.length > 2 ? rankings[2] : null;
-            final restRankings = rankings.length > 3 ? rankings.sublist(3) : <StudentRankModel>[];
+            final restRankings = rankings.length > 3
+                ? rankings.sublist(3)
+                : <StudentRankModel>[];
 
             StudentRankModel? myRankModel;
             try {
@@ -138,12 +148,16 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                     color: Colors.white.withValues(alpha: 0.2),
                                     shape: BoxShape.circle,
                                   ),
-                                  child: const Text('🔥', style: TextStyle(fontSize: 22)),
+                                  child: const Text(
+                                    '🔥',
+                                    style: TextStyle(fontSize: 22),
+                                  ),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         '${leaderboardService.streakDays} ${langProvider.translate('streak_days')}',
@@ -157,7 +171,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                       Text(
                                         'بەردەوامی لەسەر خوێندن',
                                         style: TextStyle(
-                                          color: Colors.white.withValues(alpha: 0.8),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.8,
+                                          ),
                                           fontSize: 11,
                                         ),
                                         overflow: TextOverflow.ellipsis,
@@ -169,7 +185,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(16),
@@ -179,7 +198,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                 const Text('⭐', style: TextStyle(fontSize: 14)),
                                 const SizedBox(width: 4),
                                 Text(
-                                  myRankModel != null ? '${myRankModel.points} XP' : '0 XP',
+                                  myRankModel != null
+                                      ? '${myRankModel.points} XP'
+                                      : '0 XP',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
@@ -213,38 +234,52 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                     : Colors.black.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: b.isUnlocked ? Colors.white38 : Colors.white10,
+                                  color: b.isUnlocked
+                                      ? Colors.white38
+                                      : Colors.white10,
                                 ),
                               ),
                               child: Row(
                                 children: [
-                                  Text(b.icon, style: const TextStyle(fontSize: 22)),
+                                  Text(
+                                    b.icon,
+                                    style: const TextStyle(fontSize: 22),
+                                  ),
                                   const SizedBox(width: 6),
                                   Expanded(
                                     child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           b.title,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
-                                            color: b.isUnlocked ? Colors.white : Colors.white60,
+                                            color: b.isUnlocked
+                                                ? Colors.white
+                                                : Colors.white60,
                                             fontSize: 11,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
                                         const SizedBox(height: 4),
                                         ClipRRect(
-                                          borderRadius: BorderRadius.circular(4),
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
                                           child: LinearProgressIndicator(
                                             value: b.progress,
                                             minHeight: 4,
                                             backgroundColor: Colors.white24,
-                                            valueColor: AlwaysStoppedAnimation<Color>(
-                                              b.isUnlocked ? const Color(0xFF55E6C1) : Colors.white38,
-                                            ),
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                  b.isUnlocked
+                                                      ? const Color(0xFF55E6C1)
+                                                      : Colors.white38,
+                                                ),
                                           ),
                                         ),
                                       ],
@@ -266,7 +301,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E222A) : const Color(0xFFE2E8F0),
+                    color: isDark
+                        ? const Color(0xFF1E222A)
+                        : const Color(0xFFE2E8F0),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
@@ -293,7 +330,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
-                                  color: _selectedTabIndex == 0 ? Colors.white : (isDark ? Colors.grey[400] : ZankoColors.textSecondary),
+                                  color: _selectedTabIndex == 0
+                                      ? Colors.white
+                                      : (isDark
+                                            ? Colors.grey[400]
+                                            : ZankoColors.textSecondary),
                                 ),
                               ),
                             ),
@@ -322,7 +363,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
-                                  color: _selectedTabIndex == 1 ? Colors.white : (isDark ? Colors.grey[400] : ZankoColors.textSecondary),
+                                  color: _selectedTabIndex == 1
+                                      ? Colors.white
+                                      : (isDark
+                                            ? Colors.grey[400]
+                                            : ZankoColors.textSecondary),
                                 ),
                               ),
                             ),
@@ -354,20 +399,37 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                           },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
-                              color: isSelected ? ZankoColors.primary : (isDark ? const Color(0xFF252934) : Colors.white),
+                              color: isSelected
+                                  ? ZankoColors.primary
+                                  : (isDark
+                                        ? const Color(0xFF252934)
+                                        : Colors.white),
                               borderRadius: BorderRadius.circular(18),
                               border: Border.all(
-                                color: isSelected ? ZankoColors.primary : (isDark ? Colors.white10 : Colors.grey[300]!),
+                                color: isSelected
+                                    ? ZankoColors.primary
+                                    : (isDark
+                                          ? Colors.white10
+                                          : Colors.grey[300]!),
                               ),
                             ),
                             child: Text(
                               dept,
                               style: TextStyle(
                                 fontSize: 12,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                                color: isSelected ? Colors.white : (isDark ? Colors.grey[300] : ZankoColors.textPrimary),
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.w500,
+                                color: isSelected
+                                    ? Colors.white
+                                    : (isDark
+                                          ? Colors.grey[300]
+                                          : ZankoColors.textPrimary),
                               ),
                             ),
                           ),
@@ -430,11 +492,17 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 // ── My Current Rank Header Badge ──
                 if (myRankModel != null) ...[
                   AppCard(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
                             color: ZankoColors.primary.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(12),
@@ -458,14 +526,18 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : ZankoColors.textPrimary,
+                                  color: isDark
+                                      ? Colors.white
+                                      : ZankoColors.textPrimary,
                                 ),
                               ),
                               Text(
                                 '${myRankModel.departmentName} • 🔥 ${myRankModel.streak} ڕۆژ',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                                  color: isDark
+                                      ? Colors.grey[400]
+                                      : ZankoColors.textSecondary,
                                 ),
                               ),
                             ],
@@ -494,7 +566,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   itemBuilder: (context, index) {
                     final student = restRankings[index];
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: student.isCurrentUser
                             ? ZankoColors.primary.withValues(alpha: 0.18)
@@ -503,7 +578,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                         border: Border.all(
                           color: student.isCurrentUser
                               ? ZankoColors.primary
-                              : (isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFE2E8F0)),
+                              : (isDark
+                                    ? Colors.white.withValues(alpha: 0.05)
+                                    : const Color(0xFFE2E8F0)),
                           width: student.isCurrentUser ? 1.5 : 1.0,
                         ),
                       ),
@@ -518,16 +595,22 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                 fontWeight: FontWeight.bold,
                                 color: student.isCurrentUser
                                     ? ZankoColors.primary
-                                    : (isDark ? Colors.grey[400] : ZankoColors.textSecondary),
+                                    : (isDark
+                                          ? Colors.grey[400]
+                                          : ZankoColors.textSecondary),
                               ),
                             ),
                           ),
                           const SizedBox(width: 8),
                           CircleAvatar(
                             radius: 18,
-                            backgroundColor: ZankoColors.primary.withValues(alpha: 0.2),
+                            backgroundColor: ZankoColors.primary.withValues(
+                              alpha: 0.2,
+                            ),
                             child: Text(
-                              student.name.isNotEmpty ? student.name[0].toUpperCase() : 'S',
+                              student.name.isNotEmpty
+                                  ? student.name[0].toUpperCase()
+                                  : 'S',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
@@ -545,23 +628,32 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white : ZankoColors.textPrimary,
+                                    color: isDark
+                                        ? Colors.white
+                                        : ZankoColors.textPrimary,
                                   ),
                                 ),
                                 Text(
                                   '${student.departmentName} • 🔥 ${student.streak} ڕۆژ',
                                   style: TextStyle(
                                     fontSize: 11,
-                                    color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                                    color: isDark
+                                        ? Colors.grey[400]
+                                        : ZankoColors.textSecondary,
                                   ),
                                 ),
                               ],
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: isDark ? Colors.white.withValues(alpha: 0.06) : const Color(0xFFF1F5F9),
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.06)
+                                  : const Color(0xFFF1F5F9),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -569,7 +661,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white : ZankoColors.textPrimary,
+                                color: isDark
+                                    ? Colors.white
+                                    : ZankoColors.textPrimary,
                               ),
                             ),
                           ),
@@ -644,8 +738,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              border: Border.all(color: badgeColor.withValues(alpha: 0.5), width: 1.5),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
+              border: Border.all(
+                color: badgeColor.withValues(alpha: 0.5),
+                width: 1.5,
+              ),
             ),
             child: Center(
               child: Text(

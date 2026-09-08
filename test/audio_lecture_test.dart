@@ -41,8 +41,10 @@ Response<Map<String, dynamic>> _buildResponse({
 }
 
 RequestOptions _opts(String path) => RequestOptions(path: path, method: 'POST');
-RequestOptions _optsGet(String path) => RequestOptions(path: path, method: 'GET');
-RequestOptions _optsDelete(String path) => RequestOptions(path: path, method: 'DELETE');
+RequestOptions _optsGet(String path) =>
+    RequestOptions(path: path, method: 'GET');
+RequestOptions _optsDelete(String path) =>
+    RequestOptions(path: path, method: 'DELETE');
 
 Map<String, dynamic> _buildJobPayload({
   String jobId = 'test-audio-uuid-001',
@@ -104,15 +106,19 @@ void main() {
         durationSeconds: 1800,
       );
 
-      when(() => mockDio.post<Map<String, dynamic>>(
-            '/ai/audio',
-            data: any(named: 'data'),
-            options: any(named: 'options'),
-          )).thenAnswer((_) async => _buildResponse(
-            statusCode: 202,
-            data: payload,
-            requestOptions: _opts('/ai/audio'),
-          ));
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/ai/audio',
+          data: any(named: 'data'),
+          options: any(named: 'options'),
+        ),
+      ).thenAnswer(
+        (_) async => _buildResponse(
+          statusCode: 202,
+          data: payload,
+          requestOptions: _opts('/ai/audio'),
+        ),
+      );
 
       final response = await mockDio.post<Map<String, dynamic>>(
         '/ai/audio',
@@ -123,7 +129,9 @@ void main() {
       expect(response.statusCode, equals(202));
       expect(response.data!['success'], isTrue);
 
-      final job = LectureAudioJobModel.fromJson(response.data!['data'] as Map<String, dynamic>);
+      final job = LectureAudioJobModel.fromJson(
+        response.data!['data'] as Map<String, dynamic>,
+      );
       expect(job.jobId, equals(jobId));
       expect(job.status, equals(AudioJobStatus.queued));
       expect(job.isQueued, isTrue);
@@ -148,7 +156,9 @@ void main() {
 
       for (final s in states) {
         final payload = _buildJobPayload(status: s);
-        final job = LectureAudioJobModel.fromJson(payload['data'] as Map<String, dynamic>);
+        final job = LectureAudioJobModel.fromJson(
+          payload['data'] as Map<String, dynamic>,
+        );
         expect(job.status.name, equals(s));
         expect(job.status.displayNameKu, isNotEmpty);
       }
@@ -156,7 +166,8 @@ void main() {
 
     test('state predicates reflect current phase correctly', () {
       final transcribingJob = LectureAudioJobModel.fromJson(
-        _buildJobPayload(status: 'transcribing')['data'] as Map<String, dynamic>,
+        _buildJobPayload(status: 'transcribing')['data']
+            as Map<String, dynamic>,
       );
       expect(transcribingJob.isTranscribing, isTrue);
       expect(transcribingJob.isInProgress, isTrue);
@@ -184,8 +195,10 @@ void main() {
         title: 'OS Process Synchronization',
         durationSeconds: 2720,
         result: {
-          'transcript': 'ئەمڕۆ باسی کێشەی Critical Section و چارەسەری سێمافۆر (Semaphore) دەکەین...',
-          'summary': 'وانەکە شیکردنەوەی تەواو دەدات لەسەر هەمبەری پرۆسێسەکان و ڕێگریکردن لە Race Condition.',
+          'transcript':
+              'ئەمڕۆ باسی کێشەی Critical Section و چارەسەری سێمافۆر (Semaphore) دەکەین...',
+          'summary':
+              'وانەکە شیکردنەوەی تەواو دەدات لەسەر هەمبەری پرۆسێسەکان و ڕێگریکردن لە Race Condition.',
           'keyTakeaways': [
             'سێمافۆر بریتییە لە گۆڕاوێکی جیاواز کە بەکاردێت بۆ کۆنترۆڵکردنی چوونەژوورەوە بۆ Critical Section.',
             'دوو ئۆپەراسیۆنی بنەڕەتی هەیە: wait() و signal().',
@@ -194,8 +207,9 @@ void main() {
             {
               'id': '1',
               'front': 'Critical Section',
-              'back': 'ئەو بەشەی کۆدە کە تێیدا سەرچاوە هاوبەشەکان دەستکاری دەکرێن.',
-            }
+              'back':
+                  'ئەو بەشەی کۆدە کە تێیدا سەرچاوە هاوبەشەکان دەستکاری دەکرێن.',
+            },
           ],
           'quiz': {
             'title': 'Quiz: Process Synchronization',
@@ -204,23 +218,31 @@ void main() {
                 'question': 'What does a binary semaphore value represent?',
                 'options': ['0 or 1', 'Any integer', 'Negative values', 'Null'],
                 'correctAnswer': 0,
-                'explanation': 'A binary semaphore can only take values 0 and 1 (mutex).',
-              }
+                'explanation':
+                    'A binary semaphore can only take values 0 and 1 (mutex).',
+              },
             ],
           },
           'languageDetected': 'ku',
         },
       );
 
-      when(() => mockDio.get<Map<String, dynamic>>('/ai/audio/$jobId'))
-          .thenAnswer((_) async => _buildResponse(
-                statusCode: 200,
-                data: payload,
-                requestOptions: _optsGet('/ai/audio/$jobId'),
-              ));
+      when(
+        () => mockDio.get<Map<String, dynamic>>('/ai/audio/$jobId'),
+      ).thenAnswer(
+        (_) async => _buildResponse(
+          statusCode: 200,
+          data: payload,
+          requestOptions: _optsGet('/ai/audio/$jobId'),
+        ),
+      );
 
-      final response = await mockDio.get<Map<String, dynamic>>('/ai/audio/$jobId');
-      final job = LectureAudioJobModel.fromJson(response.data!['data'] as Map<String, dynamic>);
+      final response = await mockDio.get<Map<String, dynamic>>(
+        '/ai/audio/$jobId',
+      );
+      final job = LectureAudioJobModel.fromJson(
+        response.data!['data'] as Map<String, dynamic>,
+      );
 
       expect(job.isCompleted, isTrue);
       expect(job.result, isNotNull);
@@ -235,64 +257,79 @@ void main() {
 
   // ── 4. Teacher Role Enforcement ───────────────────────────────────────────
   group('4. Teacher role enforcement', () {
-    test('non-teacher account receives 403 FORBIDDEN when creating recording', () async {
-      when(() => mockDio.post<Map<String, dynamic>>(
+    test(
+      'non-teacher account receives 403 FORBIDDEN when creating recording',
+      () async {
+        when(
+          () => mockDio.post<Map<String, dynamic>>(
             '/ai/audio',
             data: any(named: 'data'),
             options: any(named: 'options'),
-          )).thenThrow(DioException(
-        requestOptions: _opts('/ai/audio'),
-        response: Response(
-          statusCode: 403,
-          data: {
-            'success': false,
-            'error': {
-              'code': 'FORBIDDEN',
-              'message': 'Only authorized teachers can create and upload lecture recordings.',
-            },
-          },
-          requestOptions: _opts('/ai/audio'),
-        ),
-        type: DioExceptionType.badResponse,
-      ));
+          ),
+        ).thenThrow(
+          DioException(
+            requestOptions: _opts('/ai/audio'),
+            response: Response(
+              statusCode: 403,
+              data: {
+                'success': false,
+                'error': {
+                  'code': 'FORBIDDEN',
+                  'message':
+                      'Only authorized teachers can create and upload lecture recordings.',
+                },
+              },
+              requestOptions: _opts('/ai/audio'),
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
 
-      await expectLater(
-        () async => mockDio.post<Map<String, dynamic>>(
-          '/ai/audio',
-          data: FormData(),
-          options: Options(),
-        ),
-        throwsA(isA<DioException>().having(
-          (e) => e.response?.statusCode,
-          'statusCode',
-          equals(403),
-        )),
-      );
-    });
+        await expectLater(
+          () async => mockDio.post<Map<String, dynamic>>(
+            '/ai/audio',
+            data: FormData(),
+            options: Options(),
+          ),
+          throwsA(
+            isA<DioException>().having(
+              (e) => e.response?.statusCode,
+              'statusCode',
+              equals(403),
+            ),
+          ),
+        );
+      },
+    );
   });
 
   // ── 5. Course Ownership Verification ──────────────────────────────────────
   group('5. Course instructor verification', () {
     test('teacher not assigned to course receives 403 FORBIDDEN', () async {
-      when(() => mockDio.post<Map<String, dynamic>>(
-            '/ai/audio',
-            data: any(named: 'data'),
-            options: any(named: 'options'),
-          )).thenThrow(DioException(
-        requestOptions: _opts('/ai/audio'),
-        response: Response(
-          statusCode: 403,
-          data: {
-            'success': false,
-            'error': {
-              'code': 'FORBIDDEN',
-              'message': 'You are not authorized to publish lecture audio for this course.',
-            },
-          },
-          requestOptions: _opts('/ai/audio'),
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/ai/audio',
+          data: any(named: 'data'),
+          options: any(named: 'options'),
         ),
-        type: DioExceptionType.badResponse,
-      ));
+      ).thenThrow(
+        DioException(
+          requestOptions: _opts('/ai/audio'),
+          response: Response(
+            statusCode: 403,
+            data: {
+              'success': false,
+              'error': {
+                'code': 'FORBIDDEN',
+                'message':
+                    'You are not authorized to publish lecture audio for this course.',
+              },
+            },
+            requestOptions: _opts('/ai/audio'),
+          ),
+          type: DioExceptionType.badResponse,
+        ),
+      );
 
       await expectLater(
         () async => mockDio.post<Map<String, dynamic>>(
@@ -300,11 +337,13 @@ void main() {
           data: FormData(),
           options: Options(),
         ),
-        throwsA(isA<DioException>().having(
-          (e) => (e.response?.data as Map)['error']['message'],
-          'message',
-          contains('not authorized to publish lecture audio for this course'),
-        )),
+        throwsA(
+          isA<DioException>().having(
+            (e) => (e.response?.data as Map)['error']['message'],
+            'message',
+            contains('not authorized to publish lecture audio for this course'),
+          ),
+        ),
       );
     });
   });
@@ -327,15 +366,22 @@ void main() {
         },
       );
 
-      when(() => mockDio.get<Map<String, dynamic>>('/ai/audio/$jobId'))
-          .thenAnswer((_) async => _buildResponse(
-                statusCode: 200,
-                data: payload,
-                requestOptions: _optsGet('/ai/audio/$jobId'),
-              ));
+      when(
+        () => mockDio.get<Map<String, dynamic>>('/ai/audio/$jobId'),
+      ).thenAnswer(
+        (_) async => _buildResponse(
+          statusCode: 200,
+          data: payload,
+          requestOptions: _optsGet('/ai/audio/$jobId'),
+        ),
+      );
 
-      final response = await mockDio.get<Map<String, dynamic>>('/ai/audio/$jobId');
-      final job = LectureAudioJobModel.fromJson(response.data!['data'] as Map<String, dynamic>);
+      final response = await mockDio.get<Map<String, dynamic>>(
+        '/ai/audio/$jobId',
+      );
+      final job = LectureAudioJobModel.fromJson(
+        response.data!['data'] as Map<String, dynamic>,
+      );
 
       expect(job.jobId, equals(jobId));
       expect(job.isCompleted, isTrue);
@@ -345,57 +391,72 @@ void main() {
 
   // ── 7. Non-Enrolled Student Access Blocked ────────────────────────────────
   group('7. Non-enrolled student blocked', () {
-    test('non-enrolled student gets 403 FORBIDDEN when attempting access', () async {
-      when(() => mockDio.get<Map<String, dynamic>>('/ai/audio/protected-job-id'))
-          .thenThrow(DioException(
-        requestOptions: _optsGet('/ai/audio/protected-job-id'),
-        response: Response(
-          statusCode: 403,
-          data: {
-            'success': false,
-            'error': {
-              'code': 'FORBIDDEN',
-              'message': 'You are not authorized to view this lecture recording. Only enrolled students and instructors have access.',
-            },
-          },
-          requestOptions: _optsGet('/ai/audio/protected-job-id'),
-        ),
-        type: DioExceptionType.badResponse,
-      ));
+    test(
+      'non-enrolled student gets 403 FORBIDDEN when attempting access',
+      () async {
+        when(
+          () => mockDio.get<Map<String, dynamic>>('/ai/audio/protected-job-id'),
+        ).thenThrow(
+          DioException(
+            requestOptions: _optsGet('/ai/audio/protected-job-id'),
+            response: Response(
+              statusCode: 403,
+              data: {
+                'success': false,
+                'error': {
+                  'code': 'FORBIDDEN',
+                  'message':
+                      'You are not authorized to view this lecture recording. Only enrolled students and instructors have access.',
+                },
+              },
+              requestOptions: _optsGet('/ai/audio/protected-job-id'),
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
 
-      await expectLater(
-        () async => mockDio.get<Map<String, dynamic>>('/ai/audio/protected-job-id'),
-        throwsA(isA<DioException>().having(
-          (e) => e.response?.statusCode,
-          'statusCode',
-          equals(403),
-        )),
-      );
-    });
+        await expectLater(
+          () async =>
+              mockDio.get<Map<String, dynamic>>('/ai/audio/protected-job-id'),
+          throwsA(
+            isA<DioException>().having(
+              (e) => e.response?.statusCode,
+              'statusCode',
+              equals(403),
+            ),
+          ),
+        );
+      },
+    );
   });
 
   // ── 8. Invalid Audio Format ───────────────────────────────────────────────
   group('8. Invalid audio format', () {
     test('non-audio file rejected with 400 BAD_REQUEST', () async {
-      when(() => mockDio.post<Map<String, dynamic>>(
-            '/ai/audio',
-            data: any(named: 'data'),
-            options: any(named: 'options'),
-          )).thenThrow(DioException(
-        requestOptions: _opts('/ai/audio'),
-        response: Response(
-          statusCode: 400,
-          data: {
-            'success': false,
-            'error': {
-              'code': 'INVALID_FILE_TYPE',
-              'message': "Invalid audio type: 'application/pdf'. Allowed types: MP3, WAV, M4A, AAC, OGG, WebM.",
-            },
-          },
-          requestOptions: _opts('/ai/audio'),
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/ai/audio',
+          data: any(named: 'data'),
+          options: any(named: 'options'),
         ),
-        type: DioExceptionType.badResponse,
-      ));
+      ).thenThrow(
+        DioException(
+          requestOptions: _opts('/ai/audio'),
+          response: Response(
+            statusCode: 400,
+            data: {
+              'success': false,
+              'error': {
+                'code': 'INVALID_FILE_TYPE',
+                'message':
+                    "Invalid audio type: 'application/pdf'. Allowed types: MP3, WAV, M4A, AAC, OGG, WebM.",
+              },
+            },
+            requestOptions: _opts('/ai/audio'),
+          ),
+          type: DioExceptionType.badResponse,
+        ),
+      );
 
       await expectLater(
         () async => mockDio.post<Map<String, dynamic>>(
@@ -403,78 +464,95 @@ void main() {
           data: FormData(),
           options: Options(),
         ),
-        throwsA(isA<DioException>().having(
-          (e) => e.response?.statusCode,
-          'statusCode',
-          equals(400),
-        )),
+        throwsA(
+          isA<DioException>().having(
+            (e) => e.response?.statusCode,
+            'statusCode',
+            equals(400),
+          ),
+        ),
       );
     });
   });
 
   // ── 9. Corrupt Audio / Magic Bytes Check ───────────────────────────────────
   group('9. Corrupt audio binary check', () {
-    test('corrupt file disguised with audio extension rejected by security filter', () async {
-      when(() => mockDio.post<Map<String, dynamic>>(
+    test(
+      'corrupt file disguised with audio extension rejected by security filter',
+      () async {
+        when(
+          () => mockDio.post<Map<String, dynamic>>(
             '/ai/audio',
             data: any(named: 'data'),
             options: any(named: 'options'),
-          )).thenThrow(DioException(
-        requestOptions: _opts('/ai/audio'),
-        response: Response(
-          statusCode: 400,
-          data: {
-            'success': false,
-            'error': {
-              'code': 'MALICIOUS_UPLOAD_BLOCKED',
-              'message': 'Security check failed: File content does not match a valid audio format.',
-            },
-          },
-          requestOptions: _opts('/ai/audio'),
-        ),
-        type: DioExceptionType.badResponse,
-      ));
+          ),
+        ).thenThrow(
+          DioException(
+            requestOptions: _opts('/ai/audio'),
+            response: Response(
+              statusCode: 400,
+              data: {
+                'success': false,
+                'error': {
+                  'code': 'MALICIOUS_UPLOAD_BLOCKED',
+                  'message':
+                      'Security check failed: File content does not match a valid audio format.',
+                },
+              },
+              requestOptions: _opts('/ai/audio'),
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
 
-      await expectLater(
-        () async => mockDio.post<Map<String, dynamic>>(
-          '/ai/audio',
-          data: FormData(),
-          options: Options(),
-        ),
-        throwsA(isA<DioException>().having(
-          (e) => (e.response?.data as Map)['error']['code'],
-          'code',
-          equals('MALICIOUS_UPLOAD_BLOCKED'),
-        )),
-      );
-    });
+        await expectLater(
+          () async => mockDio.post<Map<String, dynamic>>(
+            '/ai/audio',
+            data: FormData(),
+            options: Options(),
+          ),
+          throwsA(
+            isA<DioException>().having(
+              (e) => (e.response?.data as Map)['error']['code'],
+              'code',
+              equals('MALICIOUS_UPLOAD_BLOCKED'),
+            ),
+          ),
+        );
+      },
+    );
   });
 
   // ── 10. Usage Limit Exceeded ──────────────────────────────────────────────
   group('10. Usage limit exceeded', () {
     test('returns 429 when teacher monthly audio quota is reached', () async {
-      when(() => mockDio.post<Map<String, dynamic>>(
-            '/ai/audio',
-            data: any(named: 'data'),
-            options: any(named: 'options'),
-          )).thenThrow(DioException(
-        requestOptions: _opts('/ai/audio'),
-        response: Response(
-          statusCode: 429,
-          data: {
-            'success': false,
-            'error': {
-              'code': 'QUOTA_EXCEEDED',
-              'message': 'Monthly audio lecture recording limit reached (5/5). Please upgrade your plan.',
-              'feature': 'audio',
-              'remaining': 0,
-              'limit': 5,
-            },
-          },
-          requestOptions: _opts('/ai/audio'),
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/ai/audio',
+          data: any(named: 'data'),
+          options: any(named: 'options'),
         ),
-        type: DioExceptionType.badResponse,
-      ));
+      ).thenThrow(
+        DioException(
+          requestOptions: _opts('/ai/audio'),
+          response: Response(
+            statusCode: 429,
+            data: {
+              'success': false,
+              'error': {
+                'code': 'QUOTA_EXCEEDED',
+                'message':
+                    'Monthly audio lecture recording limit reached (5/5). Please upgrade your plan.',
+                'feature': 'audio',
+                'remaining': 0,
+                'limit': 5,
+              },
+            },
+            requestOptions: _opts('/ai/audio'),
+          ),
+          type: DioExceptionType.badResponse,
+        ),
+      );
 
       await expectLater(
         () async => mockDio.post<Map<String, dynamic>>(
@@ -482,27 +560,36 @@ void main() {
           data: FormData(),
           options: Options(),
         ),
-        throwsA(isA<DioException>().having(
-          (e) => e.response?.statusCode,
-          'statusCode',
-          equals(429),
-        )),
+        throwsA(
+          isA<DioException>().having(
+            (e) => e.response?.statusCode,
+            'statusCode',
+            equals(429),
+          ),
+        ),
       );
     });
   });
 
   // ── 11. Idempotency ───────────────────────────────────────────────────────
   group('11. Duplicate request — idempotency', () {
-    test('second upload with same Idempotency-Key returns existing jobId', () async {
-      const sharedJobId = 'idempotent-audio-011';
-      final payload = _buildJobPayload(jobId: sharedJobId, status: 'queued');
+    test(
+      'second upload with same Idempotency-Key returns existing jobId',
+      () async {
+        const sharedJobId = 'idempotent-audio-011';
+        final payload = _buildJobPayload(jobId: sharedJobId, status: 'queued');
 
-      final job1 = LectureAudioJobModel.fromJson(payload['data'] as Map<String, dynamic>);
-      final job2 = LectureAudioJobModel.fromJson(payload['data'] as Map<String, dynamic>);
+        final job1 = LectureAudioJobModel.fromJson(
+          payload['data'] as Map<String, dynamic>,
+        );
+        final job2 = LectureAudioJobModel.fromJson(
+          payload['data'] as Map<String, dynamic>,
+        );
 
-      expect(job1.jobId, equals(job2.jobId));
-      expect(job1.status, equals(job2.status));
-    });
+        expect(job1.jobId, equals(job2.jobId));
+        expect(job1.status, equals(job2.status));
+      },
+    );
   });
 
   // ── 12. Teacher Deletion ──────────────────────────────────────────────────
@@ -510,17 +597,22 @@ void main() {
     test('DELETE /ai/audio/:jobId returns success response', () async {
       const jobId = 'audio-job-to-delete';
 
-      when(() => mockDio.delete<Map<String, dynamic>>('/ai/audio/$jobId'))
-          .thenAnswer((_) async => _buildResponse(
-                statusCode: 200,
-                data: {
-                  'success': true,
-                  'message': 'Lecture recording and AI results deleted successfully.',
-                },
-                requestOptions: _optsDelete('/ai/audio/$jobId'),
-              ));
+      when(
+        () => mockDio.delete<Map<String, dynamic>>('/ai/audio/$jobId'),
+      ).thenAnswer(
+        (_) async => _buildResponse(
+          statusCode: 200,
+          data: {
+            'success': true,
+            'message': 'Lecture recording and AI results deleted successfully.',
+          },
+          requestOptions: _optsDelete('/ai/audio/$jobId'),
+        ),
+      );
 
-      final response = await mockDio.delete<Map<String, dynamic>>('/ai/audio/$jobId');
+      final response = await mockDio.delete<Map<String, dynamic>>(
+        '/ai/audio/$jobId',
+      );
 
       expect(response.statusCode, equals(200));
       expect(response.data!['success'], isTrue);
@@ -549,7 +641,8 @@ void main() {
 
     test('formats file size label accurately', () {
       final jobKb = LectureAudioJobModel.fromJson(
-        _buildJobPayload(fileSizeBytes: 2048 * 1024)['data'] as Map<String, dynamic>,
+        _buildJobPayload(fileSizeBytes: 2048 * 1024)['data']
+            as Map<String, dynamic>,
       );
       expect(jobKb.fileSizeLabel, equals('2.0 MB'));
     });

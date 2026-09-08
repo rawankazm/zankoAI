@@ -30,9 +30,13 @@ class StatsScreen extends StatelessWidget {
     final hasDeepReader = notes >= 1;
 
     return Scaffold(
-      backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
+      backgroundColor: isDark
+          ? ZankoColors.darkBackground
+          : ZankoColors.background,
       appBar: AppBar(
-        backgroundColor: (isDark ? ZankoColors.darkBackground : ZankoColors.background).withValues(alpha: 0.9),
+        backgroundColor:
+            (isDark ? ZankoColors.darkBackground : ZankoColors.background)
+                .withValues(alpha: 0.9),
         elevation: 0,
         title: Text(
           lang.translate('nav_progress'),
@@ -48,7 +52,12 @@ class StatsScreen extends StatelessWidget {
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 110),
+          padding: const EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 10,
+            bottom: 110,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -59,12 +68,16 @@ class StatsScreen extends StatelessWidget {
                   color: isDark ? const Color(0xFF171B23) : Colors.white,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2),
+                    color: isDark
+                        ? const Color(0xFF262C36)
+                        : const Color(0xFFECEEF2),
                     width: 1.2,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.25 : 0.03,
+                      ),
                       blurRadius: 18,
                       offset: const Offset(0, 5),
                     ),
@@ -98,7 +111,9 @@ class StatsScreen extends StatelessWidget {
                                   fontSize: 16,
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: -0.2,
-                                  color: isDark ? Colors.white : const Color(0xFF17191F),
+                                  color: isDark
+                                      ? Colors.white
+                                      : const Color(0xFF17191F),
                                 ),
                               ),
                               const SizedBox(height: 2),
@@ -131,7 +146,9 @@ class StatsScreen extends StatelessWidget {
                     const SizedBox(height: 20),
                     Container(
                       height: 1,
-                      color: isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2),
+                      color: isDark
+                          ? const Color(0xFF262C36)
+                          : const Color(0xFFECEEF2),
                     ),
                     const SizedBox(height: 16),
                     Row(
@@ -185,12 +202,16 @@ class StatsScreen extends StatelessWidget {
                   color: isDark ? const Color(0xFF171B23) : Colors.white,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2),
+                    color: isDark
+                        ? const Color(0xFF262C36)
+                        : const Color(0xFFECEEF2),
                     width: 1.2,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.25 : 0.03,
+                      ),
                       blurRadius: 18,
                       offset: const Offset(0, 5),
                     ),
@@ -211,7 +232,9 @@ class StatsScreen extends StatelessWidget {
                                 fontSize: 24,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: -0.5,
-                                color: isDark ? Colors.white : const Color(0xFF17191F),
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF17191F),
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -226,7 +249,10 @@ class StatsScreen extends StatelessWidget {
                           ],
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFE2EDFB),
                             borderRadius: BorderRadius.circular(20),
@@ -234,7 +260,11 @@ class StatsScreen extends StatelessWidget {
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(CupertinoIcons.arrow_up_right, color: Color(0xFF035EC2), size: 13),
+                              Icon(
+                                CupertinoIcons.arrow_up_right,
+                                color: Color(0xFF035EC2),
+                                size: 13,
+                              ),
                               SizedBox(width: 3),
                               Text(
                                 '+14% vs last week',
@@ -289,12 +319,16 @@ class StatsScreen extends StatelessWidget {
                   color: isDark ? const Color(0xFF171B23) : Colors.white,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2),
+                    color: isDark
+                        ? const Color(0xFF262C36)
+                        : const Color(0xFFECEEF2),
                     width: 1.2,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.25 : 0.03,
+                      ),
                       blurRadius: 18,
                       offset: const Offset(0, 5),
                     ),
@@ -432,7 +466,13 @@ class StatsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBar(String day, double fraction, String time, bool isToday, bool isDark) {
+  Widget _buildBar(
+    String day,
+    double fraction,
+    String time,
+    bool isToday,
+    bool isDark,
+  ) {
     return Expanded(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -446,7 +486,9 @@ class StatsScreen extends StatelessWidget {
               fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
               color: isToday
                   ? const Color(0xFF035EC2)
-                  : (isDark ? const Color(0xFFA6ACB8) : const Color(0xFF6B7280)),
+                  : (isDark
+                        ? const Color(0xFFA6ACB8)
+                        : const Color(0xFF6B7280)),
             ),
           ),
           const SizedBox(height: 6),
@@ -456,7 +498,9 @@ class StatsScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: isToday
                   ? const Color(0xFF035EC2)
-                  : (isDark ? const Color(0xFF262C36) : const Color(0xFFE2EDFB)),
+                  : (isDark
+                        ? const Color(0xFF262C36)
+                        : const Color(0xFFE2EDFB)),
               borderRadius: BorderRadius.circular(12),
             ),
           ),
@@ -494,7 +538,9 @@ class StatsScreen extends StatelessWidget {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF035EC2).withValues(alpha: 0.2) : const Color(0xFFE2EDFB),
+                color: isDark
+                    ? const Color(0xFF035EC2).withValues(alpha: 0.2)
+                    : const Color(0xFFE2EDFB),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, color: const Color(0xFF035EC2), size: 16),
@@ -518,7 +564,9 @@ class StatsScreen extends StatelessWidget {
                     lessons,
                     style: TextStyle(
                       fontSize: 11,
-                      color: isDark ? const Color(0xFFA6ACB8) : const Color(0xFF6B7280),
+                      color: isDark
+                          ? const Color(0xFFA6ACB8)
+                          : const Color(0xFF6B7280),
                     ),
                   ),
                 ],
@@ -540,7 +588,9 @@ class StatsScreen extends StatelessWidget {
           child: LinearProgressIndicator(
             value: progress,
             minHeight: 5,
-            backgroundColor: isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2),
+            backgroundColor: isDark
+                ? const Color(0xFF262C36)
+                : const Color(0xFFECEEF2),
             valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF035EC2)),
           ),
         ),
@@ -583,7 +633,9 @@ class StatsScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: isUnlocked
                   ? const Color(0xFFE2EDFB)
-                  : (isDark ? const Color(0xFF262C36) : const Color(0xFFF4F6F9)),
+                  : (isDark
+                        ? const Color(0xFF262C36)
+                        : const Color(0xFFF4F6F9)),
               shape: BoxShape.circle,
             ),
             child: Icon(

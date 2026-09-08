@@ -23,12 +23,12 @@ class _NavigationShellState extends State<NavigationShell> {
   int _selectedIndex = 0;
 
   List<Widget> get _studentScreens => const [
-        HomeScreen(),
-        CoursesScreen(),
-        AiTeacherChatScreen(),
-        ZankolineScreen(),
-        ProfileScreen(),
-      ];
+    HomeScreen(),
+    CoursesScreen(),
+    AiTeacherChatScreen(),
+    ZankolineScreen(),
+    ProfileScreen(),
+  ];
 
   @override
   void initState() {
@@ -38,14 +38,15 @@ class _NavigationShellState extends State<NavigationShell> {
         if (mounted && updateInfo.isUpdateAvailable && updateInfo.isForced) {
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (_) => ForceUpdateScreen(updateInfo: updateInfo)),
+            MaterialPageRoute(
+              builder: (_) => ForceUpdateScreen(updateInfo: updateInfo),
+            ),
             (route) => false,
           );
         }
       });
     });
   }
-
 
   void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);
@@ -74,10 +75,7 @@ class _NavigationShellState extends State<NavigationShell> {
         },
         child: Scaffold(
           extendBody: true,
-          body: IndexedStack(
-            index: _selectedIndex,
-            children: _studentScreens,
-          ),
+          body: IndexedStack(index: _selectedIndex, children: _studentScreens),
           bottomNavigationBar: GlassBottomNavigation(
             currentIndex: _selectedIndex,
             onTap: _onItemTapped,

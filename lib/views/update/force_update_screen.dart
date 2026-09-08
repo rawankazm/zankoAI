@@ -8,10 +8,7 @@ import '../../theme.dart';
 class ForceUpdateScreen extends StatefulWidget {
   final AppUpdateInfo updateInfo;
 
-  const ForceUpdateScreen({
-    super.key,
-    required this.updateInfo,
-  });
+  const ForceUpdateScreen({super.key, required this.updateInfo});
 
   @override
   State<ForceUpdateScreen> createState() => _ForceUpdateScreenState();
@@ -30,9 +27,10 @@ class _ForceUpdateScreenState extends State<ForceUpdateScreen>
       duration: const Duration(milliseconds: 1800),
     )..repeat(reverse: true);
 
-    _glowAnimation = Tween<double>(begin: 0.85, end: 1.15).animate(
-      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
-    );
+    _glowAnimation = Tween<double>(
+      begin: 0.85,
+      end: 1.15,
+    ).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
   }
 
   @override
@@ -64,7 +62,9 @@ class _ForceUpdateScreenState extends State<ForceUpdateScreen>
     return PopScope(
       canPop: !info.isForced,
       child: Scaffold(
-        backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
+        backgroundColor: isDark
+            ? ZankoColors.darkBackground
+            : ZankoColors.background,
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -91,7 +91,9 @@ class _ForceUpdateScreenState extends State<ForceUpdateScreen>
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFFF9F0A).withValues(alpha: 0.45),
+                                color: const Color(
+                                  0xFFFF9F0A,
+                                ).withValues(alpha: 0.45),
                                 blurRadius: 36,
                                 spreadRadius: 6,
                               ),
@@ -113,7 +115,10 @@ class _ForceUpdateScreenState extends State<ForceUpdateScreen>
 
                   // 2. Version Pill Badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: ZankoColors.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
@@ -129,7 +134,9 @@ class _ForceUpdateScreenState extends State<ForceUpdateScreen>
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                            color: isDark
+                                ? Colors.grey[400]
+                                : ZankoColors.textSecondary,
                           ),
                         ),
                         Padding(
@@ -175,7 +182,9 @@ class _ForceUpdateScreenState extends State<ForceUpdateScreen>
                     style: TextStyle(
                       fontSize: 14,
                       height: 1.6,
-                      color: isDark ? Colors.grey[300] : ZankoColors.textSecondary,
+                      color: isDark
+                          ? Colors.grey[300]
+                          : ZankoColors.textSecondary,
                     ),
                   ),
 
@@ -189,7 +198,9 @@ class _ForceUpdateScreenState extends State<ForceUpdateScreen>
                       color: isDark ? ZankoColors.darkCard : Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFEFEFF5),
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.08)
+                            : const Color(0xFFEFEFF5),
                       ),
                       boxShadow: isDark ? null : ZankoShadows.card,
                     ),
@@ -198,22 +209,37 @@ class _ForceUpdateScreenState extends State<ForceUpdateScreen>
                       children: [
                         Row(
                           children: [
-                            const Icon(CupertinoIcons.sparkles, size: 16, color: Color(0xFFFF9F0A)),
+                            const Icon(
+                              CupertinoIcons.sparkles,
+                              size: 16,
+                              color: Color(0xFFFF9F0A),
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               'چی نوێیە لەم وەشانەدا؟',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
-                                color: isDark ? Colors.white : ZankoColors.textPrimary,
+                                color: isDark
+                                    ? Colors.white
+                                    : ZankoColors.textPrimary,
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 12),
-                        _buildFeatureItem(isDark, 'خێرایی و کارایی زیاتر لە کردنەوەی ئەپ'),
-                        _buildFeatureItem(isDark, 'چاککردنی مامۆستای زیرەک و کورتکراوەکان'),
-                        _buildFeatureItem(isDark, 'ڕێکخستن و چاککردنی نوێکارییەکانی زانکۆلاین'),
+                        _buildFeatureItem(
+                          isDark,
+                          'خێرایی و کارایی زیاتر لە کردنەوەی ئەپ',
+                        ),
+                        _buildFeatureItem(
+                          isDark,
+                          'چاککردنی مامۆستای زیرەک و کورتکراوەکان',
+                        ),
+                        _buildFeatureItem(
+                          isDark,
+                          'ڕێکخستن و چاککردنی نوێکارییەکانی زانکۆلاین',
+                        ),
                       ],
                     ),
                   ),
@@ -237,7 +263,9 @@ class _ForceUpdateScreenState extends State<ForceUpdateScreen>
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF007AFF).withValues(alpha: 0.4),
+                              color: const Color(
+                                0xFF007AFF,
+                              ).withValues(alpha: 0.4),
                               blurRadius: 18,
                               offset: const Offset(0, 6),
                             ),
@@ -247,7 +275,11 @@ class _ForceUpdateScreenState extends State<ForceUpdateScreen>
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(CupertinoIcons.cloud_download_fill, color: Colors.white, size: 20),
+                              Icon(
+                                CupertinoIcons.cloud_download_fill,
+                                color: Colors.white,
+                                size: 20,
+                              ),
                               SizedBox(width: 8),
                               Text(
                                 'نوێکردنەوەی ئێستا (Update Now)',
@@ -274,7 +306,9 @@ class _ForceUpdateScreenState extends State<ForceUpdateScreen>
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                          color: isDark
+                              ? Colors.grey[400]
+                              : ZankoColors.textSecondary,
                         ),
                       ),
                     ),

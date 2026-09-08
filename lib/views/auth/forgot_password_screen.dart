@@ -65,7 +65,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         if (e is AuthException) {
           _errorMessage = e.message;
         } else {
-          _errorMessage = 'هەڵەیەک ڕوویدا لە کاتی ناردنی لینکی گۆڕینی وشەی نهێنی.';
+          _errorMessage =
+              'هەڵەیەک ڕوویدا لە کاتی ناردنی لینکی گۆڕینی وشەی نهێنی.';
         }
       });
     }
@@ -79,7 +80,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('وشەی نهێنیت لەبیرچووە؟', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text(
+          'وشەی نهێنیت لەبیرچووە؟',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
         centerTitle: true,
         elevation: 0,
       ),
@@ -100,7 +104,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       color: theme.colorScheme.primary.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.lock_reset_rounded, size: 48, color: theme.colorScheme.primary),
+                    child: Icon(
+                      Icons.lock_reset_rounded,
+                      size: 48,
+                      color: theme.colorScheme.primary,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   Text(
@@ -128,16 +136,24 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       decoration: BoxDecoration(
                         color: Colors.redAccent.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: Colors.redAccent.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.error_outline_rounded, color: Colors.redAccent),
+                          const Icon(
+                            Icons.error_outline_rounded,
+                            color: Colors.redAccent,
+                          ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
                               _errorMessage!,
-                              style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                              style: const TextStyle(
+                                color: Colors.redAccent,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
                         ],
@@ -151,21 +167,34 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       decoration: BoxDecoration(
                         color: const Color(0xFF10B981).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Column(
                         children: [
-                          const Icon(Icons.mark_email_read_rounded, color: Color(0xFF10B981), size: 36),
+                          const Icon(
+                            Icons.mark_email_read_rounded,
+                            color: Color(0xFF10B981),
+                            size: 36,
+                          ),
                           const SizedBox(height: 10),
                           const Text(
                             'لینکی گۆڕینی وشەی نهێنی نێردرا!',
-                            style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold, fontSize: 16),
+                            style: TextStyle(
+                              color: Color(0xFF10B981),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
                           const SizedBox(height: 6),
                           Text(
                             'تکایە سەیری سندوقی ئیمەیڵەکەت بکە (${_emailController.text}) و کلیک لەسەر لینکەکە بکە.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13),
+                            style: TextStyle(
+                              color: isDark ? Colors.white70 : Colors.black87,
+                              fontSize: 13,
+                            ),
                           ),
                         ],
                       ),
@@ -179,16 +208,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     decoration: InputDecoration(
                       labelText: 'ئیمەیڵ',
                       prefixIcon: const Icon(Icons.email_outlined),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       filled: true,
                     ),
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton(
-                    onPressed: (_isLoading || _cooldownSeconds > 0) ? null : _handleReset,
+                    onPressed: (_isLoading || _cooldownSeconds > 0)
+                        ? null
+                        : _handleReset,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       backgroundColor: theme.colorScheme.primary,
                       foregroundColor: Colors.white,
                     ),
@@ -196,13 +231,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         ? const SizedBox(
                             width: 22,
                             height: 22,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : Text(
                             _cooldownSeconds > 0
                                 ? 'دووبارە ناردنەوە پاش ($_cooldownSeconds) چرکە'
-                                : (_emailSent ? 'دووبارە ناردنەوەی لینک' : 'ناردنی لینکی گۆڕین'),
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                : (_emailSent
+                                      ? 'دووبارە ناردنەوەی لینک'
+                                      : 'ناردنی لینکی گۆڕین'),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                   ),
                   const SizedBox(height: 16),

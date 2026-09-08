@@ -26,7 +26,14 @@ class _MindMapViewState extends State<MindMapView> {
     final topic = _topicController.text.trim();
     if (topic.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(Provider.of<LanguageProvider>(context, listen: false).translate('please_enter_topic'))),
+        SnackBar(
+          content: Text(
+            Provider.of<LanguageProvider>(
+              context,
+              listen: false,
+            ).translate('please_enter_topic'),
+          ),
+        ),
       );
       return;
     }
@@ -41,9 +48,10 @@ class _MindMapViewState extends State<MindMapView> {
 
     try {
       final aiService = Provider.of<AiService>(context, listen: false);
-      
+
       // Request Gemini to output a strict JSON representation of a mind map
-      final prompt = "تکایە نەخشەیەکی مێشک (Mind Map) بۆ ئەم بابەتەی خوارەوە دروست بکە لە شێوەی دەقی JSON ڕێکخراو بە تەواوی. "
+      final prompt =
+          "تکایە نەخشەیەکی مێشک (Mind Map) بۆ ئەم بابەتەی خوارەوە دروست بکە لە شێوەی دەقی JSON ڕێکخراو بە تەواوی. "
           "پێویستە وەڵامەکەت بە زمانی کوردی بێت و تەنها دەقی JSON بێت بەبێ هیچ دەقێکی تر یان تاگی markdown. "
           "نموونەی فۆرماتەکە:\n"
           "{\n"
@@ -63,10 +71,13 @@ class _MindMapViewState extends State<MindMapView> {
           "بابەتەکە: $topic";
 
       String responseText = await aiService.askTeacher(prompt, [], isVip: true);
-      
+
       // Clean up markdown block if present
-      responseText = responseText.replaceAll('```json', '').replaceAll('```', '').trim();
-      
+      responseText = responseText
+          .replaceAll('```json', '')
+          .replaceAll('```', '')
+          .trim();
+
       final Map<String, dynamic> data = json.decode(responseText);
       setState(() {
         _mindMapData = data;
@@ -92,18 +103,21 @@ class _MindMapViewState extends State<MindMapView> {
           "description": "بناغە و تێگەیشتنی سەرەتایی لە $topic",
           "children": [
             {"name": "پێناسەی $topic", "description": "تێگەیشتنی سەرەتایی"},
-            {"name": "بنەما زانستییەکان", "description": "پاشخانی ئەکادیمی"}
-          ]
+            {"name": "بنەما زانستییەکان", "description": "پاشخانی ئەکادیمی"},
+          ],
         },
         {
           "name": "جێبەجێکردن و بەکارهێنانی $topic",
           "description": "شێوازی پراکتیکی و شیکارکردنی پرسیارەکان",
           "children": [
             {"name": "ڕێکارەکانی $topic", "description": "هەنگاوەکانی چارەسەر"},
-            {"name": "نموونەی تاقیکردنەوە", "description": "شێوازی هێنانی پرسیار"}
-          ]
-        }
-      ]
+            {
+              "name": "نموونەی تاقیکردنەوە",
+              "description": "شێوازی هێنانی پرسیار",
+            },
+          ],
+        },
+      ],
     };
     setState(() {
       _mindMapData = mockData;
@@ -140,7 +154,7 @@ class _MindMapViewState extends State<MindMapView> {
       final double angle = i * angleStep;
       final double x = centerX + radiusLevel1 * cos(angle);
       final double y = centerY + radiusLevel1 * sin(angle);
-      
+
       final String childId = 'child_$i';
       final childNode = MindMapNode(
         id: childId,
@@ -156,10 +170,11 @@ class _MindMapViewState extends State<MindMapView> {
       if (subChildren.isNotEmpty) {
         final double subAngleStep = angleStep / (subChildren.length + 1);
         const double radiusLevel2 = 140.0;
-        
+
         for (int j = 0; j < subChildren.length; j++) {
           final subChild = subChildren[j];
-          final double subAngle = (angle - angleStep / 2) + (j + 1) * subAngleStep;
+          final double subAngle =
+              (angle - angleStep / 2) + (j + 1) * subAngleStep;
           final double sx = x + radiusLevel2 * cos(subAngle);
           final double sy = y + radiusLevel2 * sin(subAngle);
 
@@ -184,14 +199,18 @@ class _MindMapViewState extends State<MindMapView> {
       builder: (ctx) {
         final locLang = Provider.of<LanguageProvider>(context, listen: false);
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: Text(
             node.label,
             style: const TextStyle(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           content: Text(
-            node.description.isNotEmpty ? node.description : locLang.translate('mind_map_no_desc'),
+            node.description.isNotEmpty
+                ? node.description
+                : locLang.translate('mind_map_no_desc'),
             style: const TextStyle(height: 1.5, fontSize: 13.5),
             textAlign: TextAlign.center,
           ),
@@ -200,11 +219,13 @@ class _MindMapViewState extends State<MindMapView> {
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(ctx),
                 style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: Text(locLang.translate('ok'), style: const TextStyle()),
               ),
-            )
+            ),
           ],
         );
       },
@@ -223,9 +244,7 @@ class _MindMapViewState extends State<MindMapView> {
     return Directionality(
       textDirection: langProvider.textDirection,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(title),
-        ),
+        appBar: AppBar(title: Text(title)),
         body: Column(
           children: [
             // Search Input Section
@@ -239,7 +258,10 @@ class _MindMapViewState extends State<MindMapView> {
                       decoration: InputDecoration(
                         hintText: placeholder,
                         hintStyle: const TextStyle(fontSize: 12),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ),
@@ -248,10 +270,16 @@ class _MindMapViewState extends State<MindMapView> {
                     onPressed: _isLoading ? null : _generateMindMap,
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(60, 48),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: _isLoading
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
                         : const Icon(Icons.bolt_rounded),
                   ),
                 ],
@@ -265,11 +293,20 @@ class _MindMapViewState extends State<MindMapView> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.hub_outlined, size: 64, color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+                          Icon(
+                            Icons.hub_outlined,
+                            size: 64,
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.3,
+                            ),
+                          ),
                           const SizedBox(height: 16),
                           Text(
                             t('mind_map_empty'),
-                            style: const TextStyle(fontSize: 13, color: Colors.grey)
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey,
+                            ),
                           ),
                         ],
                       ),
@@ -305,8 +342,10 @@ class _MindMapViewState extends State<MindMapView> {
                                   // Position Interactive Nodes
                                   ..._nodes.map((node) {
                                     final position = node.position + _panOffset;
-                                    double size = node.depth == 0 ? 90.0 : (node.depth == 1 ? 75.0 : 60.0);
-                                    
+                                    double size = node.depth == 0
+                                        ? 90.0
+                                        : (node.depth == 1 ? 75.0 : 60.0);
+
                                     return Positioned(
                                       left: position.dx - size / 2,
                                       top: position.dy - size / 2,
@@ -318,24 +357,55 @@ class _MindMapViewState extends State<MindMapView> {
                                           decoration: BoxDecoration(
                                             gradient: LinearGradient(
                                               colors: node.depth == 0
-                                                  ? [theme.colorScheme.primary, theme.colorScheme.secondary]
+                                                  ? [
+                                                      theme.colorScheme.primary,
+                                                      theme
+                                                          .colorScheme
+                                                          .secondary,
+                                                    ]
                                                   : (node.depth == 1
-                                                      ? [theme.colorScheme.tertiary, theme.colorScheme.tertiary.withValues(alpha: 0.7)]
-                                                      : [Colors.blueGrey.shade700, Colors.blueGrey.shade500]),
+                                                        ? [
+                                                            theme
+                                                                .colorScheme
+                                                                .tertiary,
+                                                            theme
+                                                                .colorScheme
+                                                                .tertiary
+                                                                .withValues(
+                                                                  alpha: 0.7,
+                                                                ),
+                                                          ]
+                                                        : [
+                                                            Colors
+                                                                .blueGrey
+                                                                .shade700,
+                                                            Colors
+                                                                .blueGrey
+                                                                .shade500,
+                                                          ]),
                                             ),
                                             shape: BoxShape.circle,
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black.withValues(alpha: 0.2),
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.2,
+                                                ),
                                                 blurRadius: 6,
                                                 offset: const Offset(0, 3),
-                                              )
+                                              ),
                                             ],
-                                            border: Border.all(color: Colors.white.withValues(alpha: 0.7), width: 1.5),
+                                            border: Border.all(
+                                              color: Colors.white.withValues(
+                                                alpha: 0.7,
+                                              ),
+                                              width: 1.5,
+                                            ),
                                           ),
                                           child: Center(
                                             child: Padding(
-                                              padding: const EdgeInsets.all(4.0),
+                                              padding: const EdgeInsets.all(
+                                                4.0,
+                                              ),
                                               child: Text(
                                                 node.label,
                                                 textAlign: TextAlign.center,
@@ -414,14 +484,24 @@ class MindMapPainter extends CustomPainter {
     for (var edge in edges) {
       final start = edge.from.position + panOffset;
       final end = edge.to.position + panOffset;
-      
+
       // Draw bezier curves instead of straight lines for a premium aesthetic
-      final controlPoint1 = Offset(start.dx + (end.dx - start.dx) / 2, start.dy);
+      final controlPoint1 = Offset(
+        start.dx + (end.dx - start.dx) / 2,
+        start.dy,
+      );
       final controlPoint2 = Offset(start.dx + (end.dx - start.dx) / 2, end.dy);
 
       final path = Path()
         ..moveTo(start.dx, start.dy)
-        ..cubicTo(controlPoint1.dx, controlPoint1.dy, controlPoint2.dx, controlPoint2.dy, end.dx, end.dy);
+        ..cubicTo(
+          controlPoint1.dx,
+          controlPoint1.dy,
+          controlPoint2.dx,
+          controlPoint2.dy,
+          end.dx,
+          end.dy,
+        );
 
       canvas.drawPath(path, paint);
     }

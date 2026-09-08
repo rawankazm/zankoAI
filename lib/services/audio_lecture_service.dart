@@ -71,7 +71,8 @@ class AudioLectureService {
       });
     } else {
       final f = file!;
-      final actualFilename = filename ?? f.path.split(Platform.pathSeparator).last;
+      final actualFilename =
+          filename ?? f.path.split(Platform.pathSeparator).last;
       formData = FormData.fromMap({
         ...fields,
         'file': await MultipartFile.fromFile(
@@ -82,9 +83,7 @@ class AudioLectureService {
       });
     }
 
-    final headers = <String, dynamic>{
-      'Content-Type': 'multipart/form-data',
-    };
+    final headers = <String, dynamic>{'Content-Type': 'multipart/form-data'};
 
     if (idempotencyKey != null && idempotencyKey.isNotEmpty) {
       headers['Idempotency-Key'] = idempotencyKey;
@@ -151,7 +150,9 @@ class AudioLectureService {
   /// Deletes the recording and its generated materials.
   /// Only the recording teacher or an admin can perform this.
   Future<bool> deleteAudioJob(String jobId) async {
-    final response = await _dio.delete<Map<String, dynamic>>('/ai/audio/$jobId');
+    final response = await _dio.delete<Map<String, dynamic>>(
+      '/ai/audio/$jobId',
+    );
     _assertSuccess(response);
     return response.data?['success'] == true;
   }
@@ -211,7 +212,8 @@ class AudioLectureService {
         response.statusCode! < 200 ||
         response.statusCode! >= 300 ||
         body?['success'] != true) {
-      final msg = body?['error']?['message'] as String? ??
+      final msg =
+          body?['error']?['message'] as String? ??
           body?['message'] as String? ??
           'Request failed (${response.statusCode})';
       throw DioException(

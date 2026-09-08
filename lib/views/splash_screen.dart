@@ -114,7 +114,9 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
 
     // 2. If update is forced or required, show ForceUpdateScreen immediately
-    if (updateInfo != null && updateInfo.isUpdateAvailable && updateInfo.isForced) {
+    if (updateInfo != null &&
+        updateInfo.isUpdateAvailable &&
+        updateInfo.isForced) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -157,10 +159,7 @@ class _SplashScreenState extends State<SplashScreen>
         transitionDuration: const Duration(milliseconds: 800),
         pageBuilder: (context, animation, secondaryAnimation) => nextScreen,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(
-            opacity: animation,
-            child: child,
-          );
+          return FadeTransition(opacity: animation, child: child);
         },
       ),
     );
@@ -264,7 +263,10 @@ class _SplashScreenState extends State<SplashScreen>
               children: [
                 // Logo & Glowing Rings
                 AnimatedBuilder(
-                  animation: Listenable.merge([_mainController, _pulseController]),
+                  animation: Listenable.merge([
+                    _mainController,
+                    _pulseController,
+                  ]),
                   builder: (context, child) {
                     final pulse = _pulseController.value * 14.0;
                     return Opacity(
@@ -282,12 +284,16 @@ class _SplashScreenState extends State<SplashScreen>
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: ZankoColors.primary.withValues(alpha: 0.4),
+                                color: ZankoColors.primary.withValues(
+                                  alpha: 0.4,
+                                ),
                                 blurRadius: 30 + pulse,
                                 spreadRadius: 6 + (pulse * 0.5),
                               ),
                               BoxShadow(
-                                color: ZankoColors.accent.withValues(alpha: 0.3),
+                                color: ZankoColors.accent.withValues(
+                                  alpha: 0.3,
+                                ),
                                 blurRadius: 50 + pulse,
                                 spreadRadius: 10,
                               ),
@@ -312,11 +318,12 @@ class _SplashScreenState extends State<SplashScreen>
                                 width: 110,
                                 height: 110,
                                 fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) => const Icon(
-                                  CupertinoIcons.sparkles,
-                                  size: 90,
-                                  color: Colors.white,
-                                ),
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(
+                                      CupertinoIcons.sparkles,
+                                      size: 90,
+                                      color: Colors.white,
+                                    ),
                               ),
                             ),
                           ),

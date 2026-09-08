@@ -259,8 +259,9 @@ class _HomeworkSolverScreenState extends State<HomeworkSolverScreen> {
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2.2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           ),
                           SizedBox(width: 12),
@@ -304,7 +305,8 @@ class _HomeworkSolverScreenState extends State<HomeworkSolverScreen> {
                     color: Colors.redAccent.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                        color: Colors.redAccent.withValues(alpha: 0.3)),
+                      color: Colors.redAccent.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -362,7 +364,8 @@ class _HomeworkSolverScreenState extends State<HomeworkSolverScreen> {
             maxLines: 4,
             decoration: InputDecoration(
               labelText: 'دەقی پرسیار یان هاوکێشەکە',
-              hintText: 'نموونە: Calculate the limit of (sin x)/x as x -> 0 ...',
+              hintText:
+                  'نموونە: Calculate the limit of (sin x)/x as x -> 0 ...',
               alignLabelWithHint: true,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -399,8 +402,11 @@ class _HomeworkSolverScreenState extends State<HomeworkSolverScreen> {
                       backgroundColor: Colors.black54,
                       radius: 14,
                       child: IconButton(
-                        icon: const Icon(Icons.close,
-                            size: 14, color: Colors.white),
+                        icon: const Icon(
+                          Icons.close,
+                          size: 14,
+                          color: Colors.white,
+                        ),
                         padding: EdgeInsets.zero,
                         onPressed: _clearImage,
                       ),
@@ -476,8 +482,10 @@ class _HomeworkSolverScreenState extends State<HomeworkSolverScreen> {
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
             ),
           ),
 
@@ -495,14 +503,18 @@ class _HomeworkSolverScreenState extends State<HomeworkSolverScreen> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                   ),
                   items: const [
                     DropdownMenuItem(value: 'easy', child: Text('ئاسان')),
                     DropdownMenuItem(value: 'medium', child: Text('مامناوەند')),
                     DropdownMenuItem(value: 'hard', child: Text('سەخت')),
                     DropdownMenuItem(
-                        value: 'advanced', child: Text('پێشکەوتوو')),
+                      value: 'advanced',
+                      child: Text('پێشکەوتوو'),
+                    ),
                   ],
                   onChanged: (val) {
                     if (val != null) setState(() => _difficulty = val);
@@ -519,7 +531,9 @@ class _HomeworkSolverScreenState extends State<HomeworkSolverScreen> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                   ),
                   items: const [
                     DropdownMenuItem(value: 'ku', child: Text('کوردی')),
@@ -570,8 +584,11 @@ class _HomeworkSolverScreenState extends State<HomeworkSolverScreen> {
                 children: [
                   const Row(
                     children: [
-                      Icon(Icons.check_circle_outline,
-                          color: Colors.white, size: 20),
+                      Icon(
+                        Icons.check_circle_outline,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                       SizedBox(width: 6),
                       Text(
                         'وەڵامی یەکلاکەرەوە (Answer)',
@@ -584,12 +601,17 @@ class _HomeworkSolverScreenState extends State<HomeworkSolverScreen> {
                     ],
                   ),
                   IconButton(
-                    icon:
-                        const Icon(Icons.copy, color: Colors.white70, size: 18),
+                    icon: const Icon(
+                      Icons.copy,
+                      color: Colors.white70,
+                      size: 18,
+                    ),
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: sol.answer));
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('وەڵامەکە لەبەرگیرایەوە! 📋')),
+                        const SnackBar(
+                          content: Text('وەڵامەکە لەبەرگیرایەوە! 📋'),
+                        ),
                       );
                     },
                   ),
@@ -707,8 +729,11 @@ class _HomeworkSolverScreenState extends State<HomeworkSolverScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.close_rounded,
-                          color: Color(0xFFE11D48), size: 16),
+                      const Icon(
+                        Icons.close_rounded,
+                        color: Color(0xFFE11D48),
+                        size: 16,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -739,8 +764,11 @@ class _HomeworkSolverScreenState extends State<HomeworkSolverScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.tips_and_updates,
-                          color: Color(0xFFD97706), size: 16),
+                      const Icon(
+                        Icons.tips_and_updates,
+                        color: Color(0xFFD97706),
+                        size: 16,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -769,8 +797,9 @@ class _HomeworkSolverScreenState extends State<HomeworkSolverScreen> {
               runSpacing: 8,
               children: sol.relatedConcepts.map((c) {
                 return Chip(
-                  backgroundColor:
-                      const Color(0xFF7C3AED).withValues(alpha: 0.12),
+                  backgroundColor: const Color(
+                    0xFF7C3AED,
+                  ).withValues(alpha: 0.12),
                   side: BorderSide(
                     color: const Color(0xFF7C3AED).withValues(alpha: 0.25),
                   ),

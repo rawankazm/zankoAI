@@ -59,7 +59,10 @@ class LeaderboardService extends ChangeNotifier {
     required int score100,
     required int streak,
   }) {
-    return (studyMinutes * 2) + (totalQuestions * 5) + (score100 * 10) + (streak * 40);
+    return (studyMinutes * 2) +
+        (totalQuestions * 5) +
+        (score100 * 10) +
+        (streak * 40);
   }
 
   List<BadgeModel> getBadges(ScoreService scoreService) {
@@ -111,11 +114,14 @@ class LeaderboardService extends ChangeNotifier {
     ];
   }
 
-  Future<List<String>> getRegisteredDepartments({UserModel? currentUser}) async {
+  Future<List<String>> getRegisteredDepartments({
+    UserModel? currentUser,
+  }) async {
     final Set<String> depts = {};
 
     // 1. Add current user's registered department first
-    if (currentUser?.departmentName != null && currentUser!.departmentName!.trim().isNotEmpty) {
+    if (currentUser?.departmentName != null &&
+        currentUser!.departmentName!.trim().isNotEmpty) {
       depts.add(currentUser.departmentName!.trim());
     }
 
@@ -252,7 +258,11 @@ class LeaderboardService extends ChangeNotifier {
             );
           } else {
             // Use actual Supabase score fields when available
-            sc100 = (d['score100'] as num?)?.toInt() ?? (d['gpa'] != null ? ((d['gpa'] as num).toDouble() * 25).round().clamp(0, 100) : 60);
+            sc100 =
+                (d['score100'] as num?)?.toInt() ??
+                (d['gpa'] != null
+                    ? ((d['gpa'] as num).toDouble() * 25).round().clamp(0, 100)
+                    : 60);
             strk = (d['studyStreak'] as num?)?.toInt() ?? 1;
             final totalQ = (d['totalQuestionsAnswered'] as num?)?.toInt() ?? 0;
             final studyMins = (d['todayStudyMinutes'] as num?)?.toInt() ?? 0;
@@ -312,17 +322,25 @@ class LeaderboardService extends ChangeNotifier {
       );
 
       if (currentUser.id.isNotEmpty && !currentUser.isGuest) {
-        Supabase.instance.client.from('profiles').update({
-          'updated_at': DateTime.now().toUtc().toIso8601String(),
-        }).eq('id', currentUser.id).catchError((_) {});
+        Supabase.instance.client
+            .from('profiles')
+            .update({'updated_at': DateTime.now().toUtc().toIso8601String()})
+            .eq('id', currentUser.id)
+            .catchError((_) {});
       }
     }
 
     // Filter by department if specified and not 'all'
-    if (selectedDepartment != null && selectedDepartment.isNotEmpty && selectedDepartment != 'all') {
+    if (selectedDepartment != null &&
+        selectedDepartment.isNotEmpty &&
+        selectedDepartment != 'all') {
       list = list.where((item) {
-        return item.departmentName.toLowerCase().contains(selectedDepartment.toLowerCase()) ||
-               selectedDepartment.toLowerCase().contains(item.departmentName.toLowerCase());
+        return item.departmentName.toLowerCase().contains(
+              selectedDepartment.toLowerCase(),
+            ) ||
+            selectedDepartment.toLowerCase().contains(
+              item.departmentName.toLowerCase(),
+            );
       }).toList();
     }
 

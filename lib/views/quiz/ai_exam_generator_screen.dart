@@ -97,14 +97,24 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
             SnackBar(
               content: Row(
                 children: [
-                  const Icon(CupertinoIcons.checkmark_circle_fill, color: Colors.white, size: 20),
+                  const Icon(
+                    CupertinoIcons.checkmark_circle_fill,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                   const SizedBox(width: 10),
-                  Expanded(child: Text('فایلی $_pdfFileName بە سەرکەوتوویی بارکرا [${parsed.typeDisplayName}] 📄')),
+                  Expanded(
+                    child: Text(
+                      'فایلی $_pdfFileName بە سەرکەوتوویی بارکرا [${parsed.typeDisplayName}] 📄',
+                    ),
+                  ),
                 ],
               ),
               backgroundColor: ZankoColors.success,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           );
         }
@@ -134,7 +144,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
 
     // Check if free user selected more than 5 questions
     if (_questionCount > 5) {
-      _showVipExamDialog('دروستکردنی تاقیکردنەوەی زیاتر لە ٥ پرسیار تایبەتە بە ئەندامانی VIP 👑');
+      _showVipExamDialog(
+        'دروستکردنی تاقیکردنەوەی زیاتر لە ٥ پرسیار تایبەتە بە ئەندامانی VIP 👑',
+      );
       return false;
     }
 
@@ -148,7 +160,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
     }
 
     if (count >= 1) {
-      _showVipExamDialog('بەکارهێنەرانی ئاسایی تەنها دەتوانن ڕۆژانە ١ تاقیکردنەوە بە AI دروست بکەن.\nبۆ دروستکردنی تاقیکردنەوەی بێسنوور هەژمارەکەت بەرزبکەرەوە بۆ VIP 👑');
+      _showVipExamDialog(
+        'بەکارهێنەرانی ئاسایی تەنها دەتوانن ڕۆژانە ١ تاقیکردنەوە بە AI دروست بکەن.\nبۆ دروستکردنی تاقیکردنەوەی بێسنوور هەژمارەکەت بەرزبکەرەوە بۆ VIP 👑',
+      );
       return false;
     }
 
@@ -190,7 +204,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
               decoration: BoxDecoration(
                 color: ZankoColors.primary.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.4)),
+                border: Border.all(
+                  color: ZankoColors.primary.withValues(alpha: 0.4),
+                ),
               ),
               child: Row(
                 children: [
@@ -199,7 +215,11 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                   Expanded(
                     child: Text(
                       'بە تەنها ٥,٠٠٠ د.ع بێسنوور تاقیکردنەوە، سێمینار و ڕاپۆرت دروست بکە!',
-                      style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: ZankoColors.primary),
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.bold,
+                        color: ZankoColors.primary,
+                      ),
                     ),
                   ),
                 ],
@@ -213,7 +233,10 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
               Expanded(
                 child: TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text('دواتر', style: TextStyle(color: Colors.grey)),
+                  child: const Text(
+                    'دواتر',
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ),
               ),
               Expanded(
@@ -226,9 +249,14 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFB8860B),
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
-                  child: const Text('بوون بە VIP 👑', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'بوون بە VIP 👑',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],
@@ -243,19 +271,30 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
     final courseText = _courseController.text.trim();
     final topicText = _topicController.text.trim();
 
-    if (_inputMode == 'pdf' && (_pdfFileContent == null || _pdfFileName == null)) {
+    if (_inputMode == 'pdf' &&
+        (_pdfFileContent == null || _pdfFileName == null)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Row(
             children: [
-              Icon(CupertinoIcons.exclamationmark_triangle_fill, color: Colors.white, size: 20),
+              Icon(
+                CupertinoIcons.exclamationmark_triangle_fill,
+                color: Colors.white,
+                size: 20,
+              ),
               SizedBox(width: 10),
-              Expanded(child: Text('تکایە سەرەتا فایلی PDFی وانەکە باربکە یان بپەڕەرەوە بۆ بەشی دەق! 📄')),
+              Expanded(
+                child: Text(
+                  'تکایە سەرەتا فایلی PDFی وانەکە باربکە یان بپەڕەرەوە بۆ بەشی دەق! 📄',
+                ),
+              ),
             ],
           ),
           backgroundColor: ZankoColors.warning,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
       _pickPdfFile();
@@ -268,7 +307,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
           content: const Text('تکایە ناوی وانە یان بابەت بنووسە'),
           backgroundColor: ZankoColors.warning,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
       return;
@@ -294,12 +335,19 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
     String topicToUse;
 
     if (_inputMode == 'pdf' && _pdfFileName != null) {
-      final String rawName = _pdfFileName!.replaceAll(RegExp(r'\.(pdf|txt)$', caseSensitive: false), '');
+      final String rawName = _pdfFileName!.replaceAll(
+        RegExp(r'\.(pdf|txt)$', caseSensitive: false),
+        '',
+      );
       final String cleanFileName = _sanitizeExtractedText(rawName);
-      courseToUse = cleanFileName.isNotEmpty ? cleanFileName : 'فایلی PDFی بارکراو';
+      courseToUse = cleanFileName.isNotEmpty
+          ? cleanFileName
+          : 'فایلی PDFی بارکراو';
       topicToUse = 'ناوەڕۆکی $courseToUse';
     } else {
-      courseToUse = courseText.isNotEmpty ? courseText : (topicText.isNotEmpty ? topicText : 'تاقیکردنەوەی گشتی');
+      courseToUse = courseText.isNotEmpty
+          ? courseText
+          : (topicText.isNotEmpty ? topicText : 'تاقیکردنەوەی گشتی');
       topicToUse = topicText.isNotEmpty ? topicText : courseToUse;
     }
 
@@ -333,7 +381,11 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
         setState(() {
           _activeExam = exam;
           _isGenerating = false;
-          _timeRemainingSeconds = (exam.durationMinutes > 0 ? exam.durationMinutes : _durationMinutes) * 60;
+          _timeRemainingSeconds =
+              (exam.durationMinutes > 0
+                  ? exam.durationMinutes
+                  : _durationMinutes) *
+              60;
         });
 
         _startTimer();
@@ -386,18 +438,31 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
         line.trim().length < 10;
   }
 
-  QuizModel _generateFallbackExam(String topic, String course, int count, int duration, {String? pdfText}) {
+  QuizModel _generateFallbackExam(
+    String topic,
+    String course,
+    int count,
+    int duration, {
+    String? pdfText,
+  }) {
     List<String> pdfSnippets = [];
     if (pdfText != null && pdfText.trim().isNotEmpty) {
       pdfSnippets = pdfText
           .split(RegExp(r'[\.\?\!\n;]'))
           .map<String>((s) => _sanitizeExtractedText(s))
-          .where((String s) => s.length > 15 && !_isJunkMetadataLine(s) && RegExp(r'[a-zA-Z\u0600-\u06FF]').hasMatch(s))
+          .where(
+            (String s) =>
+                s.length > 15 &&
+                !_isJunkMetadataLine(s) &&
+                RegExp(r'[a-zA-Z\u0600-\u06FF]').hasMatch(s),
+          )
           .toList();
     }
 
     final List<QuestionModel> questions = [];
-    final cleanTitle = _sanitizeExtractedText(course.replaceAll(RegExp(r'\.[a-zA-Z0-9]+$', caseSensitive: false), ''));
+    final cleanTitle = _sanitizeExtractedText(
+      course.replaceAll(RegExp(r'\.[a-zA-Z0-9]+$', caseSensitive: false), ''),
+    );
     final displayTitle = cleanTitle.isNotEmpty ? cleanTitle : 'وانەی دیاریکراو';
 
     final int targetCount = count > 0 ? count : 5;
@@ -405,28 +470,52 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
     if (pdfSnippets.length >= 2) {
       for (int i = 0; i < targetCount; i++) {
         final snippet = pdfSnippets[i % pdfSnippets.length].trim();
-        final words = snippet.split(' ').where((w) => w.length > 3 && !_isJunkMetadataLine(w)).toList();
-        final mainTerm = words.isNotEmpty ? words[i % words.length] : 'چەمکی سەرەکی';
+        final words = snippet
+            .split(' ')
+            .where((w) => w.length > 3 && !_isJunkMetadataLine(w))
+            .toList();
+        final mainTerm = words.isNotEmpty
+            ? words[i % words.length]
+            : 'چەمکی سەرەکی';
 
         if (i % 3 == 0) {
           // Factual Multiple Choice
-          final truncatedSnippet = snippet.length > 100 ? '${snippet.substring(0, 100)}...' : snippet;
-          final wrong1 = (pdfSnippets.length > 1) ? pdfSnippets[(i + 1) % pdfSnippets.length].trim() : 'ناچالاککردنی سەرجەم پرۆتۆکۆلەکان';
-          final wrong2 = (pdfSnippets.length > 2) ? pdfSnippets[(i + 2) % pdfSnippets.length].trim() : 'سڕینەوەی هەموو تێکستەکان بەرامبەر داتای نادیار';
-          final wrong1Truncated = wrong1.length > 80 ? '${wrong1.substring(0, 80)}...' : (wrong1.isNotEmpty ? wrong1 : 'ڕەتکردنەوەی یاساکانی وانەکە');
-          final wrong2Truncated = wrong2.length > 80 ? '${wrong2.substring(0, 80)}...' : (wrong2.isNotEmpty ? wrong2 : 'ناچالاککردنی کردارەکان لە سیستەمەکە');
+          final truncatedSnippet = snippet.length > 100
+              ? '${snippet.substring(0, 100)}...'
+              : snippet;
+          final wrong1 = (pdfSnippets.length > 1)
+              ? pdfSnippets[(i + 1) % pdfSnippets.length].trim()
+              : 'ناچالاککردنی سەرجەم پرۆتۆکۆلەکان';
+          final wrong2 = (pdfSnippets.length > 2)
+              ? pdfSnippets[(i + 2) % pdfSnippets.length].trim()
+              : 'سڕینەوەی هەموو تێکستەکان بەرامبەر داتای نادیار';
+          final wrong1Truncated = wrong1.length > 80
+              ? '${wrong1.substring(0, 80)}...'
+              : (wrong1.isNotEmpty ? wrong1 : 'ڕەتکردنەوەی یاساکانی وانەکە');
+          final wrong2Truncated = wrong2.length > 80
+              ? '${wrong2.substring(0, 80)}...'
+              : (wrong2.isNotEmpty
+                    ? wrong2
+                    : 'ناچالاککردنی کردارەکان لە سیستەمەکە');
 
-          final rawOpts = [truncatedSnippet, wrong1Truncated, wrong2Truncated, 'هیچ کام لەمانە'];
+          final rawOpts = [
+            truncatedSnippet,
+            wrong1Truncated,
+            wrong2Truncated,
+            'هیچ کام لەمانە',
+          ];
           final shuffledOpts = List<String>.from(rawOpts)..shuffle();
 
           questions.add(
             QuestionModel(
               id: 'fallback_gen_$i',
-              questionText: 'کامیان زانیارییەکی ڕاستە دەربارەی بابەتی «$displayTitle»؟',
+              questionText:
+                  'کامیان زانیارییەکی ڕاستە دەربارەی بابەتی «$displayTitle»؟',
               type: QuestionType.multipleChoice,
               options: shuffledOpts,
               correctAnswer: truncatedSnippet,
-              explanation: 'ئەم زانیارییە بە دروستی دەربارەی دەقی وانەکەت دەرهێنراوە.',
+              explanation:
+                  'ئەم زانیارییە بە دروستی دەربارەی دەقی وانەکەت دەرهێنراوە.',
             ),
           );
         } else if (i % 3 == 1) {
@@ -438,7 +527,8 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
           questions.add(
             QuestionModel(
               id: 'fallback_gen_$i',
-              questionText: 'بۆشایی لە دەقی وانەکەدا پڕبکەرەوە: "$blankedSnippet"',
+              questionText:
+                  'بۆشایی لە دەقی وانەکەدا پڕبکەرەوە: "$blankedSnippet"',
               type: QuestionType.fillInBlank,
               options: null,
               correctAnswer: mainTerm,
@@ -447,7 +537,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
           );
         } else {
           // True/False
-          final truncatedSnippet = snippet.length > 120 ? snippet.substring(0, 120) : snippet;
+          final truncatedSnippet = snippet.length > 120
+              ? snippet.substring(0, 120)
+              : snippet;
           final isTrue = i % 2 == 0;
           questions.add(
             QuestionModel(
@@ -458,7 +550,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
               type: QuestionType.trueFalse,
               options: ['ڕاستە', 'هەڵەیە'],
               correctAnswer: isTrue ? 'ڕاستە' : 'هەڵەیە',
-              explanation: isTrue ? 'ئەم زانیارییە ڕاستە بەپێی وانەکە.' : 'ئەم زانیارییە پێچەوانەی چەمکی زانستی وانەکەیە.',
+              explanation: isTrue
+                  ? 'ئەم زانیارییە ڕاستە بەپێی وانەکە.'
+                  : 'ئەم زانیارییە پێچەوانەی چەمکی زانستی وانەکەیە.',
             ),
           );
         }
@@ -475,7 +569,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
             type: QuestionType.trueFalse,
             options: ['ڕاستە', 'هەڵەیە'],
             correctAnswer: isTrue ? 'ڕاستە' : 'هەڵەیە',
-            explanation: isTrue ? 'پێداچوونەوەی ئەم بابەتانە نمرەی بەرز دەستەبەر دەکات.' : 'سەرجەم بابەتەکان بۆ تاقیکردنەوە پێویستن.',
+            explanation: isTrue
+                ? 'پێداچوونەوەی ئەم بابەتانە نمرەی بەرز دەستەبەر دەکات.'
+                : 'سەرجەم بابەتەکان بۆ تاقیکردنەوە پێویستن.',
           ),
         );
       }
@@ -527,7 +623,11 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
       if (q.type == QuestionType.fillInBlank) {
         userAns = _blankControllers[i]?.text.trim() ?? userAns;
       }
-      if (AiService.isAnswerCorrect(userAns, q.correctAnswer, options: q.options)) {
+      if (AiService.isAnswerCorrect(
+        userAns,
+        q.correctAnswer,
+        options: q.options,
+      )) {
         score++;
       }
     }
@@ -569,12 +669,20 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
       builder: (ctx) {
         final text = buffer.toString();
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('تاقیکردنەوەی ئامادەکراو بۆ چاپ', style: TextStyle(fontFamily: 'DroidKufi', fontSize: 16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            'تاقیکردنەوەی ئامادەکراو بۆ چاپ',
+            style: TextStyle(fontFamily: 'DroidKufi', fontSize: 16),
+          ),
           content: SizedBox(
             width: double.maxFinite,
             child: SingleChildScrollView(
-              child: SelectableText(text, style: const TextStyle(fontFamily: 'Courier', fontSize: 11.5)),
+              child: SelectableText(
+                text,
+                style: const TextStyle(fontFamily: 'Courier', fontSize: 11.5),
+              ),
             ),
           ),
           actions: [
@@ -582,15 +690,29 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: text));
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('کۆپیکرا بۆ Clipboard!', style: TextStyle(fontFamily: 'DroidKufi'))),
+                  const SnackBar(
+                    content: Text(
+                      'کۆپیکرا بۆ Clipboard!',
+                      style: TextStyle(fontFamily: 'DroidKufi'),
+                    ),
+                  ),
                 );
                 Navigator.pop(ctx);
               },
-              child: const Text('کۆپیکردن', style: TextStyle(fontFamily: 'DroidKufi', fontWeight: FontWeight.bold)),
+              child: const Text(
+                'کۆپیکردن',
+                style: TextStyle(
+                  fontFamily: 'DroidKufi',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('داخستن', style: TextStyle(fontFamily: 'DroidKufi')),
+              child: const Text(
+                'داخستن',
+                style: TextStyle(fontFamily: 'DroidKufi'),
+              ),
             ),
           ],
         );
@@ -617,9 +739,13 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
           }
         },
         child: Scaffold(
-          backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
+          backgroundColor: isDark
+              ? ZankoColors.darkBackground
+              : ZankoColors.background,
           appBar: AppBar(
-            backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
+            backgroundColor: isDark
+                ? ZankoColors.darkBackground
+                : ZankoColors.background,
             elevation: 0,
             leading: IconButton(
               icon: Icon(
@@ -639,7 +765,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
             title: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
-                color: ZankoColors.primary.withValues(alpha: isDark ? 0.20 : 0.10),
+                color: ZankoColors.primary.withValues(
+                  alpha: isDark ? 0.20 : 0.10,
+                ),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: ZankoColors.primary.withValues(alpha: 0.25),
@@ -649,12 +777,18 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CuteAiBotIcon(size: 19, color: ZankoColors.primary, strokeWidth: 2),
+                  CuteAiBotIcon(
+                    size: 19,
+                    color: ZankoColors.primary,
+                    strokeWidth: 2,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     langProvider.currentLanguage == AppLanguage.english
                         ? 'AI Exam Studio'
-                        : (langProvider.currentLanguage == AppLanguage.arabic ? 'اختبار ذكي' : 'تاقیکردنەوەی زیرەک'),
+                        : (langProvider.currentLanguage == AppLanguage.arabic
+                              ? 'اختبار ذكي'
+                              : 'تاقیکردنەوەی زیرەک'),
                     style: TextStyle(
                       fontSize: 14.5,
                       fontWeight: FontWeight.w800,
@@ -670,10 +804,10 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
             child: _isGenerating
                 ? _buildGeneratingState(isDark)
                 : _activeExam == null
-                    ? _buildConfigState(isDark, langProvider)
-                    : _examCompleted
-                        ? _buildResultsState(isDark, langProvider)
-                        : _buildExamRunningState(isDark, langProvider),
+                ? _buildConfigState(isDark, langProvider)
+                : _examCompleted
+                ? _buildResultsState(isDark, langProvider)
+                : _buildExamRunningState(isDark, langProvider),
           ),
         ),
       ),
@@ -685,7 +819,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
       context: context,
       builder: (ctx) => CupertinoAlertDialog(
         title: const Text('دڵنیایت لە دەرچوون؟'),
-        content: const Text('ئەگەر لە تاقیکردنەوەکە بێیتەدەرێ، نمرەکەت تۆمار ناکرێت و وەڵامەکانت دەسڕێنەوە.'),
+        content: const Text(
+          'ئەگەر لە تاقیکردنەوەکە بێیتەدەرێ، نمرەکەت تۆمار ناکرێت و وەڵامەکانت دەسڕێنەوە.',
+        ),
         actions: [
           CupertinoDialogAction(
             child: const Text('مانەوە'),
@@ -716,14 +852,24 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
           SnackBar(
             content: const Row(
               children: [
-                Icon(CupertinoIcons.exclamationmark_triangle_fill, color: Colors.white, size: 20),
+                Icon(
+                  CupertinoIcons.exclamationmark_triangle_fill,
+                  color: Colors.white,
+                  size: 20,
+                ),
                 SizedBox(width: 10),
-                Expanded(child: Text('تکایە سەرەتا فایلی PDF هەڵبژێرە لە مۆبایلەکەت 📄')),
+                Expanded(
+                  child: Text(
+                    'تکایە سەرەتا فایلی PDF هەڵبژێرە لە مۆبایلەکەت 📄',
+                  ),
+                ),
               ],
             ),
             backgroundColor: Colors.orange.shade800,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
           ),
         );
         _pickPdfFile();
@@ -736,14 +882,20 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
           SnackBar(
             content: const Row(
               children: [
-                Icon(CupertinoIcons.exclamationmark_triangle_fill, color: Colors.white, size: 20),
+                Icon(
+                  CupertinoIcons.exclamationmark_triangle_fill,
+                  color: Colors.white,
+                  size: 20,
+                ),
                 SizedBox(width: 10),
                 Expanded(child: Text('تکایە ناوی وانە یان کۆرس بنووسە ✍️')),
               ],
             ),
             backgroundColor: Colors.orange.shade800,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
           ),
         );
         return;
@@ -786,10 +938,15 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                     }
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: _setupStep == 0
-                          ? ZankoColors.primary.withValues(alpha: isDark ? 0.20 : 0.10)
+                          ? ZankoColors.primary.withValues(
+                              alpha: isDark ? 0.20 : 0.10,
+                            )
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -801,23 +958,38 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                           decoration: BoxDecoration(
                             gradient: _setupStep == 0
                                 ? LinearGradient(
-                                    colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
+                                    colors: [
+                                      ZankoColors.gradientStart,
+                                      ZankoColors.gradientEnd,
+                                    ],
                                   )
                                 : null,
                             color: _setupStep > 0
                                 ? const Color(0xFF10B981)
-                                : (_setupStep == 0 ? null : (isDark ? Colors.white12 : const Color(0xFFE2E8F0))),
+                                : (_setupStep == 0
+                                      ? null
+                                      : (isDark
+                                            ? Colors.white12
+                                            : const Color(0xFFE2E8F0))),
                             shape: BoxShape.circle,
                           ),
                           child: Center(
                             child: _setupStep > 0
-                                ? const Icon(Icons.check, size: 15, color: Colors.white)
+                                ? const Icon(
+                                    Icons.check,
+                                    size: 15,
+                                    color: Colors.white,
+                                  )
                                 : Text(
                                     '١',
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
-                                      color: _setupStep == 0 ? Colors.white : (isDark ? Colors.white38 : const Color(0xFF94A3B8)),
+                                      color: _setupStep == 0
+                                          ? Colors.white
+                                          : (isDark
+                                                ? Colors.white38
+                                                : const Color(0xFF94A3B8)),
                                     ),
                                   ),
                           ),
@@ -832,21 +1004,33 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                                 'مەلزەمە',
                                 style: TextStyle(
                                   fontSize: 13,
-                                  fontWeight: _setupStep == 0 ? FontWeight.w800 : FontWeight.w600,
+                                  fontWeight: _setupStep == 0
+                                      ? FontWeight.w800
+                                      : FontWeight.w600,
                                   color: _setupStep == 0
-                                      ? (isDark ? Colors.white : const Color(0xFF111827))
-                                      : (isDark ? Colors.white54 : const Color(0xFF6B7280)),
+                                      ? (isDark
+                                            ? Colors.white
+                                            : const Color(0xFF111827))
+                                      : (isDark
+                                            ? Colors.white54
+                                            : const Color(0xFF6B7280)),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               Text(
-                                _pdfFileName != null ? 'فایل ئامادەیە' : 'دیاریکردن',
+                                _pdfFileName != null
+                                    ? 'فایل ئامادەیە'
+                                    : 'دیاریکردن',
                                 style: TextStyle(
                                   fontSize: 10.5,
                                   color: _pdfFileName != null
                                       ? const Color(0xFF10B981)
-                                      : (_setupStep == 0 ? ZankoColors.primary : (isDark ? Colors.white38 : const Color(0xFF9CA3AF))),
+                                      : (_setupStep == 0
+                                            ? ZankoColors.primary
+                                            : (isDark
+                                                  ? Colors.white38
+                                                  : const Color(0xFF9CA3AF))),
                                   fontWeight: FontWeight.w600,
                                 ),
                                 maxLines: 1,
@@ -868,10 +1052,15 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                 child: GestureDetector(
                   onTap: _proceedToStep2,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: _setupStep == 1
-                          ? ZankoColors.primary.withValues(alpha: isDark ? 0.20 : 0.10)
+                          ? ZankoColors.primary.withValues(
+                              alpha: isDark ? 0.20 : 0.10,
+                            )
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -883,10 +1072,17 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                           decoration: BoxDecoration(
                             gradient: _setupStep == 1
                                 ? LinearGradient(
-                                    colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
+                                    colors: [
+                                      ZankoColors.gradientStart,
+                                      ZankoColors.gradientEnd,
+                                    ],
                                   )
                                 : null,
-                            color: _setupStep == 1 ? null : (isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+                            color: _setupStep == 1
+                                ? null
+                                : (isDark
+                                      ? Colors.white12
+                                      : const Color(0xFFE2E8F0)),
                             shape: BoxShape.circle,
                           ),
                           child: Center(
@@ -895,7 +1091,11 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: _setupStep == 1 ? Colors.white : (isDark ? Colors.white38 : const Color(0xFF94A3B8)),
+                                color: _setupStep == 1
+                                    ? Colors.white
+                                    : (isDark
+                                          ? Colors.white38
+                                          : const Color(0xFF94A3B8)),
                               ),
                             ),
                           ),
@@ -910,10 +1110,16 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                                 'ڕێکخستن',
                                 style: TextStyle(
                                   fontSize: 13,
-                                  fontWeight: _setupStep == 1 ? FontWeight.w800 : FontWeight.w600,
+                                  fontWeight: _setupStep == 1
+                                      ? FontWeight.w800
+                                      : FontWeight.w600,
                                   color: _setupStep == 1
-                                      ? (isDark ? Colors.white : const Color(0xFF111827))
-                                      : (isDark ? Colors.white54 : const Color(0xFF6B7280)),
+                                      ? (isDark
+                                            ? Colors.white
+                                            : const Color(0xFF111827))
+                                      : (isDark
+                                            ? Colors.white54
+                                            : const Color(0xFF6B7280)),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -922,7 +1128,11 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                                 'ئاست و دەستپێک',
                                 style: TextStyle(
                                   fontSize: 10.5,
-                                  color: _setupStep == 1 ? ZankoColors.primary : (isDark ? Colors.white38 : const Color(0xFF9CA3AF)),
+                                  color: _setupStep == 1
+                                      ? ZankoColors.primary
+                                      : (isDark
+                                            ? Colors.white38
+                                            : const Color(0xFF9CA3AF)),
                                   fontWeight: FontWeight.w600,
                                 ),
                                 maxLines: 1,
@@ -957,7 +1167,10 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                   child: Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
+                        colors: [
+                          ZankoColors.gradientStart,
+                          ZankoColors.gradientEnd,
+                        ],
                       ),
                       borderRadius: BorderRadius.circular(4),
                     ),
@@ -1037,7 +1250,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
           'فایلی PDF ی وانەکە باربکە یان ناوی کۆرس بنووسە بۆ دروستکردنی پرسیار',
           style: TextStyle(
             fontSize: 12.5,
-            color: isDark ? ZankoColors.darkTextSecondary : const Color(0xFF6B7280),
+            color: isDark
+                ? ZankoColors.darkTextSecondary
+                : const Color(0xFF6B7280),
             height: 1.35,
           ),
         ),
@@ -1087,19 +1302,24 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: hasPdf
-                    ? (isDark ? const Color(0xFF0C2419) : const Color(0xFFF0FDF4))
+                    ? (isDark
+                          ? const Color(0xFF0C2419)
+                          : const Color(0xFFF0FDF4))
                     : (isDark ? const Color(0xFF161B26) : Colors.white),
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(
                   color: hasPdf
                       ? const Color(0xFF10B981)
-                      : (isDark ? ZankoColors.primary.withValues(alpha: 0.35) : const Color(0xFFD6E4F7)),
+                      : (isDark
+                            ? ZankoColors.primary.withValues(alpha: 0.35)
+                            : const Color(0xFFD6E4F7)),
                   width: hasPdf ? 1.8 : 1.4,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: (hasPdf ? const Color(0xFF10B981) : ZankoColors.primary)
-                        .withValues(alpha: isDark ? 0.15 : 0.05),
+                    color:
+                        (hasPdf ? const Color(0xFF10B981) : ZankoColors.primary)
+                            .withValues(alpha: isDark ? 0.15 : 0.05),
                     blurRadius: 14,
                     offset: const Offset(0, 4),
                   ),
@@ -1112,7 +1332,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF10B981).withValues(alpha: isDark ? 0.25 : 0.15),
+                            color: const Color(
+                              0xFF10B981,
+                            ).withValues(alpha: isDark ? 0.25 : 0.15),
                             borderRadius: BorderRadius.circular(15),
                           ),
                           child: const Center(
@@ -1133,7 +1355,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : const Color(0xFF111827),
+                                  color: isDark
+                                      ? Colors.white
+                                      : const Color(0xFF111827),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -1151,7 +1375,11 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(CupertinoIcons.xmark_circle_fill, color: Colors.grey, size: 22),
+                          icon: const Icon(
+                            CupertinoIcons.xmark_circle_fill,
+                            color: Colors.grey,
+                            size: 22,
+                          ),
                           onPressed: () => setState(() {
                             _pdfFileName = null;
                             _pdfFileContent = null;
@@ -1165,7 +1393,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                           width: 56,
                           height: 56,
                           decoration: BoxDecoration(
-                            color: ZankoColors.primary.withValues(alpha: isDark ? 0.20 : 0.10),
+                            color: ZankoColors.primary.withValues(
+                              alpha: isDark ? 0.20 : 0.10,
+                            ),
                             shape: BoxShape.circle,
                           ),
                           child: Center(
@@ -1182,7 +1412,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : const Color(0xFF111827),
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF111827),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -1191,7 +1423,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                           'پشتیوانی هەموو جۆرە مەلزەمەیەکی PDF لە مۆبایلەکەت',
                           style: TextStyle(
                             fontSize: 11.5,
-                            color: isDark ? ZankoColors.darkTextSecondary : ZankoColors.textSecondary,
+                            color: isDark
+                                ? ZankoColors.darkTextSecondary
+                                : ZankoColors.textSecondary,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -1202,24 +1436,44 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                           alignment: WrapAlignment.center,
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF1E2638) : const Color(0xFFF1F5F9),
+                                color: isDark
+                                    ? const Color(0xFF1E2638)
+                                    : const Color(0xFFF1F5F9),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(CupertinoIcons.doc_text_fill, size: 12, color: ZankoColors.primary),
+                                  Icon(
+                                    CupertinoIcons.doc_text_fill,
+                                    size: 12,
+                                    color: ZankoColors.primary,
+                                  ),
                                   const SizedBox(width: 5),
-                                  const Text('فایلی PDF', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                                  const Text(
+                                    'فایلی PDF',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF1E2638) : const Color(0xFFF1F5F9),
+                                color: isDark
+                                    ? const Color(0xFF1E2638)
+                                    : const Color(0xFFF1F5F9),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: const Row(
@@ -1227,7 +1481,13 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                                 children: [
                                   Text('⚡', style: TextStyle(fontSize: 11)),
                                   SizedBox(width: 4),
-                                  Text('شیکاری AI', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                                  Text(
+                                    'شیکاری AI',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -1244,7 +1504,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
               color: isDark ? const Color(0xFF161B26) : Colors.white,
               borderRadius: BorderRadius.circular(22),
               border: Border.all(
-                color: isDark ? const Color(0xFF262E3E) : const Color(0xFFE2E8F0),
+                color: isDark
+                    ? const Color(0xFF262E3E)
+                    : const Color(0xFFE2E8F0),
                 width: 1.2,
               ),
               boxShadow: [
@@ -1263,24 +1525,37 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                   decoration: InputDecoration(
                     labelText: 'ناوی وانە / کۆرس',
                     hintText: 'نموونە: سیستمەکان، فیزیا، یاسا، پزیشکی...',
-                    prefixIcon: Icon(CupertinoIcons.book_fill, color: ZankoColors.primary),
+                    prefixIcon: Icon(
+                      CupertinoIcons.book_fill,
+                      color: ZankoColors.primary,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide(
-                        color: isDark ? const Color(0xFF2C3446) : const Color(0xFFE2E7F0),
+                        color: isDark
+                            ? const Color(0xFF2C3446)
+                            : const Color(0xFFE2E7F0),
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide(
-                        color: isDark ? const Color(0xFF2C3446) : const Color(0xFFE2E7F0),
+                        color: isDark
+                            ? const Color(0xFF2C3446)
+                            : const Color(0xFFE2E7F0),
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: ZankoColors.primary, width: 1.5),
+                      borderSide: BorderSide(
+                        color: ZankoColors.primary,
+                        width: 1.5,
+                      ),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 14,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -1289,24 +1564,37 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                   decoration: InputDecoration(
                     labelText: 'بابەتی دیاریکراو (ئارەزوومەندانە)',
                     hintText: 'نموونە: بەشی یەکەم، هاوکێشەکان...',
-                    prefixIcon: Icon(CupertinoIcons.tag_fill, color: ZankoColors.primary),
+                    prefixIcon: Icon(
+                      CupertinoIcons.tag_fill,
+                      color: ZankoColors.primary,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide(
-                        color: isDark ? const Color(0xFF2C3446) : const Color(0xFFE2E7F0),
+                        color: isDark
+                            ? const Color(0xFF2C3446)
+                            : const Color(0xFFE2E7F0),
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide(
-                        color: isDark ? const Color(0xFF2C3446) : const Color(0xFFE2E7F0),
+                        color: isDark
+                            ? const Color(0xFF2C3446)
+                            : const Color(0xFFE2E7F0),
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: ZankoColors.primary, width: 1.5),
+                      borderSide: BorderSide(
+                        color: ZankoColors.primary,
+                        width: 1.5,
+                      ),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 14,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -1322,40 +1610,50 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                 Wrap(
                   spacing: 6,
                   runSpacing: 6,
-                  children: [
-                    'کۆمپیوتەر 💻',
-                    'ئینگلیزی 🇬🇧',
-                    'پزیشکی 🩺',
-                    'یاسا ⚖️',
-                    'ئابووری 📊',
-                  ].map((subject) {
-                    return GestureDetector(
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        setState(() {
-                          _courseController.text = subject.split(' ').first;
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1E2638) : const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: isDark ? const Color(0xFF2E384D) : const Color(0xFFE2E8F0),
+                  children:
+                      [
+                        'کۆمپیوتەر 💻',
+                        'ئینگلیزی 🇬🇧',
+                        'پزیشکی 🩺',
+                        'یاسا ⚖️',
+                        'ئابووری 📊',
+                      ].map((subject) {
+                        return GestureDetector(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            setState(() {
+                              _courseController.text = subject.split(' ').first;
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? const Color(0xFF1E2638)
+                                  : const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: isDark
+                                    ? const Color(0xFF2E384D)
+                                    : const Color(0xFFE2E8F0),
+                              ),
+                            ),
+                            child: Text(
+                              subject,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: isDark
+                                    ? Colors.white70
+                                    : const Color(0xFF374151),
+                              ),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          subject,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white70 : const Color(0xFF374151),
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                        );
+                      }).toList(),
                 ),
               ],
             ),
@@ -1371,20 +1669,35 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF141923) : const Color(0xFFF8FAFC),
+                  color: isDark
+                      ? const Color(0xFF141923)
+                      : const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isDark ? const Color(0xFF202736) : const Color(0xFFE2E8F0),
+                    color: isDark
+                        ? const Color(0xFF202736)
+                        : const Color(0xFFE2E8F0),
                   ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('🎯 هاوشێوەی فاینەڵ', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800)),
+                    const Text(
+                      '🎯 هاوشێوەی فاینەڵ',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                     const SizedBox(height: 2),
                     Text(
                       'پرسیاری وورد لەسەر مەلزەمە',
-                      style: TextStyle(fontSize: 10.5, color: isDark ? Colors.white54 : const Color(0xFF6B7280)),
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        color: isDark
+                            ? Colors.white54
+                            : const Color(0xFF6B7280),
+                      ),
                     ),
                   ],
                 ),
@@ -1395,20 +1708,35 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF141923) : const Color(0xFFF8FAFC),
+                  color: isDark
+                      ? const Color(0xFF141923)
+                      : const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isDark ? const Color(0xFF202736) : const Color(0xFFE2E8F0),
+                    color: isDark
+                        ? const Color(0xFF202736)
+                        : const Color(0xFFE2E8F0),
                   ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('⏱️ خولەکی کاتدار', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800)),
+                    const Text(
+                      '⏱️ خولەکی کاتدار',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                     const SizedBox(height: 2),
                     Text(
                       'خەمڵاندنی نمرە و ئاست',
-                      style: TextStyle(fontSize: 10.5, color: isDark ? Colors.white54 : const Color(0xFF6B7280)),
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        color: isDark
+                            ? Colors.white54
+                            : const Color(0xFF6B7280),
+                      ),
                     ),
                   ],
                 ),
@@ -1428,7 +1756,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: ZankoColors.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
               elevation: 6,
               shadowColor: ZankoColors.primary.withValues(alpha: 0.45),
             ),
@@ -1460,8 +1790,8 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
     final sourceTitle = _inputMode == 'pdf'
         ? (_pdfFileName ?? 'فایلی PDF')
         : (_courseController.text.trim().isNotEmpty
-            ? _courseController.text.trim()
-            : 'وانەی دیاریکراو');
+              ? _courseController.text.trim()
+              : 'وانەی دیاریکراو');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1473,7 +1803,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
             color: isDark ? const Color(0xFF161B26) : const Color(0xFFF0F6FD),
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: ZankoColors.primary.withValues(alpha: isDark ? 0.30 : 0.25),
+              color: ZankoColors.primary.withValues(
+                alpha: isDark ? 0.30 : 0.25,
+              ),
               width: 1,
             ),
           ),
@@ -1482,11 +1814,15 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: ZankoColors.primary.withValues(alpha: isDark ? 0.25 : 0.15),
+                  color: ZankoColors.primary.withValues(
+                    alpha: isDark ? 0.25 : 0.15,
+                  ),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  _inputMode == 'pdf' ? CupertinoIcons.doc_fill : CupertinoIcons.book_fill,
+                  _inputMode == 'pdf'
+                      ? CupertinoIcons.doc_fill
+                      : CupertinoIcons.book_fill,
                   color: ZankoColors.primary,
                   size: 18,
                 ),
@@ -1500,7 +1836,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                       'سەرچاوەی هەڵبژێردراو:',
                       style: TextStyle(
                         fontSize: 11,
-                        color: isDark ? ZankoColors.darkTextSecondary : ZankoColors.textSecondary,
+                        color: isDark
+                            ? ZankoColors.darkTextSecondary
+                            : ZankoColors.textSecondary,
                       ),
                     ),
                     Text(
@@ -1522,10 +1860,16 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                   setState(() => _setupStep = 0);
                 },
                 icon: const Icon(CupertinoIcons.pencil, size: 14),
-                label: const Text('گۆڕین', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                label: const Text(
+                  'گۆڕین',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
                 style: TextButton.styleFrom(
                   foregroundColor: ZankoColors.primary,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                 ),
               ),
             ],
@@ -1611,7 +1955,8 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                 typeKey: 'TrueFalse',
                 isSelected: _selectedQuestionType == 'TrueFalse',
                 isDark: isDark,
-                onTap: () => setState(() => _selectedQuestionType = 'TrueFalse'),
+                onTap: () =>
+                    setState(() => _selectedQuestionType = 'TrueFalse'),
               ),
             ),
           ],
@@ -1673,9 +2018,16 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                       child: GestureDetector(
                         onTap: () {
                           HapticFeedback.selectionClick();
-                          final isVip = Provider.of<AuthService>(context, listen: false).currentUser?.isVip ?? false;
+                          final isVip =
+                              Provider.of<AuthService>(
+                                context,
+                                listen: false,
+                              ).currentUser?.isVip ??
+                              false;
                           if (isVipCount && !isVip) {
-                            _showVipExamDialog('هەڵبژاردنی $count پرسیار تایبەتە بە ئەندامانی VIP 👑');
+                            _showVipExamDialog(
+                              'هەڵبژاردنی $count پرسیار تایبەتە بە ئەندامانی VIP 👑',
+                            );
                           } else {
                             setState(() => _questionCount = count);
                           }
@@ -1686,17 +2038,24 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                           decoration: BoxDecoration(
                             gradient: isSelected
                                 ? LinearGradient(
-                                    colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
+                                    colors: [
+                                      ZankoColors.gradientStart,
+                                      ZankoColors.gradientEnd,
+                                    ],
                                   )
                                 : null,
                             color: isSelected
                                 ? null
-                                : (isDark ? const Color(0xFF1A1F2B) : const Color(0xFFF1F4F9)),
+                                : (isDark
+                                      ? const Color(0xFF1A1F2B)
+                                      : const Color(0xFFF1F4F9)),
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
                               color: isSelected
                                   ? ZankoColors.primary
-                                  : (isDark ? const Color(0xFF2B3342) : const Color(0xFFE2E7F0)),
+                                  : (isDark
+                                        ? const Color(0xFF2B3342)
+                                        : const Color(0xFFE2E7F0)),
                               width: 1.1,
                             ),
                           ),
@@ -1705,10 +2064,14 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                               isVipCount ? '$count 👑' : '$count',
                               style: TextStyle(
                                 fontSize: 12.5,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.w600,
                                 color: isSelected
                                     ? Colors.white
-                                    : (isDark ? Colors.white70 : const Color(0xFF374151)),
+                                    : (isDark
+                                          ? Colors.white70
+                                          : const Color(0xFF374151)),
                               ),
                             ),
                           ),
@@ -1717,84 +2080,95 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                     ),
                   );
                 }).toList(),
-                ),
-                const SizedBox(height: 16),
-                const Divider(height: 1),
-                const SizedBox(height: 14),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'ماوەی تاقیکردنەوە',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF1E2430),
-                      ),
+              ),
+              const SizedBox(height: 16),
+              const Divider(height: 1),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'ماوەی تاقیکردنەوە',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : const Color(0xFF1E2430),
                     ),
-                    Text(
-                      '$_durationMinutes خولەک',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.bold,
-                        color: ZankoColors.primary,
-                      ),
+                  ),
+                  Text(
+                    '$_durationMinutes خولەک',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.bold,
+                      color: ZankoColors.primary,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [5, 10, 15, 30].map((mins) {
-                    final isSelected = _durationMinutes == mins;
-                    return Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 3),
-                        child: GestureDetector(
-                          onTap: () {
-                            HapticFeedback.selectionClick();
-                            setState(() => _durationMinutes = mins);
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            decoration: BoxDecoration(
-                              gradient: isSelected
-                                  ? LinearGradient(
-                                      colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
-                                    )
-                                  : null,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [5, 10, 15, 30].map((mins) {
+                  final isSelected = _durationMinutes == mins;
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      child: GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setState(() => _durationMinutes = mins);
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            gradient: isSelected
+                                ? LinearGradient(
+                                    colors: [
+                                      ZankoColors.gradientStart,
+                                      ZankoColors.gradientEnd,
+                                    ],
+                                  )
+                                : null,
+                            color: isSelected
+                                ? null
+                                : (isDark
+                                      ? const Color(0xFF1A1F2B)
+                                      : const Color(0xFFF1F4F9)),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
                               color: isSelected
-                                  ? null
-                                  : (isDark ? const Color(0xFF1A1F2B) : const Color(0xFFF1F4F9)),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: isSelected
-                                    ? ZankoColors.primary
-                                    : (isDark ? const Color(0xFF2B3342) : const Color(0xFFE2E7F0)),
-                                width: 1.1,
-                              ),
+                                  ? ZankoColors.primary
+                                  : (isDark
+                                        ? const Color(0xFF2B3342)
+                                        : const Color(0xFFE2E7F0)),
+                              width: 1.1,
                             ),
-                            child: Center(
-                              child: Text(
-                                '$mins خولەک',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                                  color: isSelected
-                                      ? Colors.white
-                                      : (isDark ? Colors.white70 : const Color(0xFF374151)),
-                                ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '$mins خولەک',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.w600,
+                                color: isSelected
+                                    ? Colors.white
+                                    : (isDark
+                                          ? Colors.white70
+                                          : const Color(0xFF374151)),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
           ),
+        ),
         const SizedBox(height: 28),
 
         // Action Buttons Row: Back + Launch
@@ -1806,19 +2180,31 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                 setState(() => _setupStep = 0);
               },
               style: OutlinedButton.styleFrom(
-                foregroundColor: isDark ? Colors.white70 : const Color(0xFF374151),
+                foregroundColor: isDark
+                    ? Colors.white70
+                    : const Color(0xFF374151),
                 side: BorderSide(
-                  color: isDark ? const Color(0xFF2E384D) : const Color(0xFFD1D5DB),
+                  color: isDark
+                      ? const Color(0xFF2E384D)
+                      : const Color(0xFFD1D5DB),
                 ),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 16,
+                ),
               ),
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(CupertinoIcons.arrow_right, size: 16),
                   SizedBox(width: 6),
-                  Text('گەڕانەوە', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  Text(
+                    'گەڕانەوە',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
             ),
@@ -1834,14 +2220,20 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ZankoColors.primary,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     elevation: 6,
                     shadowColor: ZankoColors.primary.withValues(alpha: 0.45),
                   ),
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      CuteAiBotIcon(size: 20, color: Colors.white, strokeWidth: 2),
+                      CuteAiBotIcon(
+                        size: 20,
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
                       SizedBox(width: 8),
                       Text(
                         'دەستپێکردنی تاقیکردنەوە 🚀',
@@ -1939,7 +2331,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
               size: 16,
               color: isSelected
                   ? Colors.white
-                  : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                  : (isDark
+                        ? const Color(0xFF94A3B8)
+                        : const Color(0xFF64748B)),
             ),
             const SizedBox(width: 7),
             Text(
@@ -1949,7 +2343,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                 color: isSelected
                     ? Colors.white
-                    : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                    : (isDark
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF64748B)),
               ),
             ),
           ],
@@ -2021,7 +2417,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
               sub,
               style: TextStyle(
                 fontSize: 10.5,
-                color: isDark ? ZankoColors.darkTextSecondary : ZankoColors.textSecondary,
+                color: isDark
+                    ? ZankoColors.darkTextSecondary
+                    : ZankoColors.textSecondary,
               ),
             ),
           ],
@@ -2116,7 +2514,10 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                 shape: BoxShape.circle,
               ),
               child: Center(
-                child: CircularProgressIndicator(color: ZankoColors.primary, strokeWidth: 3.5),
+                child: CircularProgressIndicator(
+                  color: ZankoColors.primary,
+                  strokeWidth: 3.5,
+                ),
               ),
             ),
             const SizedBox(height: 28),
@@ -2158,7 +2559,8 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
 
     final minutes = _timeRemainingSeconds ~/ 60;
     final seconds = _timeRemainingSeconds % 60;
-    final timeStr = '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    final timeStr =
+        '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
 
     return Column(
       children: [
@@ -2181,7 +2583,10 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                 children: [
                   // Timer Chip
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: _timeRemainingSeconds < 60
                           ? ZankoColors.error.withValues(alpha: 0.15)
@@ -2193,7 +2598,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                         Icon(
                           CupertinoIcons.timer,
                           size: 18,
-                          color: _timeRemainingSeconds < 60 ? ZankoColors.error : ZankoColors.primary,
+                          color: _timeRemainingSeconds < 60
+                              ? ZankoColors.error
+                              : ZankoColors.primary,
                         ),
                         const SizedBox(width: 6),
                         Text(
@@ -2201,7 +2608,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
-                            color: _timeRemainingSeconds < 60 ? ZankoColors.error : ZankoColors.primary,
+                            color: _timeRemainingSeconds < 60
+                                ? ZankoColors.error
+                                : ZankoColors.primary,
                           ),
                         ),
                       ],
@@ -2223,7 +2632,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : ZankoColors.textPrimary,
+                                  color: isDark
+                                      ? Colors.white
+                                      : ZankoColors.textPrimary,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -2233,7 +2644,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                               '${((_currentQuestionIndex + 1) / totalQuestions * 100).toInt()}%',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                                color: isDark
+                                    ? Colors.grey[400]
+                                    : ZankoColors.textSecondary,
                               ),
                             ),
                           ],
@@ -2244,8 +2657,12 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                           child: LinearProgressIndicator(
                             value: (_currentQuestionIndex + 1) / totalQuestions,
                             minHeight: 6,
-                            backgroundColor: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFEFEFF7),
-                            valueColor: AlwaysStoppedAnimation<Color>(ZankoColors.primary),
+                            backgroundColor: isDark
+                                ? Colors.white.withValues(alpha: 0.1)
+                                : const Color(0xFFEFEFF7),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              ZankoColors.primary,
+                            ),
                           ),
                         ),
                       ],
@@ -2261,7 +2678,8 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: totalQuestions,
-                  separatorBuilder: (context, index) => const SizedBox(width: 6),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: 6),
                   itemBuilder: (context, idx) {
                     final isCurrent = idx == _currentQuestionIndex;
                     final isAnswered = _userAnswers.containsKey(idx);
@@ -2276,12 +2694,20 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                           color: isCurrent
                               ? ZankoColors.primary
                               : (isAnswered
-                                  ? ZankoColors.primary.withValues(alpha: 0.25)
-                                  : (isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey[200])),
+                                    ? ZankoColors.primary.withValues(
+                                        alpha: 0.25,
+                                      )
+                                    : (isDark
+                                          ? Colors.white.withValues(alpha: 0.08)
+                                          : Colors.grey[200])),
                           border: Border.all(
                             color: isCurrent
                                 ? ZankoColors.primary
-                                : (isAnswered ? ZankoColors.primary.withValues(alpha: 0.5) : Colors.transparent),
+                                : (isAnswered
+                                      ? ZankoColors.primary.withValues(
+                                          alpha: 0.5,
+                                        )
+                                      : Colors.transparent),
                           ),
                         ),
                         child: Center(
@@ -2289,10 +2715,14 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                             '${idx + 1}',
                             style: TextStyle(
                               fontSize: 12,
-                              fontWeight: isCurrent || isAnswered ? FontWeight.bold : FontWeight.normal,
+                              fontWeight: isCurrent || isAnswered
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                               color: isCurrent
                                   ? Colors.white
-                                  : (isDark ? Colors.grey[300] : ZankoColors.textPrimary),
+                                  : (isDark
+                                        ? Colors.grey[300]
+                                        : ZankoColors.textPrimary),
                             ),
                           ),
                         ),
@@ -2320,7 +2750,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                     color: isDark ? ZankoColors.darkCard : Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF0F0F6),
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : const Color(0xFFF0F0F6),
                     ),
                   ),
                   child: Column(
@@ -2330,17 +2762,23 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: ZankoColors.primary.withValues(alpha: 0.12),
+                              color: ZankoColors.primary.withValues(
+                                alpha: 0.12,
+                              ),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               currentQuestion.type == QuestionType.trueFalse
                                   ? 'ڕاست یان هەڵە'
-                                  : (currentQuestion.type == QuestionType.fillInBlank
-                                      ? 'بۆشایی پڕبکەرەوە'
-                                      : 'هەڵبژاردن (MCQ)'),
+                                  : (currentQuestion.type ==
+                                            QuestionType.fillInBlank
+                                        ? 'بۆشایی پڕبکەرەوە'
+                                        : 'هەڵبژاردن (MCQ)'),
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
@@ -2349,10 +2787,14 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                             ),
                           ),
                           Text(
-                            _inputMode == 'pdf' ? '📄 لە فایلی PDF' : '📚 بەپێی بابەت',
+                            _inputMode == 'pdf'
+                                ? '📄 لە فایلی PDF'
+                                : '📚 بەپێی بابەت',
                             style: TextStyle(
                               fontSize: 11,
-                              color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : ZankoColors.textSecondary,
                             ),
                           ),
                         ],
@@ -2363,7 +2805,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
-                          color: isDark ? Colors.white : ZankoColors.textPrimary,
+                          color: isDark
+                              ? Colors.white
+                              : ZankoColors.textPrimary,
                           height: 1.4,
                         ),
                       ),
@@ -2380,16 +2824,26 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                       color: isDark ? ZankoColors.darkCard : Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF0F0F6),
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.08)
+                            : const Color(0xFFF0F0F6),
                       ),
                     ),
                     child: TextField(
-                      controller: _blankControllers[_currentQuestionIndex] ??= TextEditingController(text: _userAnswers[_currentQuestionIndex] ?? ''),
+                      controller: _blankControllers[_currentQuestionIndex] ??=
+                          TextEditingController(
+                            text: _userAnswers[_currentQuestionIndex] ?? '',
+                          ),
                       decoration: InputDecoration(
                         labelText: 'وەڵامەکەت لێرە بنووسە',
                         hintText: 'وەڵامی دروستی بۆشایییەکە بنووسە...',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        prefixIcon: Icon(CupertinoIcons.pencil, color: ZankoColors.primary),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        prefixIcon: Icon(
+                          CupertinoIcons.pencil,
+                          color: ZankoColors.primary,
+                        ),
                       ),
                       onChanged: (val) {
                         _userAnswers[_currentQuestionIndex] = val.trim();
@@ -2398,7 +2852,8 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                   ),
                 ] else if (currentQuestion.type == QuestionType.trueFalse) ...[
                   ...['ڕاستە', 'هەڵەیە'].map((opt) {
-                    final isSelected = _userAnswers[_currentQuestionIndex] == opt;
+                    final isSelected =
+                        _userAnswers[_currentQuestionIndex] == opt;
                     final isTrueOpt = opt == 'ڕاستە';
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
@@ -2412,13 +2867,25 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? (isTrueOpt ? ZankoColors.success.withValues(alpha: 0.15) : ZankoColors.error.withValues(alpha: 0.15))
-                                : (isDark ? ZankoColors.darkCard : Colors.white),
+                                ? (isTrueOpt
+                                      ? ZankoColors.success.withValues(
+                                          alpha: 0.15,
+                                        )
+                                      : ZankoColors.error.withValues(
+                                          alpha: 0.15,
+                                        ))
+                                : (isDark
+                                      ? ZankoColors.darkCard
+                                      : Colors.white),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: isSelected
-                                  ? (isTrueOpt ? ZankoColors.success : ZankoColors.error)
-                                  : (isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF0F0F6)),
+                                  ? (isTrueOpt
+                                        ? ZankoColors.success
+                                        : ZankoColors.error)
+                                  : (isDark
+                                        ? Colors.white.withValues(alpha: 0.08)
+                                        : const Color(0xFFF0F0F6)),
                               width: isSelected ? 2 : 1,
                             ),
                           ),
@@ -2430,25 +2897,43 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: isSelected
-                                      ? (isTrueOpt ? ZankoColors.success : ZankoColors.error)
-                                      : (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[200]),
+                                      ? (isTrueOpt
+                                            ? ZankoColors.success
+                                            : ZankoColors.error)
+                                      : (isDark
+                                            ? Colors.white.withValues(
+                                                alpha: 0.1,
+                                              )
+                                            : Colors.grey[200]),
                                 ),
                                 child: Center(
                                   child: isSelected
-                                      ? const Icon(CupertinoIcons.checkmark_alt, size: 18, color: Colors.white)
+                                      ? const Icon(
+                                          CupertinoIcons.checkmark_alt,
+                                          size: 18,
+                                          color: Colors.white,
+                                        )
                                       : null,
                                 ),
                               ),
                               const SizedBox(width: 14),
                               Expanded(
                                 child: Text(
-                                  isTrueOpt ? 'ڕاستە / True ✅' : 'هەڵەیە / False ❌',
+                                  isTrueOpt
+                                      ? 'ڕاستە / True ✅'
+                                      : 'هەڵەیە / False ❌',
                                   style: TextStyle(
                                     fontSize: 15,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.w500,
                                     color: isSelected
-                                        ? (isTrueOpt ? ZankoColors.success : ZankoColors.error)
-                                        : (isDark ? Colors.grey[200] : ZankoColors.textPrimary),
+                                        ? (isTrueOpt
+                                              ? ZankoColors.success
+                                              : ZankoColors.error)
+                                        : (isDark
+                                              ? Colors.grey[200]
+                                              : ZankoColors.textPrimary),
                                   ),
                                 ),
                               ),
@@ -2458,9 +2943,11 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                       ),
                     );
                   }),
-                ] else if (currentQuestion.options != null && currentQuestion.options!.isNotEmpty) ...[
+                ] else if (currentQuestion.options != null &&
+                    currentQuestion.options!.isNotEmpty) ...[
                   ...currentQuestion.options!.map((opt) {
-                    final isSelected = _userAnswers[_currentQuestionIndex] == opt;
+                    final isSelected =
+                        _userAnswers[_currentQuestionIndex] == opt;
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: GestureDetector(
@@ -2474,12 +2961,16 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? ZankoColors.primary.withValues(alpha: 0.15)
-                                : (isDark ? ZankoColors.darkCard : Colors.white),
+                                : (isDark
+                                      ? ZankoColors.darkCard
+                                      : Colors.white),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: isSelected
                                   ? ZankoColors.primary
-                                  : (isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF0F0F6)),
+                                  : (isDark
+                                        ? Colors.white.withValues(alpha: 0.08)
+                                        : const Color(0xFFF0F0F6)),
                               width: isSelected ? 2 : 1,
                             ),
                           ),
@@ -2492,11 +2983,19 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                                   shape: BoxShape.circle,
                                   color: isSelected
                                       ? ZankoColors.primary
-                                      : (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[200]),
+                                      : (isDark
+                                            ? Colors.white.withValues(
+                                                alpha: 0.1,
+                                              )
+                                            : Colors.grey[200]),
                                 ),
                                 child: Center(
                                   child: isSelected
-                                      ? const Icon(CupertinoIcons.checkmark_alt, size: 18, color: Colors.white)
+                                      ? const Icon(
+                                          CupertinoIcons.checkmark_alt,
+                                          size: 18,
+                                          color: Colors.white,
+                                        )
                                       : null,
                                 ),
                               ),
@@ -2506,10 +3005,16 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                                   opt,
                                   style: TextStyle(
                                     fontSize: 15,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.w500,
                                     color: isSelected
-                                        ? (isDark ? Colors.white : ZankoColors.primary)
-                                        : (isDark ? Colors.grey[200] : ZankoColors.textPrimary),
+                                        ? (isDark
+                                              ? Colors.white
+                                              : ZankoColors.primary)
+                                        : (isDark
+                                              ? Colors.grey[200]
+                                              : ZankoColors.textPrimary),
                                   ),
                                 ),
                               ),
@@ -2532,7 +3037,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
             color: isDark ? ZankoColors.darkCard : Colors.white,
             border: Border(
               top: BorderSide(
-                color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFEFEFF7),
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : const Color(0xFFEFEFF7),
               ),
             ),
           ),
@@ -2544,7 +3051,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                     onPressed: () => setState(() => _currentQuestionIndex--),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                     child: const Text('پێشوو'),
                   ),
@@ -2562,11 +3071,18 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ZankoColors.primary,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                   child: Text(
-                    _currentQuestionIndex < totalQuestions - 1 ? 'داهاتوو ➔' : '🏁 کۆتاییهێنان بە تاقیکردنەوە',
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                    _currentQuestionIndex < totalQuestions - 1
+                        ? 'داهاتوو ➔'
+                        : '🏁 کۆتاییهێنان بە تاقیکردنەوە',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -2612,7 +3128,8 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: (isPassed ? ZankoColors.success : ZankoColors.error).withValues(alpha: 0.35),
+                  color: (isPassed ? ZankoColors.success : ZankoColors.error)
+                      .withValues(alpha: 0.35),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
@@ -2621,8 +3138,14 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
             child: Column(
               children: [
                 Text(
-                  isPassed ? '🎉 پیرۆزە! لە تاقیکردنەوەکە دەرچوویت' : '⚠️ تاقیکردنەوەکەت تەواو کرد',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white),
+                  isPassed
+                      ? '🎉 پیرۆزە! لە تاقیکردنەوەکە دەرچوویت'
+                      : '⚠️ تاقیکردنەوەکەت تەواو کرد',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
@@ -2641,7 +3164,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w900,
-                        color: isPassed ? ZankoColors.success : ZankoColors.error,
+                        color: isPassed
+                            ? ZankoColors.success
+                            : ZankoColors.error,
                       ),
                     ),
                   ),
@@ -2649,7 +3174,11 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                 const SizedBox(height: 16),
                 Text(
                   'نمرەکەت: $score لە $total پرسیار • کاتی سەرفکراو: $minutesSpentخ $secondsSpentچ',
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white70),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white70,
+                  ),
                 ),
               ],
             ),
@@ -2675,7 +3204,11 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
             if (q.type == QuestionType.fillInBlank) {
               userAns = _blankControllers[idx]?.text.trim() ?? userAns;
             }
-            final isCorrect = AiService.isAnswerCorrect(userAns, q.correctAnswer, options: q.options);
+            final isCorrect = AiService.isAnswerCorrect(
+              userAns,
+              q.correctAnswer,
+              options: q.options,
+            );
 
             return Container(
               margin: const EdgeInsets.only(bottom: 16),
@@ -2696,8 +3229,12 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                   Row(
                     children: [
                       Icon(
-                        isCorrect ? CupertinoIcons.checkmark_circle_fill : CupertinoIcons.xmark_circle_fill,
-                        color: isCorrect ? ZankoColors.success : ZankoColors.error,
+                        isCorrect
+                            ? CupertinoIcons.checkmark_circle_fill
+                            : CupertinoIcons.xmark_circle_fill,
+                        color: isCorrect
+                            ? ZankoColors.success
+                            : ZankoColors.error,
                         size: 22,
                       ),
                       const SizedBox(width: 10),
@@ -2707,7 +3244,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : ZankoColors.textPrimary,
+                            color: isDark
+                                ? Colors.white
+                                : ZankoColors.textPrimary,
                           ),
                         ),
                       ),
@@ -2719,7 +3258,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.black.withValues(alpha: 0.2) : Colors.grey[100],
+                      color: isDark
+                          ? Colors.black.withValues(alpha: 0.2)
+                          : Colors.grey[100],
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
@@ -2730,7 +3271,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: isCorrect ? ZankoColors.success : ZankoColors.error,
+                            color: isCorrect
+                                ? ZankoColors.success
+                                : ZankoColors.error,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -2747,19 +3290,26 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                   ),
 
                   // AI Explanation
-                  if (q.explanation != null && q.explanation!.trim().isNotEmpty) ...[
+                  if (q.explanation != null &&
+                      q.explanation!.trim().isNotEmpty) ...[
                     const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: ZankoColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.2)),
+                        border: Border.all(
+                          color: ZankoColors.primary.withValues(alpha: 0.2),
+                        ),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(CupertinoIcons.lightbulb_fill, color: ZankoColors.primary, size: 18),
+                          Icon(
+                            CupertinoIcons.lightbulb_fill,
+                            color: ZankoColors.primary,
+                            size: 18,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Column(
@@ -2778,7 +3328,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                                   q.explanation!,
                                   style: TextStyle(
                                     fontSize: 13,
-                                    color: isDark ? Colors.grey[200] : ZankoColors.textPrimary,
+                                    color: isDark
+                                        ? Colors.grey[200]
+                                        : ZankoColors.textPrimary,
                                     height: 1.4,
                                   ),
                                 ),
@@ -2803,10 +3355,15 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                 child: OutlinedButton.icon(
                   onPressed: _exportExamText,
                   icon: const Icon(CupertinoIcons.share, size: 16),
-                  label: const Text('چاپ / هەناردە', style: TextStyle(fontSize: 11.5)),
+                  label: const Text(
+                    'چاپ / هەناردە',
+                    style: TextStyle(fontSize: 11.5),
+                  ),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
@@ -2822,10 +3379,15 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                     });
                   },
                   icon: const Icon(CupertinoIcons.refresh, size: 16),
-                  label: const Text('دووبارەکردنەوە', style: TextStyle(fontSize: 11.5)),
+                  label: const Text(
+                    'دووبارەکردنەوە',
+                    style: TextStyle(fontSize: 11.5),
+                  ),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
@@ -2835,15 +3397,30 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      CupertinoPageRoute(builder: (_) => const AiTeacherChatScreen()),
+                      CupertinoPageRoute(
+                        builder: (_) => const AiTeacherChatScreen(),
+                      ),
                     );
                   },
-                  icon: const Icon(CupertinoIcons.chat_bubble_2_fill, color: Colors.white, size: 16),
-                  label: const Text('AI مامۆستا', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11.5)),
+                  icon: const Icon(
+                    CupertinoIcons.chat_bubble_2_fill,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                  label: const Text(
+                    'AI مامۆستا',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11.5,
+                    ),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ZankoColors.primary,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),

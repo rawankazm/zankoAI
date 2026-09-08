@@ -41,8 +41,10 @@ Response<Map<String, dynamic>> _buildResponse({
   );
 }
 
-RequestOptions _optsPost(String path) => RequestOptions(path: path, method: 'POST');
-RequestOptions _optsGet(String path) => RequestOptions(path: path, method: 'GET');
+RequestOptions _optsPost(String path) =>
+    RequestOptions(path: path, method: 'POST');
+RequestOptions _optsGet(String path) =>
+    RequestOptions(path: path, method: 'GET');
 
 // ─── Payload Builders ─────────────────────────────────────────────────────────
 
@@ -132,118 +134,165 @@ void main() {
   });
 
   group('1. Question Types & Model Parsing', () {
-    test('parses QuestionType enum correctly from diverse strings and representations', () {
-      expect(QuestionType.fromString('multiple_choice'), equals(QuestionType.multipleChoice));
-      expect(QuestionType.fromString('MULTIPLECHOICE'), equals(QuestionType.multipleChoice));
-      expect(QuestionType.fromString('true_false'), equals(QuestionType.trueFalse));
-      expect(QuestionType.fromString('tf'), equals(QuestionType.trueFalse));
-      expect(QuestionType.fromString('short_answer'), equals(QuestionType.shortAnswer));
-      expect(QuestionType.fromString('shortanswer'), equals(QuestionType.shortAnswer));
-      expect(QuestionType.fromString('fill_in_blank'), equals(QuestionType.fillInBlank));
-      expect(QuestionType.fromString('essay'), equals(QuestionType.essay));
-      expect(QuestionType.fromString(null), equals(QuestionType.multipleChoice));
+    test(
+      'parses QuestionType enum correctly from diverse strings and representations',
+      () {
+        expect(
+          QuestionType.fromString('multiple_choice'),
+          equals(QuestionType.multipleChoice),
+        );
+        expect(
+          QuestionType.fromString('MULTIPLECHOICE'),
+          equals(QuestionType.multipleChoice),
+        );
+        expect(
+          QuestionType.fromString('true_false'),
+          equals(QuestionType.trueFalse),
+        );
+        expect(QuestionType.fromString('tf'), equals(QuestionType.trueFalse));
+        expect(
+          QuestionType.fromString('short_answer'),
+          equals(QuestionType.shortAnswer),
+        );
+        expect(
+          QuestionType.fromString('shortanswer'),
+          equals(QuestionType.shortAnswer),
+        );
+        expect(
+          QuestionType.fromString('fill_in_blank'),
+          equals(QuestionType.fillInBlank),
+        );
+        expect(QuestionType.fromString('essay'), equals(QuestionType.essay));
+        expect(
+          QuestionType.fromString(null),
+          equals(QuestionType.multipleChoice),
+        );
 
-      expect(QuestionType.multipleChoice.toSnakeCase(), equals('multiple_choice'));
-      expect(QuestionType.trueFalse.toSnakeCase(), equals('true_false'));
-      expect(QuestionType.shortAnswer.toSnakeCase(), equals('short_answer'));
-    });
+        expect(
+          QuestionType.multipleChoice.toSnakeCase(),
+          equals('multiple_choice'),
+        );
+        expect(QuestionType.trueFalse.toSnakeCase(), equals('true_false'));
+        expect(QuestionType.shortAnswer.toSnakeCase(), equals('short_answer'));
+      },
+    );
 
-    test('correctly maps and instantiates MCQ, True/False, and Short Answer questions', () {
-      final mcq = QuestionModel.fromMap({
-        'id': 'q-1',
-        'question_text': 'What is the time complexity of binary search?',
-        'question_type': 'multiple_choice',
-        'options': ['O(1)', 'O(log n)', 'O(n)', 'O(n^2)'],
-        'correct_answer': 'O(log n)',
-        'explanation': 'Binary search halves the search space at each step.',
-        'difficulty': 'medium',
-        'points': 2.0,
-      });
+    test(
+      'correctly maps and instantiates MCQ, True/False, and Short Answer questions',
+      () {
+        final mcq = QuestionModel.fromMap({
+          'id': 'q-1',
+          'question_text': 'What is the time complexity of binary search?',
+          'question_type': 'multiple_choice',
+          'options': ['O(1)', 'O(log n)', 'O(n)', 'O(n^2)'],
+          'correct_answer': 'O(log n)',
+          'explanation': 'Binary search halves the search space at each step.',
+          'difficulty': 'medium',
+          'points': 2.0,
+        });
 
-      expect(mcq.type, equals(QuestionType.multipleChoice));
-      expect(mcq.options?.length, equals(4));
-      expect(mcq.correctAnswer, equals('O(log n)'));
-      expect(mcq.points, equals(2.0));
-      expect(mcq.hasAnswer, isTrue);
+        expect(mcq.type, equals(QuestionType.multipleChoice));
+        expect(mcq.options?.length, equals(4));
+        expect(mcq.correctAnswer, equals('O(log n)'));
+        expect(mcq.points, equals(2.0));
+        expect(mcq.hasAnswer, isTrue);
 
-      final tf = QuestionModel.fromMap({
-        'id': 'q-2',
-        'question_text': 'HTTP is a stateful protocol.',
-        'question_type': 'true_false',
-        'options': ['True', 'False'],
-        'correct_answer': 'False',
-        'explanation': 'HTTP is stateless by design.',
-        'difficulty': 'easy',
-      });
+        final tf = QuestionModel.fromMap({
+          'id': 'q-2',
+          'question_text': 'HTTP is a stateful protocol.',
+          'question_type': 'true_false',
+          'options': ['True', 'False'],
+          'correct_answer': 'False',
+          'explanation': 'HTTP is stateless by design.',
+          'difficulty': 'easy',
+        });
 
-      expect(tf.type, equals(QuestionType.trueFalse));
-      expect(tf.correctAnswer, equals('False'));
+        expect(tf.type, equals(QuestionType.trueFalse));
+        expect(tf.correctAnswer, equals('False'));
 
-      final sa = QuestionModel.fromMap({
-        'id': 'q-3',
-        'question_text': 'What data structure uses LIFO order?',
-        'question_type': 'short_answer',
-        'options': null,
-        'correct_answer': 'Stack',
-        'difficulty': 'easy',
-      });
+        final sa = QuestionModel.fromMap({
+          'id': 'q-3',
+          'question_text': 'What data structure uses LIFO order?',
+          'question_type': 'short_answer',
+          'options': null,
+          'correct_answer': 'Stack',
+          'difficulty': 'easy',
+        });
 
-      expect(sa.type, equals(QuestionType.shortAnswer));
-      expect(sa.options, isNull);
-      expect(sa.correctAnswer, equals('Stack'));
-    });
+        expect(sa.type, equals(QuestionType.shortAnswer));
+        expect(sa.options, isNull);
+        expect(sa.correctAnswer, equals('Stack'));
+      },
+    );
   });
 
   group('2. Anti-Cheating Security: Correct Answer Protection', () {
-    test('student quiz view omits correct answers and explanations before submission', () {
-      final sanitizedData = _buildSanitizedQuestionJson(
-        id: 'q-secret-1',
-        text: 'What is the capital of Kurdistan?',
-        type: 'multiple_choice',
-        options: ['Erbil', 'Sulaymaniyah', 'Duhok', 'Kirkuk'],
-      );
-
-      final question = QuestionModel.fromMap(sanitizedData);
-
-      // Student client must not possess the correct answer or explanation
-      expect(question.correctAnswer, isEmpty);
-      expect(question.explanation, isNull);
-      expect(question.hasAnswer, isFalse);
-      expect(question.options, contains('Erbil'));
-    });
-
-    test('GET /quizzes/:id returns questions without exposing answers to student', () async {
-      final questions = [
-        _buildSanitizedQuestionJson(
-          id: 'q-1',
-          text: 'What is 5 + 7?',
+    test(
+      'student quiz view omits correct answers and explanations before submission',
+      () {
+        final sanitizedData = _buildSanitizedQuestionJson(
+          id: 'q-secret-1',
+          text: 'What is the capital of Kurdistan?',
           type: 'multiple_choice',
-          options: ['10', '11', '12', '13'],
-        ),
-        _buildSanitizedQuestionJson(
-          id: 'q-2',
-          text: 'The earth is flat.',
-          type: 'true_false',
-          options: ['True', 'False'],
-        ),
-      ];
+          options: ['Erbil', 'Sulaymaniyah', 'Duhok', 'Kirkuk'],
+        );
 
-      when(() => mockDio.get<Map<String, dynamic>>('/quizzes/quiz-101'))
-          .thenAnswer((_) async => _buildResponse(
-                statusCode: 200,
-                data: _buildQuizResponse(quizId: 'quiz-101', questions: questions),
-                requestOptions: _optsGet('/quizzes/quiz-101'),
-              ));
+        final question = QuestionModel.fromMap(sanitizedData);
 
-      final quiz = await quizService.getQuiz('quiz-101');
+        // Student client must not possess the correct answer or explanation
+        expect(question.correctAnswer, isEmpty);
+        expect(question.explanation, isNull);
+        expect(question.hasAnswer, isFalse);
+        expect(question.options, contains('Erbil'));
+      },
+    );
 
-      expect(quiz.id, equals('quiz-101'));
-      expect(quiz.questions.length, equals(2));
-      for (final q in quiz.questions) {
-        expect(q.correctAnswer, isEmpty, reason: 'Correct answers must never leak to students!');
-        expect(q.explanation, isNull, reason: 'Explanations must never leak before submission!');
-      }
-    });
+    test(
+      'GET /quizzes/:id returns questions without exposing answers to student',
+      () async {
+        final questions = [
+          _buildSanitizedQuestionJson(
+            id: 'q-1',
+            text: 'What is 5 + 7?',
+            type: 'multiple_choice',
+            options: ['10', '11', '12', '13'],
+          ),
+          _buildSanitizedQuestionJson(
+            id: 'q-2',
+            text: 'The earth is flat.',
+            type: 'true_false',
+            options: ['True', 'False'],
+          ),
+        ];
+
+        when(
+          () => mockDio.get<Map<String, dynamic>>('/quizzes/quiz-101'),
+        ).thenAnswer(
+          (_) async => _buildResponse(
+            statusCode: 200,
+            data: _buildQuizResponse(quizId: 'quiz-101', questions: questions),
+            requestOptions: _optsGet('/quizzes/quiz-101'),
+          ),
+        );
+
+        final quiz = await quizService.getQuiz('quiz-101');
+
+        expect(quiz.id, equals('quiz-101'));
+        expect(quiz.questions.length, equals(2));
+        for (final q in quiz.questions) {
+          expect(
+            q.correctAnswer,
+            isEmpty,
+            reason: 'Correct answers must never leak to students!',
+          );
+          expect(
+            q.explanation,
+            isNull,
+            reason: 'Explanations must never leak before submission!',
+          );
+        }
+      },
+    );
   });
 
   group('3. AI Question Sanity Validation & Malformed Question Rejection', () {
@@ -258,7 +307,9 @@ void main() {
       if (type == 'multiple_choice') {
         final options = q['options'];
         if (options is! List || options.length < 2) return false;
-        final stringOpts = options.map((e) => e.toString().trim().toLowerCase()).toList();
+        final stringOpts = options
+            .map((e) => e.toString().trim().toLowerCase())
+            .toList();
         if (!stringOpts.contains(correctAnswer.toLowerCase())) return false;
       } else if (type == 'true_false') {
         final norm = correctAnswer.toLowerCase();
@@ -370,19 +421,23 @@ void main() {
           ),
         ];
 
-        when(() => mockDio.post<Map<String, dynamic>>(
-              '/quizzes',
-              data: any(named: 'data'),
-            )).thenAnswer((_) async => _buildResponse(
-              statusCode: 201,
-              data: _buildQuizResponse(
-                quizId: 'quiz-$source',
-                title: 'Quiz from $source',
-                sourceType: source,
-                questions: teacherQuestions,
-              ),
-              requestOptions: _optsPost('/quizzes'),
-            ));
+        when(
+          () => mockDio.post<Map<String, dynamic>>(
+            '/quizzes',
+            data: any(named: 'data'),
+          ),
+        ).thenAnswer(
+          (_) async => _buildResponse(
+            statusCode: 201,
+            data: _buildQuizResponse(
+              quizId: 'quiz-$source',
+              title: 'Quiz from $source',
+              sourceType: source,
+              questions: teacherQuestions,
+            ),
+            requestOptions: _optsPost('/quizzes'),
+          ),
+        );
 
         final result = await quizService.createQuiz(
           title: 'Quiz from $source',
@@ -395,7 +450,7 @@ void main() {
               'options': ['Option A', 'Option B', 'Option C'],
               'correct_answer': 'Option A',
               'explanation': 'Verified explanation.',
-            }
+            },
           ],
         );
 
@@ -407,106 +462,134 @@ void main() {
   });
 
   group('5. Role Authorization & Course Access Enforcement', () {
-    test('teacher creating quiz for unauthorized course receives 403 FORBIDDEN', () async {
-      when(() => mockDio.post<Map<String, dynamic>>(
+    test(
+      'teacher creating quiz for unauthorized course receives 403 FORBIDDEN',
+      () async {
+        when(
+          () => mockDio.post<Map<String, dynamic>>(
             '/quizzes',
             data: any(named: 'data'),
-          )).thenThrow(
-        DioException(
-          requestOptions: _optsPost('/quizzes'),
-          response: Response(
-            statusCode: 403,
-            data: {
-              'success': false,
-              'error': {
-                'code': 'UNAUTHORIZED_COURSE_ACCESS',
-                'message': 'You are not an authorized teacher for this course.',
-              },
-            },
+          ),
+        ).thenThrow(
+          DioException(
             requestOptions: _optsPost('/quizzes'),
-          ),
-        ),
-      );
-
-      expect(
-        () => quizService.createQuiz(
-          title: 'Unauthorized Quiz',
-          courseId: 'forbidden-course-999',
-        ),
-        throwsA(isA<DioException>().having(
-          (e) => e.response?.statusCode,
-          'statusCode',
-          403,
-        )),
-      );
-    });
-
-    test('student attempting unauthorized course quiz receives 403 FORBIDDEN', () async {
-      when(() => mockDio.post<Map<String, dynamic>>('/quizzes/locked-quiz/start'))
-          .thenThrow(
-        DioException(
-          requestOptions: _optsPost('/quizzes/locked-quiz/start'),
-          response: Response(
-            statusCode: 403,
-            data: {
-              'success': false,
-              'error': {
-                'code': 'STUDENT_NOT_ENROLLED',
-                'message': 'You must be enrolled in this course to take this quiz.',
+            response: Response(
+              statusCode: 403,
+              data: {
+                'success': false,
+                'error': {
+                  'code': 'UNAUTHORIZED_COURSE_ACCESS',
+                  'message':
+                      'You are not an authorized teacher for this course.',
+                },
               },
-            },
-            requestOptions: _optsPost('/quizzes/locked-quiz/start'),
+              requestOptions: _optsPost('/quizzes'),
+            ),
           ),
-        ),
-      );
+        );
 
-      expect(
-        () => quizService.startQuiz('locked-quiz'),
-        throwsA(isA<DioException>().having(
-          (e) => e.response?.statusCode,
-          'statusCode',
-          403,
-        )),
-      );
-    });
+        expect(
+          () => quizService.createQuiz(
+            title: 'Unauthorized Quiz',
+            courseId: 'forbidden-course-999',
+          ),
+          throwsA(
+            isA<DioException>().having(
+              (e) => e.response?.statusCode,
+              'statusCode',
+              403,
+            ),
+          ),
+        );
+      },
+    );
+
+    test(
+      'student attempting unauthorized course quiz receives 403 FORBIDDEN',
+      () async {
+        when(
+          () =>
+              mockDio.post<Map<String, dynamic>>('/quizzes/locked-quiz/start'),
+        ).thenThrow(
+          DioException(
+            requestOptions: _optsPost('/quizzes/locked-quiz/start'),
+            response: Response(
+              statusCode: 403,
+              data: {
+                'success': false,
+                'error': {
+                  'code': 'STUDENT_NOT_ENROLLED',
+                  'message':
+                      'You must be enrolled in this course to take this quiz.',
+                },
+              },
+              requestOptions: _optsPost('/quizzes/locked-quiz/start'),
+            ),
+          ),
+        );
+
+        expect(
+          () => quizService.startQuiz('locked-quiz'),
+          throwsA(
+            isA<DioException>().having(
+              (e) => e.response?.statusCode,
+              'statusCode',
+              403,
+            ),
+          ),
+        );
+      },
+    );
   });
 
   group('6. Starting Quiz Attempt', () {
-    test('POST /quizzes/:id/start creates session and returns sanitized questions', () async {
-      when(() => mockDio.post<Map<String, dynamic>>('/quizzes/quiz-start-1/start'))
-          .thenAnswer((_) async => _buildResponse(
-                statusCode: 200,
-                data: {
-                  'success': true,
-                  'data': {
-                    'attempt_id': 'attempt-uuid-777',
-                    'quiz_id': 'quiz-start-1',
-                    'time_limit_minutes': 30,
-                    'started_at': '2026-09-07T20:00:00.000Z',
-                    'questions': [
-                      _buildSanitizedQuestionJson(
-                        id: 'q-1',
-                        text: 'Which scheduling algorithm is non-preemptive?',
-                        type: 'multiple_choice',
-                        options: ['FCFS', 'Round Robin', 'SRTF', 'Priority (preemptive)'],
-                      ),
+    test(
+      'POST /quizzes/:id/start creates session and returns sanitized questions',
+      () async {
+        when(
+          () =>
+              mockDio.post<Map<String, dynamic>>('/quizzes/quiz-start-1/start'),
+        ).thenAnswer(
+          (_) async => _buildResponse(
+            statusCode: 200,
+            data: {
+              'success': true,
+              'data': {
+                'attempt_id': 'attempt-uuid-777',
+                'quiz_id': 'quiz-start-1',
+                'time_limit_minutes': 30,
+                'started_at': '2026-09-07T20:00:00.000Z',
+                'questions': [
+                  _buildSanitizedQuestionJson(
+                    id: 'q-1',
+                    text: 'Which scheduling algorithm is non-preemptive?',
+                    type: 'multiple_choice',
+                    options: [
+                      'FCFS',
+                      'Round Robin',
+                      'SRTF',
+                      'Priority (preemptive)',
                     ],
-                  },
-                },
-                requestOptions: _optsPost('/quizzes/quiz-start-1/start'),
-              ));
+                  ),
+                ],
+              },
+            },
+            requestOptions: _optsPost('/quizzes/quiz-start-1/start'),
+          ),
+        );
 
-      final startData = await quizService.startQuiz('quiz-start-1');
+        final startData = await quizService.startQuiz('quiz-start-1');
 
-      expect(startData['attempt_id'], equals('attempt-uuid-777'));
-      final questions = (startData['questions'] as List)
-          .map((e) => QuestionModel.fromMap(e as Map<String, dynamic>))
-          .toList();
-      expect(questions.first.questionText, contains('scheduling'));
-      expect(questions.first.options, contains('FCFS'));
-      expect(questions.first.correctAnswer, isEmpty);
-      expect(questions.first.explanation, isNull);
-    });
+        expect(startData['attempt_id'], equals('attempt-uuid-777'));
+        final questions = (startData['questions'] as List)
+            .map((e) => QuestionModel.fromMap(e as Map<String, dynamic>))
+            .toList();
+        expect(questions.first.questionText, contains('scheduling'));
+        expect(questions.first.options, contains('FCFS'));
+        expect(questions.first.correctAnswer, isEmpty);
+        expect(questions.first.explanation, isNull);
+      },
+    );
   });
 
   group('7. Server-Side Score Calculation & Anti-Tampering', () {
@@ -518,8 +601,11 @@ void main() {
         } else if (type == 'true_false') {
           return selected.trim().toLowerCase() == correct.trim().toLowerCase();
         } else if (type == 'short_answer') {
-          String clean(String s) =>
-              s.trim().toLowerCase().replaceAll(RegExp(r'[^\w\s]'), '').replaceAll(RegExp(r'\s+'), ' ');
+          String clean(String s) => s
+              .trim()
+              .toLowerCase()
+              .replaceAll(RegExp(r'[^\w\s]'), '')
+              .replaceAll(RegExp(r'\s+'), ' ');
           return clean(selected) == clean(correct);
         }
         return false;
@@ -534,99 +620,118 @@ void main() {
       expect(gradeAnswer('true_false', 'False', 'True'), isFalse);
 
       // Short answer (punctuation & extra spaces handled)
-      expect(gradeAnswer('short_answer', 'Isaac Newton', 'Isaac Newton!'), isTrue);
-      expect(gradeAnswer('short_answer', 'isaac   newton', 'Isaac Newton'), isTrue);
-      expect(gradeAnswer('short_answer', 'Albert Einstein', 'Isaac Newton'), isFalse);
+      expect(
+        gradeAnswer('short_answer', 'Isaac Newton', 'Isaac Newton!'),
+        isTrue,
+      );
+      expect(
+        gradeAnswer('short_answer', 'isaac   newton', 'Isaac Newton'),
+        isTrue,
+      );
+      expect(
+        gradeAnswer('short_answer', 'Albert Einstein', 'Isaac Newton'),
+        isFalse,
+      );
     });
 
-    test('POST /quizzes/:id/submit calculates score server-side and reveals results', () async {
-      final submissionPayload = {
-        'success': true,
-        'data': {
-          'attempt_id': 'attempt-uuid-777',
-          'quiz_id': 'quiz-comp-1',
-          'user_id': 'student-uuid-888',
-          'score': 2.0,
-          'total_points': 3.0,
-          'percentage': 66.67,
-          'passed': true,
-          'passing_score': 50.0,
-          'started_at': '2026-09-07T20:00:00.000Z',
-          'completed_at': '2026-09-07T20:15:30.000Z',
-          'time_spent_seconds': 930,
-          'evaluated_answers': [
-            {
-              'question_id': 'q-1',
-              'question_text': 'What is 2 + 2?',
-              'question_type': 'multiple_choice',
-              'selected_answer': '4',
-              'correct_answer': '4',
-              'is_correct': true,
-              'points_awarded': 1.0,
-              'max_points': 1.0,
-              'explanation': '2 + 2 = 4 by definition.',
-            },
-            {
-              'question_id': 'q-2',
-              'question_text': 'The earth has two moons.',
-              'question_type': 'true_false',
-              'selected_answer': 'False',
-              'correct_answer': 'False',
-              'is_correct': true,
-              'points_awarded': 1.0,
-              'max_points': 1.0,
-              'explanation': 'Earth has one natural satellite.',
-            },
-            {
-              'question_id': 'q-3',
-              'question_text': 'Who painted the Mona Lisa?',
-              'question_type': 'short_answer',
-              'selected_answer': 'Picasso',
-              'correct_answer': 'Leonardo da Vinci',
-              'is_correct': false,
-              'points_awarded': 0.0,
-              'max_points': 1.0,
-              'explanation': 'Leonardo da Vinci painted the Mona Lisa.',
-            },
-          ],
-        },
-      };
+    test(
+      'POST /quizzes/:id/submit calculates score server-side and reveals results',
+      () async {
+        final submissionPayload = {
+          'success': true,
+          'data': {
+            'attempt_id': 'attempt-uuid-777',
+            'quiz_id': 'quiz-comp-1',
+            'user_id': 'student-uuid-888',
+            'score': 2.0,
+            'total_points': 3.0,
+            'percentage': 66.67,
+            'passed': true,
+            'passing_score': 50.0,
+            'started_at': '2026-09-07T20:00:00.000Z',
+            'completed_at': '2026-09-07T20:15:30.000Z',
+            'time_spent_seconds': 930,
+            'evaluated_answers': [
+              {
+                'question_id': 'q-1',
+                'question_text': 'What is 2 + 2?',
+                'question_type': 'multiple_choice',
+                'selected_answer': '4',
+                'correct_answer': '4',
+                'is_correct': true,
+                'points_awarded': 1.0,
+                'max_points': 1.0,
+                'explanation': '2 + 2 = 4 by definition.',
+              },
+              {
+                'question_id': 'q-2',
+                'question_text': 'The earth has two moons.',
+                'question_type': 'true_false',
+                'selected_answer': 'False',
+                'correct_answer': 'False',
+                'is_correct': true,
+                'points_awarded': 1.0,
+                'max_points': 1.0,
+                'explanation': 'Earth has one natural satellite.',
+              },
+              {
+                'question_id': 'q-3',
+                'question_text': 'Who painted the Mona Lisa?',
+                'question_type': 'short_answer',
+                'selected_answer': 'Picasso',
+                'correct_answer': 'Leonardo da Vinci',
+                'is_correct': false,
+                'points_awarded': 0.0,
+                'max_points': 1.0,
+                'explanation': 'Leonardo da Vinci painted the Mona Lisa.',
+              },
+            ],
+          },
+        };
 
-      when(() => mockDio.post<Map<String, dynamic>>(
+        when(
+          () => mockDio.post<Map<String, dynamic>>(
             '/quizzes/quiz-comp-1/submit',
             data: any(named: 'data'),
-          )).thenAnswer((_) async => _buildResponse(
+          ),
+        ).thenAnswer(
+          (_) async => _buildResponse(
             statusCode: 200,
             data: submissionPayload,
             requestOptions: _optsPost('/quizzes/quiz-comp-1/submit'),
-          ));
+          ),
+        );
 
-      final result = await quizService.submitQuiz(
-        quizId: 'quiz-comp-1',
-        attemptId: 'attempt-uuid-777',
-        timeSpentSeconds: 930,
-        answers: [
-          {'question_id': 'q-1', 'selected_answer': '4'},
-          {'question_id': 'q-2', 'selected_answer': 'False'},
-          {'question_id': 'q-3', 'selected_answer': 'Picasso'},
-        ],
-      );
+        final result = await quizService.submitQuiz(
+          quizId: 'quiz-comp-1',
+          attemptId: 'attempt-uuid-777',
+          timeSpentSeconds: 930,
+          answers: [
+            {'question_id': 'q-1', 'selected_answer': '4'},
+            {'question_id': 'q-2', 'selected_answer': 'False'},
+            {'question_id': 'q-3', 'selected_answer': 'Picasso'},
+          ],
+        );
 
-      // Verify server calculation
-      expect(result.attemptId, equals('attempt-uuid-777'));
-      expect(result.score, equals(2.0));
-      expect(result.totalPoints, equals(3.0));
-      expect(result.percentage, closeTo(66.67, 0.01));
-      expect(result.passed, isTrue);
-      expect(result.timeSpentSeconds, equals(930));
+        // Verify server calculation
+        expect(result.attemptId, equals('attempt-uuid-777'));
+        expect(result.score, equals(2.0));
+        expect(result.totalPoints, equals(3.0));
+        expect(result.percentage, closeTo(66.67, 0.01));
+        expect(result.passed, isTrue);
+        expect(result.timeSpentSeconds, equals(930));
 
-      // After submission, answers & explanations are now available for learning!
-      expect(result.evaluatedAnswers.length, equals(3));
-      final q3 = result.evaluatedAnswers[2];
-      expect(q3.isCorrect, isFalse);
-      expect(q3.correctAnswer, equals('Leonardo da Vinci'));
-      expect(q3.explanation, contains('Leonardo da Vinci painted the Mona Lisa'));
-    });
+        // After submission, answers & explanations are now available for learning!
+        expect(result.evaluatedAnswers.length, equals(3));
+        final q3 = result.evaluatedAnswers[2];
+        expect(q3.isCorrect, isFalse);
+        expect(q3.correctAnswer, equals('Leonardo da Vinci'));
+        expect(
+          q3.explanation,
+          contains('Leonardo da Vinci painted the Mona Lisa'),
+        );
+      },
+    );
 
     test('marks quiz as failed when score is below passing_score', () async {
       final failPayload = {
@@ -647,14 +752,18 @@ void main() {
         },
       };
 
-      when(() => mockDio.post<Map<String, dynamic>>(
-            '/quizzes/quiz-hard/submit',
-            data: any(named: 'data'),
-          )).thenAnswer((_) async => _buildResponse(
-            statusCode: 200,
-            data: failPayload,
-            requestOptions: _optsPost('/quizzes/quiz-hard/submit'),
-          ));
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/quizzes/quiz-hard/submit',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => _buildResponse(
+          statusCode: 200,
+          data: failPayload,
+          requestOptions: _optsPost('/quizzes/quiz-hard/submit'),
+        ),
+      );
 
       final result = await quizService.submitQuiz(
         quizId: 'quiz-hard',
@@ -674,7 +783,8 @@ void main() {
       final unreviewed = FlashcardModel(
         id: 'fc-1',
         front: 'What is a Semaphore?',
-        back: 'A synchronization variable used to control access to shared resources.',
+        back:
+            'A synchronization variable used to control access to shared resources.',
         nextReviewAt: null,
       );
       expect(unreviewed.isDue, isTrue);
@@ -699,44 +809,48 @@ void main() {
     });
 
     test('fetches due flashcards from /flashcards/due', () async {
-      when(() => mockDio.get<Map<String, dynamic>>(
-            '/flashcards/due',
-            queryParameters: any(named: 'queryParameters'),
-          )).thenAnswer((_) async => _buildResponse(
-            statusCode: 200,
-            data: {
-              'success': true,
-              'data': [
-                {
-                  'id': 'card-due-1',
-                  'front_text': 'Front 1',
-                  'back_text': 'Back 1',
-                  'deck_name': 'OS Concepts',
-                  'source_type': 'lecture',
-                  'difficulty': 'easy',
-                  'box': 1,
-                  'ease_factor': 2.5,
-                  'interval_days': 1,
-                  'repetitions': 0,
-                  'next_review_at': '2026-09-01T12:00:00.000Z',
-                },
-                {
-                  'id': 'card-due-2',
-                  'front_text': 'Front 2',
-                  'back_text': 'Back 2',
-                  'deck_name': 'OS Concepts',
-                  'source_type': 'pdf',
-                  'difficulty': 'medium',
-                  'box': 2,
-                  'ease_factor': 2.6,
-                  'interval_days': 3,
-                  'repetitions': 1,
-                  'next_review_at': '2026-09-05T12:00:00.000Z',
-                },
-              ],
-            },
-            requestOptions: _optsGet('/flashcards/due'),
-          ));
+      when(
+        () => mockDio.get<Map<String, dynamic>>(
+          '/flashcards/due',
+          queryParameters: any(named: 'queryParameters'),
+        ),
+      ).thenAnswer(
+        (_) async => _buildResponse(
+          statusCode: 200,
+          data: {
+            'success': true,
+            'data': [
+              {
+                'id': 'card-due-1',
+                'front_text': 'Front 1',
+                'back_text': 'Back 1',
+                'deck_name': 'OS Concepts',
+                'source_type': 'lecture',
+                'difficulty': 'easy',
+                'box': 1,
+                'ease_factor': 2.5,
+                'interval_days': 1,
+                'repetitions': 0,
+                'next_review_at': '2026-09-01T12:00:00.000Z',
+              },
+              {
+                'id': 'card-due-2',
+                'front_text': 'Front 2',
+                'back_text': 'Back 2',
+                'deck_name': 'OS Concepts',
+                'source_type': 'pdf',
+                'difficulty': 'medium',
+                'box': 2,
+                'ease_factor': 2.6,
+                'interval_days': 3,
+                'repetitions': 1,
+                'next_review_at': '2026-09-05T12:00:00.000Z',
+              },
+            ],
+          },
+          requestOptions: _optsGet('/flashcards/due'),
+        ),
+      );
 
       final dueCards = await quizService.getDueFlashcards();
 
@@ -749,11 +863,16 @@ void main() {
       expect(dueCards[1].isDue, isTrue);
     });
 
-    test('SM-2 review rating submission updates easeFactor, box, and intervals', () async {
-      when(() => mockDio.post<Map<String, dynamic>>(
+    test(
+      'SM-2 review rating submission updates easeFactor, box, and intervals',
+      () async {
+        when(
+          () => mockDio.post<Map<String, dynamic>>(
             '/flashcards/card-sm2-1/review',
             data: {'rating': 5},
-          )).thenAnswer((_) async => _buildResponse(
+          ),
+        ).thenAnswer(
+          (_) async => _buildResponse(
             statusCode: 200,
             data: {
               'success': true,
@@ -768,16 +887,18 @@ void main() {
               },
             },
             requestOptions: _optsPost('/flashcards/card-sm2-1/review'),
-          ));
+          ),
+        );
 
-      final progress = await quizService.reviewFlashcard('card-sm2-1', 5);
+        final progress = await quizService.reviewFlashcard('card-sm2-1', 5);
 
-      expect(progress['rating'], equals(5));
-      expect(progress['box'], equals(2));
-      expect(progress['ease_factor'], equals(2.6));
-      expect(progress['interval_days'], equals(6));
-      expect(progress['repetitions'], equals(2));
-    });
+        expect(progress['rating'], equals(5));
+        expect(progress['box'], equals(2));
+        expect(progress['ease_factor'], equals(2.6));
+        expect(progress['interval_days'], equals(6));
+        expect(progress['repetitions'], equals(2));
+      },
+    );
 
     test('SM-2 formula reset logic when quality rating < 3', () {
       // Simulating standard SuperMemo-2 formula:
@@ -789,7 +910,8 @@ void main() {
         required int intervalDays,
         required int box,
       }) {
-        double newEase = easeFactor + (0.1 - (5 - rating) * (0.08 + (5 - rating) * 0.02));
+        double newEase =
+            easeFactor + (0.1 - (5 - rating) * (0.08 + (5 - rating) * 0.02));
         if (newEase < 1.30) newEase = 1.30;
 
         int newRepetitions;

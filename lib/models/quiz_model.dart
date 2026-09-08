@@ -12,7 +12,8 @@ enum QuestionType {
   static QuestionType fromString(String? val) {
     if (val == null) return QuestionType.multipleChoice;
     final normalized = val.toLowerCase().trim().replaceAll('_', '');
-    if (normalized == 'truefalse' || normalized == 'tf') return QuestionType.trueFalse;
+    if (normalized == 'truefalse' || normalized == 'tf')
+      return QuestionType.trueFalse;
     if (normalized == 'shortanswer') return QuestionType.shortAnswer;
     if (normalized == 'fillinblank') return QuestionType.fillInBlank;
     if (normalized == 'essay') return QuestionType.essay;
@@ -40,7 +41,8 @@ class QuestionModel {
   final String questionText;
   final QuestionType type;
   final List<String>? options; // Null or empty for short_answer
-  final String correctAnswer; // Empty string if sanitized during active exam taking!
+  final String
+  correctAnswer; // Empty string if sanitized during active exam taking!
   final String? explanation; // Null if sanitized during active exam taking!
   final String difficulty;
   final double points;
@@ -84,18 +86,22 @@ class QuestionModel {
 
     return QuestionModel(
       id: (map['id'] ?? '').toString(),
-      questionText: (map['question_text'] ?? map['questionText'] ?? '').toString(),
+      questionText: (map['question_text'] ?? map['questionText'] ?? '')
+          .toString(),
       type: QuestionType.fromString(rawType?.toString()),
       options: parsedOptions,
-      correctAnswer: (map['correct_answer'] ?? map['correctAnswer'] ?? '').toString(),
+      correctAnswer: (map['correct_answer'] ?? map['correctAnswer'] ?? '')
+          .toString(),
       explanation: map['explanation']?.toString(),
       difficulty: (map['difficulty'] ?? 'medium').toString(),
       points: (map['points'] as num?)?.toDouble() ?? 1.0,
-      orderIndex: (map['order_index'] ?? map['orderIndex'] as num?)?.toInt() ?? 0,
+      orderIndex:
+          (map['order_index'] ?? map['orderIndex'] as num?)?.toInt() ?? 0,
     );
   }
 
-  factory QuestionModel.fromJson(Map<String, dynamic> json) => QuestionModel.fromMap(json);
+  factory QuestionModel.fromJson(Map<String, dynamic> json) =>
+      QuestionModel.fromMap(json);
 }
 
 class QuizModel {
@@ -160,8 +166,10 @@ class QuizModel {
           .toList();
     }
 
-    final rawPassingScore = map['passing_score'] ?? map['passingScorePercentage'] ?? 50.0;
-    final rawDuration = map['time_limit_minutes'] ?? map['durationMinutes'] ?? 10;
+    final rawPassingScore =
+        map['passing_score'] ?? map['passingScorePercentage'] ?? 50.0;
+    final rawDuration =
+        map['time_limit_minutes'] ?? map['durationMinutes'] ?? 10;
 
     return QuizModel(
       id: (map['id'] ?? '').toString(),
@@ -177,11 +185,13 @@ class QuizModel {
       isExam: map['isExam'] ?? (map['is_exam'] ?? false),
       passingScorePercentage: (rawPassingScore as num?)?.toDouble() ?? 50.0,
       isPublished: map['is_published'] ?? true,
-      questionCount: (map['question_count'] as num?)?.toInt() ?? parsedQuestions.length,
+      questionCount:
+          (map['question_count'] as num?)?.toInt() ?? parsedQuestions.length,
     );
   }
 
-  factory QuizModel.fromJson(Map<String, dynamic> json) => QuizModel.fromMap(json);
+  factory QuizModel.fromJson(Map<String, dynamic> json) =>
+      QuizModel.fromMap(json);
 }
 
 // ─── Quiz Attempt Models ──────────────────────────────────────────────────────
@@ -272,8 +282,12 @@ class QuizSubmissionResultModel {
       percentage: (json['percentage'] as num?)?.toDouble() ?? 0.0,
       passed: json['passed'] == true,
       passingScore: (json['passing_score'] as num?)?.toDouble() ?? 50.0,
-      startedAt: DateTime.tryParse(json['started_at']?.toString() ?? '') ?? DateTime.now(),
-      completedAt: DateTime.tryParse(json['completed_at']?.toString() ?? '') ?? DateTime.now(),
+      startedAt:
+          DateTime.tryParse(json['started_at']?.toString() ?? '') ??
+          DateTime.now(),
+      completedAt:
+          DateTime.tryParse(json['completed_at']?.toString() ?? '') ??
+          DateTime.now(),
       timeSpentSeconds: (json['time_spent_seconds'] as num?)?.toInt() ?? 0,
       evaluatedAnswers: parsedAnswers,
     );

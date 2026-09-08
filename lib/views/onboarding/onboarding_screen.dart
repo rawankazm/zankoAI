@@ -21,7 +21,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   @override
   void initState() {
     super.initState();
-    _fadeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
+    _fadeCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
     _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeIn);
     _fadeCtrl.forward();
   }
@@ -40,7 +43,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (_, a, _) => const NavigationShell(),
-        transitionsBuilder: (_, a, _, child) => FadeTransition(opacity: a, child: child),
+        transitionsBuilder: (_, a, _, child) =>
+            FadeTransition(opacity: a, child: child),
         transitionDuration: const Duration(milliseconds: 500),
       ),
     );
@@ -48,7 +52,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   void _nextPage() {
     if (_currentPage < _pages.length - 1) {
-      _pageController.nextPage(duration: const Duration(milliseconds: 400), curve: Curves.easeOutCubic);
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOutCubic,
+      );
     } else {
       _finish();
     }
@@ -169,11 +176,17 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       onPressed: _finish,
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.white70,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                       ),
                       child: Text(
                         t('onboarding_skip'),
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),
@@ -218,7 +231,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                               backgroundColor: Colors.white,
                               foregroundColor: page.gradient[0],
                               minimumSize: const Size(0, 58),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                              ),
                               elevation: 0,
                             ),
                             child: Row(

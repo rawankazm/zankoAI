@@ -11,7 +11,11 @@ class PdfSummaryScreen extends StatefulWidget {
   final String? initialFileName;
   final String? initialFileContent;
 
-  const PdfSummaryScreen({super.key, this.initialFileName, this.initialFileContent});
+  const PdfSummaryScreen({
+    super.key,
+    this.initialFileName,
+    this.initialFileContent,
+  });
 
   @override
   State<PdfSummaryScreen> createState() => _PdfSummaryScreenState();
@@ -23,7 +27,7 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
   String? _selectedFileContent;
   Uint8List? _selectedFileBytes;
   bool _isProcessing = false;
-  
+
   String? _pdfSummary;
   List<String> _keyPoints = [];
   String? _translation;
@@ -33,7 +37,8 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
     super.initState();
     if (widget.initialFileName != null && widget.initialFileName!.isNotEmpty) {
       _selectedFileName = widget.initialFileName!;
-      _selectedFileContent = widget.initialFileContent ?? 'Content of ${widget.initialFileName}';
+      _selectedFileContent =
+          widget.initialFileContent ?? 'Content of ${widget.initialFileName}';
       _selectedFileSize = '2.5 مێگابایت';
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_selectedFileContent != null) {
@@ -82,9 +87,13 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
 
     final aiService = Provider.of<AiService>(context, listen: false);
     try {
-      final results = await aiService.summarizePdf(_selectedFileName!, fileContent);
+      final results = await aiService.summarizePdf(
+        _selectedFileName!,
+        fileContent,
+      );
       final summaryStr = results['summary']?.toString() ?? '';
-      final isInvalid = summaryStr.trim().isEmpty ||
+      final isInvalid =
+          summaryStr.trim().isEmpty ||
           summaryStr.contains('دەستپێبکەرەوە') ||
           summaryStr.contains('Error') ||
           summaryStr.contains('blocked');
@@ -107,10 +116,13 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
   void _setMockAcademicSummary() {
     final fileName = _selectedFileName ?? 'ڕاپۆرت و فایلی وانە';
     final content = _selectedFileContent ?? '';
-    final snippet = content.trim().length > 180 ? content.trim().substring(0, 180) : content.trim();
+    final snippet = content.trim().length > 180
+        ? content.trim().substring(0, 180)
+        : content.trim();
 
     setState(() {
-      _pdfSummary = '''
+      _pdfSummary =
+          '''
 📄 **کورتکراوەی فایلی: $fileName**
 
 ---
@@ -122,9 +134,10 @@ class _PdfSummaryScreenState extends State<PdfSummaryScreen> {
       _keyPoints = [
         "پێناسەی چەمکە سەرەکییەکان لە فایلی ($fileName)",
         "شیکردنەوەی هاوکێشە و چەمکە دیاریکراوەکانی ناو دەقەکە",
-        "پۆلێنکردنی بڕگەکان بۆ پێداچوونەوەی خێرا پیش تاقیکردنەوە"
+        "پۆلێنکردنی بڕگەکان بۆ پێداچوونەوەی خێرا پیش تاقیکردنەوە",
       ];
-      _translation = '''
+      _translation =
+          '''
 This document ($fileName) covers core lecture material:
 "$snippet..."
 It structures key academic definitions for rapid study and exam preparation.
@@ -142,9 +155,7 @@ It structures key academic definitions for rapid study and exam preparation.
     return Directionality(
       textDirection: langProvider.textDirection,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(t('pdf_title')),
-        ),
+        appBar: AppBar(title: Text(t('pdf_title'))),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -164,13 +175,21 @@ It structures key academic definitions for rapid study and exam preparation.
                       const SizedBox(height: 12),
                       Text(
                         t('upload_area_title'),
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         t('upload_area_desc'),
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton.icon(
@@ -182,7 +201,11 @@ It structures key academic definitions for rapid study and exam preparation.
                         const Divider(height: 32),
                         Row(
                           children: [
-                            const Icon(Icons.picture_as_pdf, color: Colors.red, size: 36),
+                            const Icon(
+                              Icons.picture_as_pdf,
+                              color: Colors.red,
+                              size: 36,
+                            ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
@@ -190,7 +213,10 @@ It structures key academic definitions for rapid study and exam preparation.
                                 children: [
                                   Text(
                                     _selectedFileName!,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -203,8 +229,14 @@ It structures key academic definitions for rapid study and exam preparation.
                             ),
                             if (_pdfSummary == null && !_isProcessing)
                               IconButton(
-                                icon: const Icon(Icons.auto_awesome, color: Colors.blue),
-                                onPressed: () => _generateSummary(_selectedFileContent ?? t('no_text_extracted')),
+                                icon: const Icon(
+                                  Icons.auto_awesome,
+                                  color: Colors.blue,
+                                ),
+                                onPressed: () => _generateSummary(
+                                  _selectedFileContent ??
+                                      t('no_text_extracted'),
+                                ),
                                 tooltip: t('generate_summary_tooltip'),
                               ),
                           ],
@@ -251,14 +283,14 @@ It structures key academic definitions for rapid study and exam preparation.
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed: () async {
-                              await OfflineArchiveService.instance.saveOfflineItem(
-                                category: 'summary',
-                                title: _selectedFileName ?? 'کورتکراوەی PDF',
-                                courseName: 'بەڵگەنامەی PDF',
-                                payload: {
-                                  'summaryText': _pdfSummary ?? '',
-                                },
-                              );
+                              await OfflineArchiveService.instance
+                                  .saveOfflineItem(
+                                    category: 'summary',
+                                    title:
+                                        _selectedFileName ?? 'کورتکراوەی PDF',
+                                    courseName: 'بەڵگەنامەی PDF',
+                                    payload: {'summaryText': _pdfSummary ?? ''},
+                                  );
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
@@ -271,13 +303,21 @@ It structures key academic definitions for rapid study and exam preparation.
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF10B981),
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                             icon: const Icon(Icons.download_rounded, size: 16),
                             label: const Text(
                               'ئۆفلاین 📥',
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -290,8 +330,10 @@ It structures key academic definitions for rapid study and exam preparation.
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => DocumentReaderScreen(
-                                    fileName: _selectedFileName ?? t('document'),
-                                    fileContent: _selectedFileContent ??
+                                    fileName:
+                                        _selectedFileName ?? t('document'),
+                                    fileContent:
+                                        _selectedFileContent ??
                                         'دەقی بەڵگەنامەکە بەردەست نییە یان دەرهێنانی دەقەکە کێشەی تێدایە.',
                                     pdfBytes: _selectedFileBytes,
                                   ),
@@ -301,13 +343,24 @@ It structures key academic definitions for rapid study and exam preparation.
                             style: ElevatedButton.styleFrom(
                               backgroundColor: theme.colorScheme.primary,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                            icon: const Icon(Icons.chrome_reader_mode_rounded, size: 16),
+                            icon: const Icon(
+                              Icons.chrome_reader_mode_rounded,
+                              size: 16,
+                            ),
                             label: const Text(
                               'خوێندنەوە / Read',
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -331,15 +384,15 @@ It structures key academic definitions for rapid study and exam preparation.
                             const SizedBox(width: 8),
                             Text(
                               t('pdf_summary_card'),
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          _pdfSummary!,
-                          style: const TextStyle(height: 1.4),
-                        ),
+                        Text(_pdfSummary!, style: const TextStyle(height: 1.4)),
                       ],
                     ),
                   ),
@@ -356,17 +409,25 @@ It structures key academic definitions for rapid study and exam preparation.
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.star_border_rounded, color: theme.colorScheme.tertiary),
+                              Icon(
+                                Icons.star_border_rounded,
+                                color: theme.colorScheme.tertiary,
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 t('key_points_card'),
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
                               ),
                             ],
                           ),
                           ..._keyPoints.map((point) {
                             return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4.0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 4.0,
+                              ),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -401,7 +462,10 @@ It structures key academic definitions for rapid study and exam preparation.
                               const SizedBox(width: 8),
                               Text(
                                 t('translation_card'),
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
                               ),
                             ],
                           ),
@@ -489,7 +553,7 @@ class _DocumentReaderScreenState extends State<DocumentReaderScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     final cleanText = _getCleanDisplayContent(rawText);
-    
+
     // Split into sentences and group into logical readable 3-sentence paragraphs
     final rawSentences = cleanText.split(RegExp(r'(?<=[.!?])\s+'));
     final List<String> paragraphs = [];
@@ -500,8 +564,11 @@ class _DocumentReaderScreenState extends State<DocumentReaderScreen> {
       final s = sentence.trim();
       if (s.isEmpty) continue;
 
-      final isHeader = RegExp(r'^(Chapter|\d+\.\d+|\d+\.|\bTopics?\b)', caseSensitive: false).hasMatch(s);
-      
+      final isHeader = RegExp(
+        r'^(Chapter|\d+\.\d+|\d+\.|\bTopics?\b)',
+        caseSensitive: false,
+      ).hasMatch(s);
+
       if (isHeader && currentPara.isNotEmpty) {
         paragraphs.add(currentPara.toString().trim());
         currentPara = StringBuffer();
@@ -522,7 +589,10 @@ class _DocumentReaderScreenState extends State<DocumentReaderScreen> {
     }
 
     if (paragraphs.isEmpty) {
-      return Text(cleanText, style: TextStyle(fontSize: _fontSize, height: 1.65));
+      return Text(
+        cleanText,
+        style: TextStyle(fontSize: _fontSize, height: 1.65),
+      );
     }
 
     return Column(
@@ -530,7 +600,10 @@ class _DocumentReaderScreenState extends State<DocumentReaderScreen> {
       children: paragraphs.asMap().entries.map((entry) {
         final idx = entry.key + 1;
         final para = entry.value;
-        final isTitle = RegExp(r'^(Chapter|\d+\.\d+|\d+\.|\bTopics?\b)', caseSensitive: false).hasMatch(para);
+        final isTitle = RegExp(
+          r'^(Chapter|\d+\.\d+|\d+\.|\bTopics?\b)',
+          caseSensitive: false,
+        ).hasMatch(para);
 
         if (isTitle && para.length < 120) {
           return Container(
@@ -539,11 +612,17 @@ class _DocumentReaderScreenState extends State<DocumentReaderScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFF6C5CE7).withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFF6C5CE7).withValues(alpha: 0.3)),
+              border: Border.all(
+                color: const Color(0xFF6C5CE7).withValues(alpha: 0.3),
+              ),
             ),
             child: Row(
               children: [
-                const Icon(Icons.bookmark_rounded, size: 18, color: Color(0xFF6C5CE7)),
+                const Icon(
+                  Icons.bookmark_rounded,
+                  size: 18,
+                  color: Color(0xFF6C5CE7),
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -607,7 +686,9 @@ class _DocumentReaderScreenState extends State<DocumentReaderScreen> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.grey[400] : const Color(0xFF6C5CE7),
+                      color: isDark
+                          ? Colors.grey[400]
+                          : const Color(0xFF6C5CE7),
                     ),
                   ),
                 ],
@@ -618,7 +699,9 @@ class _DocumentReaderScreenState extends State<DocumentReaderScreen> {
                 style: TextStyle(
                   fontSize: _fontSize,
                   height: 1.65,
-                  color: isDark ? Colors.white.withValues(alpha: 0.9) : const Color(0xFF2D3436),
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.9)
+                      : const Color(0xFF2D3436),
                 ),
               ),
             ],
@@ -632,12 +715,15 @@ class _DocumentReaderScreenState extends State<DocumentReaderScreen> {
     if (s.trim().isEmpty) return true;
     int garbledCount = 0;
     for (final rune in s.runes) {
-      final isNormal = (rune >= 32 && rune <= 126) ||
-                       (rune >= 0x0600 && rune <= 0x06FF) ||
-                       (rune >= 0x0750 && rune <= 0x077F) ||
-                       (rune >= 0xFB50 && rune <= 0xFDFF) ||
-                       (rune >= 0xFE70 && rune <= 0xFEFF) ||
-                       rune == 10 || rune == 13 || rune == 9;
+      final isNormal =
+          (rune >= 32 && rune <= 126) ||
+          (rune >= 0x0600 && rune <= 0x06FF) ||
+          (rune >= 0x0750 && rune <= 0x077F) ||
+          (rune >= 0xFB50 && rune <= 0xFDFF) ||
+          (rune >= 0xFE70 && rune <= 0xFEFF) ||
+          rune == 10 ||
+          rune == 13 ||
+          rune == 9;
       if (!isNormal) {
         garbledCount++;
       }
@@ -654,18 +740,25 @@ class _DocumentReaderScreenState extends State<DocumentReaderScreen> {
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
 
-    final isGarbled = _isGarbledBinary(formatted) || 
-                      formatted.length < 50 ||
-                      formatted.contains('%PDF-') || 
-                      formatted.contains('/Catalog') || 
-                      formatted.contains('endobj') ||
-                      formatted.contains('<<') ||
-                      formatted.contains('/Font');
+    final isGarbled =
+        _isGarbledBinary(formatted) ||
+        formatted.length < 50 ||
+        formatted.contains('%PDF-') ||
+        formatted.contains('/Catalog') ||
+        formatted.contains('endobj') ||
+        formatted.contains('<<') ||
+        formatted.contains('/Font');
 
     if (isGarbled) {
-      final clean = formatted.replaceAll(RegExp(r'[^\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF\w\s\.\,\-\:\(\)]'), ' ')
-                       .replaceAll(RegExp(r'\s+'), ' ')
-                       .trim();
+      final clean = formatted
+          .replaceAll(
+            RegExp(
+              r'[^\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF\w\s\.\,\-\:\(\)]',
+            ),
+            ' ',
+          )
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
 
       if (clean.length > 200) {
         return clean.length > 15000 ? clean.substring(0, 15000) : clean;
@@ -678,8 +771,12 @@ class _DocumentReaderScreenState extends State<DocumentReaderScreen> {
   }
 
   String _generateDynamicDocumentSummary(String fileName) {
-    final cleanName = fileName.replaceAll('.pdf', '').replaceAll('_', ' ').replaceAll('-', ' ').trim();
-    
+    final cleanName = fileName
+        .replaceAll('.pdf', '')
+        .replaceAll('_', ' ')
+        .replaceAll('-', ' ')
+        .trim();
+
     return '''
 📚 **پۆختەی سەرەکی و خوێندنەوەی بەڵگەنامەی: "$cleanName"**
 

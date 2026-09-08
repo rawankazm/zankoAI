@@ -67,9 +67,7 @@ class PdfAiService {
       });
     }
 
-    final headers = <String, dynamic>{
-      'Content-Type': 'multipart/form-data',
-    };
+    final headers = <String, dynamic>{'Content-Type': 'multipart/form-data'};
 
     if (idempotencyKey != null && idempotencyKey.isNotEmpty) {
       headers['Idempotency-Key'] = idempotencyKey;
@@ -202,7 +200,8 @@ class PdfAiService {
         response.statusCode! < 200 ||
         response.statusCode! >= 300 ||
         body?['success'] != true) {
-      final msg = body?['error']?['message'] as String? ??
+      final msg =
+          body?['error']?['message'] as String? ??
           body?['message'] as String? ??
           'Request failed (${response.statusCode})';
       throw DioException(

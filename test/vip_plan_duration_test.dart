@@ -24,32 +24,38 @@ void main() {
       expect(days, equals(90));
     });
 
-    test('5. Price fallback for 9 Months (40,000 IQD) resolves to 270 days', () {
-      final days = VipFirestoreService.calculatePlanDays(price: 40000);
-      expect(days, equals(270));
-    });
+    test(
+      '5. Price fallback for 9 Months (40,000 IQD) resolves to 270 days',
+      () {
+        final days = VipFirestoreService.calculatePlanDays(price: 40000);
+        expect(days, equals(270));
+      },
+    );
 
     test('6. Price fallback for 1 Month (5,000 IQD) resolves to 30 days', () {
       final days = VipFirestoreService.calculatePlanDays(price: 5000);
       expect(days, equals(30));
     });
 
-    test('7. UserModel correctly parses vip_expiry and calculates vipDaysLeft', () {
-      final futureExpiry = DateTime.now().add(const Duration(days: 90));
-      final user = UserModel.fromMap({
-        'id': 'test-uuid',
-        'name': 'Rawan',
-        'email': 'rawan@zanko.edu',
-        'is_vip': true,
-        'vip_status': 'active',
-        'vip_expiry': futureExpiry.toIso8601String(),
-      });
+    test(
+      '7. UserModel correctly parses vip_expiry and calculates vipDaysLeft',
+      () {
+        final futureExpiry = DateTime.now().add(const Duration(days: 90));
+        final user = UserModel.fromMap({
+          'id': 'test-uuid',
+          'name': 'Rawan',
+          'email': 'rawan@zanko.edu',
+          'is_vip': true,
+          'vip_status': 'active',
+          'vip_expiry': futureExpiry.toIso8601String(),
+        });
 
-      expect(user.isVip, isTrue);
-      expect(user.vipExpiry, isNotNull);
-      expect(user.vipDaysLeft, greaterThanOrEqualTo(89));
-      expect(user.vipDaysLeft, lessThanOrEqualTo(90));
-    });
+        expect(user.isVip, isTrue);
+        expect(user.vipExpiry, isNotNull);
+        expect(user.vipDaysLeft, greaterThanOrEqualTo(89));
+        expect(user.vipDaysLeft, lessThanOrEqualTo(90));
+      },
+    );
 
     test('8. UserModel for 9-month plan calculates ~270 days remaining', () {
       final futureExpiry = DateTime.now().add(const Duration(days: 270));
@@ -67,13 +73,16 @@ void main() {
       expect(user.vipDaysLeft, lessThanOrEqualTo(270));
     });
 
-    test('9. Explicit durationDays parameter overrides default plan string', () {
-      final days = VipFirestoreService.calculatePlanDays(
-        plan: 'custom',
-        durationDays: 180,
-      );
-      expect(days, equals(180));
-    });
+    test(
+      '9. Explicit durationDays parameter overrides default plan string',
+      () {
+        final days = VipFirestoreService.calculatePlanDays(
+          plan: 'custom',
+          durationDays: 180,
+        );
+        expect(days, equals(180));
+      },
+    );
 
     test('10. UserModel toMap preserves vip_expiry serialization', () {
       final expiry = DateTime.now().add(const Duration(days: 90));

@@ -161,8 +161,12 @@ class UserSubscriptionModel {
     return UserSubscriptionModel(
       hasActiveSubscription: json['hasActiveSubscription'] == true,
       isPremium: json['isPremium'] == true,
-      plan: SubscriptionPlanTypeExt.fromString((json['plan'] ?? 'FREE').toString()),
-      status: SubscriptionStatusTypeExt.fromString((json['status'] ?? 'expired').toString()),
+      plan: SubscriptionPlanTypeExt.fromString(
+        (json['plan'] ?? 'FREE').toString(),
+      ),
+      status: SubscriptionStatusTypeExt.fromString(
+        (json['status'] ?? 'expired').toString(),
+      ),
       currentPeriodStart: json['currentPeriodStart'] != null
           ? DateTime.tryParse(json['currentPeriodStart'].toString())
           : null,
@@ -226,7 +230,9 @@ class SubscriptionCheckoutModel {
       checkoutUrl: json['checkoutUrl']?.toString(),
       qrPayload: json['qrPayload']?.toString(),
       provider: (json['provider'] ?? 'fib').toString(),
-      plan: SubscriptionPlanTypeExt.fromString((json['plan'] ?? 'PREMIUM_MONTHLY').toString()),
+      plan: SubscriptionPlanTypeExt.fromString(
+        (json['plan'] ?? 'PREMIUM_MONTHLY').toString(),
+      ),
       amount: (json['amount'] as num?)?.toInt() ?? 0,
       currency: (json['currency'] ?? 'IQD').toString(),
       expiresAt: json['expiresAt'] != null

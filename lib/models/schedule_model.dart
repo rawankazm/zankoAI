@@ -1,9 +1,9 @@
 class ScheduleModel {
   final String id;
   final String courseName;
-  final String time;      // e.g. "09:00 - 10:30"
-  final String location;  // e.g. "هۆڵی ٣، بەشی کۆمپیوتەر"
-  final String dayName;   // e.g. "شەممە", "یەکشەممە"
+  final String time; // e.g. "09:00 - 10:30"
+  final String location; // e.g. "هۆڵی ٣، بەشی کۆمپیوتەر"
+  final String dayName; // e.g. "شەممە", "یەکشەممە"
   final String teacherName;
 
   ScheduleModel({

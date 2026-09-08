@@ -59,7 +59,8 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
     try {
       if (await _audioRecorder.hasPermission()) {
         final tempDir = await getTemporaryDirectory();
-        final path = '${tempDir.path}/rec_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        final path =
+            '${tempDir.path}/rec_${DateTime.now().millisecondsSinceEpoch}.m4a';
 
         await _audioRecorder.start(
           const RecordConfig(
@@ -97,9 +98,9 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('هەڵە لە تۆمارکردنی دەنگ: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('هەڵە لە تۆمارکردنی دەنگ: $e')));
       }
     }
   }
@@ -127,7 +128,8 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
       if (!mounted) return;
       if (recordedBytes == null || recordedBytes.length < 300) {
         setState(() {
-          _transcriptController.text = "دەنگەکە زۆر کورت بوو، تکایە کەمێک زیاتر قسە بکە و دووبارە تاقی بکەرەوە.";
+          _transcriptController.text =
+              "دەنگەکە زۆر کورت بوو، تکایە کەمێک زیاتر قسە بکە و دووبارە تاقی بکەرەوە.";
         });
         return;
       }
@@ -147,7 +149,8 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
       });
     } catch (_) {
       setState(() {
-        _transcriptController.text = "هەڵەیەک ڕوویدا لە کاتی پەیوەندی بە ژیری دەستکرد. تکایە ئینتەرنێتەکەت بپشکنە.";
+        _transcriptController.text =
+            "هەڵەیەک ڕوویدا لە کاتی پەیوەندی بە ژیری دەستکرد. تکایە ئینتەرنێتەکەت بپشکنە.";
       });
     } finally {
       if (mounted) {
@@ -170,7 +173,9 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
         final file = result.files.single;
         final fileName = file.name;
         final dotIndex = fileName.lastIndexOf('.');
-        final ext = dotIndex != -1 ? fileName.substring(dotIndex + 1).toLowerCase() : '';
+        final ext = dotIndex != -1
+            ? fileName.substring(dotIndex + 1).toLowerCase()
+            : '';
 
         // Strict extension validation: explicitly block PDFs and any non-audio files
         if (!allowedAudioExtensions.contains(ext)) {
@@ -191,7 +196,9 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                 ),
                 backgroundColor: Colors.red.shade700,
                 behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             );
           }
@@ -211,7 +218,9 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
         if (bytes == null || bytes.isEmpty) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('فایلەکە بەتاڵە یان نەتوانرا بخوێندرێتەوە.')),
+              const SnackBar(
+                content: Text('فایلەکە بەتاڵە یان نەتوانرا بخوێندرێتەوە.'),
+              ),
             );
           }
           return;
@@ -296,9 +305,9 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
         setState(() {
           _isSummarizing = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('هەڵە لە دروستکردنی پوختە: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('هەڵە لە دروستکردنی پوختە: $e')));
       }
     }
   }
@@ -353,7 +362,8 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
     final String infoText = t('audio_summarizer_info');
     final String pickButtonText = t('audio_summarizer_upload_btn');
 
-    final bool hasText = _transcriptController.text.trim().isNotEmpty &&
+    final bool hasText =
+        _transcriptController.text.trim().isNotEmpty &&
         !_transcriptController.text.startsWith('نەتوانرا') &&
         !_transcriptController.text.startsWith('هەڵەیەک') &&
         !_transcriptController.text.startsWith('دەنگەکە زۆر کورت');
@@ -361,9 +371,7 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
     return Directionality(
       textDirection: langProvider.textDirection,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(title),
-        ),
+        appBar: AppBar(title: Text(title)),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -372,13 +380,21 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
               // Info Banner
               Card(
                 elevation: 0,
-                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.15),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                color: theme.colorScheme.primaryContainer.withValues(
+                  alpha: 0.15,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(14.0),
                   child: Row(
                     children: [
-                      Icon(Icons.mic_none_rounded, color: theme.colorScheme.primary, size: 32),
+                      Icon(
+                        Icons.mic_none_rounded,
+                        color: theme.colorScheme.primary,
+                        size: 32,
+                      ),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Text(
@@ -403,7 +419,10 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ChoiceChip(
-                      label: const Text('خۆکار (Auto)', style: TextStyle(fontSize: 12)),
+                      label: const Text(
+                        'خۆکار (Auto)',
+                        style: TextStyle(fontSize: 12),
+                      ),
                       selected: _selectedLocaleId == 'auto',
                       onSelected: (val) {
                         if (val) setState(() => _selectedLocaleId = 'auto');
@@ -411,7 +430,10 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                     ),
                     const SizedBox(width: 8),
                     ChoiceChip(
-                      label: const Text('کوردی / فارسی', style: TextStyle(fontSize: 12)),
+                      label: const Text(
+                        'کوردی / فارسی',
+                        style: TextStyle(fontSize: 12),
+                      ),
                       selected: _selectedLocaleId == 'ku',
                       onSelected: (val) {
                         if (val) setState(() => _selectedLocaleId = 'ku');
@@ -419,7 +441,10 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                     ),
                     const SizedBox(width: 8),
                     ChoiceChip(
-                      label: const Text('العربية', style: TextStyle(fontSize: 12)),
+                      label: const Text(
+                        'العربية',
+                        style: TextStyle(fontSize: 12),
+                      ),
                       selected: _selectedLocaleId == 'ar',
                       onSelected: (val) {
                         if (val) setState(() => _selectedLocaleId = 'ar');
@@ -427,7 +452,10 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                     ),
                     const SizedBox(width: 8),
                     ChoiceChip(
-                      label: const Text('English', style: TextStyle(fontSize: 12)),
+                      label: const Text(
+                        'English',
+                        style: TextStyle(fontSize: 12),
+                      ),
                       selected: _selectedLocaleId == 'en',
                       onSelected: (val) {
                         if (val) setState(() => _selectedLocaleId = 'en');
@@ -452,7 +480,9 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                             : theme.colorScheme.primary.withValues(alpha: 0.08),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: _isRecording ? Colors.red : theme.colorScheme.primary,
+                          color: _isRecording
+                              ? Colors.red
+                              : theme.colorScheme.primary,
                           width: _isRecording ? 3.5 : 2,
                         ),
                         boxShadow: _isRecording
@@ -461,7 +491,7 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                                   color: Colors.red.withValues(alpha: 0.4),
                                   blurRadius: 18,
                                   spreadRadius: 4,
-                                )
+                                ),
                               ]
                             : null,
                       ),
@@ -469,9 +499,13 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                         icon: Icon(
                           _isRecording ? Icons.stop_rounded : Icons.mic_rounded,
                           size: 46,
-                          color: _isRecording ? Colors.red : theme.colorScheme.primary,
+                          color: _isRecording
+                              ? Colors.red
+                              : theme.colorScheme.primary,
                         ),
-                        onPressed: _isRecording ? _stopRecording : _startRecording,
+                        onPressed: _isRecording
+                            ? _stopRecording
+                            : _startRecording,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -510,7 +544,9 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                   label: Text(pickButtonText),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(0, 48),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
@@ -519,7 +555,10 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                 const SizedBox(height: 12),
                 Center(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.teal.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -527,11 +566,19 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.music_note_rounded, color: Colors.teal, size: 18),
+                        const Icon(
+                          Icons.music_note_rounded,
+                          color: Colors.teal,
+                          size: 18,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           _audioFileName,
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.teal),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.teal,
+                          ),
                         ),
                       ],
                     ),
@@ -543,7 +590,9 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
               // Loading Indicator
               if (_isLoading) ...[
                 Card(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(24.0),
                     child: Column(
@@ -552,7 +601,10 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                         const SizedBox(height: 16),
                         Text(
                           t('audio_summarizer_loading'),
-                          style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
@@ -570,15 +622,22 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                       child: Row(
                         children: [
                           Icon(
-                            hasText ? Icons.text_snippet_rounded : Icons.info_outline_rounded,
-                            color: hasText ? theme.colorScheme.primary : Colors.amber,
+                            hasText
+                                ? Icons.text_snippet_rounded
+                                : Icons.info_outline_rounded,
+                            color: hasText
+                                ? theme.colorScheme.primary
+                                : Colors.amber,
                             size: 22,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               hasText ? 'دەقی دەنگەکە:' : 'تێبینی:',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -600,7 +659,11 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                             onPressed: _shareText,
                           ),
                           IconButton(
-                            icon: const Icon(Icons.delete_outline_rounded, size: 20, color: Colors.redAccent),
+                            icon: const Icon(
+                              Icons.delete_outline_rounded,
+                              size: 20,
+                              color: Colors.redAccent,
+                            ),
                             tooltip: 'سڕینەوە',
                             onPressed: _clearText,
                           ),
@@ -612,7 +675,9 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
 
                 Card(
                   elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
@@ -634,7 +699,10 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                               Expanded(
                                 child: Text(
                                   '${_transcriptController.text.trim().split(RegExp(r'\s+')).length} وشە | ${_transcriptController.text.length} پیت',
-                                  style: TextStyle(fontSize: 11.5, color: Colors.grey.shade600),
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    color: Colors.grey.shade600,
+                                  ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
@@ -646,11 +714,21 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                               Expanded(
                                 child: OutlinedButton.icon(
                                   onPressed: _copyText,
-                                  icon: const Icon(Icons.copy_rounded, size: 16),
-                                  label: const Text('لەبەرگرتنەوە (Copy)', style: TextStyle(fontSize: 12)),
+                                  icon: const Icon(
+                                    Icons.copy_rounded,
+                                    size: 16,
+                                  ),
+                                  label: const Text(
+                                    'لەبەرگرتنەوە (Copy)',
+                                    style: TextStyle(fontSize: 12),
+                                  ),
                                   style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 10),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 10,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -658,13 +736,23 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                               Expanded(
                                 child: ElevatedButton.icon(
                                   onPressed: _shareText,
-                                  icon: const Icon(Icons.share_rounded, size: 16),
-                                  label: const Text('هاوبەشکردن (Share)', style: TextStyle(fontSize: 12)),
+                                  icon: const Icon(
+                                    Icons.share_rounded,
+                                    size: 16,
+                                  ),
+                                  label: const Text(
+                                    'هاوبەشکردن (Share)',
+                                    style: TextStyle(fontSize: 12),
+                                  ),
                                   style: ElevatedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 10),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 10,
+                                    ),
                                     backgroundColor: theme.colorScheme.primary,
                                     foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -674,23 +762,41 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                           SizedBox(
                             width: double.maxFinite,
                             child: ElevatedButton.icon(
-                              onPressed: _isSummarizing ? null : _generateSummary,
+                              onPressed: _isSummarizing
+                                  ? null
+                                  : _generateSummary,
                               icon: _isSummarizing
                                   ? const SizedBox(
                                       width: 18,
                                       height: 18,
-                                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
                                     )
-                                  : const Icon(Icons.auto_awesome_rounded, size: 18),
+                                  : const Icon(
+                                      Icons.auto_awesome_rounded,
+                                      size: 18,
+                                    ),
                               label: Text(
-                                _isSummarizing ? 'خەریکی پوختەکردنی وانەکەیە...' : lang.translate('audio_summarizer_summary_btn'),
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                _isSummarizing
+                                    ? 'خەریکی پوختەکردنی وانەکەیە...'
+                                    : lang.translate(
+                                        'audio_summarizer_summary_btn',
+                                      ),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                                 backgroundColor: const Color(0xFF7C3AED),
                                 foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                             ),
                           ),
@@ -703,7 +809,9 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                   const SizedBox(height: 18),
                   Card(
                     elevation: 3,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
                     color: theme.brightness == Brightness.dark
                         ? const Color(0xFF1E1B4B)
                         : const Color(0xFFF5F3FF),
@@ -717,25 +825,40 @@ class _AudioSummarizerViewState extends State<AudioSummarizerView> {
                             children: [
                               const Row(
                                 children: [
-                                  Icon(Icons.auto_awesome_rounded, color: Color(0xFF7C3AED), size: 22),
+                                  Icon(
+                                    Icons.auto_awesome_rounded,
+                                    color: Color(0xFF7C3AED),
+                                    size: 22,
+                                  ),
                                   SizedBox(width: 8),
                                   Text(
                                     'پوختەی سەرەکی وانە (AI Summary) 🎙️',
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
                                   ),
                                 ],
                               ),
                               Row(
                                 children: [
                                   IconButton(
-                                    icon: const Icon(Icons.copy_rounded, size: 18),
+                                    icon: const Icon(
+                                      Icons.copy_rounded,
+                                      size: 18,
+                                    ),
                                     tooltip: 'لەبەرگرتنەوەی پوختە',
-                                    onPressed: () => _copyText(_summarizedNotes),
+                                    onPressed: () =>
+                                        _copyText(_summarizedNotes),
                                   ),
                                   IconButton(
-                                    icon: const Icon(Icons.share_rounded, size: 18),
+                                    icon: const Icon(
+                                      Icons.share_rounded,
+                                      size: 18,
+                                    ),
                                     tooltip: 'هاوبەشکردنی پوختە',
-                                    onPressed: () => _shareText(_summarizedNotes),
+                                    onPressed: () =>
+                                        _shareText(_summarizedNotes),
                                   ),
                                 ],
                               ),

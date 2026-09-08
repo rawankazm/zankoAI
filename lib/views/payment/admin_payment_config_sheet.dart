@@ -18,15 +18,26 @@ class AdminPaymentConfigSheet extends StatefulWidget {
   }
 
   @override
-  State<AdminPaymentConfigSheet> createState() => _AdminPaymentConfigSheetState();
+  State<AdminPaymentConfigSheet> createState() =>
+      _AdminPaymentConfigSheetState();
 }
 
 class _AdminPaymentConfigSheetState extends State<AdminPaymentConfigSheet> {
-  final TextEditingController _whatsappController = TextEditingController(text: '07509987345');
-  final TextEditingController _telegramController = TextEditingController(text: 'rawankurdi');
-  final TextEditingController _fibController = TextEditingController(text: 'FIB-ZANKO-9090');
-  final TextEditingController _fastPayController = TextEditingController(text: '0750 789 9090');
-  final TextEditingController _zainCashController = TextEditingController(text: '0780 789 9090');
+  final TextEditingController _whatsappController = TextEditingController(
+    text: '07509987345',
+  );
+  final TextEditingController _telegramController = TextEditingController(
+    text: 'rawankurdi',
+  );
+  final TextEditingController _fibController = TextEditingController(
+    text: 'FIB-ZANKO-9090',
+  );
+  final TextEditingController _fastPayController = TextEditingController(
+    text: '0750 789 9090',
+  );
+  final TextEditingController _zainCashController = TextEditingController(
+    text: '0780 789 9090',
+  );
 
   bool _isLoading = true;
   bool _isSaving = false;
@@ -46,11 +57,16 @@ class _AdminPaymentConfigSheetState extends State<AdminPaymentConfigSheet> {
           .eq('key', 'payment_config')
           .maybeSingle();
       if (data != null) {
-        if (data['whatsappNumber'] != null) _whatsappController.text = data['whatsappNumber'].toString();
-        if (data['telegramUsername'] != null) _telegramController.text = data['telegramUsername'].toString();
-        if (data['fibNumber'] != null) _fibController.text = data['fibNumber'].toString();
-        if (data['fastPayNumber'] != null) _fastPayController.text = data['fastPayNumber'].toString();
-        if (data['zainCashNumber'] != null) _zainCashController.text = data['zainCashNumber'].toString();
+        if (data['whatsappNumber'] != null)
+          _whatsappController.text = data['whatsappNumber'].toString();
+        if (data['telegramUsername'] != null)
+          _telegramController.text = data['telegramUsername'].toString();
+        if (data['fibNumber'] != null)
+          _fibController.text = data['fibNumber'].toString();
+        if (data['fastPayNumber'] != null)
+          _fastPayController.text = data['fastPayNumber'].toString();
+        if (data['zainCashNumber'] != null)
+          _zainCashController.text = data['zainCashNumber'].toString();
       }
     } catch (_) {}
     if (mounted) {
@@ -65,8 +81,13 @@ class _AdminPaymentConfigSheetState extends State<AdminPaymentConfigSheet> {
     final fastpay = _fastPayController.text.trim();
     final zaincash = _zainCashController.text.trim();
 
-    if (whatsapp.isEmpty || fib.isEmpty || fastpay.isEmpty || zaincash.isEmpty) {
-      setState(() => _statusMsg = 'تکایە خانەکانی پەیوەندی و ژمارەکان پڕبکەرەوە');
+    if (whatsapp.isEmpty ||
+        fib.isEmpty ||
+        fastpay.isEmpty ||
+        zaincash.isEmpty) {
+      setState(
+        () => _statusMsg = 'تکایە خانەکانی پەیوەندی و ژمارەکان پڕبکەرەوە',
+      );
       return;
     }
 
@@ -89,7 +110,9 @@ class _AdminPaymentConfigSheetState extends State<AdminPaymentConfigSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('ڕێکخستنەکانی پارەدان و پەیوەندی VIP پاشەکەوت کران 💳'),
+            content: Text(
+              'ڕێکخستنەکانی پارەدان و پەیوەندی VIP پاشەکەوت کران 💳',
+            ),
             backgroundColor: ZankoColors.success,
           ),
         );
@@ -155,12 +178,20 @@ class _AdminPaymentConfigSheetState extends State<AdminPaymentConfigSheet> {
               const SizedBox(height: 12),
               Text(
                 'ئەم زانیارییانەی خوارەوە لەسەر مۆبایلی سەرجەم خوێندکاران بە شێوەی ڕاستەوخۆ (Real-time) دەگۆڕێن:',
-                style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                ),
               ),
               const SizedBox(height: 20),
 
               if (_isLoading)
-                const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: CircularProgressIndicator(),
+                  ),
+                )
               else ...[
                 // WhatsApp
                 TextField(
@@ -168,8 +199,13 @@ class _AdminPaymentConfigSheetState extends State<AdminPaymentConfigSheet> {
                   keyboardType: TextInputType.phone,
                   decoration: InputDecoration(
                     labelText: '💬 ژمارەی WhatsApp (بۆ کڕینی VIP)',
-                    prefixIcon: const Icon(CupertinoIcons.chat_bubble_fill, color: Color(0xFF25D366)),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                    prefixIcon: const Icon(
+                      CupertinoIcons.chat_bubble_fill,
+                      color: Color(0xFF25D366),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -179,8 +215,13 @@ class _AdminPaymentConfigSheetState extends State<AdminPaymentConfigSheet> {
                   controller: _telegramController,
                   decoration: InputDecoration(
                     labelText: '✈️ یوزەرنەیمی Telegram',
-                    prefixIcon: const Icon(CupertinoIcons.paperplane_fill, color: Color(0xFF229ED9)),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                    prefixIcon: const Icon(
+                      CupertinoIcons.paperplane_fill,
+                      color: Color(0xFF229ED9),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -190,8 +231,13 @@ class _AdminPaymentConfigSheetState extends State<AdminPaymentConfigSheet> {
                   controller: _fibController,
                   decoration: InputDecoration(
                     labelText: 'ژمارەی ئەژماری FIB — بانکی یەکەمی عێراقی',
-                    prefixIcon: const Icon(Icons.account_balance_rounded, color: Color(0xFF0F172A)),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                    prefixIcon: const Icon(
+                      Icons.account_balance_rounded,
+                      color: Color(0xFF0F172A),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -202,8 +248,13 @@ class _AdminPaymentConfigSheetState extends State<AdminPaymentConfigSheet> {
                   keyboardType: TextInputType.phone,
                   decoration: InputDecoration(
                     labelText: 'ژمارەی فاست پەی (FastPay Number)',
-                    prefixIcon: const Icon(Icons.account_balance_wallet_rounded, color: Color(0xFFE11D48)),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                    prefixIcon: const Icon(
+                      Icons.account_balance_wallet_rounded,
+                      color: Color(0xFFE11D48),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -214,14 +265,25 @@ class _AdminPaymentConfigSheetState extends State<AdminPaymentConfigSheet> {
                   keyboardType: TextInputType.phone,
                   decoration: InputDecoration(
                     labelText: 'ژمارەی زین کاش (ZainCash Number)',
-                    prefixIcon: Icon(Icons.phone_android_rounded, color: ZankoColors.primary),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                    prefixIcon: Icon(
+                      Icons.phone_android_rounded,
+                      color: ZankoColors.primary,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
 
                 if (_statusMsg != null) ...[
-                  Text(_statusMsg!, style: const TextStyle(color: Colors.redAccent, fontSize: 13)),
+                  Text(
+                    _statusMsg!,
+                    style: const TextStyle(
+                      color: Colors.redAccent,
+                      fontSize: 13,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                 ],
 
@@ -231,13 +293,26 @@ class _AdminPaymentConfigSheetState extends State<AdminPaymentConfigSheet> {
                   child: ElevatedButton.icon(
                     onPressed: _isSaving ? null : _savePaymentNumbers,
                     icon: _isSaving
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
                         : const Icon(CupertinoIcons.checkmark_seal_fill),
-                    label: Text(_isSaving ? 'پاشەکەوت دەکرێت...' : 'پاشەکەوتکردنی ژمارەکان 💾'),
+                    label: Text(
+                      _isSaving
+                          ? 'پاشەکەوت دەکرێت...'
+                          : 'پاشەکەوتکردنی ژمارەکان 💾',
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: ZankoColors.primary,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                   ),
                 ),

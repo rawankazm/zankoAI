@@ -25,7 +25,7 @@ class _NotesScreenState extends State<NotesScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
-  
+
   String _selectedCourse = 'Operating Systems';
   String _selectedCategoryFilter = 'all'; // stable internal key
 
@@ -72,7 +72,7 @@ class _NotesScreenState extends State<NotesScreen> {
   void _showNoteModal(BuildContext context, [NoteModel? note]) {
     _editingNote = note;
     _currentNoteIsAiFormatted = note?.isAiFormatted ?? false;
-    
+
     if (note != null) {
       _titleController.text = note.title;
       _contentController.text = note.content;
@@ -103,7 +103,9 @@ class _NotesScreenState extends State<NotesScreen> {
               ),
               decoration: BoxDecoration(
                 color: isDark ? ZankoColors.darkCard : Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(30),
+                ),
                 boxShadow: ZankoShadows.card,
               ),
               child: SingleChildScrollView(
@@ -126,21 +128,28 @@ class _NotesScreenState extends State<NotesScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          note == null ? '✍️ Create New Note' : '✏️ Edit Study Note',
+                          note == null
+                              ? '✍️ Create New Note'
+                              : '✏️ Edit Study Note',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
-                            color: isDark ? Colors.white : ZankoColors.textPrimary,
+                            color: isDark
+                                ? Colors.white
+                                : ZankoColors.textPrimary,
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(CupertinoIcons.xmark_circle_fill, color: Colors.grey),
+                          icon: const Icon(
+                            CupertinoIcons.xmark_circle_fill,
+                            color: Colors.grey,
+                          ),
                           onPressed: () => Navigator.pop(context),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Title Input
                     TextField(
                       controller: _titleController,
@@ -150,10 +159,15 @@ class _NotesScreenState extends State<NotesScreen> {
                         color: isDark ? Colors.white : ZankoColors.textPrimary,
                       ),
                       decoration: InputDecoration(
-                        hintText: Provider.of<LanguageProvider>(context, listen: false).translate('note_title_hint'),
+                        hintText: Provider.of<LanguageProvider>(
+                          context,
+                          listen: false,
+                        ).translate('note_title_hint'),
                         hintStyle: TextStyle(color: ZankoColors.textSecondary),
                         filled: true,
-                        fillColor: isDark ? ZankoColors.darkBackground : const Color(0xFFF6F6FB),
+                        fillColor: isDark
+                            ? ZankoColors.darkBackground
+                            : const Color(0xFFF6F6FB),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
                           borderSide: BorderSide.none,
@@ -164,24 +178,37 @@ class _NotesScreenState extends State<NotesScreen> {
 
                     // Course Dropdown
                     DropdownButtonFormField<String>(
-                      initialValue: _courses.contains(_selectedCourse) ? _selectedCourse : _courses.first,
+                      initialValue: _courses.contains(_selectedCourse)
+                          ? _selectedCourse
+                          : _courses.first,
                       isExpanded: true,
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: isDark ? ZankoColors.darkBackground : const Color(0xFFF6F6FB),
-                        prefixIcon: Icon(Icons.class_rounded, color: _getCourseColor(_selectedCourse)),
+                        fillColor: isDark
+                            ? ZankoColors.darkBackground
+                            : const Color(0xFFF6F6FB),
+                        prefixIcon: Icon(
+                          Icons.class_rounded,
+                          color: _getCourseColor(_selectedCourse),
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
                           borderSide: BorderSide.none,
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
                       ),
                       items: _courses.map((c) {
                         return DropdownMenuItem<String>(
                           value: c,
                           child: Text(
                             c,
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         );
                       }).toList(),
@@ -204,18 +231,30 @@ class _NotesScreenState extends State<NotesScreen> {
                         color: isDark ? Colors.white : ZankoColors.textPrimary,
                       ),
                       decoration: InputDecoration(
-                        hintText: Provider.of<LanguageProvider>(context, listen: false).translate('note_content_hint'),
+                        hintText: Provider.of<LanguageProvider>(
+                          context,
+                          listen: false,
+                        ).translate('note_content_hint'),
                         hintStyle: TextStyle(color: ZankoColors.textSecondary),
                         filled: true,
-                        fillColor: isDark ? ZankoColors.darkBackground : const Color(0xFFF6F6FB),
+                        fillColor: isDark
+                            ? ZankoColors.darkBackground
+                            : const Color(0xFFF6F6FB),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide.none,
                         ),
                         suffixIcon: IconButton(
-                          icon: Icon(CupertinoIcons.mic_fill, color: ZankoColors.primary),
-                          tooltip: Provider.of<LanguageProvider>(context, listen: false).translate('dictate_voice_note'),
-                          onPressed: () => _startVoiceRecordingModal(context, setModalState),
+                          icon: Icon(
+                            CupertinoIcons.mic_fill,
+                            color: ZankoColors.primary,
+                          ),
+                          tooltip: Provider.of<LanguageProvider>(
+                            context,
+                            listen: false,
+                          ).translate('dictate_voice_note'),
+                          onPressed: () =>
+                              _startVoiceRecordingModal(context, setModalState),
                         ),
                       ),
                     ),
@@ -232,12 +271,17 @@ class _NotesScreenState extends State<NotesScreen> {
                               const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2.5),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                ),
                               ),
                               const SizedBox(width: 12),
                               Text(
                                 t('ai_organizing_note'),
-                                style: TextStyle(fontSize: 13, color: ZankoColors.primary),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: ZankoColors.primary,
+                                ),
                               ),
                             ],
                           ),
@@ -250,9 +294,14 @@ class _NotesScreenState extends State<NotesScreen> {
                           if (rawContent.isEmpty) return;
 
                           setModalState(() => _isAiOrganizing = true);
-                          final aiService = Provider.of<AiService>(context, listen: false);
+                          final aiService = Provider.of<AiService>(
+                            context,
+                            listen: false,
+                          );
                           try {
-                            final polished = await aiService.organizeNote(rawContent);
+                            final polished = await aiService.organizeNote(
+                              rawContent,
+                            );
                             setModalState(() {
                               _contentController.text = polished;
                               _isAiOrganizing = false;
@@ -263,12 +312,17 @@ class _NotesScreenState extends State<NotesScreen> {
                           }
                         },
                         icon: const Icon(CupertinoIcons.sparkles, size: 18),
-                        label: Text('AI Format & Summarize', style: TextStyle(fontWeight: FontWeight.w600)),
+                        label: Text(
+                          'AI Format & Summarize',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: ZankoColors.primary,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
                       ),
 
@@ -282,9 +336,14 @@ class _NotesScreenState extends State<NotesScreen> {
                               backgroundColor: Colors.black,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
                             ),
-                            child: Text('Save Note', style: TextStyle(fontWeight: FontWeight.w700)),
+                            child: Text(
+                              'Save Note',
+                              style: TextStyle(fontWeight: FontWeight.w700),
+                            ),
                           ),
                         ),
                       ],
@@ -299,19 +358,25 @@ class _NotesScreenState extends State<NotesScreen> {
     );
   }
 
-  Future<void> _startVoiceRecordingModal(BuildContext context, StateSetter setModalState) async {
+  Future<void> _startVoiceRecordingModal(
+    BuildContext context,
+    StateSetter setModalState,
+  ) async {
     final audioRecorder = AudioRecorder();
     if (!await audioRecorder.hasPermission()) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ڕێگەپێدانی مایکرۆفۆن پێویستە بۆ تۆمارکردن 🎙️')),
+          const SnackBar(
+            content: Text('ڕێگەپێدانی مایکرۆفۆن پێویستە بۆ تۆمارکردن 🎙️'),
+          ),
         );
       }
       return;
     }
 
     final tempDir = await getTemporaryDirectory();
-    final filePath = '${tempDir.path}/note_voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
+    final filePath =
+        '${tempDir.path}/note_voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
     await audioRecorder.start(
       const RecordConfig(encoder: AudioEncoder.aacLc),
       path: filePath,
@@ -320,7 +385,10 @@ class _NotesScreenState extends State<NotesScreen> {
     int recordSeconds = 0;
     Timer? recordTimer;
     bool isProcessing = false;
-    List<double> barHeights = List.generate(12, (_) => 12.0 + Random().nextDouble() * 30.0);
+    List<double> barHeights = List.generate(
+      12,
+      (_) => 12.0 + Random().nextDouble() * 30.0,
+    );
 
     if (!context.mounted) return;
 
@@ -330,7 +398,10 @@ class _NotesScreenState extends State<NotesScreen> {
       builder: (dialogCtx) {
         return StatefulBuilder(
           builder: (dialogCtx, setDialogState) {
-            final lang = Provider.of<LanguageProvider>(dialogCtx, listen: false);
+            final lang = Provider.of<LanguageProvider>(
+              dialogCtx,
+              listen: false,
+            );
             final aiService = Provider.of<AiService>(dialogCtx, listen: false);
             String t(String key) => lang.translate(key);
 
@@ -338,23 +409,36 @@ class _NotesScreenState extends State<NotesScreen> {
               if (!isProcessing) {
                 setDialogState(() {
                   recordSeconds++;
-                  barHeights = List.generate(12, (_) => 12.0 + Random().nextDouble() * 30.0);
+                  barHeights = List.generate(
+                    12,
+                    (_) => 12.0 + Random().nextDouble() * 30.0,
+                  );
                 });
               }
             });
 
-            String timeStr = '${(recordSeconds ~/ 60).toString().padLeft(2, '0')}:${(recordSeconds % 60).toString().padLeft(2, '0')}';
+            String timeStr =
+                '${(recordSeconds ~/ 60).toString().padLeft(2, '0')}:${(recordSeconds % 60).toString().padLeft(2, '0')}';
 
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+              ),
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(CupertinoIcons.mic_circle_fill, color: Colors.redAccent, size: 28),
+                  const Icon(
+                    CupertinoIcons.mic_circle_fill,
+                    color: Colors.redAccent,
+                    size: 28,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     t('recording_voice_note'),
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -366,12 +450,19 @@ class _NotesScreenState extends State<NotesScreen> {
                     const SizedBox(height: 16),
                     const Text(
                       'Gemini Flash دەنگەکە دەکاتە دەق... ⚡',
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
                     ),
                   ] else ...[
                     Text(
                       timeStr,
-                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.redAccent),
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.redAccent,
+                      ),
                     ),
                     const SizedBox(height: 20),
                     Row(
@@ -418,11 +509,12 @@ class _NotesScreenState extends State<NotesScreen> {
                                 final fileToRead = File(path ?? filePath);
                                 if (await fileToRead.exists()) {
                                   final bytes = await fileToRead.readAsBytes();
-                                  final transcribedText = await aiService.transcribeAudio(
-                                    bytes,
-                                    'note_voice.m4a',
-                                    mimeType: 'audio/mp4',
-                                  );
+                                  final transcribedText = await aiService
+                                      .transcribeAudio(
+                                        bytes,
+                                        'note_voice.m4a',
+                                        mimeType: 'audio/mp4',
+                                      );
 
                                   try {
                                     await fileToRead.delete();
@@ -430,8 +522,11 @@ class _NotesScreenState extends State<NotesScreen> {
 
                                   if (transcribedText.trim().isNotEmpty) {
                                     setModalState(() {
-                                      final currentText = _contentController.text.trim();
-                                      _contentController.text = currentText.isEmpty
+                                      final currentText = _contentController
+                                          .text
+                                          .trim();
+                                      _contentController.text =
+                                          currentText.isEmpty
                                           ? transcribedText.trim()
                                           : '$currentText\n${transcribedText.trim()}';
                                     });
@@ -442,13 +537,24 @@ class _NotesScreenState extends State<NotesScreen> {
                               audioRecorder.dispose();
                               if (dialogCtx.mounted) Navigator.pop(dialogCtx);
                             },
-                            icon: const Icon(CupertinoIcons.checkmark_circle_fill, size: 18),
-                            label: const Text('تەواو', style: TextStyle(fontWeight: FontWeight.w600)),
+                            icon: const Icon(
+                              CupertinoIcons.checkmark_circle_fill,
+                              size: 18,
+                            ),
+                            label: const Text(
+                              'تەواو',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.redAccent,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
                             ),
                           ),
                         ),
@@ -470,7 +576,14 @@ class _NotesScreenState extends State<NotesScreen> {
 
     if (title.isEmpty || content.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(Provider.of<LanguageProvider>(context, listen: false).translate('provide_title_content'))),
+        SnackBar(
+          content: Text(
+            Provider.of<LanguageProvider>(
+              context,
+              listen: false,
+            ).translate('provide_title_content'),
+          ),
+        ),
       );
       return;
     }
@@ -499,7 +612,14 @@ class _NotesScreenState extends State<NotesScreen> {
 
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(Provider.of<LanguageProvider>(context, listen: false).translate('note_saved'))),
+      SnackBar(
+        content: Text(
+          Provider.of<LanguageProvider>(
+            context,
+            listen: false,
+          ).translate('note_saved'),
+        ),
+      ),
     );
   }
 
@@ -507,7 +627,14 @@ class _NotesScreenState extends State<NotesScreen> {
     final dbService = Provider.of<DatabaseService>(context, listen: false);
     dbService.deleteNote(noteId);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(Provider.of<LanguageProvider>(context, listen: false).translate('note_deleted'))),
+      SnackBar(
+        content: Text(
+          Provider.of<LanguageProvider>(
+            context,
+            listen: false,
+          ).translate('note_deleted'),
+        ),
+      ),
     );
   }
 
@@ -521,7 +648,8 @@ class _NotesScreenState extends State<NotesScreen> {
     // Filter notes based on search query & category pills
     final searchQuery = _searchController.text.trim().toLowerCase();
     final filteredNotes = dbService.notes.where((n) {
-      final matchesSearch = searchQuery.isEmpty ||
+      final matchesSearch =
+          searchQuery.isEmpty ||
           n.title.toLowerCase().contains(searchQuery) ||
           n.content.toLowerCase().contains(searchQuery) ||
           (n.courseName?.toLowerCase().contains(searchQuery) ?? false);
@@ -537,9 +665,13 @@ class _NotesScreenState extends State<NotesScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
+      backgroundColor: isDark
+          ? ZankoColors.darkBackground
+          : ZankoColors.background,
       appBar: AppBar(
-        backgroundColor: (isDark ? ZankoColors.darkBackground : ZankoColors.background).withValues(alpha: 0.9),
+        backgroundColor:
+            (isDark ? ZankoColors.darkBackground : ZankoColors.background)
+                .withValues(alpha: 0.9),
         elevation: 0,
         title: Text(
           langProvider.translate('notes_title'),
@@ -553,10 +685,15 @@ class _NotesScreenState extends State<NotesScreen> {
         actions: [
           IconButton(
             icon: Icon(
-              _isGridView ? CupertinoIcons.list_bullet : CupertinoIcons.square_grid_2x2,
+              _isGridView
+                  ? CupertinoIcons.list_bullet
+                  : CupertinoIcons.square_grid_2x2,
               color: ZankoColors.primary,
             ),
-            tooltip: Provider.of<LanguageProvider>(context, listen: false).translate('toggle_view'),
+            tooltip: Provider.of<LanguageProvider>(
+              context,
+              listen: false,
+            ).translate('toggle_view'),
             onPressed: () => setState(() => _isGridView = !_isGridView),
           ),
         ],
@@ -573,7 +710,9 @@ class _NotesScreenState extends State<NotesScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: isDark ? [] : ZankoShadows.card,
                 border: Border.all(
-                  color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFEFEFF6),
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : const Color(0xFFEFEFF6),
                 ),
               ),
               child: TextField(
@@ -584,13 +723,24 @@ class _NotesScreenState extends State<NotesScreen> {
                   color: isDark ? Colors.white : ZankoColors.textPrimary,
                 ),
                 decoration: InputDecoration(
-                  icon: const Icon(CupertinoIcons.search, color: ZankoColors.textSecondary, size: 20),
+                  icon: const Icon(
+                    CupertinoIcons.search,
+                    color: ZankoColors.textSecondary,
+                    size: 20,
+                  ),
                   hintText: langProvider.translate('search_notes'),
-                  hintStyle: TextStyle(fontSize: 14, color: ZankoColors.textSecondary),
+                  hintStyle: TextStyle(
+                    fontSize: 14,
+                    color: ZankoColors.textSecondary,
+                  ),
                   border: InputBorder.none,
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.cancel_rounded, size: 18, color: Colors.grey),
+                          icon: const Icon(
+                            Icons.cancel_rounded,
+                            size: 18,
+                            color: Colors.grey,
+                          ),
                           onPressed: () {
                             _searchController.clear();
                             setState(() {});
@@ -608,42 +758,54 @@ class _NotesScreenState extends State<NotesScreen> {
             child: ListView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                // (key, displayLabel) pairs
-                ('all', t('filter_all')),
-                ('AI Notes ✦', 'AI Notes ✦'),
-                ..._courses.map((c) => (c, c)),
-              ].map((entry) {
-                final catKey = entry.$1;
-                final catLabel = entry.$2;
-                final isSelected = _selectedCategoryFilter == catKey;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
-                    selected: isSelected,
-                    showCheckmark: false,
-                    backgroundColor: isDark ? ZankoColors.darkCard : Colors.white,
-                    selectedColor: ZankoColors.primary,
-                    side: BorderSide(
-                      color: isSelected
-                          ? ZankoColors.primary
-                          : (isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFE5E5EA)),
-                    ),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    label: Text(
-                      catLabel,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                        color: isSelected
-                            ? Colors.white
-                            : (isDark ? Colors.white70 : ZankoColors.textPrimary),
+              children:
+                  [
+                    // (key, displayLabel) pairs
+                    ('all', t('filter_all')),
+                    ('AI Notes ✦', 'AI Notes ✦'),
+                    ..._courses.map((c) => (c, c)),
+                  ].map((entry) {
+                    final catKey = entry.$1;
+                    final catLabel = entry.$2;
+                    final isSelected = _selectedCategoryFilter == catKey;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: FilterChip(
+                        selected: isSelected,
+                        showCheckmark: false,
+                        backgroundColor: isDark
+                            ? ZankoColors.darkCard
+                            : Colors.white,
+                        selectedColor: ZankoColors.primary,
+                        side: BorderSide(
+                          color: isSelected
+                              ? ZankoColors.primary
+                              : (isDark
+                                    ? Colors.white.withValues(alpha: 0.1)
+                                    : const Color(0xFFE5E5EA)),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        label: Text(
+                          catLabel,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: isSelected
+                                ? Colors.white
+                                : (isDark
+                                      ? Colors.white70
+                                      : ZankoColors.textPrimary),
+                          ),
+                        ),
+                        onSelected: (_) =>
+                            setState(() => _selectedCategoryFilter = catKey),
                       ),
-                    ),
-                    onSelected: (_) => setState(() => _selectedCategoryFilter = catKey),
-                  ),
-                );
-              }).toList(),
+                    );
+                  }).toList(),
             ),
           ),
           const SizedBox(height: 8),
@@ -658,7 +820,9 @@ class _NotesScreenState extends State<NotesScreen> {
                         Icon(
                           CupertinoIcons.doc_text_search,
                           size: 64,
-                          color: ZankoColors.textSecondary.withValues(alpha: 0.5),
+                          color: ZankoColors.textSecondary.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                         const SizedBox(height: 14),
                         Text(
@@ -673,28 +837,29 @@ class _NotesScreenState extends State<NotesScreen> {
                     ),
                   )
                 : _isGridView
-                    ? GridView.builder(
-                        padding: const EdgeInsets.all(16),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                ? GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           crossAxisSpacing: 14,
                           mainAxisSpacing: 14,
                           childAspectRatio: 0.85,
                         ),
-                        itemCount: filteredNotes.length,
-                        itemBuilder: (context, index) {
-                          final note = filteredNotes[index];
-                          return _buildNoteGridCard(context, note, isDark);
-                        },
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: filteredNotes.length,
-                        itemBuilder: (context, index) {
-                          final note = filteredNotes[index];
-                          return _buildNoteListCard(context, note, isDark);
-                        },
-                      ),
+                    itemCount: filteredNotes.length,
+                    itemBuilder: (context, index) {
+                      final note = filteredNotes[index];
+                      return _buildNoteGridCard(context, note, isDark);
+                    },
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filteredNotes.length,
+                    itemBuilder: (context, index) {
+                      final note = filteredNotes[index];
+                      return _buildNoteListCard(context, note, isDark);
+                    },
+                  ),
           ),
         ],
       ),
@@ -724,7 +889,9 @@ class _NotesScreenState extends State<NotesScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: isDark ? [] : ZankoShadows.card,
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF0F0F6),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : const Color(0xFFF0F0F6),
         ),
       ),
       child: InkWell(
@@ -738,7 +905,9 @@ class _NotesScreenState extends State<NotesScreen> {
               height: 6,
               decoration: BoxDecoration(
                 color: color,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
               ),
             ),
             Padding(
@@ -750,7 +919,10 @@ class _NotesScreenState extends State<NotesScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: color.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
@@ -767,7 +939,11 @@ class _NotesScreenState extends State<NotesScreen> {
                         ),
                       ),
                       if (note.isAiFormatted)
-                        Icon(CupertinoIcons.sparkles, color: ZankoColors.accent, size: 14),
+                        Icon(
+                          CupertinoIcons.sparkles,
+                          color: ZankoColors.accent,
+                          size: 14,
+                        ),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -787,7 +963,9 @@ class _NotesScreenState extends State<NotesScreen> {
                     style: TextStyle(
                       fontSize: 12,
                       height: 1.35,
-                      color: isDark ? Colors.white70 : ZankoColors.textSecondary,
+                      color: isDark
+                          ? Colors.white70
+                          : ZankoColors.textSecondary,
                     ),
                     maxLines: 4,
                     overflow: TextOverflow.ellipsis,
@@ -803,14 +981,21 @@ class _NotesScreenState extends State<NotesScreen> {
                 children: [
                   Text(
                     '${note.createdAt.day}/${note.createdAt.month}',
-                    style: TextStyle(fontSize: 10, color: ZankoColors.textSecondary),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: ZankoColors.textSecondary,
+                    ),
                   ),
                   Row(
                     children: [
                       IconButton(
                         constraints: const BoxConstraints(),
                         padding: EdgeInsets.zero,
-                        icon: const Icon(CupertinoIcons.share, size: 16, color: Colors.grey),
+                        icon: const Icon(
+                          CupertinoIcons.share,
+                          size: 16,
+                          color: Colors.grey,
+                        ),
                         onPressed: () {
                           Share.share(
                             '📌 ${note.title}\n${note.courseName != null ? '📚 ${note.courseName}\n' : ''}\n${note.content}',
@@ -822,7 +1007,11 @@ class _NotesScreenState extends State<NotesScreen> {
                       IconButton(
                         constraints: const BoxConstraints(),
                         padding: EdgeInsets.zero,
-                        icon: const Icon(CupertinoIcons.trash, size: 16, color: Colors.redAccent),
+                        icon: const Icon(
+                          CupertinoIcons.trash,
+                          size: 16,
+                          color: Colors.redAccent,
+                        ),
                         onPressed: () => _deleteNote(context, note.id),
                       ),
                     ],
@@ -847,11 +1036,16 @@ class _NotesScreenState extends State<NotesScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: isDark ? [] : ZankoShadows.card,
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF0F0F6),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : const Color(0xFFF0F0F6),
         ),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 10,
+        ),
         onTap: () => _showNoteModal(context, note),
         leading: Container(
           width: 44,
@@ -861,7 +1055,9 @@ class _NotesScreenState extends State<NotesScreen> {
             shape: BoxShape.circle,
           ),
           child: Icon(
-            note.isAiFormatted ? CupertinoIcons.sparkles : CupertinoIcons.doc_text_fill,
+            note.isAiFormatted
+                ? CupertinoIcons.sparkles
+                : CupertinoIcons.doc_text_fill,
             color: color,
             size: 20,
           ),
@@ -890,7 +1086,11 @@ class _NotesScreenState extends State<NotesScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: const Icon(CupertinoIcons.share, size: 18, color: Colors.grey),
+              icon: const Icon(
+                CupertinoIcons.share,
+                size: 18,
+                color: Colors.grey,
+              ),
               onPressed: () {
                 Share.share(
                   '📌 ${note.title}\n${note.courseName != null ? '📚 ${note.courseName}\n' : ''}\n${note.content}',
@@ -899,7 +1099,11 @@ class _NotesScreenState extends State<NotesScreen> {
               },
             ),
             IconButton(
-              icon: const Icon(CupertinoIcons.trash, size: 18, color: Colors.redAccent),
+              icon: const Icon(
+                CupertinoIcons.trash,
+                size: 18,
+                color: Colors.redAccent,
+              ),
               onPressed: () => _deleteNote(context, note.id),
             ),
           ],

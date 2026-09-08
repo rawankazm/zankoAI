@@ -22,7 +22,8 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
   Future<void> _openAdUrl(String urlStr) async {
     if (urlStr.trim().isEmpty) return;
     String formattedUrl = urlStr.trim();
-    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
+    if (!formattedUrl.startsWith('http://') &&
+        !formattedUrl.startsWith('https://')) {
       formattedUrl = 'https://$formattedUrl';
     }
     final uri = Uri.parse(formattedUrl);
@@ -51,7 +52,10 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
           .limit(5)
           .catchError((_) => <Map<String, dynamic>>[]),
       builder: (context, snapshot) {
-        if (snapshot.hasError || !snapshot.hasData || snapshot.data == null || snapshot.data!.isEmpty) {
+        if (snapshot.hasError ||
+            !snapshot.hasData ||
+            snapshot.data == null ||
+            snapshot.data!.isEmpty) {
           return const SizedBox.shrink();
         }
 
@@ -60,23 +64,29 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
 
         final currentLang = langProvider.currentLanguage;
         String title = adData['title'] ?? '';
-        if (currentLang == AppLanguage.arabic && (adData['titleAr']?.toString().isNotEmpty ?? false)) {
+        if (currentLang == AppLanguage.arabic &&
+            (adData['titleAr']?.toString().isNotEmpty ?? false)) {
           title = adData['titleAr'];
-        } else if (currentLang == AppLanguage.english && (adData['titleEn']?.toString().isNotEmpty ?? false)) {
+        } else if (currentLang == AppLanguage.english &&
+            (adData['titleEn']?.toString().isNotEmpty ?? false)) {
           title = adData['titleEn'];
         }
 
         String description = adData['description'] ?? '';
-        if (currentLang == AppLanguage.arabic && (adData['descAr']?.toString().isNotEmpty ?? false)) {
+        if (currentLang == AppLanguage.arabic &&
+            (adData['descAr']?.toString().isNotEmpty ?? false)) {
           description = adData['descAr'];
-        } else if (currentLang == AppLanguage.english && (adData['descEn']?.toString().isNotEmpty ?? false)) {
+        } else if (currentLang == AppLanguage.english &&
+            (adData['descEn']?.toString().isNotEmpty ?? false)) {
           description = adData['descEn'];
         }
 
         String buttonText = adData['buttonTextKu'] ?? 'سەردان بکە';
-        if (currentLang == AppLanguage.arabic && (adData['buttonTextAr']?.toString().isNotEmpty ?? false)) {
+        if (currentLang == AppLanguage.arabic &&
+            (adData['buttonTextAr']?.toString().isNotEmpty ?? false)) {
           buttonText = adData['buttonTextAr'];
-        } else if (currentLang == AppLanguage.english && (adData['buttonTextEn']?.toString().isNotEmpty ?? false)) {
+        } else if (currentLang == AppLanguage.english &&
+            (adData['buttonTextEn']?.toString().isNotEmpty ?? false)) {
           buttonText = adData['buttonTextEn'];
         }
 
@@ -144,9 +154,14 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
                                 Row(
                                   children: [
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 3,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: ZankoColors.primary.withValues(alpha: 0.15),
+                                        color: ZankoColors.primary.withValues(
+                                          alpha: 0.15,
+                                        ),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Row(
@@ -178,7 +193,9 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
                                     style: TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.bold,
-                                      color: isDark ? Colors.white : ZankoColors.textPrimary,
+                                      color: isDark
+                                          ? Colors.white
+                                          : ZankoColors.textPrimary,
                                     ),
                                   ),
                                 ],
@@ -190,7 +207,9 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                                      color: isDark
+                                          ? Colors.grey[400]
+                                          : ZankoColors.textSecondary,
                                     ),
                                   ),
                                 ],
@@ -208,7 +227,10 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 10,
+                                ),
                               ),
                               child: Text(
                                 buttonText,

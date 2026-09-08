@@ -55,7 +55,8 @@ class AppCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: color ?? defaultBg,
         borderRadius: BorderRadius.circular(borderRadius),
-        boxShadow: boxShadow ??
+        boxShadow:
+            boxShadow ??
             (isDark
                 ? [
                     BoxShadow(
@@ -65,9 +66,12 @@ class AppCard extends StatelessWidget {
                     ),
                   ]
                 : ZankoShadows.card),
-        border: border ??
+        border:
+            border ??
             Border.all(
-              color: isDark ? Colors.white.withValues(alpha: 0.12) : const Color(0xFFF0F0F6),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.12)
+                  : const Color(0xFFF0F0F6),
               width: 1,
             ),
       ),
@@ -75,10 +79,7 @@ class AppCard extends StatelessWidget {
     );
 
     if (onTap != null) {
-      return AnimatedScaleButton(
-        onTap: onTap,
-        child: content,
-      );
+      return AnimatedScaleButton(onTap: onTap, child: content);
     }
 
     return content;
@@ -90,11 +91,7 @@ class AnimatedScaleButton extends StatefulWidget {
   final Widget child;
   final VoidCallback? onTap;
 
-  const AnimatedScaleButton({
-    super.key,
-    required this.child,
-    this.onTap,
-  });
+  const AnimatedScaleButton({super.key, required this.child, this.onTap});
 
   @override
   State<AnimatedScaleButton> createState() => _AnimatedScaleButtonState();
@@ -113,9 +110,10 @@ class _AnimatedScaleButtonState extends State<AnimatedScaleButton>
       duration: const Duration(milliseconds: 100),
       reverseDuration: const Duration(milliseconds: 150),
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.97).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.97,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -143,10 +141,7 @@ class _AnimatedScaleButtonState extends State<AnimatedScaleButton>
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
       onTapCancel: _onTapCancel,
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: widget.child,
-      ),
+      child: ScaleTransition(scale: _scaleAnimation, child: widget.child),
     );
   }
 }
@@ -190,7 +185,7 @@ class GradientButton extends StatelessWidget {
               Text(
                 text,
                 style: TextStyle(
-          fontSize: 16,
+                  fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
@@ -283,7 +278,9 @@ class AppleSearchBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(ZankoRadius.input),
         boxShadow: isDark ? [] : ZankoShadows.card,
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFEFEFF7),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : const Color(0xFFEFEFF7),
           width: 1,
         ),
       ),
@@ -303,14 +300,16 @@ class AppleSearchBar extends StatelessWidget {
                 onSubmitted: onSubmitted,
                 onTap: onTap,
                 style: TextStyle(
-          fontSize: 15,
+                  fontSize: 15,
                   color: isDark ? Colors.white : ZankoColors.textPrimary,
                 ),
                 decoration: InputDecoration(
                   hintText: hintText,
                   hintStyle: TextStyle(
-          fontSize: 15,
-                    color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                    fontSize: 15,
+                    color: isDark
+                        ? Colors.grey[400]
+                        : ZankoColors.textSecondary,
                   ),
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
@@ -387,7 +386,7 @@ class ProgressRing extends StatelessWidget {
               Text(
                 title,
                 style: TextStyle(
-          fontSize: 22,
+                  fontSize: 22,
                   fontWeight: FontWeight.w800,
                   color: isDark ? Colors.white : ZankoColors.textPrimary,
                   letterSpacing: -0.5,
@@ -396,7 +395,7 @@ class ProgressRing extends StatelessWidget {
               Text(
                 subtitle,
                 style: TextStyle(
-          fontSize: 11,
+                  fontSize: 11,
                   fontWeight: FontWeight.w500,
                   color: isDark ? Colors.grey[400]! : ZankoColors.textSecondary,
                 ),
@@ -421,7 +420,9 @@ class _RingPainter extends CustomPainter {
     final radius = (size.width - strokeWidth) / 2;
 
     final bgPaint = Paint()
-      ..color = isDark ? Colors.white.withValues(alpha: 0.12) : const Color(0xFFEFEFF7)
+      ..color = isDark
+          ? Colors.white.withValues(alpha: 0.12)
+          : const Color(0xFFEFEFF7)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
@@ -466,8 +467,7 @@ class AIHeroCard extends StatefulWidget {
   State<AIHeroCard> createState() => _AIHeroCardState();
 }
 
-class _AIHeroCardState extends State<AIHeroCard>
-    with TickerProviderStateMixin {
+class _AIHeroCardState extends State<AIHeroCard> with TickerProviderStateMixin {
   late AnimationController _floatController;
   late Animation<double> _floatAnimation;
   late AnimationController _punchController;
@@ -512,13 +512,17 @@ class _AIHeroCardState extends State<AIHeroCard>
 
     _punchScale = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween<double>(begin: 1.0, end: 1.25)
-            .chain(CurveTween(curve: Curves.easeOutBack)),
+        tween: Tween<double>(
+          begin: 1.0,
+          end: 1.25,
+        ).chain(CurveTween(curve: Curves.easeOutBack)),
         weight: 45,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: 1.25, end: 1.0)
-            .chain(CurveTween(curve: Curves.elasticOut)),
+        tween: Tween<double>(
+          begin: 1.25,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.elasticOut)),
         weight: 55,
       ),
     ]).animate(_punchController);
@@ -562,7 +566,9 @@ class _AIHeroCardState extends State<AIHeroCard>
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF035EC2).withValues(alpha: isDark ? 0.2 : 0.04),
+            color: const Color(
+              0xFF035EC2,
+            ).withValues(alpha: isDark ? 0.2 : 0.04),
             blurRadius: 20,
             offset: const Offset(0, 6),
           ),
@@ -578,7 +584,10 @@ class _AIHeroCardState extends State<AIHeroCard>
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF1E293B) : Colors.white,
                   borderRadius: BorderRadius.circular(14),
@@ -604,16 +613,27 @@ class _AIHeroCardState extends State<AIHeroCard>
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        _getAiQuotes(langProvider.currentLanguage == AppLanguage.english)[
-                            _quoteIndex % _getAiQuotes(langProvider.currentLanguage == AppLanguage.english).length],
+                        _getAiQuotes(
+                          langProvider.currentLanguage == AppLanguage.english,
+                        )[_quoteIndex %
+                            _getAiQuotes(
+                              langProvider.currentLanguage ==
+                                  AppLanguage.english,
+                            ).length],
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white : ZankoColors.textPrimary,
+                          color: isDark
+                              ? Colors.white
+                              : ZankoColors.textPrimary,
                         ),
                       ),
                     ),
-                    const HugeIcon(icon: HugeIcons.strokeRoundedCancel01, size: 12, color: Colors.grey),
+                    const HugeIcon(
+                      icon: HugeIcons.strokeRoundedCancel01,
+                      size: 12,
+                      color: Colors.grey,
+                    ),
                   ],
                 ),
               ),
@@ -642,7 +662,9 @@ class _AIHeroCardState extends State<AIHeroCard>
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w400,
-                        color: isDark ? const Color(0xFFA6ACB8) : const Color(0xFF6B7280),
+                        color: isDark
+                            ? const Color(0xFFA6ACB8)
+                            : const Color(0xFF6B7280),
                         height: 1.35,
                       ),
                       maxLines: 2,
@@ -652,13 +674,18 @@ class _AIHeroCardState extends State<AIHeroCard>
                     GestureDetector(
                       onTap: widget.onStartLearning,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF035EC2),
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF035EC2).withValues(alpha: 0.3),
+                              color: const Color(
+                                0xFF035EC2,
+                              ).withValues(alpha: 0.3),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
@@ -693,7 +720,10 @@ class _AIHeroCardState extends State<AIHeroCard>
               GestureDetector(
                 onTap: _onRobotTap,
                 child: AnimatedBuilder(
-                  animation: Listenable.merge([_floatAnimation, _punchController]),
+                  animation: Listenable.merge([
+                    _floatAnimation,
+                    _punchController,
+                  ]),
                   builder: (context, child) {
                     return Transform.translate(
                       offset: Offset(0, _floatAnimation.value),
@@ -706,11 +736,11 @@ class _AIHeroCardState extends State<AIHeroCard>
                             'assets/images/robot.png',
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) {
-                                return const HugeIcon(
-                                  icon: HugeIcons.strokeRoundedAiMagic,
-                                  size: 72,
-                                  color: Color(0xFF035EC2),
-                                );
+                              return const HugeIcon(
+                                icon: HugeIcons.strokeRoundedAiMagic,
+                                size: 72,
+                                color: Color(0xFF035EC2),
+                              );
                             },
                           ),
                         ),
@@ -766,7 +796,7 @@ class QuickActionCard extends StatelessWidget {
             child: Text(
               title,
               style: TextStyle(
-          fontSize: 14,
+                fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: isDark ? Colors.white : ZankoColors.textPrimary,
               ),
@@ -814,7 +844,7 @@ class StatisticCard extends StatelessWidget {
             Text(
               value,
               style: TextStyle(
-          fontSize: 14,
+                fontSize: 14,
                 fontWeight: FontWeight.w800,
                 color: isDark ? Colors.white : ZankoColors.textPrimary,
               ),
@@ -823,7 +853,7 @@ class StatisticCard extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-          fontSize: 10,
+                fontSize: 10,
                 fontWeight: FontWeight.w500,
                 color: isDark ? Colors.grey[400]! : ZankoColors.textSecondary,
               ),
@@ -909,7 +939,10 @@ class CourseCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: badgeColor,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: textColor.withValues(alpha: 0.25), width: 0.8),
+        border: Border.all(
+          color: textColor.withValues(alpha: 0.25),
+          width: 0.8,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -954,10 +987,18 @@ class CourseCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF035EC2).withValues(alpha: 0.2) : const Color(0xFFE2EDFB),
+                  color: isDark
+                      ? const Color(0xFF035EC2).withValues(alpha: 0.2)
+                      : const Color(0xFFE2EDFB),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Center(child: appIcon(icon, color: const Color(0xFF035EC2), size: 22)),
+                child: Center(
+                  child: appIcon(
+                    icon,
+                    color: const Color(0xFF035EC2),
+                    size: 22,
+                  ),
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -979,7 +1020,9 @@ class CourseCard extends StatelessWidget {
                       subtitle,
                       style: TextStyle(
                         fontSize: 12,
-                        color: isDark ? Colors.grey[400]! : ZankoColors.textSecondary,
+                        color: isDark
+                            ? Colors.grey[400]!
+                            : ZankoColors.textSecondary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -991,7 +1034,9 @@ class CourseCard extends StatelessWidget {
                 PopupMenuButton<String>(
                   icon: HugeIcon(
                     icon: HugeIcons.strokeRoundedMoreVertical,
-                    color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                    color: isDark
+                        ? Colors.grey[400]
+                        : ZankoColors.textSecondary,
                     size: 18,
                   ),
                   onSelected: (val) {
@@ -1004,9 +1049,19 @@ class CourseCard extends StatelessWidget {
                         value: 'edit',
                         child: Row(
                           children: [
-                            HugeIcon(icon: HugeIcons.strokeRoundedPencilEdit02, size: 16, color: ZankoColors.primary),
+                            HugeIcon(
+                              icon: HugeIcons.strokeRoundedPencilEdit02,
+                              size: 16,
+                              color: ZankoColors.primary,
+                            ),
                             const SizedBox(width: 8),
-                            Text(Provider.of<LanguageProvider>(context, listen: false).translate('edit_course'), style: const TextStyle(fontSize: 13)),
+                            Text(
+                              Provider.of<LanguageProvider>(
+                                context,
+                                listen: false,
+                              ).translate('edit_course'),
+                              style: const TextStyle(fontSize: 13),
+                            ),
                           ],
                         ),
                       ),
@@ -1015,9 +1070,22 @@ class CourseCard extends StatelessWidget {
                         value: 'delete',
                         child: Row(
                           children: [
-                            const HugeIcon(icon: HugeIcons.strokeRoundedDelete02, size: 16, color: Colors.redAccent),
+                            const HugeIcon(
+                              icon: HugeIcons.strokeRoundedDelete02,
+                              size: 16,
+                              color: Colors.redAccent,
+                            ),
                             const SizedBox(width: 8),
-                            Text(Provider.of<LanguageProvider>(context, listen: false).translate('delete_course'), style: const TextStyle(fontSize: 13, color: Colors.redAccent)),
+                            Text(
+                              Provider.of<LanguageProvider>(
+                                context,
+                                listen: false,
+                              ).translate('delete_course'),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Colors.redAccent,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -1035,8 +1103,12 @@ class CourseCard extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: progress,
                     minHeight: 6,
-                    backgroundColor: isDark ? const Color(0xFF262C36) : const Color(0xFFECEEF2),
-                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF035EC2)),
+                    backgroundColor: isDark
+                        ? const Color(0xFF262C36)
+                        : const Color(0xFFECEEF2),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Color(0xFF035EC2),
+                    ),
                   ),
                 ),
               ),
@@ -1044,7 +1116,9 @@ class CourseCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF035EC2).withValues(alpha: 0.2) : const Color(0xFFE2EDFB),
+                  color: isDark
+                      ? const Color(0xFF035EC2).withValues(alpha: 0.2)
+                      : const Color(0xFFE2EDFB),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -1063,7 +1137,9 @@ class CourseCard extends StatelessWidget {
             const SizedBox(height: 12),
             Container(
               height: 1,
-              color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey.withValues(alpha: 0.15),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.grey.withValues(alpha: 0.15),
             ),
             const SizedBox(height: 10),
             Wrap(
@@ -1073,7 +1149,10 @@ class CourseCard extends StatelessWidget {
                 if (midtermDate != null)
                   _buildExamBadge(
                     context: context,
-                    label: Provider.of<LanguageProvider>(context, listen: false).translate('midterm_exam'),
+                    label: Provider.of<LanguageProvider>(
+                      context,
+                      listen: false,
+                    ).translate('midterm_exam'),
                     examDate: midtermDate,
                     icon: HugeIcons.strokeRoundedClock01,
                     defaultColor: const Color(0xFF007AFF),
@@ -1082,7 +1161,10 @@ class CourseCard extends StatelessWidget {
                 if (finalDate != null)
                   _buildExamBadge(
                     context: context,
-                    label: Provider.of<LanguageProvider>(context, listen: false).translate('final_exam'),
+                    label: Provider.of<LanguageProvider>(
+                      context,
+                      listen: false,
+                    ).translate('final_exam'),
                     examDate: finalDate,
                     icon: HugeIcons.strokeRoundedFlag01,
                     defaultColor: const Color(0xFFAF52DE),
@@ -1116,10 +1198,7 @@ class CuteAiBotIcon extends StatelessWidget {
       width: size,
       height: size,
       child: CustomPaint(
-        painter: _CuteAiBotPainter(
-          color: color,
-          strokeWidth: strokeWidth,
-        ),
+        painter: _CuteAiBotPainter(color: color, strokeWidth: strokeWidth),
       ),
     );
   }
@@ -1250,13 +1329,13 @@ class _GlassBottomNavigationState extends State<GlassBottomNavigation>
       vsync: this,
       duration: const Duration(milliseconds: 320),
     );
-    _positionAnimation = Tween<double>(
-      begin: widget.currentIndex.toDouble(),
-      end: widget.currentIndex.toDouble(),
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOutCubic,
-    ));
+    _positionAnimation =
+        Tween<double>(
+          begin: widget.currentIndex.toDouble(),
+          end: widget.currentIndex.toDouble(),
+        ).animate(
+          CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
+        );
   }
 
   @override
@@ -1265,13 +1344,9 @@ class _GlassBottomNavigationState extends State<GlassBottomNavigation>
     if (widget.currentIndex != oldWidget.currentIndex) {
       final start = _positionAnimation.value;
       final end = widget.currentIndex.toDouble();
-      _positionAnimation = Tween<double>(
-        begin: start,
-        end: end,
-      ).animate(CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeInOutCubic,
-      ));
+      _positionAnimation = Tween<double>(begin: start, end: end).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
+      );
       _controller.forward(from: 0.0);
     }
   }
@@ -1290,7 +1365,9 @@ class _GlassBottomNavigationState extends State<GlassBottomNavigation>
 
     final barColor = isDark ? ZankoColors.darkCard : ZankoColors.card;
     final borderColor = isDark ? ZankoColors.darkBorder : ZankoColors.border;
-    final inactiveColor = isDark ? ZankoColors.darkTextSecondary : ZankoColors.textSecondary;
+    final inactiveColor = isDark
+        ? ZankoColors.darkTextSecondary
+        : ZankoColors.textSecondary;
 
     const double barHeight = 64.0;
     const double barTop = 20.0;
@@ -1424,12 +1501,17 @@ class _GlassBottomNavigationState extends State<GlassBottomNavigation>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: LinearGradient(
-                            colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
+                            colors: [
+                              ZankoColors.gradientStart,
+                              ZankoColors.gradientEnd,
+                            ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
                           border: Border.all(
-                            color: Colors.white.withValues(alpha: isDark ? 0.30 : 0.45),
+                            color: Colors.white.withValues(
+                              alpha: isDark ? 0.30 : 0.45,
+                            ),
                             width: 1.5,
                           ),
                           boxShadow: [
@@ -1454,7 +1536,10 @@ class _GlassBottomNavigationState extends State<GlassBottomNavigation>
                             duration: const Duration(milliseconds: 200),
                             transitionBuilder: (child, anim) => ScaleTransition(
                               scale: anim,
-                              child: FadeTransition(opacity: anim, child: child),
+                              child: FadeTransition(
+                                opacity: anim,
+                                child: child,
+                              ),
                             ),
                             child: KeyedSubtree(
                               key: ValueKey<int>(widget.currentIndex),
@@ -1478,7 +1563,11 @@ class _GlassBottomNavigationState extends State<GlassBottomNavigation>
     );
   }
 
-  Widget _buildNavIcon(int index, {required bool isSelected, required bool isDark}) {
+  Widget _buildNavIcon(
+    int index, {
+    required bool isSelected,
+    required bool isDark,
+  }) {
     final color = isSelected
         ? Colors.white
         : (isDark ? ZankoColors.darkTextSecondary : ZankoColors.textSecondary);
@@ -1577,14 +1666,20 @@ class _CurvedNotchPainter extends CustomPainter {
 
     // Smooth organic S-curve scoop dipping down and back up
     path.cubicTo(
-      activeX - (activeX - startX) * 0.50, barTop,
-      activeX - (activeX - startX) * 0.50, barTop + scoopDepth,
-      activeX, barTop + scoopDepth,
+      activeX - (activeX - startX) * 0.50,
+      barTop,
+      activeX - (activeX - startX) * 0.50,
+      barTop + scoopDepth,
+      activeX,
+      barTop + scoopDepth,
     );
     path.cubicTo(
-      activeX + (endX - activeX) * 0.50, barTop + scoopDepth,
-      activeX + (endX - activeX) * 0.50, barTop,
-      endX, barTop,
+      activeX + (endX - activeX) * 0.50,
+      barTop + scoopDepth,
+      activeX + (endX - activeX) * 0.50,
+      barTop,
+      endX,
+      barTop,
     );
 
     if (endX < w - r) {
@@ -1608,12 +1703,7 @@ class _CurvedNotchPainter extends CustomPainter {
     path.close();
 
     // 1. Ambient drop shadow
-    canvas.drawShadow(
-      path,
-      Colors.black.withValues(alpha: 0.12),
-      14,
-      true,
-    );
+    canvas.drawShadow(path, Colors.black.withValues(alpha: 0.12), 14, true);
 
     // 2. Fill background
     final fillPaint = Paint()
@@ -1636,7 +1726,6 @@ class _CurvedNotchPainter extends CustomPainter {
         oldDelegate.borderColor != borderColor;
   }
 }
-
 
 // ─── Glass Button Widget ───────────────────────────────────────────────────
 class GlassButton extends StatelessWidget {
@@ -1664,7 +1753,9 @@ class GlassButton extends StatelessWidget {
           color: isDark ? ZankoColors.darkCard : Colors.white,
           shape: BoxShape.circle,
           border: Border.all(
-            color: isDark ? Colors.white.withValues(alpha: 0.12) : const Color(0xFFF0F0F6),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.12)
+                : const Color(0xFFF0F0F6),
           ),
           boxShadow: isDark ? [] : ZankoShadows.card,
         ),
@@ -1673,4 +1764,3 @@ class GlassButton extends StatelessWidget {
     );
   }
 }
-

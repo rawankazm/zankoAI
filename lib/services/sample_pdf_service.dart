@@ -16,7 +16,9 @@ class SamplePdfService {
     final lower = fileName.toLowerCase();
     final courseLower = courseTitle.toLowerCase();
 
-    if (lower.contains('calc') || courseLower.contains('calc') || courseLower.contains('math')) {
+    if (lower.contains('calc') ||
+        courseLower.contains('calc') ||
+        courseLower.contains('math')) {
       return '''
 ZANKO AI ACADEMIC STUDY MATERIAL
 Course: Calculus & Mathematical Analysis
@@ -51,7 +53,9 @@ lim_{x -> 2} (x + 2) = 4.
 Problem 2: Derivative of f(x) = sin(x^2).
 Solution: By Chain Rule, f'(x) = cos(x^2) * 2x = 2x * cos(x^2).
 ''';
-    } else if (lower.contains('os_') || courseLower.contains('operating') || courseLower.contains('system')) {
+    } else if (lower.contains('os_') ||
+        courseLower.contains('operating') ||
+        courseLower.contains('system')) {
       return '''
 ZANKO AI ACADEMIC STUDY MATERIAL
 Course: Operating Systems Architecture
@@ -85,7 +89,9 @@ Page Fault occurs when a requested page is not in physical RAM and must be fetch
 Q1: Compare Process vs Thread in terms of overhead and context switching.
 Q2: Explain Banker's Algorithm for Deadlock Avoidance.
 ''';
-    } else if (lower.contains('ml_') || courseLower.contains('machine') || courseLower.contains('ai')) {
+    } else if (lower.contains('ml_') ||
+        courseLower.contains('machine') ||
+        courseLower.contains('ai')) {
       return '''
 ZANKO AI ACADEMIC STUDY MATERIAL
 Course: Artificial Intelligence & Machine Learning
@@ -137,7 +143,8 @@ Welcome to $courseTitle. This academic guide provides a structural overview of k
   /// Generate physical PDF File on device storage
   Future<File> getOrCreateSamplePdf(String fileName, String courseTitle) async {
     final cacheKey = '$courseTitle-$fileName';
-    if (_pdfCache.containsKey(cacheKey) && await _pdfCache[cacheKey]!.exists()) {
+    if (_pdfCache.containsKey(cacheKey) &&
+        await _pdfCache[cacheKey]!.exists()) {
       return _pdfCache[cacheKey]!;
     }
 
@@ -159,12 +166,24 @@ Welcome to $courseTitle. This academic guide provides a structural overview of k
   }
 
   /// Create PDF Document bytes using Syncfusion PDF
-  Future<Uint8List> _createPdfBytes(String fileName, String courseTitle, String content) async {
+  Future<Uint8List> _createPdfBytes(
+    String fileName,
+    String courseTitle,
+    String content,
+  ) async {
     final PdfDocument document = PdfDocument();
     final PdfPage page = document.pages.add();
 
-    final PdfFont titleFont = PdfStandardFont(PdfFontFamily.helvetica, 18, style: PdfFontStyle.bold);
-    final PdfFont subTitleFont = PdfStandardFont(PdfFontFamily.helvetica, 12, style: PdfFontStyle.italic);
+    final PdfFont titleFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      18,
+      style: PdfFontStyle.bold,
+    );
+    final PdfFont subTitleFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      12,
+      style: PdfFontStyle.italic,
+    );
     final PdfFont bodyFont = PdfStandardFont(PdfFontFamily.helvetica, 10);
     final PdfBrush primaryBrush = PdfSolidBrush(PdfColor(13, 71, 161));
     final PdfBrush textBrush = PdfSolidBrush(PdfColor(33, 33, 33));
@@ -198,10 +217,7 @@ Welcome to $courseTitle. This academic guide provides a structural overview of k
       brush: textBrush,
     );
 
-    textElement.draw(
-      page: page,
-      bounds: const Rect.fromLTWH(0, 70, 500, 680),
-    );
+    textElement.draw(page: page, bounds: const Rect.fromLTWH(0, 70, 500, 680));
 
     final List<int> bytes = await document.save();
     document.dispose();

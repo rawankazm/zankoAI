@@ -18,15 +18,39 @@ String fixNotificationEncoding(dynamic raw) {
   final input = raw.toString();
   if (input.isEmpty) return input;
 
-  if (input.contains('Ù') || input.contains('Ø') || input.contains('Û') || input.contains('ð') || input.contains('Ã')) {
+  if (input.contains('Ù') ||
+      input.contains('Ø') ||
+      input.contains('Û') ||
+      input.contains('ð') ||
+      input.contains('Ã')) {
     const cp1252Map = <int, int>{
-      0x20AC: 0x80, 0x201A: 0x82, 0x0192: 0x83, 0x201E: 0x84,
-      0x2026: 0x85, 0x2020: 0x86, 0x2021: 0x87, 0x02C6: 0x88,
-      0x2030: 0x89, 0x0160: 0x8A, 0x2039: 0x8B, 0x0152: 0x8C,
-      0x017D: 0x8E, 0x2018: 0x91, 0x2019: 0x92, 0x201C: 0x93,
-      0x201D: 0x94, 0x2022: 0x95, 0x2013: 0x96, 0x2014: 0x97,
-      0x02DC: 0x98, 0x2122: 0x99, 0x0161: 0x9A, 0x203A: 0x9B,
-      0x0153: 0x9C, 0x017E: 0x9E, 0x0178: 0x9F,
+      0x20AC: 0x80,
+      0x201A: 0x82,
+      0x0192: 0x83,
+      0x201E: 0x84,
+      0x2026: 0x85,
+      0x2020: 0x86,
+      0x2021: 0x87,
+      0x02C6: 0x88,
+      0x2030: 0x89,
+      0x0160: 0x8A,
+      0x2039: 0x8B,
+      0x0152: 0x8C,
+      0x017D: 0x8E,
+      0x2018: 0x91,
+      0x2019: 0x92,
+      0x201C: 0x93,
+      0x201D: 0x94,
+      0x2022: 0x95,
+      0x2013: 0x96,
+      0x2014: 0x97,
+      0x02DC: 0x98,
+      0x2122: 0x99,
+      0x0161: 0x9A,
+      0x203A: 0x9B,
+      0x0153: 0x9C,
+      0x017E: 0x9E,
+      0x0178: 0x9F,
     };
 
     try {
@@ -52,14 +76,16 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
   bool _initialized = false;
   RealtimeChannel? _notificationChannel;
   Timer? _firestorePollTimer;
 
   static const String _prefShownNotifIdsKey = 'zanko_shown_notif_ids_v2';
   static const String _prefReadNotificationsKey = 'zanko_read_notifications_v1';
-  static const String _prefDeletedNotificationsKey = 'zanko_deleted_notifications_v1';
+  static const String _prefDeletedNotificationsKey =
+      'zanko_deleted_notifications_v1';
 
   final Dio _dio = Dio(
     BaseOptions(
@@ -69,8 +95,10 @@ class NotificationService {
   );
 
   final ValueNotifier<int> unreadCountNotifier = ValueNotifier<int>(0);
-  final StreamController<void> _notificationsUpdatedController = StreamController<void>.broadcast();
-  Stream<void> get onNotificationsUpdated => _notificationsUpdatedController.stream;
+  final StreamController<void> _notificationsUpdatedController =
+      StreamController<void>.broadcast();
+  Stream<void> get onNotificationsUpdated =>
+      _notificationsUpdatedController.stream;
 
   Future<void> init() async {
     if (_initialized) return;
@@ -91,7 +119,10 @@ class NotificationService {
       },
     );
 
-    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (androidPlugin != null) {
       const channel = AndroidNotificationChannel(
         'zanko_admin_channel',
@@ -119,14 +150,22 @@ class NotificationService {
 
         // Subscribe to global topic for all student announcements
         await messaging.subscribeToTopic('all_students');
-        debugPrint('[NotificationService] Subscribed to FCM topic: all_students');
+        debugPrint(
+          '[NotificationService] Subscribed to FCM topic: all_students',
+        );
 
         // Handle foreground notifications seamlessly
         FirebaseMessaging.onMessage.listen((RemoteMessage message) {
           final notif = message.notification;
-          final title = fixNotificationEncoding(notif?.title ?? message.data['title'] ?? 'ZankoAI 🔔');
-          final body = fixNotificationEncoding(notif?.body ?? message.data['body'] ?? '');
-          debugPrint('[NotificationService] Foreground FCM message received: $title');
+          final title = fixNotificationEncoding(
+            notif?.title ?? message.data['title'] ?? 'ZankoAI 🔔',
+          );
+          final body = fixNotificationEncoding(
+            notif?.body ?? message.data['body'] ?? '',
+          );
+          debugPrint(
+            '[NotificationService] Foreground FCM message received: $title',
+          );
           showInstantNotification(
             id: message.messageId.hashCode,
             title: title,
@@ -140,7 +179,9 @@ class NotificationService {
           debugPrint('[NotificationService] Acquired FCM device token: $token');
         }
       } catch (e) {
-        debugPrint('[NotificationService] Notice initializing Firebase Messaging: $e');
+        debugPrint(
+          '[NotificationService] Notice initializing Firebase Messaging: $e',
+        );
       }
     }
 
@@ -162,7 +203,9 @@ class NotificationService {
         if (token != null && userId.isNotEmpty) {
           await NotificationBackendService().registerDevice(
             fcmToken: token,
-            platform: defaultTargetPlatform == TargetPlatform.android ? 'android' : 'ios',
+            platform: defaultTargetPlatform == TargetPlatform.android
+                ? 'android'
+                : 'ios',
           );
         }
       } catch (e) {
@@ -172,7 +215,11 @@ class NotificationService {
   }
 
   /// Start listening to notifications from both Supabase Realtime AND Admin Firestore
-  Future<void> listenToAdminNotifications(String userId, bool isVip, {String? email}) async {
+  Future<void> listenToAdminNotifications(
+    String userId,
+    bool isVip, {
+    String? email,
+  }) async {
     try {
       await init();
 
@@ -188,10 +235,16 @@ class NotificationService {
             callback: (payload) {
               final newRecord = payload.newRecord;
               final targetUserId = newRecord['user_id']?.toString();
-              if (targetUserId == null || targetUserId.isEmpty || targetUserId == userId) {
-                final title = fixNotificationEncoding(newRecord['title'] ?? 'ZankoAI 🔔');
+              if (targetUserId == null ||
+                  targetUserId.isEmpty ||
+                  targetUserId == userId) {
+                final title = fixNotificationEncoding(
+                  newRecord['title'] ?? 'ZankoAI 🔔',
+                );
                 final body = fixNotificationEncoding(newRecord['body'] ?? '');
-                debugPrint('[NotificationService] Incoming realtime push received: "$title" - "$body"');
+                debugPrint(
+                  '[NotificationService] Incoming realtime push received: "$title" - "$body"',
+                );
                 showInstantNotification(
                   id: newRecord['id'].hashCode,
                   title: title,
@@ -240,16 +293,34 @@ class NotificationService {
         final target = fields['target']?['stringValue'] ?? 'all';
         final docUserId = fields['userId']?['stringValue'];
 
-        final isMatch = (target == 'all' || target == 'all_students' || target == 'students') ||
+        final isMatch =
+            (target == 'all' ||
+                target == 'all_students' ||
+                target == 'students') ||
             (target == 'vip' && isVip) ||
             (userId.isNotEmpty && (docUserId == userId || target == userId));
 
         if (!isMatch) continue;
 
-        final title = fixNotificationEncoding(fields['title']?['stringValue'] ?? fields['header']?['stringValue'] ?? '🔔 ئاگاداری فەرمی');
-        final body = fixNotificationEncoding(fields['body']?['stringValue'] ?? fields['message']?['stringValue'] ?? '');
-        final timeStr = fields['createdAt']?['timestampValue'] ?? doc['createTime'] ?? DateTime.now().toIso8601String();
-        final rawCat = (fields['category']?['stringValue'] ?? fields['type']?['stringValue'] ?? 'Announcement').toString();
+        final title = fixNotificationEncoding(
+          fields['title']?['stringValue'] ??
+              fields['header']?['stringValue'] ??
+              '🔔 ئاگاداری فەرمی',
+        );
+        final body = fixNotificationEncoding(
+          fields['body']?['stringValue'] ??
+              fields['message']?['stringValue'] ??
+              '',
+        );
+        final timeStr =
+            fields['createdAt']?['timestampValue'] ??
+            doc['createTime'] ??
+            DateTime.now().toIso8601String();
+        final rawCat =
+            (fields['category']?['stringValue'] ??
+                    fields['type']?['stringValue'] ??
+                    'Announcement')
+                .toString();
 
         items.add({
           'id': id,
@@ -261,7 +332,9 @@ class NotificationService {
         });
       }
     } catch (e) {
-      debugPrint('[NotificationService] Notice fetching Firestore notifications: $e');
+      debugPrint(
+        '[NotificationService] Notice fetching Firestore notifications: $e',
+      );
     }
 
     // B. Direct Messages (if userId provided)
@@ -279,9 +352,18 @@ class NotificationService {
 
           if (docUserId != userId) continue;
 
-          final title = fixNotificationEncoding(fields['title']?['stringValue'] ?? '✉️ پەیامی تایبەت لە ئەدمینەوە');
-          final body = fixNotificationEncoding(fields['message']?['stringValue'] ?? fields['body']?['stringValue'] ?? '');
-          final timeStr = fields['createdAt']?['timestampValue'] ?? doc['createTime'] ?? DateTime.now().toIso8601String();
+          final title = fixNotificationEncoding(
+            fields['title']?['stringValue'] ?? '✉️ پەیامی تایبەت لە ئەدمینەوە',
+          );
+          final body = fixNotificationEncoding(
+            fields['message']?['stringValue'] ??
+                fields['body']?['stringValue'] ??
+                '',
+          );
+          final timeStr =
+              fields['createdAt']?['timestampValue'] ??
+              doc['createTime'] ??
+              DateTime.now().toIso8601String();
 
           items.add({
             'id': id,
@@ -293,7 +375,9 @@ class NotificationService {
           });
         }
       } catch (e) {
-        debugPrint('[NotificationService] Notice fetching Firestore direct messages: $e');
+        debugPrint(
+          '[NotificationService] Notice fetching Firestore direct messages: $e',
+        );
       }
     }
 
@@ -304,11 +388,17 @@ class NotificationService {
   Future<void> checkFirestoreNotifications(String userId, bool isVip) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final shownIds = (prefs.getStringList(_prefShownNotifIdsKey) ?? []).toSet();
-      final readIds = (prefs.getStringList(_prefReadNotificationsKey) ?? []).toSet();
-      final deletedIds = (prefs.getStringList(_prefDeletedNotificationsKey) ?? []).toSet();
+      final shownIds = (prefs.getStringList(_prefShownNotifIdsKey) ?? [])
+          .toSet();
+      final readIds = (prefs.getStringList(_prefReadNotificationsKey) ?? [])
+          .toSet();
+      final deletedIds =
+          (prefs.getStringList(_prefDeletedNotificationsKey) ?? []).toSet();
 
-      final items = await fetchFirestoreNotifications(userId: userId, isVip: isVip);
+      final items = await fetchFirestoreNotifications(
+        userId: userId,
+        isVip: isVip,
+      );
       if (items.isEmpty) return;
 
       int unreadCount = 0;
@@ -334,7 +424,9 @@ class NotificationService {
 
           // If the notification was sent in the last 4 hours or is fresh, trigger instant notification
           if (now.difference(itemTime).inHours <= 4) {
-            debugPrint('[NotificationService] Popping up instant admin alert: "${item['title']}"');
+            debugPrint(
+              '[NotificationService] Popping up instant admin alert: "${item['title']}"',
+            );
             showInstantNotification(
               id: id.hashCode,
               title: item['title'] ?? 'ZankoAI 🔔',
@@ -351,7 +443,9 @@ class NotificationService {
         _notificationsUpdatedController.add(null);
       }
     } catch (e) {
-      debugPrint('[NotificationService] Notice checking Firestore notifications: $e');
+      debugPrint(
+        '[NotificationService] Notice checking Firestore notifications: $e',
+      );
     }
   }
 

@@ -10,13 +10,11 @@ import 'login_screen.dart';
 class EmailVerificationScreen extends StatefulWidget {
   final String email;
 
-  const EmailVerificationScreen({
-    super.key,
-    required this.email,
-  });
+  const EmailVerificationScreen({super.key, required this.email});
 
   @override
-  State<EmailVerificationScreen> createState() => _EmailVerificationScreenState();
+  State<EmailVerificationScreen> createState() =>
+      _EmailVerificationScreenState();
 }
 
 class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
@@ -101,13 +99,15 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       } else {
         setState(() {
           _isChecking = false;
-          _errorMessage = 'ئیمەیڵەکەت هێشتا پشتڕاست نەکراوەتەوە. تکایە سەیری سندوقی ئیمەیڵەکەت بکە.';
+          _errorMessage =
+              'ئیمەیڵەکەت هێشتا پشتڕاست نەکراوەتەوە. تکایە سەیری سندوقی ئیمەیڵەکەت بکە.';
         });
       }
     } catch (e) {
       setState(() {
         _isChecking = false;
-        _errorMessage = 'تکایە سەرەتا کلیک لەسەر لینکی ناو ئیمەیڵەکەت بکە، پاشان ئەم دوگمەیە دابگرە.';
+        _errorMessage =
+            'تکایە سەرەتا کلیک لەسەر لینکی ناو ئیمەیڵەکەت بکە، پاشان ئەم دوگمەیە دابگرە.';
       });
     }
   }
@@ -120,7 +120,10 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('پشتڕاستکردنەوەی ئیمەیڵ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text(
+          'پشتڕاستکردنەوەی ئیمەیڵ',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
         centerTitle: true,
         automaticallyImplyLeading: false,
       ),
@@ -141,7 +144,11 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                       color: theme.colorScheme.primary.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.mark_email_unread_rounded, size: 48, color: theme.colorScheme.primary),
+                    child: Icon(
+                      Icons.mark_email_unread_rounded,
+                      size: 48,
+                      color: theme.colorScheme.primary,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   Text(
@@ -179,12 +186,17 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                       decoration: BoxDecoration(
                         color: const Color(0xFF10B981).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Text(
                         _statusMessage!,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Color(0xFF10B981),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -195,12 +207,17 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                       decoration: BoxDecoration(
                         color: Colors.redAccent.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: Colors.redAccent.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Text(
                         _errorMessage!,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                        style: const TextStyle(
+                          color: Colors.redAccent,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -209,7 +226,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                     onPressed: _isChecking ? null : _checkStatus,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       backgroundColor: theme.colorScheme.primary,
                       foregroundColor: Colors.white,
                     ),
@@ -217,19 +236,29 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                         ? const SizedBox(
                             width: 22,
                             height: 22,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : const Text(
                             'لینکم کلیک کرد، بچۆ ژوورەوە ✅',
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton(
-                    onPressed: (_isResending || _cooldownSeconds > 0) ? null : _handleResend,
+                    onPressed: (_isResending || _cooldownSeconds > 0)
+                        ? null
+                        : _handleResend,
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                     child: _isResending
                         ? const SizedBox(
@@ -249,7 +278,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                     onPressed: () {
                       Navigator.pushAndRemoveUntil(
                         context,
-                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const LoginScreen(),
+                        ),
                         (route) => false,
                       );
                     },

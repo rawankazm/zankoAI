@@ -19,11 +19,29 @@ abstract class AiService extends ChangeNotifier {
   bool get hasRealApiKey;
   int get freeMessageLimit;
 
-  Future<bool> checkAndIncrementDailyLimit({bool isVip = false, bool isPendingVip = false});
-  Future<String> askTeacher(String userPrompt, List<Map<String, String>> chatHistory, {bool isVip = false, bool isPendingVip = false});
-  Future<String> solveImageQuestion(Uint8List imageBytes, String promptText, {bool isVip = false, bool isPendingVip = false});
+  Future<bool> checkAndIncrementDailyLimit({
+    bool isVip = false,
+    bool isPendingVip = false,
+  });
+  Future<String> askTeacher(
+    String userPrompt,
+    List<Map<String, String>> chatHistory, {
+    bool isVip = false,
+    bool isPendingVip = false,
+  });
+  Future<String> solveImageQuestion(
+    Uint8List imageBytes,
+    String promptText, {
+    bool isVip = false,
+    bool isPendingVip = false,
+  });
   Future<Map<String, dynamic>> summarizePdf(String pdfName, String pdfContent);
-  Future<String> transcribeAudio(Uint8List? audioBytes, String audioFileName, {String mimeType = 'audio/mp4', String language = 'auto'});
+  Future<String> transcribeAudio(
+    Uint8List? audioBytes,
+    String audioFileName, {
+    String mimeType = 'audio/mp4',
+    String language = 'auto',
+  });
   Future<String> summarizeAudio(String audioFileName, String transcriptText);
   Future<QuizModel> generateQuiz(String topic, String courseName);
   Future<QuizModel> generateQuizFromText(String fileText, String courseName);
@@ -39,8 +57,14 @@ abstract class AiService extends ChangeNotifier {
   });
   Future<String> organizeNote(String rawNoteContent);
   Future<List<FlashcardModel>> generateFlashcards(String topicOrText);
-  Future<List<StudyPlanDayModel>> generateStudyPlan(String examTopic, int daysRemaining);
-  Future<Map<String, dynamic>> predictExam(String notesName, String notesContent);
+  Future<List<StudyPlanDayModel>> generateStudyPlan(
+    String examTopic,
+    int daysRemaining,
+  );
+  Future<Map<String, dynamic>> predictExam(
+    String notesName,
+    String notesContent,
+  );
   Future<Map<String, dynamic>> generateStudyRoadmap({
     required String subjectName,
     required int totalChapters,
@@ -54,7 +78,11 @@ abstract class AiService extends ChangeNotifier {
   });
 
   /// Helper to robustly check if a user answer matches the correct answer
-  static bool isAnswerCorrect(String? userAns, String? correctAns, {List<String>? options}) {
+  static bool isAnswerCorrect(
+    String? userAns,
+    String? correctAns, {
+    List<String>? options,
+  }) {
     if (userAns == null || correctAns == null) return false;
     final u = userAns.trim();
     final c = correctAns.trim();
@@ -64,7 +92,17 @@ abstract class AiService extends ChangeNotifier {
     if (u.toLowerCase() == c.toLowerCase()) return true;
 
     // True/False equivalence (Kurdish, Arabic, English)
-    const truthy = {'ڕاستە', 'ڕاست', 'true', 't', '1', 'صح', 'صحيح', 'yes', 'y'};
+    const truthy = {
+      'ڕاستە',
+      'ڕاست',
+      'true',
+      't',
+      '1',
+      'صح',
+      'صحيح',
+      'yes',
+      'y',
+    };
     const falsy = {'هەڵەیە', 'هەڵە', 'false', 'f', '0', 'خطأ', 'no', 'n'};
     final uLower = u.toLowerCase();
     final cLower = c.toLowerCase();
@@ -73,7 +111,10 @@ abstract class AiService extends ChangeNotifier {
 
     // Helper to strip leading option identifiers e.g. "A) ", "1. ", "B - "
     String stripPrefix(String s) {
-      return s.replaceFirst(RegExp(r'^[A-Da-d0-9][\.\)\:\-]\s*'), '').trim().toLowerCase();
+      return s
+          .replaceFirst(RegExp(r'^[A-Da-d0-9][\.\)\:\-]\s*'), '')
+          .trim()
+          .toLowerCase();
     }
 
     final uClean = stripPrefix(u);
@@ -82,25 +123,37 @@ abstract class AiService extends ChangeNotifier {
 
     // Letter matching (A, B, C, D / 0, 1, 2, 3) against options
     if (options != null && options.isNotEmpty) {
-      final letterMap = {'a': 0, 'b': 1, 'c': 2, 'd': 3, '0': 0, '1': 1, '2': 2, '3': 3};
+      final letterMap = {
+        'a': 0,
+        'b': 1,
+        'c': 2,
+        'd': 3,
+        '0': 0,
+        '1': 1,
+        '2': 2,
+        '3': 3,
+      };
       if (letterMap.containsKey(cLower)) {
         final targetIdx = letterMap[cLower]!;
         if (targetIdx < options.length) {
           final optText = options[targetIdx];
-          if (uLower == optText.toLowerCase() || uClean == stripPrefix(optText)) return true;
+          if (uLower == optText.toLowerCase() || uClean == stripPrefix(optText))
+            return true;
         }
       }
       if (letterMap.containsKey(uLower)) {
         final targetIdx = letterMap[uLower]!;
         if (targetIdx < options.length) {
           final optText = options[targetIdx];
-          if (cLower == optText.toLowerCase() || cClean == stripPrefix(optText)) return true;
+          if (cLower == optText.toLowerCase() || cClean == stripPrefix(optText))
+            return true;
         }
       }
     }
 
     // Punctuation and whitespace invariant comparison
-    String sanitize(String s) => s.replaceAll(RegExp(r'[\s\p{P}]', unicode: true), '').toLowerCase();
+    String sanitize(String s) =>
+        s.replaceAll(RegExp(r'[\s\p{P}]', unicode: true), '').toLowerCase();
     if (sanitize(u) == sanitize(c)) return true;
 
     return false;
@@ -109,11 +162,20 @@ abstract class AiService extends ChangeNotifier {
 
 class ZankoAiService extends ChangeNotifier implements AiService {
   static bool _isValidApiKey(String? key) =>
-      key != null && (key.trim().startsWith('AIzaSy') || key.trim().startsWith('AQ.')) && key.trim().length >= 25;
+      key != null &&
+      (key.trim().startsWith('AIzaSy') || key.trim().startsWith('AQ.')) &&
+      key.trim().length >= 25;
 
-  static const String _defaultApiKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
+  static const String _defaultApiKey = String.fromEnvironment(
+    'GEMINI_API_KEY',
+    defaultValue: '',
+  );
   // Developer configured key (managed internally, base64 protected from scanner false-positives):
-  static final String _embeddedApiKey = utf8.decode(base64Decode('QVEuQWI4Uk42TFFyUFZlMVFFeUgzRjJQVTJyaGd4eFJ2aXhNUlpXS3puZHg5S194YUVpcVE='));
+  static final String _embeddedApiKey = utf8.decode(
+    base64Decode(
+      'QVEuQWI4Uk42TFFyUFZlMVFFeUgzRjJQVTJyaGd4eFJ2aXhNUlpXS3puZHg5S194YUVpcVE=',
+    ),
+  );
 
   String? _apiKey;
   final List<String> _keyPool = [];
@@ -161,7 +223,6 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     notifyListeners();
   }
 
-
   @override
   String? get apiKey => _apiKey;
 
@@ -183,26 +244,36 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   bool get hasApiKey => hasRealApiKey;
 
   @override
-  Future<bool> checkAndIncrementDailyLimit({bool isVip = false, bool isPendingVip = false}) async {
+  Future<bool> checkAndIncrementDailyLimit({
+    bool isVip = false,
+    bool isPendingVip = false,
+  }) async {
     if (isVip) return true;
 
     // 1. Server-authoritative quota check & increment via Supabase RPC
     try {
       final user = Supabase.instance.client.auth.currentUser;
-      debugPrint('🔍 [QuotaCheck] Supabase Auth User: ${user?.id ?? "Guest (None)"}');
+      debugPrint(
+        '🔍 [QuotaCheck] Supabase Auth User: ${user?.id ?? "Guest (None)"}',
+      );
       if (user != null) {
-        final res = await Supabase.instance.client.rpc('consume_feature_quota', params: {
-          'p_user_id': user.id,
-          'p_feature': 'ai_chat',
-          'p_increment': 1,
-        });
+        final res = await Supabase.instance.client.rpc(
+          'consume_feature_quota',
+          params: {
+            'p_user_id': user.id,
+            'p_feature': 'ai_chat',
+            'p_increment': 1,
+          },
+        );
         debugPrint('🔍 [QuotaCheck] Server RPC Result: $res');
         if (res != null && res is Map) {
           final allowed = res['allowed'] == true;
           return allowed;
         }
       } else {
-        debugPrint('⚠️ [QuotaCheck] User is not logged in. To test server-side quotas, please log in with an account.');
+        debugPrint(
+          '⚠️ [QuotaCheck] User is not logged in. To test server-side quotas, please log in with an account.',
+        );
       }
     } catch (e) {
       debugPrint('❌ [QuotaCheck] Server-side quota check error: $e');
@@ -268,17 +339,26 @@ class ZankoAiService extends ChangeNotifier implements AiService {
         errStr.contains('quota');
   }
 
-  Future<String> _callGeminiHttp(String key, String prompt, String systemInstruction) async {
+  Future<String> _callGeminiHttp(
+    String key,
+    String prompt,
+    String systemInstruction,
+  ) async {
     final client = HttpClient();
     client.connectionTimeout = const Duration(seconds: 10);
 
-    final modelsToTry = _lastWorkingModel != null 
-        ? [_lastWorkingModel!, ..._validFastModels.where((m) => m != _lastWorkingModel)]
+    final modelsToTry = _lastWorkingModel != null
+        ? [
+            _lastWorkingModel!,
+            ..._validFastModels.where((m) => m != _lastWorkingModel),
+          ]
         : _validFastModels;
 
     for (final m in modelsToTry.take(3)) {
       try {
-        final uri = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=$key');
+        final uri = Uri.parse(
+          'https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=$key',
+        );
         final request = await client.postUrl(uri);
         request.headers.set('content-type', 'application/json');
         request.headers.set('x-goog-api-key', key);
@@ -286,21 +366,24 @@ class ZankoAiService extends ChangeNotifier implements AiService {
         final bodyMap = {
           if (systemInstruction.isNotEmpty)
             'system_instruction': {
-              'parts': [{'text': systemInstruction}]
+              'parts': [
+                {'text': systemInstruction},
+              ],
             },
           'contents': [
             {
-              'parts': [{'text': prompt}]
-            }
+              'parts': [
+                {'text': prompt},
+              ],
+            },
           ],
-          'generationConfig': {
-            'maxOutputTokens': 800,
-            'temperature': 0.7,
-          }
+          'generationConfig': {'maxOutputTokens': 800, 'temperature': 0.7},
         };
 
         request.add(utf8.encode(jsonEncode(bodyMap)));
-        final response = await request.close().timeout(const Duration(seconds: 25));
+        final response = await request.close().timeout(
+          const Duration(seconds: 25),
+        );
         final respStr = await response.transform(utf8.decoder).join();
 
         if (response.statusCode == 200) {
@@ -343,13 +426,23 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   List<String> _getActiveKeys() {
     final candidateKeys = <String>[
-      if (_lastWorkingKey != null && _isValidApiKey(_lastWorkingKey)) _lastWorkingKey!.trim(),
+      if (_lastWorkingKey != null && _isValidApiKey(_lastWorkingKey))
+        _lastWorkingKey!.trim(),
       ..._keyPool.where((k) => _isValidApiKey(k) && k != _lastWorkingKey),
-      if (_apiKey != null && _isValidApiKey(_apiKey) && !_keyPool.contains(_apiKey) && _apiKey != _lastWorkingKey)
+      if (_apiKey != null &&
+          _isValidApiKey(_apiKey) &&
+          !_keyPool.contains(_apiKey) &&
+          _apiKey != _lastWorkingKey)
         _apiKey!.trim(),
-      if (_defaultApiKey.trim().isNotEmpty && _isValidApiKey(_defaultApiKey) && _defaultApiKey != _apiKey && _defaultApiKey != _lastWorkingKey)
+      if (_defaultApiKey.trim().isNotEmpty &&
+          _isValidApiKey(_defaultApiKey) &&
+          _defaultApiKey != _apiKey &&
+          _defaultApiKey != _lastWorkingKey)
         _defaultApiKey.trim(),
-      if (_embeddedApiKey.trim().isNotEmpty && _isValidApiKey(_embeddedApiKey) && _embeddedApiKey != _apiKey && _embeddedApiKey != _lastWorkingKey)
+      if (_embeddedApiKey.trim().isNotEmpty &&
+          _isValidApiKey(_embeddedApiKey) &&
+          _embeddedApiKey != _apiKey &&
+          _embeddedApiKey != _lastWorkingKey)
         _embeddedApiKey.trim(),
     ];
 
@@ -362,20 +455,30 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   }
 
   // Fast & Resilient Gemini Caller with Multi-Key Dynamic Pool
-  Future<String> _callGemini(String prompt, {String systemInstruction = ""}) async {
+  Future<String> _callGemini(
+    String prompt, {
+    String systemInstruction = "",
+  }) async {
     final keysToTry = _getActiveKeys();
 
     for (final keyToUse in keysToTry) {
       if (keyToUse.isEmpty) continue;
 
-      final httpFallback = await _callGeminiHttp(keyToUse, prompt, systemInstruction);
+      final httpFallback = await _callGeminiHttp(
+        keyToUse,
+        prompt,
+        systemInstruction,
+      );
       if (httpFallback.isNotEmpty) {
         return httpFallback;
       }
     }
 
     // Instant Academic Fallback Generator (Sub-0.2s zero-latency contextual response)
-    return _generateAcademicResponse(prompt, systemInstruction: systemInstruction);
+    return _generateAcademicResponse(
+      prompt,
+      systemInstruction: systemInstruction,
+    );
   }
 
   Future<String> _callGeminiWithPdf(
@@ -402,39 +505,75 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   }
 
   @override
-  Future<String> askTeacher(String userPrompt, List<Map<String, String>> chatHistory, {bool isVip = false, bool isPendingVip = false}) async {
+  Future<String> askTeacher(
+    String userPrompt,
+    List<Map<String, String>> chatHistory, {
+    bool isVip = false,
+    bool isPendingVip = false,
+  }) async {
     // 1. Immediate, clean greeting response if the message is solely a greeting
-    final strippedForGreetingCheck = userPrompt.replaceAll(RegExp(r'\[.*?\]'), '').trim();
-    final cleanPrompt = strippedForGreetingCheck.toLowerCase().replaceAll(RegExp(r'[!?,.؛،\s]'), '');
+    final strippedForGreetingCheck = userPrompt
+        .replaceAll(RegExp(r'\[.*?\]'), '')
+        .trim();
+    final cleanPrompt = strippedForGreetingCheck.toLowerCase().replaceAll(
+      RegExp(r'[!?,.؛،\s]'),
+      '',
+    );
     const greetingMatches = [
-      'سڵاو', 'سلاو', 'سڵاومامۆستا', 'سلاومامۆستا', 'سڵاوو', 'سلاوو',
-      'چۆنی', 'چۆنیت', 'باشی', 'سڵاوچۆنی', 'سلاوچونی',
-      'سڵاوکاکم', 'سڵاوبرایم', 'سڵاوبەڕێز',
-      'hello', 'hi', 'hey', 'goodmorning', 'goodevening',
-      'مرحبا', 'سلام', 'السلامعلیکم', 'أهلا', 'اهلا', 'هلا'
+      'سڵاو',
+      'سلاو',
+      'سڵاومامۆستا',
+      'سلاومامۆستا',
+      'سڵاوو',
+      'سلاوو',
+      'چۆنی',
+      'چۆنیت',
+      'باشی',
+      'سڵاوچۆنی',
+      'سلاوچونی',
+      'سڵاوکاکم',
+      'سڵاوبرایم',
+      'سڵاوبەڕێز',
+      'hello',
+      'hi',
+      'hey',
+      'goodmorning',
+      'goodevening',
+      'مرحبا',
+      'سلام',
+      'السلامعلیکم',
+      'أهلا',
+      'اهلا',
+      'هلا',
     ];
     if (greetingMatches.contains(cleanPrompt)) {
       return "سڵاو! چۆن دەتوانم یارمەتیت بدەم؟";
     }
 
-    final allowed = await checkAndIncrementDailyLimit(isVip: isVip, isPendingVip: isPendingVip);
+    final allowed = await checkAndIncrementDailyLimit(
+      isVip: isVip,
+      isPendingVip: isPendingVip,
+    );
     if (!allowed) {
       if (isPendingVip) {
         return "⏳ **داواکاری VIPەکەت لە چاوەڕوانی پەسەندکردنەوەی ئەدمینە**\n\n"
-               "سنووری ١٠ پەیامی بەخۆڕاییت بۆ ئەمڕۆ تەواو بووە. ئەدمین بەم زووانە داواکارییەکەت پەسەند دەکات و دواتر نامەی بێسنوور دەبێتەوە! 👑";
+            "سنووری ١٠ پەیامی بەخۆڕاییت بۆ ئەمڕۆ تەواو بووە. ئەدمین بەم زووانە داواکارییەکەت پەسەند دەکات و دواتر نامەی بێسنوور دەبێتەوە! 👑";
       }
       return "⭐ **گەیشتیتە سنووری ١٠ پەیامی بەخۆڕایی بۆ ئەمڕۆ**\n\n"
-             "بۆ نامەی بێسنوور ئەپەکەت بۆ **VIP** بەرز بکەرەوە!";
+          "بۆ نامەی بێسنوور ئەپەکەت بۆ **VIP** بەرز بکەرەوە!";
     }
 
     // 2. Build multi-turn context
     String historyStr = "";
     for (var msg in chatHistory.take(8)) {
-      historyStr += "${msg['role'] == 'user' ? 'خوێندکار' : 'مامۆستا'}: ${msg['content']}\n";
+      historyStr +=
+          "${msg['role'] == 'user' ? 'خوێندکار' : 'مامۆستا'}: ${msg['content']}\n";
     }
-    final prompt = historyStr.isEmpty ? userPrompt : "$historyStrخوێندکار: $userPrompt\nمامۆستا:";
-    
-    const systemInstruction = 
+    final prompt = historyStr.isEmpty
+        ? userPrompt
+        : "$historyStrخوێندکار: $userPrompt\nمامۆستا:";
+
+    const systemInstruction =
         "تۆ مامۆستای ژیری زانکۆیت لە ئەپڵیکەیشنی ZankoAI (Academic AI Tutor). ڕێنمایی زۆر گرنگ دەربارەی شێوازی وەڵامدانەوە:\n"
         "١. ئەگەر پەیامی خوێندکار تەنها سڵاو یان چاکوچۆنی بوو (وەک 'سڵاو' یان 'چۆنی'): تەنها بڵێ: 'سڵاو! چۆن دەتوانم لە وانەکانتدا یارمەتیت بدەم؟'.\n"
         "٢. ئەگەر خوێندکار هەم سڵاوی کردبوو و هەم پرسیارەکەی نووسیبوو لە هەمان پەیامدا (وەک: 'سڵاو مامۆستا، یاسای نیوتن چییە؟' یان 'سڵاو چۆنی، داتابەیس چییە؟'): پێویستە لە هەمان وەڵامدا و لە یەک چات وەڵامی هەردووکیان بدەیتەوە؛ سەرەتا بە ڕێز و گەرمی وەڵامی سڵاو و چاکوچۆنییەکەی بدەرەوە (بۆ نموونە: 'سڵاو و ڕێز! زۆر بەخێربێیت خوێندکاری ئازیز، هیوادارم هەمیشە باش و سەرکەوتوو بیت 🌸')، و دەستبەجێ بە دوایدا وەڵامی تەواو و زانستی پرسیارەکەی بدەرەوە بە خاڵبەندی و ڕوونکردنەوەی ورد بەبێ ئەوەی هیچ کام لە سڵاو یان پرسیارەکەی پشتگوێ بخەیت.\n"
@@ -444,7 +583,9 @@ class ZankoAiService extends ChangeNotifier implements AiService {
         "٦. یاسای بیرکاری و سیمبولی دۆلار: هەرگیز و بە هیچ جۆرێک نیشانەی دۆلار (\$ یان \$\$) لە وەڵامەکانتدا بەکارمەهێنە بۆ هاوکێشە یان نووسین. هاوکێشەکان بە شێوازی دەقی سادە و ڕوون بنووسە (وەک: d/dx(x^n) = n · x^(n-1) یان 3x² یان 6x) بەبێ هیچ نیشانەیەکی \$.";
 
     // 3. Production: Route through Trusted Server-Side AI Gateway (if configured with real host)
-    final isPlaceholderBackend = AppEnv.backendBaseUrl.contains('api.zankoai.com');
+    final isPlaceholderBackend = AppEnv.backendBaseUrl.contains(
+      'api.zankoai.com',
+    );
     if (!isPlaceholderBackend) {
       try {
         final session = Supabase.instance.client.auth.currentSession;
@@ -452,13 +593,9 @@ class ZankoAiService extends ChangeNotifier implements AiService {
           final client = ApiClient();
           final response = await client.dio.post(
             '/ai/chat',
-            data: {
-              'message': userPrompt,
-            },
+            data: {'message': userPrompt},
             options: Options(
-              headers: {
-                'Authorization': 'Bearer ${session.accessToken}',
-              },
+              headers: {'Authorization': 'Bearer ${session.accessToken}'},
               sendTimeout: const Duration(seconds: 2),
               receiveTimeout: const Duration(seconds: 10),
             ),
@@ -466,8 +603,12 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
           if (response.statusCode == 200 && response.data != null) {
             final data = response.data['data'];
-            if (data != null && data['message'] != null && data['message']['content'] != null) {
-              return cleanMathAndDollarSigns(data['message']['content'].toString());
+            if (data != null &&
+                data['message'] != null &&
+                data['message']['content'] != null) {
+              return cleanMathAndDollarSigns(
+                data['message']['content'].toString(),
+              );
             }
           }
         }
@@ -478,7 +619,10 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
     // 4. Ultra-Fast Direct Gemini Engine (Sub-2s response with Gemini 3.5 Flash-Lite)
     try {
-      final aiRes = await _callGemini(prompt, systemInstruction: systemInstruction);
+      final aiRes = await _callGemini(
+        prompt,
+        systemInstruction: systemInstruction,
+      );
       if (aiRes.trim().isNotEmpty) {
         return cleanMathAndDollarSigns(aiRes);
       }
@@ -491,14 +635,33 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   }
 
   // Instant Context-Aware Academic Knowledge Engine (Sub-0.2s execution)
-  String _generateAcademicResponse(String query, {String systemInstruction = ""}) {
+  String _generateAcademicResponse(
+    String query, {
+    String systemInstruction = "",
+  }) {
     final stripped = query.replaceAll(RegExp(r'\[.*?\]'), '').trim();
     final cleanQ = stripped.toLowerCase().replaceAll(RegExp(r'[!?,.؛،\s]'), '');
     const greetingMatches = [
-      'سڵاو', 'سلاو', 'سڵاومامۆستا', 'سلاومامۆستا', 'سڵاوو', 'سلاوو',
-      'چۆنی', 'چۆنیت', 'باشی', 'سڵاوچۆنی', 'سلاوچونی',
-      'hello', 'hi', 'hey',
-      'مرحبا', 'سلام', 'السلامعلیکم', 'أهلا', 'اهلا', 'هلا'
+      'سڵاو',
+      'سلاو',
+      'سڵاومامۆستا',
+      'سلاومامۆستا',
+      'سڵاوو',
+      'سلاوو',
+      'چۆنی',
+      'چۆنیت',
+      'باشی',
+      'سڵاوچۆنی',
+      'سلاوچونی',
+      'hello',
+      'hi',
+      'hey',
+      'مرحبا',
+      'سلام',
+      'السلامعلیکم',
+      'أهلا',
+      'اهلا',
+      'هلا',
     ];
     if (greetingMatches.contains(cleanQ)) {
       return "سڵاو! چۆن دەتوانم یارمەتیت بدەم؟";
@@ -510,9 +673,16 @@ class ZankoAiService extends ChangeNotifier implements AiService {
       caseSensitive: false,
     ).hasMatch(stripped);
 
-    if (hasGreeting && !rawContent.contains('سڵاو خوێندکاری ئازیز') && !rawContent.contains('سڵاو و ڕێز')) {
+    if (hasGreeting &&
+        !rawContent.contains('سڵاو خوێندکاری ئازیز') &&
+        !rawContent.contains('سڵاو و ڕێز')) {
       final qLower = query.toLowerCase().trim();
-      final isEnglish = RegExp(r'^[a-zA-Z0-9\s\?\!\.,\-_]+$').hasMatch(query) || (qLower.contains('explain') || qLower.contains('what is') || qLower.contains('how to') || qLower.contains('difference'));
+      final isEnglish =
+          RegExp(r'^[a-zA-Z0-9\s\?\!\.,\-_]+$').hasMatch(query) ||
+          (qLower.contains('explain') ||
+              qLower.contains('what is') ||
+              qLower.contains('how to') ||
+              qLower.contains('difference'));
       final greetingPrefix = isEnglish
           ? "Hello and welcome! I am glad to assist you 🌸\n\n"
           : "سڵاو و ڕێز! زۆر بەخێربێیت خوێندکاری ئازیز، هیوادارم هەمیشە باش و سەرکەوتوو بیت 🌸\n\n";
@@ -523,12 +693,20 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   }
 
   String _buildAcademicContent(String query) {
-
     final qLower = query.toLowerCase().trim();
-    final isEnglish = RegExp(r'^[a-zA-Z0-9\s\?\!\.,\-_]+$').hasMatch(query) || (qLower.contains('explain') || qLower.contains('what is') || qLower.contains('how to') || qLower.contains('difference'));
+    final isEnglish =
+        RegExp(r'^[a-zA-Z0-9\s\?\!\.,\-_]+$').hasMatch(query) ||
+        (qLower.contains('explain') ||
+            qLower.contains('what is') ||
+            qLower.contains('how to') ||
+            qLower.contains('difference'));
 
     // 0. Translation & Vocabulary (Kurdish to English / English to Kurdish)
-    if (qLower.contains('وەرگێڕان') || qLower.contains('translate') || qLower.contains('ترجم') || qLower.contains('dashboard') || qLower.contains('داشبۆرد')) {
+    if (qLower.contains('وەرگێڕان') ||
+        qLower.contains('translate') ||
+        qLower.contains('ترجم') ||
+        qLower.contains('dashboard') ||
+        qLower.contains('داشبۆرد')) {
       return """
 # 🌐 وەرگێڕانی وورد و ئەکادیمی بۆ ئینگلیزی (English Translation)
 
@@ -558,7 +736,13 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     }
 
     // 1. Computer Science & Software / Flutter
-    if (qLower.contains('flutter') || qLower.contains('فلاتەر') || qLower.contains('فلاتر') || qLower.contains('widget') || qLower.contains('state management') || qLower.contains('statefulwidget') || qLower.contains('statelesswidget')) {
+    if (qLower.contains('flutter') ||
+        qLower.contains('فلاتەر') ||
+        qLower.contains('فلاتر') ||
+        qLower.contains('widget') ||
+        qLower.contains('state management') ||
+        qLower.contains('statefulwidget') ||
+        qLower.contains('statelesswidget')) {
       if (isEnglish) {
         return """
 # 💻 Introduction to Flutter Framework
@@ -639,7 +823,11 @@ class StudentCard extends StatelessWidget {
     }
 
     // 2. Operating Systems & Memory Management
-    if (qLower.contains('operating system') || qLower.contains('memory management') || qLower.contains('یادگە') || qLower.contains('بیردانک') || qLower.contains('deadlock')) {
+    if (qLower.contains('operating system') ||
+        qLower.contains('memory management') ||
+        qLower.contains('یادگە') ||
+        qLower.contains('بیردانک') ||
+        qLower.contains('deadlock')) {
       return """
 # ⚙️ بەڕێوەبردنی یادگە لە سیستەمی کارپێکردندا (OS Memory Management)
 
@@ -666,7 +854,11 @@ class StudentCard extends StatelessWidget {
     }
 
     // 3. Computer Networks & OSI Model
-    if (qLower.contains('osi') || qLower.contains('network') || qLower.contains('تۆڕ') || qLower.contains('tcp') || qLower.contains('ip')) {
+    if (qLower.contains('osi') ||
+        qLower.contains('network') ||
+        qLower.contains('تۆڕ') ||
+        qLower.contains('tcp') ||
+        qLower.contains('ip')) {
       return """
 # 🌐 ڕوونکردنەوەی ٧ چینی مۆدێلی OSI (OSI 7 Layers Model)
 
@@ -690,7 +882,15 @@ class StudentCard extends StatelessWidget {
     }
 
     // 4. Medicine & Pharmacy & Health
-    if (qLower.contains('heart') || qLower.contains('blood') || qLower.contains('دڵ') || qLower.contains('پزیشکی') || qLower.contains('دەرمان') || qLower.contains('drug') || qLower.contains('anatomy') || qLower.contains('cell') || qLower.contains('cell')) {
+    if (qLower.contains('heart') ||
+        qLower.contains('blood') ||
+        qLower.contains('دڵ') ||
+        qLower.contains('پزیشکی') ||
+        qLower.contains('دەرمان') ||
+        qLower.contains('drug') ||
+        qLower.contains('anatomy') ||
+        qLower.contains('cell') ||
+        qLower.contains('cell')) {
       return """
 # 🏥 ڕوونکردنەوەی زانستی ئەکادیمی (Medical & Health Sciences)
 
@@ -713,7 +913,13 @@ class StudentCard extends StatelessWidget {
     }
 
     // 5. Mathematics & Physics & Engineering
-    if (qLower.contains('calculus') || qLower.contains('integral') || qLower.contains('derivative') || qLower.contains('هاوکێشە') || qLower.contains('بیرکاری') || qLower.contains('matrix') || qLower.contains('physics')) {
+    if (qLower.contains('calculus') ||
+        qLower.contains('integral') ||
+        qLower.contains('derivative') ||
+        qLower.contains('هاوکێشە') ||
+        qLower.contains('بیرکاری') ||
+        qLower.contains('matrix') ||
+        qLower.contains('physics')) {
       return """
 # 📐 شیکار و ڕوونکردنەوەی بیرکاری و فیزیا (Mathematics & Engineering)
 
@@ -738,7 +944,10 @@ class StudentCard extends StatelessWidget {
     }
 
     // General Contextual Response Fallback
-    final cleanTopic = query.replaceAll('خوێندکار:', '').replaceAll('مامۆستا:', '').trim();
+    final cleanTopic = query
+        .replaceAll('خوێندکار:', '')
+        .replaceAll('مامۆستا:', '')
+        .trim();
     return """
 # 🧑‍🏫 وەڵامی زانستی مامۆستا ZankoAI
 
@@ -774,14 +983,19 @@ class StudentCard extends StatelessWidget {
     client.connectionTimeout = const Duration(seconds: 45);
 
     final modelsToTry = _lastWorkingModel != null
-        ? [_lastWorkingModel!, ..._validVisionModels.where((m) => m != _lastWorkingModel)]
+        ? [
+            _lastWorkingModel!,
+            ..._validVisionModels.where((m) => m != _lastWorkingModel),
+          ]
         : _validVisionModels;
 
     final base64Data = base64Encode(mediaBytes);
 
     for (final m in modelsToTry) {
       try {
-        final uri = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=$key');
+        final uri = Uri.parse(
+          'https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=$key',
+        );
         final request = await client.postUrl(uri);
         request.headers.set('content-type', 'application/json');
         request.headers.set('x-goog-api-key', key);
@@ -790,26 +1004,25 @@ class StudentCard extends StatelessWidget {
           if (systemPrompt.isNotEmpty)
             'system_instruction': {
               'parts': [
-                {'text': systemPrompt}
-              ]
+                {'text': systemPrompt},
+              ],
             },
           'contents': [
             {
               'parts': [
                 {'text': prompt},
                 {
-                  'inline_data': {
-                    'mime_type': mimeType,
-                    'data': base64Data,
-                  }
-                }
-              ]
-            }
-          ]
+                  'inline_data': {'mime_type': mimeType, 'data': base64Data},
+                },
+              ],
+            },
+          ],
         };
 
         request.add(utf8.encode(jsonEncode(bodyMap)));
-        final response = await request.close().timeout(const Duration(seconds: 60));
+        final response = await request.close().timeout(
+          const Duration(seconds: 60),
+        );
         final respStr = await response.transform(utf8.decoder).join();
 
         if (response.statusCode == 200) {
@@ -849,12 +1062,28 @@ class StudentCard extends StatelessWidget {
     'gemini-3.7-flash',
   ];
 
-  Future<String> _callGeminiMultimodal(Uint8List mediaBytes, String prompt, {String mimeType = 'image/jpeg'}) async {
+  Future<String> _callGeminiMultimodal(
+    Uint8List mediaBytes,
+    String prompt, {
+    String mimeType = 'image/jpeg',
+  }) async {
     final keysToTry = <String>[
-      if (_lastWorkingKey != null && _isValidApiKey(_lastWorkingKey)) _lastWorkingKey!.trim(),
-      if (_apiKey != null && _isValidApiKey(_apiKey) && _apiKey != _lastWorkingKey) _apiKey!.trim(),
-      if (_defaultApiKey.trim().isNotEmpty && _isValidApiKey(_defaultApiKey) && _defaultApiKey != _apiKey && _defaultApiKey != _lastWorkingKey) _defaultApiKey.trim(),
-      if (_embeddedApiKey.trim().isNotEmpty && _isValidApiKey(_embeddedApiKey) && _embeddedApiKey != _apiKey && _embeddedApiKey != _lastWorkingKey) _embeddedApiKey.trim(),
+      if (_lastWorkingKey != null && _isValidApiKey(_lastWorkingKey))
+        _lastWorkingKey!.trim(),
+      if (_apiKey != null &&
+          _isValidApiKey(_apiKey) &&
+          _apiKey != _lastWorkingKey)
+        _apiKey!.trim(),
+      if (_defaultApiKey.trim().isNotEmpty &&
+          _isValidApiKey(_defaultApiKey) &&
+          _defaultApiKey != _apiKey &&
+          _defaultApiKey != _lastWorkingKey)
+        _defaultApiKey.trim(),
+      if (_embeddedApiKey.trim().isNotEmpty &&
+          _isValidApiKey(_embeddedApiKey) &&
+          _embeddedApiKey != _apiKey &&
+          _embeddedApiKey != _lastWorkingKey)
+        _embeddedApiKey.trim(),
     ];
 
     final isAudio = mimeType.startsWith('audio');
@@ -866,27 +1095,46 @@ class StudentCard extends StatelessWidget {
         actualMime = 'audio/aac';
       }
       if (mediaBytes.length > 12) {
-        if (mediaBytes[0] == 0x52 && mediaBytes[1] == 0x49 && mediaBytes[2] == 0x46 && mediaBytes[3] == 0x46) {
+        if (mediaBytes[0] == 0x52 &&
+            mediaBytes[1] == 0x49 &&
+            mediaBytes[2] == 0x46 &&
+            mediaBytes[3] == 0x46) {
           actualMime = 'audio/wav';
         } else if (mediaBytes[0] == 0xFF && (mediaBytes[1] & 0xF6) == 0xF0) {
           // AAC ADTS sync header
           actualMime = 'audio/aac';
-        } else if ((mediaBytes[0] == 0x49 && mediaBytes[1] == 0x44 && mediaBytes[2] == 0x33) ||
+        } else if ((mediaBytes[0] == 0x49 &&
+                mediaBytes[1] == 0x44 &&
+                mediaBytes[2] == 0x33) ||
             (mediaBytes[0] == 0xFF && (mediaBytes[1] & 0xE6) == 0xE2)) {
           // ID3v2 or MP3 header
           actualMime = 'audio/mp3';
-        } else if (mediaBytes[4] == 0x66 && mediaBytes[5] == 0x74 && mediaBytes[6] == 0x79 && mediaBytes[7] == 0x70) {
+        } else if (mediaBytes[4] == 0x66 &&
+            mediaBytes[5] == 0x74 &&
+            mediaBytes[6] == 0x79 &&
+            mediaBytes[7] == 0x70) {
           actualMime = 'audio/mp4';
-        } else if (mediaBytes[0] == 0x4F && mediaBytes[1] == 0x67 && mediaBytes[2] == 0x67 && mediaBytes[3] == 0x53) {
+        } else if (mediaBytes[0] == 0x4F &&
+            mediaBytes[1] == 0x67 &&
+            mediaBytes[2] == 0x67 &&
+            mediaBytes[3] == 0x53) {
           actualMime = 'audio/ogg';
-        } else if (mediaBytes[0] == 0x66 && mediaBytes[1] == 0x4C && mediaBytes[2] == 0x61 && mediaBytes[3] == 0x43) {
+        } else if (mediaBytes[0] == 0x66 &&
+            mediaBytes[1] == 0x4C &&
+            mediaBytes[2] == 0x61 &&
+            mediaBytes[3] == 0x43) {
           actualMime = 'audio/flac';
         }
       }
     } else if (mediaBytes.length > 8) {
-      if (mediaBytes[0] == 0x89 && mediaBytes[1] == 0x50 && mediaBytes[2] == 0x4E && mediaBytes[3] == 0x47) {
+      if (mediaBytes[0] == 0x89 &&
+          mediaBytes[1] == 0x50 &&
+          mediaBytes[2] == 0x4E &&
+          mediaBytes[3] == 0x47) {
         actualMime = 'image/png';
-      } else if (mediaBytes[0] == 0xFF && mediaBytes[1] == 0xD8 && mediaBytes[2] == 0xFF) {
+      } else if (mediaBytes[0] == 0xFF &&
+          mediaBytes[1] == 0xD8 &&
+          mediaBytes[2] == 0xFF) {
         actualMime = 'image/jpeg';
       } else if (mediaBytes.length > 12 &&
           mediaBytes[0] == 0x52 &&
@@ -900,14 +1148,16 @@ class StudentCard extends StatelessWidget {
     final systemPrompt = isAudio
         ? "You are an advanced AI Speech-to-Text transcriber. Listen to the audio and transcribe every spoken word accurately in the exact language spoken (Kurdish Sorani, Kurdish Badini, Arabic, or English). Output ONLY the transcribed words without any preamble or notes."
         : "تۆ مامۆستایەکی زۆر زیرەک و شارەزای هەموو بوارە ئەکادیمییەکان، بڕوانامەکان، بەڵگەنامەکان، بیرکاری و زانستەکانی بە ناوی ZankoAI. "
-          "ئەم وێنەیە بە تەواوی و بە وردی شیکار بکە. ئەگەر بەکارهێنەر پرسیار یان تێبینییەکی تایبەتی هەبوو لەسەر وێنەکە (وەک ناوی کەس، پرسیارێکی دیاریکراو، یان داواکارییەک وەک وەرگێڕان)، وەڵامی ورد و ڕاستەوخۆ دەربارەی وێنەکە بدەرەوە بە هەمان زمانی پرسیارەکە (کوردی سۆرانی، کوردی بادینی، عەرەبی، یان ئینگلیزی). "
-          "هەرگیز نیشانەی دۆلار (\$ یان \$\$) بۆ هاوکێشە بیرکارییەکان بەکارمەهێنە، بەڵکو بە دەقی ئاسایی و ڕوونی بێ \$ بنووسە.";
+              "ئەم وێنەیە بە تەواوی و بە وردی شیکار بکە. ئەگەر بەکارهێنەر پرسیار یان تێبینییەکی تایبەتی هەبوو لەسەر وێنەکە (وەک ناوی کەس، پرسیارێکی دیاریکراو، یان داواکارییەک وەک وەرگێڕان)، وەڵامی ورد و ڕاستەوخۆ دەربارەی وێنەکە بدەرەوە بە هەمان زمانی پرسیارەکە (کوردی سۆرانی، کوردی بادینی، عەرەبی، یان ئینگلیزی). "
+              "هەرگیز نیشانەی دۆلار (\$ یان \$\$) بۆ هاوکێشە بیرکارییەکان بەکارمەهێنە، بەڵکو بە دەقی ئاسایی و ڕوونی بێ \$ بنووسە.";
 
     final defaultPrompt = isAudio
         ? "Transcribe the spoken words in this audio exactly in Kurdish (Sorani/Badini), Arabic, or English."
         : "ئەم وێنەیە بە وردی شیکار بکە و وەڵامی تێبینی یان پرسیارەکەی سەرەوە بدەرەوە.";
 
-    final effectivePrompt = prompt.trim().isNotEmpty ? prompt.trim() : defaultPrompt;
+    final effectivePrompt = prompt.trim().isNotEmpty
+        ? prompt.trim()
+        : defaultPrompt;
 
     for (final keyToUse in keysToTry) {
       if (keyToUse.isEmpty) continue;
@@ -942,23 +1192,34 @@ class StudentCard extends StatelessWidget {
 
     // If query has specific academic instructions (like translation or math), provide fallback response
     if (effectivePrompt != defaultPrompt && effectivePrompt.length > 5) {
-      return _generateAcademicResponse(effectivePrompt, systemInstruction: systemPrompt);
+      return _generateAcademicResponse(
+        effectivePrompt,
+        systemInstruction: systemPrompt,
+      );
     }
 
     return "⚠️ **نەتوانرا وێنەکە لە سێرڤەری زیرەکی دەستکرد شیکار بکرێت**\n\n"
-           "تکایە دڵنیابە لە پەیوەندی ئینتەرنێتەکەت و دووبارە هەوڵ بدەرەوە.";
+        "تکایە دڵنیابە لە پەیوەندی ئینتەرنێتەکەت و دووبارە هەوڵ بدەرەوە.";
   }
 
   @override
-  Future<String> solveImageQuestion(Uint8List imageBytes, String promptText, {bool isVip = false, bool isPendingVip = false}) async {
-    final allowed = await checkAndIncrementDailyLimit(isVip: isVip, isPendingVip: isPendingVip);
+  Future<String> solveImageQuestion(
+    Uint8List imageBytes,
+    String promptText, {
+    bool isVip = false,
+    bool isPendingVip = false,
+  }) async {
+    final allowed = await checkAndIncrementDailyLimit(
+      isVip: isVip,
+      isPendingVip: isPendingVip,
+    );
     if (!allowed) {
       if (isPendingVip) {
         return "⏳ **داواکاری VIPەکەت لە چاوەڕوانی پەسەندکردنەوەی ئەدمینە**\n\n"
-               "سنووری ١٠ پەیامی بەخۆڕاییت بۆ ئەمڕۆ تەواو بووە. ئەدمین بەم زووانە داواکارییەکەت پەسەند دەکات! 👑";
+            "سنووری ١٠ پەیامی بەخۆڕاییت بۆ ئەمڕۆ تەواو بووە. ئەدمین بەم زووانە داواکارییەکەت پەسەند دەکات! 👑";
       }
       return "⭐ **گەیشتیتە سنووری ١٠ پەیامی بەخۆڕایی بۆ ئەمڕۆ**\n\n"
-             "بۆ نامەی بێسنوور ئەپەکەت بۆ **VIP** بەرز بکەرەوە!";
+          "بۆ نامەی بێسنوور ئەپەکەت بۆ **VIP** بەرز بکەرەوە!";
     }
 
     try {
@@ -970,47 +1231,58 @@ class StudentCard extends StatelessWidget {
   }
 
   @override
-  Future<Map<String, dynamic>> summarizePdf(String pdfName, String pdfContent) async {
+  Future<Map<String, dynamic>> summarizePdf(
+    String pdfName,
+    String pdfContent,
+  ) async {
     await Future.delayed(const Duration(milliseconds: 1000));
 
-    final safeContent = pdfContent.length > 6000 ? pdfContent.substring(0, 6000) : pdfContent;
+    final safeContent = pdfContent.length > 6000
+        ? pdfContent.substring(0, 6000)
+        : pdfContent;
     final englishCharCount = RegExp(r'[a-zA-Z]').allMatches(safeContent).length;
-    final isEnglishDoc = safeContent.length > 30 && (englishCharCount / safeContent.length) > 0.35;
+    final isEnglishDoc =
+        safeContent.length > 30 &&
+        (englishCharCount / safeContent.length) > 0.35;
 
     if (hasRealApiKey) {
       try {
         final prompt = isEnglishDoc
             ? "Analyze and summarize the following English PDF document ('$pdfName') thoroughly.\n"
-              "Since the document is in English, provide your entire response IN HIGH QUALITY ACADEMIC ENGLISH in 3 clear sections:\n"
-              "1- Overview Summary (Summary)\n"
-              "2- Key Bullet Points (Key Points)\n"
-              "3- Core Academic Takeaway & Explanation (Explanation)\n\n"
-              "Document Content:\n$safeContent"
+                  "Since the document is in English, provide your entire response IN HIGH QUALITY ACADEMIC ENGLISH in 3 clear sections:\n"
+                  "1- Overview Summary (Summary)\n"
+                  "2- Key Bullet Points (Key Points)\n"
+                  "3- Core Academic Takeaway & Explanation (Explanation)\n\n"
+                  "Document Content:\n$safeContent"
             : "ئەم دەقەی خوارەوە کە لە فایلی بە ناوی '$pdfName' دەرهێنراوە بە وردی کورت بکەرەوە. "
-              "وەڵامەکەت پێویستە بە زمانی کوردی (سۆرانی) بێت و سێ بەش لەخۆ بگرێت: "
-              "١- کورتەیەکی گشتی (Summary)\n"
-              "٢- خاڵە سەرەکی و گرنگەکان (Key Points) وەک لیستی خاڵبەندی\n"
-              "٣- وەرگێڕانی گرنگترین پارچەی دەقەکە بۆ کوردی (Translation)\n\n"
-              "دەقەکە:\n$safeContent";
-        
+                  "وەڵامەکەت پێویستە بە زمانی کوردی (سۆرانی) بێت و سێ بەش لەخۆ بگرێت: "
+                  "١- کورتەیەکی گشتی (Summary)\n"
+                  "٢- خاڵە سەرەکی و گرنگەکان (Key Points) وەک لیستی خاڵبەندی\n"
+                  "٣- وەرگێڕانی گرنگترین پارچەی دەقەکە بۆ کوردی (Translation)\n\n"
+                  "دەقەکە:\n$safeContent";
+
         final responseText = await _callGemini(prompt);
-        
+
         final sections = responseText.split('\n\n');
         String summary = responseText;
         List<String> keyPoints = [];
         String translation = isEnglishDoc
             ? "Academic summary generated directly in English from source text."
             : "وەرگێڕان لە دەقی سەرەکییەوە ئەنجامدراوە.";
-        
+
         if (sections.isNotEmpty) summary = sections[0];
-        
+
         final lines = responseText.split('\n');
         for (var line in lines) {
-          if (line.trim().startsWith('-') || line.trim().startsWith('*') || RegExp(r'^\d+\.').hasMatch(line.trim())) {
-            keyPoints.add(line.trim().replaceAll(RegExp(r'^[\-\*\d\.\s]+'), ''));
+          if (line.trim().startsWith('-') ||
+              line.trim().startsWith('*') ||
+              RegExp(r'^\d+\.').hasMatch(line.trim())) {
+            keyPoints.add(
+              line.trim().replaceAll(RegExp(r'^[\-\*\d\.\s]+'), ''),
+            );
           }
         }
-        
+
         if (keyPoints.isEmpty) {
           keyPoints = ["سەیری دەقی کورتکراوە بکە بۆ خاڵە سەرەکییەکان."];
         }
@@ -1018,9 +1290,9 @@ class StudentCard extends StatelessWidget {
         return {
           'summary': summary,
           'keyPoints': keyPoints.take(5).toList(),
-          'translation': responseText.length > summary.length 
-              ? responseText.substring(summary.length).trim() 
-              : translation
+          'translation': responseText.length > summary.length
+              ? responseText.substring(summary.length).trim()
+              : translation,
         };
       } catch (e) {
         if (_isNetworkError(e)) {
@@ -1028,7 +1300,7 @@ class StudentCard extends StatelessWidget {
           return {
             'summary': "📡 **(شێوازی ئۆفلاین)**\n\n${mockRes['summary']}",
             'keyPoints': mockRes['keyPoints'],
-            'translation': mockRes['translation']
+            'translation': mockRes['translation'],
           };
         }
         rethrow;
@@ -1040,27 +1312,38 @@ class StudentCard extends StatelessWidget {
 
   Map<String, dynamic> _getMockSummary(String pdfName) {
     return {
-      'summary': "ئەم فایلە ('$pdfName') باسی بنەماکانی پەیوەندی لە تۆڕە کۆمپیوتەرەکاندا دەکات. ڕوونیدەکاتەوە کە چۆن کۆمپیوتەرەکان لە ڕێگەی پرۆتۆکۆلە جیاوازەکانەوە پەیوەندی بەیەکەوە دەکەن بۆ ئاڵوگۆڕکردنی داتا.",
+      'summary':
+          "ئەم فایلە ('$pdfName') باسی بنەماکانی پەیوەندی لە تۆڕە کۆمپیوتەرەکاندا دەکات. ڕوونیدەکاتەوە کە چۆن کۆمپیوتەرەکان لە ڕێگەی پرۆتۆکۆلە جیاوازەکانەوە پەیوەندی بەیەکەوە دەکەن بۆ ئاڵوگۆڕکردنی داتا.",
       'keyPoints': [
         "پێناسەی تۆڕ: کۆمەڵێک ئامێرن کە بە یەکەوە بەستراون بۆ هاوبەشکردنی سەرچاوەکان.",
         "مۆدێلی OSI: لە ٧ چین پێکهاتووە (فیزیکی، بەستنی داتا، تۆڕ، گواستنەوە، دانیشتن، پێشکەشکردن، جێبەجێکردن).",
-        "پڕۆتۆکۆلی TCP/IP: بنەمای سەرەکی ئینتەرنێتە و گواستنەوەی پارێزراوی زانیارییەکان مسۆگەر دەکات."
+        "پڕۆتۆکۆلی TCP/IP: بنەمای سەرەکی ئینتەرنێتە و گواستنەوەی پارێزراوی زانیارییەکان مسۆگەر دەکات.",
       ],
-      'translation': "ئەم پەڕتووکە لەسەر تۆڕەکانی کۆمپیوتەر ڕێبەرایەتییەکی تەواوە بۆ خوێندکارانی بەشی تەکنەلۆجیا تا بە بنەماکانی سویچ، ڕاوتەر و گواستنەوەی پاکەتەکان ئاشنا بن."
+      'translation':
+          "ئەم پەڕتووکە لەسەر تۆڕەکانی کۆمپیوتەر ڕێبەرایەتییەکی تەواوە بۆ خوێندکارانی بەشی تەکنەلۆجیا تا بە بنەماکانی سویچ، ڕاوتەر و گواستنەوەی پاکەتەکان ئاشنا بن.",
     };
   }
 
   @override
-  Future<String> transcribeAudio(Uint8List? audioBytes, String audioFileName, {String mimeType = 'audio/mp4', String language = 'auto'}) async {
+  Future<String> transcribeAudio(
+    Uint8List? audioBytes,
+    String audioFileName, {
+    String mimeType = 'audio/mp4',
+    String language = 'auto',
+  }) async {
     if (audioBytes != null && audioBytes.isNotEmpty) {
       try {
-        String langInstruction = "transcribe in the exact spoken language (Kurdish Sorani, Kurdish Badini, Arabic, or English)";
+        String langInstruction =
+            "transcribe in the exact spoken language (Kurdish Sorani, Kurdish Badini, Arabic, or English)";
         if (language == 'ku') {
-          langInstruction = "the audio is a Kurdish lecture. Transcribe every spoken word accurately in proper Kurdish Sorani / Badini script";
+          langInstruction =
+              "the audio is a Kurdish lecture. Transcribe every spoken word accurately in proper Kurdish Sorani / Badini script";
         } else if (language == 'ar') {
-          langInstruction = "the audio is an Arabic lecture. Transcribe every spoken word accurately in standard Arabic script";
+          langInstruction =
+              "the audio is an Arabic lecture. Transcribe every spoken word accurately in standard Arabic script";
         } else if (language == 'en') {
-          langInstruction = "the audio is an English lecture. Transcribe every spoken word accurately in English";
+          langInstruction =
+              "the audio is an English lecture. Transcribe every spoken word accurately in English";
         }
 
         final prompt =
@@ -1072,7 +1355,10 @@ class StudentCard extends StatelessWidget {
             "3. Do NOT add any preamble, titles, translations, markdown formatting, or extra commentary.\n"
             "4. Transcribe accurately with natural punctuation and paragraph breaks.";
 
-        final effectiveMime = (mimeType.isEmpty || mimeType == 'audio/m4a' || mimeType == 'audio/x-m4a')
+        final effectiveMime =
+            (mimeType.isEmpty ||
+                mimeType == 'audio/m4a' ||
+                mimeType == 'audio/x-m4a')
             ? 'audio/mp4'
             : mimeType;
 
@@ -1094,11 +1380,19 @@ class StudentCard extends StatelessWidget {
   }
 
   @override
-  Future<String> summarizeAudio(String audioFileName, String transcriptText) async {
+  Future<String> summarizeAudio(
+    String audioFileName,
+    String transcriptText,
+  ) async {
     if (hasRealApiKey) {
       try {
-        final cleanName = audioFileName.replaceAll('.m4a', '').replaceAll('.mp3', '').replaceAll('_', ' ').trim();
-        final prompt = '''
+        final cleanName = audioFileName
+            .replaceAll('.m4a', '')
+            .replaceAll('.mp3', '')
+            .replaceAll('_', ' ')
+            .trim();
+        final prompt =
+            '''
 ئەمە تۆماری دەنگیی وانەی ئەکادیمییە بە ناوی '$cleanName'. 
 دەقی دەنگەکە:
 $transcriptText
@@ -1117,13 +1411,19 @@ $transcriptText
 ''';
 
         final response = await _callGemini(prompt);
-        if (response.trim().isNotEmpty && !response.contains('Error') && !response.contains('blocked')) {
+        if (response.trim().isNotEmpty &&
+            !response.contains('Error') &&
+            !response.contains('blocked')) {
           return response.trim();
         }
       } catch (_) {}
     }
 
-    final cleanName = audioFileName.replaceAll('.m4a', '').replaceAll('.mp3', '').replaceAll('_', ' ').trim();
+    final cleanName = audioFileName
+        .replaceAll('.m4a', '')
+        .replaceAll('.mp3', '')
+        .replaceAll('_', ' ')
+        .trim();
     return '''
 # 🎙️ پوختەی سەرەکی تۆماری دەنگی ($cleanName)
 
@@ -1150,7 +1450,8 @@ $transcriptText
 
     if (hasRealApiKey) {
       try {
-        final prompt = "کویزێکی تاقیکاری لەسەر بابەتی '$topic' لە وانەی '$courseName' دروست بکە بە زمانی کوردی (سۆرانی). "
+        final prompt =
+            "کویزێکی تاقیکاری لەسەر بابەتی '$topic' لە وانەی '$courseName' دروست بکە بە زمانی کوردی (سۆرانی). "
             "کویزەکە پێویستە ٣ پرسیار لەخۆ بگرێت بە فۆرماتی JSON: \n"
             "{\n"
             "  \"title\": \"تاقیکردنەوە لەسەر $topic\",\n"
@@ -1173,11 +1474,15 @@ $transcriptText
   }
 
   @override
-  Future<QuizModel> generateQuizFromText(String fileText, String courseName) async {
+  Future<QuizModel> generateQuizFromText(
+    String fileText,
+    String courseName,
+  ) async {
     await Future.delayed(const Duration(milliseconds: 500));
 
     try {
-      final prompt = """
+      final prompt =
+          """
 تۆ مامۆستایەکی زیرەک و پسپۆڕی. ئەم دەقەی خوارەوە بە وردی بخوێنەوە کە لە فایلی (PDF / پەڕگە) بارکراوی وانەکە وەرگیراوە.
 لە بەردەوامی دەقەکەوە، کویزێکی زانستی بەرز دروست بکە لەسەر بیرۆکە و زانیارییەکانی نێو دەقەکە بە زمانی کوردی (سۆرانی).
 
@@ -1201,9 +1506,21 @@ $fileText
 """;
 
       final response = await _callGemini(prompt);
-      return _parseQuizJson(response, "کویزی فایلی بارکراو", courseName, pdfContent: fileText);
+      return _parseQuizJson(
+        response,
+        "کویزی فایلی بارکراو",
+        courseName,
+        pdfContent: fileText,
+      );
     } catch (e) {
-      return _generateMockExam("تاقیکردنەوە لەسەر دەقی فایلی بارکراو", courseName, 5, 10, "Medium", pdfContent: fileText);
+      return _generateMockExam(
+        "تاقیکردنەوە لەسەر دەقی فایلی بارکراو",
+        courseName,
+        5,
+        10,
+        "Medium",
+        pdfContent: fileText,
+      );
     }
   }
 
@@ -1229,12 +1546,13 @@ $fileText
         final typeInstruction = (questionType == 'TrueFalse')
             ? "پێویستە سەرجەم پرسیارەکان پرسیاری (ڕاست و هەڵە) بن بە هەردوو هەڵبژاردنی ['ڕاستە', 'هەڵەیە']."
             : (questionType == 'FillInBlank')
-                ? "پێویستە سەرجەم پرسیارەکان پرسیاری (بۆشایی - Fill in the blank) بن، کە دەقی پرسیارەکە بۆشاییی هێڵی ___ تێدا بێت."
-                : (questionType == 'MCQ')
-                    ? "پێویستە سەرجەم پرسیارەکان پرسیاری (فرەبژاردە - MCQ) بن بە ٤ هەڵبژاردنی زانستیی واقیعی."
-                    : "تێکەڵەیەک لە پرسیاری فرەبژاردەی MCQ، ڕاست و هەڵە، و بۆشایی (___) دروست بکە.";
+            ? "پێویستە سەرجەم پرسیارەکان پرسیاری (بۆشایی - Fill in the blank) بن، کە دەقی پرسیارەکە بۆشاییی هێڵی ___ تێدا بێت."
+            : (questionType == 'MCQ')
+            ? "پێویستە سەرجەم پرسیارەکان پرسیاری (فرەبژاردە - MCQ) بن بە ٤ هەڵبژاردنی زانستیی واقیعی."
+            : "تێکەڵەیەک لە پرسیاری فرەبژاردەی MCQ، ڕاست و هەڵە، و بۆشایی (___) دروست بکە.";
 
-        final prompt = """
+        final prompt =
+            """
 تۆ مامۆستایەکی سەرەکی بەئەزموونی زانکۆیت. ئەرکت دروستکردنی تاقیکردنەوەیەکی زانستی زۆر ورد و پڕۆفێشناڵە (DIRECT ACADEMIC EXAM) تەنها لەسەر ناوەڕۆک و بابەتی زانستی فایلی PDFی بارکراوی ژێرەوە.
 ناوی وانە/فایل: "$courseName"
 
@@ -1305,15 +1623,33 @@ $pdfContext
           );
         }
       } catch (e) {
-        return _generateMockExam("تاقیکردنەوە لەسەر PDF - $courseName", courseName, questionCount, durationMinutes, difficulty, pdfContent: pdfContent);
+        return _generateMockExam(
+          "تاقیکردنەوە لەسەر PDF - $courseName",
+          courseName,
+          questionCount,
+          durationMinutes,
+          difficulty,
+          pdfContent: pdfContent,
+        );
       }
     }
 
-    return _generateMockExam("تاقیکردنەوە لەسەر PDF - $courseName", courseName, questionCount, durationMinutes, difficulty, pdfContent: pdfContent);
+    return _generateMockExam(
+      "تاقیکردنەوە لەسەر PDF - $courseName",
+      courseName,
+      questionCount,
+      durationMinutes,
+      difficulty,
+      pdfContent: pdfContent,
+    );
   }
 
   /// Helper to robustly check if a user answer matches the correct answer
-  static bool isAnswerCorrect(String? userAns, String? correctAns, {List<String>? options}) {
+  static bool isAnswerCorrect(
+    String? userAns,
+    String? correctAns, {
+    List<String>? options,
+  }) {
     if (userAns == null || correctAns == null) return false;
     final u = userAns.trim();
     final c = correctAns.trim();
@@ -1323,7 +1659,17 @@ $pdfContext
     if (u.toLowerCase() == c.toLowerCase()) return true;
 
     // True/False equivalence (Kurdish, Arabic, English)
-    const truthy = {'ڕاستە', 'ڕاست', 'true', 't', '1', 'صح', 'صحيح', 'yes', 'y'};
+    const truthy = {
+      'ڕاستە',
+      'ڕاست',
+      'true',
+      't',
+      '1',
+      'صح',
+      'صحيح',
+      'yes',
+      'y',
+    };
     const falsy = {'هەڵەیە', 'هەڵە', 'false', 'f', '0', 'خطأ', 'no', 'n'};
     final uLower = u.toLowerCase();
     final cLower = c.toLowerCase();
@@ -1332,7 +1678,10 @@ $pdfContext
 
     // Helper to strip leading option identifiers e.g. "A) ", "1. ", "B - "
     String stripPrefix(String s) {
-      return s.replaceFirst(RegExp(r'^[A-Da-d0-9][\.\)\:\-]\s*'), '').trim().toLowerCase();
+      return s
+          .replaceFirst(RegExp(r'^[A-Da-d0-9][\.\)\:\-]\s*'), '')
+          .trim()
+          .toLowerCase();
     }
 
     final uClean = stripPrefix(u);
@@ -1341,25 +1690,37 @@ $pdfContext
 
     // Letter matching (A, B, C, D / 0, 1, 2, 3) against options
     if (options != null && options.isNotEmpty) {
-      final letterMap = {'a': 0, 'b': 1, 'c': 2, 'd': 3, '0': 0, '1': 1, '2': 2, '3': 3};
+      final letterMap = {
+        'a': 0,
+        'b': 1,
+        'c': 2,
+        'd': 3,
+        '0': 0,
+        '1': 1,
+        '2': 2,
+        '3': 3,
+      };
       if (letterMap.containsKey(cLower)) {
         final targetIdx = letterMap[cLower]!;
         if (targetIdx < options.length) {
           final optText = options[targetIdx];
-          if (uLower == optText.toLowerCase() || uClean == stripPrefix(optText)) return true;
+          if (uLower == optText.toLowerCase() || uClean == stripPrefix(optText))
+            return true;
         }
       }
       if (letterMap.containsKey(uLower)) {
         final targetIdx = letterMap[uLower]!;
         if (targetIdx < options.length) {
           final optText = options[targetIdx];
-          if (cLower == optText.toLowerCase() || cClean == stripPrefix(optText)) return true;
+          if (cLower == optText.toLowerCase() || cClean == stripPrefix(optText))
+            return true;
         }
       }
     }
 
     // Punctuation and whitespace invariant comparison
-    String sanitize(String s) => s.replaceAll(RegExp(r'[\s\p{P}]', unicode: true), '').toLowerCase();
+    String sanitize(String s) =>
+        s.replaceAll(RegExp(r'[\s\p{P}]', unicode: true), '').toLowerCase();
     if (sanitize(u) == sanitize(c)) return true;
 
     return false;
@@ -1396,17 +1757,27 @@ $pdfContext
       final rawQuestions = (data['questions'] ?? data['quiz'] ?? []) as List;
       for (var q in rawQuestions) {
         final qMap = Map<String, dynamic>.from(q);
-        final qText = (qMap['question'] ?? qMap['questionText'] ?? qMap['title'] ?? '').toString().trim();
+        final qText =
+            (qMap['question'] ?? qMap['questionText'] ?? qMap['title'] ?? '')
+                .toString()
+                .trim();
         final optionsRaw = qMap['options'] ?? qMap['choices'];
-        List<String> options = optionsRaw != null ? List<String>.from(optionsRaw) : <String>[];
-        var correctAns = (qMap['correct_answer'] ?? qMap['correctAnswer'] ?? '').toString().trim();
-        final explanation = qMap['explanation'] ?? qMap['explanation_kurdi'] ?? qMap['reason'];
+        List<String> options = optionsRaw != null
+            ? List<String>.from(optionsRaw)
+            : <String>[];
+        var correctAns = (qMap['correct_answer'] ?? qMap['correctAnswer'] ?? '')
+            .toString()
+            .trim();
+        final explanation =
+            qMap['explanation'] ?? qMap['explanation_kurdi'] ?? qMap['reason'];
 
         if (qText.isEmpty) continue;
 
         QuestionType qType = QuestionType.multipleChoice;
         final typeStr = qMap['type']?.toString().toLowerCase() ?? '';
-        if (typeStr == 'truefalse' || (options.length == 2 && (options.contains('ڕاستە') || options.contains('True')))) {
+        if (typeStr == 'truefalse' ||
+            (options.length == 2 &&
+                (options.contains('ڕاستە') || options.contains('True')))) {
           qType = QuestionType.trueFalse;
         } else if (typeStr == 'fillinblank' || qText.contains('___')) {
           qType = QuestionType.fillInBlank;
@@ -1416,16 +1787,33 @@ $pdfContext
         if (qType == QuestionType.trueFalse) {
           options = ['ڕاستە', 'هەڵەیە'];
           final cLower = correctAns.toLowerCase();
-          if (cLower.contains('true') || cLower.contains('ڕاست') || cLower == 't' || cLower == '1' || cLower.contains('صح')) {
+          if (cLower.contains('true') ||
+              cLower.contains('ڕاست') ||
+              cLower == 't' ||
+              cLower == '1' ||
+              cLower.contains('صح')) {
             correctAns = 'ڕاستە';
-          } else if (cLower.contains('false') || cLower.contains('هەڵە') || cLower == 'f' || cLower == '0' || cLower.contains('خطأ')) {
+          } else if (cLower.contains('false') ||
+              cLower.contains('هەڵە') ||
+              cLower == 'f' ||
+              cLower == '0' ||
+              cLower.contains('خطأ')) {
             correctAns = 'هەڵەیە';
           } else {
             correctAns = 'ڕاستە';
           }
         } else if (options.isNotEmpty) {
           // Map single-letter/index correct answers (A, B, C, D / 0, 1, 2, 3) to the actual option text
-          final letterMap = {'a': 0, 'b': 1, 'c': 2, 'd': 3, '0': 0, '1': 1, '2': 2, '3': 3};
+          final letterMap = {
+            'a': 0,
+            'b': 1,
+            'c': 2,
+            'd': 3,
+            '0': 0,
+            '1': 1,
+            '2': 2,
+            '3': 3,
+          };
           final cLower = correctAns.toLowerCase();
           if (letterMap.containsKey(cLower)) {
             final idx = letterMap[cLower]!;
@@ -1445,14 +1833,16 @@ $pdfContext
           correctAns = options[0];
         }
 
-        questions.add(QuestionModel(
-          id: 'q_${Random().nextInt(100000)}',
-          questionText: qText,
-          type: qType,
-          options: options.isNotEmpty ? options : null,
-          correctAnswer: correctAns,
-          explanation: explanation?.toString().trim(),
-        ));
+        questions.add(
+          QuestionModel(
+            id: 'q_${Random().nextInt(100000)}',
+            questionText: qText,
+            type: qType,
+            options: options.isNotEmpty ? options : null,
+            correctAnswer: correctAns,
+            explanation: explanation?.toString().trim(),
+          ),
+        );
       }
 
       if (questions.isEmpty) {
@@ -1466,7 +1856,10 @@ $pdfContext
         );
       }
 
-      final finalQuestions = (expectedCount != null && expectedCount > 0 && questions.length > expectedCount)
+      final finalQuestions =
+          (expectedCount != null &&
+              expectedCount > 0 &&
+              questions.length > expectedCount)
           ? questions.take(expectedCount).toList()
           : questions;
 
@@ -1496,7 +1889,8 @@ $pdfContext
 
     if (hasRealApiKey) {
       try {
-        final prompt = "ئەم تێبینییەی خوارەوە بە شێوازێکی زۆر مۆدێرن و ڕێکخراو بە مارکداون (Markdown) دابڕێژەرەوە بە زمانی کوردی. "
+        final prompt =
+            "ئەم تێبینییەی خوارەوە بە شێوازێکی زۆر مۆدێرن و ڕێکخراو بە مارکداون (Markdown) دابڕێژەرەوە بە زمانی کوردی. "
             "سەردێڕ، بەشەکان، خاڵبەندی بەکاربهێنە بۆ ڕوونکردنەوەی بابەتەکە بە شێوەیەکی فێرکاری:\n\n$rawNoteContent";
         return await _callGemini(prompt);
       } catch (e) {
@@ -1530,8 +1924,14 @@ $pdfContext
     final cards = <FlashcardModel>[];
 
     // 1. Check if lines are paired as question / answer (e.g. پرسیار: / وەڵام:)
-    final qPrefix = RegExp(r'^(?:پرسیار|س|Q|q)[\s\:\.\-]*', caseSensitive: false);
-    final aPrefix = RegExp(r'^(?:وەڵام|ج|A|a)[\s\:\.\-]*', caseSensitive: false);
+    final qPrefix = RegExp(
+      r'^(?:پرسیار|س|Q|q)[\s\:\.\-]*',
+      caseSensitive: false,
+    );
+    final aPrefix = RegExp(
+      r'^(?:وەڵام|ج|A|a)[\s\:\.\-]*',
+      caseSensitive: false,
+    );
     bool hasQAPair = false;
     for (int i = 0; i < lines.length - 1; i += 2) {
       if (qPrefix.hasMatch(lines[i]) && aPrefix.hasMatch(lines[i + 1])) {
@@ -1545,11 +1945,13 @@ $pdfContext
         final q = lines[i].replaceFirst(qPrefix, '').trim();
         final a = lines[i + 1].replaceFirst(aPrefix, '').trim();
         if (q.isNotEmpty && a.isNotEmpty) {
-          cards.add(FlashcardModel(
-            id: 'fc_${Random().nextInt(100000)}_${DateTime.now().millisecondsSinceEpoch}',
-            front: q,
-            back: a,
-          ));
+          cards.add(
+            FlashcardModel(
+              id: 'fc_${Random().nextInt(100000)}_${DateTime.now().millisecondsSinceEpoch}',
+              front: q,
+              back: a,
+            ),
+          );
         }
       }
       if (cards.isNotEmpty) return cards;
@@ -1562,18 +1964,24 @@ $pdfContext
       if (delimiterRegex.hasMatch(line)) matchCount++;
     }
 
-    if (matchCount >= 1 && (matchCount >= lines.length / 2 || lines.length == 1)) {
+    if (matchCount >= 1 &&
+        (matchCount >= lines.length / 2 || lines.length == 1)) {
       for (final line in lines) {
         final match = delimiterRegex.firstMatch(line);
         if (match != null) {
-          final front = line.substring(0, match.start).replaceAll(RegExp(r'^\d+[\.\)\-]\s*'), '').trim();
+          final front = line
+              .substring(0, match.start)
+              .replaceAll(RegExp(r'^\d+[\.\)\-]\s*'), '')
+              .trim();
           final back = line.substring(match.end).trim();
           if (front.isNotEmpty && back.isNotEmpty) {
-            cards.add(FlashcardModel(
-              id: 'fc_${Random().nextInt(100000)}_${DateTime.now().millisecondsSinceEpoch}',
-              front: front,
-              back: back,
-            ));
+            cards.add(
+              FlashcardModel(
+                id: 'fc_${Random().nextInt(100000)}_${DateTime.now().millisecondsSinceEpoch}',
+                front: front,
+                back: back,
+              ),
+            );
           }
         }
       }
@@ -1589,11 +1997,13 @@ $pdfContext
     if (sentences.length >= 2) {
       for (int i = 0; i < sentences.length; i++) {
         final s = sentences[i];
-        cards.add(FlashcardModel(
-          id: 'fc_${Random().nextInt(100000)}_${DateTime.now().millisecondsSinceEpoch}_$i',
-          front: 'خاڵی سەرەکی #${i + 1}:',
-          back: s,
-        ));
+        cards.add(
+          FlashcardModel(
+            id: 'fc_${Random().nextInt(100000)}_${DateTime.now().millisecondsSinceEpoch}_$i',
+            front: 'خاڵی سەرەکی #${i + 1}:',
+            back: s,
+          ),
+        );
       }
       if (cards.isNotEmpty) return cards;
     }
@@ -1607,177 +2017,254 @@ $pdfContext
     final displayTopic = topic.isNotEmpty ? topic : 'بابەتی خوێندنەوە';
 
     // 1. Computer Networks (تۆڕەکانی کۆمپیوتەر)
-    if (lower.contains('تۆڕ') || lower.contains('network') || lower.contains('osi') || lower.contains('tcp') || lower.contains('ip') || lower.contains('router') || lower.contains('switch')) {
+    if (lower.contains('تۆڕ') ||
+        lower.contains('network') ||
+        lower.contains('osi') ||
+        lower.contains('tcp') ||
+        lower.contains('ip') ||
+        lower.contains('router') ||
+        lower.contains('switch')) {
       return [
         FlashcardModel(
           id: 'fc_net_1_${DateTime.now().millisecondsSinceEpoch}',
-          front: 'چینەکانی مۆدێلی حەوت چینی OSI چیین بە ڕیزبەندی لە خوارەوە بۆ سەرەوە؟',
-          back: '١. فیزیایی (Physical)\n٢. بەستەری داتا (Data Link)\n٣. تۆڕ (Network)\n٤. گواستنەوە (Transport)\n٥. دانیشتن (Session)\n٦. خستنەڕوو (Presentation)\n٧. بەرنامە (Application).',
+          front:
+              'چینەکانی مۆدێلی حەوت چینی OSI چیین بە ڕیزبەندی لە خوارەوە بۆ سەرەوە؟',
+          back:
+              '١. فیزیایی (Physical)\n٢. بەستەری داتا (Data Link)\n٣. تۆڕ (Network)\n٤. گواستنەوە (Transport)\n٥. دانیشتن (Session)\n٦. خستنەڕوو (Presentation)\n٧. بەرنامە (Application).',
         ),
         FlashcardModel(
           id: 'fc_net_2_${DateTime.now().millisecondsSinceEpoch}',
           front: 'جیاوازی سەرەکی نێوان پرۆتۆکۆلی TCP و UDP چییە؟',
-          back: 'پرۆتۆکۆلی TCP دڵنیایی دەدات لە گەیشتنی تەواوی داتا (Reliable & Connection-Oriented)، بەڵام UDP خێراترە بەبێ دڵنیایی گەیشتن (Unreliable & Connectionless) وەک پەخشی دەنگ و ڤیدیۆ.',
+          back:
+              'پرۆتۆکۆلی TCP دڵنیایی دەدات لە گەیشتنی تەواوی داتا (Reliable & Connection-Oriented)، بەڵام UDP خێراترە بەبێ دڵنیایی گەیشتن (Unreliable & Connectionless) وەک پەخشی دەنگ و ڤیدیۆ.',
         ),
         FlashcardModel(
           id: 'fc_net_3_${DateTime.now().millisecondsSinceEpoch}',
           front: 'جیاوازی ئەدرێسی فیزیکی MAC Address و لۆژیکی IP Address چییە؟',
-          back: 'ئەدرێسی MAC نەگۆڕە و تایبەتە بە کارتی تۆڕ (NIC) لە چینی دووەم، بەڵام IP ناونیشانی لۆژیکی گۆڕاوە لە چینی سێیەم کە لە ڕێگەی تۆڕەوە دەدرێت بە ئامێرەکە.',
+          back:
+              'ئەدرێسی MAC نەگۆڕە و تایبەتە بە کارتی تۆڕ (NIC) لە چینی دووەم، بەڵام IP ناونیشانی لۆژیکی گۆڕاوە لە چینی سێیەم کە لە ڕێگەی تۆڕەوە دەدرێت بە ئامێرەکە.',
         ),
         FlashcardModel(
           id: 'fc_net_4_${DateTime.now().millisecondsSinceEpoch}',
           front: 'ڕۆڵ و مەبەستی سەرەکی لە سیستەمی DNS چییە؟',
-          back: 'سیستەمی DNS ناوی دۆمەینی وێبسایتەکان (وەک google.com) دەگۆڕێت بۆ ناونیشانی ژمارەیی IP بۆ ئەوەی ڕاوتەر و وێبگەڕەکان بتوانن پەیوەندی پێوە بکەن.',
+          back:
+              'سیستەمی DNS ناوی دۆمەینی وێبسایتەکان (وەک google.com) دەگۆڕێت بۆ ناونیشانی ژمارەیی IP بۆ ئەوەی ڕاوتەر و وێبگەڕەکان بتوانن پەیوەندی پێوە بکەن.',
         ),
         FlashcardModel(
           id: 'fc_net_5_${DateTime.now().millisecondsSinceEpoch}',
-          front: 'جیاوازی ئامێری سۆویچ (Switch) و ڕاوتەر (Router) لە تۆڕدا چییە؟',
-          back: 'سۆویچ ئامێرەکانی ناو هەمان تۆڕی خۆجێیی (LAN) لە چینی دووەم بەیەکەوە دەبەستێت، بەڵام ڕاوتەر تۆڕە جیاوازەکان (LAN بۆ WAN یان ئینتەرنێت) لە چینی سێیەم ئاڕاستە دەکات.',
+          front:
+              'جیاوازی ئامێری سۆویچ (Switch) و ڕاوتەر (Router) لە تۆڕدا چییە؟',
+          back:
+              'سۆویچ ئامێرەکانی ناو هەمان تۆڕی خۆجێیی (LAN) لە چینی دووەم بەیەکەوە دەبەستێت، بەڵام ڕاوتەر تۆڕە جیاوازەکان (LAN بۆ WAN یان ئینتەرنێت) لە چینی سێیەم ئاڕاستە دەکات.',
         ),
       ];
     }
 
     // 2. Operating Systems (سیستەمی کارپێکردن)
-    if (lower.contains('کارپێکردن') || lower.contains('operating') || lower.contains('os') || lower.contains('process') || lower.contains('thread') || lower.contains('deadlock')) {
+    if (lower.contains('کارپێکردن') ||
+        lower.contains('operating') ||
+        lower.contains('os') ||
+        lower.contains('process') ||
+        lower.contains('thread') ||
+        lower.contains('deadlock')) {
       return [
         FlashcardModel(
           id: 'fc_os_1_${DateTime.now().millisecondsSinceEpoch}',
           front: 'جیاوازی سەرەکی نێوان پرۆسێس (Process) و سرێد (Thread) چییە؟',
-          back: 'پرۆسێس بریتییە لە پرۆگرامێک لەکاتی جێبەجێکردندا کە خاوەن میمۆریی سەربەخۆیە، لەکاتێکدا سرێد یەکەیەکی سووک و بچووکتری ناو هەمان پرۆسێسە و میمۆری لەگەڵ سرێدەکانی تر هاوبەش دەکات.',
+          back:
+              'پرۆسێس بریتییە لە پرۆگرامێک لەکاتی جێبەجێکردندا کە خاوەن میمۆریی سەربەخۆیە، لەکاتێکدا سرێد یەکەیەکی سووک و بچووکتری ناو هەمان پرۆسێسە و میمۆری لەگەڵ سرێدەکانی تر هاوبەش دەکات.',
         ),
         FlashcardModel(
           id: 'fc_os_2_${DateTime.now().millisecondsSinceEpoch}',
           front: 'چوار مەرجە سەرەکییەکەی دروستبوونی بنبەست (Deadlock) چین؟',
-          back: '١. بێبەشکردنی دوولایەنە (Mutual Exclusion)\n٢. دەستگرتن و چاوەڕوانی (Hold & Wait)\n٣. نەبوونی دەستبەسەرداگرتن (No Preemption)\n٤. چاوەڕوانی بازنەیی (Circular Wait).',
+          back:
+              '١. بێبەشکردنی دوولایەنە (Mutual Exclusion)\n٢. دەستگرتن و چاوەڕوانی (Hold & Wait)\n٣. نەبوونی دەستبەسەرداگرتن (No Preemption)\n٤. چاوەڕوانی بازنەیی (Circular Wait).',
         ),
         FlashcardModel(
           id: 'fc_os_3_${DateTime.now().millisecondsSinceEpoch}',
-          front: 'چەمکی بیرگەی خەیاڵی (Virtual Memory) و پەیجکردن (Paging) چییە؟',
-          back: 'تەکنیکێکە ڕێگە دەدات پرۆگرامێک جێبەجێ بکرێت تەنانەت ئەگەر قەبارەکەی لە RAMی فیزیکی گەورەتریش بێت، بە دابەشکردنی بۆ چەند بلۆکێکی یەکسان (Pages) لە نێوان RAM و دیسکدا.',
+          front:
+              'چەمکی بیرگەی خەیاڵی (Virtual Memory) و پەیجکردن (Paging) چییە؟',
+          back:
+              'تەکنیکێکە ڕێگە دەدات پرۆگرامێک جێبەجێ بکرێت تەنانەت ئەگەر قەبارەکەی لە RAMی فیزیکی گەورەتریش بێت، بە دابەشکردنی بۆ چەند بلۆکێکی یەکسان (Pages) لە نێوان RAM و دیسکدا.',
         ),
         FlashcardModel(
           id: 'fc_os_4_${DateTime.now().millisecondsSinceEpoch}',
-          front: 'جیاوازی ئەلگۆریزمەکانی خشتەبەندی CPU (وەک FCFS بەرامبەر Round Robin) چییە؟',
-          back: 'لە FCFS پرۆسەکان بەپێی کاتی گەیشتن جێبەجێ دەبن بێ پچڕان، بەڵام لە Round Robin کاتێکی دیاریکراو (Time Quantum) بە یەکسانی دەدرێت بە هەر پرۆسەیەک.',
+          front:
+              'جیاوازی ئەلگۆریزمەکانی خشتەبەندی CPU (وەک FCFS بەرامبەر Round Robin) چییە؟',
+          back:
+              'لە FCFS پرۆسەکان بەپێی کاتی گەیشتن جێبەجێ دەبن بێ پچڕان، بەڵام لە Round Robin کاتێکی دیاریکراو (Time Quantum) بە یەکسانی دەدرێت بە هەر پرۆسەیەک.',
         ),
         FlashcardModel(
           id: 'fc_os_5_${DateTime.now().millisecondsSinceEpoch}',
-          front: 'کێشەی کێبڕکێ (Race Condition) و ڕۆڵی سیمافۆر (Semaphore) چییە؟',
-          back: 'ڕوودەدات کاتێک چەندین سرێد لە یەک کاتدا دەستکاری هەمان داتای هاوبەش دەکەن؛ بۆ چارەسەری، سیمافۆر یان میوتێکس بەکاردێت بۆ قفڵکردنی بەشە هەستیارەکە (Critical Section).',
+          front:
+              'کێشەی کێبڕکێ (Race Condition) و ڕۆڵی سیمافۆر (Semaphore) چییە؟',
+          back:
+              'ڕوودەدات کاتێک چەندین سرێد لە یەک کاتدا دەستکاری هەمان داتای هاوبەش دەکەن؛ بۆ چارەسەری، سیمافۆر یان میوتێکس بەکاردێت بۆ قفڵکردنی بەشە هەستیارەکە (Critical Section).',
         ),
       ];
     }
 
     // 3. Database & SQL (داتابەیس)
-    if (lower.contains('داتابەیس') || lower.contains('database') || lower.contains('sql') || lower.contains('query') || lower.contains('خشتە') || lower.contains('جدول')) {
+    if (lower.contains('داتابەیس') ||
+        lower.contains('database') ||
+        lower.contains('sql') ||
+        lower.contains('query') ||
+        lower.contains('خشتە') ||
+        lower.contains('جدول')) {
       return [
         FlashcardModel(
           id: 'fc_db_1_${DateTime.now().millisecondsSinceEpoch}',
-          front: 'جیاوازی داتابەیسی پەیوەندیدار (SQL / RDBMS) لەگەڵ ناپەیوەندیدار (NoSQL) چییە؟',
-          back: 'داتابەیسی SQL داتاکان بە خشتە، پەیوەندی و ستراکچەری جێگیر (Schema) ڕێکدەخات، لەکاتێکدا NoSQL داتای بێ ستراکچەر و بەڵگەنامەیی (وەک JSON) بە قەبارەی زۆر پاشەکەوت دەکات.',
+          front:
+              'جیاوازی داتابەیسی پەیوەندیدار (SQL / RDBMS) لەگەڵ ناپەیوەندیدار (NoSQL) چییە؟',
+          back:
+              'داتابەیسی SQL داتاکان بە خشتە، پەیوەندی و ستراکچەری جێگیر (Schema) ڕێکدەخات، لەکاتێکدا NoSQL داتای بێ ستراکچەر و بەڵگەنامەیی (وەک JSON) بە قەبارەی زۆر پاشەکەوت دەکات.',
         ),
         FlashcardModel(
           id: 'fc_db_2_${DateTime.now().millisecondsSinceEpoch}',
-          front: 'کلیلە سەرەکی (Primary Key) و کلیلە بیانی (Foreign Key) لە داتابەیسدا چین؟',
-          back: 'کلیلە سەرەکی ناسێنەری تاک و نەدووبارەبووەوەی هەر دێڕێکە لە خشتەدا، کلیلە بیانیش ستوونێکە کە خشتەیەک بە خشتەیەکی ترەوە دەبەستێت.',
+          front:
+              'کلیلە سەرەکی (Primary Key) و کلیلە بیانی (Foreign Key) لە داتابەیسدا چین؟',
+          back:
+              'کلیلە سەرەکی ناسێنەری تاک و نەدووبارەبووەوەی هەر دێڕێکە لە خشتەدا، کلیلە بیانیش ستوونێکە کە خشتەیەک بە خشتەیەکی ترەوە دەبەستێت.',
         ),
         FlashcardModel(
           id: 'fc_db_3_${DateTime.now().millisecondsSinceEpoch}',
           front: 'مەبەست لە نۆرماڵایزەیشن (Normalization) لە داتابەیسدا چییە؟',
-          back: 'ڕێکخستنەوەی خشتەکانە بەپێی یاساکانی 1NF و 2NF و 3NF بۆ نەهێشتنی دووبارەبوونەوەی زیانبەخشی داتا (Redundancy) و پاراستنی دروستی داتا لەکاتی گۆڕانکاری.',
+          back:
+              'ڕێکخستنەوەی خشتەکانە بەپێی یاساکانی 1NF و 2NF و 3NF بۆ نەهێشتنی دووبارەبوونەوەی زیانبەخشی داتا (Redundancy) و پاراستنی دروستی داتا لەکاتی گۆڕانکاری.',
         ),
         FlashcardModel(
           id: 'fc_db_4_${DateTime.now().millisecondsSinceEpoch}',
           front: 'تایبەتمەندییەکانی ACID لە ترانزاکشندا چی دەگەیەنن؟',
-          back: 'پێکدێن لە: یەکگرتوویی (Atomicity - هەمووی یان هیچ)، هاوسەنگی (Consistency)، دابڕان (Isolation)، و مانەوەی هەمیشەیی دوای پاشەکەوتکردن (Durability).',
+          back:
+              'پێکدێن لە: یەکگرتوویی (Atomicity - هەمووی یان هیچ)، هاوسەنگی (Consistency)، دابڕان (Isolation)، و مانەوەی هەمیشەیی دوای پاشەکەوتکردن (Durability).',
         ),
         FlashcardModel(
           id: 'fc_db_5_${DateTime.now().millisecondsSinceEpoch}',
           front: 'سوودی دروستکردنی Index لەسەر ستوونەکانی داتابەیس چییە؟',
-          back: 'خێرایی هێنانەوە و گەڕانی داتا لە فەرمانەکانی SELECT بە شێوەیەکی زۆر بەرچاو زیاد دەکات بە بەکارهێنانی درەختی B-Tree، بەڵام کەمێک کاتی نووسین (INSERT) هێواش دەکات.',
+          back:
+              'خێرایی هێنانەوە و گەڕانی داتا لە فەرمانەکانی SELECT بە شێوەیەکی زۆر بەرچاو زیاد دەکات بە بەکارهێنانی درەختی B-Tree، بەڵام کەمێک کاتی نووسین (INSERT) هێواش دەکات.',
         ),
       ];
     }
 
     // 4. Artificial Intelligence & Machine Learning (ژیرەیی دەستکرد)
-    if (lower.contains('ژیرەیی') || lower.contains('دەستکرد') || lower.contains('ai') || lower.contains('intelligence') || lower.contains('machine learning') || lower.contains('deep learning')) {
+    if (lower.contains('ژیرەیی') ||
+        lower.contains('دەستکرد') ||
+        lower.contains('ai') ||
+        lower.contains('intelligence') ||
+        lower.contains('machine learning') ||
+        lower.contains('deep learning')) {
       return [
         FlashcardModel(
           id: 'fc_ai_1_${DateTime.now().millisecondsSinceEpoch}',
-          front: 'جیاوازی ژیرەیی دەستکرد (AI)، فێربوونی مۆدێل (ML) و فێربوونی قووڵ (DL) چییە؟',
-          back: 'ژیرەیی دەستکرد چەمکی گشتی لێکچواندنی زیرەکییە؛ فێربوونی ئامێر (ML) بەشێکە لێی کە بە داتا مۆدێل فێر دەکات؛ فێربوونی قووڵ (DL) بەشێکە لە ML کە تۆڕی دەماری فرەچین بەکاردێنێت.',
+          front:
+              'جیاوازی ژیرەیی دەستکرد (AI)، فێربوونی مۆدێل (ML) و فێربوونی قووڵ (DL) چییە؟',
+          back:
+              'ژیرەیی دەستکرد چەمکی گشتی لێکچواندنی زیرەکییە؛ فێربوونی ئامێر (ML) بەشێکە لێی کە بە داتا مۆدێل فێر دەکات؛ فێربوونی قووڵ (DL) بەشێکە لە ML کە تۆڕی دەماری فرەچین بەکاردێنێت.',
         ),
         FlashcardModel(
           id: 'fc_ai_2_${DateTime.now().millisecondsSinceEpoch}',
-          front: 'جیاوازی فێربوونی چاودێریکراو (Supervised) و چاودێرینەکراو (Unsupervised) چییە؟',
-          back: 'لە چاودێریکراو داتاکە ناونیشان و وەڵامی ئامادەی لەگەڵدایە (Labeled Data)، لە چاودێرینەکراو مۆدێلەکە خۆی شێواز و گرووپەکان بەبێ وەڵامی پێشوەختە دەدۆزێتەوە.',
+          front:
+              'جیاوازی فێربوونی چاودێریکراو (Supervised) و چاودێرینەکراو (Unsupervised) چییە؟',
+          back:
+              'لە چاودێریکراو داتاکە ناونیشان و وەڵامی ئامادەی لەگەڵدایە (Labeled Data)، لە چاودێرینەکراو مۆدێلەکە خۆی شێواز و گرووپەکان بەبێ وەڵامی پێشوەختە دەدۆزێتەوە.',
         ),
         FlashcardModel(
           id: 'fc_ai_3_${DateTime.now().millisecondsSinceEpoch}',
           front: 'کێشەی Overfitting لە مۆدێلدا چییە و چۆن چارەسەر دەکرێت؟',
-          back: 'ئەوەیە کە مۆدێلەکە داتای مەشق زۆر لەبەر دەکات بەڵام لەسەر داتای نوێ ورد نییە؛ چارەسەرەکەی بریتییە لە Regularization، داتای زیاتر، و Dropout.',
+          back:
+              'ئەوەیە کە مۆدێلەکە داتای مەشق زۆر لەبەر دەکات بەڵام لەسەر داتای نوێ ورد نییە؛ چارەسەرەکەی بریتییە لە Regularization، داتای زیاتر، و Dropout.',
         ),
         FlashcardModel(
           id: 'fc_ai_4_${DateTime.now().millisecondsSinceEpoch}',
-          front: 'ئەلگۆریزمی Backpropagation و Gradient Descent چی دەکەن لە تۆڕی دەماردا؟',
-          back: 'ڕێژەی هەڵەی دەرهاویشتە (Loss) هەژمار دەکەن و هەنگاو بە هەنگاو کێشی دەمارەکان (Weights) نوێ دەکەنەوە تا هەڵەکە کەمترین بڕی هەبێت.',
+          front:
+              'ئەلگۆریزمی Backpropagation و Gradient Descent چی دەکەن لە تۆڕی دەماردا؟',
+          back:
+              'ڕێژەی هەڵەی دەرهاویشتە (Loss) هەژمار دەکەن و هەنگاو بە هەنگاو کێشی دەمارەکان (Weights) نوێ دەکەنەوە تا هەڵەکە کەمترین بڕی هەبێت.',
         ),
         FlashcardModel(
           id: 'fc_ai_5_${DateTime.now().millisecondsSinceEpoch}',
           front: 'مۆدێلی زاری گەورە (LLM) چۆن کاردەکات؟',
-          back: 'مۆدێلێکی پێشکەوتووی زیرەکی دەستکردە لەسەر بنەمای Transformer کە ڕاهێنراوە لەسەر ملیاران دەق بۆ تێگەیشتن و دروستکردنی وەڵام بە پێشبینیکردنی وشەی دواتر.',
+          back:
+              'مۆدێلێکی پێشکەوتووی زیرەکی دەستکردە لەسەر بنەمای Transformer کە ڕاهێنراوە لەسەر ملیاران دەق بۆ تێگەیشتن و دروستکردنی وەڵام بە پێشبینیکردنی وشەی دواتر.',
         ),
       ];
     }
 
     // 5. Mathematics & Calculus (ماتماتیک و کالکولەس)
-    if (lower.contains('ماتماتیک') || lower.contains('کالکولەس') || lower.contains('بیرکاری') || lower.contains('math') || lower.contains('calculus') || lower.contains('داتاشراو') || lower.contains('تەواوکاری')) {
+    if (lower.contains('ماتماتیک') ||
+        lower.contains('کالکولەس') ||
+        lower.contains('بیرکاری') ||
+        lower.contains('math') ||
+        lower.contains('calculus') ||
+        lower.contains('داتاشراو') ||
+        lower.contains('تەواوکاری')) {
       return [
         FlashcardModel(
           id: 'fc_math_1_${DateTime.now().millisecondsSinceEpoch}',
-          front: 'مانای ئەندازەیی داتاشراو (Derivative / التفاضل) لە خاڵێکدا چییە؟',
-          back: 'بریتییە لە لێژی (Slope)ی هێڵی لێکەوت لەسەر چەماوەی نەخشەکە لەو خاڵەدا، هەروەها نیشاندەری ڕێژەی گۆڕانی دەستبەجێی بڕەکانە (dy/dx).',
+          front:
+              'مانای ئەندازەیی داتاشراو (Derivative / التفاضل) لە خاڵێکدا چییە؟',
+          back:
+              'بریتییە لە لێژی (Slope)ی هێڵی لێکەوت لەسەر چەماوەی نەخشەکە لەو خاڵەدا، هەروەها نیشاندەری ڕێژەی گۆڕانی دەستبەجێی بڕەکانە (dy/dx).',
         ),
         FlashcardModel(
           id: 'fc_math_2_${DateTime.now().millisecondsSinceEpoch}',
-          front: 'مەبەست لە تەواوکاری دیاریکراو (Definite Integral / التكامل) چییە؟',
-          back: 'پڕۆسەی پێچەوانەی داتاشراوە و بۆ هەژمارکردنی ڕووبەری نێوان چەماوەی نەخشەکە و تەوەری ئاسۆیی لە نێوان دوو خاڵی دیاریکراودا بەکاردێت.',
+          front:
+              'مەبەست لە تەواوکاری دیاریکراو (Definite Integral / التكامل) چییە؟',
+          back:
+              'پڕۆسەی پێچەوانەی داتاشراوە و بۆ هەژمارکردنی ڕووبەری نێوان چەماوەی نەخشەکە و تەوەری ئاسۆیی لە نێوان دوو خاڵی دیاریکراودا بەکاردێت.',
         ),
         FlashcardModel(
           id: 'fc_math_3_${DateTime.now().millisecondsSinceEpoch}',
           front: 'یاسای بەرهەمی لێکدان (Product Rule) لە داتاشراودا چییە؟',
-          back: 'ئەگەر دوو نەخشە لێکدرابن (u · v)، داتاشراوەکەی یەکسانە بە: یەکەمجار لێکدانی داتاشراوی دووەم + دووەمجار لێکدانی داتاشراوی یەکەم: (u · v)\' = u\'v + uv\'.',
+          back:
+              'ئەگەر دوو نەخشە لێکدرابن (u · v)، داتاشراوەکەی یەکسانە بە: یەکەمجار لێکدانی داتاشراوی دووەم + دووەمجار لێکدانی داتاشراوی یەکەم: (u · v)\' = u\'v + uv\'.',
         ),
         FlashcardModel(
           id: 'fc_math_4_${DateTime.now().millisecondsSinceEpoch}',
           front: 'دیاریکەری ماتریکس (Determinant) چ گرنگییەکی هەیە؟',
-          back: 'ژمارەیەکە لە ماتریکسی چوارگۆشەدا؛ ئەگەر بڕەکەی یەکسان بێت بە صفر ئەوا پێچەوانەی ماتریکسەکە بوونی نییە و سیستەمی هاوکێشەکان وەڵامی تاکی نییە.',
+          back:
+              'ژمارەیەکە لە ماتریکسی چوارگۆشەدا؛ ئەگەر بڕەکەی یەکسان بێت بە صفر ئەوا پێچەوانەی ماتریکسەکە بوونی نییە و سیستەمی هاوکێشەکان وەڵامی تاکی نییە.',
         ),
       ];
     }
 
     // 6. Programming & Python / Flutter / Software
-    if (lower.contains('پایسۆن') || lower.contains('python') || lower.contains('پرۆگرام') || lower.contains('flutter') || lower.contains('فلاتەر') || lower.contains('کۆد') || lower.contains('جاڤا') || lower.contains('java') || lower.contains('c++')) {
+    if (lower.contains('پایسۆن') ||
+        lower.contains('python') ||
+        lower.contains('پرۆگرام') ||
+        lower.contains('flutter') ||
+        lower.contains('فلاتەر') ||
+        lower.contains('کۆد') ||
+        lower.contains('جاڤا') ||
+        lower.contains('java') ||
+        lower.contains('c++')) {
       return [
         FlashcardModel(
           id: 'fc_prog_1_${DateTime.now().millisecondsSinceEpoch}',
           front: 'چوار بنەمای سەرەکی بەرنامەسازی تەن-تەوەر (OOP) چین؟',
-          back: '١. شاردنەوەی زانیاری (Encapsulation)\n٢. بۆماوەیی (Inheritance)\n٣. فرەشێوەیی (Polymorphism)\n٤. پوختەکاری چەمک (Abstraction).',
+          back:
+              '١. شاردنەوەی زانیاری (Encapsulation)\n٢. بۆماوەیی (Inheritance)\n٣. فرەشێوەیی (Polymorphism)\n٤. پوختەکاری چەمک (Abstraction).',
         ),
         FlashcardModel(
           id: 'fc_prog_2_${DateTime.now().millisecondsSinceEpoch}',
-          front: 'جیاوازی نێوان زمانەکانی خاوەن پشکنینی جێگیر (Static Typing) و داینامیک (Dynamic Typing) چییە؟',
-          back: 'لە جۆری جێگیردا جۆری گۆڕاوەکان لە کاتی نووسین دەناسرێن (وەک Dart, Java, C++)، لە داینامیک لە کاتی کارپێکردندا دەناسرێن (وەک Python, JavaScript).',
+          front:
+              'جیاوازی نێوان زمانەکانی خاوەن پشکنینی جێگیر (Static Typing) و داینامیک (Dynamic Typing) چییە؟',
+          back:
+              'لە جۆری جێگیردا جۆری گۆڕاوەکان لە کاتی نووسین دەناسرێن (وەک Dart, Java, C++)، لە داینامیک لە کاتی کارپێکردندا دەناسرێن (وەک Python, JavaScript).',
         ),
         FlashcardModel(
           id: 'fc_prog_3_${DateTime.now().millisecondsSinceEpoch}',
-          front: 'مەبەست لە بەڕێوەبردنی بارودۆخ (State Management) لە فریمۆرکەکانی وەک Flutter چییە؟',
-          back: 'شێوازی کۆنترۆڵکردن، هاوبەشکردن، و نوێکردنەوەی داتاکانی شاشەی ئەپڵیکەیشنە لە نێوان چەندین پەڕە و ویجێت بە شێوەیەکی خێرا و سەربەخۆ.',
+          front:
+              'مەبەست لە بەڕێوەبردنی بارودۆخ (State Management) لە فریمۆرکەکانی وەک Flutter چییە؟',
+          back:
+              'شێوازی کۆنترۆڵکردن، هاوبەشکردن، و نوێکردنەوەی داتاکانی شاشەی ئەپڵیکەیشنە لە نێوان چەندین پەڕە و ویجێت بە شێوەیەکی خێرا و سەربەخۆ.',
         ),
         FlashcardModel(
           id: 'fc_prog_4_${DateTime.now().millisecondsSinceEpoch}',
           front: 'کلیلەوشەکانی Async و Await لە پرۆگرامسازیدا بۆچی بەکاردێن؟',
-          back: 'بۆ ئەنجامدانی کردارە درێژخایەنەکان (وەک هێنانی داتا لە ئینتەرنێت یان داتابەیس) بەبێ بەستنی ڕووکاری شاشە (Non-blocking Asynchronous Code).',
+          back:
+              'بۆ ئەنجامدانی کردارە درێژخایەنەکان (وەک هێنانی داتا لە ئینتەرنێت یان داتابەیس) بەبێ بەستنی ڕووکاری شاشە (Non-blocking Asynchronous Code).',
         ),
       ];
     }
@@ -1787,22 +2274,27 @@ $pdfContext
       FlashcardModel(
         id: 'fc_gen_1_${DateTime.now().millisecondsSinceEpoch}',
         front: 'پێناسە و چەمکی بنەڕەتی «$displayTopic» چییە؟',
-        back: 'بریتییە لە کۆمەڵە بنەما، یاسا زانستییەکان، و تیۆرییە پەیوەندیدارەکانی «$displayTopic» کە بۆ شیکارکردن و تێگەیشتنی ورد لەم بوارەدا بەکاردێن.',
+        back:
+            'بریتییە لە کۆمەڵە بنەما، یاسا زانستییەکان، و تیۆرییە پەیوەندیدارەکانی «$displayTopic» کە بۆ شیکارکردن و تێگەیشتنی ورد لەم بوارەدا بەکاردێن.',
       ),
       FlashcardModel(
         id: 'fc_gen_2_${DateTime.now().millisecondsSinceEpoch}',
         front: 'گرنگترین جێبەجێکردنی «$displayTopic» لە تاقیکردنەوەدا چییە؟',
-        back: 'بەکارهێنانی هاوکێشە و چەمکە سەرەکییەکان بۆ شیکارکردنی پرسیارە وردەکان و پاشەکەوتکردنی کات لە ئەزموونی ئەکادیمیدا.',
+        back:
+            'بەکارهێنانی هاوکێشە و چەمکە سەرەکییەکان بۆ شیکارکردنی پرسیارە وردەکان و پاشەکەوتکردنی کات لە ئەزموونی ئەکادیمیدا.',
       ),
       FlashcardModel(
         id: 'fc_gen_3_${DateTime.now().millisecondsSinceEpoch}',
-        front: 'خاڵی جیاکەرەوەی سەرەکی «$displayTopic» لەگەڵ بابەتەکانی تر چییە؟',
-        back: 'پشت بەستن بە میتۆدی زانستی، بەڵگەی سەلمێنراو، و بەکارهێنانی لە پڕۆسە و سیستەمە پراکتیکییەکاندا.',
+        front:
+            'خاڵی جیاکەرەوەی سەرەکی «$displayTopic» لەگەڵ بابەتەکانی تر چییە؟',
+        back:
+            'پشت بەستن بە میتۆدی زانستی، بەڵگەی سەلمێنراو، و بەکارهێنانی لە پڕۆسە و سیستەمە پراکتیکییەکاندا.',
       ),
       FlashcardModel(
         id: 'fc_gen_4_${DateTime.now().millisecondsSinceEpoch}',
         front: 'چۆن بە باشترین شێوە پێداچوونەوە بۆ «$displayTopic» بکەم؟',
-        back: 'بە دابەشکردنی بۆ خاڵە سەرەکییەکان، فێربوونی یاسا بنەڕەتییەکان و ڕاهێنانی بەردەوام بە بەکارهێنانی فلاشکارد.',
+        back:
+            'بە دابەشکردنی بۆ خاڵە سەرەکییەکان، فێربوونی یاسا بنەڕەتییەکان و ڕاهێنانی بەردەوام بە بەکارهێنانی فلاشکارد.',
       ),
     ];
   }
@@ -1830,10 +2322,15 @@ $pdfContext
             "]\n\n"
             "بابەت:\n$cleanInput";
 
-        final response = await _callGemini(prompt).timeout(const Duration(seconds: 4));
+        final response = await _callGemini(
+          prompt,
+        ).timeout(const Duration(seconds: 4));
 
         String jsonText = response.trim();
-        final jsonMatch = RegExp(r'\[\s*\{.*\}\s*\]', dotAll: true).firstMatch(jsonText);
+        final jsonMatch = RegExp(
+          r'\[\s*\{.*\}\s*\]',
+          dotAll: true,
+        ).firstMatch(jsonText);
         if (jsonMatch != null) {
           jsonText = jsonMatch.group(0)!;
         } else {
@@ -1852,34 +2349,44 @@ $pdfContext
         try {
           final List<dynamic> data = jsonDecode(jsonText);
           for (final item in data) {
-            final f = (item['front'] ?? item['question'] ?? '').toString().trim();
+            final f = (item['front'] ?? item['question'] ?? '')
+                .toString()
+                .trim();
             final b = (item['back'] ?? item['answer'] ?? '').toString().trim();
             if (f.isNotEmpty && b.isNotEmpty) {
-              list.add(FlashcardModel(
-                id: 'card_${Random().nextInt(100000)}_${DateTime.now().millisecondsSinceEpoch}',
-                front: f,
-                back: b,
-              ));
+              list.add(
+                FlashcardModel(
+                  id: 'card_${Random().nextInt(100000)}_${DateTime.now().millisecondsSinceEpoch}',
+                  front: f,
+                  back: b,
+                ),
+              );
             }
           }
         } catch (_) {
-          final regExp = RegExp(r'"(?:front|question)"\s*:\s*"([^"]+)"\s*,\s*"(?:back|answer)"\s*:\s*"([^"]+)"');
+          final regExp = RegExp(
+            r'"(?:front|question)"\s*:\s*"([^"]+)"\s*,\s*"(?:back|answer)"\s*:\s*"([^"]+)"',
+          );
           for (final m in regExp.allMatches(response)) {
             final f = m.group(1)?.trim() ?? '';
             final b = m.group(2)?.trim() ?? '';
             if (f.isNotEmpty && b.isNotEmpty) {
-              list.add(FlashcardModel(
-                id: 'card_${Random().nextInt(100000)}_${DateTime.now().millisecondsSinceEpoch}',
-                front: f,
-                back: b,
-              ));
+              list.add(
+                FlashcardModel(
+                  id: 'card_${Random().nextInt(100000)}_${DateTime.now().millisecondsSinceEpoch}',
+                  front: f,
+                  back: b,
+                ),
+              );
             }
           }
         }
 
         if (list.isNotEmpty) return list;
       } catch (e) {
-        debugPrint('Gemini flashcard call timed out or failed, using contextual generator: $e');
+        debugPrint(
+          'Gemini flashcard call timed out or failed, using contextual generator: $e',
+        );
       }
     }
 
@@ -1888,20 +2395,24 @@ $pdfContext
   }
 
   @override
-  Future<List<StudyPlanDayModel>> generateStudyPlan(String examTopic, int daysRemaining) async {
+  Future<List<StudyPlanDayModel>> generateStudyPlan(
+    String examTopic,
+    int daysRemaining,
+  ) async {
     await Future.delayed(const Duration(milliseconds: 1000));
-    
+
     if (hasRealApiKey) {
       try {
-        final prompt = "من تاقیکردنەوەم هەیە لەسەر بابەت یان کۆرسی '$examTopic' لە دوای $daysRemaining ڕۆژی تر. "
+        final prompt =
+            "من تاقیکردنەوەم هەیە لەسەر بابەت یان کۆرسی '$examTopic' لە دوای $daysRemaining ڕۆژی تر. "
             "بۆم بکە بە پلانێکی خوێندنی هەفتانە بۆ هەر ڕۆژێک کە چۆن دابەشی بکەم بۆ ئەوەی بتوانم نمرەیەکی باش بهێنم. "
             "وەڵامەکە بە فۆرماتی JSON بنووسە بەبێ هیچی تر بەم فۆرماتەی خوارەوە بە زمانی کوردی (سۆرانی): \n"
             "[\n"
             "  { \"dayName\": \"ڕۆژی یەکەم (شەممە)\", \"taskDescription\": \"چی بخوێنم بە کورتی\" }\n"
             "]\n\n";
-            
+
         final response = await _callGemini(prompt);
-        
+
         String jsonText = response.trim();
         if (jsonText.startsWith("```json")) {
           jsonText = jsonText.substring(7);
@@ -1912,20 +2423,27 @@ $pdfContext
           jsonText = jsonText.substring(0, jsonText.length - 3);
         }
         jsonText = jsonText.trim();
-        
+
         final List<dynamic> data = jsonDecode(jsonText);
-        return data.map((item) => StudyPlanDayModel(
-          dayName: item['dayName'] ?? '',
-          taskDescription: item['taskDescription'] ?? '',
-        )).toList();
+        return data
+            .map(
+              (item) => StudyPlanDayModel(
+                dayName: item['dayName'] ?? '',
+                taskDescription: item['taskDescription'] ?? '',
+              ),
+            )
+            .toList();
       } catch (e) {
         if (_isNetworkError(e)) {
-          return _getMockStudyPlan("📡 (بەستنەوە نییە) - $examTopic", daysRemaining);
+          return _getMockStudyPlan(
+            "📡 (بەستنەوە نییە) - $examTopic",
+            daysRemaining,
+          );
         }
         return _getMockStudyPlan(examTopic, daysRemaining);
       }
     }
-    
+
     return _getMockStudyPlan(examTopic, daysRemaining);
   }
 
@@ -1933,22 +2451,36 @@ $pdfContext
     return [
       StudyPlanDayModel(
         dayName: 'ڕۆژی یەکەم',
-        taskDescription: 'خوێندنەوەی تیۆری سەرەکی بابەتەکە و ناسینی زاراوە گرنگەکانی $topic.',
+        taskDescription:
+            'خوێندنەوەی تیۆری سەرەکی بابەتەکە و ناسینی زاراوە گرنگەکانی $topic.',
       ),
       StudyPlanDayModel(
         dayName: 'ڕۆژی دووەم',
-        taskDescription: 'پێداچوونەوە بە فلاشکاردەکان و تاقیکردنەوەی خێرا بۆ بەشە تیۆرییەکان.',
+        taskDescription:
+            'پێداچوونەوە بە فلاشکاردەکان و تاقیکردنەوەی خێرا بۆ بەشە تیۆرییەکان.',
       ),
       StudyPlanDayModel(
         dayName: 'ڕۆژی سێیەم',
-        taskDescription: 'چارەسەرکردنی پرسیارە نموونەییەکان و پێداچوونەوەی کۆتا بە خشتەی وانەکان.',
+        taskDescription:
+            'چارەسەرکردنی پرسیارە نموونەییەکان و پێداچوونەوەی کۆتا بە خشتەی وانەکان.',
       ),
     ];
   }
 
   // Dynamic fallback exam generator from PDF content
-  QuizModel _generateMockQuiz(String topic, String courseName, {String? pdfContent}) {
-    return _generateMockExam(topic, courseName, 5, 10, 'Medium', pdfContent: pdfContent);
+  QuizModel _generateMockQuiz(
+    String topic,
+    String courseName, {
+    String? pdfContent,
+  }) {
+    return _generateMockExam(
+      topic,
+      courseName,
+      5,
+      10,
+      'Medium',
+      pdfContent: pdfContent,
+    );
   }
 
   bool _isJunkMetadataLine(String line) {
@@ -1975,7 +2507,10 @@ $pdfContext
     if (input.trim().isEmpty) return '';
 
     String cleaned = input.replaceAll(
-      RegExp(r'\b(obj|endobj|stream|endstream|xref|trailer|FlateDecode|Font|CIDFont|FontDescriptor|ProcSet|MediaBox|Type1|WinAnsiEncoding|Identity-H)\b', caseSensitive: false),
+      RegExp(
+        r'\b(obj|endobj|stream|endstream|xref|trailer|FlateDecode|Font|CIDFont|FontDescriptor|ProcSet|MediaBox|Type1|WinAnsiEncoding|Identity-H)\b',
+        caseSensitive: false,
+      ),
       ' ',
     );
 
@@ -1992,7 +2527,10 @@ $pdfContext
     String? pdfContent,
   }) {
     final List<QuestionModel> examQuestions = [];
-    final rawTitle = courseName.replaceAll(RegExp(r'\.[a-zA-Z0-9]+$', caseSensitive: false), '');
+    final rawTitle = courseName.replaceAll(
+      RegExp(r'\.[a-zA-Z0-9]+$', caseSensitive: false),
+      '',
+    );
     final cleanTitle = _sanitizeExtractedText(rawTitle);
     final displayTitle = cleanTitle.isNotEmpty ? cleanTitle : 'وانەی بارکراو';
 
@@ -2001,35 +2539,64 @@ $pdfContext
       pdfSnippets = pdfContent
           .split(RegExp(r'[\.\?\!\n;]'))
           .map((s) => _sanitizeExtractedText(s))
-          .where((s) => s.length > 15 && !_isJunkMetadataLine(s) && RegExp(r'[a-zA-Z\u0600-\u06FF]').hasMatch(s))
+          .where(
+            (s) =>
+                s.length > 15 &&
+                !_isJunkMetadataLine(s) &&
+                RegExp(r'[a-zA-Z\u0600-\u06FF]').hasMatch(s),
+          )
           .toList();
     }
 
     if (pdfSnippets.length >= 2) {
       for (int i = 0; i < count; i++) {
         final snippet = pdfSnippets[i % pdfSnippets.length].trim();
-        final words = snippet.split(' ').where((w) => w.length > 3 && !_isJunkMetadataLine(w)).toList();
-        final mainTerm = words.isNotEmpty ? words[i % words.length] : 'چەمکی زانستی';
+        final words = snippet
+            .split(' ')
+            .where((w) => w.length > 3 && !_isJunkMetadataLine(w))
+            .toList();
+        final mainTerm = words.isNotEmpty
+            ? words[i % words.length]
+            : 'چەمکی زانستی';
 
         if (i % 3 == 0) {
           // Factual Multiple Choice from exact PDF sentence
-          final truncatedSnippet = snippet.length > 100 ? '${snippet.substring(0, 100)}...' : snippet;
-          final wrong1 = (pdfSnippets.length > 1) ? pdfSnippets[(i + 1) % pdfSnippets.length].trim() : 'ناچالاککردنی سەرجەم پرۆتۆکۆلەکان';
-          final wrong2 = (pdfSnippets.length > 2) ? pdfSnippets[(i + 2) % pdfSnippets.length].trim() : 'سڕینەوەی هەموو تێکستەکان بەرامبەر داتای نادیار';
-          final wrong1Truncated = wrong1.length > 80 ? '${wrong1.substring(0, 80)}...' : (wrong1.isNotEmpty ? wrong1 : 'ڕەتکردنەوەی یاساکانی وانەکە');
-          final wrong2Truncated = wrong2.length > 80 ? '${wrong2.substring(0, 80)}...' : (wrong2.isNotEmpty ? wrong2 : 'ناچالاککردنی کردارەکان لە سیستەمەکە');
+          final truncatedSnippet = snippet.length > 100
+              ? '${snippet.substring(0, 100)}...'
+              : snippet;
+          final wrong1 = (pdfSnippets.length > 1)
+              ? pdfSnippets[(i + 1) % pdfSnippets.length].trim()
+              : 'ناچالاککردنی سەرجەم پرۆتۆکۆلەکان';
+          final wrong2 = (pdfSnippets.length > 2)
+              ? pdfSnippets[(i + 2) % pdfSnippets.length].trim()
+              : 'سڕینەوەی هەموو تێکستەکان بەرامبەر داتای نادیار';
+          final wrong1Truncated = wrong1.length > 80
+              ? '${wrong1.substring(0, 80)}...'
+              : (wrong1.isNotEmpty ? wrong1 : 'ڕەتکردنەوەی یاساکانی وانەکە');
+          final wrong2Truncated = wrong2.length > 80
+              ? '${wrong2.substring(0, 80)}...'
+              : (wrong2.isNotEmpty
+                    ? wrong2
+                    : 'ناچالاککردنی کردارەکان لە سیستەمەکە');
 
-          final rawOpts = [truncatedSnippet, wrong1Truncated, wrong2Truncated, 'هیچ کام لەمانە'];
+          final rawOpts = [
+            truncatedSnippet,
+            wrong1Truncated,
+            wrong2Truncated,
+            'هیچ کام لەمانە',
+          ];
           final shuffledOpts = List<String>.from(rawOpts)..shuffle();
 
           examQuestions.add(
             QuestionModel(
               id: 'pdf_ex_$i',
-              questionText: 'کامیان زانیارییەکی ڕاستە بەپێی ناوەرۆکی فایلی وانەی «$displayTitle»؟',
+              questionText:
+                  'کامیان زانیارییەکی ڕاستە بەپێی ناوەرۆکی فایلی وانەی «$displayTitle»؟',
               type: QuestionType.multipleChoice,
               options: shuffledOpts,
               correctAnswer: truncatedSnippet,
-              explanation: 'ئەم ڕستەیە ڕاستەوخۆ لە دەقی زانستی فایلی PDFەکە دەرهێنراوە.',
+              explanation:
+                  'ئەم ڕستەیە ڕاستەوخۆ لە دەقی زانستی فایلی PDFەکە دەرهێنراوە.',
             ),
           );
         } else if (i % 3 == 1) {
@@ -2041,16 +2608,20 @@ $pdfContext
           examQuestions.add(
             QuestionModel(
               id: 'pdf_ex_$i',
-              questionText: 'بۆشایی لە دەقی وانەکەدا پڕبکەرەوە: "$blankedSnippet"',
+              questionText:
+                  'بۆشایی لە دەقی وانەکەدا پڕبکەرەوە: "$blankedSnippet"',
               type: QuestionType.fillInBlank,
               options: null,
               correctAnswer: mainTerm,
-              explanation: 'زاراوەی «$mainTerm» ڕاستەوخۆ دەقی بۆشایی فایلی PDFی بارکراوە.',
+              explanation:
+                  'زاراوەی «$mainTerm» ڕاستەوخۆ دەقی بۆشایی فایلی PDFی بارکراوە.',
             ),
           );
         } else {
           // True/False from exact PDF sentence
-          final truncatedSnippet = snippet.length > 120 ? snippet.substring(0, 120) : snippet;
+          final truncatedSnippet = snippet.length > 120
+              ? snippet.substring(0, 120)
+              : snippet;
           final isTrue = i % 2 == 0;
           examQuestions.add(
             QuestionModel(
@@ -2099,10 +2670,14 @@ $pdfContext
   }
 
   @override
-  Future<Map<String, dynamic>> predictExam(String notesName, String notesContent) async {
+  Future<Map<String, dynamic>> predictExam(
+    String notesName,
+    String notesContent,
+  ) async {
     if (hasRealApiKey) {
       try {
-        final prompt = "ئەم نووسین و تێبینییانەی خوارەوە بخوێنەوە کە هی خوێندکارە لە فایلی بە ناوی '$notesName'. "
+        final prompt =
+            "ئەم نووسین و تێبینییانەی خوارەوە بخوێنەوە کە هی خوێندکارە لە فایلی بە ناوی '$notesName'. "
             "شیکردنەوە بکە و پێشبینی ٥ پرسیاری تاقیکردنەوەی زۆر گرنگ بکە کە پێشبینی دەکەیت مامۆستا لەسەر ئەم بابەتانە دایبنێت. "
             "وەڵامەکەت پێویستە بە زمانی کوردی (سۆرانی) بنوسیت و ئەم بەشانە لەخۆ بگرێت:\n"
             "١. پێناسەیەکی کورت بۆ بابەتە سەرەکییەکان.\n"
@@ -2111,14 +2686,12 @@ $pdfContext
             "تێبینییەکان:\n$notesContent";
 
         final responseText = await _callGemini(prompt);
-        return {
-          'prediction': responseText,
-          'isOffline': false,
-        };
+        return {'prediction': responseText, 'isOffline': false};
       } catch (e) {
         if (_isNetworkError(e)) {
           return {
-            'prediction': "📡 **(شێوازی ئۆفلاین — زانیاری پاشەکەوتکراو)**\n\n${_generateDynamicPrediction(notesName, notesContent)}",
+            'prediction':
+                "📡 **(شێوازی ئۆفلاین — زانیاری پاشەکەوتکراو)**\n\n${_generateDynamicPrediction(notesName, notesContent)}",
             'isOffline': true,
           };
         }
@@ -2138,7 +2711,9 @@ $pdfContext
   String _generateDynamicPrediction(String notesName, String notesContent) {
     final cleanNotes = notesContent.trim();
     final subject = notesName.replaceAll(RegExp(r'\.\w+$'), '');
-    final snippet = cleanNotes.length > 200 ? cleanNotes.substring(0, 200) : cleanNotes;
+    final snippet = cleanNotes.length > 200
+        ? cleanNotes.substring(0, 200)
+        : cleanNotes;
 
     return "🎯 **پێشبینی پرسیارەکانی تاقیکردنەوە بۆ بابەتی: $subject**\n\n"
         "--- SECTION 1: پێناسە و چەمکە سەرەکییەکان ---\n"
@@ -2161,7 +2736,8 @@ $pdfContext
     required int hoursPerDay,
   }) async {
     try {
-      final prompt = """
+      final prompt =
+          """
 تۆ شارەزایەکی زانستی و ڕێنماییکاری زانکۆیی. تکایە بۆ بابەتی ($subjectName) کە ($totalChapters) بەشی هەیە و تەنها ($daysRemaining) ڕۆژی ماوە بۆ تاقیکردنەوە، و خوێندکار دەتوانێت ڕۆژانە ($hoursPerDay) کاتژمێر بخوێنێت، نەخشەڕێگایەکی ڕۆژانەی گونجاو بە زمانی کوردی (سۆرانی) بە شێوازی JSON بنووسەوە.
 
 شێوازی پێویستی JSON:
@@ -2199,7 +2775,8 @@ $pdfContext
         fallbackTasks.add({
           'dayIndex': i,
           'title': 'پێداچوونەوەی گشتی و بەکارهێنانی فلاش کارتەکان 📑',
-          'description': 'حلکردنی کویزەکانی ڕابردوو و تاقیکردنەوە لەسەر سەرجەم بەشەکانی (١ بۆ $totalChapters)',
+          'description':
+              'حلکردنی کویزەکانی ڕابردوو و تاقیکردنەوە لەسەر سەرجەم بەشەکانی (١ بۆ $totalChapters)',
           'suggestedPomodoros': (hoursPerDay * 2).clamp(2, 8),
         });
       } else {
@@ -2208,14 +2785,16 @@ $pdfContext
           'title': startChap == endChap
               ? 'خوێندنی بەشی $startChap لە بابەتی $subjectName 📖'
               : 'خوێندنی بەشەکانی ($startChap بۆ $endChap) 📚',
-          'description': 'تێگەیشتن لە چەمکە سەرەکییەکان، دیاریکردنی وشە کلیلییەکان و پاشەکەوتکردنی لە فلاش کارت.',
+          'description':
+              'تێگەیشتن لە چەمکە سەرەکییەکان، دیاریکردنی وشە کلیلییەکان و پاشەکەوتکردنی لە فلاش کارت.',
           'suggestedPomodoros': (hoursPerDay * 2).clamp(2, 6),
         });
       }
     }
 
     return {
-      'advice': 'بەردەوام بە لەسەر جێبەجێکردنی نەخشەڕێگاکەت بە بەکارهێنانی کاتژمێری فۆکەس (Pomodoro) تا بە بەرزترین نمرە سەربکەویت!',
+      'advice':
+          'بەردەوام بە لەسەر جێبەجێکردنی نەخشەڕێگاکەت بە بەکارهێنانی کاتژمێری فۆکەس (Pomodoro) تا بە بەرزترین نمرە سەربکەویت!',
       'tasks': fallbackTasks,
     };
   }
@@ -2226,7 +2805,9 @@ $pdfContext
     String? pdfName,
     String targetLanguage = 'ku',
   }) async {
-    final cleanContent = pdfText.length > 15000 ? pdfText.substring(0, 15000) : pdfText;
+    final cleanContent = pdfText.length > 15000
+        ? pdfText.substring(0, 15000)
+        : pdfText;
     final isEn = targetLanguage == 'en';
 
     final jsonExample = isEn
@@ -2310,7 +2891,8 @@ $jsonExample
           if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
             final jsonSub = jsonString.substring(startIndex, endIndex + 1);
             final decoded = jsonDecode(jsonSub);
-            if (decoded is Map<String, dynamic> && decoded.containsKey('sections')) {
+            if (decoded is Map<String, dynamic> &&
+                decoded.containsKey('sections')) {
               return decoded;
             }
           }
@@ -2325,29 +2907,33 @@ $jsonExample
     if (isEn) {
       return {
         'title': 'Audio Lecture: ${pdfName ?? 'Lecture Notes'}',
-        'summary': 'Could not connect to AI. Please check your internet and API key.',
+        'summary':
+            'Could not connect to AI. Please check your internet and API key.',
         'targetLanguage': 'en',
         'sections': [
           {
             'sectionTitle': 'Connection Error',
-            'kurdishExplanation': 'Could not reach the AI service. Please check your internet connection or API key, then try again.',
-            'englishKeyTerms': []
-          }
-        ]
+            'kurdishExplanation':
+                'Could not reach the AI service. Please check your internet connection or API key, then try again.',
+            'englishKeyTerms': [],
+          },
+        ],
       };
     }
 
     return {
       'title': 'ڕوونکردنەوەی دەنگی: ${pdfName ?? 'وانەی ئەکادیمی'}',
-      'summary': 'نەتوانرا پەیوەندی بە سێرڤەری AI بکرێت. تکایە پەیوەندی ئینتەرنێتت بپشکنە و دووبارە هەوڵ بدەرەوە.',
+      'summary':
+          'نەتوانرا پەیوەندی بە سێرڤەری AI بکرێت. تکایە پەیوەندی ئینتەرنێتت بپشکنە و دووبارە هەوڵ بدەرەوە.',
       'targetLanguage': 'ku',
       'sections': [
         {
           'sectionTitle': 'هەڵەی پەیوەندی',
-          'kurdishExplanation': 'نەتوانرا بە سێرڤەری AI پەیوەندی بکرێت. تکایە دڵنیابە لە هەبوونی ئینتەرنێت، پاشان دووبارە هەوڵ بدەرەوە.',
-          'englishKeyTerms': []
-        }
-      ]
+          'kurdishExplanation':
+              'نەتوانرا بە سێرڤەری AI پەیوەندی بکرێت. تکایە دڵنیابە لە هەبوونی ئینتەرنێت، پاشان دووبارە هەوڵ بدەرەوە.',
+          'englishKeyTerms': [],
+        },
+      ],
     };
   }
 }

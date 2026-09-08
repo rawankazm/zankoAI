@@ -46,10 +46,7 @@ class _UniversityPickerSheet extends StatefulWidget {
   final String? selectedName;
   final String? initialCityKey;
 
-  const _UniversityPickerSheet({
-    this.selectedName,
-    this.initialCityKey,
-  });
+  const _UniversityPickerSheet({this.selectedName, this.initialCityKey});
 
   @override
   State<_UniversityPickerSheet> createState() => _UniversityPickerSheetState();
@@ -58,7 +55,8 @@ class _UniversityPickerSheet extends StatefulWidget {
 class _UniversityPickerSheetState extends State<_UniversityPickerSheet> {
   final TextEditingController _searchCtrl = TextEditingController();
   final TextEditingController _customUniCtrl = TextEditingController();
-  String _selectedCityFilter = 'all'; // 'all', 'city_erbil', 'city_slemani', 'city_duhok', 'city_karkuk', 'city_halabja'
+  String _selectedCityFilter =
+      'all'; // 'all', 'city_erbil', 'city_slemani', 'city_duhok', 'city_karkuk', 'city_halabja'
   String _searchQuery = '';
 
   final List<Map<String, String>> _cityFilters = [
@@ -116,7 +114,10 @@ class _UniversityPickerSheetState extends State<_UniversityPickerSheet> {
           children: [
             Icon(Icons.edit_note_rounded, color: Color(0xFFF97316)),
             SizedBox(width: 8),
-            Text('نووسینی ناوی زانکۆ / پەیمانگە', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(
+              'نووسینی ناوی زانکۆ / پەیمانگە',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
           ],
         ),
         content: TextField(
@@ -154,7 +155,9 @@ class _UniversityPickerSheetState extends State<_UniversityPickerSheet> {
             style: ElevatedButton.styleFrom(
               backgroundColor: ZankoColors.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             child: const Text('دیاریکردن'),
           ),
@@ -209,7 +212,11 @@ class _UniversityPickerSheetState extends State<_UniversityPickerSheet> {
                     color: ZankoColors.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Icon(Icons.school_rounded, color: ZankoColors.primary, size: 24),
+                  child: Icon(
+                    Icons.school_rounded,
+                    color: ZankoColors.primary,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -251,7 +258,10 @@ class _UniversityPickerSheetState extends State<_UniversityPickerSheet> {
               onChanged: (val) => setState(() => _searchQuery = val),
               decoration: InputDecoration(
                 hintText: 'گەڕان بۆ زانکۆ، کۆلێژ یان شار...',
-                hintStyle: TextStyle(fontSize: 13, color: isDark ? Colors.grey[400] : Colors.grey[500]),
+                hintStyle: TextStyle(
+                  fontSize: 13,
+                  color: isDark ? Colors.grey[400] : Colors.grey[500],
+                ),
                 prefixIcon: const Icon(Icons.search_rounded, size: 22),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
@@ -263,8 +273,13 @@ class _UniversityPickerSheetState extends State<_UniversityPickerSheet> {
                       )
                     : null,
                 filled: true,
-                fillColor: isDark ? const Color(0xFF2A1C1E) : const Color(0xFFF3F4F6),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                fillColor: isDark
+                    ? const Color(0xFF2A1C1E)
+                    : const Color(0xFFF3F4F6),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -290,15 +305,23 @@ class _UniversityPickerSheetState extends State<_UniversityPickerSheet> {
                     f['label']!,
                     style: TextStyle(
                       fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: isSelected ? Colors.white : (isDark ? Colors.grey[300] : Colors.grey[700]),
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                      color: isSelected
+                          ? Colors.white
+                          : (isDark ? Colors.grey[300] : Colors.grey[700]),
                     ),
                   ),
                   selected: isSelected,
                   selectedColor: ZankoColors.primary,
-                  backgroundColor: isDark ? const Color(0xFF2A1C1E) : const Color(0xFFF3F4F6),
+                  backgroundColor: isDark
+                      ? const Color(0xFF2A1C1E)
+                      : const Color(0xFFF3F4F6),
                   showCheckmark: false,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                   onSelected: (selected) {
                     if (selected) {
                       setState(() => _selectedCityFilter = f['key']!);
@@ -317,7 +340,11 @@ class _UniversityPickerSheetState extends State<_UniversityPickerSheet> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.search_off_rounded, size: 48, color: Colors.grey.withValues(alpha: 0.5)),
+                        Icon(
+                          Icons.search_off_rounded,
+                          size: 48,
+                          color: Colors.grey.withValues(alpha: 0.5),
+                        ),
                         const SizedBox(height: 8),
                         const Text('هیچ زانکۆیەک نەدۆزرایەوە'),
                         const SizedBox(height: 12),
@@ -327,7 +354,9 @@ class _UniversityPickerSheetState extends State<_UniversityPickerSheet> {
                           label: const Text('ناوی زانکۆکەت بە دەست بنووسە'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: ZankoColors.primary,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         ),
                       ],
@@ -338,14 +367,19 @@ class _UniversityPickerSheetState extends State<_UniversityPickerSheet> {
                     itemCount: _filteredUniversities.length,
                     itemBuilder: (ctx, index) {
                       final uni = _filteredUniversities[index];
-                      final isSelected = widget.selectedName != null &&
-                          (widget.selectedName == uni.nameKu || widget.selectedName == uni.nameEn);
+                      final isSelected =
+                          widget.selectedName != null &&
+                          (widget.selectedName == uni.nameKu ||
+                              widget.selectedName == uni.nameEn);
 
                       if (uni.id == 'other_univ') {
                         return Container(
                           margin: const EdgeInsets.symmetric(vertical: 6),
                           decoration: BoxDecoration(
-                            border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.4), style: BorderStyle.solid),
+                            border: Border.all(
+                              color: ZankoColors.primary.withValues(alpha: 0.4),
+                              style: BorderStyle.solid,
+                            ),
                             borderRadius: BorderRadius.circular(16),
                             color: ZankoColors.primary.withValues(alpha: 0.06),
                           ),
@@ -353,10 +387,15 @@ class _UniversityPickerSheetState extends State<_UniversityPickerSheet> {
                             leading: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: ZankoColors.primary.withValues(alpha: 0.2),
+                                color: ZankoColors.primary.withValues(
+                                  alpha: 0.2,
+                                ),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: Icon(Icons.edit_note_rounded, color: ZankoColors.primary),
+                              child: Icon(
+                                Icons.edit_note_rounded,
+                                color: ZankoColors.primary,
+                              ),
                             ),
                             title: Text(
                               uni.nameKu,
@@ -365,8 +404,14 @@ class _UniversityPickerSheetState extends State<_UniversityPickerSheet> {
                                 color: ZankoColors.primary,
                               ),
                             ),
-                            subtitle: const Text('پەیمانگە یان کۆلێژێک کە لە لیستەکەدا نییە', style: TextStyle(fontSize: 12)),
-                            trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                            subtitle: const Text(
+                              'پەیمانگە یان کۆلێژێک کە لە لیستەکەدا نییە',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                            trailing: const Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 16,
+                            ),
                             onTap: _handleCustomUniversity,
                           ),
                         );
@@ -377,18 +422,27 @@ class _UniversityPickerSheetState extends State<_UniversityPickerSheet> {
                         decoration: BoxDecoration(
                           color: isSelected
                               ? ZankoColors.primary.withValues(alpha: 0.12)
-                              : (isDark ? const Color(0xFF26181A) : const Color(0xFFF9FAFB)),
+                              : (isDark
+                                    ? const Color(0xFF26181A)
+                                    : const Color(0xFFF9FAFB)),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: isSelected
                                 ? ZankoColors.primary
-                                : (isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.05)),
+                                : (isDark
+                                      ? Colors.white.withValues(alpha: 0.06)
+                                      : Colors.black.withValues(alpha: 0.05)),
                           ),
                         ),
                         child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 4,
+                          ),
                           leading: CircleAvatar(
-                            backgroundColor: _getUniversityBadgeColor(uni.type).withValues(alpha: 0.15),
+                            backgroundColor: _getUniversityBadgeColor(
+                              uni.type,
+                            ).withValues(alpha: 0.15),
                             child: Icon(
                               _getUniversityIcon(uni.type),
                               color: _getUniversityBadgeColor(uni.type),
@@ -399,16 +453,23 @@ class _UniversityPickerSheetState extends State<_UniversityPickerSheet> {
                             uni.nameKu,
                             style: TextStyle(
                               fontSize: 14,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.w600,
                               color: textCol,
                             ),
                           ),
                           subtitle: Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: _getUniversityBadgeColor(uni.type).withValues(alpha: 0.12),
+                                  color: _getUniversityBadgeColor(
+                                    uni.type,
+                                  ).withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
@@ -425,7 +486,9 @@ class _UniversityPickerSheetState extends State<_UniversityPickerSheet> {
                                 '📍 ${uni.cityNameKu}',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                  color: isDark
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -433,14 +496,23 @@ class _UniversityPickerSheetState extends State<_UniversityPickerSheet> {
                                 '(${uni.departments.length - 1} بەش)',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                  color: isDark
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
                                 ),
                               ),
                             ],
                           ),
                           trailing: isSelected
-                              ? Icon(Icons.check_circle_rounded, color: ZankoColors.primary)
-                              : const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey),
+                              ? Icon(
+                                  Icons.check_circle_rounded,
+                                  color: ZankoColors.primary,
+                                )
+                              : const Icon(
+                                  Icons.arrow_forward_ios_rounded,
+                                  size: 14,
+                                  color: Colors.grey,
+                                ),
                           onTap: () => Navigator.pop(context, uni),
                         ),
                       );
@@ -508,7 +580,9 @@ class _DepartmentPickerSheetState extends State<_DepartmentPickerSheet> {
   @override
   void initState() {
     super.initState();
-    _departments = KurdistanUniversitiesData.getDepartmentsFor(widget.universityName);
+    _departments = KurdistanUniversitiesData.getDepartmentsFor(
+      widget.universityName,
+    );
   }
 
   @override
@@ -533,7 +607,10 @@ class _DepartmentPickerSheetState extends State<_DepartmentPickerSheet> {
           children: [
             Icon(Icons.edit_note_rounded, color: Color(0xFFF97316)),
             SizedBox(width: 8),
-            Text('نووسینی ناوی بەش', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(
+              'نووسینی ناوی بەش',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
           ],
         ),
         content: TextField(
@@ -560,7 +637,9 @@ class _DepartmentPickerSheetState extends State<_DepartmentPickerSheet> {
             style: ElevatedButton.styleFrom(
               backgroundColor: ZankoColors.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             child: const Text('دیاریکردن'),
           ),
@@ -615,7 +694,11 @@ class _DepartmentPickerSheetState extends State<_DepartmentPickerSheet> {
                     color: const Color(0xFF10B981).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(Icons.account_tree_rounded, color: Color(0xFF10B981), size: 24),
+                  child: const Icon(
+                    Icons.account_tree_rounded,
+                    color: Color(0xFF10B981),
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -659,8 +742,12 @@ class _DepartmentPickerSheetState extends State<_DepartmentPickerSheet> {
               controller: _searchCtrl,
               onChanged: (val) => setState(() => _searchQuery = val),
               decoration: InputDecoration(
-                hintText: 'گەڕان بۆ ناوی بەش (نموونە: کۆمپیوتەر، پزیشکی، یاسا)...',
-                hintStyle: TextStyle(fontSize: 13, color: isDark ? Colors.grey[400] : Colors.grey[500]),
+                hintText:
+                    'گەڕان بۆ ناوی بەش (نموونە: کۆمپیوتەر، پزیشکی، یاسا)...',
+                hintStyle: TextStyle(
+                  fontSize: 13,
+                  color: isDark ? Colors.grey[400] : Colors.grey[500],
+                ),
                 prefixIcon: const Icon(Icons.search_rounded, size: 22),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
@@ -672,8 +759,13 @@ class _DepartmentPickerSheetState extends State<_DepartmentPickerSheet> {
                       )
                     : null,
                 filled: true,
-                fillColor: isDark ? const Color(0xFF2A1C1E) : const Color(0xFFF3F4F6),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                fillColor: isDark
+                    ? const Color(0xFF2A1C1E)
+                    : const Color(0xFFF3F4F6),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -690,7 +782,11 @@ class _DepartmentPickerSheetState extends State<_DepartmentPickerSheet> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.search_off_rounded, size: 48, color: Colors.grey.withValues(alpha: 0.5)),
+                        Icon(
+                          Icons.search_off_rounded,
+                          size: 48,
+                          color: Colors.grey.withValues(alpha: 0.5),
+                        ),
                         const SizedBox(height: 8),
                         const Text('هیچ بەشێک نەدۆزرایەوە'),
                         const SizedBox(height: 12),
@@ -700,7 +796,9 @@ class _DepartmentPickerSheetState extends State<_DepartmentPickerSheet> {
                           label: const Text('ناوی بەشەکەت بە دەست بنووسە'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: ZankoColors.primary,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         ),
                       ],
@@ -711,25 +809,40 @@ class _DepartmentPickerSheetState extends State<_DepartmentPickerSheet> {
                     itemCount: _filteredDepartments.length,
                     itemBuilder: (ctx, index) {
                       final dept = _filteredDepartments[index];
-                      final isSelected = widget.selectedDepartment != null && widget.selectedDepartment == dept;
-                      final isCustomOption = dept.contains('بەشێکی تر') || dept.contains('پشکا دیتر');
+                      final isSelected =
+                          widget.selectedDepartment != null &&
+                          widget.selectedDepartment == dept;
+                      final isCustomOption =
+                          dept.contains('بەشێکی تر') ||
+                          dept.contains('پشکا دیتر');
 
                       if (isCustomOption) {
                         return Container(
                           margin: const EdgeInsets.symmetric(vertical: 6),
                           decoration: BoxDecoration(
-                            border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.4)),
+                            border: Border.all(
+                              color: const Color(
+                                0xFF10B981,
+                              ).withValues(alpha: 0.4),
+                            ),
                             borderRadius: BorderRadius.circular(16),
-                            color: const Color(0xFF10B981).withValues(alpha: 0.06),
+                            color: const Color(
+                              0xFF10B981,
+                            ).withValues(alpha: 0.06),
                           ),
                           child: ListTile(
                             leading: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                                color: const Color(
+                                  0xFF10B981,
+                                ).withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(Icons.edit_note_rounded, color: Color(0xFF10B981)),
+                              child: const Icon(
+                                Icons.edit_note_rounded,
+                                color: Color(0xFF10B981),
+                              ),
                             ),
                             title: const Text(
                               'بەشێکی تر (نووسینی بە دەستی خۆت)',
@@ -738,8 +851,14 @@ class _DepartmentPickerSheetState extends State<_DepartmentPickerSheet> {
                                 color: Color(0xFF10B981),
                               ),
                             ),
-                            subtitle: const Text('ئەگەر بەشەکەت لەم لیستەدا نەبوو لێرە بینوسە', style: TextStyle(fontSize: 12)),
-                            trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                            subtitle: const Text(
+                              'ئەگەر بەشەکەت لەم لیستەدا نەبوو لێرە بینوسە',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                            trailing: const Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 16,
+                            ),
                             onTap: _handleCustomDepartment,
                           ),
                         );
@@ -750,32 +869,49 @@ class _DepartmentPickerSheetState extends State<_DepartmentPickerSheet> {
                         decoration: BoxDecoration(
                           color: isSelected
                               ? ZankoColors.primary.withValues(alpha: 0.12)
-                              : (isDark ? const Color(0xFF26181A) : const Color(0xFFF9FAFB)),
+                              : (isDark
+                                    ? const Color(0xFF26181A)
+                                    : const Color(0xFFF9FAFB)),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: isSelected
                                 ? ZankoColors.primary
-                                : (isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04)),
+                                : (isDark
+                                      ? Colors.white.withValues(alpha: 0.06)
+                                      : Colors.black.withValues(alpha: 0.04)),
                           ),
                         ),
                         child: ListTile(
                           dense: true,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 2,
+                          ),
                           leading: Icon(
                             _getDepartmentIcon(dept),
-                            color: isSelected ? ZankoColors.primary : (isDark ? Colors.grey[400] : Colors.grey[700]),
+                            color: isSelected
+                                ? ZankoColors.primary
+                                : (isDark
+                                      ? Colors.grey[400]
+                                      : Colors.grey[700]),
                             size: 20,
                           ),
                           title: Text(
                             dept,
                             style: TextStyle(
                               fontSize: 13.5,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.w500,
                               color: textCol,
                             ),
                           ),
                           trailing: isSelected
-                              ? Icon(Icons.check_circle_rounded, color: ZankoColors.primary, size: 20)
+                              ? Icon(
+                                  Icons.check_circle_rounded,
+                                  color: ZankoColors.primary,
+                                  size: 20,
+                                )
                               : null,
                           onTap: () => Navigator.pop(context, dept),
                         ),
@@ -790,19 +926,31 @@ class _DepartmentPickerSheetState extends State<_DepartmentPickerSheet> {
 
   IconData _getDepartmentIcon(String dept) {
     final lower = dept.toLowerCase();
-    if (lower.contains('پزیشکی') || lower.contains('medicine') || lower.contains('نوژداری')) {
+    if (lower.contains('پزیشکی') ||
+        lower.contains('medicine') ||
+        lower.contains('نوژداری')) {
       return Icons.medical_services_rounded;
-    } else if (lower.contains('کۆمپیوتەر') || lower.contains('computer') || lower.contains('software') || lower.contains('it')) {
+    } else if (lower.contains('کۆمپیوتەر') ||
+        lower.contains('computer') ||
+        lower.contains('software') ||
+        lower.contains('it')) {
       return Icons.computer_rounded;
     } else if (lower.contains('ئەندازیاری') || lower.contains('engineering')) {
       return Icons.architecture_rounded;
     } else if (lower.contains('یاسا') || lower.contains('law')) {
       return Icons.gavel_rounded;
-    } else if (lower.contains('کارگێڕی') || lower.contains('business') || lower.contains('ژمێریاری')) {
+    } else if (lower.contains('کارگێڕی') ||
+        lower.contains('business') ||
+        lower.contains('ژمێریاری')) {
       return Icons.analytics_rounded;
-    } else if (lower.contains('زمان') || lower.contains('language') || lower.contains('english')) {
+    } else if (lower.contains('زمان') ||
+        lower.contains('language') ||
+        lower.contains('english')) {
       return Icons.translate_rounded;
-    } else if (lower.contains('زانست') || lower.contains('science') || lower.contains('کیمیا') || lower.contains('فیزیا')) {
+    } else if (lower.contains('زانست') ||
+        lower.contains('science') ||
+        lower.contains('کیمیا') ||
+        lower.contains('فیزیا')) {
       return Icons.science_rounded;
     } else if (lower.contains('پەروەردە') || lower.contains('education')) {
       return Icons.school_rounded;

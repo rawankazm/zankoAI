@@ -49,7 +49,9 @@ void main() async {
   try {
     if (!kIsWeb) {
       await Firebase.initializeApp();
-      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+      FirebaseMessaging.onBackgroundMessage(
+        _firebaseMessagingBackgroundHandler,
+      );
     }
   } catch (e) {
     debugPrint('Firebase core initialization notice: $e');
@@ -60,9 +62,11 @@ void main() async {
       url: AppEnv.supabaseUrl,
       publishableKey: AppEnv.supabaseAnonKey,
     );
-    unawaited(NotificationService().init().catchError((e) {
-      debugPrint('Notification init notice: $e');
-    }));
+    unawaited(
+      NotificationService().init().catchError((e) {
+        debugPrint('Notification init notice: $e');
+      }),
+    );
   } catch (e) {
     debugPrint('Supabase core initialization notice: $e');
   }
@@ -90,15 +94,11 @@ class ZankoApp extends StatelessWidget {
         ChangeNotifierProvider<DatabaseService>(
           create: (_) => SupabaseDatabaseService(),
         ),
-        ChangeNotifierProvider<AiService>(
-          create: (_) => ZankoAiService(),
-        ),
+        ChangeNotifierProvider<AiService>(create: (_) => ZankoAiService()),
         ChangeNotifierProvider<LanguageProvider>(
           create: (_) => LanguageProvider(),
         ),
-        ChangeNotifierProvider<ThemeProvider>(
-          create: (_) => ThemeProvider(),
-        ),
+        ChangeNotifierProvider<ThemeProvider>(create: (_) => ThemeProvider()),
         ChangeNotifierProvider<ScoreService>.value(
           value: ScoreService.instance,
         ),
@@ -109,8 +109,11 @@ class ZankoApp extends StatelessWidget {
           value: StudyRoadmapService.instance,
         ),
         ChangeNotifierProxyProvider<AiService, ZankolineService>(
-          create: (context) => ZankolineService(Provider.of<AiService>(context, listen: false)),
-          update: (context, aiService, previous) => (previous ?? ZankolineService(aiService))..updateAiService(aiService),
+          create: (context) =>
+              ZankolineService(Provider.of<AiService>(context, listen: false)),
+          update: (context, aiService, previous) =>
+              (previous ?? ZankolineService(aiService))
+                ..updateAiService(aiService),
         ),
       ],
       child: Consumer2<LanguageProvider, ThemeProvider>(
@@ -120,8 +123,14 @@ class ZankoApp extends StatelessWidget {
             title: 'ZankoAI',
             debugShowCheckedModeBanner: false,
             builder: DevicePreview.appBuilder,
-            theme: ZankoTheme.getLightTheme(themeProvider.activeTheme, languageFontFamily: langProvider.fontFamily),
-            darkTheme: ZankoTheme.getDarkTheme(themeProvider.activeTheme, languageFontFamily: langProvider.fontFamily),
+            theme: ZankoTheme.getLightTheme(
+              themeProvider.activeTheme,
+              languageFontFamily: langProvider.fontFamily,
+            ),
+            darkTheme: ZankoTheme.getDarkTheme(
+              themeProvider.activeTheme,
+              languageFontFamily: langProvider.fontFamily,
+            ),
             themeMode: themeProvider.themeMode,
             localizationsDelegates: const [
               _KurdishMaterialLocalizationsDelegate(),
@@ -138,9 +147,7 @@ class ZankoApp extends StatelessWidget {
             ],
             locale: Locale(langProvider.languageCode, ''),
             initialRoute: '/',
-            routes: {
-              '/': (context) => const SplashScreen(),
-            },
+            routes: {'/': (context) => const SplashScreen()},
           );
         },
       ),
@@ -149,11 +156,13 @@ class ZankoApp extends StatelessWidget {
 }
 
 // Fallback Material Localizations for Kurdish (Sorani & Badini) using Arabic locale behavior for RTL formatting
-class _KurdishMaterialLocalizationsDelegate extends LocalizationsDelegate<MaterialLocalizations> {
+class _KurdishMaterialLocalizationsDelegate
+    extends LocalizationsDelegate<MaterialLocalizations> {
   const _KurdishMaterialLocalizationsDelegate();
 
   @override
-  bool isSupported(Locale locale) => locale.languageCode == 'ku' || locale.languageCode == 'badini';
+  bool isSupported(Locale locale) =>
+      locale.languageCode == 'ku' || locale.languageCode == 'badini';
 
   @override
   Future<MaterialLocalizations> load(Locale locale) =>
@@ -164,11 +173,13 @@ class _KurdishMaterialLocalizationsDelegate extends LocalizationsDelegate<Materi
 }
 
 // Fallback Cupertino Localizations for Kurdish (Sorani & Badini) using Arabic locale behavior for RTL formatting
-class _KurdishCupertinoLocalizationsDelegate extends LocalizationsDelegate<CupertinoLocalizations> {
+class _KurdishCupertinoLocalizationsDelegate
+    extends LocalizationsDelegate<CupertinoLocalizations> {
   const _KurdishCupertinoLocalizationsDelegate();
 
   @override
-  bool isSupported(Locale locale) => locale.languageCode == 'ku' || locale.languageCode == 'badini';
+  bool isSupported(Locale locale) =>
+      locale.languageCode == 'ku' || locale.languageCode == 'badini';
 
   @override
   Future<CupertinoLocalizations> load(Locale locale) =>

@@ -58,7 +58,8 @@ class OcrAiService {
       });
     } else {
       final f = file!;
-      final actualFilename = filename ?? f.path.split(Platform.pathSeparator).last;
+      final actualFilename =
+          filename ?? f.path.split(Platform.pathSeparator).last;
       formData = FormData.fromMap({
         'file': await MultipartFile.fromFile(
           f.path,
@@ -70,9 +71,7 @@ class OcrAiService {
       });
     }
 
-    final headers = <String, dynamic>{
-      'Content-Type': 'multipart/form-data',
-    };
+    final headers = <String, dynamic>{'Content-Type': 'multipart/form-data'};
 
     if (idempotencyKey != null && idempotencyKey.isNotEmpty) {
       headers['Idempotency-Key'] = idempotencyKey;
@@ -190,7 +189,8 @@ class OcrAiService {
         response.statusCode! < 200 ||
         response.statusCode! >= 300 ||
         body?['success'] != true) {
-      final msg = body?['error']?['message'] as String? ??
+      final msg =
+          body?['error']?['message'] as String? ??
           body?['message'] as String? ??
           'Request failed (${response.statusCode})';
       throw DioException(

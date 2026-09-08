@@ -173,16 +173,22 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
     await db.insert('notes', {
       'id': 'n1',
       'title': 'تێبینی دەربارەی سیستەمی کارپێکردن',
-      'content': 'سیستەمی کارپێکردن (OS) بریتییە لەو نەرمەکاڵایەی کە ڕەقەکاڵاکان و نەرمەکاڵاکانی تر بەڕێوەدەبات.',
-      'createdAt': DateTime.now().subtract(const Duration(days: 2)).toIso8601String(),
+      'content':
+          'سیستەمی کارپێکردن (OS) بریتییە لەو نەرمەکاڵایەی کە ڕەقەکاڵاکان و نەرمەکاڵاکانی تر بەڕێوەدەبات.',
+      'createdAt': DateTime.now()
+          .subtract(const Duration(days: 2))
+          .toIso8601String(),
       'isAiFormatted': 1,
       'courseName': 'سیستەمی کارپێکردن',
     });
     await db.insert('notes', {
       'id': 'n2',
       'title': 'کورتەی وانەی داتابەیس',
-      'content': 'داتابەیس (Database) سیستەمێکە بۆ کۆکردنەوە و ڕێکخستنی زانیارییەکان بە شێوازێک کە ئاسان بێت.',
-      'createdAt': DateTime.now().subtract(const Duration(hours: 5)).toIso8601String(),
+      'content':
+          'داتابەیس (Database) سیستەمێکە بۆ کۆکردنەوە و ڕێکخستنی زانیارییەکان بە شێوازێک کە ئاسان بێت.',
+      'createdAt': DateTime.now()
+          .subtract(const Duration(hours: 5))
+          .toIso8601String(),
       'isAiFormatted': 0,
       'courseName': 'بنکەی زانیاری',
     });
@@ -199,7 +205,8 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
       {
         'id': 'q1_1',
         'quizId': 'q1',
-        'questionText': 'سی پی یو (CPU) مێشکی کۆمپیوتەرە و بەرپرسە لە پڕۆسێسکردنی فەرمانەکان.',
+        'questionText':
+            'سی پی یو (CPU) مێشکی کۆمپیوتەرە و بەرپرسە لە پڕۆسێسکردنی فەرمانەکان.',
         'type': 'trueFalse',
         'options': null,
         'correctAnswer': 'ڕاستە',
@@ -207,7 +214,8 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
       {
         'id': 'q1_2',
         'quizId': 'q1',
-        'questionText': 'کام لەمانە وەک یادگەی کاتی (Volatile memory) دادەنرێت؟',
+        'questionText':
+            'کام لەمانە وەک یادگەی کاتی (Volatile memory) دادەنرێت؟',
         'type': 'multipleChoice',
         'options': jsonEncode(['RAM', 'ROM', 'HDD', 'SSD']),
         'correctAnswer': 'RAM',
@@ -221,12 +229,14 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
     await db.insert('flashcards', {
       'id': 'c1',
       'front': 'مۆدێلی OSI چییە؟',
-      'back': 'ڕێکخراوێکە بۆ لێکتێگەیشتنی پرۆتۆکۆلەکانی تۆڕ لە ٧ چینی جیاوازدا.',
+      'back':
+          'ڕێکخراوێکە بۆ لێکتێگەیشتنی پرۆتۆکۆلەکانی تۆڕ لە ٧ چینی جیاوازدا.',
     });
     await db.insert('flashcards', {
       'id': 'c2',
       'front': 'کارکردنی CPU چییە؟',
-      'back': 'ئامێری سەرەکی جێبەجێکردنی فەرمانەکان و پرۆسێسەکردنی زانیارییەکان لە کۆمپیوتەردا.',
+      'back':
+          'ئامێری سەرەکی جێبەجێکردنی فەرمانەکان و پرۆسێسەکردنی زانیارییەکان لە کۆمپیوتەردا.',
     });
 
     // Mock Reminders
@@ -246,7 +256,9 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
       'courseName': 'سیستەمی کارپێکردن',
       'teacherName': 'د. سارا محمد',
       'status': 'pending',
-      'createdAt': DateTime.now().subtract(const Duration(hours: 3)).toIso8601String(),
+      'createdAt': DateTime.now()
+          .subtract(const Duration(hours: 3))
+          .toIso8601String(),
     });
     await db.insert('enrollment_requests', {
       'id': 'req_2',
@@ -255,7 +267,9 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
       'courseName': 'داتابەیس',
       'teacherName': 'د. سارا محمد',
       'status': 'approved',
-      'createdAt': DateTime.now().subtract(const Duration(days: 1)).toIso8601String(),
+      'createdAt': DateTime.now()
+          .subtract(const Duration(days: 1))
+          .toIso8601String(),
     });
   }
 
@@ -267,31 +281,39 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
     final notesMaps = await db.query('notes', orderBy: 'createdAt DESC');
     _notes.clear();
     for (var m in notesMaps) {
-      _notes.add(NoteModel(
-        id: m['id'] as String,
-        title: m['title'] as String,
-        content: m['content'] as String,
-        createdAt: DateTime.parse(m['createdAt'] as String),
-        isAiFormatted: m['isAiFormatted'] == 1,
-        courseName: m['courseName'] as String?,
-      ));
+      _notes.add(
+        NoteModel(
+          id: m['id'] as String,
+          title: m['title'] as String,
+          content: m['content'] as String,
+          createdAt: DateTime.parse(m['createdAt'] as String),
+          isAiFormatted: m['isAiFormatted'] == 1,
+          courseName: m['courseName'] as String?,
+        ),
+      );
     }
 
     // Load Schedule (Purge legacy dummy mock items if any)
-    await db.delete('schedule', where: 'id IN (?, ?, ?, ?)', whereArgs: ['s1', 's2', 's3', 's4']);
+    await db.delete(
+      'schedule',
+      where: 'id IN (?, ?, ?, ?)',
+      whereArgs: ['s1', 's2', 's3', 's4'],
+    );
     final scheduleMaps = await db.query('schedule');
     _schedule.clear();
     for (var m in scheduleMaps) {
       final id = m['id'] as String;
       if (id == 's1' || id == 's2' || id == 's3' || id == 's4') continue;
-      _schedule.add(ScheduleModel(
-        id: id,
-        courseName: m['courseName'] as String,
-        time: m['time'] as String,
-        location: m['location'] as String,
-        dayName: m['dayName'] as String,
-        teacherName: (m['teacherName'] as String?) ?? '',
-      ));
+      _schedule.add(
+        ScheduleModel(
+          id: id,
+          courseName: m['courseName'] as String,
+          time: m['time'] as String,
+          location: m['location'] as String,
+          dayName: m['dayName'] as String,
+          teacherName: (m['teacherName'] as String?) ?? '',
+        ),
+      );
     }
 
     // Load Quizzes
@@ -299,57 +321,74 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
     _quizzes.clear();
     for (var qMap in quizMaps) {
       final qId = qMap['id'] as String;
-      final questionMaps = await db.query('questions', where: 'quizId = ?', whereArgs: [qId]);
+      final questionMaps = await db.query(
+        'questions',
+        where: 'quizId = ?',
+        whereArgs: [qId],
+      );
       final List<QuestionModel> questions = [];
       for (var q in questionMaps) {
         final optionsStr = q['options'] as String?;
-        questions.add(QuestionModel(
-          id: q['id'] as String,
-          questionText: q['questionText'] as String,
-          type: q['type'] == 'trueFalse'
-              ? QuestionType.trueFalse
-              : q['type'] == 'fillInBlank'
-                  ? QuestionType.fillInBlank
-                  : QuestionType.multipleChoice,
-          options: optionsStr != null ? List<String>.from(jsonDecode(optionsStr)) : null,
-          correctAnswer: q['correctAnswer'] as String,
-        ));
+        questions.add(
+          QuestionModel(
+            id: q['id'] as String,
+            questionText: q['questionText'] as String,
+            type: q['type'] == 'trueFalse'
+                ? QuestionType.trueFalse
+                : q['type'] == 'fillInBlank'
+                ? QuestionType.fillInBlank
+                : QuestionType.multipleChoice,
+            options: optionsStr != null
+                ? List<String>.from(jsonDecode(optionsStr))
+                : null,
+            correctAnswer: q['correctAnswer'] as String,
+          ),
+        );
       }
-      _quizzes.add(QuizModel(
-        id: qId,
-        title: qMap['title'] as String,
-        courseName: qMap['courseName'] as String,
-        durationMinutes: qMap['durationMinutes'] as int? ?? 10,
-        questions: questions,
-      ));
+      _quizzes.add(
+        QuizModel(
+          id: qId,
+          title: qMap['title'] as String,
+          courseName: qMap['courseName'] as String,
+          durationMinutes: qMap['durationMinutes'] as int? ?? 10,
+          questions: questions,
+        ),
+      );
     }
 
     // Load Flashcards
     final flashcardsMaps = await db.query('flashcards');
     _flashcards.clear();
     for (var m in flashcardsMaps) {
-      _flashcards.add(FlashcardModel(
-        id: m['id'] as String,
-        front: m['front'] as String,
-        back: m['back'] as String,
-      ));
+      _flashcards.add(
+        FlashcardModel(
+          id: m['id'] as String,
+          front: m['front'] as String,
+          back: m['back'] as String,
+        ),
+      );
     }
 
     // Load Reminders
     final remindersMaps = await db.query('reminders');
     _reminders.clear();
     for (var m in remindersMaps) {
-      _reminders.add(ReminderModel(
-        id: m['id'] as String,
-        title: m['title'] as String,
-        deadline: DateTime.parse(m['deadline'] as String),
-        courseName: m['courseName'] as String,
-        isCompleted: m['isCompleted'] == 1,
-      ));
+      _reminders.add(
+        ReminderModel(
+          id: m['id'] as String,
+          title: m['title'] as String,
+          deadline: DateTime.parse(m['deadline'] as String),
+          courseName: m['courseName'] as String,
+          isCompleted: m['isCompleted'] == 1,
+        ),
+      );
     }
 
     // Load Enrollment Requests
-    final enrollmentMaps = await db.query('enrollment_requests', orderBy: 'createdAt DESC');
+    final enrollmentMaps = await db.query(
+      'enrollment_requests',
+      orderBy: 'createdAt DESC',
+    );
     _enrollmentRequests.clear();
     for (var m in enrollmentMaps) {
       _enrollmentRequests.add({
@@ -368,7 +407,8 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
     for (var row in statsList) {
       if (row['key'] == 'pomodoros') _completedPomodoros = row['value'] as int;
       if (row['key'] == 'quizzes_taken') _quizzesTaken = row['value'] as int;
-      if (row['key'] == 'flashcards_flipped') _flashcardsFlipped = row['value'] as int;
+      if (row['key'] == 'flashcards_flipped')
+        _flashcardsFlipped = row['value'] as int;
     }
 
     notifyListeners();
@@ -454,7 +494,12 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
       });
     }
     _quizzesTaken++;
-    await db.update('stats', {'value': _quizzesTaken}, where: 'key = ?', whereArgs: ['quizzes_taken']);
+    await db.update(
+      'stats',
+      {'value': _quizzesTaken},
+      where: 'key = ?',
+      whereArgs: ['quizzes_taken'],
+    );
     await loadData();
   }
 
@@ -467,7 +512,12 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
       'back': card.back,
     });
     _flashcardsFlipped++;
-    await db.update('stats', {'value': _flashcardsFlipped}, where: 'key = ?', whereArgs: ['flashcards_flipped']);
+    await db.update(
+      'stats',
+      {'value': _flashcardsFlipped},
+      where: 'key = ?',
+      whereArgs: ['flashcards_flipped'],
+    );
     await loadData();
   }
 
@@ -497,7 +547,12 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
     final maps = await db.query('reminders', where: 'id = ?', whereArgs: [id]);
     if (maps.isNotEmpty) {
       final currentCompleted = maps.first['isCompleted'] as int;
-      await db.update('reminders', {'isCompleted': currentCompleted == 1 ? 0 : 1}, where: 'id = ?', whereArgs: [id]);
+      await db.update(
+        'reminders',
+        {'isCompleted': currentCompleted == 1 ? 0 : 1},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
     }
     await loadData();
   }
@@ -510,7 +565,12 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
   }
 
   @override
-  Future<void> requestEnrollment(String studentName, String studentEmail, String courseName, String teacherName) async {
+  Future<void> requestEnrollment(
+    String studentName,
+    String studentEmail,
+    String courseName,
+    String teacherName,
+  ) async {
     final db = await database;
     await db.insert('enrollment_requests', {
       'id': 'req_${DateTime.now().millisecondsSinceEpoch}',
@@ -527,14 +587,24 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
   @override
   Future<void> approveEnrollment(String requestId) async {
     final db = await database;
-    await db.update('enrollment_requests', {'status': 'approved'}, where: 'id = ?', whereArgs: [requestId]);
+    await db.update(
+      'enrollment_requests',
+      {'status': 'approved'},
+      where: 'id = ?',
+      whereArgs: [requestId],
+    );
     await loadData();
   }
 
   @override
   Future<void> rejectEnrollment(String requestId) async {
     final db = await database;
-    await db.update('enrollment_requests', {'status': 'rejected'}, where: 'id = ?', whereArgs: [requestId]);
+    await db.update(
+      'enrollment_requests',
+      {'status': 'rejected'},
+      where: 'id = ?',
+      whereArgs: [requestId],
+    );
     await loadData();
   }
 
@@ -566,7 +636,12 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
   void incrementPomodoros() async {
     final db = await database;
     _completedPomodoros++;
-    await db.update('stats', {'value': _completedPomodoros}, where: 'key = ?', whereArgs: ['pomodoros']);
+    await db.update(
+      'stats',
+      {'value': _completedPomodoros},
+      where: 'key = ?',
+      whereArgs: ['pomodoros'],
+    );
     await loadData();
   }
 
@@ -574,7 +649,12 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
   void incrementQuizzesTaken() async {
     final db = await database;
     _quizzesTaken++;
-    await db.update('stats', {'value': _quizzesTaken}, where: 'key = ?', whereArgs: ['quizzes_taken']);
+    await db.update(
+      'stats',
+      {'value': _quizzesTaken},
+      where: 'key = ?',
+      whereArgs: ['quizzes_taken'],
+    );
     await loadData();
   }
 
@@ -582,7 +662,12 @@ class SqliteDatabaseService extends ChangeNotifier implements DatabaseService {
   void incrementFlashcardsFlipped() async {
     final db = await database;
     _flashcardsFlipped++;
-    await db.update('stats', {'value': _flashcardsFlipped}, where: 'key = ?', whereArgs: ['flashcards_flipped']);
+    await db.update(
+      'stats',
+      {'value': _flashcardsFlipped},
+      where: 'key = ?',
+      whereArgs: ['flashcards_flipped'],
+    );
     await loadData();
   }
 }

@@ -60,7 +60,10 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            Provider.of<LanguageProvider>(context, listen: false).translate('snackbar_enter_topic'),
+            Provider.of<LanguageProvider>(
+              context,
+              listen: false,
+            ).translate('snackbar_enter_topic'),
             style: const TextStyle(fontFamily: 'DroidKufi'),
           ),
           backgroundColor: Colors.orange,
@@ -113,7 +116,9 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✅ ${cards.length} فلاشکارد بە سەرکەوتوویی دروستکران!'),
+            content: Text(
+              '✅ ${cards.length} فلاشکارد بە سەرکەوتوویی دروستکران!',
+            ),
             backgroundColor: const Color(0xFF10B981),
             duration: const Duration(seconds: 2),
           ),
@@ -147,7 +152,9 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✅ ${fallbackCards.length} فلاشکارد بە سەرکەوتوویی ئامادەکران!'),
+            content: Text(
+              '✅ ${fallbackCards.length} فلاشکارد بە سەرکەوتوویی ئامادەکران!',
+            ),
             backgroundColor: const Color(0xFF10B981),
             duration: const Duration(seconds: 2),
           ),
@@ -161,22 +168,26 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       FlashcardModel(
         id: 'fc_1_${DateTime.now().millisecondsSinceEpoch}',
         front: 'چەمکی بنەڕەتی بابەتەکە ($topic) چییە؟',
-        back: 'پێناسەی گشتی ($topic) بریتییە لە کۆمەڵە یاسا و چەمکە زانستییەکان کە بۆ شیکارکردن و تێگەیشتن لە بابەتەکە بەکاردێن.',
+        back:
+            'پێناسەی گشتی ($topic) بریتییە لە کۆمەڵە یاسا و چەمکە زانستییەکان کە بۆ شیکارکردن و تێگەیشتن لە بابەتەکە بەکاردێن.',
       ),
       FlashcardModel(
         id: 'fc_2_${DateTime.now().millisecondsSinceEpoch}',
         front: 'گرنگترین ئامانجی ($topic) لە بواری زانستیدا چییە؟',
-        back: 'باشترکردنی خێرایی، کەمکردنەوەی هەڵە مرۆییەکان، و گەیشتن بە ئەنجامی تێروتەسەلی زانستی.',
+        back:
+            'باشترکردنی خێرایی، کەمکردنەوەی هەڵە مرۆییەکان، و گەیشتن بە ئەنجامی تێروتەسەلی زانستی.',
       ),
       FlashcardModel(
         id: 'fc_3_${DateTime.now().millisecondsSinceEpoch}',
         front: 'چۆن داتاکانی ($topic) شی دەکرێنەوە؟',
-        back: 'بە بەکارهێنانی مۆدێلی بیرکاری، فۆرمولە ستانداردەکان، و ئامرازە ئامارییەکان لە پرۆسەی فێربووندا.',
+        back:
+            'بە بەکارهێنانی مۆدێلی بیرکاری، فۆرمولە ستانداردەکان، و ئامرازە ئامارییەکان لە پرۆسەی فێربووندا.',
       ),
       FlashcardModel(
         id: 'fc_4_${DateTime.now().millisecondsSinceEpoch}',
         front: 'ڕۆڵی زیرەکی دەستکرد (AI) لە ($topic) چییە؟',
-        back: 'ئۆتۆماتیکردنی پرۆسە دووبارەبووەکان، دروستکردنی پێشبینی زیرەکانە، و ئاسانکاری فێربوونی ئەکادیمی.',
+        back:
+            'ئۆتۆماتیکردنی پرۆسە دووبارەبووەکان، دروستکردنی پێشبینی زیرەکانە، و ئاسانکاری فێربوونی ئەکادیمی.',
       ),
     ];
   }
@@ -209,9 +220,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-        ),
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -242,7 +251,9 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                 decoration: InputDecoration(
                   labelText: 'ڕووی پێشەوە (پرسیار یان دەستەواژە)',
                   hintText: 'نموونە: چەمکی داتابەیس چییە؟',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -252,7 +263,9 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                 decoration: InputDecoration(
                   labelText: 'ڕووی دواوە (وەڵام یان شیکار)',
                   hintText: 'نموونە: بریتییە لە کۆمەڵە زانیارییەکی ڕێکخراو...',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -261,7 +274,9 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                   backgroundColor: ZankoColors.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 onPressed: () {
                   final f = frontCtrl.text.trim();
@@ -269,7 +284,9 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                   if (f.isEmpty || b.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('تکایە هەردوو ڕووی فلاشکاردەکە بنووسە (پرسیار و وەڵام)'),
+                        content: Text(
+                          'تکایە هەردوو ڕووی فلاشکاردەکە بنووسە (پرسیار و وەڵام)',
+                        ),
                         backgroundColor: Colors.orange,
                         duration: Duration(seconds: 2),
                       ),
@@ -304,14 +321,19 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('✅ فلاشکاردەکە بە سەرکەوتوویی پاشەکەوت کرا!'),
+                        content: Text(
+                          '✅ فلاشکاردەکە بە سەرکەوتوویی پاشەکەوت کرا!',
+                        ),
                         backgroundColor: Color(0xFF10B981),
                         duration: Duration(seconds: 2),
                       ),
                     );
                   }
                 },
-                child: const Text('پاشەکەوتکردن', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'پاشەکەوتکردن',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
               const SizedBox(height: 10),
             ],
@@ -334,7 +356,9 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
     return Directionality(
       textDirection: langProvider.textDirection,
       child: Scaffold(
-        backgroundColor: isDark ? ZankoColors.darkBackground : ZankoColors.background,
+        backgroundColor: isDark
+            ? ZankoColors.darkBackground
+            : ZankoColors.background,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -349,17 +373,25 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
           centerTitle: true,
           actions: [
             IconButton(
-              icon: Icon(CupertinoIcons.plus_circle_fill, color: ZankoColors.primary),
+              icon: Icon(
+                CupertinoIcons.plus_circle_fill,
+                color: ZankoColors.primary,
+              ),
               tooltip: 'زیادکردنی فلاشکارد',
               onPressed: () => _showAddCardModal(context),
             ),
             IconButton(
-              icon: Icon(CupertinoIcons.qrcode_viewfinder, color: ZankoColors.primary),
+              icon: Icon(
+                CupertinoIcons.qrcode_viewfinder,
+                color: ZankoColors.primary,
+              ),
               tooltip: t('scan_qr_deck'),
               onPressed: () async {
                 final success = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const QrScannerView()),
+                  MaterialPageRoute(
+                    builder: (context) => const QrScannerView(),
+                  ),
                 );
                 if (success == true) {
                   setState(() {
@@ -404,24 +436,34 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                       return GestureDetector(
                         onTap: () => _generateCards(item['title']),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: isDark ? ZankoColors.darkCard : Colors.white,
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: ZankoColors.primary.withValues(alpha: 0.25),
+                              color: ZankoColors.primary.withValues(
+                                alpha: 0.25,
+                              ),
                             ),
                           ),
                           child: Row(
                             children: [
-                              Text(item['icon']!, style: const TextStyle(fontSize: 13)),
+                              Text(
+                                item['icon']!,
+                                style: const TextStyle(fontSize: 13),
+                              ),
                               const SizedBox(width: 6),
                               Text(
                                 item['title']!,
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: isDark ? Colors.white : ZankoColors.textPrimary,
+                                  color: isDark
+                                      ? Colors.white
+                                      : ZankoColors.textPrimary,
                                 ),
                               ),
                             ],
@@ -441,11 +483,15 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                     color: isDark ? ZankoColors.darkCard : Colors.white,
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(
-                      color: isDark ? Colors.white12 : ZankoColors.primary.withValues(alpha: 0.15),
+                      color: isDark
+                          ? Colors.white12
+                          : ZankoColors.primary.withValues(alpha: 0.15),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                        color: Colors.black.withValues(
+                          alpha: isDark ? 0.2 : 0.04,
+                        ),
                         blurRadius: 16,
                         offset: const Offset(0, 4),
                       ),
@@ -459,16 +505,22 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                         maxLines: 2,
                         style: TextStyle(
                           fontSize: 14,
-                          color: isDark ? Colors.white : ZankoColors.textPrimary,
+                          color: isDark
+                              ? Colors.white
+                              : ZankoColors.textPrimary,
                         ),
                         decoration: InputDecoration(
                           hintText: 'بابەتێک بنووسە یان دەقێک لێرە دابنێ...',
                           hintStyle: TextStyle(
                             fontSize: 13,
-                            color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                            color: isDark
+                                ? Colors.grey[400]
+                                : ZankoColors.textSecondary,
                           ),
                           filled: true,
-                          fillColor: isDark ? ZankoColors.darkBackground : const Color(0xFFF8FAFC),
+                          fillColor: isDark
+                              ? ZankoColors.darkBackground
+                              : const Color(0xFFF8FAFC),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
                             borderSide: BorderSide.none,
@@ -487,12 +539,18 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                                   SizedBox(
                                     width: 20,
                                     height: 20,
-                                    child: CircularProgressIndicator(strokeWidth: 2.5, color: ZankoColors.primary),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      color: ZankoColors.primary,
+                                    ),
                                   ),
                                   const SizedBox(width: 12),
                                   const Text(
                                     'زیرەکی دەستکرد لە حاڵەتی دروستکردنی فلاشکاردایە...',
-                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -501,12 +559,17 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                               height: 48,
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
-                                  colors: [Color(0xFF6C5CE7), Color(0xFF8E44AD)],
+                                  colors: [
+                                    Color(0xFF6C5CE7),
+                                    Color(0xFF8E44AD),
+                                  ],
                                 ),
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFF6C5CE7).withValues(alpha: 0.35),
+                                    color: const Color(
+                                      0xFF6C5CE7,
+                                    ).withValues(alpha: 0.35),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -514,7 +577,11 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                               ),
                               child: ElevatedButton.icon(
                                 onPressed: () => _generateCards(),
-                                icon: const Icon(CupertinoIcons.sparkles, color: Colors.white, size: 18),
+                                icon: const Icon(
+                                  CupertinoIcons.sparkles,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
                                 label: Text(
                                   t('flashcards_generate_btn'),
                                   style: const TextStyle(
@@ -526,7 +593,9 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.transparent,
                                   shadowColor: Colors.transparent,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
                                 ),
                               ),
                             ),
@@ -538,11 +607,18 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
 
                 if (cards.isEmpty)
                   Container(
-                    padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 40,
+                      horizontal: 20,
+                    ),
                     alignment: Alignment.center,
                     child: Column(
                       children: [
-                        Icon(CupertinoIcons.layers, size: 54, color: ZankoColors.primary.withValues(alpha: 0.5)),
+                        Icon(
+                          CupertinoIcons.layers,
+                          size: 54,
+                          color: ZankoColors.primary.withValues(alpha: 0.5),
+                        ),
                         const SizedBox(height: 14),
                         Text(
                           t('flashcards_empty_state'),
@@ -550,21 +626,36 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                            color: isDark
+                                ? Colors.grey[400]
+                                : ZankoColors.textSecondary,
                           ),
                         ),
                         const SizedBox(height: 18),
                         ElevatedButton.icon(
                           onPressed: () => _showAddCardModal(context),
-                          icon: const Icon(CupertinoIcons.plus_circle_fill, size: 18, color: Colors.white),
+                          icon: const Icon(
+                            CupertinoIcons.plus_circle_fill,
+                            size: 18,
+                            color: Colors.white,
+                          ),
                           label: const Text(
                             'فلاشکاردێک بە دەستی خۆت بنووسە',
-                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: ZankoColors.primary,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 12,
+                            ),
                           ),
                         ),
                       ],
@@ -578,9 +669,14 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: ZankoColors.primary.withValues(alpha: 0.12),
+                              color: ZankoColors.primary.withValues(
+                                alpha: 0.12,
+                              ),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -595,18 +691,31 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                           const SizedBox(width: 8),
                           if (_learnedCardIndices.contains(_currentIndex))
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                                color: const Color(
+                                  0xFF10B981,
+                                ).withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Row(
                                 children: [
-                                  Icon(CupertinoIcons.checkmark_seal_fill, size: 13, color: Color(0xFF10B981)),
+                                  Icon(
+                                    CupertinoIcons.checkmark_seal_fill,
+                                    size: 13,
+                                    color: Color(0xFF10B981),
+                                  ),
                                   SizedBox(width: 4),
                                   Text(
                                     'زانراوە',
-                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF10B981)),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF10B981),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -614,7 +723,11 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                         ],
                       ),
                       IconButton(
-                        icon: Icon(CupertinoIcons.shuffle, color: ZankoColors.primary, size: 20),
+                        icon: Icon(
+                          CupertinoIcons.shuffle,
+                          color: ZankoColors.primary,
+                          size: 20,
+                        ),
                         tooltip: 'تێکەڵکردن',
                         onPressed: () => _shuffleDeck(cards),
                       ),
@@ -626,17 +739,24 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                   // 3D Flip Card Container
                   Center(
                     child: FlipCardWidget(
-                      key: ValueKey('${cards[_currentIndex].id}_$_currentIndex'),
+                      key: ValueKey(
+                        '${cards[_currentIndex].id}_$_currentIndex',
+                      ),
                       front: _buildCardFace(
                         context,
                         content: cards[_currentIndex].front,
                         title: 'پێشەوە • پرسیار',
                         badgeIcon: CupertinoIcons.question_circle_fill,
                         gradientColors: isDark
-                            ? [const Color(0xFF0F172A), ZankoColors.darkCardSecondary]
+                            ? [
+                                const Color(0xFF0F172A),
+                                ZankoColors.darkCardSecondary,
+                              ]
                             : [Colors.white, const Color(0xFFF8FAFC)],
                         borderColor: ZankoColors.primary,
-                        textColor: isDark ? Colors.white : ZankoColors.textPrimary,
+                        textColor: isDark
+                            ? Colors.white
+                            : ZankoColors.textPrimary,
                         tip: 'کلیک بکە بۆ گۆڕینی لای کارتەکە 🔄',
                       ),
                       back: _buildCardFace(
@@ -646,9 +766,14 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                         badgeIcon: CupertinoIcons.lightbulb_fill,
                         gradientColors: isDark
                             ? [const Color(0xFF064E3B), const Color(0xFF047857)]
-                            : [const Color(0xFFECFDF5), const Color(0xD1D1FADF)],
+                            : [
+                                const Color(0xFFECFDF5),
+                                const Color(0xD1D1FADF),
+                              ],
                         borderColor: const Color(0xFF10B981),
-                        textColor: isDark ? Colors.white : const Color(0xFF064E3B),
+                        textColor: isDark
+                            ? Colors.white
+                            : const Color(0xFF064E3B),
                         tip: 'کلیک بکە بۆ گۆڕینی لای کارتەکە 🔄',
                       ),
                     ),
@@ -678,13 +803,17 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                                 : (isDark ? Colors.white10 : Colors.grey[200]),
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: _currentIndex > 0 ? ZankoColors.primary.withValues(alpha: 0.3) : Colors.transparent,
+                              color: _currentIndex > 0
+                                  ? ZankoColors.primary.withValues(alpha: 0.3)
+                                  : Colors.transparent,
                             ),
                           ),
                           child: Icon(
                             CupertinoIcons.chevron_left,
                             color: _currentIndex > 0
-                                ? (isDark ? Colors.white : ZankoColors.textPrimary)
+                                ? (isDark
+                                      ? Colors.white
+                                      : ZankoColors.textPrimary)
                                 : Colors.grey,
                             size: 20,
                           ),
@@ -703,7 +832,10 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                           });
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
                           decoration: BoxDecoration(
                             color: _learnedCardIndices.contains(_currentIndex)
                                 ? const Color(0xFF10B981)
@@ -716,16 +848,26 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                                 _learnedCardIndices.contains(_currentIndex)
                                     ? CupertinoIcons.checkmark_alt_circle_fill
                                     : CupertinoIcons.checkmark_alt_circle,
-                                color: _learnedCardIndices.contains(_currentIndex) ? Colors.white : ZankoColors.primary,
+                                color:
+                                    _learnedCardIndices.contains(_currentIndex)
+                                    ? Colors.white
+                                    : ZankoColors.primary,
                                 size: 18,
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                _learnedCardIndices.contains(_currentIndex) ? 'فێربووم ✅' : 'نیشانکردن بە فێربوو',
+                                _learnedCardIndices.contains(_currentIndex)
+                                    ? 'فێربووم ✅'
+                                    : 'نیشانکردن بە فێربوو',
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
-                                  color: _learnedCardIndices.contains(_currentIndex) ? Colors.white : ZankoColors.primary,
+                                  color:
+                                      _learnedCardIndices.contains(
+                                        _currentIndex,
+                                      )
+                                      ? Colors.white
+                                      : ZankoColors.primary,
                                 ),
                               ),
                             ],
@@ -751,13 +893,17 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
                                 : (isDark ? Colors.white10 : Colors.grey[200]),
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: _currentIndex < cards.length - 1 ? ZankoColors.primary.withValues(alpha: 0.3) : Colors.transparent,
+                              color: _currentIndex < cards.length - 1
+                                  ? ZankoColors.primary.withValues(alpha: 0.3)
+                                  : Colors.transparent,
                             ),
                           ),
                           child: Icon(
                             CupertinoIcons.chevron_right,
                             color: _currentIndex < cards.length - 1
-                                ? (isDark ? Colors.white : ZankoColors.textPrimary)
+                                ? (isDark
+                                      ? Colors.white
+                                      : ZankoColors.textPrimary)
                                 : Colors.grey,
                             size: 20,
                           ),
@@ -794,7 +940,10 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: borderColor.withValues(alpha: 0.5), width: 1.8),
+        border: Border.all(
+          color: borderColor.withValues(alpha: 0.5),
+          width: 1.8,
+        ),
         boxShadow: [
           BoxShadow(
             color: borderColor.withValues(alpha: 0.25),
@@ -853,7 +1002,11 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(CupertinoIcons.refresh_thin, size: 14, color: textColor.withValues(alpha: 0.7)),
+              Icon(
+                CupertinoIcons.refresh_thin,
+                size: 14,
+                color: textColor.withValues(alpha: 0.7),
+              ),
               const SizedBox(width: 6),
               Text(
                 tip,
@@ -881,7 +1034,8 @@ class FlipCardWidget extends StatefulWidget {
   State<FlipCardWidget> createState() => _FlipCardWidgetState();
 }
 
-class _FlipCardWidgetState extends State<FlipCardWidget> with SingleTickerProviderStateMixin {
+class _FlipCardWidgetState extends State<FlipCardWidget>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
   bool _isFront = true;

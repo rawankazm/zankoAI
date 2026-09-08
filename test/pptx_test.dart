@@ -16,7 +16,10 @@ void main() {
 - کێشە نەریتییەکان لە کارگێڕیدا
 ''';
 
-    final slides = PptxGeneratorService.parseSlidesFromText(rawText, defaultTitle: 'سیمینار');
+    final slides = PptxGeneratorService.parseSlidesFromText(
+      rawText,
+      defaultTitle: 'سیمینار',
+    );
     expect(slides.isNotEmpty, true);
     expect(slides.length, 2);
 
@@ -27,7 +30,75 @@ void main() {
       supervisorName: 'د. نەبەز عومەر',
       university: 'زانکۆی سەڵاحەدین',
       department: 'کۆلێژی زانست',
-      logoBytes: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4, 0x89, 0x00, 0x00, 0x00, 0x0A, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9C, 0x63, 0x00, 0x01, 0x00, 0x00, 0x05, 0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82],
+      logoBytes: [
+        0x89,
+        0x50,
+        0x4E,
+        0x47,
+        0x0D,
+        0x0A,
+        0x1A,
+        0x0A,
+        0x00,
+        0x00,
+        0x00,
+        0x0D,
+        0x49,
+        0x48,
+        0x44,
+        0x52,
+        0x00,
+        0x00,
+        0x00,
+        0x01,
+        0x00,
+        0x00,
+        0x00,
+        0x01,
+        0x08,
+        0x06,
+        0x00,
+        0x00,
+        0x00,
+        0x1F,
+        0x15,
+        0xC4,
+        0x89,
+        0x00,
+        0x00,
+        0x00,
+        0x0A,
+        0x49,
+        0x44,
+        0x41,
+        0x54,
+        0x78,
+        0x9C,
+        0x63,
+        0x00,
+        0x01,
+        0x00,
+        0x00,
+        0x05,
+        0x00,
+        0x01,
+        0x0D,
+        0x0A,
+        0x2D,
+        0xB4,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x49,
+        0x45,
+        0x4E,
+        0x44,
+        0xAE,
+        0x42,
+        0x60,
+        0x82,
+      ],
     );
     expect(bytes.isNotEmpty, true);
     File('scratch/test_presentation.pptx').writeAsBytesSync(bytes);
@@ -86,10 +157,17 @@ void main() {
 - 🎙️ **تێبینی پێشکەشکار: زۆر سوپاس بۆ کات و گوێگرتنتان**
 ''';
 
-    final parsed = PptxGeneratorService.parseSlidesFromText(rawAiResponse, defaultTitle: 'زیرەکی دەستکرد');
+    final parsed = PptxGeneratorService.parseSlidesFromText(
+      rawAiResponse,
+      defaultTitle: 'زیرەکی دەستکرد',
+    );
     expect(parsed.length, 8);
     for (int i = 0; i < parsed.length; i++) {
-      expect(parsed[i].bulletPoints.isNotEmpty, true, reason: 'Slide ${i + 1} has no bullets');
+      expect(
+        parsed[i].bulletPoints.isNotEmpty,
+        true,
+        reason: 'Slide ${i + 1} has no bullets',
+      );
     }
 
     final bytes = await PptxGeneratorService.createPptxBytes(
@@ -115,7 +193,10 @@ void main() {
 - کەمکردنەوەی کاتی چارەسەر
 ''';
 
-    final slides = PptxGeneratorService.parseSlidesFromText(rawText, defaultTitle: 'تەکنەلۆجیا');
+    final slides = PptxGeneratorService.parseSlidesFromText(
+      rawText,
+      defaultTitle: 'تەکنەلۆجیا',
+    );
     final bytes = await PptxGeneratorService.createPptxBytes(
       slides,
       presentationTitle: 'تەکنەلۆجیای زیرەک',
@@ -123,7 +204,75 @@ void main() {
       supervisorName: 'د. محەمەد',
       university: 'زانکۆی سەڵاحەدین',
       department: 'کۆلێژی پزیشکی',
-      logoBytes: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4, 0x89, 0x00, 0x00, 0x00, 0x0A, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9C, 0x63, 0x00, 0x01, 0x00, 0x00, 0x05, 0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82],
+      logoBytes: [
+        0x89,
+        0x50,
+        0x4E,
+        0x47,
+        0x0D,
+        0x0A,
+        0x1A,
+        0x0A,
+        0x00,
+        0x00,
+        0x00,
+        0x0D,
+        0x49,
+        0x48,
+        0x44,
+        0x52,
+        0x00,
+        0x00,
+        0x00,
+        0x01,
+        0x00,
+        0x00,
+        0x00,
+        0x01,
+        0x08,
+        0x06,
+        0x00,
+        0x00,
+        0x00,
+        0x1F,
+        0x15,
+        0xC4,
+        0x89,
+        0x00,
+        0x00,
+        0x00,
+        0x0A,
+        0x49,
+        0x44,
+        0x41,
+        0x54,
+        0x78,
+        0x9C,
+        0x63,
+        0x00,
+        0x01,
+        0x00,
+        0x00,
+        0x05,
+        0x00,
+        0x01,
+        0x0D,
+        0x0A,
+        0x2D,
+        0xB4,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x49,
+        0x45,
+        0x4E,
+        0x44,
+        0xAE,
+        0x42,
+        0x60,
+        0x82,
+      ],
     );
 
     expect(bytes.isNotEmpty, true);
@@ -153,7 +302,10 @@ void main() {
 - Neural network model
 ''';
 
-    final slides = PptxGeneratorService.parseSlidesFromText(variedOutput, defaultTitle: 'تاقیکردنەوە');
+    final slides = PptxGeneratorService.parseSlidesFromText(
+      variedOutput,
+      defaultTitle: 'تاقیکردنەوە',
+    );
     expect(slides.length, 5);
     expect(slides[0].title.contains('پێناسە'), true);
     expect(slides[1].title.contains('Theoretical Background'), true);
@@ -162,11 +314,26 @@ void main() {
     expect(slides[4].title.contains('Methodology'), true);
   });
 
-  test('Seminar final slide Thank You message translates across all languages', () {
-    expect(PptxGeneratorService.getThankYouMessage('ku'), 'سوپاس بۆ ئامادەبوونتان');
-    expect(PptxGeneratorService.getThankYouMessage('ku_badini'), 'سوپاس بۆ ئامادەبوونا هەوە');
-    expect(PptxGeneratorService.getThankYouMessage('badini'), 'سوپاس بۆ ئامادەبوونا هەوە');
-    expect(PptxGeneratorService.getThankYouMessage('ar'), 'شكراً لحضوركم');
-    expect(PptxGeneratorService.getThankYouMessage('en'), 'Thank You for Your Attendance');
-  });
+  test(
+    'Seminar final slide Thank You message translates across all languages',
+    () {
+      expect(
+        PptxGeneratorService.getThankYouMessage('ku'),
+        'سوپاس بۆ ئامادەبوونتان',
+      );
+      expect(
+        PptxGeneratorService.getThankYouMessage('ku_badini'),
+        'سوپاس بۆ ئامادەبوونا هەوە',
+      );
+      expect(
+        PptxGeneratorService.getThankYouMessage('badini'),
+        'سوپاس بۆ ئامادەبوونا هەوە',
+      );
+      expect(PptxGeneratorService.getThankYouMessage('ar'), 'شكراً لحضوركم');
+      expect(
+        PptxGeneratorService.getThankYouMessage('en'),
+        'Thank You for Your Attendance',
+      );
+    },
+  );
 }

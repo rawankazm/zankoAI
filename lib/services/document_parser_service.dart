@@ -82,10 +82,7 @@ class DocumentParserService {
 
       if (bytes == null || bytes.isEmpty) return null;
 
-      return parseDocumentBytes(
-        fileName: file.name,
-        bytes: bytes,
-      );
+      return parseDocumentBytes(fileName: file.name, bytes: bytes);
     } catch (e) {
       rethrow;
     }
@@ -194,15 +191,21 @@ class DocumentParserService {
   // ──────────────────────────────────────────────────────────────────────────
   // 2. Modern Word Extractor (.docx - OpenXML 2007 through 2024 / 365)
   // ──────────────────────────────────────────────────────────────────────────
-  static ({String text, int estimatedPages}) _extractTextFromDocx(Uint8List bytes) {
+  static ({String text, int estimatedPages}) _extractTextFromDocx(
+    Uint8List bytes,
+  ) {
     try {
       final archive = ZipDecoder().decodeBytes(bytes, verify: false);
       final buffer = StringBuffer();
 
       // Priority 1: word/document.xml (Main Body)
       for (final file in archive.files) {
-        if (file.name == 'word/document.xml' || file.name == 'word/document2.xml') {
-          final xmlStr = utf8.decode(file.content as List<int>, allowMalformed: true);
+        if (file.name == 'word/document.xml' ||
+            file.name == 'word/document2.xml') {
+          final xmlStr = utf8.decode(
+            file.content as List<int>,
+            allowMalformed: true,
+          );
           final parsed = _extractTextFromWordXml(xmlStr);
           if (parsed.isNotEmpty) {
             buffer.writeln(parsed);
@@ -218,7 +221,10 @@ class DocumentParserService {
                 name.startsWith('word/footnotes') ||
                 name.startsWith('word/comments')) &&
             name.endsWith('.xml')) {
-          final xmlStr = utf8.decode(file.content as List<int>, allowMalformed: true);
+          final xmlStr = utf8.decode(
+            file.content as List<int>,
+            allowMalformed: true,
+          );
           final parsed = _extractTextFromWordXml(xmlStr);
           if (parsed.isNotEmpty) {
             buffer.writeln(parsed);
@@ -238,7 +244,10 @@ class DocumentParserService {
   static String _extractTextFromWordXml(String xml) {
     final buffer = StringBuffer();
     // Parse paragraphs <w:p>
-    final paragraphRegex = RegExp(r'<w:p(?:\s+[^>]*)?>(.*?)</w:p>', dotAll: true);
+    final paragraphRegex = RegExp(
+      r'<w:p(?:\s+[^>]*)?>(.*?)</w:p>',
+      dotAll: true,
+    );
     final textRegex = RegExp(r'<w:t(?:\s+[^>]*)?>(.*?)</w:t>', dotAll: true);
     final tabRegex = RegExp(r'<w:tab/>');
     final brRegex = RegExp(r'<w:br/>');
@@ -249,7 +258,9 @@ class DocumentParserService {
         final pContent = pMatch.group(1) ?? '';
         final lineBuffer = StringBuffer();
 
-        var processed = pContent.replaceAll(tabRegex, '\t').replaceAll(brRegex, '\n');
+        var processed = pContent
+            .replaceAll(tabRegex, '\t')
+            .replaceAll(brRegex, '\n');
         for (final tMatch in textRegex.allMatches(processed)) {
           final text = tMatch.group(1) ?? '';
           lineBuffer.write(_decodeXmlEntities(text));
@@ -274,9 +285,12 @@ class DocumentParserService {
   // ──────────────────────────────────────────────────────────────────────────
   // 3. Legacy Word Extractor (.doc - Word 97-2003 / RTF / OLE Compound File)
   // ──────────────────────────────────────────────────────────────────────────
-  static ({String text, int estimatedPages}) _extractTextFromDoc(Uint8List bytes) {
+  static ({String text, int estimatedPages}) _extractTextFromDoc(
+    Uint8List bytes,
+  ) {
     // 1. Check if file is actually an RTF file saved as .doc
-    final isRtf = bytes.length > 5 &&
+    final isRtf =
+        bytes.length > 5 &&
         bytes[0] == 0x7B && // {
         bytes[1] == 0x5C && // \
         bytes[2] == 0x72 && // r
@@ -308,19 +322,31 @@ class DocumentParserService {
       for (final file in archive.files) {
         final name = file.name;
         // Slide XML matching: ppt/slides/slide1.xml, ppt/slides/slide2.xml, etc.
-        final slideMatch = RegExp(r'ppt/slides/slide(\d+)\.xml', caseSensitive: false).firstMatch(name);
+        final slideMatch = RegExp(
+          r'ppt/slides/slide(\d+)\.xml',
+          caseSensitive: false,
+        ).firstMatch(name);
         if (slideMatch != null) {
           final slideIndex = int.tryParse(slideMatch.group(1) ?? '1') ?? 1;
-          final xmlStr = utf8.decode(file.content as List<int>, allowMalformed: true);
+          final xmlStr = utf8.decode(
+            file.content as List<int>,
+            allowMalformed: true,
+          );
           final slideText = _extractTextFromPptxSlideXml(xmlStr);
           slideMap[slideIndex] = slideText;
         }
 
         // Notes XML matching: ppt/notesSlides/notesSlide1.xml
-        final notesMatch = RegExp(r'ppt/notesSlides/notesSlide(\d+)\.xml', caseSensitive: false).firstMatch(name);
+        final notesMatch = RegExp(
+          r'ppt/notesSlides/notesSlide(\d+)\.xml',
+          caseSensitive: false,
+        ).firstMatch(name);
         if (notesMatch != null) {
           final noteIndex = int.tryParse(notesMatch.group(1) ?? '1') ?? 1;
-          final xmlStr = utf8.decode(file.content as List<int>, allowMalformed: true);
+          final xmlStr = utf8.decode(
+            file.content as List<int>,
+            allowMalformed: true,
+          );
           final noteText = _extractTextFromPptxSlideXml(xmlStr);
           notesMap[noteIndex] = noteText;
         }
@@ -360,7 +386,10 @@ class DocumentParserService {
   static String _extractTextFromPptxSlideXml(String xml) {
     final buffer = StringBuffer();
     // In PowerPoint OpenXML, text runs are in <a:p> (paragraphs) with <a:r><a:t>text</a:t></a:r>
-    final paragraphRegex = RegExp(r'<a:p(?:\s+[^>]*)?>(.*?)</a:p>', dotAll: true);
+    final paragraphRegex = RegExp(
+      r'<a:p(?:\s+[^>]*)?>(.*?)</a:p>',
+      dotAll: true,
+    );
     final textRegex = RegExp(r'<a:t(?:\s+[^>]*)?>(.*?)</a:t>', dotAll: true);
 
     final paragraphs = paragraphRegex.allMatches(xml);
@@ -394,7 +423,10 @@ class DocumentParserService {
   // ──────────────────────────────────────────────────────────────────────────
   static ({String text, int slideCount}) _extractTextFromPpt(Uint8List bytes) {
     final extracted = _extractAsciiAndUtf16Strings(bytes);
-    final paragraphs = extracted.split('\n').where((p) => p.trim().isNotEmpty).toList();
+    final paragraphs = extracted
+        .split('\n')
+        .where((p) => p.trim().isNotEmpty)
+        .toList();
 
     final buffer = StringBuffer();
     int currentSlide = 1;
@@ -477,7 +509,11 @@ class DocumentParserService {
       final asciiBuffer = StringBuffer();
       for (int i = 0; i < bytes.length; i++) {
         final byte = bytes[i];
-        if ((byte >= 32 && byte <= 126) || byte == 10 || byte == 13 || byte == 9 || byte >= 128) {
+        if ((byte >= 32 && byte <= 126) ||
+            byte == 10 ||
+            byte == 13 ||
+            byte == 9 ||
+            byte >= 128) {
           asciiBuffer.writeCharCode(byte);
         } else {
           if (asciiBuffer.length >= 6) {

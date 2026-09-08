@@ -92,7 +92,8 @@ class ScoreService extends ChangeNotifier {
   bool get isStreakCompletedToday {
     if (_lastStreakDate == null) return false;
     final now = DateTime.now();
-    final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final todayStr =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
     return _lastStreakDate == todayStr;
   }
 
@@ -103,7 +104,8 @@ class ScoreService extends ChangeNotifier {
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final todayStr =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
     if (_lastStreakDate == null) {
       _streakCount = 1;
@@ -137,10 +139,13 @@ class ScoreService extends ChangeNotifier {
   Future<void> syncToCloud([String? uid]) async {
     try {
       final targetUid = uid ?? Supabase.instance.client.auth.currentUser?.id;
-      if (targetUid != null && targetUid.isNotEmpty && !targetUid.startsWith('guest_')) {
-        await Supabase.instance.client.from('profiles').update({
-          'updated_at': DateTime.now().toUtc().toIso8601String(),
-        }).eq('id', targetUid);
+      if (targetUid != null &&
+          targetUid.isNotEmpty &&
+          !targetUid.startsWith('guest_')) {
+        await Supabase.instance.client
+            .from('profiles')
+            .update({'updated_at': DateTime.now().toUtc().toIso8601String()})
+            .eq('id', targetUid);
       }
     } catch (_) {}
   }

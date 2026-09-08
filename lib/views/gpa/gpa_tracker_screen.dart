@@ -22,13 +22,14 @@ class CourseScoreItem {
   double get totalScore => (quizScore + examScore).clamp(0.0, 100.0);
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'quizScore': quizScore,
-        'examScore': examScore,
-      };
+    'id': id,
+    'title': title,
+    'quizScore': quizScore,
+    'examScore': examScore,
+  };
 
-  factory CourseScoreItem.fromJson(Map<String, dynamic> json) => CourseScoreItem(
+  factory CourseScoreItem.fromJson(Map<String, dynamic> json) =>
+      CourseScoreItem(
         id: json['id'] ?? '',
         title: json['title'] ?? '',
         quizScore: (json['quizScore'] as num?)?.toDouble() ?? 0.0,
@@ -61,7 +62,9 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
       try {
         final List<dynamic> decoded = jsonDecode(rawJson);
         setState(() {
-          _courses = decoded.map((item) => CourseScoreItem.fromJson(item)).toList();
+          _courses = decoded
+              .map((item) => CourseScoreItem.fromJson(item))
+              .toList();
           _isLoading = false;
         });
         return;
@@ -71,11 +74,36 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
     // Default sample courses if empty
     setState(() {
       _courses = [
-        CourseScoreItem(id: 'c1', title: 'Operating Systems', quizScore: 36.0, examScore: 52.0),
-        CourseScoreItem(id: 'c2', title: 'Machine Learning Fundamentals', quizScore: 38.0, examScore: 55.0),
-        CourseScoreItem(id: 'c3', title: 'Calculus & Linear Algebra', quizScore: 32.0, examScore: 45.0),
-        CourseScoreItem(id: 'c4', title: 'Python & Data Science', quizScore: 35.0, examScore: 48.0),
-        CourseScoreItem(id: 'c5', title: 'Data Structures & Algorithms', quizScore: 30.0, examScore: 42.0),
+        CourseScoreItem(
+          id: 'c1',
+          title: 'Operating Systems',
+          quizScore: 36.0,
+          examScore: 52.0,
+        ),
+        CourseScoreItem(
+          id: 'c2',
+          title: 'Machine Learning Fundamentals',
+          quizScore: 38.0,
+          examScore: 55.0,
+        ),
+        CourseScoreItem(
+          id: 'c3',
+          title: 'Calculus & Linear Algebra',
+          quizScore: 32.0,
+          examScore: 45.0,
+        ),
+        CourseScoreItem(
+          id: 'c4',
+          title: 'Python & Data Science',
+          quizScore: 35.0,
+          examScore: 48.0,
+        ),
+        CourseScoreItem(
+          id: 'c5',
+          title: 'Data Structures & Algorithms',
+          quizScore: 30.0,
+          examScore: 42.0,
+        ),
       ];
       _isLoading = false;
     });
@@ -98,9 +126,19 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isEditing = existingCourse != null;
 
-    final titleController = TextEditingController(text: existingCourse?.title ?? '');
-    final quizController = TextEditingController(text: existingCourse != null ? existingCourse.quizScore.toStringAsFixed(1) : '35.0');
-    final examController = TextEditingController(text: existingCourse != null ? existingCourse.examScore.toStringAsFixed(1) : '50.0');
+    final titleController = TextEditingController(
+      text: existingCourse?.title ?? '',
+    );
+    final quizController = TextEditingController(
+      text: existingCourse != null
+          ? existingCourse.quizScore.toStringAsFixed(1)
+          : '35.0',
+    );
+    final examController = TextEditingController(
+      text: existingCourse != null
+          ? existingCourse.examScore.toStringAsFixed(1)
+          : '50.0',
+    );
 
     showModalBottomSheet(
       context: context,
@@ -114,14 +152,20 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
             final currentTotal = (quizVal + examVal).clamp(0.0, 100.0);
 
             return Padding(
-              padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              ),
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF1E222A) : Colors.white,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(28),
+                  ),
                   border: Border.all(
-                    color: isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFEFEFF7),
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : const Color(0xFFEFEFF7),
                   ),
                 ),
                 child: Column(
@@ -140,7 +184,9 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                     ),
                     const SizedBox(height: 18),
                     Text(
-                      isEditing ? 'دەستکاری نمرەی وانە 📝' : 'زیادکردنی وانە و نمرەی نوێ 🎓',
+                      isEditing
+                          ? 'دەستکاری نمرەی وانە 📝'
+                          : 'زیادکردنی وانە و نمرەی نوێ 🎓',
                       style: TextStyle(
                         fontSize: 19,
                         fontWeight: FontWeight.bold,
@@ -153,7 +199,9 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                       'نمرەی کویز (لە سەر ٤٠) و تاقیکردنەوە (لە سەر ٦٠) بنووسە تا کۆی گشتی لەسەر ١٠٠ دیاری بێت:',
                       style: TextStyle(
                         fontSize: 12,
-                        color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                        color: isDark
+                            ? Colors.grey[400]
+                            : ZankoColors.textSecondary,
                         fontFamily: 'DroidKufi',
                       ),
                     ),
@@ -162,12 +210,22 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                     // Course Name
                     TextField(
                       controller: titleController,
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
                       decoration: InputDecoration(
                         labelText: 'ناوی وانە (Course Name)',
-                        prefixIcon: Icon(Icons.book_rounded, color: ZankoColors.primary),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        prefixIcon: Icon(
+                          Icons.book_rounded,
+                          color: ZankoColors.primary,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -178,13 +236,25 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                         Expanded(
                           child: TextField(
                             controller: quizController,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black,
+                            ),
                             decoration: InputDecoration(
                               labelText: 'نمرەی کویز (/40)',
-                              prefixIcon: Icon(CupertinoIcons.checkmark_circle, color: ZankoColors.accent),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                              prefixIcon: Icon(
+                                CupertinoIcons.checkmark_circle,
+                                color: ZankoColors.accent,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 12,
+                              ),
                             ),
                             onChanged: (_) => setModalState(() {}),
                           ),
@@ -193,13 +263,25 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                         Expanded(
                           child: TextField(
                             controller: examController,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black,
+                            ),
                             decoration: InputDecoration(
                               labelText: 'نمرەی تاقیکردنەوە (/60)',
-                              prefixIcon: const Icon(CupertinoIcons.doc_text_fill, color: Color(0xFFFF9F0A)),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                              prefixIcon: const Icon(
+                                CupertinoIcons.doc_text_fill,
+                                color: Color(0xFFFF9F0A),
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 12,
+                              ),
                             ),
                             onChanged: (_) => setModalState(() {}),
                           ),
@@ -212,9 +294,13 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: ZankoColors.primary.withValues(alpha: isDark ? 0.15 : 0.08),
+                        color: ZankoColors.primary.withValues(
+                          alpha: isDark ? 0.15 : 0.08,
+                        ),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: ZankoColors.primary.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: ZankoColors.primary.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -222,7 +308,11 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                           const Expanded(
                             child: Text(
                               'کۆی گشتی وانەکە (لەسەر ١٠٠):',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'DroidKufi'),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                fontFamily: 'DroidKufi',
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -247,7 +337,9 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: ZankoColors.primary,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                         ),
                         onPressed: () {
                           final title = titleController.text.trim();
@@ -255,7 +347,9 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
 
                           setState(() {
                             if (isEditing) {
-                              final index = _courses.indexWhere((c) => c.id == existingCourse.id);
+                              final index = _courses.indexWhere(
+                                (c) => c.id == existingCourse.id,
+                              );
                               if (index != -1) {
                                 _courses[index] = CourseScoreItem(
                                   id: existingCourse.id,
@@ -281,7 +375,12 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                         },
                         child: Text(
                           isEditing ? 'نوێکردنەوەی نمرە' : 'خەزنکردنی وانە',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'DroidKufi'),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontFamily: 'DroidKufi',
+                          ),
                         ),
                       ),
                     ),
@@ -315,9 +414,17 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
     return Directionality(
       textDirection: langProvider.textDirection,
       child: Scaffold(
-        backgroundColor: isDark ? const Color(0xFF11141A) : const Color(0xFFF8F9FE),
+        backgroundColor: isDark
+            ? const Color(0xFF11141A)
+            : const Color(0xFFF8F9FE),
         appBar: AppBar(
-          title: const Text('نمرە و ئەنجامی وانەکان', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'DroidKufi')),
+          title: const Text(
+            'نمرە و ئەنجامی وانەکان',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontFamily: 'DroidKufi',
+            ),
+          ),
           centerTitle: true,
           actions: [
             IconButton(
@@ -343,12 +450,11 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                               ? [
                                   const Color(0xFF0F172A),
                                   ZankoColors.darkCardSecondary,
-                                  const Color(0xFF064E3B).withValues(alpha: 0.5),
+                                  const Color(
+                                    0xFF064E3B,
+                                  ).withValues(alpha: 0.5),
                                 ]
-                              : [
-                                  Colors.white,
-                                  const Color(0xFFF0FDF4),
-                                ],
+                              : [Colors.white, const Color(0xFFF0FDF4)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -382,14 +488,22 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                                 ),
                               ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: badgeColor,
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
                                   statusBadge,
-                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'DroidKufi'),
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    fontFamily: 'DroidKufi',
+                                  ),
                                 ),
                               ),
                             ],
@@ -430,8 +544,12 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                             child: LinearProgressIndicator(
                               value: (avg / 100.0).clamp(0.0, 1.0),
                               minHeight: 10,
-                              backgroundColor: Colors.white.withValues(alpha: 0.2),
-                              valueColor: AlwaysStoppedAnimation<Color>(badgeColor),
+                              backgroundColor: Colors.white.withValues(
+                                alpha: 0.2,
+                              ),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                badgeColor,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 18),
@@ -440,11 +558,28 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              _buildHeaderStat('کۆی وانەکان', '${_courses.length} وانە'),
-                              Container(width: 1, height: 24, color: Colors.white24),
-                              _buildHeaderStat('تێکڕای کویز', '${(_courses.isEmpty ? 0 : _courses.fold<double>(0, (s, c) => s + c.quizScore) / _courses.length).toStringAsFixed(1)} / 40'),
-                              Container(width: 1, height: 24, color: Colors.white24),
-                              _buildHeaderStat('تێکڕای تاقیکردنەوە', '${(_courses.isEmpty ? 0 : _courses.fold<double>(0, (s, c) => s + c.examScore) / _courses.length).toStringAsFixed(1)} / 60'),
+                              _buildHeaderStat(
+                                'کۆی وانەکان',
+                                '${_courses.length} وانە',
+                              ),
+                              Container(
+                                width: 1,
+                                height: 24,
+                                color: Colors.white24,
+                              ),
+                              _buildHeaderStat(
+                                'تێکڕای کویز',
+                                '${(_courses.isEmpty ? 0 : _courses.fold<double>(0, (s, c) => s + c.quizScore) / _courses.length).toStringAsFixed(1)} / 40',
+                              ),
+                              Container(
+                                width: 1,
+                                height: 24,
+                                color: Colors.white24,
+                              ),
+                              _buildHeaderStat(
+                                'تێکڕای تاقیکردنەوە',
+                                '${(_courses.isEmpty ? 0 : _courses.fold<double>(0, (s, c) => s + c.examScore) / _courses.length).toStringAsFixed(1)} / 60',
+                              ),
                             ],
                           ),
                         ],
@@ -460,7 +595,9 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1E222A) : Colors.white,
+                          color: isDark
+                              ? const Color(0xFF1E222A)
+                              : Colors.white,
                           borderRadius: BorderRadius.circular(18),
                           border: Border.all(
                             color: ZankoColors.primary.withValues(alpha: 0.4),
@@ -473,10 +610,16 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: ZankoColors.primary.withValues(alpha: 0.15),
+                                color: ZankoColors.primary.withValues(
+                                  alpha: 0.15,
+                                ),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: Icon(CupertinoIcons.add, color: ZankoColors.primary, size: 22),
+                              child: Icon(
+                                CupertinoIcons.add,
+                                color: ZankoColors.primary,
+                                size: 22,
+                              ),
                             ),
                             const SizedBox(width: 14),
                             const Expanded(
@@ -489,7 +632,11 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                                 ),
                               ),
                             ),
-                            Icon(CupertinoIcons.chevron_forward, color: ZankoColors.primary, size: 18),
+                            Icon(
+                              CupertinoIcons.chevron_forward,
+                              color: ZankoColors.primary,
+                              size: 18,
+                            ),
                           ],
                         ),
                       ),
@@ -515,7 +662,12 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                           padding: const EdgeInsets.all(30),
                           child: Text(
                             'هیچ وانەیەک زیادت نەکردووە، بەتنەکە لەسەرەوە دابگرە',
-                            style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontFamily: 'DroidKufi'),
+                            style: TextStyle(
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
+                              fontFamily: 'DroidKufi',
+                            ),
                           ),
                         ),
                       )
@@ -529,10 +681,14 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1E222A) : Colors.white,
+                            color: isDark
+                                ? const Color(0xFF1E222A)
+                                : Colors.white,
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFF0F0F6),
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.08)
+                                  : const Color(0xFFF0F0F6),
                             ),
                             boxShadow: isDark ? [] : ZankoShadows.card,
                           ),
@@ -545,7 +701,11 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                                   color: scoreColor.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(14),
                                 ),
-                                child: Icon(Icons.school_rounded, color: scoreColor, size: 22),
+                                child: Icon(
+                                  Icons.school_rounded,
+                                  color: scoreColor,
+                                  size: 22,
+                                ),
                               ),
                               const SizedBox(width: 14),
                               Expanded(
@@ -557,7 +717,9 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                                       style: TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.bold,
-                                        color: isDark ? Colors.white : ZankoColors.textPrimary,
+                                        color: isDark
+                                            ? Colors.white
+                                            : ZankoColors.textPrimary,
                                         fontFamily: 'DroidKufi',
                                       ),
                                     ),
@@ -566,7 +728,9 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                                       'کویز: ${course.quizScore.toStringAsFixed(1)}/40  •  تاقیکردنەوە: ${course.examScore.toStringAsFixed(1)}/60',
                                       style: TextStyle(
                                         fontSize: 11,
-                                        color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                                        color: isDark
+                                            ? Colors.grey[400]
+                                            : ZankoColors.textSecondary,
                                         fontFamily: 'DroidKufi',
                                       ),
                                     ),
@@ -586,19 +750,29 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                                   ),
                                   const Text(
                                     '/ 100 نمرە',
-                                    style: TextStyle(fontSize: 10, color: Colors.grey, fontFamily: 'DroidKufi'),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey,
+                                      fontFamily: 'DroidKufi',
+                                    ),
                                   ),
                                 ],
                               ),
                               const SizedBox(width: 8),
                               PopupMenuButton<String>(
-                                icon: const Icon(Icons.more_vert_rounded, color: Colors.grey, size: 20),
+                                icon: const Icon(
+                                  Icons.more_vert_rounded,
+                                  color: Colors.grey,
+                                  size: 20,
+                                ),
                                 onSelected: (val) {
                                   if (val == 'edit') {
                                     _showAddOrEditCourseModal(course);
                                   } else if (val == 'delete') {
                                     setState(() {
-                                      _courses.removeWhere((c) => c.id == course.id);
+                                      _courses.removeWhere(
+                                        (c) => c.id == course.id,
+                                      );
                                     });
                                     _saveCourseScores();
                                   }
@@ -610,7 +784,13 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                                       children: [
                                         Icon(Icons.edit, size: 18),
                                         SizedBox(width: 8),
-                                        Text('دەستکاری', style: TextStyle(fontSize: 13, fontFamily: 'DroidKufi')),
+                                        Text(
+                                          'دەستکاری',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontFamily: 'DroidKufi',
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -618,9 +798,20 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                                     value: 'delete',
                                     child: Row(
                                       children: [
-                                        Icon(Icons.delete, size: 18, color: Colors.redAccent),
+                                        Icon(
+                                          Icons.delete,
+                                          size: 18,
+                                          color: Colors.redAccent,
+                                        ),
                                         SizedBox(width: 8),
-                                        Text('سڕینەوە', style: TextStyle(fontSize: 13, color: Colors.redAccent, fontFamily: 'DroidKufi')),
+                                        Text(
+                                          'سڕینەوە',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.redAccent,
+                                            fontFamily: 'DroidKufi',
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -630,10 +821,10 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                           ),
                         );
                       }),
-                  const SizedBox(height: 40),
-                ],
+                    const SizedBox(height: 40),
+                  ],
+                ),
               ),
-            ),
       ),
     );
   }
@@ -643,12 +834,20 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 10, color: Colors.white60, fontFamily: 'DroidKufi'),
+          style: const TextStyle(
+            fontSize: 10,
+            color: Colors.white60,
+            fontFamily: 'DroidKufi',
+          ),
         ),
         const SizedBox(height: 2),
         Text(
           value,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
       ],
     );

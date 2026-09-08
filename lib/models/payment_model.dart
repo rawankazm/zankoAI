@@ -2,13 +2,7 @@
 // ZankoAI Iraq Payment Architecture — Payment Models
 // ==============================================================================
 
-enum PaymentStatusType {
-  pending,
-  paid,
-  failed,
-  cancelled,
-  refunded,
-}
+enum PaymentStatusType { pending, paid, failed, cancelled, refunded }
 
 class PaymentRecordModel {
   final String id;

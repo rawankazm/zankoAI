@@ -5,9 +5,10 @@ class FeatureIntroData {
   final String id;
   final IconData icon;
   final List<Color> gradient;
-  final Map<String, String> title;        // en / ar / ku
+  final Map<String, String> title; // en / ar / ku
   final Map<String, String> subtitle;
-  final List<Map<String, String>> bullets; // each bullet: {icon_name, en, ar, ku}
+  final List<Map<String, String>>
+  bullets; // each bullet: {icon_name, en, ar, ku}
 
   const FeatureIntroData({
     required this.id,
@@ -29,7 +30,8 @@ class FeatureIntros {
     subtitle: {
       'en': 'Your personal AI tutor powered by Gemini — ask anything, anytime.',
       'ar': 'أستاذك الذكي الشخصي بتقنية Gemini — اسأل عن أي شيء في أي وقت.',
-      'ku': 'مامۆستای تایبەتی AI بەهێزی Gemini — هەر پرسیارێک لە هەر کاتێکدا بپرسە.',
+      'ku':
+          'مامۆستای تایبەتی AI بەهێزی Gemini — هەر پرسیارێک لە هەر کاتێکدا بپرسە.',
     },
     bullets: [
       {
@@ -57,7 +59,11 @@ class FeatureIntros {
     id: 'pdf_summary',
     icon: Icons.picture_as_pdf_rounded,
     gradient: [Color(0xFFFF3B30), Color(0xFFFF6B35)],
-    title: {'en': 'Course Summarizer', 'ar': 'ملخص المقررات', 'ku': 'کورتکەرەوەی وانەکان'},
+    title: {
+      'en': 'Course Summarizer',
+      'ar': 'ملخص المقررات',
+      'ku': 'کورتکەرەوەی وانەکان',
+    },
     subtitle: {
       'en': 'Upload your PDF or text files and get instant AI summaries.',
       'ar': 'حمّل ملفات PDF أو نصية واحصل على ملخص فوري بالذكاء الاصطناعي.',
@@ -93,7 +99,8 @@ class FeatureIntros {
     subtitle: {
       'en': 'Create and review digital flashcards to memorize faster.',
       'ar': 'أنشئ بطاقات مراجعة رقمية وراجع بها لحفظ أسرع.',
-      'ku': 'فلاشکاردی دیجیتاڵ دروست بکە و پێیان دووبارە بخوێنەرەوە بۆ خێراتر لەبیرکردن.',
+      'ku':
+          'فلاشکاردی دیجیتاڵ دروست بکە و پێیان دووبارە بخوێنەرەوە بۆ خێراتر لەبیرکردن.',
     },
     bullets: [
       {
@@ -157,7 +164,8 @@ class FeatureIntros {
     subtitle: {
       'en': 'Never miss a deadline — set countdowns for your exams and tasks.',
       'ar': 'لا تفوت موعدًا — ضع عداداً تنازليًا لامتحاناتك ومهامك.',
-      'ku': 'هیچ کاتژمێرەکی نەبەزێنە — ژمارەی پاشگەرد بۆ تاقیکردنەوە و ئەرکەکانت دابنێ.',
+      'ku':
+          'هیچ کاتژمێرەکی نەبەزێنە — ژمارەی پاشگەرد بۆ تاقیکردنەوە و ئەرکەکانت دابنێ.',
     },
     bullets: [
       {
@@ -185,11 +193,16 @@ class FeatureIntros {
     id: 'planner',
     icon: Icons.event_note_rounded,
     gradient: [Color(0xFF34C759), Color(0xFF00C896)],
-    title: {'en': 'AI Study Planner', 'ar': 'مخطط الدراسة الذكي', 'ku': 'پلانی خوێندنی AI'},
+    title: {
+      'en': 'AI Study Planner',
+      'ar': 'مخطط الدراسة الذكي',
+      'ku': 'پلانی خوێندنی AI',
+    },
     subtitle: {
       'en': 'Let AI build a personalized weekly study plan for your exams.',
       'ar': 'دع الذكاء يبني خطة دراسة أسبوعية شخصية لامتحاناتك.',
-      'ku': 'با AI پلانی خوێندنی هەفتانەی تایبەت بۆ تاقیکردنەوەکانت دروست بکات.',
+      'ku':
+          'با AI پلانی خوێندنی هەفتانەی تایبەت بۆ تاقیکردنەوەکانت دروست بکات.',
     },
     bullets: [
       {
@@ -249,7 +262,11 @@ class FeatureIntros {
     id: 'stats',
     icon: Icons.emoji_events_rounded,
     gradient: [Color(0xFFFFCC00), Color(0xFFFF9500)],
-    title: {'en': 'Achievements & Stats', 'ar': 'الإنجازات والإحصائيات', 'ku': 'ئامار و میدالیاکان'},
+    title: {
+      'en': 'Achievements & Stats',
+      'ar': 'الإنجازات والإحصائيات',
+      'ku': 'ئامار و میدالیاکان',
+    },
     subtitle: {
       'en': 'Track your learning progress and earn achievement badges.',
       'ar': 'تابع تقدمك في التعلم واكسب شارات الإنجاز.',
@@ -281,11 +298,17 @@ class FeatureIntros {
     id: 'exam_predictor',
     icon: Icons.psychology_rounded,
     gradient: [Color(0xFFAF52DE), Color(0xFF5856D6)],
-    title: {'en': 'Exam Predictor', 'ar': 'متنبئ الامتحان', 'ku': 'پێشبینیکەری تاقیکردنەوە'},
+    title: {
+      'en': 'Exam Predictor',
+      'ar': 'متنبئ الامتحان',
+      'ku': 'پێشبینیکەری تاقیکردنەوە',
+    },
     subtitle: {
-      'en': 'Paste your notes and let Gemini predict the most likely exam questions.',
+      'en':
+          'Paste your notes and let Gemini predict the most likely exam questions.',
       'ar': 'الصق ملاحظاتك ودع Gemini يتوقع أسئلة الامتحان الأرجح.',
-      'ku': 'تێبینییەکانت دابنێ و با Gemini ئەو پرسیارانەی پێشبینی بکات کە زۆر ئەگەرن لە تاقیکردنەوەدا بێنەوە.',
+      'ku':
+          'تێبینییەکانت دابنێ و با Gemini ئەو پرسیارانەی پێشبینی بکات کە زۆر ئەگەرن لە تاقیکردنەوەدا بێنەوە.',
     },
     bullets: [
       {
@@ -345,9 +368,14 @@ class FeatureIntros {
     id: 'audio_summarizer',
     icon: Icons.mic_rounded,
     gradient: [Color(0xFFFF2D55), Color(0xFFAF52DE)],
-    title: {'en': 'Audio Lecture Summarizer', 'ar': 'ملخص المحاضرات الصوتية', 'ku': 'کورتکەرەوەی دەنگی وانەکان'},
+    title: {
+      'en': 'Audio Lecture Summarizer',
+      'ar': 'ملخص المحاضرات الصوتية',
+      'ku': 'کورتکەرەوەی دەنگی وانەکان',
+    },
     subtitle: {
-      'en': 'Upload an audio recording and get a full AI summary of the lecture.',
+      'en':
+          'Upload an audio recording and get a full AI summary of the lecture.',
       'ar': 'ارفع تسجيلاً صوتياً واحصل على ملخص كامل بالذكاء الاصطناعي.',
       'ku': 'تۆماری دەنگی باربکە و کورتکراوەی تەواوی AI وەربگرە.',
     },
@@ -377,7 +405,11 @@ class FeatureIntros {
     id: 'peer_share',
     icon: Icons.qr_code_scanner_rounded,
     gradient: [Color(0xFF007AFF), Color(0xFF34C759)],
-    title: {'en': 'Peer Share', 'ar': 'مشاركة كروت الدراسة', 'ku': 'هاوبەشکردنی فلاشکارد'},
+    title: {
+      'en': 'Peer Share',
+      'ar': 'مشاركة كروت الدراسة',
+      'ku': 'هاوبەشکردنی فلاشکارد',
+    },
     subtitle: {
       'en': 'Share your flashcard decks with classmates using QR codes.',
       'ar': 'شارك مجموعات بطاقاتك مع زملائك باستخدام رموز QR.',
@@ -441,7 +473,11 @@ class FeatureIntros {
     id: 'schedule',
     icon: Icons.calendar_today_rounded,
     gradient: [Color(0xFF5856D6), Color(0xFF34C759)],
-    title: {'en': 'Class Schedule', 'ar': 'جدول الوانات', 'ku': 'خشتەی وانەکان'},
+    title: {
+      'en': 'Class Schedule',
+      'ar': 'جدول الوانات',
+      'ku': 'خشتەی وانەکان',
+    },
     subtitle: {
       'en': 'Add and manage your weekly lecture timetable in one place.',
       'ar': 'أضف وأدر جدول محاضراتك الأسبوعي في مكان واحد.',
@@ -497,44 +533,44 @@ class _FeatureIntroSheet extends StatelessWidget {
 
   IconData _iconFromName(String name) {
     const m = {
-      'chat_bubble_rounded':            Icons.chat_bubble_rounded,
-      'history_edu_rounded':            Icons.history_edu_rounded,
-      'record_voice_over_rounded':      Icons.record_voice_over_rounded,
-      'upload_file_rounded':            Icons.upload_file_rounded,
-      'summarize_rounded':              Icons.summarize_rounded,
-      'translate_rounded':              Icons.translate_rounded,
-      'add_card_rounded':               Icons.add_card_rounded,
-      'flip_rounded':                   Icons.flip_rounded,
-      'qr_code_rounded':                Icons.qr_code_rounded,
-      'auto_awesome_rounded':           Icons.auto_awesome_rounded,
-      'check_circle_rounded':           Icons.check_circle_rounded,
-      'history_rounded':                Icons.history_rounded,
-      'timer_rounded':                  Icons.timer_rounded,
+      'chat_bubble_rounded': Icons.chat_bubble_rounded,
+      'history_edu_rounded': Icons.history_edu_rounded,
+      'record_voice_over_rounded': Icons.record_voice_over_rounded,
+      'upload_file_rounded': Icons.upload_file_rounded,
+      'summarize_rounded': Icons.summarize_rounded,
+      'translate_rounded': Icons.translate_rounded,
+      'add_card_rounded': Icons.add_card_rounded,
+      'flip_rounded': Icons.flip_rounded,
+      'qr_code_rounded': Icons.qr_code_rounded,
+      'auto_awesome_rounded': Icons.auto_awesome_rounded,
+      'check_circle_rounded': Icons.check_circle_rounded,
+      'history_rounded': Icons.history_rounded,
+      'timer_rounded': Icons.timer_rounded,
       'notification_important_rounded': Icons.notification_important_rounded,
-      'list_alt_rounded':               Icons.list_alt_rounded,
-      'calendar_month_rounded':         Icons.calendar_month_rounded,
-      'schedule_rounded':               Icons.schedule_rounded,
-      'task_alt_rounded':               Icons.task_alt_rounded,
-      'play_circle_rounded':            Icons.play_circle_rounded,
-      'self_improvement_rounded':       Icons.self_improvement_rounded,
-      'bar_chart_rounded':              Icons.bar_chart_rounded,
-      'insights_rounded':               Icons.insights_rounded,
-      'military_tech_rounded':          Icons.military_tech_rounded,
-      'local_fire_department_rounded':  Icons.local_fire_department_rounded,
-      'lightbulb_rounded':              Icons.lightbulb_rounded,
-      'fact_check_rounded':             Icons.fact_check_rounded,
-      'search_rounded':                 Icons.search_rounded,
-      'touch_app_rounded':              Icons.touch_app_rounded,
-      'zoom_out_map_rounded':           Icons.zoom_out_map_rounded,
-      'mic_rounded':                    Icons.mic_rounded,
-      'audio_file_rounded':             Icons.audio_file_rounded,
-      'qr_code_scanner_rounded':        Icons.qr_code_scanner_rounded,
-      'groups_rounded':                 Icons.groups_rounded,
-      'edit_note_rounded':              Icons.edit_note_rounded,
-      'share_rounded':                  Icons.share_rounded,
-      'view_week_rounded':              Icons.view_week_rounded,
-      'add_circle_rounded':             Icons.add_circle_rounded,
-      'home_rounded':                   Icons.home_rounded,
+      'list_alt_rounded': Icons.list_alt_rounded,
+      'calendar_month_rounded': Icons.calendar_month_rounded,
+      'schedule_rounded': Icons.schedule_rounded,
+      'task_alt_rounded': Icons.task_alt_rounded,
+      'play_circle_rounded': Icons.play_circle_rounded,
+      'self_improvement_rounded': Icons.self_improvement_rounded,
+      'bar_chart_rounded': Icons.bar_chart_rounded,
+      'insights_rounded': Icons.insights_rounded,
+      'military_tech_rounded': Icons.military_tech_rounded,
+      'local_fire_department_rounded': Icons.local_fire_department_rounded,
+      'lightbulb_rounded': Icons.lightbulb_rounded,
+      'fact_check_rounded': Icons.fact_check_rounded,
+      'search_rounded': Icons.search_rounded,
+      'touch_app_rounded': Icons.touch_app_rounded,
+      'zoom_out_map_rounded': Icons.zoom_out_map_rounded,
+      'mic_rounded': Icons.mic_rounded,
+      'audio_file_rounded': Icons.audio_file_rounded,
+      'qr_code_scanner_rounded': Icons.qr_code_scanner_rounded,
+      'groups_rounded': Icons.groups_rounded,
+      'edit_note_rounded': Icons.edit_note_rounded,
+      'share_rounded': Icons.share_rounded,
+      'view_week_rounded': Icons.view_week_rounded,
+      'add_circle_rounded': Icons.add_circle_rounded,
+      'home_rounded': Icons.home_rounded,
     };
     return m[name] ?? Icons.star_rounded;
   }
@@ -546,7 +582,11 @@ class _FeatureIntroSheet extends StatelessWidget {
     final primary = data.gradient[0];
     final isRTL = lang == 'ku' || lang == 'ar';
 
-    final gotIt = lang == 'ku' ? 'دەزانم، با بچینە ناو! 🚀' : lang == 'ar' ? 'فهمت، لنبدأ! 🚀' : 'Got it, let\'s go! 🚀';
+    final gotIt = lang == 'ku'
+        ? 'دەزانم، با بچینە ناو! 🚀'
+        : lang == 'ar'
+        ? 'فهمت، لنبدأ! 🚀'
+        : 'Got it, let\'s go! 🚀';
 
     return Directionality(
       textDirection: isRTL ? TextDirection.rtl : TextDirection.ltr,
@@ -555,15 +595,23 @@ class _FeatureIntroSheet extends StatelessWidget {
           color: surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         ),
-        padding: EdgeInsets.fromLTRB(24, 12, 24, MediaQuery.of(context).padding.bottom + 24),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          12,
+          24,
+          MediaQuery.of(context).padding.bottom + 24,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // Handle bar
             Container(
-              width: 36, height: 4,
+              width: 36,
+              height: 4,
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF3A3A3C) : const Color(0xFFE5E5EA),
+                color: isDark
+                    ? const Color(0xFF3A3A3C)
+                    : const Color(0xFFE5E5EA),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -571,11 +619,22 @@ class _FeatureIntroSheet extends StatelessWidget {
 
             // Icon header
             Container(
-              width: 72, height: 72,
+              width: 72,
+              height: 72,
               decoration: BoxDecoration(
-                gradient: LinearGradient(colors: data.gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
+                gradient: LinearGradient(
+                  colors: data.gradient,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.35), blurRadius: 16, offset: const Offset(0, 6))],
+                boxShadow: [
+                  BoxShadow(
+                    color: primary.withValues(alpha: 0.35),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
               child: Icon(data.icon, color: Colors.white, size: 36),
             ),
@@ -584,7 +643,11 @@ class _FeatureIntroSheet extends StatelessWidget {
             // Title
             Text(
               _t(data.title),
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: -0.5),
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.5,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
@@ -592,7 +655,11 @@ class _FeatureIntroSheet extends StatelessWidget {
             // Subtitle
             Text(
               _t(data.subtitle),
-              style: const TextStyle(fontSize: 15, color: Color(0xFF8E8E93), height: 1.5),
+              style: const TextStyle(
+                fontSize: 15,
+                color: Color(0xFF8E8E93),
+                height: 1.5,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 28),
@@ -600,7 +667,9 @@ class _FeatureIntroSheet extends StatelessWidget {
             // Bullets
             Container(
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF2F2F7),
+                color: isDark
+                    ? const Color(0xFF2C2C2E)
+                    : const Color(0xFFF2F2F7),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -611,22 +680,38 @@ class _FeatureIntroSheet extends StatelessWidget {
                   return Column(
                     children: [
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
                         child: Row(
                           children: [
                             Container(
-                              width: 36, height: 36,
+                              width: 36,
+                              height: 36,
                               decoration: BoxDecoration(
-                                gradient: LinearGradient(colors: data.gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
+                                gradient: LinearGradient(
+                                  colors: data.gradient,
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: Icon(_iconFromName(b['icon'] ?? ''), color: Colors.white, size: 18),
+                              child: Icon(
+                                _iconFromName(b['icon'] ?? ''),
+                                color: Colors.white,
+                                size: 18,
+                              ),
                             ),
                             const SizedBox(width: 14),
                             Expanded(
                               child: Text(
                                 _t(b),
-                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, height: 1.4),
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.4,
+                                ),
                               ),
                             ),
                           ],
@@ -636,7 +721,9 @@ class _FeatureIntroSheet extends StatelessWidget {
                         Divider(
                           height: 0,
                           indent: 66,
-                          color: isDark ? const Color(0xFF3A3A3C) : const Color(0xFFE5E5EA),
+                          color: isDark
+                              ? const Color(0xFF3A3A3C)
+                              : const Color(0xFFE5E5EA),
                           thickness: 0.5,
                         ),
                     ],
@@ -655,11 +742,19 @@ class _FeatureIntroSheet extends StatelessWidget {
                   backgroundColor: primary,
                   foregroundColor: Colors.white,
                   minimumSize: const Size(0, 54),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   elevation: 0,
                   shadowColor: Colors.transparent,
                 ),
-                child: Text(gotIt, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                child: Text(
+                  gotIt,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ),
           ],

@@ -21,11 +21,7 @@ class _StudentCoursesEnrollScreenState
       'teacherName': 'د. سارا محمد',
       'code': 'CS301',
     },
-    {
-      'courseName': 'داتابەیس',
-      'teacherName': 'د. سارا محمد',
-      'code': 'CS302',
-    },
+    {'courseName': 'داتابەیس', 'teacherName': 'د. سارا محمد', 'code': 'CS302'},
     {
       'courseName': 'ئەمنیەتی سایبەر',
       'teacherName': 'د. سارا محمد',
@@ -55,7 +51,12 @@ class _StudentCoursesEnrollScreenState
   ) async {
     setState(() => _isRequesting = true);
 
-    await db.requestEnrollment(studentName, studentEmail, courseName, teacherName);
+    await db.requestEnrollment(
+      studentName,
+      studentEmail,
+      courseName,
+      teacherName,
+    );
 
     // Simulate sending local notification to the teacher/student
     final notifyService = NotificationService();
@@ -69,8 +70,7 @@ class _StudentCoursesEnrollScreenState
       setState(() => _isRequesting = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(t('enroll_success'),
-              style: const TextStyle()),
+          content: Text(t('enroll_success'), style: const TextStyle()),
           backgroundColor: const Color(0xFF059669),
         ),
       );
@@ -93,8 +93,7 @@ class _StudentCoursesEnrollScreenState
       textDirection: lang.textDirection,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(t('course_enrollment'),
-              style: const TextStyle()),
+          title: Text(t('course_enrollment'), style: const TextStyle()),
           centerTitle: true,
           flexibleSpace: Container(
             decoration: const BoxDecoration(
@@ -117,9 +116,10 @@ class _StudentCoursesEnrollScreenState
             final code = course['code']!;
 
             // Find current enrollment status
-            final requests = db.enrollmentRequests.where((r) =>
-                r['studentEmail'] == studentEmail &&
-                r['courseName'] == cName);
+            final requests = db.enrollmentRequests.where(
+              (r) =>
+                  r['studentEmail'] == studentEmail && r['courseName'] == cName,
+            );
 
             final hasRequest = requests.isNotEmpty;
             final status = hasRequest ? requests.first['status'] as String : '';
@@ -155,7 +155,7 @@ class _StudentCoursesEnrollScreenState
                     color: Colors.black.withValues(alpha: 0.04),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
-                  )
+                  ),
                 ],
               ),
               child: Row(
@@ -164,8 +164,9 @@ class _StudentCoursesEnrollScreenState
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: (hasRequest ? statusColor : const Color(0xFF1565C0))
-                          .withValues(alpha: 0.1),
+                      color:
+                          (hasRequest ? statusColor : const Color(0xFF1565C0))
+                              .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(
@@ -188,7 +189,9 @@ class _StudentCoursesEnrollScreenState
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.5,
+                                ),
                               ),
                             ),
                           ],
@@ -203,15 +206,21 @@ class _StudentCoursesEnrollScreenState
                         const SizedBox(height: 3),
                         Row(
                           children: [
-                            Icon(Icons.person_outline_rounded,
-                                size: 14,
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                            Icon(
+                              Icons.person_outline_rounded,
+                              size: 14,
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               tName,
                               style: TextStyle(
                                 fontSize: 13,
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
                               ),
                             ),
                           ],
@@ -223,12 +232,16 @@ class _StudentCoursesEnrollScreenState
                   // Action Button or Status Chip
                   if (hasRequest)
                     Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: statusColor.withValues(alpha: 0.2)),
+                        border: Border.all(
+                          color: statusColor.withValues(alpha: 0.2),
+                        ),
                       ),
                       child: Text(
                         statusLabel,
@@ -244,13 +257,13 @@ class _StudentCoursesEnrollScreenState
                       onPressed: _isRequesting
                           ? null
                           : () => _enrollRequest(
-                                cName,
-                                tName,
-                                studentName,
-                                studentEmail,
-                                db,
-                                t,
-                              ),
+                              cName,
+                              tName,
+                              studentName,
+                              studentEmail,
+                              db,
+                              t,
+                            ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF1565C0),
                         foregroundColor: Colors.white,
@@ -258,7 +271,9 @@ class _StudentCoursesEnrollScreenState
                           borderRadius: BorderRadius.circular(12),
                         ),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 8),
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
                       ),
                       child: Text(
                         t('request_enrollment'),

@@ -43,7 +43,9 @@ class ReminderModel {
     return ReminderModel(
       id: map['id'] ?? '',
       title: map['title'] ?? '',
-      deadline: DateTime.parse(map['deadline'] ?? DateTime.now().toIso8601String()),
+      deadline: DateTime.parse(
+        map['deadline'] ?? DateTime.now().toIso8601String(),
+      ),
       courseName: map['courseName'] ?? '',
       isCompleted: map['isCompleted'] ?? false,
     );

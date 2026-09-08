@@ -12,7 +12,8 @@ import '../models/lecture_model.dart';
 import '../models/announcement_model.dart';
 import 'database_service.dart';
 
-class SupabaseDatabaseService extends ChangeNotifier implements DatabaseService {
+class SupabaseDatabaseService extends ChangeNotifier
+    implements DatabaseService {
   SupabaseClient get _supabase => Supabase.instance.client;
 
   final List<NoteModel> _notes = [];
@@ -68,7 +69,8 @@ class SupabaseDatabaseService extends ChangeNotifier implements DatabaseService 
   void _listenToAuthChanges() {
     _supabase.auth.onAuthStateChange.listen((data) {
       final event = data.event;
-      if (event == AuthChangeEvent.signedIn || event == AuthChangeEvent.tokenRefreshed) {
+      if (event == AuthChangeEvent.signedIn ||
+          event == AuthChangeEvent.tokenRefreshed) {
         loadData();
       } else if (event == AuthChangeEvent.signedOut) {
         _notes.clear();
@@ -138,7 +140,9 @@ class SupabaseDatabaseService extends ChangeNotifier implements DatabaseService 
             id: item['id'].toString(),
             title: item['title'] ?? '',
             content: item['content'] ?? '',
-            createdAt: item['created_at'] != null ? DateTime.parse(item['created_at']) : DateTime.now(),
+            createdAt: item['created_at'] != null
+                ? DateTime.parse(item['created_at'])
+                : DateTime.now(),
             isAiFormatted: item['is_ai_formatted'] ?? false,
             courseName: item['course_name'],
           ),
@@ -158,7 +162,9 @@ class SupabaseDatabaseService extends ChangeNotifier implements DatabaseService 
           ReminderModel(
             id: item['id'].toString(),
             title: item['title'] ?? '',
-            deadline: item['deadline'] != null ? DateTime.parse(item['deadline']) : DateTime.now(),
+            deadline: item['deadline'] != null
+                ? DateTime.parse(item['deadline'])
+                : DateTime.now(),
             courseName: item['course_name'],
             isCompleted: item['is_completed'] ?? false,
           ),
@@ -179,11 +185,7 @@ class SupabaseDatabaseService extends ChangeNotifier implements DatabaseService 
             final b = (item['back_text'] ?? item['back'] ?? '').toString();
             if (f.isNotEmpty || b.isNotEmpty) {
               _flashcards.add(
-                FlashcardModel(
-                  id: item['id'].toString(),
-                  front: f,
-                  back: b,
-                ),
+                FlashcardModel(id: item['id'].toString(), front: f, back: b),
               );
             }
           }
@@ -228,11 +230,14 @@ class SupabaseDatabaseService extends ChangeNotifier implements DatabaseService 
     }
 
     try {
-      await _supabase.from('notes').update({
-        'title': note.title,
-        'content': note.content,
-        'is_ai_formatted': note.isAiFormatted,
-      }).eq('id', note.id);
+      await _supabase
+          .from('notes')
+          .update({
+            'title': note.title,
+            'content': note.content,
+            'is_ai_formatted': note.isAiFormatted,
+          })
+          .eq('id', note.id);
     } catch (_) {}
   }
 
@@ -274,16 +279,19 @@ class SupabaseDatabaseService extends ChangeNotifier implements DatabaseService 
     _saveFlashcardsToLocal();
 
     if (uid != null) {
-      _supabase.from('flashcards').insert({
-        'creator_id': uid,
-        'front_text': card.front,
-        'back_text': card.back,
-        'deck_name': 'General',
-        'is_public': true,
-      }).catchError((e) {
-        debugPrint('Background Supabase insert flashcard error: $e');
-        return null;
-      });
+      _supabase
+          .from('flashcards')
+          .insert({
+            'creator_id': uid,
+            'front_text': card.front,
+            'back_text': card.back,
+            'deck_name': 'General',
+            'is_public': true,
+          })
+          .catchError((e) {
+            debugPrint('Background Supabase insert flashcard error: $e');
+            return null;
+          });
     }
   }
 
@@ -295,7 +303,9 @@ class SupabaseDatabaseService extends ChangeNotifier implements DatabaseService 
     _saveFlashcardsToLocal();
 
     if (uid != null) {
-      _supabase.from('flashcards').delete().eq('creator_id', uid).catchError((e) {
+      _supabase.from('flashcards').delete().eq('creator_id', uid).catchError((
+        e,
+      ) {
         debugPrint('Background Supabase clear flashcards error: $e');
         return null;
       });
@@ -325,12 +335,17 @@ class SupabaseDatabaseService extends ChangeNotifier implements DatabaseService 
   Future<void> toggleReminder(String id) async {
     final index = _reminders.indexWhere((r) => r.id == id);
     if (index != -1) {
-      final updated = _reminders[index].copyWith(isCompleted: !_reminders[index].isCompleted);
+      final updated = _reminders[index].copyWith(
+        isCompleted: !_reminders[index].isCompleted,
+      );
       _reminders[index] = updated;
       notifyListeners();
 
       try {
-        await _supabase.from('reminders').update({'is_completed': updated.isCompleted}).eq('id', id);
+        await _supabase
+            .from('reminders')
+            .update({'is_completed': updated.isCompleted})
+            .eq('id', id);
       } catch (_) {}
     }
   }
@@ -370,7 +385,12 @@ class SupabaseDatabaseService extends ChangeNotifier implements DatabaseService 
   }
 
   @override
-  Future<void> requestEnrollment(String studentName, String studentEmail, String courseName, String teacherName) async {
+  Future<void> requestEnrollment(
+    String studentName,
+    String studentEmail,
+    String courseName,
+    String teacherName,
+  ) async {
     await Future.delayed(const Duration(milliseconds: 300));
     _enrollmentRequests.add({
       'id': 'req_${DateTime.now().millisecondsSinceEpoch}',
