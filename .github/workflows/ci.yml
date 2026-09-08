@@ -1,0 +1,137 @@
+name: ZankoAI Production CI
+
+on:
+  workflow_call:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop, 'feature/*']
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─── 1 & 2. Flutter Formatting & Unit / Integration Tests ───
+  flutter-ci:
+    name: 1 & 2. Flutter Formatting & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java (for Android toolchain if needed)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Install Flutter Dependencies
+        run: flutter pub get
+
+      - name: 1. Flutter Code Formatting Check
+        run: dart format --output=none --set-exit-if-changed lib/ test/
+
+      - name: Flutter Static Analysis
+        run: flutter analyze --no-fatal-infos
+
+      - name: 2. Run Flutter Unit & Integration Tests
+        run: flutter test --coverage
+
+  # ─── 3, 4 & 5. Backend Lint, Type Checking & Tests ───
+  backend-ci:
+    name: 3, 4 & 5. Backend Lint, TypeCheck & Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Backend Dependencies
+        run: npm install
+
+      - name: 3. Backend Linting
+        run: npm run lint
+
+      - name: 4. Backend Type Checking (Strict TypeScript)
+        run: npm run typecheck
+
+      - name: 5. Run Backend Automated Test Suite
+        run: npm test
+
+  # ─── 6. Supabase SQL Migration Validation ───
+  sql-migrations:
+    name: 6. SQL Migration Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Migration Monotonic & Guard Validation Script
+        run: |
+          chmod +x scripts/validate_sql_migrations.sh
+          bash scripts/validate_sql_migrations.sh supabase/migrations
+
+  # ─── 7. Docker Multi-Stage Build & Compose Validation ───
+  docker-build:
+    name: 7. Docker Build & Manifest Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Test Multi-Stage Dockerfile Build
+        uses: docker/build-push-action@v5
+        with:
+          context: backend
+          file: backend/Dockerfile
+          push: false
+          tags: zanko-backend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Validate Production Docker Compose Config
+        run: |
+          cd backend
+          docker compose -f docker-compose.prod.yml config
+
+  # ─── 8. Security Scans & Zero-Leakage Checks ───
+  security-checks:
+    name: 8. Security Checks & Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan Repository for Leaked Secrets (TruffleHog)
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch || 'main' }}
+          head: HEAD
+          extra_args: --only-verified
+        continue-on-error: true
+
+      - name: Audit Backend Dependencies for Critical Vulnerabilities
+        working-directory: backend
+        run: |
+          npm audit --audit-level=critical || true

@@ -1,0 +1,196 @@
+name: ZankoAI Production Deployment
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  # ─── 1. Prerequisite CI Gate ───
+  verify-ci:
+    name: Verify Complete CI Suite
+    uses: ./.github/workflows/ci.yml
+
+  # ─── 2. Production Deployment to DigitalOcean ───
+  deploy:
+    name: Deploy to DigitalOcean (api.zankoai.com)
+    needs: [verify-ci]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Check DigitalOcean Deployment Credentials
+        id: check_ssh
+        run: |
+          if [ -z "${{ secrets.DO_SSH_PRIVATE_KEY }}" ] || [ -z "${{ secrets.DO_DROPLET_HOST }}" ]; then
+            echo "configured=false" >> $GITHUB_OUTPUT
+            echo "⚠️ Notice: DO_SSH_PRIVATE_KEY or DO_DROPLET_HOST is not yet configured in GitHub Secrets."
+            echo "   Droplet remote deployment step skipped safely. Configure secrets to enable auto-deployment."
+          else
+            echo "configured=true" >> $GITHUB_OUTPUT
+            echo "✅ DigitalOcean credentials detected. Proceeding with droplet deployment."
+          fi
+
+      - name: Set up SSH Private Key
+        if: steps.check_ssh.outputs.configured == 'true'
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DO_SSH_PRIVATE_KEY }}
+
+      - name: Deploy Code & Inject Backend Secrets
+        if: steps.check_ssh.outputs.configured == 'true'
+        env:
+          HOST: ${{ secrets.DO_DROPLET_HOST }}
+          USER: ${{ secrets.DO_SSH_USER || 'zanko_deploy' }}
+          # Category 1: Supabase Secrets (Backend Server Keys)
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_JWT_SECRET: ${{ secrets.SUPABASE_JWT_SECRET }}
+          # Category 2: AI Provider Keys (Backend Only)
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Category 3: Payment Provider Keys (Backend Only)
+          FIB_CLIENT_ID: ${{ secrets.FIB_CLIENT_ID }}
+          FIB_CLIENT_SECRET: ${{ secrets.FIB_CLIENT_SECRET }}
+          ZAINCASH_MSISDN: ${{ secrets.ZAINCASH_MSISDN }}
+          ZAINCASH_MERCHANT_ID: ${{ secrets.ZAINCASH_MERCHANT_ID }}
+          ZAINCASH_SECRET: ${{ secrets.ZAINCASH_SECRET }}
+          # Infrastructure Secrets
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+        run: |
+          ssh -o StrictHostKeyChecking=no "${USER}@${HOST}" "bash -s" << 'EOF'
+            set -euo pipefail
+            APP_DIR="/var/www/zankoAI"
+            cd "${APP_DIR}"
+
+            echo "📥 Fetching latest production release from git..."
+            git fetch origin main
+            git checkout main
+            git pull origin main
+
+            echo "🔐 Backing up previous environment and injecting production secrets..."
+            if [ -f "backend/.env.production" ]; then
+              cp "backend/.env.production" "backend/.env.production.bak"
+            fi
+
+            cat << 'ENV_EOF' > backend/.env.production
+          NODE_ENV=production
+          PORT=4000
+          CORS_ORIGIN=https://zanko-admin.vercel.app,https://zankoai.com,https://www.zankoai.com
+
+          # Supabase Infrastructure
+          SUPABASE_URL=${SUPABASE_URL}
+          SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+          SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+          SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET}
+
+          # Redis Cache & Queue
+          REDIS_HOST=redis
+          REDIS_PORT=6379
+          REDIS_PASSWORD=${REDIS_PASSWORD}
+
+          # AI Providers
+          DEFAULT_AI_PROVIDER=google
+          GEMINI_API_KEY=${GEMINI_API_KEY}
+          GEMINI_MODEL=gemini-2.5-flash
+          OPENAI_API_KEY=${OPENAI_API_KEY}
+          OPENAI_MODEL=gpt-4o-mini
+          ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+          ANTHROPIC_MODEL=claude-3-5-haiku-20241022
+          AI_TIMEOUT_MS=30000
+          AI_MAX_RETRIES=2
+
+          # Payment Gateways (FIB & ZainCash)
+          FIB_CLIENT_ID=${FIB_CLIENT_ID}
+          FIB_CLIENT_SECRET=${FIB_CLIENT_SECRET}
+          ZAINCASH_MSISDN=${ZAINCASH_MSISDN}
+          ZAINCASH_MERCHANT_ID=${ZAINCASH_MERCHANT_ID}
+          ZAINCASH_SECRET=${ZAINCASH_SECRET}
+
+          # Backup & Encryption
+          BACKUP_ENCRYPTION_KEY=${BACKUP_ENCRYPTION_KEY}
+          ENV_EOF
+
+            # Set strict permissions on injected secrets file
+            chmod 600 backend/.env.production
+
+            echo "🚀 Launching rolling update via Docker Compose..."
+            chmod +x deploy/deploy.sh
+            ./deploy/deploy.sh
+          EOF
+
+  # ─── 3. Post-Deployment Production Health Verification & Auto-Rollback ───
+  health-check-and-rollback:
+    name: Production Health Verification & Auto-Rollback
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    if: needs.deploy.result == 'success'
+    steps:
+      - name: Check DigitalOcean SSH Credentials
+        id: check_ssh
+        run: |
+          if [ -z "${{ secrets.DO_SSH_PRIVATE_KEY }}" ] || [ -z "${{ secrets.DO_DROPLET_HOST }}" ]; then
+            echo "configured=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ Droplet deployment was skipped; skipping health verification and rollback."
+          else
+            echo "configured=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up SSH for Potential Rollback
+        if: steps.check_ssh.outputs.configured == 'true'
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DO_SSH_PRIVATE_KEY }}
+
+      - name: Probe Live Endpoints (api.zankoai.com)
+        if: steps.check_ssh.outputs.configured == 'true'
+        id: probe
+        run: |
+          DOMAIN="https://api.zankoai.com"
+          MAX_RETRIES=6
+          DELAY=10
+          SUCCESS=false
+
+          echo "🔍 Probing ${DOMAIN}/api/health and ${DOMAIN}/api/ready..."
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i of $MAX_RETRIES..."
+            HEALTH_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${DOMAIN}/api/health" || true)
+            READY_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${DOMAIN}/api/ready" || true)
+
+            if [ "$HEALTH_CODE" -eq 200 ] && [ "$READY_CODE" -eq 200 ]; then
+              echo "✅ Health check PASSED: /api/health (${HEALTH_CODE}), /api/ready (${READY_CODE})"
+              SUCCESS=true
+              break
+            fi
+
+            echo "Pending readiness (Health: $HEALTH_CODE, Ready: $READY_CODE). Waiting ${DELAY}s..."
+            sleep $DELAY
+          done
+
+          if [ "$SUCCESS" != true ]; then
+            echo "❌ Health check failed after $MAX_RETRIES attempts!"
+            exit 1
+          fi
+
+      - name: Execute Automated Rollback on Health Failure
+        if: steps.check_ssh.outputs.configured == 'true' && failure()
+        env:
+          HOST: ${{ secrets.DO_DROPLET_HOST }}
+          USER: ${{ secrets.DO_SSH_USER || 'zanko_deploy' }}
+        run: |
+          echo "🚨 Triggering automated rollback on DigitalOcean Droplet..."
+          ssh -o StrictHostKeyChecking=no "${USER}@${HOST}" "bash -s" << 'EOF'
+            set -euo pipefail
+            cd /var/www/zankoAI
+            chmod +x deploy/rollback_deployment.sh
+            ./deploy/rollback_deployment.sh
+          EOF
+          echo "⚠️ Production instance rolled back to previous stable release."
+          exit 1
