@@ -200,3 +200,21 @@ export const pdfAiQueue = pdfQueue;
 export const ocrAiQueue = ocrQueue;
 export const audioTranscriptionQueue = audioQueue;
 export const fileProcessingQueue = pdfQueue;
+
+/**
+ * Closes all BullMQ queues cleanly for graceful shutdown.
+ */
+export async function closeAllQueues(): Promise<void> {
+  const queueNames = Object.keys(allQueues) as QueueName[];
+  logger.info(`Shutting down ${queueNames.length} BullMQ queues...`);
+  await Promise.all(
+    queueNames.map(async (name) => {
+      try {
+        await allQueues[name].close();
+        logger.info(`Queue [${name}] closed successfully.`);
+      } catch (err: any) {
+        logger.error(`Error closing queue [${name}]: ${err.message}`);
+      }
+    })
+  );
+}

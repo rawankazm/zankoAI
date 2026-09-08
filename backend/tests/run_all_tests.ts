@@ -221,6 +221,12 @@ const main = async () => {
   await import('./production_notification.test.js').catch(async () => {
     await import('./production_notification.test.ts' as any);
   });
+
+  // Run Production Monitoring and Logging Suite
+  console.log('📈 Launching Production Monitoring & Logging Suite...\n');
+  await import('./production_monitoring.test.js').catch(async () => {
+    await import('./production_monitoring.test.ts' as any);
+  });
 };
 
 main().catch((err) => {

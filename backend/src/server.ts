@@ -3,6 +3,7 @@ import { env } from './config/env.js';
 import { logger } from './config/logger.js';
 import { checkSupabaseHealth } from './config/supabase.js';
 import { redis, checkRedisHealth } from './config/redis.js';
+import { closeAllQueues } from './queues/unified_queues.js';
 
 const startServer = async () => {
   try {
@@ -36,15 +37,25 @@ const startServer = async () => {
     });
 
     // ─── Graceful Shutdown Handler ───
+    let isShuttingDown = false;
     const handleShutdown = (signal: string) => {
+      if (isShuttingDown) return;
+      isShuttingDown = true;
       logger.info(`🛑 Received ${signal}. Starting graceful shutdown...`);
 
       // 1. Stop taking new requests
       server.close(async () => {
-        logger.info('✅ HTTP server closed. Closing external connections...');
+        logger.info('✅ HTTP server closed. Closing queue connections and external resources...');
 
         try {
-          // 2. Disconnect Redis
+          // 2. Cleanly close all BullMQ queues
+          await closeAllQueues();
+        } catch (err) {
+          logger.error('Error closing BullMQ queues:', err);
+        }
+
+        try {
+          // 3. Disconnect Redis
           await redis.quit();
           logger.info('✅ Redis connection closed.');
         } catch (err) {

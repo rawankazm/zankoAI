@@ -5,6 +5,7 @@ import { env } from './config/env.js';
 import { corsOptions, SECURITY_LIMITS } from './config/security.js';
 import { apiRouter } from './routes/index.js';
 import { healthRoutes } from './routes/health.routes.js';
+import { requestLogger } from './middleware/request_logger.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { rateLimiter } from './middleware/rateLimiter.js';
 import { sanitizeInput } from './middleware/sanitization.js';
@@ -12,6 +13,9 @@ import { NotFoundError } from './utils/apiError.js';
 
 export const createApp = (): Express => {
   const app = express();
+
+  // ─── 0. Structured JSON Request Tracing & Production Latency Logger ───
+  app.use(requestLogger);
 
   // ─── 1. Core Security & Fingerprint Reduction ───
   app.disable('x-powered-by');
