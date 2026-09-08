@@ -35,3 +35,7 @@ web-build/
 # Local env
 .env*.local
 .env
+.env.production
+.env.*
+!.env.example
+!.env.production.example

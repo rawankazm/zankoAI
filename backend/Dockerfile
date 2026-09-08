@@ -30,7 +30,10 @@ RUN npm ci --only=production && npm cache clean --force
 # Copy compiled JavaScript output
 COPY --from=builder /app/dist ./dist
 
-# Create a non-root user for security
+# Install curl for robust Docker container healthchecks
+RUN apk add --no-cache curl
+
+# Run as non-root user for security
 USER node
 
 # Default port

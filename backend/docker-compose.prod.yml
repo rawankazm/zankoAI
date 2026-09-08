@@ -1,0 +1,134 @@
+# ==============================================================================
+# ZankoAI Production Multi-Container Orchestration Manifest
+# DigitalOcean Ubuntu Droplet — api.zankoai.com
+# ==============================================================================
+
+version: '3.8'
+
+services:
+  # ─── 1. Public Nginx Reverse Proxy (Front-Facing, SSL/TLS Termination) ───
+  nginx:
+    image: nginx:alpine
+    container_name: zanko_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    networks:
+      - zanko_network
+
+  # ─── 2. Internal Node.js API Service (Private, ZERO Direct Public Exposure) ───
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zanko_api
+    restart: unless-stopped
+    expose:
+      - "4000"
+    # Note: NO "ports:" directive! Port 4000 is unreachable from public internet.
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    networks:
+      - zanko_network
+
+  # ─── 3. Background BullMQ Queue Worker (Private, ZERO Direct Public Exposure) ──
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zanko_worker
+    restart: unless-stopped
+    command: ["npm", "run", "start:worker"]
+    # Note: NO "ports:" directive!
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    networks:
+      - zanko_network
+
+  # ─── 4. Redis In-Memory Cache & Queue (Private, Authenticated, Persistent) ────
+  redis:
+    image: redis:7-alpine
+    container_name: zanko_redis
+    restart: unless-stopped
+    # Note: NO "ports:" directive! Port 6379 is unreachable from public internet.
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --requirepass ${REDIS_PASSWORD:-zanko_production_vault_redis_password_2026}
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_prod_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-zanko_production_vault_redis_password_2026}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+    networks:
+      - zanko_network
+
+volumes:
+  redis_prod_data:
+    driver: local
+
+networks:
+  zanko_network:
+    driver: bridge
