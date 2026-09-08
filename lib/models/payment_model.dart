@@ -4,6 +4,8 @@
 
 enum PaymentStatusType { pending, paid, failed, cancelled, refunded }
 
+typedef PaymentModel = PaymentRecordModel;
+
 class PaymentRecordModel {
   final String id;
   final String userId;

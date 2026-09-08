@@ -2,6 +2,8 @@
 // ZankoAI Premium Subscription Models
 // ==============================================================================
 
+typedef SubscriptionModel = UserSubscriptionModel;
+
 /// Subscription Plans supported in ZankoAI
 enum SubscriptionPlanType {
   free,
@@ -153,34 +155,47 @@ class UserSubscriptionModel {
           status == SubscriptionStatusType.trialing) &&
       (currentPeriodEnd == null || currentPeriodEnd!.isAfter(DateTime.now()));
 
+  bool get isActive =>
+      hasActiveSubscription ||
+      isPremium ||
+      status == SubscriptionStatusType.active ||
+      status == SubscriptionStatusType.trialing;
+
+  SubscriptionPlanType get planType => plan;
+
   bool get isExpired =>
       status == SubscriptionStatusType.expired ||
       (currentPeriodEnd != null && currentPeriodEnd!.isBefore(DateTime.now()));
 
   factory UserSubscriptionModel.fromJson(Map<String, dynamic> json) {
+    final rawPlan = (json['plan_type'] ?? json['plan'] ?? 'FREE').toString();
+    final rawStatus = (json['status'] ?? 'expired').toString();
+    final rawIsActive = json['is_active'] == true ||
+        json['hasActiveSubscription'] == true ||
+        rawStatus.toLowerCase() == 'active';
+    final rawIsPremium = json['is_premium'] == true ||
+        json['isPremium'] == true ||
+        rawPlan.toUpperCase().contains('PREMIUM');
+
     return UserSubscriptionModel(
-      hasActiveSubscription: json['hasActiveSubscription'] == true,
-      isPremium: json['isPremium'] == true,
-      plan: SubscriptionPlanTypeExt.fromString(
-        (json['plan'] ?? 'FREE').toString(),
-      ),
-      status: SubscriptionStatusTypeExt.fromString(
-        (json['status'] ?? 'expired').toString(),
-      ),
-      currentPeriodStart: json['currentPeriodStart'] != null
-          ? DateTime.tryParse(json['currentPeriodStart'].toString())
+      hasActiveSubscription: rawIsActive,
+      isPremium: rawIsPremium,
+      plan: SubscriptionPlanTypeExt.fromString(rawPlan),
+      status: SubscriptionStatusTypeExt.fromString(rawStatus),
+      currentPeriodStart: json['currentPeriodStart'] != null || json['current_period_start'] != null
+          ? DateTime.tryParse((json['currentPeriodStart'] ?? json['current_period_start']).toString())
           : null,
-      currentPeriodEnd: json['currentPeriodEnd'] != null
-          ? DateTime.tryParse(json['currentPeriodEnd'].toString())
+      currentPeriodEnd: json['currentPeriodEnd'] != null || json['current_period_end'] != null
+          ? DateTime.tryParse((json['currentPeriodEnd'] ?? json['current_period_end']).toString())
           : null,
-      cancelAtPeriodEnd: json['cancelAtPeriodEnd'] == true,
-      inGracePeriod: json['inGracePeriod'] == true,
-      gracePeriodEnd: json['gracePeriodEnd'] != null
-          ? DateTime.tryParse(json['gracePeriodEnd'].toString())
+      cancelAtPeriodEnd: json['cancelAtPeriodEnd'] == true || json['cancel_at_period_end'] == true,
+      inGracePeriod: json['inGracePeriod'] == true || json['in_grace_period'] == true,
+      gracePeriodEnd: json['gracePeriodEnd'] != null || json['grace_period_end'] != null
+          ? DateTime.tryParse((json['gracePeriodEnd'] ?? json['grace_period_end']).toString())
           : null,
-      autoRenew: json['autoRenew'] == true,
-      provider: json['provider']?.toString(),
-      daysRemaining: (json['daysRemaining'] as num?)?.toInt() ?? 0,
+      autoRenew: json['autoRenew'] == true || json['auto_renew'] == true,
+      provider: (json['provider'])?.toString(),
+      daysRemaining: ((json['daysRemaining'] ?? json['days_remaining']) as num?)?.toInt() ?? 0,
     );
   }
 

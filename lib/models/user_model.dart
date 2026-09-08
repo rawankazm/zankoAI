@@ -17,6 +17,7 @@ class UserModel {
   final DateTime? vipExpiry;
   final String status; // 'active' | 'suspended' | 'deleted' | 'pending'
 
+  String get fullName => name;
   bool get isSuspended => status.toLowerCase() == 'suspended';
   bool get isGuest =>
       id.startsWith('guest_') ||
@@ -187,4 +188,8 @@ class UserModel {
       status: (map['status'] ?? 'active').toString(),
     );
   }
+
+  factory UserModel.fromJson(Map<String, dynamic> json) => UserModel.fromMap(json);
+
+  Map<String, dynamic> toJson() => toMap();
 }

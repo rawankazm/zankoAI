@@ -34,6 +34,9 @@ class FlashcardModel {
   bool get isDue =>
       nextReviewAt == null || DateTime.now().isAfter(nextReviewAt!);
 
+  String get question => front;
+  String get answer => back;
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -62,8 +65,8 @@ class FlashcardModel {
 
     return FlashcardModel(
       id: (map['id'] ?? '').toString(),
-      front: (map['front_text'] ?? map['front'] ?? '').toString(),
-      back: (map['back_text'] ?? map['back'] ?? '').toString(),
+      front: (map['question'] ?? map['front_text'] ?? map['front'] ?? '').toString(),
+      back: (map['answer'] ?? map['back_text'] ?? map['back'] ?? '').toString(),
       deckName: (map['deck_name'] ?? map['deckName'] ?? 'General').toString(),
       courseId: map['course_id']?.toString(),
       source: (map['source_type'] ?? map['source'] ?? 'manual').toString(),
@@ -80,4 +83,6 @@ class FlashcardModel {
 
   factory FlashcardModel.fromJson(Map<String, dynamic> json) =>
       FlashcardModel.fromMap(json);
+
+  Map<String, dynamic> toJson() => toMap();
 }

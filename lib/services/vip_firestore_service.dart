@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -326,6 +327,97 @@ class VipFirestoreService {
     }
 
     return 30;
+  }
+
+  /// Fetches authoritative payment configuration (numbers, accounts, prices)
+  /// directly from Firestore `config/payment_config` where `zanko-admin.vercel.app` writes.
+  static Future<Map<String, dynamic>?> getPaymentConfig() async {
+    try {
+      final dio = Dio(BaseOptions(
+        connectTimeout: const Duration(seconds: 6),
+        receiveTimeout: const Duration(seconds: 6),
+      ));
+      final resp = await dio.get<Map<String, dynamic>>(
+        'https://firestore.googleapis.com/v1/projects/$_firebaseProjectId/databases/(default)/documents/config/payment_config',
+      );
+      if (resp.statusCode == 200 && resp.data != null) {
+        final fields = resp.data!['fields'] as Map<String, dynamic>? ?? {};
+        final config = <String, dynamic>{};
+
+        for (final entry in fields.entries) {
+          final val = entry.value;
+          if (val is Map) {
+            if (val.containsKey('stringValue')) {
+              config[entry.key] = val['stringValue'];
+            } else if (val.containsKey('integerValue')) {
+              config[entry.key] = int.tryParse(val['integerValue'].toString()) ?? val['integerValue'];
+            } else if (val.containsKey('doubleValue')) {
+              config[entry.key] = double.tryParse(val['doubleValue'].toString()) ?? val['doubleValue'];
+            } else if (val.containsKey('booleanValue')) {
+              config[entry.key] = val['booleanValue'];
+            }
+          } else {
+            config[entry.key] = val;
+          }
+        }
+        return config;
+      }
+    } catch (e) {
+      debugPrint('Notice fetching Firestore payment config: $e');
+    }
+    return null;
+  }
+
+  /// Updates payment numbers in Firestore `config/payment_config` so they
+  /// immediately reflect in both `zanko-admin.vercel.app` and mobile app clients.
+  static Future<bool> savePaymentConfig({
+    required String whatsapp,
+    required String telegram,
+    required String fib,
+    required String fastpay,
+    required String zaincash,
+  }) async {
+    try {
+      final tokenData = await _getFirebaseAuthToken(userEmail: 'admin@zanko.edu');
+      final idToken = tokenData?['idToken'];
+
+      final dio = Dio(BaseOptions(
+        connectTimeout: const Duration(seconds: 8),
+        receiveTimeout: const Duration(seconds: 8),
+      ));
+
+      final url = 'https://firestore.googleapis.com/v1/projects/$_firebaseProjectId/databases/(default)/documents/config/payment_config'
+          '?updateMask.fieldPaths=whatsappNumber'
+          '&updateMask.fieldPaths=telegramUsername'
+          '&updateMask.fieldPaths=fibNumber'
+          '&updateMask.fieldPaths=fastPayNumber'
+          '&updateMask.fieldPaths=zainCashNumber'
+          '&updateMask.fieldPaths=updatedAt';
+
+      final resp = await dio.patch(
+        url,
+        options: Options(
+          headers: {
+            if (idToken != null) 'Authorization': 'Bearer $idToken',
+            'Content-Type': 'application/json',
+          },
+        ),
+        data: {
+          'fields': {
+            'whatsappNumber': {'stringValue': whatsapp},
+            'telegramUsername': {'stringValue': telegram},
+            'fibNumber': {'stringValue': fib},
+            'fastPayNumber': {'stringValue': fastpay},
+            'zainCashNumber': {'stringValue': zaincash},
+            'updatedAt': {'timestampValue': DateTime.now().toUtc().toIso8601String()},
+          },
+        },
+      );
+      return resp.statusCode == 200;
+    } catch (e) {
+      debugPrint('Notice saving Firestore payment config: $e');
+      return false;
+    }
   }
 
   /// Submits a VIP upgrade request to Firestore `vip_requests` collection

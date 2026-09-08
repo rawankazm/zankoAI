@@ -33,8 +33,9 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
 
   String _whatsappNumber = '07509987345';
   String _telegramUsername = 'rawankurdi';
-  String _fibNumber = 'FIB-ZANKO-9090';
-  String _fastPayNumber = '0750 789 9090';
+  String _fibNumber = '07509987345';
+  String _fastPayNumber = '07509987345';
+  String _zainCashNumber = '07509987345';
 
   int _price1Month = 5000;
   int _price3Months = 12000;
@@ -152,6 +153,15 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
           _fastPayNumber = fastpay.toString().trim();
         }
 
+        final zaincash =
+            data['zainCashNumber'] ??
+            data['zaincash'] ??
+            data['zainCash'] ??
+            data['zaincash_number'];
+        if (zaincash != null && zaincash.toString().trim().isNotEmpty) {
+          _zainCashNumber = zaincash.toString().trim();
+        }
+
         final p1 =
             data['monthlyVipPrice'] ??
             data['price_1_month'] ??
@@ -172,6 +182,16 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
       });
     }
 
+    // 1. Fetch authoritative config from Firestore (which zanko-admin.vercel.app updates)
+    VipFirestoreService.getPaymentConfig().then((fsData) {
+      if (fsData != null && mounted) {
+        parseData(fsData);
+      }
+    }).catchError((e) {
+      debugPrint('Firestore payment config fetch notice: $e');
+    });
+
+    // 2. Also check Supabase config table as fallback
     Supabase.instance.client
         .from('config')
         .select()
@@ -379,17 +399,22 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
 
     return Directionality(
       textDirection: lang.textDirection,
-      child: Container(
-        decoration: BoxDecoration(
-          color: isDark ? ZankoColors.darkCard : Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        ),
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 16,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-        ),
+      child: SafeArea(
+        top: true,
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.94,
+          ),
+          decoration: BoxDecoration(
+            color: isDark ? ZankoColors.darkCard : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 16,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -655,7 +680,9 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'ژمارەکانی پارەدان (FastPay, FIB)',
+                                _zainCashNumber.isNotEmpty
+                                    ? 'ژمارەکانی پارەدان (FastPay, FIB, ZainCash)'
+                                    : 'ژمارەکانی پارەدان (FastPay, FIB)',
                                 style: TextStyle(
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w700,
@@ -697,6 +724,16 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
                               icon: Icons.account_balance_rounded,
                               isDark: isDark,
                             ),
+                            if (_zainCashNumber.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              _buildPaymentRow(
+                                title: 'ZainCash',
+                                number: _zainCashNumber,
+                                color: const Color(0xFF7C3AED),
+                                icon: Icons.phone_android_rounded,
+                                isDark: isDark,
+                              ),
+                            ],
                             const SizedBox(height: 8),
                             Text(
                               '📌 دوای ناردنی پارەکە، لە خوارەوە لە ڕێگەی واتسئاپ یان تەلەگرام وێنەی وەسڵەکە بنێرە.',
@@ -926,7 +963,8 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   // ── Plan Card Widget ───────────────────────────────────────────────────────
