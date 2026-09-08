@@ -3,6 +3,7 @@ import { AppError } from '../utils/apiError.js';
 import { ResponseFormatter } from '../utils/apiResponse.js';
 import { logger } from '../config/logger.js';
 import { env } from '../config/env.js';
+import { AiCostGuardService } from '../services/ai_cost_guard.service.js';
 
 export const errorHandler = (
   err: Error,
@@ -12,32 +13,36 @@ export const errorHandler = (
 ): void => {
   const isProduction = env.NODE_ENV === 'production';
 
+  // Sanitize all error messages and stacks to prevent any API key or secret leakage
+  const safeMessage = AiCostGuardService.sanitizeSecrets(err.message || '');
+  const safeStack = err.stack ? AiCostGuardService.sanitizeSecrets(err.stack) : undefined;
+
   // 1. Known Operational AppErrors
   if (err instanceof AppError) {
     if (err.statusCode >= 500) {
-      logger.error(`[AppError ${err.statusCode}] ${err.message}`, {
+      logger.error(`[AppError ${err.statusCode}] ${safeMessage}`, {
         url: req.originalUrl,
         method: req.method,
         code: err.code,
-        stack: err.stack,
+        stack: safeStack,
       });
 
       // In production, mask internal 500 messages
-      const clientMessage = isProduction ? 'An unexpected server error occurred' : err.message;
+      const clientMessage = isProduction ? 'An unexpected server error occurred' : safeMessage;
       const clientDetails = isProduction ? undefined : err.details;
       ResponseFormatter.error(res, clientMessage, err.statusCode, err.code, clientDetails);
       return;
     }
 
     // 4xx Client Errors (Validation, NotFound, Unauthorized, Forbidden, etc.)
-    logger.warn(`[ClientError ${err.statusCode}] ${err.message}`, {
+    logger.warn(`[ClientError ${err.statusCode}] ${safeMessage}`, {
       url: req.originalUrl,
       method: req.method,
       code: err.code,
       details: err.details,
     });
 
-    ResponseFormatter.error(res, err.message, err.statusCode, err.code, err.details);
+    ResponseFormatter.error(res, safeMessage, err.statusCode, err.code, err.details);
     return;
   }
 
@@ -61,23 +66,24 @@ export const errorHandler = (
   }
 
   // 4. CORS Policy Errors
-  if (err.message && err.message.startsWith('CORS policy violation')) {
-    logger.warn(`[CorsBlocked] ${err.message}`);
-    ResponseFormatter.error(res, err.message, 403, 'CORS_FORBIDDEN');
+  if (safeMessage.startsWith('CORS policy violation')) {
+    logger.warn(`[CorsBlocked] ${safeMessage}`);
+    ResponseFormatter.error(res, safeMessage, 403, 'CORS_FORBIDDEN');
     return;
   }
 
   // 5. Unexpected Internal System Errors (Never leak internal details or stacks in production)
-  logger.error(`[UnhandledSystemError] ${err.message}`, {
+  logger.error(`[UnhandledSystemError] ${safeMessage}`, {
     url: req.originalUrl,
     method: req.method,
-    stack: err.stack,
+    stack: safeStack,
   });
 
-  const message = isProduction ? 'Internal server error' : err.message;
-  const details = isProduction ? undefined : { stack: err.stack };
+  const message = isProduction ? 'Internal server error' : safeMessage;
+  const details = isProduction ? undefined : { stack: safeStack };
 
   ResponseFormatter.error(res, message, 500, 'INTERNAL_SERVER_ERROR', details);
 };
 
 export default errorHandler;
+

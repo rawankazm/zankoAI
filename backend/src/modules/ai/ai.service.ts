@@ -4,6 +4,7 @@ import { logger } from '../../config/logger.js';
 import { supabaseAdmin } from '../../config/supabase.js';
 import { aiOrchestrator } from './providers/ai_orchestrator.service.js';
 import { AIMessage, AICompletionResult } from './providers/ai_provider.interface.js';
+import { AiCostGuardService } from '../../services/ai_cost_guard.service.js';
 
 export interface ChatExecutionResult {
   text: string;
@@ -31,11 +32,12 @@ export class AiGatewayService {
   getSystemInstruction(): string {
     return `You are ZankoAI (مامۆستای ژیری زانکۆ), the dedicated academic AI tutor for university students in Kurdistan and Iraq.
 CRITICAL BEHAVIORAL RULES:
-1. GREETING: If the user simply says a greeting (such as "سڵاو", "سلاو", "hello", "hi", "مرحبا"), respond ONLY with: "سڵاو! چۆن دەتوانم لە وانەکانتدا یارمەتیت بدەم؟"
-2. NO PREAMBLE / NO FLUFF: Answer the user's question directly and immediately. Do NOT write unnecessary introductions, conversational filler, polite intros, or redundant disclaimers.
-3. ACADEMIC EXCELLENCE & CONCISENESS: Keep explanations structured, rigorous, and directly helpful for university coursework. Use clear bullet points, formulas, or code snippets where applicable.
-4. LANGUAGE MATCHING: Always reply in the exact language/dialect of the prompt (Kurdish Sorani, Kurdish Badini, Arabic, or English).
-5. MATH FORMATTING: NEVER use dollar signs ($ or $$) or LaTeX math delimiters ($...$ or $$...$$). NEVER wrap formulas in dollar signs. Present all math, formulas, and expressions using plain readable text or Unicode (e.g. x², d/dx, ·, =, +, -). Right-to-left readers must not have dollar signs breaking text flow.`;
+1. GREETING ONLY: If the user simply says a greeting without a question (such as "سڵاو", "سلاو", "hello", "hi", "مرحبا"), respond ONLY with: "سڵاو! چۆن دەتوانم لە وانەکانتدا یارمەتیت بدەم؟"
+2. GREETING WITH QUESTION: If the user writes both a greeting AND asks a question in the same message (e.g. "سڵاو مامۆستا، یاسای ئۆم چییە؟", "سڵاو چۆنی، داتابەیس چییە؟", or "Hello, what is polymorphism?"): You MUST answer BOTH in the single chat response! First acknowledge and answer their greeting warmly and politely in the same language/dialect (e.g. "سڵاو و ڕێز! زۆر بەخێربێیت خوێندکاری ئازیز، هیوادارم هەمیشە باش و سەرکەوتوو بیت 🌸"), and then immediately provide the comprehensive, structured academic explanation answering their question. Do not skip either the greeting or the question!
+3. DIRECT QUESTION: If the prompt contains only a question without any greeting, answer the question directly without unnecessary conversational filler.
+4. ACADEMIC EXCELLENCE & CONCISENESS: Keep explanations structured, rigorous, and directly helpful for university coursework. Use clear bullet points, formulas, or code snippets where applicable.
+5. LANGUAGE MATCHING: Always reply in the exact language/dialect of the prompt (Kurdish Sorani, Kurdish Badini, Arabic, or English).
+6. MATH FORMATTING: NEVER use dollar signs ($ or $$) or LaTeX math delimiters ($...$ or $$...$$). NEVER wrap formulas in dollar signs. Present all math, formulas, and expressions using plain readable text or Unicode (e.g. x², d/dx, ·, =, +, -). Right-to-left readers must not have dollar signs breaking text flow.`;
   }
 
   /**
@@ -45,7 +47,8 @@ CRITICAL BEHAVIORAL RULES:
   async chatWithTeacher(
     userId: string,
     prompt: string,
-    history: AIMessage[] = []
+    history: AIMessage[] = [],
+    feature: string = 'ai_chat'
   ): Promise<ChatExecutionResult> {
     const startTime = Date.now();
     const createdAt = new Date(startTime).toISOString();
@@ -70,10 +73,10 @@ CRITICAL BEHAVIORAL RULES:
       const durationMs = Date.now() - startTime;
       const completedAt = new Date().toISOString();
 
-      // Record detailed audit log in public.ai_requests
+      // Record detailed audit log in public.ai_requests via AiCostGuardService
       await this.recordAiRequest({
         userId,
-        feature: 'ai_chat',
+        feature,
         provider: result.provider,
         model: result.model,
         status: 'success',
@@ -99,13 +102,15 @@ CRITICAL BEHAVIORAL RULES:
     } catch (err: any) {
       const durationMs = Date.now() - startTime;
       const completedAt = new Date().toISOString();
-      errorMessage = err?.message || 'AI generation failed';
+      const rawError = err?.message || 'AI generation failed';
+      // NEVER EXPOSE PROVIDER API KEYS
+      errorMessage = AiCostGuardService.sanitizeSecrets(rawError);
       status = errorMessage.includes('timed out') ? 'timeout' : 'failed';
 
       // Record failure audit log
       await this.recordAiRequest({
         userId,
-        feature: 'ai_chat',
+        feature,
         provider: env.DEFAULT_AI_PROVIDER || 'google',
         model: 'unknown',
         status,
@@ -119,6 +124,7 @@ CRITICAL BEHAVIORAL RULES:
         completedAt,
       });
 
+      err.message = errorMessage;
       throw err;
     }
   }
@@ -131,7 +137,7 @@ CRITICAL BEHAVIORAL RULES:
     feature: string;
     provider: string;
     model: string;
-    status: 'success' | 'failed' | 'timeout';
+    status: 'success' | 'failed' | 'timeout' | 'blocked';
     tokens: number;
     promptTokens?: number;
     completionTokens?: number;
@@ -142,36 +148,25 @@ CRITICAL BEHAVIORAL RULES:
     completedAt: string;
   }): Promise<void> {
     try {
-      await supabaseAdmin.from('ai_requests').insert({
+      await AiCostGuardService.recordAiRequest({
         user_id: data.userId,
         feature: data.feature,
         provider: data.provider,
         model: data.model,
-        status: data.status,
-        tokens: data.tokens,
-        prompt_tokens: data.promptTokens || 0,
-        completion_tokens: data.completionTokens || 0,
-        estimated_cost: data.estimatedCost,
-        duration: data.duration,
-        error_message: data.errorMessage || null,
-        created_at: data.createdAt,
-        completed_at: data.completedAt,
-      });
-
-      // Legacy support for ai_usage_logs
-      await supabaseAdmin.from('ai_usage_logs').insert({
-        user_id: data.userId,
-        feature: data.feature,
-        model_used: data.model,
         input_tokens: data.promptTokens || 0,
         output_tokens: data.completionTokens || 0,
-        duration_ms: data.duration,
+        estimated_cost: data.estimatedCost,
+        duration: data.duration,
+        status: data.status,
         created_at: data.createdAt,
+        completed_at: data.completedAt,
+        error_message: data.errorMessage,
       });
     } catch (err) {
-      logger.error('Failed to record AI request log in Supabase:', err);
+      logger.error('Failed to record AI request log in AiCostGuardService:', err);
     }
   }
+
 
   /**
    * Multimodal Homework / Image Question Solver
@@ -186,44 +181,69 @@ CRITICAL BEHAVIORAL RULES:
     const prompt = userPrompt || 'تکایە ئەم پرسیارە شیکار بکە بە هەنگاو بە هەنگاو بە زمانی کوردی، و وەڵامی دروست لەگەڵ هۆکارەکەیدا ڕوون بکەرەوە.';
 
     if (this.geminiVisionClient) {
-      const response = await this.geminiVisionClient.models.generateContent({
-        model: env.GEMINI_MODEL || 'gemini-2.5-flash',
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              {
-                inlineData: {
-                  mimeType: mimeType || 'image/jpeg',
-                  data: imageBase64,
+      try {
+        const response = await this.geminiVisionClient.models.generateContent({
+          model: env.GEMINI_MODEL || 'gemini-2.5-flash',
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                {
+                  inlineData: {
+                    mimeType: mimeType || 'image/jpeg',
+                    data: imageBase64,
+                  },
                 },
-              },
-              { text: prompt },
-            ],
+                { text: prompt },
+              ],
+            },
+          ],
+          config: {
+            systemInstruction: this.getSystemInstruction(),
           },
-        ],
-        config: {
-          systemInstruction: this.getSystemInstruction(),
-        },
-      });
+        });
 
-      const solution = response.text || '';
-      const durationMs = Date.now() - startTime;
+        const solution = response.text || '';
+        const durationMs = Date.now() - startTime;
+        const promptTokens = Math.ceil(prompt.length / 4);
+        const completionTokens = Math.ceil(solution.length / 4);
+        const estimatedCost = (promptTokens * 0.075 + completionTokens * 0.3) / 1000000;
 
-      await this.recordAiRequest({
-        userId,
-        feature: 'homework',
-        provider: 'google',
-        model: env.GEMINI_MODEL || 'gemini-2.5-flash',
-        status: 'success',
-        tokens: 0,
-        estimatedCost: 0.0005,
-        duration: durationMs,
-        createdAt: new Date(startTime).toISOString(),
-        completedAt: new Date().toISOString(),
-      });
+        await this.recordAiRequest({
+          userId,
+          feature: 'solve_image',
+          provider: 'google',
+          model: env.GEMINI_MODEL || 'gemini-2.5-flash',
+          status: 'success',
+          tokens: promptTokens + completionTokens,
+          promptTokens,
+          completionTokens,
+          estimatedCost,
+          duration: durationMs,
+          createdAt: new Date(startTime).toISOString(),
+          completedAt: new Date().toISOString(),
+        });
 
-      return { solution, provider: 'google' };
+        return { solution, provider: 'google' };
+      } catch (err: any) {
+        const durationMs = Date.now() - startTime;
+        const cleanMsg = AiCostGuardService.sanitizeSecrets(err?.message || 'Vision AI failed');
+        await this.recordAiRequest({
+          userId,
+          feature: 'solve_image',
+          provider: 'google',
+          model: env.GEMINI_MODEL || 'gemini-2.5-flash',
+          status: 'failed',
+          tokens: 0,
+          estimatedCost: 0,
+          duration: durationMs,
+          errorMessage: cleanMsg,
+          createdAt: new Date(startTime).toISOString(),
+          completedAt: new Date().toISOString(),
+        });
+        err.message = cleanMsg;
+        throw err;
+      }
     }
 
     throw new Error('Vision AI model is not configured.');
@@ -259,7 +279,7 @@ Respond ONLY with valid JSON in the following format:
   ]
 }`;
 
-    const result = await this.chatWithTeacher(userId, prompt);
+    const result = await this.chatWithTeacher(userId, prompt, [], 'quiz');
     try {
       const cleanJson = result.text.replace(/```json/g, '').replace(/```/g, '').trim();
       return JSON.parse(cleanJson);
@@ -284,7 +304,7 @@ Respond ONLY with valid JSON in the following format:
   { "front": "پرسیار یان زاراوە", "back": "ڕوونکردنەوە یان وەڵام" }
 ]`;
 
-    const result = await this.chatWithTeacher(userId, prompt);
+    const result = await this.chatWithTeacher(userId, prompt, [], 'flashcards');
     try {
       let cleanJson = result.text.replace(/```json/g, '').replace(/```/g, '').trim();
       const match = cleanJson.match(/\[\s*\{[\s\S]*\}\s*\]/);

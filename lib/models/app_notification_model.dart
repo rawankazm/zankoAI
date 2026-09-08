@@ -5,7 +5,12 @@
 enum AppNotificationType {
   assignmentReminder,
   examReminder,
+  announcement,
   teacherAnnouncement,
+  aiJobCompletion,
+  subscriptionActivated,
+  subscriptionExpiring,
+  paymentResult,
   systemNotification,
   subscriptionNotification,
   system,
@@ -25,9 +30,23 @@ enum AppNotificationType {
       case 'exam_reminder':
       case 'examreminder':
         return AppNotificationType.examReminder;
+      case 'announcement':
+        return AppNotificationType.announcement;
       case 'teacher_announcement':
       case 'teacherannouncement':
         return AppNotificationType.teacherAnnouncement;
+      case 'ai_job_completion':
+      case 'aijobcompletion':
+        return AppNotificationType.aiJobCompletion;
+      case 'subscription_activated':
+      case 'subscriptionactivated':
+        return AppNotificationType.subscriptionActivated;
+      case 'subscription_expiring':
+      case 'subscriptionexpiring':
+        return AppNotificationType.subscriptionExpiring;
+      case 'payment_result':
+      case 'paymentresult':
+        return AppNotificationType.paymentResult;
       case 'subscription_notification':
       case 'subscriptionnotification':
         return AppNotificationType.subscriptionNotification;
@@ -55,8 +74,18 @@ enum AppNotificationType {
         return 'assignment_reminder';
       case AppNotificationType.examReminder:
         return 'exam_reminder';
+      case AppNotificationType.announcement:
+        return 'announcement';
       case AppNotificationType.teacherAnnouncement:
         return 'teacher_announcement';
+      case AppNotificationType.aiJobCompletion:
+        return 'ai_job_completion';
+      case AppNotificationType.subscriptionActivated:
+        return 'subscription_activated';
+      case AppNotificationType.subscriptionExpiring:
+        return 'subscription_expiring';
+      case AppNotificationType.paymentResult:
+        return 'payment_result';
       case AppNotificationType.subscriptionNotification:
         return 'subscription_notification';
       case AppNotificationType.systemNotification:
@@ -82,8 +111,17 @@ enum AppNotificationType {
         return 'بیرهێنانەوەی ئەرک';
       case AppNotificationType.examReminder:
         return 'بیرهێنانەوەی تاقیکردنەوە';
+      case AppNotificationType.announcement:
       case AppNotificationType.teacherAnnouncement:
-        return 'ئاگاداری مامۆستا';
+        return 'ئاگاداری گشتی و مامۆستا';
+      case AppNotificationType.aiJobCompletion:
+        return 'تەواوبوونی کاری ژیری دەستکرد 🤖';
+      case AppNotificationType.subscriptionActivated:
+        return 'چالاکبوونی بەشداری VIP ✨';
+      case AppNotificationType.subscriptionExpiring:
+        return 'بەسەرچوونی نزیکی بەشداری VIP ⏳';
+      case AppNotificationType.paymentResult:
+        return 'ئەنجامی پرۆسەی پارەدان 💳';
       case AppNotificationType.subscriptionNotification:
         return 'ئاگاداری بەشداری VIP';
       case AppNotificationType.systemNotification:
@@ -207,8 +245,11 @@ class NotificationPreferencesModel {
   final bool assignmentReminders;
   final bool examReminders;
   final bool teacherAnnouncements;
-  final bool systemNotifications;
+  final bool announcements;
+  final bool aiJobCompletion;
   final bool subscriptionNotifications;
+  final bool paymentUpdates;
+  final bool systemNotifications;
   final bool pushEnabled;
   final bool emailEnabled;
   final int leadTimeMinutes;
@@ -219,8 +260,11 @@ class NotificationPreferencesModel {
     this.assignmentReminders = true,
     this.examReminders = true,
     this.teacherAnnouncements = true,
-    this.systemNotifications = true,
+    this.announcements = true,
+    this.aiJobCompletion = true,
     this.subscriptionNotifications = true,
+    this.paymentUpdates = true,
+    this.systemNotifications = true,
     this.pushEnabled = true,
     this.emailEnabled = false,
     this.leadTimeMinutes = 60,
@@ -232,8 +276,11 @@ class NotificationPreferencesModel {
     bool? assignmentReminders,
     bool? examReminders,
     bool? teacherAnnouncements,
-    bool? systemNotifications,
+    bool? announcements,
+    bool? aiJobCompletion,
     bool? subscriptionNotifications,
+    bool? paymentUpdates,
+    bool? systemNotifications,
     bool? pushEnabled,
     bool? emailEnabled,
     int? leadTimeMinutes,
@@ -244,8 +291,11 @@ class NotificationPreferencesModel {
       assignmentReminders: assignmentReminders ?? this.assignmentReminders,
       examReminders: examReminders ?? this.examReminders,
       teacherAnnouncements: teacherAnnouncements ?? this.teacherAnnouncements,
-      systemNotifications: systemNotifications ?? this.systemNotifications,
+      announcements: announcements ?? this.announcements,
+      aiJobCompletion: aiJobCompletion ?? this.aiJobCompletion,
       subscriptionNotifications: subscriptionNotifications ?? this.subscriptionNotifications,
+      paymentUpdates: paymentUpdates ?? this.paymentUpdates,
+      systemNotifications: systemNotifications ?? this.systemNotifications,
       pushEnabled: pushEnabled ?? this.pushEnabled,
       emailEnabled: emailEnabled ?? this.emailEnabled,
       leadTimeMinutes: leadTimeMinutes ?? this.leadTimeMinutes,
@@ -259,8 +309,11 @@ class NotificationPreferencesModel {
       'assignment_reminders': assignmentReminders,
       'exam_reminders': examReminders,
       'teacher_announcements': teacherAnnouncements,
-      'system_notifications': systemNotifications,
+      'announcements': announcements,
+      'ai_job_completion': aiJobCompletion,
       'subscription_notifications': subscriptionNotifications,
+      'payment_updates': paymentUpdates,
+      'system_notifications': systemNotifications,
       'push_enabled': pushEnabled,
       'email_enabled': emailEnabled,
       'lead_time_minutes': leadTimeMinutes,
@@ -274,8 +327,11 @@ class NotificationPreferencesModel {
       assignmentReminders: map['assignment_reminders'] ?? map['assignmentReminders'] ?? true,
       examReminders: map['exam_reminders'] ?? map['examReminders'] ?? true,
       teacherAnnouncements: map['teacher_announcements'] ?? map['teacherAnnouncements'] ?? true,
-      systemNotifications: map['system_notifications'] ?? map['systemNotifications'] ?? true,
+      announcements: map['announcements'] ?? true,
+      aiJobCompletion: map['ai_job_completion'] ?? map['aiJobCompletion'] ?? true,
       subscriptionNotifications: map['subscription_notifications'] ?? map['subscriptionNotifications'] ?? true,
+      paymentUpdates: map['payment_updates'] ?? map['paymentUpdates'] ?? true,
+      systemNotifications: map['system_notifications'] ?? map['systemNotifications'] ?? true,
       pushEnabled: map['push_enabled'] ?? map['pushEnabled'] ?? true,
       emailEnabled: map['email_enabled'] ?? map['emailEnabled'] ?? false,
       leadTimeMinutes: (map['lead_time_minutes'] ?? map['leadTimeMinutes'] as num?)?.toInt() ?? 60,

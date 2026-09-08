@@ -18,7 +18,9 @@ class UserModel {
   final String? photoUrl;
   final String vipStatus; // 'none' | 'pending' | 'active' | 'rejected' | 'expired'
   final DateTime? vipExpiry;
+  final String status; // 'active' | 'suspended' | 'deleted' | 'pending'
 
+  bool get isSuspended => status.toLowerCase() == 'suspended';
   bool get isGuest =>
       id.startsWith('guest_') ||
       email.startsWith('guest_') ||
@@ -56,6 +58,7 @@ class UserModel {
     this.photoUrl,
     this.vipStatus = 'none',
     this.vipExpiry,
+    this.status = 'active',
   });
 
   UserModel copyWith({
@@ -72,6 +75,7 @@ class UserModel {
     String? photoUrl,
     String? vipStatus,
     DateTime? vipExpiry,
+    String? status,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -87,6 +91,7 @@ class UserModel {
       photoUrl: photoUrl ?? this.photoUrl,
       vipStatus: vipStatus ?? this.vipStatus,
       vipExpiry: vipExpiry ?? this.vipExpiry,
+      status: status ?? this.status,
     );
   }
 
@@ -105,6 +110,7 @@ class UserModel {
       'gpa': gpa,
       'gpaHistory': gpaHistory,
       'photoUrl': photoUrl,
+      'status': status,
     };
   }
 
@@ -157,6 +163,7 @@ class UserModel {
           ? List<double>.from((map['gpa_history'] as List).map((x) => (x as num).toDouble()))
           : (map['gpaHistory'] != null ? List<double>.from((map['gpaHistory'] as List).map((x) => (x as num).toDouble())) : const []),
       photoUrl: map['avatar_url']?.toString() ?? map['photoUrl']?.toString(),
+      status: (map['status'] ?? 'active').toString(),
     );
   }
 }

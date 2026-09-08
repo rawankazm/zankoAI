@@ -12,6 +12,8 @@ import { aiRoutes } from '../modules/ai/ai.routes.js';
 import { storageRoutes } from './storage.routes.js';
 import { usageRoutes } from './usage.routes.js';
 import { subscriptionRoutes } from './subscription.routes.js';
+import { notificationRoutes } from './notification.routes.js';
+import { deviceRoutes } from './device.routes.js';
 
 const apiRouter = Router();
 
@@ -49,6 +51,10 @@ apiRouter.use('/usage', usageRoutes);
 
 // 11. Production Subscription Architecture (/api/subscription)
 apiRouter.use('/subscription', subscriptionRoutes);
+
+// 12. Production Push Notifications (/api/notifications) & Multi-Device Registration (/api/devices)
+apiRouter.use('/notifications', notificationRoutes);
+apiRouter.use('/devices', deviceRoutes);
 
 export { apiRouter };
 

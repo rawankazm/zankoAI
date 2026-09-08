@@ -44,6 +44,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   String _selectedCategory = 'all';
   final List<NotificationItem> _notifications = [];
   StreamSubscription? _directMsgSub;
+  StreamSubscription? _firestoreUpdateSub;
   final Set<String> _readDocIds = {};
   final Set<String> _deletedDocIds = {};
 
@@ -81,75 +82,139 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return DateTime.now();
   }
 
-  void _listenToNotifications() {
+  Future<void> _fetchInitialNotifications() async {
     final authService = Provider.of<AuthService>(context, listen: false);
     final user = authService.currentUser;
-    if (user == null || user.isGuest) return;
+    final currentUserId = user?.id ?? '';
+    final isVip = user?.isVip ?? false;
 
+    final List<dynamic> combinedList = [];
+
+    // 1. Fetch from Supabase PostgreSQL notifications table
+    try {
+      final sbData = await Supabase.instance.client
+          .from('notifications')
+          .select()
+          .order('created_at', ascending: false)
+          .limit(60);
+      combinedList.addAll(sbData);
+    } catch (e) {
+      debugPrint('[NotificationsScreen] Notice fetching Supabase notifications: $e');
+    }
+
+    // 2. Fetch from Firebase Firestore admin notifications & direct messages
+    try {
+      final fsData = await NotificationService().fetchFirestoreNotifications(
+        userId: currentUserId,
+        isVip: isVip,
+      );
+      combinedList.addAll(fsData);
+    } catch (e) {
+      debugPrint('[NotificationsScreen] Notice fetching Firestore notifications: $e');
+    }
+
+    debugPrint('[NotificationsScreen] Loaded ${combinedList.length} total notifications across sources');
+    _processNotificationRows(combinedList, currentUserId);
+  }
+
+  void _listenToNotifications() {
+
+    // 1. Instantly fetch current notifications across Supabase and Firestore
+    _fetchInitialNotifications();
+
+    // 2. Subscribe to Supabase realtime stream for live database events
     _directMsgSub?.cancel();
     _directMsgSub = Supabase.instance.client
         .from('notifications')
         .stream(primaryKey: ['id'])
-        .listen((data) {
-      _notifications.clear();
-      for (var row in data) {
-        final id = row['id'].toString();
-        if (_deletedDocIds.contains(id)) continue;
-        final targetUserId = (row['user_id'] ?? '').toString();
-        if (targetUserId.isNotEmpty && targetUserId != user.id) continue;
+        .listen(
+          (data) {
+            _fetchInitialNotifications();
+          },
+          onError: (err) {
+            debugPrint('[NotificationsScreen] Supabase realtime stream notice: $err');
+          },
+        );
 
-        final title = fixNotificationEncoding(row['title'] ?? '🔔 ئاگادارکردنەوە');
-        final body = fixNotificationEncoding(row['body'] ?? '');
-        final time = _parseTimestamp(row['created_at']);
-        final rawCat = (row['type'] ?? 'Announcement').toString().toLowerCase();
-
-        String category = 'Announcement';
-        IconData icon = CupertinoIcons.bell_fill;
-        Color color = const Color(0xFFFF9F0A);
-
-        if (rawCat.contains('tutor') || rawCat.contains('ai')) {
-          category = 'AI Tutor';
-          icon = CupertinoIcons.sparkles;
-          color = ZankoColors.accent;
-        } else if (rawCat.contains('course') || rawCat.contains('lesson')) {
-          category = 'Course';
-          icon = CupertinoIcons.book_fill;
-          color = const Color(0xFF10B981);
-        } else if (rawCat.contains('quiz') || rawCat.contains('exam')) {
-          category = 'Quiz';
-          icon = CupertinoIcons.pencil_ellipsis_rectangle;
-          color = const Color(0xFF6366F1);
-        } else if (rawCat.contains('remind') || rawCat.contains('schedule')) {
-          category = 'Reminder';
-          icon = CupertinoIcons.alarm_fill;
-          color = const Color(0xFFEC4899);
-        } else if (rawCat.contains('admin') || rawCat.contains('direct')) {
-          category = 'Admin Direct';
-          icon = CupertinoIcons.mail_solid;
-          color = ZankoColors.primary;
-        }
-
-        final isRead = row['is_read'] == true || _readDocIds.contains(id);
-
-        _notifications.add(NotificationItem(
-          id: id,
-          title: title.toString(),
-          body: body.toString(),
-          time: time,
-          category: category,
-          icon: icon,
-          color: color,
-          isRead: isRead,
-        ));
-      }
-      _notifications.sort((a, b) => b.time.compareTo(a.time));
-      if (mounted) setState(() {});
+    // 3. Subscribe to Firestore admin panel live updates
+    _firestoreUpdateSub?.cancel();
+    _firestoreUpdateSub = NotificationService().onNotificationsUpdated.listen((_) {
+      _fetchInitialNotifications();
     });
+  }
+
+  void _processNotificationRows(List<dynamic> data, String currentUserId) {
+    _notifications.clear();
+    final Set<String> processedKeys = {};
+
+    for (var row in data) {
+      final id = (row['id'] ?? '').toString();
+      if (id.isNotEmpty && _deletedDocIds.contains(id)) continue;
+
+      final targetUserId = (row['user_id'] ?? row['userId'] ?? '').toString();
+      if (targetUserId.isNotEmpty && targetUserId != currentUserId) continue;
+
+      final title = fixNotificationEncoding(row['title'] ?? '🔔 ئاگادارکردنەوە');
+      final body = fixNotificationEncoding(row['body'] ?? row['message'] ?? '');
+      final time = _parseTimestamp(row['created_at']);
+      final rawCat = (row['type'] ?? row['category'] ?? 'Announcement').toString().toLowerCase();
+
+      // Deduplicate identical title + body
+      final dedupeKey = "${title.trim()}|||${body.trim()}";
+      if (processedKeys.contains(dedupeKey)) continue;
+      processedKeys.add(dedupeKey);
+
+      String category = 'Announcement';
+      IconData icon = CupertinoIcons.bell_fill;
+      Color color = const Color(0xFFFF9F0A);
+
+      if (rawCat.contains('tutor') || rawCat.contains('ai')) {
+        category = 'AI Tutor';
+        icon = CupertinoIcons.sparkles;
+        color = ZankoColors.accent;
+      } else if (rawCat.contains('course') || rawCat.contains('lesson')) {
+        category = 'Course';
+        icon = CupertinoIcons.book_fill;
+        color = const Color(0xFF10B981);
+      } else if (rawCat.contains('quiz') || rawCat.contains('exam')) {
+        category = 'Quiz';
+        icon = CupertinoIcons.pencil_ellipsis_rectangle;
+        color = const Color(0xFF6366F1);
+      } else if (rawCat.contains('remind') || rawCat.contains('schedule')) {
+        category = 'Reminder';
+        icon = CupertinoIcons.alarm_fill;
+        color = const Color(0xFFEC4899);
+      } else if (rawCat.contains('admin') || rawCat.contains('direct')) {
+        category = 'Admin Direct';
+        icon = CupertinoIcons.mail_solid;
+        color = ZankoColors.primary;
+      }
+
+      final isRead = row['is_read'] == true || (id.isNotEmpty && _readDocIds.contains(id));
+
+      _notifications.add(NotificationItem(
+        id: id.isNotEmpty ? id : dedupeKey,
+        title: title.toString(),
+        body: body.toString(),
+        time: time,
+        category: category,
+        icon: icon,
+        color: color,
+        isRead: isRead,
+      ));
+    }
+
+    _notifications.sort((a, b) => b.time.compareTo(a.time));
+    final unreadTotal = _notifications.where((n) => !n.isRead).length;
+    NotificationService().unreadCountNotifier.value = unreadTotal;
+
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
     _directMsgSub?.cancel();
+    _firestoreUpdateSub?.cancel();
     super.dispose();
   }
 

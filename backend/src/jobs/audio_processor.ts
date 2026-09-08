@@ -105,7 +105,7 @@ export async function processAudioLectureJob(data: LectureAudioJobData): Promise
       `4. Conclusion and Review Points\n\n` +
       `Write in the same language as the lecture (Kurdish, Arabic, or English).`;
 
-    const summaryRes = await aiGateway.chatWithTeacher(teacherId, summaryPrompt);
+    const summaryRes = await aiGateway.chatWithTeacher(teacherId, summaryPrompt, [], 'audio');
     const summary = summaryRes.text;
 
     const takeawaysPrompt =
@@ -115,7 +115,7 @@ export async function processAudioLectureJob(data: LectureAudioJobData): Promise
 
     let keyTakeaways: string[] = [];
     try {
-      const takeawaysRes = await aiGateway.chatWithTeacher(teacherId, takeawaysPrompt);
+      const takeawaysRes = await aiGateway.chatWithTeacher(teacherId, takeawaysPrompt, [], 'audio');
       const cleanJson = extractJson(takeawaysRes.text, '[');
       keyTakeaways = JSON.parse(cleanJson) as string[];
     } catch (err: any) {
@@ -135,7 +135,7 @@ export async function processAudioLectureJob(data: LectureAudioJobData): Promise
 
     let flashcards: AudioFlashcard[] = [];
     try {
-      const fcRes = await aiGateway.chatWithTeacher(teacherId, flashcardsPrompt);
+      const fcRes = await aiGateway.chatWithTeacher(teacherId, flashcardsPrompt, [], 'audio');
       const cleanJson = extractJson(fcRes.text, '[');
       flashcards = JSON.parse(cleanJson) as AudioFlashcard[];
     } catch (err: any) {
@@ -151,7 +151,7 @@ export async function processAudioLectureJob(data: LectureAudioJobData): Promise
 
     let quiz: AudioQuiz = { title: `Quiz: ${title}`, questions: [] };
     try {
-      const quizRes = await aiGateway.chatWithTeacher(teacherId, quizPrompt);
+      const quizRes = await aiGateway.chatWithTeacher(teacherId, quizPrompt, [], 'audio');
       const cleanJson = extractJson(quizRes.text, '{');
       quiz = JSON.parse(cleanJson) as AudioQuiz;
     } catch (err: any) {

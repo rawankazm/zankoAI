@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
 import '../../services/score_service.dart';
+import '../../services/notification_service.dart';
 import '../../theme.dart';
 import '../../widgets/apple_ui_components.dart';
 import '../ai_teacher/ai_teacher_chat_screen.dart';
@@ -48,8 +48,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         final auth = Provider.of<AuthService>(context, listen: false);
-        if (auth.currentUser != null && !auth.currentUser!.isGuest) {
+        final user = auth.currentUser;
+        if (user != null && !user.isGuest) {
           auth.reloadUser();
+          NotificationService().listenToAdminNotifications(
+            user.id,
+            user.isVip,
+            email: user.email,
+          );
+        } else {
+          NotificationService().listenToAdminNotifications(
+            user?.id ?? '',
+            false,
+          );
         }
       }
     });
@@ -349,9 +360,6 @@ class _NotificationBellButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context, listen: false);
-    final user = authService.currentUser;
-
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
@@ -386,34 +394,25 @@ class _NotificationBellButton extends StatelessWidget {
                 size: 20,
               ),
             ),
-            if (user != null && !user.isGuest)
-              StreamBuilder<List<Map<String, dynamic>>>(
-                stream: Supabase.instance.client
-                    .from('notifications')
-                    .stream(primaryKey: ['id'])
-                    .eq('user_id', user.id),
-                builder: (context, notifSnap) {
-                  bool hasUnread = false;
-                  if (notifSnap.hasData) {
-                    hasUnread = notifSnap.data!.any((n) => n['is_read'] != true);
-                  }
+            ValueListenableBuilder<int>(
+              valueListenable: NotificationService().unreadCountNotifier,
+              builder: (context, unreadCount, _) {
+                if (unreadCount <= 0) return const SizedBox.shrink();
 
-                  if (!hasUnread) return const SizedBox.shrink();
-
-                  return Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFFF3B30),
-                        shape: BoxShape.circle,
-                      ),
+                return Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFF3B30),
+                      shape: BoxShape.circle,
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),

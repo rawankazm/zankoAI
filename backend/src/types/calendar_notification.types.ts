@@ -64,7 +64,12 @@ export interface CalendarEventUpdateInput {
 export type NotificationType =
   | 'assignment_reminder'
   | 'exam_reminder'
+  | 'announcement'
   | 'teacher_announcement'
+  | 'ai_job_completion'
+  | 'subscription_activated'
+  | 'subscription_expiring'
+  | 'payment_result'
   | 'system_notification'
   | 'subscription_notification'
   | 'system'
@@ -96,6 +101,9 @@ export interface NotificationPreferencesRecord {
   assignment_reminders: boolean;
   exam_reminders: boolean;
   teacher_announcements: boolean;
+  announcements?: boolean;
+  ai_job_completion?: boolean;
+  payment_updates?: boolean;
   system_notifications: boolean;
   subscription_notifications: boolean;
   push_enabled: boolean;

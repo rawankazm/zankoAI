@@ -178,7 +178,7 @@ async function runAiProcessing(
         `Write a clear, organized summary with key points, main arguments, and important conclusions. ` +
         `Use bullet points or numbered lists where appropriate. Be thorough but concise.`;
 
-      const result = await aiGateway.chatWithTeacher(userId, prompt);
+      const result = await aiGateway.chatWithTeacher(userId, prompt, [], 'pdf');
       results.summary = result.text;
       logger.info(`[PdfProcessor] Summary generated (${result.text.length} chars)`);
     } catch (err: any) {
@@ -196,7 +196,7 @@ async function runAiProcessing(
         `Use "short_answer" or "discussion" for the type field.\n\n` +
         `Document: "${filename}"\n\nContent:\n${text}`;
 
-      const result = await aiGateway.chatWithTeacher(userId, prompt);
+      const result = await aiGateway.chatWithTeacher(userId, prompt, [], 'pdf');
       const clean = extractJson(result.text, '[');
       results.questions = JSON.parse(clean) as PdfQuestion[];
       logger.info(`[PdfProcessor] ${results.questions.length} questions generated`);
@@ -214,7 +214,7 @@ async function runAiProcessing(
         `{"title":"Quiz Title","questions":[{"questionText":"...","type":"multiple_choice","options":["A","B","C","D"],"correctAnswer":"A","explanation":"..."}]}\n\n` +
         `Document: "${filename}"\n\nContent:\n${text}`;
 
-      const result = await aiGateway.chatWithTeacher(userId, prompt);
+      const result = await aiGateway.chatWithTeacher(userId, prompt, [], 'pdf');
       const clean = extractJson(result.text, '{');
       results.quiz = JSON.parse(clean) as PdfQuiz;
       logger.info(`[PdfProcessor] Quiz generated (${results.quiz.questions?.length ?? 0} questions)`);
@@ -232,7 +232,7 @@ async function runAiProcessing(
         `[{"front":"Term or question","back":"Definition or answer"}]\n\n` +
         `Document: "${filename}"\n\nContent:\n${text}`;
 
-      const result = await aiGateway.chatWithTeacher(userId, prompt);
+      const result = await aiGateway.chatWithTeacher(userId, prompt, [], 'pdf');
       const clean = extractJson(result.text, '[');
       results.flashcards = JSON.parse(clean) as PdfFlashcard[];
       logger.info(`[PdfProcessor] ${results.flashcards.length} flashcards generated`);

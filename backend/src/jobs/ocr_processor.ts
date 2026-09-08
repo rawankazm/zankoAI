@@ -169,7 +169,7 @@ async function generateAiOutputs(
         `Text:\n${text}\n\n` +
         `Write a clear, structured summary highlighting key concepts, formulas, and conclusions.`;
 
-      const result = await aiGateway.chatWithTeacher(userId, prompt);
+      const result = await aiGateway.chatWithTeacher(userId, prompt, [], 'ocr');
       results.summary = result.text;
     } catch (err: any) {
       logger.warn(`[OcrProcessor] Summary generation failed: ${err.message}`);
@@ -184,7 +184,7 @@ async function generateAiOutputs(
         `[{"id":"1","question":"...","answer":"..."}]\n\n` +
         `Text:\n${text}`;
 
-      const result = await aiGateway.chatWithTeacher(userId, prompt);
+      const result = await aiGateway.chatWithTeacher(userId, prompt, [], 'ocr');
       const clean = extractJson(result.text, '[');
       results.questions = JSON.parse(clean) as OcrQuestion[];
     } catch (err: any) {
@@ -200,7 +200,7 @@ async function generateAiOutputs(
         `{"title":"Quiz: ${filename}","questions":[{"question":"...","options":["A","B","C","D"],"correctAnswer":0,"explanation":"..."}]}\n\n` +
         `Text:\n${text}`;
 
-      const result = await aiGateway.chatWithTeacher(userId, prompt);
+      const result = await aiGateway.chatWithTeacher(userId, prompt, [], 'ocr');
       const clean = extractJson(result.text, '{');
       results.quiz = JSON.parse(clean) as OcrQuiz;
     } catch (err: any) {
@@ -216,7 +216,7 @@ async function generateAiOutputs(
         `[{"id":"1","front":"Term / Question","back":"Definition / Answer"}]\n\n` +
         `Text:\n${text}`;
 
-      const result = await aiGateway.chatWithTeacher(userId, prompt);
+      const result = await aiGateway.chatWithTeacher(userId, prompt, [], 'ocr');
       const clean = extractJson(result.text, '[');
       results.flashcards = JSON.parse(clean) as OcrFlashcard[];
     } catch (err: any) {

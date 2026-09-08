@@ -86,7 +86,25 @@ class NotificationBackendService {
     return NotificationPreferencesModel.fromJson(data);
   }
 
-  /// Registers a device token for push notifications.
+  /// Registers a device token for push notifications (POST /devices).
+  Future<Map<String, dynamic>> registerDevice({
+    required String fcmToken,
+    required String platform,
+    String? deviceId,
+    String? appVersion,
+  }) async {
+    final payload = <String, dynamic>{
+      'fcm_token': fcmToken,
+      'platform': platform,
+      'device_id': ?deviceId,
+      'app_version': ?appVersion,
+    };
+
+    final response = await _dio.post<Map<String, dynamic>>('/devices', data: payload);
+    return response.data?['data'] as Map<String, dynamic>? ?? {};
+  }
+
+  /// Backward-compatible alias for registering device tokens via /notifications/devices.
   Future<void> registerDeviceToken({
     required String fcmToken,
     required String platform,
@@ -103,8 +121,20 @@ class NotificationBackendService {
     await _dio.post<Map<String, dynamic>>('/notifications/devices', data: payload);
   }
 
-  /// Unregisters a device token on user logout.
+  /// Unregisters or deletes a device by its record ID, device_id, or token (DELETE /devices/:id).
+  Future<void> deleteDevice(String id) async {
+    await _dio.delete<Map<String, dynamic>>('/devices/$id');
+  }
+
+  /// Backward-compatible alias for unregistering device tokens via /notifications/devices/:token.
   Future<void> unregisterDeviceToken(String fcmToken) async {
     await _dio.delete<Map<String, dynamic>>('/notifications/devices/$fcmToken');
+  }
+
+  /// Lists active registered devices for current user (GET /devices).
+  Future<List<Map<String, dynamic>>> listDevices() async {
+    final response = await _dio.get<Map<String, dynamic>>('/devices');
+    final data = response.data?['data'] as List<dynamic>? ?? [];
+    return data.whereType<Map<String, dynamic>>().toList();
   }
 }

@@ -203,6 +203,24 @@ const main = async () => {
   await import('./ai_chat.test.js').catch(async () => {
     await import('./ai_chat.test.ts' as any);
   });
+
+  // Run AI Cost Protection, Guardrails & Abuse Suite
+  console.log('🛡️ Launching AI Cost Protection, Guardrails & Abuse Suite...\n');
+  await import('./ai_cost_protection.test.js').catch(async () => {
+    await import('./ai_cost_protection.test.ts' as any);
+  });
+
+  // Run Admin System & Security Audit Suite
+  console.log('👑 Launching Admin System & Security Audit Suite...\n');
+  await import('./admin_system.test.js').catch(async () => {
+    await import('./admin_system.test.ts' as any);
+  });
+
+  // Run Production Push Notification Architecture Suite
+  console.log('🔔 Launching Production Push Notification Architecture Suite...\n');
+  await import('./production_notification.test.js').catch(async () => {
+    await import('./production_notification.test.ts' as any);
+  });
 };
 
 main().catch((err) => {

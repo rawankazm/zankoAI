@@ -56,5 +56,28 @@ void main() {
       expect(response.contains('شیکاری') || response.contains('یاسا') || response.contains('تەواوکاری') || response.contains('داتاشراو'), isTrue);
       expect(stopwatch.elapsedMilliseconds, lessThan(8000));
     });
+    test('Pure greeting alone returns immediate friendly assistance prompt', () async {
+      final response = await aiService.askTeacher(
+        'سڵاو',
+        [],
+        isVip: true,
+      );
+
+      expect(response, equals('سڵاو! چۆن دەتوانم یارمەتیت بدەم؟'));
+    });
+
+    test('Greeting combined with academic question answers BOTH in a single chat response', () async {
+      final response = await aiService.askTeacher(
+        'سڵاو مامۆستا چۆنیت؟ دەمەوێت لەسەر فلاتەر بزانم',
+        [],
+        isVip: true,
+      );
+
+      expect(response, isNotEmpty);
+      // Confirms greeting is returned
+      expect(response.contains('سڵاو') || response.contains('بەخێربێیت'), isTrue);
+      // Confirms academic answer to the question is also returned in the same chat
+      expect(response.contains('فلاتەر') || response.contains('Flutter'), isTrue);
+    });
   });
 }

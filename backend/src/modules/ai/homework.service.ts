@@ -15,6 +15,7 @@ import type {
   HomeworkSolutionData,
   HomeworkRecord,
 } from '../../types/homework.types.js';
+import { AiCostGuardService } from '../../services/ai_cost_guard.service.js';
 
 export class HomeworkService {
   private provider: GeminiHomeworkProvider;
@@ -101,17 +102,59 @@ export class HomeworkService {
     }
 
     // ── 6. Execute AI Problem Solving with Gemini ─────────────────────────────
-    const aiResult = await this.provider.solve({
-      text: input.text,
-      imageBuffer: file?.buffer,
-      imageMimeType,
-      subject: input.subject,
-      course: input.course,
-      difficulty: input.difficulty,
-      language: input.language,
-    });
+    let aiResult: any;
+    try {
+      aiResult = await this.provider.solve({
+        text: input.text,
+        imageBuffer: file?.buffer,
+        imageMimeType,
+        subject: input.subject,
+        course: input.course,
+        difficulty: input.difficulty,
+        language: input.language,
+      });
+    } catch (err: any) {
+      const durationMs = Date.now() - startTime;
+      const cleanMsg = AiCostGuardService.sanitizeSecrets(err?.message || 'Homework AI failed');
+      await AiCostGuardService.recordAiRequest({
+        user_id: userId,
+        feature: 'homework',
+        provider: 'google',
+        model: 'gemini-2.5-flash',
+        input_tokens: 0,
+        output_tokens: 0,
+        estimated_cost: 0,
+        duration: durationMs,
+        status: 'failed',
+        created_at: new Date(startTime).toISOString(),
+        completed_at: new Date().toISOString(),
+        error_message: cleanMsg,
+      });
+      err.message = cleanMsg;
+      throw err;
+    }
 
     const durationMs = Date.now() - startTime;
+    const tokensUsed = aiResult.tokensUsed || 300;
+    const inputTokens = Math.ceil(tokensUsed * 0.4);
+    const outputTokens = Math.ceil(tokensUsed * 0.6);
+    const estimatedCost = (inputTokens * 0.075 + outputTokens * 0.3) / 1000000;
+
+    // Record request telemetry with all 10 required fields
+    await AiCostGuardService.recordAiRequest({
+      user_id: userId,
+      feature: 'homework',
+      provider: 'google',
+      model: 'gemini-2.5-flash',
+      input_tokens: inputTokens,
+      output_tokens: outputTokens,
+      estimated_cost: estimatedCost,
+      duration: durationMs,
+      status: 'success',
+      created_at: new Date(startTime).toISOString(),
+      completed_at: new Date().toISOString(),
+    });
+
 
     // ── 7. Store metadata in public.homework_requests ─────────────────────────
     // Never store raw image base64; keep database lean and privacy-compliant.

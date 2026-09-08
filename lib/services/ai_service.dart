@@ -403,8 +403,9 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   @override
   Future<String> askTeacher(String userPrompt, List<Map<String, String>> chatHistory, {bool isVip = false, bool isPendingVip = false}) async {
-    // 1. Immediate, clean greeting response without filler
-    final cleanPrompt = userPrompt.trim().toLowerCase().replaceAll(RegExp(r'[!?,.؛،\s]'), '');
+    // 1. Immediate, clean greeting response if the message is solely a greeting
+    final strippedForGreetingCheck = userPrompt.replaceAll(RegExp(r'\[.*?\]'), '').trim();
+    final cleanPrompt = strippedForGreetingCheck.toLowerCase().replaceAll(RegExp(r'[!?,.؛،\s]'), '');
     const greetingMatches = [
       'سڵاو', 'سلاو', 'سڵاومامۆستا', 'سلاومامۆستا', 'سڵاوو', 'سلاوو',
       'چۆنی', 'چۆنیت', 'باشی', 'سڵاوچۆنی', 'سلاوچونی',
@@ -434,12 +435,13 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     final prompt = historyStr.isEmpty ? userPrompt : "$historyStrخوێندکار: $userPrompt\nمامۆستا:";
     
     const systemInstruction = 
-        "تۆ مامۆستای ژیری زانکۆیت لە ئەپڵیکەیشنی ZankoAI (Academic AI Tutor). ڕێنمایی زۆر گرنگ:\n"
-        "١. ئەگەر پەیامەکە تەنها سڵاو بوو، تەنها بڵێ: 'سڵاو! چۆن دەتوانم لە وانەکانتدا یارمەتیت بدەم؟'.\n"
-        "٢. ڕاستەوخۆ و دەستبەجێ بەبێ پێشەکی، وتەی زیادە، یان ناساندنی خۆت، وەڵامی تەواوی زانستی و هاوکێشە یان یاساکە بە وردی ڕوون بکەرەوە.\n"
-        "٣. شیکارییەکان زۆر ڕێکخراو و بە شێوازی ئەکادیمی (خاڵبەندی، هاوکێشەی بیرکاری، نموونەی ژیانی ڕۆژانە) بنووسە.\n"
-        "٤. بە هەمان زمان و دیالێکتی پرسیارەکە (سۆرانی، بادینی، عەرەبی، ئینگلیزی) وەڵام بدەرەوە.\n"
-        "٥. یاسای بیرکاری و سیمبولی دۆلار: هەرگیز و بە هیچ جۆرێک نیشانەی دۆلار (\$ یان \$\$) لە وەڵامەکانتدا بەکارمەهێنە بۆ هاوکێشە یان نووسین. هاوکێشەکان بە شێوازی دەقی سادە و ڕوون بنووسە (وەک: d/dx(x^n) = n · x^(n-1) یان 3x² یان 6x) بەبێ هیچ نیشانەیەکی \$.";
+        "تۆ مامۆستای ژیری زانکۆیت لە ئەپڵیکەیشنی ZankoAI (Academic AI Tutor). ڕێنمایی زۆر گرنگ دەربارەی شێوازی وەڵامدانەوە:\n"
+        "١. ئەگەر پەیامی خوێندکار تەنها سڵاو یان چاکوچۆنی بوو (وەک 'سڵاو' یان 'چۆنی'): تەنها بڵێ: 'سڵاو! چۆن دەتوانم لە وانەکانتدا یارمەتیت بدەم؟'.\n"
+        "٢. ئەگەر خوێندکار هەم سڵاوی کردبوو و هەم پرسیارەکەی نووسیبوو لە هەمان پەیامدا (وەک: 'سڵاو مامۆستا، یاسای نیوتن چییە؟' یان 'سڵاو چۆنی، داتابەیس چییە؟'): پێویستە لە هەمان وەڵامدا و لە یەک چات وەڵامی هەردووکیان بدەیتەوە؛ سەرەتا بە ڕێز و گەرمی وەڵامی سڵاو و چاکوچۆنییەکەی بدەرەوە (بۆ نموونە: 'سڵاو و ڕێز! زۆر بەخێربێیت خوێندکاری ئازیز، هیوادارم هەمیشە باش و سەرکەوتوو بیت 🌸')، و دەستبەجێ بە دوایدا وەڵامی تەواو و زانستی پرسیارەکەی بدەرەوە بە خاڵبەندی و ڕوونکردنەوەی ورد بەبێ ئەوەی هیچ کام لە سڵاو یان پرسیارەکەی پشتگوێ بخەیت.\n"
+        "٣. ئەگەر پەیامەکە تەنها پرسیار بوو بێ سڵاوکردن: ڕاستەوخۆ دەستبکە بە شیکار و وەڵامە ئەکادیمییەکە بەبێ پێشەکی و وتەی زیادە.\n"
+        "٤. شیکارییەکان زۆر ڕێکخراو و بە شێوازی ئەکادیمی (خاڵبەندی، هاوکێشەی بیرکاری، نموونەی ژیانی ڕۆژانە) بنووسە.\n"
+        "٥. بە هەمان زمان و دیالێکتی پرسیارەکە (سۆرانی، بادینی، عەرەبی، ئینگلیزی) وەڵام بدەرەوە.\n"
+        "٦. یاسای بیرکاری و سیمبولی دۆلار: هەرگیز و بە هیچ جۆرێک نیشانەی دۆلار (\$ یان \$\$) لە وەڵامەکانتدا بەکارمەهێنە بۆ هاوکێشە یان نووسین. هاوکێشەکان بە شێوازی دەقی سادە و ڕوون بنووسە (وەک: d/dx(x^n) = n · x^(n-1) یان 3x² یان 6x) بەبێ هیچ نیشانەیەکی \$.";
 
     // 3. Production: Route through Trusted Server-Side AI Gateway (if configured with real host)
     final isPlaceholderBackend = AppEnv.backendBaseUrl.contains('api.zankoai.com');
@@ -490,7 +492,8 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   // Instant Context-Aware Academic Knowledge Engine (Sub-0.2s execution)
   String _generateAcademicResponse(String query, {String systemInstruction = ""}) {
-    final cleanQ = query.trim().toLowerCase().replaceAll(RegExp(r'[!?,.؛،\s]'), '');
+    final stripped = query.replaceAll(RegExp(r'\[.*?\]'), '').trim();
+    final cleanQ = stripped.toLowerCase().replaceAll(RegExp(r'[!?,.؛،\s]'), '');
     const greetingMatches = [
       'سڵاو', 'سلاو', 'سڵاومامۆستا', 'سلاومامۆستا', 'سڵاوو', 'سلاوو',
       'چۆنی', 'چۆنیت', 'باشی', 'سڵاوچۆنی', 'سلاوچونی',
@@ -500,6 +503,26 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     if (greetingMatches.contains(cleanQ)) {
       return "سڵاو! چۆن دەتوانم یارمەتیت بدەم؟";
     }
+
+    final rawContent = _buildAcademicContent(query);
+    final hasGreeting = RegExp(
+      r'(سڵاو|سلاو|سڵاڤ|سلاڤ|مرحبا|سلام|أهلا|اهلا|hello|hi|hey|چۆنی|چۆنیت|باشی)',
+      caseSensitive: false,
+    ).hasMatch(stripped);
+
+    if (hasGreeting && !rawContent.contains('سڵاو خوێندکاری ئازیز') && !rawContent.contains('سڵاو و ڕێز')) {
+      final qLower = query.toLowerCase().trim();
+      final isEnglish = RegExp(r'^[a-zA-Z0-9\s\?\!\.,\-_]+$').hasMatch(query) || (qLower.contains('explain') || qLower.contains('what is') || qLower.contains('how to') || qLower.contains('difference'));
+      final greetingPrefix = isEnglish
+          ? "Hello and welcome! I am glad to assist you 🌸\n\n"
+          : "سڵاو و ڕێز! زۆر بەخێربێیت خوێندکاری ئازیز، هیوادارم هەمیشە باش و سەرکەوتوو بیت 🌸\n\n";
+      return "$greetingPrefix$rawContent";
+    }
+
+    return rawContent;
+  }
+
+  String _buildAcademicContent(String query) {
 
     final qLower = query.toLowerCase().trim();
     final isEnglish = RegExp(r'^[a-zA-Z0-9\s\?\!\.,\-_]+$').hasMatch(query) || (qLower.contains('explain') || qLower.contains('what is') || qLower.contains('how to') || qLower.contains('difference'));

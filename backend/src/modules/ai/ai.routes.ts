@@ -3,6 +3,7 @@ import { authenticate } from '../../middleware/authenticate.js';
 import { enforceUsage } from '../../middleware/enforceUsage.js';
 import { rateLimiter } from '../../middleware/rate_limiter.js';
 import { uploadGuard } from '../../middleware/uploadGuard.js';
+import { aiCostGuard } from '../../middleware/aiCostGuard.js';
 import {
   chatHandler,
   listConversationsHandler,
@@ -41,6 +42,7 @@ const router = Router();
 router.post(
   '/chat',
   authenticate,
+  aiCostGuard,
   rateLimiter({ windowMs: 60 * 1000, maxRequests: 30, keyPrefix: 'rl:ai:chat' }),
   enforceUsage('ai_chat'),
   chatHandler
@@ -76,6 +78,7 @@ router.delete(
 router.post(
   '/homework',
   authenticate,
+  aiCostGuard,
   rateLimiter({ windowMs: 60 * 1000, maxRequests: 15, keyPrefix: 'rl:ai:homework' }),
   homeworkUpload.single('image'),
   submitHomeworkHandler
@@ -85,6 +88,7 @@ router.post(
 router.post(
   '/solve-image',
   authenticate,
+  aiCostGuard,
   rateLimiter({ windowMs: 60 * 1000, maxRequests: 20, keyPrefix: 'rl:ai:solve' }),
   enforceUsage('homework'),
   solveImageHandler
@@ -94,6 +98,7 @@ router.post(
 router.post(
   '/generate-quiz',
   authenticate,
+  aiCostGuard,
   rateLimiter({ windowMs: 60 * 1000, maxRequests: 10, keyPrefix: 'rl:ai:quiz' }),
   enforceUsage('quiz'),
   generateQuizHandler
@@ -103,6 +108,7 @@ router.post(
 router.post(
   '/generate-flashcards',
   authenticate,
+  aiCostGuard,
   rateLimiter({ windowMs: 60 * 1000, maxRequests: 10, keyPrefix: 'rl:ai:flashcards' }),
   enforceUsage('flashcards'),
   generateFlashcardsHandler
@@ -121,6 +127,7 @@ router.post(
 router.post(
   '/pdf',
   authenticate,
+  aiCostGuard,
   rateLimiter({ windowMs: 60 * 1000, maxRequests: 5, keyPrefix: 'rl:ai:pdf' }),
   pdfUpload.single('file'),
   uploadGuard({
@@ -152,6 +159,7 @@ router.get(
 router.post(
   '/pdf/:jobId/ask',
   authenticate,
+  aiCostGuard,
   rateLimiter({ windowMs: 60 * 1000, maxRequests: 20, keyPrefix: 'rl:ai:pdf:ask' }),
   enforceUsage('ai_chat'),
   askPdfQuestionHandler
@@ -170,6 +178,7 @@ router.post(
 router.post(
   '/ocr',
   authenticate,
+  aiCostGuard,
   rateLimiter({ windowMs: 60 * 1000, maxRequests: 10, keyPrefix: 'rl:ai:ocr' }),
   ocrUpload.single('file'),
   uploadGuard({
@@ -216,6 +225,7 @@ router.delete(
 router.post(
   '/audio',
   authenticate,
+  aiCostGuard,
   rateLimiter({ windowMs: 60 * 1000, maxRequests: 5, keyPrefix: 'rl:ai:audio' }),
   audioUpload.single('file'),
   uploadGuard({
