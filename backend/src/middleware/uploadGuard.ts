@@ -135,21 +135,34 @@ export const uploadGuard = (options: UploadGuardOptions = {}) => {
         );
       }
 
-      // 4. Magic bytes verification (if buffer available in memory)
-      if (f.buffer && Buffer.isBuffer(f.buffer)) {
-        const check = validateMagicBytes(f.buffer);
-        if (!check.isValid) {
-          SecurityLogger.fromRequest(req, 'MALICIOUS_UPLOAD_BLOCKED', 'CRITICAL', 'BLOCKED', {
-            reason: 'File contents do not match genuine document/image magic bytes',
-            fileName: f.originalname,
-          });
-          return next(
-            new BadRequestError(
-              'Security verification failed: File content does not match genuine document or image structure'
-            )
-          );
-        }
+      // 4. Magic bytes verification (requires in-memory buffer)
+      // SECURITY [H-08]: If buffer is absent (e.g. diskStorage), reject the upload.
+      // Never allow unverified files through — always use multer memoryStorage for security-critical uploads.
+      if (!f.buffer || !Buffer.isBuffer(f.buffer)) {
+        SecurityLogger.fromRequest(req, 'MALICIOUS_UPLOAD_BLOCKED', 'CRITICAL', 'BLOCKED', {
+          reason: 'File buffer unavailable for magic byte verification — possible diskStorage misconfiguration',
+          fileName: f.originalname,
+        });
+        return next(
+          new BadRequestError(
+            'Security verification failed: File content could not be verified. Ensure multipart uploads use memory storage.'
+          )
+        );
       }
+
+      const check = validateMagicBytes(f.buffer);
+      if (!check.isValid) {
+        SecurityLogger.fromRequest(req, 'MALICIOUS_UPLOAD_BLOCKED', 'CRITICAL', 'BLOCKED', {
+          reason: 'File contents do not match genuine document/image magic bytes',
+          fileName: f.originalname,
+        });
+        return next(
+          new BadRequestError(
+            'Security verification failed: File content does not match genuine document or image structure'
+          )
+        );
+      }
+
 
       // 5. Sanitize filename on request object
       if (f.originalname) {

@@ -17,6 +17,10 @@ import {
   listPaymentsQuerySchema,
   listAuditLogsQuerySchema,
   getUsageQuerySchema,
+  setUserVipBodySchema,
+  createPlanLimitBodySchema,
+  updatePlanLimitBodySchema,
+  planLimitIdParamSchema,
 } from '../validators/admin.validators.js';
 import { asyncWrapper } from '../utils/asyncWrapper.js';
 
@@ -65,7 +69,8 @@ router.post(
   validateRequest({ body: updateAccountStatusSchema }),
   asyncWrapper(AdminController.updateUserStatus)
 );
-router.post('/users/vip', asyncWrapper(AdminController.setUserVip));
+// SECURITY [H-02]: Added Zod validation to prevent mass-assignment on VIP grant.
+router.post('/users/vip', validateRequest({ body: setUserVipBodySchema }), asyncWrapper(AdminController.setUserVip));
 
 // ─── 2. Subscriptions & Payments ────────────────────────────────────────────
 router.get(
@@ -103,10 +108,10 @@ router.get('/faculties', asyncWrapper(AdminController.listFaculties));
 router.get('/departments', asyncWrapper(AdminController.listDepartments));
 router.get('/courses', asyncWrapper(AdminController.listCourses));
 
-// ─── 6. Plan Limits ─────────────────────────────────────────────────────────
+// SECURITY [H-03]: Added Zod validators with MAX_SAFE_QUOTA clamping on plan-limit endpoints.
 router.get('/plan-limits', asyncWrapper(AdminController.listPlanLimits));
-router.put('/plan-limits/:id', asyncWrapper(AdminController.updatePlanLimit));
-router.post('/plan-limits', asyncWrapper(AdminController.createPlanLimit));
+router.put('/plan-limits/:id', validateRequest({ params: planLimitIdParamSchema, body: updatePlanLimitBodySchema }), asyncWrapper(AdminController.updatePlanLimit));
+router.post('/plan-limits', validateRequest({ body: createPlanLimitBodySchema }), asyncWrapper(AdminController.createPlanLimit));
 
 // ─── 7. User Analytics & Alerts (MAU, DAU, Thresholds) ──────────────────────
 router.get('/analytics/users', asyncWrapper(AdminAnalyticsController.getUserAnalytics));

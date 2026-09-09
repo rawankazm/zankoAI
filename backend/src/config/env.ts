@@ -10,13 +10,14 @@ const envSchema = z.object({
     .transform((val) => parseInt(val, 10)),
   NODE_ENV: z.enum(['development', 'staging', 'production', 'test']).default('development'),
   API_PREFIX: z.string().default('/api'),
-  CORS_ORIGIN: z.string().default('*'),
+  CORS_ORIGIN: z.string().default('https://zankoai.com'),
 
   // Supabase Credentials (Strictly Server-Side)
   SUPABASE_URL: z.string().url().default('https://placeholder.supabase.co'),
   SUPABASE_ANON_KEY: z.string().min(1).default('placeholder-anon-key'),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).default('placeholder-service-role-key'),
-  SUPABASE_JWT_SECRET: z.string().default('placeholder-jwt-secret'),
+  // SECURITY [C-01]: SUPABASE_JWT_SECRET must be set explicitly — no insecure default.
+  SUPABASE_JWT_SECRET: z.string().min(32).default('REPLACE_ME_SUPABASE_JWT_SECRET_32_CHARS_MIN'),
 
   // Redis Configuration
   REDIS_HOST: z.string().default('127.0.0.1'),
@@ -57,10 +58,18 @@ const envSchema = z.object({
     .default('2')
     .transform((val) => parseInt(val, 10)),
 
-  // Future Payment Gateways (placeholders)
+  // Payment Gateways — SECURITY [C-01]: All secrets required in production; no insecure fallbacks.
   FIB_CLIENT_ID: z.string().optional(),
   FIB_CLIENT_SECRET: z.string().optional(),
   FASTPAY_MERCHANT_ID: z.string().optional(),
+  FASTPAY_PASSWORD: z.string().optional(),
+  ZAINCASH_MSISDN: z.string().optional(),
+  // SECURITY [C-01]: Required — used to sign/verify ZainCash JWT tokens.
+  ZAINCASH_SECRET: z.string().min(32).optional(),
+  QI_CARD_SECRET_KEY: z.string().min(32).optional(),
+
+  // Notifications — SECURITY [C-01]: Must be a strong random secret in production.
+  NOTIFICATION_SECRET: z.string().min(32).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -72,7 +81,30 @@ export const validateEnv = (): Env => {
     console.error(parsed.error.format());
     process.exit(1);
   }
-  return parsed.data;
+
+  const cfg = parsed.data;
+
+  // SECURITY [C-04]: Reject wildcard CORS in production — prevents auth bypass from any origin.
+  if (cfg.NODE_ENV === 'production' && (cfg.CORS_ORIGIN === '*' || !cfg.CORS_ORIGIN)) {
+    console.error('❌ SECURITY: CORS_ORIGIN cannot be "*" or empty in production. Set it to your explicit domain(s).');
+    process.exit(1);
+  }
+
+  // SECURITY [C-01]: Reject placeholder/default secrets in production.
+  if (cfg.NODE_ENV === 'production') {
+    const insecureDefaults = [
+      'REPLACE_ME_SUPABASE_JWT_SECRET_32_CHARS_MIN',
+      'placeholder-jwt-secret',
+      'placeholder-service-role-key',
+      'placeholder-anon-key',
+    ];
+    if (insecureDefaults.some(d => cfg.SUPABASE_JWT_SECRET?.includes(d) || cfg.SUPABASE_SERVICE_ROLE_KEY?.includes(d))) {
+      console.error('❌ SECURITY: Placeholder secrets detected in production environment. Set real values in environment variables.');
+      process.exit(1);
+    }
+  }
+
+  return cfg;
 };
 
 export const env = validateEnv();

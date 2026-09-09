@@ -15,6 +15,11 @@ import { NotFoundError } from './utils/apiError.js';
 export const createApp = (): Express => {
   const app = express();
 
+  // SECURITY [H-04]: Trust exactly 1 reverse proxy (Nginx). This enables req.ip to correctly
+  // resolve the real client IP from X-Forwarded-For set by Nginx only, not by the client itself.
+  // Setting to 1 means we trust the immediately preceding proxy but not client-injected headers.
+  app.set('trust proxy', 1);
+
   // ─── 0. Structured JSON Request Tracing & Production Latency Logger ───
   app.use(requestLogger);
 

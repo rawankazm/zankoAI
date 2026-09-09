@@ -259,7 +259,9 @@ export class PaymentService {
     transactionId: string
   ): Promise<void> {
     const isYearly = payment.plan === 'PREMIUM_YEARLY' || payment.plan === 'YEARLY';
-    const periodDays = (payment.metadata && payment.metadata.duration_days) ? payment.metadata.duration_days : (isYearly ? 365 : 30);
+    // SECURITY [H-07]: Never trust metadata.duration_days from the payment record.
+    // The duration MUST be derived solely from the canonical plan name to prevent manipulation.
+    const periodDays = isYearly ? 365 : 30;
     const subPlan: SubscriptionPlanType = isYearly ? 'PREMIUM_YEARLY' : 'PREMIUM_MONTHLY';
 
     logger.info('Activating VIP subscription for user ' + payment.user_id + ' for ' + periodDays + ' days');

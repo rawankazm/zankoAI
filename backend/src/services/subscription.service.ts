@@ -190,117 +190,148 @@ export class SubscriptionService {
       inGracePeriod: false,
       gracePeriodEnd: sub.grace_period_end || null,
       autoRenew: sub.auto_renew ?? false,
-      provider: sub.provider,
-      daysRemaining,
-    };
-  }
-
-  /**
+   /**
    * 2. Activation Lifecycle Method
    * Grants Premium/VIP upon verified payment or administrator grant.
+   *
+   * SECURITY [C-03]: Wrapped in a Redis distributed lock to prevent duplicate
+   * activation from concurrent webhook retries (race condition between idempotency
+   * check and the DB upsert). Lock is keyed by idempotencyKey and auto-expires in 30s.
    */
   static async activateSubscription(params: ActivateSubscriptionParams): Promise<SubscriptionRecord> {
     const { userId, plan, provider, durationDays, providerSubscriptionId, providerCustomerId, autoRenew, metadata } = params;
 
-    let periodDays = durationDays;
-    if (!periodDays) {
-      if (plan === 'PREMIUM_YEARLY') {
-        periodDays = 365;
-      } else {
-        periodDays = 30;
+    // SECURITY [C-03]: Acquire distributed lock — only one concurrent call per idempotency key is allowed.
+    const lockKey = `zanko:sub_activate_lock:${params.idempotencyKey || userId}`;
+    const lockToken = `lock:${Date.now()}:${Math.random()}`;
+    const LOCK_TTL_SECONDS = 30;
+
+    const acquired = await redis.set(lockKey, lockToken, 'EX', LOCK_TTL_SECONDS, 'NX');
+    if (!acquired) {
+      logger.warn('[SubscriptionService] Duplicate activation blocked by Redis lock for: ' + lockKey);
+      // Return existing subscription record rather than throwing
+      const { data: existingSub } = await supabaseAdmin
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (existingSub) return existingSub as SubscriptionRecord;
+      throw new Error('Concurrent subscription activation detected. Please retry.');
+    }
+
+    try {
+      let periodDays = durationDays;
+      if (!periodDays) {
+        if (plan === 'PREMIUM_YEARLY') {
+          periodDays = 365;
+        } else {
+          periodDays = 30;
+        }
       }
-    }
 
-    const now = new Date();
-    // Check if user has an existing active subscription to prevent loss of remaining days
-    const { data: existingSub } = await supabaseAdmin
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('status', 'active')
-      .maybeSingle();
+      const now = new Date();
+      // Check if user has an existing active subscription to prevent loss of remaining days
+      const { data: existingSub } = await supabaseAdmin
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .maybeSingle();
 
-    let startDate = now;
-    let endDate: Date;
+      let startDate = now;
+      let endDate: Date;
 
-    if (existingSub && new Date(existingSub.current_period_end).getTime() > now.getTime()) {
-      // Append period to existing active expiry
-      const currentExpiry = new Date(existingSub.current_period_end);
-      endDate = new Date(currentExpiry.getTime() + periodDays * 86400000);
-      startDate = new Date(existingSub.current_period_start);
-    } else {
-      endDate = new Date(now.getTime() + periodDays * 86400000);
-    }
+      if (existingSub && new Date(existingSub.current_period_end).getTime() > now.getTime()) {
+        // Append period to existing active expiry
+        const currentExpiry = new Date(existingSub.current_period_end);
+        endDate = new Date(currentExpiry.getTime() + periodDays * 86400000);
+        startDate = new Date(existingSub.current_period_start);
+      } else {
+        endDate = new Date(now.getTime() + periodDays * 86400000);
+      }
 
-    // Upsert subscription record
-    const { data: sub, error: subErr } = await supabaseAdmin
-      .from('subscriptions')
-      .upsert(
-        {
-          user_id: userId,
+      // Upsert subscription record
+      const { data: sub, error: subErr } = await supabaseAdmin
+        .from('subscriptions')
+        .upsert(
+          {
+            user_id: userId,
+            plan,
+            status: 'active',
+            provider,
+            provider_subscription_id: providerSubscriptionId || null,
+            provider_customer_id: providerCustomerId || null,
+            current_period_start: startDate.toISOString(),
+            current_period_end: endDate.toISOString(),
+            cancel_at_period_end: false,
+            grace_period_end: null,
+            auto_renew: autoRenew ?? false,
+            metadata: metadata || {},
+            updated_at: now.toISOString(),
+          },
+          { onConflict: 'user_id' }
+        )
+        .select()
+        .single();
+
+      if (subErr) {
+        logger.error('Failed to activate subscription in database: ' + subErr.message);
+        throw subErr;
+      }
+
+      // Elevate user profile to VIP and Premium
+      await supabaseAdmin
+        .from('profiles')
+        .update({
+          plan: 'premium',
+          is_vip: true,
+          vip_status: 'active',
+          vip_expiry: endDate.toISOString(),
+          updated_at: now.toISOString(),
+        })
+        .eq('id', userId);
+
+      // Record audit event
+      await supabaseAdmin.from('subscription_events').insert({
+        subscription_id: sub.id,
+        user_id: userId,
+        event_type: 'subscription.activated',
+        provider,
+        provider_event_id: providerSubscriptionId || null,
+        idempotency_key: params.idempotencyKey || ('act_' + userId + '_' + now.getTime()),
+        payload: {
           plan,
-          status: 'active',
-          provider,
-          provider_subscription_id: providerSubscriptionId || null,
-          provider_customer_id: providerCustomerId || null,
+          periodDays,
           current_period_start: startDate.toISOString(),
           current_period_end: endDate.toISOString(),
-          cancel_at_period_end: false,
-          grace_period_end: null,
-          auto_renew: autoRenew ?? false,
-          metadata: metadata || {},
-          updated_at: now.toISOString(),
+          autoRenew: autoRenew ?? false,
         },
-        { onConflict: 'user_id' }
-      )
-      .select()
-      .single();
+      });
 
-    if (subErr) {
-      logger.error('Failed to activate subscription in database: ' + subErr.message);
-      throw subErr;
+      // Send confirmation notification
+      await NotificationService.scheduleNotification({
+        userId,
+        title: 'ZankoAI Premium Activated! 🌟',
+        body: 'بەخێربێیت بۆ زانکۆ پرێمیۆم! هەموو تایبەتمەندییە زیرەکەکان بۆتۆ چالاككران.',
+        type: 'subscription_notification',
+        idempotencyKey: 'notif_sub_act_' + sub.id,
+      });
+
+      logger.info('Activated subscription ' + sub.id + ' for user ' + userId + ' until ' + endDate.toISOString());
+      return sub as SubscriptionRecord;
+    } finally {
+      // Always release the distributed lock after activation completes
+      try {
+        const currentToken = await redis.get(lockKey);
+        if (currentToken === lockToken) {
+          await redis.del(lockKey);
+        }
+      } catch (releasErr: any) {
+        logger.warn('[SubscriptionService] Failed to release activation lock: ' + releasErr.message);
+      }
     }
-
-    // Elevate user profile to VIP and Premium
-    await supabaseAdmin
-      .from('profiles')
-      .update({
-        plan: 'premium',
-        is_vip: true,
-        vip_status: 'active',
-        vip_expiry: endDate.toISOString(),
-        updated_at: now.toISOString(),
-      })
-      .eq('id', userId);
-
-    // Record audit event
-    await supabaseAdmin.from('subscription_events').insert({
-      subscription_id: sub.id,
-      user_id: userId,
-      event_type: 'subscription.activated',
-      provider,
-      provider_event_id: providerSubscriptionId || null,
-      idempotency_key: params.idempotencyKey || ('act_' + userId + '_' + now.getTime()),
-      payload: {
-        plan,
-        periodDays,
-        current_period_start: startDate.toISOString(),
-        current_period_end: endDate.toISOString(),
-        autoRenew: autoRenew ?? false,
-      },
-    });
-
-    // Send confirmation notification
-    await NotificationService.scheduleNotification({
-      userId,
-      title: 'ZankoAI Premium Activated! 🌟',
-      body: 'بەخێربێیت بۆ زانکۆ پرێمیۆم! هەموو تایبەتمەندییە زیرەکەکان بۆتۆ چالاککران.',
-      type: 'subscription_notification',
-      idempotencyKey: 'notif_sub_act_' + sub.id,
-    });
-
-    logger.info('Activated subscription ' + sub.id + ' for user ' + userId + ' until ' + endDate.toISOString());
-    return sub as SubscriptionRecord;
   }
 
   /**

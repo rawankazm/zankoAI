@@ -162,6 +162,7 @@ export class QiCardPaymentProvider implements PaymentProvider {
     }
 
     // Cryptographic HMAC SHA256 Signature Verification
+    // SECURITY [C-02]: Signature header is REQUIRED — never silently skipped.
     if (this.config.secretKey) {
       const expectedSignPayload = orderId + ':' + amount.toString() + ':' + currency + ':' + (bodyObj.timestamp || '');
       const expectedSignature = crypto
@@ -169,15 +170,23 @@ export class QiCardPaymentProvider implements PaymentProvider {
         .update(expectedSignPayload)
         .digest('hex');
 
-      if (signature) {
-        const sigBuf = Buffer.from(signature, 'utf8');
-        const expBuf = Buffer.from(expectedSignature, 'utf8');
-        const match = sigBuf.length === expBuf.length && crypto.timingSafeEqual(sigBuf, expBuf);
-        if (!match) {
-          logger.warn('Qi Card webhook invalid signature for order: ' + orderId);
-          throw new Error('Qi Card webhook rejected: Cryptographic signature mismatch.');
-        }
+      if (!signature) {
+        logger.warn('Qi Card webhook rejected: Missing cryptographic signature header for order: ' + orderId);
+        throw new Error('Qi Card webhook rejected: Cryptographic signature header is required but missing.');
       }
+
+      const sigBuf = Buffer.from(signature, 'utf8');
+      const expBuf = Buffer.from(expectedSignature, 'utf8');
+      const match = sigBuf.length === expBuf.length && crypto.timingSafeEqual(sigBuf, expBuf);
+      if (!match) {
+        logger.warn('Qi Card webhook invalid signature for order: ' + orderId);
+        throw new Error('Qi Card webhook rejected: Cryptographic signature mismatch.');
+      }
+    } else {
+      // SECURITY [C-02]: If secretKey is not configured, log a critical warning and reject.
+      // Never process payments without signature verification.
+      logger.error('CRITICAL SECURITY: QI_CARD_SECRET_KEY is not configured. Webhook rejected for safety.');
+      throw new Error('Qi Card webhook rejected: Server-side secret key not configured. Contact administrator.');
     }
 
     const isPaid = statusRaw === 'SUCCESS' || statusRaw === 'PAID' || statusRaw === 'COMPLETED';

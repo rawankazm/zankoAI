@@ -33,12 +33,10 @@ export const rateLimiter = (options?: RateLimiterOptions | number, maxReqs?: num
   }
 
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    // Unique identifier: user ID if authenticated, else client IP
-    const clientIp =
-      (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
-      req.socket.remoteAddress ||
-      req.ip ||
-      'anonymous';
+    // Unique identifier: user ID if authenticated, else client IP.
+    // SECURITY [H-04]: Use req.ip (resolved by Express trust proxy), NOT raw X-Forwarded-For header.
+    // Manually reading X-Forwarded-For allows attackers to spoof their IP and bypass rate limiting.
+    const clientIp = req.ip || req.socket.remoteAddress || 'anonymous';
     const identifier = req.user?.id ? `user:${req.user.id}` : `ip:${clientIp}`;
     const key = `${keyPrefix}:${identifier}`;
 
@@ -112,11 +110,8 @@ export const bruteForceLimiter = (options: {
   const keyPrefix = options.keyPrefix || 'bruteforce:auth';
 
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const clientIp =
-      (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
-      req.socket.remoteAddress ||
-      req.ip ||
-      'anonymous';
+    // SECURITY [H-04]: Use req.ip (resolved by Express trust proxy), NOT raw X-Forwarded-For.
+    const clientIp = req.ip || req.socket.remoteAddress || 'anonymous';
 
     // Account specific identifier if email / identifier provided in body
     const targetAccount = typeof req.body?.email === 'string'
@@ -154,8 +149,16 @@ export const bruteForceLimiter = (options: {
       next();
     } catch (err: any) {
       if (err instanceof RateLimitError) return next(err);
-      logger.warn('Brute force limiter Redis fallback:', err.message);
-      next();
+      // SECURITY [H-05]: Fail CLOSED on Redis failure for brute-force limiter.
+      // Silently allowing requests through when Redis is down enables brute-force attacks.
+      logger.error('[BruteForceLimiter] Redis unavailable — failing closed to prevent brute-force attacks:', err.message);
+      res.status(503).json({
+        success: false,
+        error: {
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'Authentication service temporarily unavailable. Please try again shortly.',
+        },
+      });
     }
   };
 };

@@ -163,7 +163,24 @@ export class QuizService {
       return this.getFallbackQuestions(params);
     }
 
-    const contextContent = source_text.length > 8000 ? source_text.substring(0, 8000) : source_text;
+    // SECURITY [H-06]: Sanitize user-supplied source_text to remove common prompt injection patterns
+    // before embedding in the AI system prompt. Wrap in XML delimiters to signal untrusted content.
+    const sanitizePromptContent = (text: string): string => {
+      return text
+        // Remove common injection trigger phrases
+        .replace(/ignore\s+(previous|prior|above|all)\s+(instructions?|prompts?|rules?)/gi, '[FILTERED]')
+        .replace(/disregard\s+(previous|prior|above|all)\s+(instructions?|prompts?|rules?)/gi, '[FILTERED]')
+        .replace(/you\s+are\s+now\s+a/gi, '[FILTERED]')
+        .replace(/act\s+as\s+(if\s+you\s+are|a)/gi, '[FILTERED]')
+        .replace(/new\s+instructions?:/gi, '[FILTERED]')
+        .replace(/system\s+prompt:/gi, '[FILTERED]')
+        .replace(/\[\s*INST\s*\]/gi, '[FILTERED]')
+        .replace(/<\s*system\s*>/gi, '[FILTERED]');
+    };
+
+    const rawContent = source_text.length > 8000 ? source_text.substring(0, 8000) : source_text;
+    const contextContent = sanitizePromptContent(rawContent);
+
     const prompt = `You are ZankoAI's expert academic university quiz generator.
 Generate exactly ${question_count} high-quality academic questions based on the following material:
 Source Type: "${sourceType || 'ai_topic'}"
@@ -198,8 +215,10 @@ CRITICAL QUESTION RULES:
   }
 ]
 
-SOURCE TEXT:
-${contextContent || topic}`;
+<SOURCE_MATERIAL>
+${contextContent || topic}
+</SOURCE_MATERIAL>`;
+
 
     try {
       const model = env.GEMINI_MODEL || 'gemini-2.5-flash';

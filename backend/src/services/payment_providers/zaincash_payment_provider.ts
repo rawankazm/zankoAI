@@ -76,7 +76,11 @@ export class ZainCashPaymentProvider implements PaymentProvider {
    * 3. Verifies a completed payment directly with the provider
    */
   async verifyPayment(referenceId: string, payload?: any): Promise<VerificationResult> {
-    const secret = env.ZAINCASH_SECRET || 'zanko_zaincash_secret_2026';
+    // SECURITY [C-01/H-01]: Fail hard if secret is not configured — no insecure fallback.
+    const secret = env.ZAINCASH_SECRET;
+    if (!secret) {
+      return { valid: false, orderId: referenceId, status: 'failed', error: 'Server misconfiguration: ZAINCASH_SECRET not set.' };
+    }
     if (!payload?.token) {
       return {
         valid: false,
@@ -87,7 +91,8 @@ export class ZainCashPaymentProvider implements PaymentProvider {
     }
 
     try {
-      const decoded = jwt.verify(payload.token, secret) as any;
+      // SECURITY [H-01]: Explicitly specify algorithm to reject alg:none attacks.
+      const decoded = jwt.verify(payload.token, secret, { algorithms: ['HS256'] }) as any;
       const isSuccess = decoded.status === 'success';
 
       return {
@@ -116,7 +121,11 @@ export class ZainCashPaymentProvider implements PaymentProvider {
     headers: Record<string, string>,
     rawBody: any
   ): Promise<WebhookResult> {
-    const secret = env.ZAINCASH_SECRET || 'zanko_zaincash_secret_2026';
+    // SECURITY [C-01/H-01]: Fail hard if secret is not configured — no insecure fallback.
+    const secret = env.ZAINCASH_SECRET;
+    if (!secret) {
+      throw new Error('ZainCash webhook rejected: ZAINCASH_SECRET is not configured. Contact system administrator.');
+    }
     const bodyObj = typeof rawBody === 'string' ? JSON.parse(rawBody) : rawBody;
     const token = bodyObj.token || headers['x-zaincash-token'];
 
@@ -125,7 +134,8 @@ export class ZainCashPaymentProvider implements PaymentProvider {
     }
 
     try {
-      const decoded = jwt.verify(token, secret) as any;
+      // SECURITY [H-01]: Explicitly specify algorithm to reject alg:none attacks.
+      const decoded = jwt.verify(token, secret, { algorithms: ['HS256'] }) as any;
       const isPaid = decoded.status === 'success';
       const orderId = decoded.orderid || bodyObj.orderId || bodyObj.order_id;
       const txId = decoded.id || ('zc_tx_' + orderId);
