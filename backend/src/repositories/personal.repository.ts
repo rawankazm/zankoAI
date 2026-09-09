@@ -3,7 +3,7 @@ import { ParsedQuery } from '../utils/queryBuilder.js';
 
 export class PersonalRepository {
   // ─── Calendar Events ───
-  static async listCalendarEvents(userId: string, startTime?: string, endTime?: string) {
+  static async listCalendarEvents(userId: string, startTime?: string, endTime?: string, maxLimit = 100) {
     let req = supabaseAdmin.from('calendar_events').select('*').eq('user_id', userId);
 
     if (startTime) {
@@ -13,7 +13,9 @@ export class PersonalRepository {
       req = req.lte('start_time', endTime);
     }
 
-    const { data, error } = await req.order('start_time', { ascending: true });
+    const { data, error } = await req
+      .order('start_time', { ascending: true })
+      .limit(maxLimit);
     if (error) throw error;
     return data || [];
   }

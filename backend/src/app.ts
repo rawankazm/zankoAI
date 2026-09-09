@@ -9,6 +9,7 @@ import { requestLogger } from './middleware/request_logger.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { rateLimiter } from './middleware/rateLimiter.js';
 import { sanitizeInput } from './middleware/sanitization.js';
+import { compressionMiddleware } from './middleware/compression.js';
 import { NotFoundError } from './utils/apiError.js';
 
 export const createApp = (): Express => {
@@ -52,6 +53,9 @@ export const createApp = (): Express => {
 
   // CORS with strict origin validation
   app.use(cors(corsOptions));
+
+  // Response Compression (Gzip / Deflate for payloads >= 1KB)
+  app.use(compressionMiddleware);
 
   // ─── 2. Request Parsing & Strict Body Limits ───
   // Lowered from 25MB to 2MB to eliminate memory exhaustion DoS vectors

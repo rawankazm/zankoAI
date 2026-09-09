@@ -163,26 +163,25 @@ export class LearningRepository {
   }
 
   static async getQuizWithQuestions(id: string, sanitizeAnswers = true) {
-    const { data: quiz, error: qErr } = await supabaseAdmin
-      .from('quizzes')
-      .select('*')
-      .eq('id', id)
-      .maybeSingle();
+    const [quizRes, questionsRes] = await Promise.all([
+      supabaseAdmin.from('quizzes').select('*').eq('id', id).maybeSingle(),
+      supabaseAdmin
+        .from('quiz_questions')
+        .select('*')
+        .eq('quiz_id', id)
+        .order('order_index', { ascending: true }),
+    ]);
 
-    if (qErr || !quiz) return null;
+    if (quizRes.error || !quizRes.data) return null;
+    if (questionsRes.error) throw questionsRes.error;
 
-    const { data: questions, error: questionsErr } = await supabaseAdmin
-      .from('quiz_questions')
-      .select('*')
-      .eq('quiz_id', id)
-      .order('order_index', { ascending: true });
-
-    if (questionsErr) throw questionsErr;
+    const quiz = quizRes.data;
+    const questions = questionsRes.data || [];
 
     // Sanitize correct_answer from students during active taking
     const cleanQuestions = sanitizeAnswers
-      ? (questions || []).map(({ correct_answer, explanation, ...rest }) => rest)
-      : questions || [];
+      ? questions.map(({ correct_answer, explanation, ...rest }: any) => rest)
+      : questions;
 
     return { ...quiz, questions: cleanQuestions };
   }
