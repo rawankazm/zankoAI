@@ -7,8 +7,9 @@ typedef SubscriptionModel = UserSubscriptionModel;
 /// Subscription Plans supported in ZankoAI
 enum SubscriptionPlanType {
   free,
-  premiumMonthly,
-  premiumYearly,
+  premiumMonthly, // 1 Month - 5,000 IQD
+  premiumQuarterly, // 3 Months - 12,000 IQD
+  premiumYearly, // 9 Months - 40,000 IQD
   student,
   university,
   team,
@@ -21,8 +22,10 @@ extension SubscriptionPlanTypeExt on SubscriptionPlanType {
         return 'FREE';
       case SubscriptionPlanType.premiumMonthly:
         return 'PREMIUM_MONTHLY';
+      case SubscriptionPlanType.premiumQuarterly:
+        return 'PREMIUM_3_MONTHS';
       case SubscriptionPlanType.premiumYearly:
-        return 'PREMIUM_YEARLY';
+        return 'PREMIUM_9_MONTHS';
       case SubscriptionPlanType.student:
         return 'STUDENT';
       case SubscriptionPlanType.university:
@@ -32,14 +35,44 @@ extension SubscriptionPlanTypeExt on SubscriptionPlanType {
     }
   }
 
+  int get priceIqd {
+    switch (this) {
+      case SubscriptionPlanType.premiumMonthly:
+        return 5000;
+      case SubscriptionPlanType.premiumQuarterly:
+        return 12000;
+      case SubscriptionPlanType.premiumYearly:
+        return 40000;
+      case SubscriptionPlanType.free:
+      default:
+        return 0;
+    }
+  }
+
+  int get durationDays {
+    switch (this) {
+      case SubscriptionPlanType.premiumMonthly:
+        return 30;
+      case SubscriptionPlanType.premiumQuarterly:
+        return 90;
+      case SubscriptionPlanType.premiumYearly:
+        return 270;
+      case SubscriptionPlanType.free:
+      default:
+        return 0;
+    }
+  }
+
   String get labelKu {
     switch (this) {
       case SubscriptionPlanType.free:
         return 'بەخۆڕایی (Free)';
       case SubscriptionPlanType.premiumMonthly:
-        return 'پریمیۆمی مانگانە (Monthly)';
+        return 'پلانی ١ مانگ (5,000 د.ع)';
+      case SubscriptionPlanType.premiumQuarterly:
+        return 'پلانی ٣ مانگ (12,000 د.ع)';
       case SubscriptionPlanType.premiumYearly:
-        return 'پریمیۆمی ساڵانە (Yearly)';
+        return 'پلانی ٩ مانگ (40,000 د.ع)';
       case SubscriptionPlanType.student:
         return 'داشکاندنی قوتابی (Student)';
       case SubscriptionPlanType.university:
@@ -53,8 +86,17 @@ extension SubscriptionPlanTypeExt on SubscriptionPlanType {
     switch (raw.toUpperCase()) {
       case 'PREMIUM_MONTHLY':
       case 'MONTHLY':
+      case 'PREMIUM_1_MONTH':
+      case '1_MONTH':
       case 'PREMIUM':
         return SubscriptionPlanType.premiumMonthly;
+      case 'PREMIUM_3_MONTHS':
+      case '3_MONTHS':
+      case 'QUARTERLY':
+      case 'PREMIUM_QUARTERLY':
+        return SubscriptionPlanType.premiumQuarterly;
+      case 'PREMIUM_9_MONTHS':
+      case '9_MONTHS':
       case 'PREMIUM_YEARLY':
       case 'YEARLY':
         return SubscriptionPlanType.premiumYearly;
@@ -132,6 +174,7 @@ class UserSubscriptionModel {
   final bool autoRenew;
   final String? provider;
   final int daysRemaining;
+  final UserUsageSummaryModel? usage;
 
   const UserSubscriptionModel({
     required this.hasActiveSubscription,
@@ -146,6 +189,7 @@ class UserSubscriptionModel {
     this.autoRenew = false,
     this.provider,
     this.daysRemaining = 0,
+    this.usage,
   });
 
   /// STRICT RULE: If current_period_end < now, user cannot be treated as Premium
@@ -170,12 +214,16 @@ class UserSubscriptionModel {
   factory UserSubscriptionModel.fromJson(Map<String, dynamic> json) {
     final rawPlan = (json['plan_type'] ?? json['plan'] ?? 'FREE').toString();
     final rawStatus = (json['status'] ?? 'expired').toString();
-    final rawIsActive = json['is_active'] == true ||
-        json['hasActiveSubscription'] == true ||
-        rawStatus.toLowerCase() == 'active';
-    final rawIsPremium = json['is_premium'] == true ||
-        json['isPremium'] == true ||
-        rawPlan.toUpperCase().contains('PREMIUM');
+    
+    final rawIsActive = json.containsKey('hasActiveSubscription')
+        ? json['hasActiveSubscription'] == true
+        : (json['is_active'] == true || rawStatus.toLowerCase() == 'active');
+
+    final rawIsPremium = json.containsKey('isPremium')
+        ? json['isPremium'] == true
+        : json.containsKey('is_premium')
+            ? json['is_premium'] == true
+            : (rawPlan.toUpperCase().contains('PREMIUM') && rawIsActive);
 
     return UserSubscriptionModel(
       hasActiveSubscription: rawIsActive,
@@ -196,6 +244,9 @@ class UserSubscriptionModel {
       autoRenew: json['autoRenew'] == true || json['auto_renew'] == true,
       provider: (json['provider'])?.toString(),
       daysRemaining: ((json['daysRemaining'] ?? json['days_remaining']) as num?)?.toInt() ?? 0,
+      usage: json['usage'] is Map<String, dynamic>
+          ? UserUsageSummaryModel.fromJson(json['usage'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -213,8 +264,153 @@ class UserSubscriptionModel {
       'autoRenew': autoRenew,
       'provider': provider,
       'daysRemaining': daysRemaining,
+      'usage': usage?.toJson(),
     };
   }
+}
+
+/// Feature quota & live usage tracking model
+class FeatureUsageModel {
+  final String feature;
+  final String periodType; // 'daily' or 'monthly'
+  final int currentUsage;
+  final int limit;
+  final int remaining;
+  final DateTime? resetAt;
+  final String? description;
+
+  const FeatureUsageModel({
+    required this.feature,
+    required this.periodType,
+    required this.currentUsage,
+    required this.limit,
+    required this.remaining,
+    this.resetAt,
+    this.description,
+  });
+
+  bool get isUnlimited => limit <= 0;
+  double get progressRatio => isUnlimited || limit == 0
+      ? 0.0
+      : (currentUsage / limit).clamp(0.0, 1.0);
+  bool get isExhausted => !isUnlimited && remaining <= 0;
+
+  factory FeatureUsageModel.fromJson(Map<String, dynamic> json, [String? featureKey]) {
+    return FeatureUsageModel(
+      feature: (json['feature'] ?? featureKey ?? '').toString(),
+      periodType: (json['period_type'] ?? json['periodType'] ?? 'daily').toString(),
+      currentUsage: ((json['current_usage'] ?? json['currentUsage']) as num?)?.toInt() ?? 0,
+      limit: ((json['limit'] ?? json['limit_value']) as num?)?.toInt() ?? 0,
+      remaining: ((json['remaining']) as num?)?.toInt() ?? 0,
+      resetAt: json['reset_at'] != null || json['resetAt'] != null
+          ? DateTime.tryParse((json['reset_at'] ?? json['resetAt']).toString())
+          : null,
+      description: (json['description'])?.toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'feature': feature,
+      'period_type': periodType,
+      'current_usage': currentUsage,
+      'limit': limit,
+      'remaining': remaining,
+      'reset_at': resetAt?.toIso8601String(),
+      'description': description,
+    };
+  }
+}
+
+/// Aggregated user usage summary model
+class UserUsageSummaryModel {
+  final String plan;
+  final bool isVip;
+  final Map<String, FeatureUsageModel> features;
+  final DateTime? queriedAt;
+
+  const UserUsageSummaryModel({
+    required this.plan,
+    required this.isVip,
+    required this.features,
+    this.queriedAt,
+  });
+
+  FeatureUsageModel? getFeature(String name) => features[name];
+
+  factory UserUsageSummaryModel.fromJson(Map<String, dynamic> json) {
+    final rawFeatures = json['features'];
+    final parsedMap = <String, FeatureUsageModel>{};
+
+    if (rawFeatures is Map<String, dynamic>) {
+      rawFeatures.forEach((key, val) {
+        if (val is Map<String, dynamic>) {
+          parsedMap[key] = FeatureUsageModel.fromJson(val, key);
+        }
+      });
+    }
+
+    return UserUsageSummaryModel(
+      plan: (json['plan'] ?? 'free').toString(),
+      isVip: json['is_vip'] == true || json['isVip'] == true,
+      features: parsedMap,
+      queriedAt: json['queried_at'] != null || json['queriedAt'] != null
+          ? DateTime.tryParse((json['queried_at'] ?? json['queriedAt']).toString())
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'plan': plan,
+      'is_vip': isVip,
+      'features': features.map((k, v) => MapEntry(k, v.toJson())),
+      'queried_at': queriedAt?.toIso8601String(),
+    };
+  }
+}
+
+/// Pluggable payment provider option with visual branding
+enum PaymentProviderOption {
+  fastpay('fastpay', 'FastPay', 'فاست پەی (FastPay)', 0xFFE00613),
+  fib('fib', 'First Iraqi Bank', 'بانکی یەکەمی عێراقی (FIB)', 0xFF104E35),
+  zaincash('zaincash', 'ZainCash', 'زەین کاش (ZainCash)', 0xFFE1007A),
+  qiCard('qi_card', 'Qi Card / Mastercard', 'کی کارت / ماستەرکارت (Qi Card)', 0xFF005BAC);
+
+  final String id;
+  final String englishName;
+  final String kurdishName;
+  final int primaryColorHex;
+
+  const PaymentProviderOption(this.id, this.englishName, this.kurdishName, this.primaryColorHex);
+
+  static PaymentProviderOption fromString(String val) {
+    switch (val.toLowerCase()) {
+      case 'fastpay':
+        return PaymentProviderOption.fastpay;
+      case 'fib':
+        return PaymentProviderOption.fib;
+      case 'zaincash':
+        return PaymentProviderOption.zaincash;
+      case 'qi_card':
+      case 'qicard':
+      case 'mastercard':
+      case 'visa':
+        return PaymentProviderOption.qiCard;
+      default:
+        return PaymentProviderOption.fastpay;
+    }
+  }
+}
+
+/// Subscription flow state machine for the UI
+enum SubscriptionFlowState {
+  idle,
+  loading,
+  paymentPending,
+  verifying,
+  paymentSuccessful,
+  paymentFailed,
 }
 
 /// Checkout session response model from POST /api/subscription/checkout

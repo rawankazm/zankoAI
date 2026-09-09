@@ -13,7 +13,7 @@ export const checkoutSchema = z.object({
     'UNIVERSITY',
     'TEAM',
   ]),
-  provider: z.enum(['fib', 'fastpay', 'zaincash', 'stripe']),
+  provider: z.enum(['fib', 'fastpay', 'zaincash', 'qi_card', 'stripe', 'sandbox']),
   returnUrl: z.string().url().optional(),
   cancelUrl: z.string().url().optional(),
 });

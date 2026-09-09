@@ -5,8 +5,9 @@
 import { supabaseAdmin } from '../config/supabase.js';
 import { redis } from '../config/redis.js';
 import { logger } from '../config/logger.js';
-import { PaymentProviderRegistry } from './payment_providers/index.js';
 import { NotificationService } from './notification.service.js';
+import { UsageService } from './usage.service.js';
+import { PaymentService } from './payment.service.js';
 import {
   SubscriptionPlanType,
   SubscriptionStatusType,
@@ -43,6 +44,19 @@ export class SubscriptionService {
       logger.error('Error fetching subscription for user ' + userId + ':', error);
     }
 
+    const res = await this.resolveSubscriptionStatus(userId, sub);
+    try {
+      res.usage = await UsageService.getUserUsageStatus(userId);
+    } catch (uErr: any) {
+      logger.warn('Failed to load usage status for user ' + userId + ': ' + uErr.message);
+    }
+    return res;
+  }
+
+  private static async resolveSubscriptionStatus(
+    userId: string,
+    sub: any
+  ): Promise<SubscriptionStatusResponse> {
     if (!sub) {
       return {
         hasActiveSubscription: false,
@@ -815,13 +829,35 @@ export class SubscriptionService {
   }): Promise<CheckoutResult> {
     const provider = PaymentProviderRegistry.get(params.providerName);
 
-    const checkout = await provider.createCheckout({
-      userId: params.userId,
-      userEmail: params.userEmail,
-      plan: params.plan,
-      returnUrl: params.returnUrl,
-      cancelUrl: params.cancelUrl,
-    });
+    let checkout: CheckoutResult;
+    if (typeof (provider as any).createCheckout === 'function') {
+      checkout = await (provider as any).createCheckout({
+        userId: params.userId,
+        userEmail: params.userEmail,
+        plan: params.plan,
+        returnUrl: params.returnUrl,
+        cancelUrl: params.cancelUrl,
+      });
+    } else {
+      const payment = await PaymentService.createCheckout({
+        userId: params.userId,
+        userEmail: params.userEmail,
+        plan: params.plan,
+        providerName: params.providerName,
+        returnUrl: params.returnUrl,
+        cancelUrl: params.cancelUrl,
+      });
+
+      checkout = {
+        checkoutId: payment.orderId || payment.transactionId || 'chk_' + Date.now(),
+        checkoutUrl: payment.paymentUrl,
+        qrPayload: payment.qrPayload,
+        provider: params.providerName,
+        plan: params.plan,
+        amount: payment.amount ?? PaymentService.getPlanPriceIqd(params.plan),
+        currency: payment.currency || 'IQD',
+      };
+    }
 
     // Record checkout event
     await supabaseAdmin.from('subscription_events').insert({

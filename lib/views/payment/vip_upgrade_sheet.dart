@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
 import '../../services/vip_firestore_service.dart';
@@ -113,6 +114,31 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
             duration: Duration(seconds: 5),
           ),
         );
+      } else if (mounted) {
+        final prefs = await SharedPreferences.getInstance();
+        final reqStatus =
+            prefs.getString('zanko_last_vip_req_status_' + user.id);
+        if (reqStatus == 'rejected' && mounted) {
+          _vipPollTimer?.cancel();
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.cancel_rounded, color: Colors.redAccent),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '⚠️ داواکاری بەشداریکردنی VIPەکەت پەسەند نەکرا.',
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Color(0xFF1E293B),
+              duration: Duration(seconds: 5),
+            ),
+          );
+        }
       }
     });
   }
@@ -280,7 +306,8 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
 دەمەوێت بەشداری VIP لە Zanko AI چالاک بکەم:
 
 📌 زانیاری داواکاری:
-• پلان: $_planTitle ($priceStr د.ع)
+• پلان: $_planTitle
+• بڕی پارە: $priceStr دیناری عێراقی
 • ناوی خوێندکار: $userName
 • ئیمەیڵ: $userEmail
 • ئایدی هەژمار: $userId
@@ -341,7 +368,8 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
 دەمەوێت بەشداری VIP لە Zanko AI چالاک بکەم:
 
 📌 زانیاری داواکاری:
-• پلان: $_planTitle ($priceStr د.ع)
+• پلان: $_planTitle
+• بڕی پارە: $priceStr دیناری عێراقی
 • ناوی خوێندکار: $userName
 • ئیمەیڵ: $userEmail
 • ئایدی هەژمار: $userId

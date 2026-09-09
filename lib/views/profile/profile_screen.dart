@@ -13,6 +13,7 @@ import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
 import '../../services/theme_provider.dart';
 import '../auth/login_screen.dart';
+import '../subscription/premium_subscription_screen.dart';
 import '../payment/vip_upgrade_sheet.dart';
 import '../../services/app_version_service.dart';
 import '../update/force_update_screen.dart';

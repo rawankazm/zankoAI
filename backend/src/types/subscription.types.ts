@@ -107,6 +107,8 @@ export interface WebhookResult {
   metadata?: Record<string, any>;
 }
 
+import { UserUsageSummaryResponse } from './usage.types.js';
+
 export interface SubscriptionStatusResponse {
   hasActiveSubscription: boolean;
   isPremium: boolean;
@@ -120,6 +122,7 @@ export interface SubscriptionStatusResponse {
   autoRenew?: boolean;
   provider?: string;
   daysRemaining?: number;
+  usage?: UserUsageSummaryResponse;
 }
 
 export interface SubscriptionHistoryResponse {

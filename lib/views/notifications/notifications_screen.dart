@@ -126,21 +126,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       );
     }
 
-    // 2. Fetch from Firebase Firestore admin notifications & direct messages
-    try {
-      final fsData = await NotificationService().fetchFirestoreNotifications(
-        userId: currentUserId,
-        isVip: isVip,
-      );
-      combinedList.addAll(fsData);
-    } catch (e) {
-      debugPrint(
-        '[NotificationsScreen] Notice fetching Firestore notifications: $e',
-      );
-    }
-
     debugPrint(
-      '[NotificationsScreen] Loaded ${combinedList.length} total notifications across sources',
+      '[NotificationsScreen] Loaded ${combinedList.length} total notifications from Supabase',
     );
     _processNotificationRows(combinedList, currentUserId);
   }

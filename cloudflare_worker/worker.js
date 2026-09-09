@@ -223,109 +223,14 @@ export default {
   },
 };
 
-// ─── Helper: Send FCM Notification ───────────────────────────────────────────
+// ─── Helper: Send FCM Notification (Disconnected from Firebase) ────────────────
 async function sendFcmNotification(env, { title, body, topic, token, data }) {
-  try {
-    const projectId = env.FIREBASE_PROJECT_ID || env.PROJECT_ID;
-    const clientEmail = env.SERVICE_ACCOUNT_EMAIL || env.SERVICE_ACCOUNT_EMA || env.CLIENT_EMAIL;
-
-    if (!projectId || !clientEmail) {
-      return {
-        success: false,
-        mode: 'missing_env_config',
-        note: 'Required env vars not set: FIREBASE_PROJECT_ID and SERVICE_ACCOUNT_EMAIL must be configured as Cloudflare Worker secrets.',
-      };
-    }
-
-    let privateKey = env.SERVICE_ACCOUNT_PRIVATE_KEY || env.SERVICE_ACCOUNT_PRI || env.PRIVATE_KEY || env.FIREBASE_PRIVATE_KEY || env.FCM_PRIVATE_KEY;
-    
-    // Auto-discover private key if variable name was slightly different
-    if (!privateKey) {
-      for (const k of Object.keys(env)) {
-        if (typeof env[k] === 'string' && (env[k].includes('PRIVATE KEY') || env[k].length > 300)) {
-          privateKey = env[k];
-          break;
-        }
-      }
-    }
-
-    // 1. If using Google Service Account (HTTP v1 API)
-    if (clientEmail && privateKey) {
-      try {
-        const accessToken = await getGoogleAccessToken(
-          clientEmail,
-          privateKey
-        );
-
-        const messagePayload = {
-          message: {
-            notification: {
-              title: title,
-              body: body,
-            },
-            android: {
-              priority: 'HIGH',
-              collapse_key: 'zanko_admin_broadcast',
-              notification: {
-                channel_id: 'zanko_admin_channel',
-                sound: 'default',
-                default_sound: true,
-                default_vibrate_timings: true,
-                icon: 'ic_launcher',
-                tag: 'zanko_admin_broadcast',
-              },
-            },
-            apns: {
-              payload: {
-                aps: {
-                  sound: 'default',
-                  badge: 1,
-                },
-              },
-            },
-            data: data || {},
-          },
-        };
-
-        if (token) {
-          messagePayload.message.token = token;
-        } else {
-          messagePayload.message.topic = topic || 'all_students';
-        }
-
-        const response = await fetch(
-          `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(messagePayload),
-          }
-        );
-
-        const resData = await response.json();
-        if (!response.ok) {
-          return { success: false, error: resData };
-        }
-        return { success: true, mode: 'v1_oauth', messageId: resData.name };
-      } catch (authError) {
-        return { success: false, error: `Auth Error: ${authError.message}` };
-      }
-    }
-
-    // 2. Error: v1 credentials present but private key missing
-    return {
-      success: false,
-      mode: 'missing_private_key',
-      hasEmail: !!clientEmail,
-      hasPrivateKey: !!privateKey,
-      note: 'FCM requires a valid SERVICE_ACCOUNT_PRIVATE_KEY secret configured in the Cloudflare Worker.',
-    };
-  } catch (err) {
-    return { success: false, error: err.message };
-  }
+  // Completely disconnected from Firebase FCM — zero traffic sent to Firebase users
+  return {
+    success: true,
+    disconnected: true,
+    note: 'Firebase FCM is completely disconnected. All notifications stream via Supabase.',
+  };
 }
 
 // ─── Google OAuth2 Access Token Generator with In-Memory Caching ──────────────

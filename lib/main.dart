@@ -22,16 +22,7 @@ import 'services/zankoline_service.dart';
 
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'dart:async';
-
-@pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  try {
-    await Firebase.initializeApp();
-  } catch (_) {}
-}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,17 +36,6 @@ void main() async {
     debugPrint('Platform Dispatcher Error: $error');
     return true;
   };
-
-  try {
-    if (!kIsWeb) {
-      await Firebase.initializeApp();
-      FirebaseMessaging.onBackgroundMessage(
-        _firebaseMessagingBackgroundHandler,
-      );
-    }
-  } catch (e) {
-    debugPrint('Firebase core initialization notice: $e');
-  }
 
   try {
     await Supabase.initialize(
