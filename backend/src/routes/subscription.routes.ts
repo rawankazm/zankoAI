@@ -5,6 +5,7 @@
 import { Router } from 'express';
 import { SubscriptionController } from '../controllers/subscription.controller.js';
 import { authenticateUser } from '../middleware/authenticateUser.js';
+import { requireRole } from '../middleware/requireRole.js';
 import { asyncWrapper } from '../utils/asyncWrapper.js';
 
 const router = Router();
@@ -21,8 +22,13 @@ router.post('/checkout', authenticateUser, asyncWrapper(SubscriptionController.c
 // POST /api/subscription/cancel - Cancel recurring subscription at period end or immediately
 router.post('/cancel', authenticateUser, asyncWrapper(SubscriptionController.cancelSubscription));
 
-// POST /api/subscription/maintenance - Execute subscription maintenance routine on-demand
-router.post('/maintenance', authenticateUser, asyncWrapper(SubscriptionController.runMaintenance));
+// POST /api/subscription/maintenance - Execute subscription maintenance routine on-demand (strictly Admin only)
+router.post(
+  '/maintenance',
+  authenticateUser,
+  requireRole(['admin']),
+  asyncWrapper(SubscriptionController.runMaintenance)
+);
 
 // POST /api/subscription/restore - Server-side restore of subscription
 router.post('/restore', authenticateUser, asyncWrapper(SubscriptionController.restoreSubscription));

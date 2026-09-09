@@ -22,17 +22,30 @@ export class LearningController {
   }
 
   static async createLecture(req: Request, res: Response): Promise<Response> {
-    const lecture = await LearningService.createLecture(req.body);
+    const lecture = await LearningService.createLecture(
+      req.body,
+      req.user!.id,
+      req.profile?.role || 'teacher'
+    );
     return ResponseFormatter.created(res, lecture, 'Lecture created successfully');
   }
 
   static async updateLecture(req: Request, res: Response): Promise<Response> {
-    const lecture = await LearningService.updateLecture(req.params.id, req.body);
+    const lecture = await LearningService.updateLecture(
+      req.params.id,
+      req.body,
+      req.user!.id,
+      req.profile?.role || 'teacher'
+    );
     return ResponseFormatter.success(res, lecture, 'Lecture updated successfully');
   }
 
   static async deleteLecture(req: Request, res: Response): Promise<Response> {
-    await LearningService.deleteLecture(req.params.id);
+    await LearningService.deleteLecture(
+      req.params.id,
+      req.user!.id,
+      req.profile?.role || 'teacher'
+    );
     return ResponseFormatter.success(res, null, 'Lecture deleted successfully');
   }
 
@@ -54,17 +67,30 @@ export class LearningController {
   }
 
   static async createAssignment(req: Request, res: Response): Promise<Response> {
-    const assignment = await LearningService.createAssignment(req.user!.id, req.body);
+    const assignment = await LearningService.createAssignment(
+      req.user!.id,
+      req.profile?.role || 'teacher',
+      req.body
+    );
     return ResponseFormatter.created(res, assignment, 'Assignment created successfully');
   }
 
   static async updateAssignment(req: Request, res: Response): Promise<Response> {
-    const assignment = await LearningService.updateAssignment(req.params.id, req.body);
+    const assignment = await LearningService.updateAssignment(
+      req.params.id,
+      req.body,
+      req.user!.id,
+      req.profile?.role || 'teacher'
+    );
     return ResponseFormatter.success(res, assignment, 'Assignment updated successfully');
   }
 
   static async deleteAssignment(req: Request, res: Response): Promise<Response> {
-    await LearningService.deleteAssignment(req.params.id);
+    await LearningService.deleteAssignment(
+      req.params.id,
+      req.user!.id,
+      req.profile?.role || 'teacher'
+    );
     return ResponseFormatter.success(res, null, 'Assignment deleted successfully');
   }
 
@@ -119,8 +145,22 @@ export class LearningController {
     return ResponseFormatter.created(res, quiz, 'Quiz created successfully');
   }
 
+  static async updateQuiz(req: Request, res: Response): Promise<Response> {
+    const quiz = await LearningService.updateQuiz(
+      req.params.id,
+      req.body,
+      req.user!.id,
+      req.profile?.role || 'teacher'
+    );
+    return ResponseFormatter.success(res, quiz, 'Quiz updated successfully');
+  }
+
   static async addQuestion(req: Request, res: Response): Promise<Response> {
-    const question = await LearningService.addQuestion(req.body);
+    const question = await LearningService.addQuestion(
+      req.body,
+      req.user!.id,
+      req.profile?.role || 'teacher'
+    );
     return ResponseFormatter.created(res, question, 'Question added successfully');
   }
 

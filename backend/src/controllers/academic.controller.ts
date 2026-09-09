@@ -131,7 +131,8 @@ export class AcademicController {
   // ─── Enrollment ───
   static async enroll(req: Request, res: Response): Promise<Response> {
     const courseId = req.params.courseId || req.body.course_id;
-    const role = req.body.role || 'student';
+    const isAdmin = (req.user as any)?.role === 'admin' || (req as any).profile?.role === 'admin';
+    const role = isAdmin ? (req.body.role || 'student') : 'student';
     const member = await AcademicService.enrollSelf(courseId, req.user!.id, role);
     return ResponseFormatter.created(res, member, 'Successfully enrolled in course');
   }

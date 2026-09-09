@@ -14,6 +14,7 @@ import { Request, Response } from 'express';
 import { NotificationService } from '../services/notification.service.js';
 import { ResponseFormatter } from '../utils/apiResponse.js';
 import { NotificationType } from '../types/calendar_notification.types.js';
+import { ForbiddenError } from '../utils/apiError.js';
 
 export class NotificationController {
   /**
@@ -105,7 +106,12 @@ export class NotificationController {
    * Queues a notification job via BullMQ worker.
    */
   static async scheduleNotification(req: Request, res: Response): Promise<Response> {
-    const targetUserId = req.body.user_id || req.user!.id;
+    const isAdmin = (req.user as any)?.role === 'admin' || (req as any).profile?.role === 'admin';
+    if (!isAdmin && req.body.user_id && req.body.user_id !== req.user!.id) {
+      throw new ForbiddenError('Only administrators can schedule notifications for other users');
+    }
+    const targetUserId = isAdmin ? (req.body.user_id || req.user!.id) : req.user!.id;
+
     const result = await NotificationService.scheduleNotification({
       userId: targetUserId,
       title: req.body.title,

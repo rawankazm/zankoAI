@@ -15,13 +15,24 @@ export class TeacherController {
 
   static async getCourseStudents(req: Request, res: Response): Promise<Response> {
     const courseId = req.params.courseId;
-    const students = await TeacherService.getCourseStudents(courseId);
+    const callerId = req.user!.id;
+    const callerRole = req.profile?.role || 'teacher';
+    const students = await TeacherService.getCourseStudents(courseId, callerId, callerRole);
     return ResponseFormatter.success(res, students);
   }
 
   static async gradeStudent(req: Request, res: Response): Promise<Response> {
     const { course_id, student_id, grade, feedback } = req.body;
-    const result = await TeacherService.updateStudentGrade(course_id, student_id, grade, feedback);
+    const callerId = req.user!.id;
+    const callerRole = req.profile?.role || 'teacher';
+    const result = await TeacherService.updateStudentGrade(
+      course_id,
+      student_id,
+      grade,
+      feedback,
+      callerId,
+      callerRole
+    );
     return ResponseFormatter.success(res, result, 'Student graded successfully');
   }
 }

@@ -1,5 +1,6 @@
 import { CourseRepository, CourseRecord } from '../repositories/course.repository.js';
 import { supabaseAdmin } from '../config/supabase.js';
+import { NotFoundError, ForbiddenError } from '../utils/apiError.js';
 
 export class TeacherService {
   static async getTeacherCourses(teacherId: string): Promise<CourseRecord[]> {
@@ -14,7 +15,24 @@ export class TeacherService {
     });
   }
 
-  static async getCourseStudents(courseId: string): Promise<any[]> {
+  static async getCourseStudents(
+    courseId: string,
+    callerId?: string,
+    callerRole?: string
+  ): Promise<any[]> {
+    if (callerRole && callerRole !== 'admin' && callerId) {
+      const { data: course } = await supabaseAdmin
+        .from('courses')
+        .select('instructor_id')
+        .eq('id', courseId)
+        .maybeSingle();
+
+      if (!course) throw new NotFoundError('Course not found');
+      if (course.instructor_id !== callerId) {
+        throw new ForbiddenError('You are not authorized to view students for this course');
+      }
+    }
+
     return CourseRepository.getCourseStudents(courseId);
   }
 
@@ -22,8 +40,23 @@ export class TeacherService {
     courseId: string,
     studentId: string,
     grade: number,
-    feedback?: string
+    feedback?: string,
+    callerId?: string,
+    callerRole?: string
   ): Promise<any> {
+    if (callerRole && callerRole !== 'admin' && callerId) {
+      const { data: course } = await supabaseAdmin
+        .from('courses')
+        .select('instructor_id')
+        .eq('id', courseId)
+        .maybeSingle();
+
+      if (!course) throw new NotFoundError('Course not found');
+      if (course.instructor_id !== callerId) {
+        throw new ForbiddenError('You are not authorized to grade students in this course');
+      }
+    }
+
     // Record grade in exam_results / grades table
     const { data, error } = await supabaseAdmin
       .from('exam_results')

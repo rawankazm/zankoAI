@@ -16,17 +16,58 @@ export class LearningService {
     return lecture;
   }
 
-  static async createLecture(data: any) {
+  static async createLecture(data: any, callerId?: string, callerRole?: string) {
+    if (callerRole && callerRole !== 'admin' && callerId) {
+      const { data: course } = await supabaseAdmin
+        .from('courses')
+        .select('instructor_id')
+        .eq('id', data.course_id)
+        .maybeSingle();
+
+      if (!course) throw new NotFoundError('Course not found');
+      if (course.instructor_id !== callerId) {
+        throw new ForbiddenError('You can only create lectures for courses you instruct');
+      }
+    }
     return LearningRepository.createLecture(data);
   }
 
-  static async updateLecture(id: string, data: any) {
+  static async updateLecture(id: string, data: any, callerId?: string, callerRole?: string) {
+    const lecture = await LearningRepository.getLectureById(id);
+    if (!lecture) throw new NotFoundError('Lecture not found');
+
+    if (callerRole && callerRole !== 'admin' && callerId) {
+      const { data: course } = await supabaseAdmin
+        .from('courses')
+        .select('instructor_id')
+        .eq('id', lecture.course_id)
+        .maybeSingle();
+
+      if (!course || course.instructor_id !== callerId) {
+        throw new ForbiddenError('You can only update lectures for courses you instruct');
+      }
+    }
+
     const updated = await LearningRepository.updateLecture(id, data);
-    if (!updated) throw new NotFoundError('Lecture not found');
     return updated;
   }
 
-  static async deleteLecture(id: string) {
+  static async deleteLecture(id: string, callerId?: string, callerRole?: string) {
+    const lecture = await LearningRepository.getLectureById(id);
+    if (!lecture) throw new NotFoundError('Lecture not found');
+
+    if (callerRole && callerRole !== 'admin' && callerId) {
+      const { data: course } = await supabaseAdmin
+        .from('courses')
+        .select('instructor_id')
+        .eq('id', lecture.course_id)
+        .maybeSingle();
+
+      if (!course || course.instructor_id !== callerId) {
+        throw new ForbiddenError('You can only delete lectures for courses you instruct');
+      }
+    }
+
     return LearningRepository.deleteLecture(id);
   }
 
@@ -42,20 +83,66 @@ export class LearningService {
     return assignment;
   }
 
-  static async createAssignment(callerId: string, data: any) {
+  static async createAssignment(callerId: string, callerRole: string, data: any) {
+    if (callerRole !== 'admin') {
+      const { data: course } = await supabaseAdmin
+        .from('courses')
+        .select('instructor_id')
+        .eq('id', data.course_id)
+        .maybeSingle();
+
+      if (!course) throw new NotFoundError('Course not found');
+      if (course.instructor_id !== callerId) {
+        throw new ForbiddenError('You can only create assignments for courses you instruct');
+      }
+    }
+
     return LearningRepository.createAssignment({
       ...data,
       creator_id: callerId,
     });
   }
 
-  static async updateAssignment(id: string, data: any) {
+  static async updateAssignment(id: string, data: any, callerId?: string, callerRole?: string) {
+    const assignment = await LearningRepository.getAssignmentById(id);
+    if (!assignment) throw new NotFoundError('Assignment not found');
+
+    if (callerRole && callerRole !== 'admin' && callerId) {
+      if (assignment.creator_id !== callerId) {
+        const { data: course } = await supabaseAdmin
+          .from('courses')
+          .select('instructor_id')
+          .eq('id', assignment.course_id)
+          .maybeSingle();
+
+        if (!course || course.instructor_id !== callerId) {
+          throw new ForbiddenError('You can only update assignments for courses you instruct');
+        }
+      }
+    }
+
     const updated = await LearningRepository.updateAssignment(id, data);
-    if (!updated) throw new NotFoundError('Assignment not found');
     return updated;
   }
 
-  static async deleteAssignment(id: string) {
+  static async deleteAssignment(id: string, callerId?: string, callerRole?: string) {
+    const assignment = await LearningRepository.getAssignmentById(id);
+    if (!assignment) throw new NotFoundError('Assignment not found');
+
+    if (callerRole && callerRole !== 'admin' && callerId) {
+      if (assignment.creator_id !== callerId) {
+        const { data: course } = await supabaseAdmin
+          .from('courses')
+          .select('instructor_id')
+          .eq('id', assignment.course_id)
+          .maybeSingle();
+
+        if (!course || course.instructor_id !== callerId) {
+          throw new ForbiddenError('You can only delete assignments for courses you instruct');
+        }
+      }
+    }
+
     return LearningRepository.deleteAssignment(id);
   }
 
@@ -147,7 +234,63 @@ export class LearningService {
     });
   }
 
-  static async addQuestion(data: any) {
+  static async updateQuiz(id: string, data: any, callerId?: string, callerRole?: string) {
+    const { data: quiz } = await supabaseAdmin
+      .from('quizzes')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (!quiz) throw new NotFoundError('Quiz not found');
+
+    if (callerRole && callerRole !== 'admin' && callerId) {
+      if (quiz.creator_id !== callerId) {
+        const { data: course } = await supabaseAdmin
+          .from('courses')
+          .select('instructor_id')
+          .eq('id', quiz.course_id)
+          .maybeSingle();
+
+        if (!course || course.instructor_id !== callerId) {
+          throw new ForbiddenError('You can only modify quizzes for courses you instruct');
+        }
+      }
+    }
+
+    const { data: updated, error } = await supabaseAdmin
+      .from('quizzes')
+      .update({ ...data, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .maybeSingle();
+
+    if (error) throw error;
+    return updated;
+  }
+
+  static async addQuestion(data: any, callerId?: string, callerRole?: string) {
+    if (callerRole && callerRole !== 'admin' && callerId) {
+      const { data: quiz } = await supabaseAdmin
+        .from('quizzes')
+        .select('creator_id, course_id')
+        .eq('id', data.quiz_id)
+        .maybeSingle();
+
+      if (!quiz) throw new NotFoundError('Quiz not found');
+
+      if (quiz.creator_id !== callerId) {
+        const { data: course } = await supabaseAdmin
+          .from('courses')
+          .select('instructor_id')
+          .eq('id', quiz.course_id)
+          .maybeSingle();
+
+        if (!course || course.instructor_id !== callerId) {
+          throw new ForbiddenError('You can only add questions to quizzes for courses you instruct');
+        }
+      }
+    }
+
     return LearningRepository.addQuizQuestion(data);
   }
 
