@@ -45,53 +45,77 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
     final langProvider = Provider.of<LanguageProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: Supabase.instance.client
-          .from('ads')
-          .select()
-          .limit(5)
-          .catchError((_) => <Map<String, dynamic>>[]),
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: Supabase.instance.client
+          .from('notifications')
+          .stream(primaryKey: ['id'])
+          .handleError((_) => <Map<String, dynamic>>[]),
       builder: (context, snapshot) {
-        if (snapshot.hasError ||
-            !snapshot.hasData ||
-            snapshot.data == null ||
-            snapshot.data!.isEmpty) {
+        final allRows = snapshot.data ?? [];
+        final matchingAds = allRows.where((row) {
+          final data = row['data'] is Map ? (row['data'] as Map<String, dynamic>) : <String, dynamic>{};
+          final isAd = data['is_ad'] == true || (row['type'] == 'broadcast' && data['is_ad'] == true);
+          if (!isAd) return false;
+          if (data['is_deleted'] == true) return false;
+
+          final isActive = data['isActive'] == true ||
+              data['is_active'] == true ||
+              (data['isActive'] == null && data['is_active'] == null);
+          if (!isActive) return false;
+
+          final screens = data['showOnScreens'] ?? data['show_on_screens'];
+          if (screens is List && screens.isNotEmpty) {
+            final screenList = screens.map((s) => s.toString()).toList();
+            return screenList.contains(widget.screenName) ||
+                screenList.contains('all');
+          }
+          return true;
+        }).map((row) {
+          final data = row['data'] is Map ? (row['data'] as Map<String, dynamic>) : <String, dynamic>{};
+          return {
+            'id': row['id'],
+            'title': row['title'] ?? data['title'],
+            'description': row['body'] ?? data['description'],
+            ...data,
+          };
+        }).toList();
+
+        if (matchingAds.isEmpty) {
           return const SizedBox.shrink();
         }
 
-        final matchingAds = snapshot.data!;
         final adData = matchingAds.first;
 
         final currentLang = langProvider.currentLanguage;
-        String title = adData['title'] ?? '';
-        if (currentLang == AppLanguage.arabic &&
-            (adData['titleAr']?.toString().isNotEmpty ?? false)) {
-          title = adData['titleAr'];
-        } else if (currentLang == AppLanguage.english &&
-            (adData['titleEn']?.toString().isNotEmpty ?? false)) {
-          title = adData['titleEn'];
+        String title = (adData['title'] ?? '').toString();
+        final titleAr = (adData['titleAr'] ?? adData['title_ar'])?.toString() ?? '';
+        final titleEn = (adData['titleEn'] ?? adData['title_en'])?.toString() ?? '';
+        if (currentLang == AppLanguage.arabic && titleAr.isNotEmpty) {
+          title = titleAr;
+        } else if (currentLang == AppLanguage.english && titleEn.isNotEmpty) {
+          title = titleEn;
         }
 
-        String description = adData['description'] ?? '';
-        if (currentLang == AppLanguage.arabic &&
-            (adData['descAr']?.toString().isNotEmpty ?? false)) {
-          description = adData['descAr'];
-        } else if (currentLang == AppLanguage.english &&
-            (adData['descEn']?.toString().isNotEmpty ?? false)) {
-          description = adData['descEn'];
+        String description = (adData['description'] ?? '').toString();
+        final descAr = (adData['descAr'] ?? adData['desc_ar'])?.toString() ?? '';
+        final descEn = (adData['descEn'] ?? adData['desc_en'])?.toString() ?? '';
+        if (currentLang == AppLanguage.arabic && descAr.isNotEmpty) {
+          description = descAr;
+        } else if (currentLang == AppLanguage.english && descEn.isNotEmpty) {
+          description = descEn;
         }
 
-        String buttonText = adData['buttonTextKu'] ?? 'سەردان بکە';
-        if (currentLang == AppLanguage.arabic &&
-            (adData['buttonTextAr']?.toString().isNotEmpty ?? false)) {
-          buttonText = adData['buttonTextAr'];
-        } else if (currentLang == AppLanguage.english &&
-            (adData['buttonTextEn']?.toString().isNotEmpty ?? false)) {
-          buttonText = adData['buttonTextEn'];
+        String buttonText = (adData['buttonTextKu'] ?? adData['button_text_ku'] ?? 'سەردان بکە').toString();
+        final btnAr = (adData['buttonTextAr'] ?? adData['button_text_ar'])?.toString() ?? '';
+        final btnEn = (adData['buttonTextEn'] ?? adData['button_text_en'])?.toString() ?? '';
+        if (currentLang == AppLanguage.arabic && btnAr.isNotEmpty) {
+          buttonText = btnAr;
+        } else if (currentLang == AppLanguage.english && btnEn.isNotEmpty) {
+          buttonText = btnEn;
         }
 
-        final imageUrl = adData['imageUrl'] as String?;
-        final linkUrl = adData['linkUrl'] as String? ?? '';
+        final imageUrl = (adData['imageUrl'] ?? adData['image_url']) as String?;
+        final linkUrl = (adData['linkUrl'] ?? adData['link_url'] ?? '').toString();
 
         return Container(
           margin: const EdgeInsets.symmetric(vertical: 8),

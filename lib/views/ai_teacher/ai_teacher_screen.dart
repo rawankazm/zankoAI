@@ -5,6 +5,7 @@ import '../../services/ai_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
 import '../../utils/math_text_cleaner.dart';
+import '../../widgets/ad_banner_widget.dart';
 
 class AiTeacherScreen extends StatefulWidget {
   const AiTeacherScreen({super.key});
@@ -267,6 +268,8 @@ class _AiTeacherScreenState extends State<AiTeacherScreen> {
         ),
         body: Column(
           children: [
+            // Ad Banner for AI Teacher
+            const AdBannerWidget(screenName: 'ai_teacher'),
             // Messages list
             Expanded(
               child: ListView.builder(

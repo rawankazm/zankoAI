@@ -13,6 +13,7 @@ import '../../services/database_service.dart';
 import '../../services/language_provider.dart';
 import '../../models/note_model.dart';
 import '../../theme.dart';
+import '../../widgets/ad_banner_widget.dart';
 
 class NotesScreen extends StatefulWidget {
   const NotesScreen({super.key});
@@ -700,6 +701,9 @@ class _NotesScreenState extends State<NotesScreen> {
       ),
       body: Column(
         children: [
+          // Ad Banner for Notes
+          const AdBannerWidget(screenName: 'notes'),
+
           // Search & Filter Section
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

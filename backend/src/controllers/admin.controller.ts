@@ -221,4 +221,168 @@ export class AdminController {
 
     return ResponseFormatter.created(res, created, 'Plan limit created successfully');
   }
+
+  // ─── Verification & Extended Admin Handlers ──────────────────────────────
+
+  static async verifyAdmin(req: Request, res: Response): Promise<Response> {
+    return ResponseFormatter.success(
+      res,
+      {
+        id: req.profile!.id,
+        email: req.profile!.email,
+        full_name: req.profile!.full_name,
+        role: req.profile!.role,
+        status: req.profile!.status,
+        plan: req.profile!.plan,
+      },
+      'Admin verified successfully'
+    );
+  }
+
+  static async getDashboardOverview(req: Request, res: Response): Promise<Response> {
+    const data = await AdminService.getDashboardOverview();
+    return ResponseFormatter.success(res, data, 'Dashboard overview retrieved successfully');
+  }
+
+  static async getUserDetail(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+    const detail = await AdminService.getUserDetail(id);
+    return ResponseFormatter.success(res, detail, 'User detail retrieved successfully');
+  }
+
+  static async listTeachers(req: Request, res: Response): Promise<Response> {
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 50;
+    const status = req.query.status as string | undefined;
+    const q = req.query.q as string | undefined;
+
+    const data = await AdminService.listAllUsers({ page, limit, role: 'teacher', status, q });
+    return ResponseFormatter.success(res, data, 'Teachers retrieved successfully');
+  }
+
+  static async listStudents(req: Request, res: Response): Promise<Response> {
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 50;
+    const status = req.query.status as string | undefined;
+    const plan = req.query.plan as string | undefined;
+    const q = req.query.q as string | undefined;
+
+    const data = await AdminService.listAllUsers({ page, limit, role: 'student', status, plan, q });
+    return ResponseFormatter.success(res, data, 'Students retrieved successfully');
+  }
+
+  // ─── Academic Hierarchy Handlers ──────────────────────────────────────────
+
+  static async createUniversity(req: Request, res: Response): Promise<Response> {
+    const adminId = req.profile!.id;
+    const meta = AdminController.getReqMeta(req);
+    const result = await AdminService.createUniversity(adminId, req.body, meta);
+    return ResponseFormatter.created(res, result, 'University created successfully');
+  }
+
+  static async updateUniversity(req: Request, res: Response): Promise<Response> {
+    const adminId = req.profile!.id;
+    const meta = AdminController.getReqMeta(req);
+    const result = await AdminService.updateUniversity(adminId, req.params.id, req.body, meta);
+    return ResponseFormatter.success(res, result, 'University updated successfully');
+  }
+
+  static async deleteUniversity(req: Request, res: Response): Promise<Response> {
+    const adminId = req.profile!.id;
+    const meta = AdminController.getReqMeta(req);
+    const result = await AdminService.deleteUniversity(adminId, req.params.id, meta);
+    return ResponseFormatter.success(res, result, 'University deleted successfully');
+  }
+
+  static async createFaculty(req: Request, res: Response): Promise<Response> {
+    const adminId = req.profile!.id;
+    const meta = AdminController.getReqMeta(req);
+    const result = await AdminService.createFaculty(adminId, req.body, meta);
+    return ResponseFormatter.created(res, result, 'Faculty created successfully');
+  }
+
+  static async updateFaculty(req: Request, res: Response): Promise<Response> {
+    const adminId = req.profile!.id;
+    const meta = AdminController.getReqMeta(req);
+    const result = await AdminService.updateFaculty(adminId, req.params.id, req.body, meta);
+    return ResponseFormatter.success(res, result, 'Faculty updated successfully');
+  }
+
+  static async deleteFaculty(req: Request, res: Response): Promise<Response> {
+    const adminId = req.profile!.id;
+    const meta = AdminController.getReqMeta(req);
+    const result = await AdminService.deleteFaculty(adminId, req.params.id, meta);
+    return ResponseFormatter.success(res, result, 'Faculty deleted successfully');
+  }
+
+  static async createDepartment(req: Request, res: Response): Promise<Response> {
+    const adminId = req.profile!.id;
+    const meta = AdminController.getReqMeta(req);
+    const result = await AdminService.createDepartment(adminId, req.body, meta);
+    return ResponseFormatter.created(res, result, 'Department created successfully');
+  }
+
+  static async updateDepartment(req: Request, res: Response): Promise<Response> {
+    const adminId = req.profile!.id;
+    const meta = AdminController.getReqMeta(req);
+    const result = await AdminService.updateDepartment(adminId, req.params.id, req.body, meta);
+    return ResponseFormatter.success(res, result, 'Department updated successfully');
+  }
+
+  static async deleteDepartment(req: Request, res: Response): Promise<Response> {
+    const adminId = req.profile!.id;
+    const meta = AdminController.getReqMeta(req);
+    const result = await AdminService.deleteDepartment(adminId, req.params.id, meta);
+    return ResponseFormatter.success(res, result, 'Department deleted successfully');
+  }
+
+  static async createCourse(req: Request, res: Response): Promise<Response> {
+    const adminId = req.profile!.id;
+    const meta = AdminController.getReqMeta(req);
+    const result = await AdminService.createCourse(adminId, req.body, meta);
+    return ResponseFormatter.created(res, result, 'Course created successfully');
+  }
+
+  static async updateCourse(req: Request, res: Response): Promise<Response> {
+    const adminId = req.profile!.id;
+    const meta = AdminController.getReqMeta(req);
+    const result = await AdminService.updateCourse(adminId, req.params.id, req.body, meta);
+    return ResponseFormatter.success(res, result, 'Course updated successfully');
+  }
+
+  static async archiveCourse(req: Request, res: Response): Promise<Response> {
+    const adminId = req.profile!.id;
+    const meta = AdminController.getReqMeta(req);
+    const result = await AdminService.archiveCourse(adminId, req.params.id, meta);
+    return ResponseFormatter.success(res, result, 'Course archived successfully');
+  }
+
+  static async getCourseDetail(req: Request, res: Response): Promise<Response> {
+    const result = await AdminService.getCourseDetail(req.params.id);
+    return ResponseFormatter.success(res, result, 'Course details retrieved successfully');
+  }
+
+  // ─── Broadcast Notifications ─────────────────────────────────────────────
+
+  static async listBroadcastNotifications(req: Request, res: Response): Promise<Response> {
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 50;
+    const result = await AdminService.listBroadcastNotifications(page, limit);
+    return ResponseFormatter.success(res, result, 'Broadcast notifications retrieved successfully');
+  }
+
+  static async createBroadcastNotification(req: Request, res: Response): Promise<Response> {
+    const adminId = req.profile!.id;
+    const meta = AdminController.getReqMeta(req);
+    const result = await AdminService.createBroadcastNotification(adminId, req.body, meta);
+    return ResponseFormatter.created(res, result, 'Broadcast notification dispatched successfully');
+  }
+
+  // ─── System Health ───────────────────────────────────────────────────────
+
+  static async getSystemHealth(req: Request, res: Response): Promise<Response> {
+    const health = await AdminService.getSystemHealth();
+    return ResponseFormatter.success(res, health, 'System health report generated successfully');
+  }
 }
+

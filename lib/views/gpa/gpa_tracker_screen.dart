@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/language_provider.dart';
 import '../../theme.dart';
+import '../../widgets/ad_banner_widget.dart';
 
 class CourseScoreItem {
   final String id;
@@ -441,6 +442,9 @@ class _GpaTrackerScreenState extends State<GpaTrackerScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Ad Banner for GPA
+                    const AdBannerWidget(screenName: 'gpa'),
+
                     // ── Hero Total Score Card (out of 100) ─────────────────
                     Container(
                       padding: const EdgeInsets.all(24),

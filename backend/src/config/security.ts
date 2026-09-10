@@ -5,6 +5,7 @@ import { logger } from './logger.js';
 // Explicitly allowlisted origins
 export const ALLOWED_ORIGINS = [
   'https://zanko-admin.vercel.app',
+  'https://admin.zankoai.com',
   'https://zankoai.com',
   'https://www.zankoai.com',
   // Local development origins

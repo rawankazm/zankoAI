@@ -8,6 +8,7 @@ import '../../services/language_provider.dart';
 import '../../services/score_service.dart';
 import '../../models/quiz_model.dart';
 import '../../theme.dart';
+import '../../widgets/ad_banner_widget.dart';
 
 class QuizScreen extends StatefulWidget {
   final String? initialTopic;
@@ -375,6 +376,9 @@ class _QuizScreenState extends State<QuizScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Ad Banner for Quiz
+              const AdBannerWidget(screenName: 'quiz'),
+
               if (_activeQuiz == null && !_isGenerating) ...[
                 // Quiz Generator Form
                 Card(

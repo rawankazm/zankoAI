@@ -15,6 +15,7 @@ import '../../services/score_service.dart';
 import '../ai_teacher/ai_teacher_chat_screen.dart';
 import '../payment/vip_upgrade_sheet.dart';
 import '../../widgets/apple_ui_components.dart';
+import '../../widgets/ad_banner_widget.dart';
 
 class AiExamGeneratorScreen extends StatefulWidget {
   final String? initialCourse;
@@ -1193,6 +1194,9 @@ class _AiExamGeneratorScreenState extends State<AiExamGeneratorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Ad Banner for Quiz
+          const AdBannerWidget(screenName: 'quiz'),
+
           // Step 1 vs Step 2 Onboarding Indicator
           _buildStepIndicator(isDark),
 

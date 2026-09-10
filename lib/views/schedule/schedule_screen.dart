@@ -8,6 +8,7 @@ import '../../models/schedule_model.dart';
 import '../../services/database_service.dart';
 import '../../services/language_provider.dart';
 import '../../theme.dart';
+import '../../widgets/ad_banner_widget.dart';
 
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
@@ -868,6 +869,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         body: SafeArea(
           child: Column(
             children: [
+              // Ad Banner for Schedule
+              const AdBannerWidget(screenName: 'schedule'),
+
               // Apple-Style Hero Status Card
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),

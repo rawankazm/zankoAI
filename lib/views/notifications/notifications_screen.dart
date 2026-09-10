@@ -108,7 +108,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final authService = Provider.of<AuthService>(context, listen: false);
     final user = authService.currentUser;
     final currentUserId = user?.id ?? '';
-    final isVip = user?.isVip ?? false;
 
     final List<dynamic> combinedList = [];
 
@@ -168,6 +167,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     for (var row in data) {
       final id = (row['id'] ?? '').toString();
       if (id.isNotEmpty && _deletedDocIds.contains(id)) continue;
+
+      // Filter out ad banners from notification inbox
+      final rowData = row['data'];
+      if (rowData is Map && rowData['is_ad'] == true) continue;
 
       final targetUserId = (row['user_id'] ?? row['userId'] ?? '').toString();
       if (targetUserId.isNotEmpty && targetUserId != currentUserId) continue;

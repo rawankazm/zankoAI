@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../services/language_provider.dart';
 import '../../services/zankoline_service.dart';
 import '../../widgets/apple_ui_components.dart';
+import '../../widgets/ad_banner_widget.dart';
 
 class ZankolineScreen extends StatefulWidget {
   const ZankolineScreen({super.key});
@@ -314,6 +315,9 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Ad Banner for Zankoline
+            const AdBannerWidget(screenName: 'zankoline'),
+
             // ─── Admission Calculator Card ───
             Container(
               padding: const EdgeInsets.all(20),

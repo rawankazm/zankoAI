@@ -25,6 +25,7 @@ import '../courses/course_detail_screen.dart';
 import '../stats/stats_screen.dart';
 import 'courses_screen.dart';
 import '../../data/kurdistan_universities_data.dart';
+import '../../widgets/ad_banner_widget.dart';
 
 // ─── Home Screen ─────────────────────────────────────────────────────────────
 class HomeScreen extends StatefulWidget {
@@ -310,6 +311,9 @@ class _HomeScreenState extends State<HomeScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 8),
+                        // ── Banner Ad ──────────────────────────────────────────
+                        const AdBannerWidget(screenName: 'home'),
+                        const SizedBox(height: 6),
                         // ── 1. AI Hero Assistant Card ──────────────────────────
                         _staggered(
                           1,

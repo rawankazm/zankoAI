@@ -8,6 +8,7 @@ import '../../services/database_service.dart';
 import '../../services/language_provider.dart';
 import '../../theme.dart';
 import 'qr_share_sheet.dart';
+import '../../widgets/ad_banner_widget.dart';
 
 class FlashcardsScreen extends StatefulWidget {
   const FlashcardsScreen({super.key});
@@ -424,6 +425,9 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Ad Banner for Flashcards
+                const AdBannerWidget(screenName: 'flashcards'),
+
                 // Quick Topic Suggestions Chips
                 SizedBox(
                   height: 38,

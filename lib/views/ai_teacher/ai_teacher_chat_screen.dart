@@ -19,6 +19,7 @@ import '../../models/note_model.dart';
 import '../../theme.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../widgets/apple_ui_components.dart';
+import '../../widgets/ad_banner_widget.dart';
 import '../payment/vip_upgrade_sheet.dart';
 import '../../utils/math_text_cleaner.dart';
 
@@ -2307,6 +2308,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
           children: [
             // Custom Header with Mode Selector
             _buildHeader(context),
+
+            // Ad Banner for AI Teacher
+            const AdBannerWidget(screenName: 'ai_teacher'),
 
             // Messages List with Hero State
             Expanded(
