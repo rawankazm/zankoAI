@@ -60,6 +60,11 @@ export default function UserDetail() {
     if (!data?.profile) return;
     setActionLoading(true);
     const newStatus = data.profile.status === 'active' ? 'suspended' : 'active';
+    setData(prev => ({
+      ...prev,
+      profile: { ...prev.profile, status: newStatus },
+      status: newStatus,
+    }));
     try {
       await AdminApi.updateUserStatus(id, newStatus, suspendReason || 'گۆڕینی دۆخ لە پەڕەی وردەکاری');
       setToast({

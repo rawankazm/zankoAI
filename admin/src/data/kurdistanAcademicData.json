@@ -1,0 +1,4959 @@
+{
+  "universities": [
+    {
+      "id": "epu_shaqlawa_college",
+      "name": "کۆلێژی تەکنیکی شەقڵاوە (EPU)",
+      "name_en": "Shaqlawa Technical College",
+      "name_ar": "الكلية التقنية شقلاوة",
+      "code": "EPU-SHAQLAWA-COLLEGE",
+      "city": "هەولێر / شەقڵاوە",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "epu_eng_college",
+      "name": "کۆلێژی تەکنیکی ئەندازیاری هەولێر (EPU)",
+      "name_en": "Erbil Technical Engineering College",
+      "name_ar": "الكلية التقنية الهندسية أربيل",
+      "code": "EPU-ENG-COLLEGE",
+      "city": "هەولێر",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "epu_computer_college",
+      "name": "کۆلێژی تەکنیکی ئەندازیاری کۆمپیوتەر و زانیاری هەولێر (EPU)",
+      "name_en": "Technical College of Computer & Informatics Engineering",
+      "name_ar": "الكلية التقنية لهندسة الحاسوب والمعلوماتية",
+      "code": "EPU-COMPUTER-COLLEGE",
+      "city": "هەولێر",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "epu_health_college",
+      "name": "کۆلێژی تەکنیکی تەندروستی و پزیشکی هەولێر (EPU)",
+      "name_en": "Erbil Health and Medical Technical College",
+      "name_ar": "الكلية التقنية الطبية والصحية أربيل",
+      "code": "EPU-HEALTH-COLLEGE",
+      "city": "هەولێر",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "epu_admin_college",
+      "name": "کۆلێژی تەکنیکی کارگێڕی هەولێر (EPU)",
+      "name_en": "Erbil Technical Administrative College",
+      "name_ar": "الكلية التقنية الإدارية أربيل",
+      "code": "EPU-ADMIN-COLLEGE",
+      "city": "هەولێر",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "epu_soran_college",
+      "name": "کۆلێژی تەکنیکی سۆران (EPU)",
+      "name_en": "Soran Technical College",
+      "name_ar": "الكلية التقنية سوران",
+      "code": "EPU-SORAN-COLLEGE",
+      "city": "هەولێر / سۆران",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "epu_erbil_medical_inst",
+      "name": "پەیمانگەی تەکنیکی پزیشکی هەولێر (EPU)",
+      "name_en": "Erbil Technical Medical Institute",
+      "name_ar": "المعهد التقني الطبي أربيل",
+      "code": "EPU-ERBIL-MEDICAL-INST",
+      "city": "هەولێر",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "epu_erbil_tech_inst",
+      "name": "پەیمانگەی تەکنەلۆجی هەولێر (EPU)",
+      "name_en": "Erbil Technology Institute",
+      "name_ar": "المعهد التكنولوجي أربيل",
+      "code": "EPU-ERBIL-TECH-INST",
+      "city": "هەولێر",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "epu_erbil_admin_inst",
+      "name": "پەیمانگەی تەکنیکی کارگێڕی هەولێر (EPU)",
+      "name_en": "Erbil Technical Administrative Institute",
+      "name_ar": "المعهد التقني الإداري أربيل",
+      "code": "EPU-ERBIL-ADMIN-INST",
+      "city": "هەولێر",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "epu_koya_inst",
+      "name": "پەیمانگەی تەکنیکی کۆیە (EPU)",
+      "name_en": "Koya Technical Institute",
+      "name_ar": "المعهد التقني كويه",
+      "code": "EPU-KOYA-INST",
+      "city": "هەولێر / کۆیە",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "epu_khabat_inst",
+      "name": "پەیمانگەی تەکنیکی خەبات (EPU)",
+      "name_en": "Khabat Technical Institute",
+      "name_ar": "المعهد التقني خبات",
+      "code": "EPU-KHABAT-INST",
+      "city": "هەولێر / خەبات",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "epu_choman_inst",
+      "name": "پەیمانگەی تەکنیکی چۆمان (EPU)",
+      "name_en": "Choman Technical Institute",
+      "name_ar": "المعهد التقني جومان",
+      "code": "EPU-CHOMAN-INST",
+      "city": "هەولێر / چۆمان",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "epu_mergasor_inst",
+      "name": "پەیمانگەی تەکنیکی مێرگەسۆر (EPU)",
+      "name_en": "Mergasor Technical Institute",
+      "name_ar": "المعهد التقني ميركه سور",
+      "code": "EPU-MERGASOR-INST",
+      "city": "هەولێر / مێرگەسۆر",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "spu_eng_college",
+      "name": "کۆلێژی تەکنیکی ئەندازیاری سلێمانی (SPU)",
+      "name_en": "Technical College of Engineering - Sulaimani",
+      "name_ar": "الكلية التقنية الهندسية السليمانية",
+      "code": "SPU-ENG-COLLEGE",
+      "city": "سلێمانی",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "spu_health_college",
+      "name": "کۆلێژی تەکنیکی تەندروستی و پزیشکی سلێمانی (SPU)",
+      "name_en": "Technical College of Health & Medicine - Sulaimani",
+      "name_ar": "الكلية التقنية الطبية والصحية السليمانية",
+      "code": "SPU-HEALTH-COLLEGE",
+      "city": "سلێمانی",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "spu_informatics_college",
+      "name": "کۆلێژی تەکنیکی زانیاری و کۆمپیوتەر سلێمانی (SPU)",
+      "name_en": "Technical College of Informatics - Sulaimani",
+      "name_ar": "الكلية التقنية للمعلوماتية السليمانية",
+      "code": "SPU-INFORMATICS-COLLEGE",
+      "city": "سلێمانی",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "spu_admin_college",
+      "name": "کۆلێژی تەکنیکی کارگێڕی سلێمانی (SPU)",
+      "name_en": "Technical College of Administration - Sulaimani",
+      "name_ar": "الكلية التقنية الإدارية السليمانية",
+      "code": "SPU-ADMIN-COLLEGE",
+      "city": "سلێمانی",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "spu_halabja_college",
+      "name": "کۆلێژی تەکنیکی هەڵەبجە (SPU)",
+      "name_en": "Halabja Technical College",
+      "name_ar": "الكلية التقنية حلبجة",
+      "code": "SPU-HALABJA-COLLEGE",
+      "city": "هەڵەبجە",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "spu_slemani_inst",
+      "name": "پەیمانگەی تەکنیکی سلێمانی (SPU)",
+      "name_en": "Sulaimani Technical Institute",
+      "name_ar": "المعهد التقني السليمانية",
+      "code": "SPU-SLEMANI-INST",
+      "city": "سلێمانی",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "spu_kalar_inst",
+      "name": "پەیمانگەی تەکنیکی کەلار (SPU)",
+      "name_en": "Kalar Technical Institute",
+      "name_ar": "المعهد التقني كلار",
+      "code": "SPU-KALAR-INST",
+      "city": "سلێمانی / گەرمیان",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "spu_chamchamal_inst",
+      "name": "پەیمانگەی تەکنیکی چەمچەماڵ (SPU)",
+      "name_en": "Chamchamal Technical Institute",
+      "name_ar": "المعهد التقني جمجمال",
+      "code": "SPU-CHAMCHAMAL-INST",
+      "city": "سلێمانی / چەمچەماڵ",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "spu_halabja_inst",
+      "name": "پەیمانگەی تەکنیکی هەڵەبجە (SPU)",
+      "name_en": "Halabja Technical Institute",
+      "name_ar": "المعهد التقني حلبجة",
+      "code": "SPU-HALABJA-INST",
+      "city": "هەڵەبجە",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "spu_darbandikhan_inst",
+      "name": "پەیمانگەی تەکنیکی دەربەندیخان (SPU)",
+      "name_en": "Darbandikhan Technical Institute",
+      "name_ar": "المعهد التقني دربندخان",
+      "code": "SPU-DARBANDIKHAN-INST",
+      "city": "سلێمانی / دەربەندیخان",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "spu_dukan_inst",
+      "name": "پەیمانگەی تەکنیکی دوکان (SPU)",
+      "name_en": "Dukan Technical Institute",
+      "name_ar": "المعهد التقني دوكان",
+      "code": "SPU-DUKAN-INST",
+      "city": "سلێمانی / دوکان",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "spu_bakrajo_inst",
+      "name": "پەیمانگەی تەکنیکی بەکرەجۆ (SPU)",
+      "name_en": "Bakrajo Technical Institute",
+      "name_ar": "المعهد التقني بكرجو",
+      "code": "SPU-BAKRAJO-INST",
+      "city": "سلێمانی / بەکرەجۆ",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dpu_eng_college",
+      "name": "کۆلێژا تەکنیکی ئەندازیاریێ دهۆک (DPU)",
+      "name_en": "Duhok Technical College of Engineering",
+      "name_ar": "الكلية التقنية الهندسية دهوك",
+      "code": "DPU-ENG-COLLEGE",
+      "city": "دهۆک",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dpu_health_college",
+      "name": "کۆلێژا تەکنیکی یا تەندروستی و نوژداری دهۆک (DPU)",
+      "name_en": "Duhok Technical College of Health & Medicine",
+      "name_ar": "الكلية التقنية الطبية والصحية دهوك",
+      "code": "DPU-HEALTH-COLLEGE",
+      "city": "دهۆک",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dpu_admin_college",
+      "name": "کۆلێژا تەکنیکی یا کارگێڕی دهۆک (DPU)",
+      "name_en": "Duhok Technical College of Administration",
+      "name_ar": "الكلية التقنية الإدارية دهوك",
+      "code": "DPU-ADMIN-COLLEGE",
+      "city": "دهۆک",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dpu_duhok_inst",
+      "name": "پەیمانگەها تەکنیکی یا دهۆک (DPU)",
+      "name_en": "Duhok Technical Institute",
+      "name_ar": "المعهد التقني دهوك",
+      "code": "DPU-DUHOK-INST",
+      "city": "دهۆک",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dpu_zakho_inst",
+      "name": "پەیمانگەها تەکنیکی یا زاخۆ (DPU)",
+      "name_en": "Zakho Technical Institute",
+      "name_ar": "المعهد التقني زاخو",
+      "code": "DPU-ZAKHO-INST",
+      "city": "دهۆک / زاخۆ",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dpu_amedi_inst",
+      "name": "پەیمانگەها تەکنیکی یا ئامێدیێ (DPU)",
+      "name_en": "Amedi Technical Institute",
+      "name_ar": "المعهد التقني العمادية",
+      "code": "DPU-AMEDI-INST",
+      "city": "دهۆک / ئامێدی",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dpu_shekhan_inst",
+      "name": "پەیمانگەها تەکنیکی یا شێخان (DPU)",
+      "name_en": "Shekhan Technical Institute",
+      "name_ar": "المعهد التقني شيخان",
+      "code": "DPU-SHEKHAN-INST",
+      "city": "دهۆک / شێخان",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dpu_shingal_inst",
+      "name": "پەیمانگەها تەکنیکی یا شنگال (DPU)",
+      "name_en": "Shingal Technical Institute",
+      "name_ar": "المعهد التقني سنجار",
+      "code": "DPU-SHINGAL-INST",
+      "city": "شنگال",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dpu_bardarash_inst",
+      "name": "پەیمانگەها تەکنیکی یا بەردەڕەش (DPU)",
+      "name_en": "Bardarash Technical Institute",
+      "name_ar": "المعهد التقني بردرش",
+      "code": "DPU-BARDARASH-INST",
+      "city": "دهۆک / بەردەڕەش",
+      "type": "پۆلیتەکنیک",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "salahaddin_erbil",
+      "name": "زانکۆی سەلاحەدین - هەولێر",
+      "name_en": "Salahaddin University - Erbil",
+      "name_ar": "جامعة صلاح الدين - أربيل",
+      "code": "SALAHADDIN-ERBIL",
+      "city": "هەولێر",
+      "type": "حکومی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "univ_slemani",
+      "name": "زانکۆی سلێمانی",
+      "name_en": "University of Sulaimani",
+      "name_ar": "جامعة السليمانية",
+      "code": "UNIV-SLEMANI",
+      "city": "سلێمانی",
+      "type": "حکومی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "univ_duhok",
+      "name": "زانکۆی دهۆک",
+      "name_en": "University of Duhok",
+      "name_ar": "جامعة دهوك",
+      "code": "UNIV-DUHOK",
+      "city": "دهۆک",
+      "type": "حکومی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "hmu_erbil",
+      "name": "زانکۆی هەولێری پزیشکی (HMU)",
+      "name_en": "Hawler Medical University",
+      "name_ar": "جامعة هولير الطبية",
+      "code": "HMU-ERBIL",
+      "city": "هەولێر",
+      "type": "حکومی / پزیشکی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "koya_univ",
+      "name": "زانکۆی کۆیە",
+      "name_en": "Koya University",
+      "name_ar": "جامعة كويه",
+      "code": "KOYA-UNIV",
+      "city": "هەولێر / کۆیە",
+      "type": "حکومی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "soran_univ",
+      "name": "زانکۆی سۆران",
+      "name_en": "Soran University",
+      "name_ar": "جامعة سوران",
+      "code": "SORAN-UNIV",
+      "city": "هەولێر / سۆران",
+      "type": "حکومی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "zakho_univ",
+      "name": "زانکۆی زاخۆ",
+      "name_en": "University of Zakho",
+      "name_ar": "جامعة زاخو",
+      "code": "ZAKHO-UNIV",
+      "city": "دهۆک / زاخۆ",
+      "type": "حکومی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "raparin_univ",
+      "name": "زانکۆی ڕاپەڕین (ڕانیە / قەڵادزێ)",
+      "name_en": "University of Raparin",
+      "name_ar": "جامعة رابرين",
+      "code": "RAPARIN-UNIV",
+      "city": "سلێمانی / ڕانیە",
+      "type": "حکومی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "halabja_univ",
+      "name": "زانکۆی هەڵەبجە",
+      "name_en": "University of Halabja",
+      "name_ar": "جامعة حلبجة",
+      "code": "HALABJA-UNIV",
+      "city": "هەڵەبجە",
+      "type": "حکومی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "garmian_univ",
+      "name": "زانکۆی گەرمیان (کەلار / کفری)",
+      "name_en": "University of Garmian",
+      "name_ar": "جامعة كرميان",
+      "code": "GARMIAN-UNIV",
+      "city": "سلێمانی / گەرمیان",
+      "type": "حکومی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "charmo_univ",
+      "name": "زانکۆی چەرموو (چەمچەماڵ)",
+      "name_en": "Charmo University",
+      "name_ar": "جامعة چەرموو",
+      "code": "CHARMO-UNIV",
+      "city": "سلێمانی / چەمچەماڵ",
+      "type": "حکومی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "kirkuk_univ",
+      "name": "زانکۆی کەرکووک",
+      "name_en": "University of Kirkuk",
+      "name_ar": "جامعة كركوك",
+      "code": "KIRKUK-UNIV",
+      "city": "کەرکووک",
+      "type": "حکومی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "akre_univ",
+      "name": "زانکۆی ئاکرێ بۆ زانستە کردارییەکان",
+      "name_en": "University of Akre for Applied Sciences",
+      "name_ar": "جامعة عقرة للعلوم التطبيقية",
+      "code": "AKRE-UNIV",
+      "city": "دهۆک / ئاکرێ",
+      "type": "حکومی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "tiu_univ",
+      "name": "زانکۆی تیشک نێودەوڵەتی (TIU - هەولێر / سلێمانی)",
+      "name_en": "Tishk International University (TIU)",
+      "name_ar": "جامعة تيشك الدولية",
+      "code": "TIU-UNIV",
+      "city": "هەولێر / سلێمانی",
+      "type": "ئەهلی / نێودەوڵەتی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "ukh_erbil",
+      "name": "زانکۆی کوردستان هەولێر (UKH)",
+      "name_en": "University of Kurdistan Hewlêr (UKH)",
+      "name_ar": "جامعة كردستان هولير",
+      "code": "UKH-ERBIL",
+      "city": "هەولێر",
+      "type": "نێودەوڵەتی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "auis_slemani",
+      "name": "زانکۆی ئەمریکی لە عێراق - سلێمانی (AUIS)",
+      "name_en": "American University of Iraq, Sulaimani (AUIS)",
+      "name_ar": "الجامعة الأمريكية في العراق - السليمانية",
+      "code": "AUIS-SLEMANI",
+      "city": "سلێمانی",
+      "type": "نێودەوڵەتی / ئەمریکی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "auk_duhok",
+      "name": "زانکۆی ئەمریکی لە کوردستان - دهۆک (AUK)",
+      "name_en": "American University of Kurdistan, Duhok (AUK)",
+      "name_ar": "الجامعة الأمريكية في كردستان - دهوك",
+      "code": "AUK-DUHOK",
+      "city": "دهۆک",
+      "type": "نێودەوڵەتی / ئەمریکی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "komar_slemani",
+      "name": "زانکۆی کۆمار بۆ زانست و تەکنەلۆجیا (KUST)",
+      "name_en": "Komar University of Science and Technology (KUST)",
+      "name_ar": "جامعة كومار للعلوم والتكنولوجيا",
+      "code": "KOMAR-SLEMANI",
+      "city": "سلێمانی",
+      "type": "ئەهلی / پێشکەوتوو",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "cihan_univ",
+      "name": "زانکۆی جیهان (هەولێر / سلێمانی / دهۆک)",
+      "name_en": "Cihan University (Erbil / Sulaimani / Duhok)",
+      "name_ar": "جامعة جيهان",
+      "code": "CIHAN-UNIV",
+      "city": "هەولێر / سلێمانی / دهۆک",
+      "type": "ئەهلی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "lfu_erbil",
+      "name": "زانکۆی لوبنانی فەرەنسی (LFU)",
+      "name_en": "Lebanese French University (LFU)",
+      "name_ar": "الجامعة اللبنانية الفرنسية",
+      "code": "LFU-ERBIL",
+      "city": "هەولێر",
+      "type": "ئەهلی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "hayat_erbil",
+      "name": "زانکۆی حەیات بۆ زانست و تەکنەلۆجیا",
+      "name_en": "Hayat University of Science and Technology",
+      "name_ar": "جامعة حياة للعلوم والتكنولوجيا",
+      "code": "HAYAT-ERBIL",
+      "city": "هەولێر",
+      "type": "ئەهلی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "nawroz_duhok",
+      "name": "زانکۆی نەورۆز (دهۆک)",
+      "name_en": "Nawroz University - Duhok",
+      "name_ar": "جامعة نوروز",
+      "code": "NAWROZ-DUHOK",
+      "city": "دهۆک",
+      "type": "ئەهلی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "cue_erbil",
+      "name": "زانکۆی کاستۆلیک لە هەولێر (CUE - عەنکاوە)",
+      "name_en": "Catholic University in Erbil (CUE)",
+      "name_ar": "الجامعة الكاثوليكية في أربيل",
+      "code": "CUE-ERBIL",
+      "city": "هەولێر / عەنکاوە",
+      "type": "ئەهلی / نێودەوڵەتی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "qiu_slemani",
+      "name": "زانکۆی قەیوان نێودەوڵەتی (QIU - سلێمانی)",
+      "name_en": "Qaiwan International University (QIU)",
+      "name_ar": "جامعة قيوان الدولية",
+      "code": "QIU-SLEMANI",
+      "city": "سلێمانی",
+      "type": "نێودەوڵەتی",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "other_univ",
+      "name": "زانکۆ، کۆلێژ یان پەیمانگەیەکی تر (نووسینی بە دەست)",
+      "name_en": "Other University, College or Institute",
+      "name_ar": "جامعة أو كلية أو معهد آخر",
+      "code": "OTHER-UNIV",
+      "city": "گشت شارەکان",
+      "type": "تایبەت",
+      "is_active": true,
+      "created_at": "2026-01-01T00:00:00Z"
+    }
+  ],
+  "faculties": [
+    {
+      "id": "fac-1",
+      "university_id": "epu_shaqlawa_college",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-2",
+      "university_id": "epu_eng_college",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-3",
+      "university_id": "epu_computer_college",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-4",
+      "university_id": "epu_health_college",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-5",
+      "university_id": "epu_admin_college",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-6",
+      "university_id": "epu_soran_college",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-7",
+      "university_id": "epu_erbil_medical_inst",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-8",
+      "university_id": "epu_erbil_tech_inst",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-9",
+      "university_id": "epu_erbil_admin_inst",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-10",
+      "university_id": "epu_koya_inst",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-11",
+      "university_id": "epu_khabat_inst",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-12",
+      "university_id": "epu_choman_inst",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-13",
+      "university_id": "epu_mergasor_inst",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-14",
+      "university_id": "spu_eng_college",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-15",
+      "university_id": "spu_health_college",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-16",
+      "university_id": "spu_informatics_college",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-17",
+      "university_id": "spu_admin_college",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-18",
+      "university_id": "spu_halabja_college",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-19",
+      "university_id": "spu_slemani_inst",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-20",
+      "university_id": "spu_kalar_inst",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-21",
+      "university_id": "spu_chamchamal_inst",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-22",
+      "university_id": "spu_halabja_inst",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-23",
+      "university_id": "spu_darbandikhan_inst",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-24",
+      "university_id": "spu_dukan_inst",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-25",
+      "university_id": "spu_bakrajo_inst",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-26",
+      "university_id": "dpu_eng_college",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-27",
+      "university_id": "dpu_health_college",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-28",
+      "university_id": "dpu_admin_college",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-29",
+      "university_id": "dpu_duhok_inst",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-30",
+      "university_id": "dpu_zakho_inst",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-31",
+      "university_id": "dpu_amedi_inst",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-32",
+      "university_id": "dpu_shekhan_inst",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-33",
+      "university_id": "dpu_shingal_inst",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-34",
+      "university_id": "dpu_bardarash_inst",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-38",
+      "university_id": "hmu_erbil",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-39",
+      "university_id": "koya_univ",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-40",
+      "university_id": "soran_univ",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-41",
+      "university_id": "zakho_univ",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-42",
+      "university_id": "raparin_univ",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-43",
+      "university_id": "halabja_univ",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-44",
+      "university_id": "garmian_univ",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-45",
+      "university_id": "charmo_univ",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-46",
+      "university_id": "kirkuk_univ",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-47",
+      "university_id": "akre_univ",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-48",
+      "university_id": "tiu_univ",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-49",
+      "university_id": "ukh_erbil",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-50",
+      "university_id": "auis_slemani",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-51",
+      "university_id": "auk_duhok",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-52",
+      "university_id": "komar_slemani",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-53",
+      "university_id": "cihan_univ",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-54",
+      "university_id": "lfu_erbil",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-55",
+      "university_id": "hayat_erbil",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-56",
+      "university_id": "nawroz_duhok",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-57",
+      "university_id": "cue_erbil",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-58",
+      "university_id": "qiu_slemani",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "fac-59",
+      "university_id": "other_univ",
+      "name": "کۆلێژی سەرەکی / گشتی",
+      "created_at": "2026-01-01T00:00:00Z"
+    }
+  ],
+  "departments": [
+    {
+      "id": "dep-1",
+      "faculty_id": "fac-1",
+      "university_id": "epu_shaqlawa_college",
+      "name": "بەشی شیکاری نەخۆشییەکان (Medical Laboratory Technology - MLT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-2",
+      "faculty_id": "fac-1",
+      "university_id": "epu_shaqlawa_college",
+      "name": "بەشی پەرستاری (Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-3",
+      "faculty_id": "fac-1",
+      "university_id": "epu_shaqlawa_college",
+      "name": "بەشی تەکنەلۆجیای زانیاری (Information Technology - IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-4",
+      "faculty_id": "fac-1",
+      "university_id": "epu_shaqlawa_college",
+      "name": "بەشی سیستەمی زانیاری کارگێڕی (Management Information Systems - MIS)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-5",
+      "faculty_id": "fac-1",
+      "university_id": "epu_shaqlawa_college",
+      "name": "بەشی کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-6",
+      "faculty_id": "fac-1",
+      "university_id": "epu_shaqlawa_college",
+      "name": "بەشی کارگێڕی دامەزراوە گەشتیارییەکان (Tourism Foundation Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-7",
+      "faculty_id": "fac-1",
+      "university_id": "epu_shaqlawa_college",
+      "name": "بەشی تەکنیکی پرۆتۆکۆڵ و تواناسازی دیپلۆماسی (Protocol & Diplomacy)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-8",
+      "faculty_id": "fac-1",
+      "university_id": "epu_shaqlawa_college",
+      "name": "بەشی کۆنترۆڵی جۆری خۆراک (Food Quality Control)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-9",
+      "faculty_id": "fac-1",
+      "university_id": "epu_shaqlawa_college",
+      "name": "بەشی بیناکاری و تەکنیکی تەلارسازی (Building & Architectural Technique)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-10",
+      "faculty_id": "fac-1",
+      "university_id": "epu_shaqlawa_college",
+      "name": "بەشی پزیشکی ڤێتێرنەری (Veterinary)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-11",
+      "faculty_id": "fac-2",
+      "university_id": "epu_eng_college",
+      "name": "بەشی ئەندازیاری بیناکاری و کەرەستە (Civil & Construction Materials Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-12",
+      "faculty_id": "fac-2",
+      "university_id": "epu_eng_college",
+      "name": "بەشی ئەندازیاری تەکنیکی ئۆتۆمبێل (Automotive Technology Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-13",
+      "faculty_id": "fac-2",
+      "university_id": "epu_eng_college",
+      "name": "بەشی ئەندازیاری میکانیک و وزە (Mechanical and Energy Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-14",
+      "faculty_id": "fac-2",
+      "university_id": "epu_eng_college",
+      "name": "بەشی ئەندازیاری ڕێگاوبان و پرد (Highway and Bridges Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-15",
+      "faculty_id": "fac-2",
+      "university_id": "epu_eng_college",
+      "name": "بەشی ئەندازیاری ئۆتۆمەیشن و پیشەسازی (Automation & Industrial Technology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-16",
+      "faculty_id": "fac-2",
+      "university_id": "epu_eng_college",
+      "name": "بەشی ئەندازیاری تەکنەلۆجیای نەوت (Petroleum Technology Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-17",
+      "faculty_id": "fac-3",
+      "university_id": "epu_computer_college",
+      "name": "بەشی ئەندازیاری سیستەمی زانیاری (Information Systems Engineering - ISE)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-18",
+      "faculty_id": "fac-3",
+      "university_id": "epu_computer_college",
+      "name": "بەشی ئەندازیاری ژیری دەستکرد و ڕۆبۆتیکس (AI & Robotics Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-19",
+      "faculty_id": "fac-3",
+      "university_id": "epu_computer_college",
+      "name": "بەشی ئەندازیاری پەیوەندییەکان و تەکنەلۆجیای زانیاری (ICT Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-20",
+      "faculty_id": "fac-3",
+      "university_id": "epu_computer_college",
+      "name": "بەشی ئەندازیاری تۆڕەکان و ئاسایشی سایبەری (Cybersecurity & Networks)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-21",
+      "faculty_id": "fac-4",
+      "university_id": "epu_health_college",
+      "name": "بەشی تەکنەلۆجیای تاقیگەی پزیشکی (Medical Laboratory Technology - MLT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-22",
+      "faculty_id": "fac-4",
+      "university_id": "epu_health_college",
+      "name": "بەشی تەکنیکی تیشک و وێنەگری پزیشکی (Radiology & Medical Imaging)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-23",
+      "faculty_id": "fac-4",
+      "university_id": "epu_health_college",
+      "name": "بەشی تەکنەلۆجیای بێهۆشکاری (Anesthesia Technology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-24",
+      "faculty_id": "fac-4",
+      "university_id": "epu_health_college",
+      "name": "بەشی تەکنیکی دەرمانسازی کلینیکی (Clinical Pharmacy Techniques)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-25",
+      "faculty_id": "fac-4",
+      "university_id": "epu_health_college",
+      "name": "بەشی چارەسەری سروشتی (Physiotherapy)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-26",
+      "faculty_id": "fac-4",
+      "university_id": "epu_health_college",
+      "name": "بەشی پەرستاری چاودێری چڕ و فریاکەوتن (Critical Care & Emergency Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-27",
+      "faculty_id": "fac-4",
+      "university_id": "epu_health_college",
+      "name": "بەشی دەست و قاچی دەستکرد (Prosthetics & Orthotics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-28",
+      "faculty_id": "fac-4",
+      "university_id": "epu_health_college",
+      "name": "بەشی کیمیای کلینیکی (Clinical Biochemistry)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-29",
+      "faculty_id": "fac-5",
+      "university_id": "epu_admin_college",
+      "name": "بەشی تەکنەلۆجیای زانیاری کارگێڕی (Business Information Technology - BIT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-30",
+      "faculty_id": "fac-5",
+      "university_id": "epu_admin_college",
+      "name": "بەشی تەکنەلۆجیای میدیا و ڕاگەیاندن (Media Technology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-31",
+      "faculty_id": "fac-5",
+      "university_id": "epu_admin_college",
+      "name": "بەشی تەکنیکەکانی ژمێریاری و دارایی (Accounting & Financial Techniques)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-32",
+      "faculty_id": "fac-5",
+      "university_id": "epu_admin_college",
+      "name": "بەشی بەڕێوەبردنی سەرچاوە مرۆییەکان (Human Resources Management - HRM)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-33",
+      "faculty_id": "fac-5",
+      "university_id": "epu_admin_college",
+      "name": "بەشی بازاڕگەری و بازرگانی نێودەوڵەتی (International Marketing & Trade)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-34",
+      "faculty_id": "fac-5",
+      "university_id": "epu_admin_college",
+      "name": "بەشی کارگێڕی دامەزراوە گەشتیارییەکان و هۆتێل (Tourism Institution Management)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-35",
+      "faculty_id": "fac-6",
+      "university_id": "epu_soran_college",
+      "name": "بەشی شیکاری نەخۆشییەکان (Medical Laboratory Technology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-36",
+      "faculty_id": "fac-6",
+      "university_id": "epu_soran_college",
+      "name": "بەشی پەرستاری (Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-37",
+      "faculty_id": "fac-6",
+      "university_id": "epu_soran_college",
+      "name": "بەشی مامانی (Midwifery)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-38",
+      "faculty_id": "fac-6",
+      "university_id": "epu_soran_college",
+      "name": "بەشی تەکنەلۆجیای زانیاری (Information Technology - IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-39",
+      "faculty_id": "fac-6",
+      "university_id": "epu_soran_college",
+      "name": "بەشی کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-40",
+      "faculty_id": "fac-6",
+      "university_id": "epu_soran_college",
+      "name": "بەشی ژمێریاری (Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-41",
+      "faculty_id": "fac-6",
+      "university_id": "epu_soran_college",
+      "name": "بەشی ڕاگەیاندن و بازاڕگەری (Media & Marketing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-42",
+      "faculty_id": "fac-6",
+      "university_id": "epu_soran_college",
+      "name": "بەشی بیناکاری و شارستانی (Civil Construction)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-43",
+      "faculty_id": "fac-7",
+      "university_id": "epu_erbil_medical_inst",
+      "name": "بەشی شیکاری نەخۆشییەکان (Medical Laboratory Analysis)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-44",
+      "faculty_id": "fac-7",
+      "university_id": "epu_erbil_medical_inst",
+      "name": "بەشی پەرستاری (Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-45",
+      "faculty_id": "fac-7",
+      "university_id": "epu_erbil_medical_inst",
+      "name": "بەشی دەرمانسازی (Pharmacy Techniques)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-46",
+      "faculty_id": "fac-7",
+      "university_id": "epu_erbil_medical_inst",
+      "name": "بەشی تیشک (Radiology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-47",
+      "faculty_id": "fac-7",
+      "university_id": "epu_erbil_medical_inst",
+      "name": "بەشی بێهۆشکاری (Anesthesia)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-48",
+      "faculty_id": "fac-7",
+      "university_id": "epu_erbil_medical_inst",
+      "name": "بەشی تەندروستی کۆمەڵ (Community Health)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-49",
+      "faculty_id": "fac-7",
+      "university_id": "epu_erbil_medical_inst",
+      "name": "بەشی پیشەسازی ددان (Dental Prosthetics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-50",
+      "faculty_id": "fac-7",
+      "university_id": "epu_erbil_medical_inst",
+      "name": "بەشی تەکنیکی چاو و چاویلکە (Optics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-51",
+      "faculty_id": "fac-8",
+      "university_id": "epu_erbil_tech_inst",
+      "name": "بەشی تەکنەلۆجیای زانیاری (Information Technology - IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-52",
+      "faculty_id": "fac-8",
+      "university_id": "epu_erbil_tech_inst",
+      "name": "بەشی سیستەمی کۆمپیوتەر و تۆڕەکان (Computer Systems)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-53",
+      "faculty_id": "fac-8",
+      "university_id": "epu_erbil_tech_inst",
+      "name": "بەشی بیناکاری و شارستانی (Civil & Construction)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-54",
+      "faculty_id": "fac-8",
+      "university_id": "epu_erbil_tech_inst",
+      "name": "بەشی ڕووپێوان و دروستکردنی ڕێگاوبان (Surveying & Road Construction)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-55",
+      "faculty_id": "fac-8",
+      "university_id": "epu_erbil_tech_inst",
+      "name": "بەشی توانای کارەبا و ئەلیکترۆنیک (Electrical Power)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-56",
+      "faculty_id": "fac-8",
+      "university_id": "epu_erbil_tech_inst",
+      "name": "بەشی میکانیک و چاککردنەوەی ئۆتۆمبێل (Automotive & Mechanical)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-57",
+      "faculty_id": "fac-8",
+      "university_id": "epu_erbil_tech_inst",
+      "name": "بەشی ساردکەرەوە و هەواگۆڕکێ (Refrigeration & Air Conditioning)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-58",
+      "faculty_id": "fac-8",
+      "university_id": "epu_erbil_tech_inst",
+      "name": "بەشی تەکنەلۆجیای نەوت و پترۆکیمیا (Petroleum Technology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-59",
+      "faculty_id": "fac-9",
+      "university_id": "epu_erbil_admin_inst",
+      "name": "بەشی کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-60",
+      "faculty_id": "fac-9",
+      "university_id": "epu_erbil_admin_inst",
+      "name": "بەشی ژمێریاری (Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-61",
+      "faculty_id": "fac-9",
+      "university_id": "epu_erbil_admin_inst",
+      "name": "بەشی کارگێڕی یاسایی (Legal Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-62",
+      "faculty_id": "fac-9",
+      "university_id": "epu_erbil_admin_inst",
+      "name": "بەشی بەڕێوەبردنی سەرچاوە مرۆییەکان (Human Resources)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-63",
+      "faculty_id": "fac-9",
+      "university_id": "epu_erbil_admin_inst",
+      "name": "بەشی زانیاری و کتێبخانەکان (Information and Libraries)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-64",
+      "faculty_id": "fac-9",
+      "university_id": "epu_erbil_admin_inst",
+      "name": "بەشی ڕاگەیاندن و میدیا (Media)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-65",
+      "faculty_id": "fac-9",
+      "university_id": "epu_erbil_admin_inst",
+      "name": "بەشی تەکنیکی وەرگێڕان (Translation Techniques)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-66",
+      "faculty_id": "fac-9",
+      "university_id": "epu_erbil_admin_inst",
+      "name": "بەشی دڵنیایی و بیمە (Insurance)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-67",
+      "faculty_id": "fac-9",
+      "university_id": "epu_erbil_admin_inst",
+      "name": "بەشی ڕێبەری گەشتیاری (Tourist Guidance Management)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-68",
+      "faculty_id": "fac-9",
+      "university_id": "epu_erbil_admin_inst",
+      "name": "بەشی بازاڕگەری (Marketing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-69",
+      "faculty_id": "fac-10",
+      "university_id": "epu_koya_inst",
+      "name": "بەشی شیکاری نەخۆشییەکان (Medical Laboratory Analysis)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-70",
+      "faculty_id": "fac-10",
+      "university_id": "epu_koya_inst",
+      "name": "بەشی پەرستاری (Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-71",
+      "faculty_id": "fac-10",
+      "university_id": "epu_koya_inst",
+      "name": "بەشی تەکنەلۆجیای نەوت (Petroleum Technology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-72",
+      "faculty_id": "fac-10",
+      "university_id": "epu_koya_inst",
+      "name": "بەشی تەکنەلۆجیای زانیاری (Information Technology - IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-73",
+      "faculty_id": "fac-10",
+      "university_id": "epu_koya_inst",
+      "name": "بەشی سیستەمی کۆمپیوتەر (Computer Systems)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-74",
+      "faculty_id": "fac-10",
+      "university_id": "epu_koya_inst",
+      "name": "بەشی کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-75",
+      "faculty_id": "fac-10",
+      "university_id": "epu_koya_inst",
+      "name": "بەشی ژمێریاری (Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-76",
+      "faculty_id": "fac-10",
+      "university_id": "epu_koya_inst",
+      "name": "بەشی کارگێڕی یاسایی (Legal Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-77",
+      "faculty_id": "fac-11",
+      "university_id": "epu_khabat_inst",
+      "name": "بەشی شیکاری تاقیگەی نەخۆشییەکان (Medical Lab Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-78",
+      "faculty_id": "fac-11",
+      "university_id": "epu_khabat_inst",
+      "name": "بەشی تەندروستی کۆمەڵ (Community Health)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-79",
+      "faculty_id": "fac-11",
+      "university_id": "epu_khabat_inst",
+      "name": "بەشی کارگێڕی یاسایی (Legal Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-80",
+      "faculty_id": "fac-11",
+      "university_id": "epu_khabat_inst",
+      "name": "بەشی تەکنەلۆجیای زانیاری (Information Technology - IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-81",
+      "faculty_id": "fac-11",
+      "university_id": "epu_khabat_inst",
+      "name": "بەشی بەرهەمهێنانی ڕووەکی و کشتوکاڵ (Plant Production)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-82",
+      "faculty_id": "fac-11",
+      "university_id": "epu_khabat_inst",
+      "name": "بەشی پیشەسازی و کۆنترۆڵی جۆری خۆراک (Food Quality Control)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-83",
+      "faculty_id": "fac-12",
+      "university_id": "epu_choman_inst",
+      "name": "بەشی کارگێڕی گومرک (Customs Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-84",
+      "faculty_id": "fac-12",
+      "university_id": "epu_choman_inst",
+      "name": "بەشی تەکنەلۆجیای زانیاری (Information Technology - IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-85",
+      "faculty_id": "fac-12",
+      "university_id": "epu_choman_inst",
+      "name": "بەشی کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-86",
+      "faculty_id": "fac-12",
+      "university_id": "epu_choman_inst",
+      "name": "بەشی کارگێڕی دارایی و ژمێریاری (Financial Administration & Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-87",
+      "faculty_id": "fac-12",
+      "university_id": "epu_choman_inst",
+      "name": "بەشی تەکنیکی تەلارسازی و بیناکاری (Architectural Techniques)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-88",
+      "faculty_id": "fac-12",
+      "university_id": "epu_choman_inst",
+      "name": "بەشی کارگێڕی گەشتوگوزار (Tourism Management)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-89",
+      "faculty_id": "fac-13",
+      "university_id": "epu_mergasor_inst",
+      "name": "بەشی پەرستاری (Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-90",
+      "faculty_id": "fac-13",
+      "university_id": "epu_mergasor_inst",
+      "name": "بەشی تەکنەلۆجیای زانیاری (Information Technology - IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-91",
+      "faculty_id": "fac-13",
+      "university_id": "epu_mergasor_inst",
+      "name": "بەشی کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-92",
+      "faculty_id": "fac-13",
+      "university_id": "epu_mergasor_inst",
+      "name": "بەشی کارگێڕی گەشتوگوزار و میوانداری (Tourism & Hospitality)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-93",
+      "faculty_id": "fac-14",
+      "university_id": "spu_eng_college",
+      "name": "بەشی ئەندازیاری پلاندانانی شار (City Planning Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-94",
+      "faculty_id": "fac-14",
+      "university_id": "spu_eng_college",
+      "name": "بەشی ئەندازیاری نەوت و وزە (Petroleum & Energy Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-95",
+      "faculty_id": "fac-14",
+      "university_id": "spu_eng_college",
+      "name": "بەشی ئەندازیاری میکانیک (Mechanical Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-96",
+      "faculty_id": "fac-14",
+      "university_id": "spu_eng_college",
+      "name": "بەشی ئەندازیاری پەیوەندییەکان (Communication Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-97",
+      "faculty_id": "fac-14",
+      "university_id": "spu_eng_college",
+      "name": "بەشی ئەندازیاری توانای کارەبا (Electrical Power Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-98",
+      "faculty_id": "fac-14",
+      "university_id": "spu_eng_college",
+      "name": "بەشی ئەندازیاری شارستانی و بیناکاری (Civil & Construction)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-99",
+      "faculty_id": "fac-15",
+      "university_id": "spu_health_college",
+      "name": "بەشی تاقیگەی پزیشکی (Medical Laboratory Analysis - MLT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-100",
+      "faculty_id": "fac-15",
+      "university_id": "spu_health_college",
+      "name": "بەشی بێهۆشکاری (Anesthesia Technology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-101",
+      "faculty_id": "fac-15",
+      "university_id": "spu_health_college",
+      "name": "بەشی پەرستاری (Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-102",
+      "faculty_id": "fac-15",
+      "university_id": "spu_health_college",
+      "name": "بەشی تەندروستی کۆمەڵ (Community Health)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-103",
+      "faculty_id": "fac-16",
+      "university_id": "spu_informatics_college",
+      "name": "بەشی تەکنەلۆجیای زانیاری (Information Technology - IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-104",
+      "faculty_id": "fac-16",
+      "university_id": "spu_informatics_college",
+      "name": "بەشی تەکنەلۆجیای دەیتابەیس (Database Technology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-105",
+      "faculty_id": "fac-16",
+      "university_id": "spu_informatics_college",
+      "name": "بەشی تەکنەلۆجیای تۆڕەکان (Network Technology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-106",
+      "faculty_id": "fac-16",
+      "university_id": "spu_informatics_college",
+      "name": "بەشی زانستی کۆمپیوتەر (Computer Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-107",
+      "faculty_id": "fac-17",
+      "university_id": "spu_admin_college",
+      "name": "بەشی پەیوەندییە گشتییەکان و بازاڕگەری (Public Relations & Marketing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-108",
+      "faculty_id": "fac-17",
+      "university_id": "spu_admin_college",
+      "name": "بەشی تەکنیکی ژمێریاری و دارایی (Accounting & Financial Technique)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-109",
+      "faculty_id": "fac-17",
+      "university_id": "spu_admin_college",
+      "name": "بەشی تەکنیکی بەڕێوەبردنی کار (Business Management Technique)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-110",
+      "faculty_id": "fac-17",
+      "university_id": "spu_admin_college",
+      "name": "بەشی تەکنیکی میدیا و ڕاگەیاندن (Media Technique)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-111",
+      "faculty_id": "fac-17",
+      "university_id": "spu_admin_college",
+      "name": "بەشی تەکنەلۆجیای زانیاری کارگێڕی (Business IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-112",
+      "faculty_id": "fac-18",
+      "university_id": "spu_halabja_college",
+      "name": "بەشی پڕۆژە کشتوکاڵییەکان (Agricultural Projects)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-113",
+      "faculty_id": "fac-18",
+      "university_id": "spu_halabja_college",
+      "name": "بەشی زانستی خۆراک و کۆنترۆڵی جۆری (Food Science & Quality Control)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-114",
+      "faculty_id": "fac-18",
+      "university_id": "spu_halabja_college",
+      "name": "بەشی شیکاری تاقیگەی پزیشکی (Medical Laboratory Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-115",
+      "faculty_id": "fac-18",
+      "university_id": "spu_halabja_college",
+      "name": "بەشی تەکنەلۆجیای زانیاری (Information Technology - IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-116",
+      "faculty_id": "fac-18",
+      "university_id": "spu_halabja_college",
+      "name": "بەشی کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-117",
+      "faculty_id": "fac-19",
+      "university_id": "spu_slemani_inst",
+      "name": "بەشی شیکاری نەخۆشییەکان (Medical Lab Analysis)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-118",
+      "faculty_id": "fac-19",
+      "university_id": "spu_slemani_inst",
+      "name": "بەشی پەرستاری (Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-119",
+      "faculty_id": "fac-19",
+      "university_id": "spu_slemani_inst",
+      "name": "بەشی دەرمانسازی (Pharmacy Techniques)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-120",
+      "faculty_id": "fac-19",
+      "university_id": "spu_slemani_inst",
+      "name": "بەشی تیشک (Radiology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-121",
+      "faculty_id": "fac-19",
+      "university_id": "spu_slemani_inst",
+      "name": "بەشی بێهۆشکاری (Anesthesia)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-122",
+      "faculty_id": "fac-19",
+      "university_id": "spu_slemani_inst",
+      "name": "بەشی پیشەسازی ددان (Dental Care)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-123",
+      "faculty_id": "fac-19",
+      "university_id": "spu_slemani_inst",
+      "name": "بەشی تەندروستی کۆمەڵ (Community Health)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-124",
+      "faculty_id": "fac-19",
+      "university_id": "spu_slemani_inst",
+      "name": "بەشی سیستەمی کۆمپیوتەر و IT (Computer Systems & IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-125",
+      "faculty_id": "fac-19",
+      "university_id": "spu_slemani_inst",
+      "name": "بەشی بیناکاری و ڕووپێوان (Civil & Surveying)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-126",
+      "faculty_id": "fac-19",
+      "university_id": "spu_slemani_inst",
+      "name": "بەشی کارەبا و ئەلیکترۆنیک (Electrical)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-127",
+      "faculty_id": "fac-19",
+      "university_id": "spu_slemani_inst",
+      "name": "بەشی میکانیک و ئۆتۆمبێل (Automotive & Mechanics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-128",
+      "faculty_id": "fac-19",
+      "university_id": "spu_slemani_inst",
+      "name": "بەشی کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-129",
+      "faculty_id": "fac-19",
+      "university_id": "spu_slemani_inst",
+      "name": "بەشی ژمێریاری (Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-130",
+      "faculty_id": "fac-19",
+      "university_id": "spu_slemani_inst",
+      "name": "بەشی کارگێڕی یاسایی (Legal Admin)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-131",
+      "faculty_id": "fac-19",
+      "university_id": "spu_slemani_inst",
+      "name": "بەشی تەکنیکی میدیا (Media Techniques)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-132",
+      "faculty_id": "fac-20",
+      "university_id": "spu_kalar_inst",
+      "name": "بەشی شیکاری نەخۆشییەکان (Medical Lab Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-133",
+      "faculty_id": "fac-20",
+      "university_id": "spu_kalar_inst",
+      "name": "بەشی پەرستاری (Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-134",
+      "faculty_id": "fac-20",
+      "university_id": "spu_kalar_inst",
+      "name": "بەشی تەکنەلۆجیای زانیاری (IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-135",
+      "faculty_id": "fac-20",
+      "university_id": "spu_kalar_inst",
+      "name": "بەشی بیناکاری (Civil Construction)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-136",
+      "faculty_id": "fac-20",
+      "university_id": "spu_kalar_inst",
+      "name": "بەشی کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-137",
+      "faculty_id": "fac-20",
+      "university_id": "spu_kalar_inst",
+      "name": "بەشی ژمێریاری (Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-138",
+      "faculty_id": "fac-20",
+      "university_id": "spu_kalar_inst",
+      "name": "بەشی ڕووپێوان (Surveying)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-139",
+      "faculty_id": "fac-20",
+      "university_id": "spu_kalar_inst",
+      "name": "بەشی پزیشکی ڤێتێرنەری (Veterinary)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-140",
+      "faculty_id": "fac-21",
+      "university_id": "spu_chamchamal_inst",
+      "name": "بەشی شیکاری نەخۆشییەکان (Medical Lab Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-141",
+      "faculty_id": "fac-21",
+      "university_id": "spu_chamchamal_inst",
+      "name": "بەشی تەکنەلۆجیای زانیاری (Information Technology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-142",
+      "faculty_id": "fac-21",
+      "university_id": "spu_chamchamal_inst",
+      "name": "بەشی تەکنەلۆجیای نەوت و گاز (Oil & Gas Technology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-143",
+      "faculty_id": "fac-21",
+      "university_id": "spu_chamchamal_inst",
+      "name": "بەشی کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-144",
+      "faculty_id": "fac-21",
+      "university_id": "spu_chamchamal_inst",
+      "name": "بەشی ژمێریاری (Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-145",
+      "faculty_id": "fac-22",
+      "university_id": "spu_halabja_inst",
+      "name": "بەشی شیکاری نەخۆشییەکان (Medical Lab Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-146",
+      "faculty_id": "fac-22",
+      "university_id": "spu_halabja_inst",
+      "name": "بەشی پەرستاری (Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-147",
+      "faculty_id": "fac-22",
+      "university_id": "spu_halabja_inst",
+      "name": "بەشی تەکنەلۆجیای زانیاری (IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-148",
+      "faculty_id": "fac-22",
+      "university_id": "spu_halabja_inst",
+      "name": "بەشی کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-149",
+      "faculty_id": "fac-22",
+      "university_id": "spu_halabja_inst",
+      "name": "بەشی ژمێریاری (Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-150",
+      "faculty_id": "fac-22",
+      "university_id": "spu_halabja_inst",
+      "name": "بەشی دیزاینی بیناسازی و تەلارسازی (Architectural Design)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-151",
+      "faculty_id": "fac-23",
+      "university_id": "spu_darbandikhan_inst",
+      "name": "بەشی شیکاری نەخۆشییەکان (Medical Lab)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-152",
+      "faculty_id": "fac-23",
+      "university_id": "spu_darbandikhan_inst",
+      "name": "بەشی تەکنەلۆجیای زانیاری (IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-153",
+      "faculty_id": "fac-23",
+      "university_id": "spu_darbandikhan_inst",
+      "name": "بەشی کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-154",
+      "faculty_id": "fac-23",
+      "university_id": "spu_darbandikhan_inst",
+      "name": "بەشی ژمێریاری (Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-155",
+      "faculty_id": "fac-24",
+      "university_id": "spu_dukan_inst",
+      "name": "بەشی تەکنەلۆجیای زانیاری (IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-156",
+      "faculty_id": "fac-24",
+      "university_id": "spu_dukan_inst",
+      "name": "بەشی کارگێڕی کار و بانک (Business & Banking)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-157",
+      "faculty_id": "fac-24",
+      "university_id": "spu_dukan_inst",
+      "name": "بەشی ژمێریاری (Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-158",
+      "faculty_id": "fac-24",
+      "university_id": "spu_dukan_inst",
+      "name": "بەشی کارگێڕی گەشتوگوزار (Tourism)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-159",
+      "faculty_id": "fac-25",
+      "university_id": "spu_bakrajo_inst",
+      "name": "بەشی بەرهەمهێنانی ڕووەکی و کشتوکاڵ (Plant Production)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-160",
+      "faculty_id": "fac-25",
+      "university_id": "spu_bakrajo_inst",
+      "name": "بەشی تەکنەلۆجیای خۆراک (Food Technology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-161",
+      "faculty_id": "fac-25",
+      "university_id": "spu_bakrajo_inst",
+      "name": "بەشی دارستان و ژینگەپارێزی (Forestry & Environment)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-162",
+      "faculty_id": "fac-25",
+      "university_id": "spu_bakrajo_inst",
+      "name": "بەشی ژمێریاری (Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-163",
+      "faculty_id": "fac-26",
+      "university_id": "dpu_eng_college",
+      "name": "پشکا ئەندازیارییا تەکنەلۆجیایا پێزانینان (Information Technology - IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-164",
+      "faculty_id": "fac-26",
+      "university_id": "dpu_eng_college",
+      "name": "پشکا ئەندازیارییا شارستانی و بیناکاری (Civil & Construction)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-165",
+      "faculty_id": "fac-26",
+      "university_id": "dpu_eng_college",
+      "name": "پشکا ئەندازیارییا وزە و نەوت و گاز (Petroleum & Energy Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-166",
+      "faculty_id": "fac-26",
+      "university_id": "dpu_eng_college",
+      "name": "پشکا ئەندازیارییا ڕێک و پردان (Road & Bridge Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-167",
+      "faculty_id": "fac-26",
+      "university_id": "dpu_eng_college",
+      "name": "پشکا ئەندازیارییا میکانیک (Mechanical Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-168",
+      "faculty_id": "fac-26",
+      "university_id": "dpu_eng_college",
+      "name": "پشکا دیتر (نڤیسینا ب دەست)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-169",
+      "faculty_id": "fac-27",
+      "university_id": "dpu_health_college",
+      "name": "پشکا تەکنەلۆجیایا تاقیگەها نوژداری (Medical Laboratory Technology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-170",
+      "faculty_id": "fac-27",
+      "university_id": "dpu_health_college",
+      "name": "پشکا تەکنەلۆجیایا بێهۆشکاریێ (Anesthesia Technology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-171",
+      "faculty_id": "fac-27",
+      "university_id": "dpu_health_college",
+      "name": "پشکا تەندروستیا جڤاکی (Public Health & Community)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-172",
+      "faculty_id": "fac-27",
+      "university_id": "dpu_health_college",
+      "name": "پشکا پەرستاریێ (Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-173",
+      "faculty_id": "fac-27",
+      "university_id": "dpu_health_college",
+      "name": "پشکا دیتر (نڤیسینا ب دەست)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-174",
+      "faculty_id": "fac-28",
+      "university_id": "dpu_admin_college",
+      "name": "پشکا تەکنەلۆجیایا پێزانینێن کارگێڕی (Business Information Technology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-175",
+      "faculty_id": "fac-28",
+      "university_id": "dpu_admin_college",
+      "name": "پشکا ژمێریاری و دارایی (Accounting & Finance)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-176",
+      "faculty_id": "fac-28",
+      "university_id": "dpu_admin_college",
+      "name": "پشکا کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-177",
+      "faculty_id": "fac-28",
+      "university_id": "dpu_admin_college",
+      "name": "پشکا بازاڕگەرییا نێڤدەولەتی (International Marketing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-178",
+      "faculty_id": "fac-28",
+      "university_id": "dpu_admin_college",
+      "name": "پشکا تەکنیکێن میدیایێ و مالتی میدیا (Media & Multimedia)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-179",
+      "faculty_id": "fac-28",
+      "university_id": "dpu_admin_college",
+      "name": "پشکا دیتر (نڤیسینا ب دەست)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-180",
+      "faculty_id": "fac-29",
+      "university_id": "dpu_duhok_inst",
+      "name": "پشکا شیکاریێن نەخۆشییان (Medical Laboratory Analysis)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-181",
+      "faculty_id": "fac-29",
+      "university_id": "dpu_duhok_inst",
+      "name": "پشکا پەرستاریێ (Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-182",
+      "faculty_id": "fac-29",
+      "university_id": "dpu_duhok_inst",
+      "name": "پشکا دەرمانسازیێ (Pharmacy)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-183",
+      "faculty_id": "fac-29",
+      "university_id": "dpu_duhok_inst",
+      "name": "پشکا تیشکێ (Radiology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-184",
+      "faculty_id": "fac-29",
+      "university_id": "dpu_duhok_inst",
+      "name": "پشکا بێهۆشکاریێ (Anesthesia)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-185",
+      "faculty_id": "fac-29",
+      "university_id": "dpu_duhok_inst",
+      "name": "پشکا چارەسەریا سروشتی (Physiotherapy)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-186",
+      "faculty_id": "fac-29",
+      "university_id": "dpu_duhok_inst",
+      "name": "پشکا ئامیرێن نوژداری (Medical Devices Technology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-187",
+      "faculty_id": "fac-29",
+      "university_id": "dpu_duhok_inst",
+      "name": "پشکا تەکنەلۆجیایا پێزانینان و وێب (IT & Web Technology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-188",
+      "faculty_id": "fac-29",
+      "university_id": "dpu_duhok_inst",
+      "name": "پشکا بیناکاری و شارستانی (Building & Construction)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-189",
+      "faculty_id": "fac-29",
+      "university_id": "dpu_duhok_inst",
+      "name": "پشکا ڕووپێڤان (Surveying)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-190",
+      "faculty_id": "fac-29",
+      "university_id": "dpu_duhok_inst",
+      "name": "پشکا کارەب و وزەیا ڕۆژێ (Solar Energy & Electrical)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-191",
+      "faculty_id": "fac-29",
+      "university_id": "dpu_duhok_inst",
+      "name": "پشکا میکانیک و پیشەسازی (Manufacturing & Mechanics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-192",
+      "faculty_id": "fac-29",
+      "university_id": "dpu_duhok_inst",
+      "name": "پشکا کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-193",
+      "faculty_id": "fac-29",
+      "university_id": "dpu_duhok_inst",
+      "name": "پشکا ژمێریاری (Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-194",
+      "faculty_id": "fac-29",
+      "university_id": "dpu_duhok_inst",
+      "name": "پشکا کارگێڕیا یاسایی (Legal Admin)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-195",
+      "faculty_id": "fac-29",
+      "university_id": "dpu_duhok_inst",
+      "name": "پشکا دیتر (نڤیسینا ب دەست)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-196",
+      "faculty_id": "fac-30",
+      "university_id": "dpu_zakho_inst",
+      "name": "پشکا شیکاریێن نەخۆشییان (Medical Laboratory Technology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-197",
+      "faculty_id": "fac-30",
+      "university_id": "dpu_zakho_inst",
+      "name": "پشکا پەرستاریێ (Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-198",
+      "faculty_id": "fac-30",
+      "university_id": "dpu_zakho_inst",
+      "name": "پشکا تەکنەلۆجیایا پێزانینان (Information Technology - IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-199",
+      "faculty_id": "fac-30",
+      "university_id": "dpu_zakho_inst",
+      "name": "پشکا بەرهەمئینانا نەوتێ (Petroleum Studies)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-200",
+      "faculty_id": "fac-30",
+      "university_id": "dpu_zakho_inst",
+      "name": "پشکا کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-201",
+      "faculty_id": "fac-30",
+      "university_id": "dpu_zakho_inst",
+      "name": "پشکا ژمێریاری (Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-202",
+      "faculty_id": "fac-30",
+      "university_id": "dpu_zakho_inst",
+      "name": "پشکا کارگێڕی گومرک (Customs)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-203",
+      "faculty_id": "fac-30",
+      "university_id": "dpu_zakho_inst",
+      "name": "پشکا چاندنێ (Conservation Agriculture)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-204",
+      "faculty_id": "fac-30",
+      "university_id": "dpu_zakho_inst",
+      "name": "پشکا دیتر (نڤیسینا ب دەست)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-205",
+      "faculty_id": "fac-31",
+      "university_id": "dpu_amedi_inst",
+      "name": "پشکا شیکاریێن نەخۆشییان (Disease Analyses / Medical Lab)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-206",
+      "faculty_id": "fac-31",
+      "university_id": "dpu_amedi_inst",
+      "name": "پشکا تەکنەلۆجیایا پێزانینان (Information Technology - IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-207",
+      "faculty_id": "fac-31",
+      "university_id": "dpu_amedi_inst",
+      "name": "پشکا کارگێڕی کار (Business Management)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-208",
+      "faculty_id": "fac-31",
+      "university_id": "dpu_amedi_inst",
+      "name": "پشکا کارگێڕی گەشتوگوزار (Tourism Management)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-209",
+      "faculty_id": "fac-31",
+      "university_id": "dpu_amedi_inst",
+      "name": "پشکا بازاڕگەری (Marketing Management)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-210",
+      "faculty_id": "fac-31",
+      "university_id": "dpu_amedi_inst",
+      "name": "پشکا سەرچاوەیێن گیانەوەری (Animal Resources)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-211",
+      "faculty_id": "fac-31",
+      "university_id": "dpu_amedi_inst",
+      "name": "پشکا ئامار و پێزانین (Statistics & Information)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-212",
+      "faculty_id": "fac-31",
+      "university_id": "dpu_amedi_inst",
+      "name": "پشکا دیتر (نڤیسینا ب دەست)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-213",
+      "faculty_id": "fac-32",
+      "university_id": "dpu_shekhan_inst",
+      "name": "پشکا شیکاریێن نەخۆشییان (Medical Lab Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-214",
+      "faculty_id": "fac-32",
+      "university_id": "dpu_shekhan_inst",
+      "name": "پشکا پەرستاریێ (Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-215",
+      "faculty_id": "fac-32",
+      "university_id": "dpu_shekhan_inst",
+      "name": "پشکا تەکنەلۆجیایا پێزانینان (IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-216",
+      "faculty_id": "fac-32",
+      "university_id": "dpu_shekhan_inst",
+      "name": "پشکا کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-217",
+      "faculty_id": "fac-32",
+      "university_id": "dpu_shekhan_inst",
+      "name": "پشکا ژمێریاری (Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-218",
+      "faculty_id": "fac-32",
+      "university_id": "dpu_shekhan_inst",
+      "name": "پشکا دیتر (نڤیسینا ب دەست)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-219",
+      "faculty_id": "fac-33",
+      "university_id": "dpu_shingal_inst",
+      "name": "پشکا پەرستاریێ (Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-220",
+      "faculty_id": "fac-33",
+      "university_id": "dpu_shingal_inst",
+      "name": "پشکا شیکاریێن نەخۆشییان (Medical Lab)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-221",
+      "faculty_id": "fac-33",
+      "university_id": "dpu_shingal_inst",
+      "name": "پشکا تەکنەلۆجیایا پێزانینان (IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-222",
+      "faculty_id": "fac-33",
+      "university_id": "dpu_shingal_inst",
+      "name": "پشکا کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-223",
+      "faculty_id": "fac-33",
+      "university_id": "dpu_shingal_inst",
+      "name": "پشکا ژمێریاری (Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-224",
+      "faculty_id": "fac-33",
+      "university_id": "dpu_shingal_inst",
+      "name": "پشکا دیتر (نڤیسینا ب دەست)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-225",
+      "faculty_id": "fac-34",
+      "university_id": "dpu_bardarash_inst",
+      "name": "پشکا شیکاریێن نەخۆشییان (Medical Lab)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-226",
+      "faculty_id": "fac-34",
+      "university_id": "dpu_bardarash_inst",
+      "name": "پشکا پەرستاریێ (Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-227",
+      "faculty_id": "fac-34",
+      "university_id": "dpu_bardarash_inst",
+      "name": "پشکا تەکنەلۆجیایا پێزانینان (IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-228",
+      "faculty_id": "fac-34",
+      "university_id": "dpu_bardarash_inst",
+      "name": "پشکا کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-229",
+      "faculty_id": "fac-34",
+      "university_id": "dpu_bardarash_inst",
+      "name": "پشکا ژمێریاری (Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-230",
+      "faculty_id": "fac-34",
+      "university_id": "dpu_bardarash_inst",
+      "name": "پشکا دیتر (نڤیسینا ب دەست)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-231",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی ئەندازیاری پرۆگرامسازی و زانیاری (Software & Informatics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-232",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی ئەندازیاری کۆمپیوتەر (Computer Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-233",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی ئەندازیاری شارستانی (Civil Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-234",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی ئەندازیاری تەلارسازی (Architecture Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-235",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی ئەندازیاری کارەبا (Electrical Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-236",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی ئەندازیاری میکانیک (Mechanical Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-237",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی ئەندازیاری نەوت و کیمیا (Chemical & Petroleum)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-238",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی ئەندازیاری ڕووپێوان و جیۆماتیکس (Surveying & Geomatics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-239",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی ئەندازیاری بەنداو و سەرچاوەکانی ئاو (Dams & Water Resources)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-240",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی زانستی کۆمپیوتەر و IT (Computer Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-241",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی بایۆلۆجی و زیندەوەرزانی (Biology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-242",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی کیمیا (Chemistry)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-243",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی فیزیا (Physics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-244",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی بیرکاری (Mathematics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-245",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی جیۆلۆجی و نەوت (Geology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-246",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی ژینگە (Environmental Sciences)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-247",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی یاسا (Law)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-248",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی زانستە ڕامیارییەکان و پەیوەندییە نێودەوڵەتییەکان (Political Science & IR)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-249",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-250",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی ژمێریاری (Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-251",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی ئابووری (Economics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-252",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی دارایی و بانک (Finance & Banking)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-253",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی کارگێڕی گەشتوگوزار و شوێنەوار (Tourism Management)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-254",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی زمانی ئینگلیزی (English Language)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-255",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی زمانی کوردی (Kurdish Language)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-256",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی زمانی عەرەبی (Arabic Language)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-257",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی وەرگێڕان (Translation)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-258",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی زمانی فەرەنسی (French Language)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-259",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی زمانی تورکی (Turkish Language)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-260",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی زمانی ئەڵمانی (German Language)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-261",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی زمانی فارسی (Persian Language)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-262",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی پەروەردەی گشتی (Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-263",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی پەروەردەی بنەڕەتی (Basic Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-264",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی زانستە ئیسلامییەکان و شەریعە (Islamic Sciences)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-265",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی کشتوکاڵ و سەرچاوە سروشتییەکان (Agriculture)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-266",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی پەروەردەی جەستەیی و وەرزش (Physical Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-267",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی هونەرە جوانەکان (Fine Arts)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-268",
+      "faculty_id": "fac-35",
+      "university_id": "salahaddin_erbil",
+      "name": "بەشی ئاداب و مێژوو و جوگرافیا و دەرونناسی (Arts & Humanities)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-269",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی پزیشکی گشتی (College of Medicine)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-270",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی پزیشکی ددان (College of Dentistry)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-271",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی دەرمانسازی (College of Pharmacy)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-272",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی پەرستاری (College of Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-273",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی زانستە تەندروستییەکان (Health Sciences)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-274",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی ئەندازیاری کۆمپیوتەر و پرۆگرامسازی (Computer & Software)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-275",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی ئەندازیاری شارستانی (Civil Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-276",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی ئەندازیاری تەلارسازی (Architecture)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-277",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی ئەندازیاری کارەبا (Electrical Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-278",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی ئەندازیاری سەرچاوەکانی ئاو (Water Resources)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-279",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی زانستی کۆمپیوتەر (Computer Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-280",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی زیندەوەرزانی و بایۆلۆجی (Biology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-281",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی کیمیا (Chemistry)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-282",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی فیزیا (Physics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-283",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی بیرکاری (Mathematics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-284",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی جیۆلۆجی (Geology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-285",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی یاسا (College of Law)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-286",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی زانستە سیاسییەکان (Political Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-287",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-288",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی ژمێریاری (Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-289",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی دارایی و بانک (Finance & Banking)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-290",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی بازاڕگەری (Marketing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-291",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی ئابووری (Economics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-292",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی زمانی ئینگلیزی (English Language)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-293",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی زمانی کوردی (Kurdish Language)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-294",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی زمانی عەرەبی (Arabic Language)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-295",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی وەرگێڕان (Translation)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-296",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی زانستە مرۆڤایەتییەکان - مێژوو، جوگرافیا، کۆمەڵناسی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-297",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی پەروەردەی بنەڕەتی (Basic Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-298",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی زانستە ئیسلامییەکان (Islamic Sciences)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-299",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی کشتوکاڵ و زانستە کشتوکاڵییەکان (Agriculture)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-300",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی پزیشکی ڤێتێرنەری و ئاژەڵداری (Veterinary Medicine)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-301",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی پەروەردەی وەرزش (Physical Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-302",
+      "faculty_id": "fac-36",
+      "university_id": "univ_slemani",
+      "name": "بەشی هونەر و دیزاین (College of Arts)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-303",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا نوژدارییا گشتی (Medicine)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-304",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا نوژدارییا ددانا (Dentistry)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-305",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا دەرمانسازیێ (Pharmacy)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-306",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا پەرستاریێ (Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-307",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا ئەندازیارییا کۆمپیۆتەر و پرۆگرامسازی (Computer & Software)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-308",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا ئەندازیارییا شارستانی (Civil Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-309",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا ئەندازیارییا تەلارسازی (Architecture)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-310",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا ئەندازیارییا کارەب و ئەلیکترۆنیک (Electrical & Electronics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-311",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا ئەندازیارییا میکانیک (Mechanical)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-312",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا زانستێن کۆمپیۆتەری (Computer Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-313",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا بایۆلۆجی (Biology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-314",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا کیمیا (Chemistry)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-315",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا فیزیک (Physics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-316",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا بیرکاری (Mathematics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-317",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا یاسا (Law)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-318",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا زانستێن سیاسی (Political Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-319",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-320",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا ژمێریاری (Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-321",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا ئابووری و دارایی (Economics & Finance)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-322",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا زمانێ ئینگلیزی (English Language)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-323",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا زمانێ کوردی (Kurdish Language)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-324",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا زمانێ عەرەبی (Arabic Language)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-325",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا وەرگێڕان (Translation)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-326",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا پەروەردا بنەڕەت (Basic Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-327",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا چاندنێ و کشتوکاڵ (Agriculture)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-328",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا نوژدارییا گیانەوەران (Veterinary)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-329",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا پەروەردا وەرزشێ (Physical Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-330",
+      "faculty_id": "fac-37",
+      "university_id": "univ_duhok",
+      "name": "پشکا دیتر (نڤیسینا ب دەست)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-331",
+      "faculty_id": "fac-38",
+      "university_id": "hmu_erbil",
+      "name": "بەشی پزیشکی گشتی (College of Medicine)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-332",
+      "faculty_id": "fac-38",
+      "university_id": "hmu_erbil",
+      "name": "بەشی پزیشکی ددان (College of Dentistry)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-333",
+      "faculty_id": "fac-38",
+      "university_id": "hmu_erbil",
+      "name": "بەشی دەرمانسازی (College of Pharmacy)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-334",
+      "faculty_id": "fac-38",
+      "university_id": "hmu_erbil",
+      "name": "بەشی پەرستاری (College of Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-335",
+      "faculty_id": "fac-38",
+      "university_id": "hmu_erbil",
+      "name": "بەشی شیکاری تاقیگەی پزیشکی (Medical Lab Analysis)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-336",
+      "faculty_id": "fac-38",
+      "university_id": "hmu_erbil",
+      "name": "بەشی بێهۆشکاری (Anesthesia)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-337",
+      "faculty_id": "fac-38",
+      "university_id": "hmu_erbil",
+      "name": "بەشی چارەسەری سروشتی (Physiotherapy)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-338",
+      "faculty_id": "fac-38",
+      "university_id": "hmu_erbil",
+      "name": "بەشی کیمیای کلینیکی (Clinical Biochemistry)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-339",
+      "faculty_id": "fac-39",
+      "university_id": "koya_univ",
+      "name": "بەشی پزیشکی گشتی (Medicine)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-340",
+      "faculty_id": "fac-39",
+      "university_id": "koya_univ",
+      "name": "بەشی ئەندازیاری نەوت (Petroleum Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-341",
+      "faculty_id": "fac-39",
+      "university_id": "koya_univ",
+      "name": "بەشی ئەندازیاری کیمیا (Chemical Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-342",
+      "faculty_id": "fac-39",
+      "university_id": "koya_univ",
+      "name": "بەشی ئەندازیاری شارستانی (Civil Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-343",
+      "faculty_id": "fac-39",
+      "university_id": "koya_univ",
+      "name": "بەشی ئەندازیاری کۆمپیوتەر و نەرمەکاڵا (Software & Computer Eng.)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-344",
+      "faculty_id": "fac-39",
+      "university_id": "koya_univ",
+      "name": "بەشی ئەندازیاری تەلارسازی (Architecture)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-345",
+      "faculty_id": "fac-39",
+      "university_id": "koya_univ",
+      "name": "بەشی بایۆلۆجی و کیمیا و فیزیا (Science & Health)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-346",
+      "faculty_id": "fac-39",
+      "university_id": "koya_univ",
+      "name": "بەشی کلینیکاڵ سایکۆلۆجی و دەرونناسی (Clinical Psychology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-347",
+      "faculty_id": "fac-39",
+      "university_id": "koya_univ",
+      "name": "بەشی زمانی ئینگلیزی (English Language)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-348",
+      "faculty_id": "fac-39",
+      "university_id": "koya_univ",
+      "name": "بەشی پەروەردە و زمانەکان (Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-349",
+      "faculty_id": "fac-39",
+      "university_id": "koya_univ",
+      "name": "بەشی یاسا و زانستە مرۆڤایەتییەکان (Humanities & Law)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-350",
+      "faculty_id": "fac-39",
+      "university_id": "koya_univ",
+      "name": "بەشی پەروەردەی جەستەیی و وەرزش (Physical Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-351",
+      "faculty_id": "fac-40",
+      "university_id": "soran_univ",
+      "name": "بەشی ئەندازیاری نەوت و گاز (Petroleum & Gas Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-352",
+      "faculty_id": "fac-40",
+      "university_id": "soran_univ",
+      "name": "بەشی ئەندازیاری شارستانی (Civil Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-353",
+      "faculty_id": "fac-40",
+      "university_id": "soran_univ",
+      "name": "بەشی ئەندازیاری کیمیایی (Chemical Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-354",
+      "faculty_id": "fac-40",
+      "university_id": "soran_univ",
+      "name": "بەشی زانستی کۆمپیوتەر (Computer Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-355",
+      "faculty_id": "fac-40",
+      "university_id": "soran_univ",
+      "name": "بەشی بایۆلۆجی و زیندەوەرزانی (Biology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-356",
+      "faculty_id": "fac-40",
+      "university_id": "soran_univ",
+      "name": "بەشی کیمیا (Chemistry)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-357",
+      "faculty_id": "fac-40",
+      "university_id": "soran_univ",
+      "name": "بەشی زانستی جیۆلۆجی نەوت (Petroleum Geology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-358",
+      "faculty_id": "fac-40",
+      "university_id": "soran_univ",
+      "name": "بەشی یاسا و زانستە سیاسییەکان و کارگێڕی (Law & Political Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-359",
+      "faculty_id": "fac-40",
+      "university_id": "soran_univ",
+      "name": "بەشی زمانی ئینگلیزی، کوردی، عەرەبی (Arts & Languages)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-360",
+      "faculty_id": "fac-40",
+      "university_id": "soran_univ",
+      "name": "بەشی پەروەردەی بنەڕەتی و دەرونناسی (Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-361",
+      "faculty_id": "fac-41",
+      "university_id": "zakho_univ",
+      "name": "پشکا نوژداریێ (Medicine)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-362",
+      "faculty_id": "fac-41",
+      "university_id": "zakho_univ",
+      "name": "پشکا ئەندازیارییا نەوت و وزە (Petroleum & Energy)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-363",
+      "faculty_id": "fac-41",
+      "university_id": "zakho_univ",
+      "name": "پشکا ئەندازیارییا میکانیک (Mechanical Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-364",
+      "faculty_id": "fac-41",
+      "university_id": "zakho_univ",
+      "name": "پشکا ئەندازیارییا شارستانی (Civil Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-365",
+      "faculty_id": "fac-41",
+      "university_id": "zakho_univ",
+      "name": "پشکا زانستێن کۆمپیۆتەری (Computer Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-366",
+      "faculty_id": "fac-41",
+      "university_id": "zakho_univ",
+      "name": "پشکا بایۆلۆجی (Biology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-367",
+      "faculty_id": "fac-41",
+      "university_id": "zakho_univ",
+      "name": "پشکا کیمیا (Chemistry)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-368",
+      "faculty_id": "fac-41",
+      "university_id": "zakho_univ",
+      "name": "پشکا فیزیک (Physics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-369",
+      "faculty_id": "fac-41",
+      "university_id": "zakho_univ",
+      "name": "پشکا بیرکاری (Mathematics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-370",
+      "faculty_id": "fac-41",
+      "university_id": "zakho_univ",
+      "name": "پشکا کارگێڕی کار و ئابووری (Business & Economics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-371",
+      "faculty_id": "fac-41",
+      "university_id": "zakho_univ",
+      "name": "پشکا زانستێن مرۆڤایەتی و زمان (Humanities & Languages)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-372",
+      "faculty_id": "fac-41",
+      "university_id": "zakho_univ",
+      "name": "پشکا پەروەردا بنەڕەت (Basic Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-373",
+      "faculty_id": "fac-41",
+      "university_id": "zakho_univ",
+      "name": "پشکا دیتر (نڤیسینا ب دەست)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-374",
+      "faculty_id": "fac-42",
+      "university_id": "raparin_univ",
+      "name": "بەشی پەرستاری (Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-375",
+      "faculty_id": "fac-42",
+      "university_id": "raparin_univ",
+      "name": "بەشی ئەندازیاری شارستانی (Civil Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-376",
+      "faculty_id": "fac-42",
+      "university_id": "raparin_univ",
+      "name": "بەشی زانستی کۆمپیوتەر (Computer Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-377",
+      "faculty_id": "fac-42",
+      "university_id": "raparin_univ",
+      "name": "بەشی بایۆلۆجی و کیمیا و فیزیا (Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-378",
+      "faculty_id": "fac-42",
+      "university_id": "raparin_univ",
+      "name": "بەشی پەروەردە - زمانەکان و مێژوو و جوگرافیا (Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-379",
+      "faculty_id": "fac-42",
+      "university_id": "raparin_univ",
+      "name": "بەشی پەروەردەی بنەڕەتی (Basic Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-380",
+      "faculty_id": "fac-42",
+      "university_id": "raparin_univ",
+      "name": "بەشی زانستە مرۆڤایەتییەکان (قەڵادزێ) (Humanities)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-381",
+      "faculty_id": "fac-42",
+      "university_id": "raparin_univ",
+      "name": "بەشی زانستە ئیسلامییەکان (Islamic Sciences)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-382",
+      "faculty_id": "fac-43",
+      "university_id": "halabja_univ",
+      "name": "بەشی زانستی کۆمپیوتەر (Computer Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-383",
+      "faculty_id": "fac-43",
+      "university_id": "halabja_univ",
+      "name": "بەشی فیزیا (Physics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-384",
+      "faculty_id": "fac-43",
+      "university_id": "halabja_univ",
+      "name": "بەشی یاسا (Law)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-385",
+      "faculty_id": "fac-43",
+      "university_id": "halabja_univ",
+      "name": "بەشی کارگێڕی نێودەوڵەتی (International Admin)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-386",
+      "faculty_id": "fac-43",
+      "university_id": "halabja_univ",
+      "name": "بەشی زمانی ئینگلیزی (English)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-387",
+      "faculty_id": "fac-43",
+      "university_id": "halabja_univ",
+      "name": "بەشی زمانی کوردی و عەرەبی (Kurdish & Arabic)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-388",
+      "faculty_id": "fac-43",
+      "university_id": "halabja_univ",
+      "name": "بەشی مێژوو و جوگرافیا (History & Geo)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-389",
+      "faculty_id": "fac-43",
+      "university_id": "halabja_univ",
+      "name": "بەشی پەروەردەی بنەڕەتی (Basic Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-390",
+      "faculty_id": "fac-43",
+      "university_id": "halabja_univ",
+      "name": "بەشی پەروەردەی جەستەیی و وەرزش (Physical Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-391",
+      "faculty_id": "fac-44",
+      "university_id": "garmian_univ",
+      "name": "بەشی پزیشکی (Medicine)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-392",
+      "faculty_id": "fac-44",
+      "university_id": "garmian_univ",
+      "name": "بەشی ئەندازیاری شارستانی (Civil)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-393",
+      "faculty_id": "fac-44",
+      "university_id": "garmian_univ",
+      "name": "بەشی زانستی کۆمپیوتەر و IT (Computer Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-394",
+      "faculty_id": "fac-44",
+      "university_id": "garmian_univ",
+      "name": "بەشی بایۆلۆجی و کیمیا (Biology & Chemistry)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-395",
+      "faculty_id": "fac-44",
+      "university_id": "garmian_univ",
+      "name": "بەشی پەروەردە - زمانی ئینگلیزی و کوردی (Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-396",
+      "faculty_id": "fac-44",
+      "university_id": "garmian_univ",
+      "name": "بەشی پەروەردەی بنەڕەتی (Basic Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-397",
+      "faculty_id": "fac-44",
+      "university_id": "garmian_univ",
+      "name": "بەشی کشتوکاڵ (کفری) (Agriculture)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-398",
+      "faculty_id": "fac-44",
+      "university_id": "garmian_univ",
+      "name": "بەشی زمان و زانستە مرۆڤایەتییەکان (کفری) (Humanities)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-399",
+      "faculty_id": "fac-45",
+      "university_id": "charmo_univ",
+      "name": "بەشی زانستی کۆمپیوتەر (Computer Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-400",
+      "faculty_id": "fac-45",
+      "university_id": "charmo_univ",
+      "name": "بەشی پشکنینی پزیشکی و تاقیگە (Medical Lab Analysis)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-401",
+      "faculty_id": "fac-45",
+      "university_id": "charmo_univ",
+      "name": "بەشی دەرمانگەری (Pharmaceutical Sciences)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-402",
+      "faculty_id": "fac-45",
+      "university_id": "charmo_univ",
+      "name": "بەشی کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-403",
+      "faculty_id": "fac-45",
+      "university_id": "charmo_univ",
+      "name": "بەشی نەوت و سامانە سروشتییەکان (Oil Resources)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-404",
+      "faculty_id": "fac-45",
+      "university_id": "charmo_univ",
+      "name": "بەشی زمانی ئینگلیزی (English Language)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-405",
+      "faculty_id": "fac-45",
+      "university_id": "charmo_univ",
+      "name": "بەشی زمانی کوردی و عەرەبی (Kurdish & Arabic)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-406",
+      "faculty_id": "fac-45",
+      "university_id": "charmo_univ",
+      "name": "بەشی پەروەردەی بنەڕەتی (Basic Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-407",
+      "faculty_id": "fac-46",
+      "university_id": "kirkuk_univ",
+      "name": "بەشی پزیشکی گشتی (College of Medicine)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-408",
+      "faculty_id": "fac-46",
+      "university_id": "kirkuk_univ",
+      "name": "بەشی پزیشکی ددان (Dentistry)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-409",
+      "faculty_id": "fac-46",
+      "university_id": "kirkuk_univ",
+      "name": "بەشی دەرمانسازی (Pharmacy)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-410",
+      "faculty_id": "fac-46",
+      "university_id": "kirkuk_univ",
+      "name": "بەشی پەرستاری (Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-411",
+      "faculty_id": "fac-46",
+      "university_id": "kirkuk_univ",
+      "name": "بەشی ئەندازیاری کۆمپیوتەر و پرۆگرامسازی (Computer & Software)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-412",
+      "faculty_id": "fac-46",
+      "university_id": "kirkuk_univ",
+      "name": "بەشی ئەندازیاری شارستانی و نەوت (Civil & Petroleum)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-413",
+      "faculty_id": "fac-46",
+      "university_id": "kirkuk_univ",
+      "name": "بەشی ئەندازیاری کارەبا و میکانیک (Electrical & Mechanical)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-414",
+      "faculty_id": "fac-46",
+      "university_id": "kirkuk_univ",
+      "name": "بەشی زانستی کۆمپیوتەر (Computer Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-415",
+      "faculty_id": "fac-46",
+      "university_id": "kirkuk_univ",
+      "name": "بەشی بایۆلۆجی، کیمیا، فیزیا، بیرکاری، جیۆلۆجی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-416",
+      "faculty_id": "fac-46",
+      "university_id": "kirkuk_univ",
+      "name": "بەشی یاسا و زانستە سیاسییەکان (Law & Politics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-417",
+      "faculty_id": "fac-46",
+      "university_id": "kirkuk_univ",
+      "name": "بەشی کارگێڕی کار و ژمێریاری (Business & Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-418",
+      "faculty_id": "fac-46",
+      "university_id": "kirkuk_univ",
+      "name": "بەشی زمانی ئینگلیزی، کوردی، عەرەبی، تورکمانی",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-419",
+      "faculty_id": "fac-46",
+      "university_id": "kirkuk_univ",
+      "name": "بەشی پەروەردەی زانستە پەروەردەییەکان (Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-420",
+      "faculty_id": "fac-46",
+      "university_id": "kirkuk_univ",
+      "name": "بەشی پەروەردەی بنەڕەتی (Basic Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-421",
+      "faculty_id": "fac-46",
+      "university_id": "kirkuk_univ",
+      "name": "بەشی کشتوکاڵ و ڤێتێرنەری (Agriculture & Vet)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-422",
+      "faculty_id": "fac-46",
+      "university_id": "kirkuk_univ",
+      "name": "بەشی زانستە ئیسلامییەکان (Islamic Sciences)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-423",
+      "faculty_id": "fac-47",
+      "university_id": "akre_univ",
+      "name": "پشکا زانستێن کۆمپیۆتەری و IT (Computer Science & IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-424",
+      "faculty_id": "fac-47",
+      "university_id": "akre_univ",
+      "name": "پشکا شیکاریێن تاقیگەهی (Medical Lab Technology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-425",
+      "faculty_id": "fac-47",
+      "university_id": "akre_univ",
+      "name": "پشکا تەندروستی یا تەکنیکی (Applied Health Sciences)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-426",
+      "faculty_id": "fac-47",
+      "university_id": "akre_univ",
+      "name": "پشکا ئەندازیارییا کرداری (Applied Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-427",
+      "faculty_id": "fac-47",
+      "university_id": "akre_univ",
+      "name": "پشکا کارگێڕی کار و ژمێریاری (Applied Admin & Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-428",
+      "faculty_id": "fac-47",
+      "university_id": "akre_univ",
+      "name": "پشکا کارگێڕی گومرک و باج (Customs & Tax)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-429",
+      "faculty_id": "fac-47",
+      "university_id": "akre_univ",
+      "name": "پشکا دیتر (نڤیسینا ب دەست)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-430",
+      "faculty_id": "fac-48",
+      "university_id": "tiu_univ",
+      "name": "بەشی پزیشکی ددان (Dentistry)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-431",
+      "faculty_id": "fac-48",
+      "university_id": "tiu_univ",
+      "name": "بەشی دەرمانسازی (Pharmacy)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-432",
+      "faculty_id": "fac-48",
+      "university_id": "tiu_univ",
+      "name": "بەشی پەرستاری (Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-433",
+      "faculty_id": "fac-48",
+      "university_id": "tiu_univ",
+      "name": "بەشی شیکاری پزیشکی (Medical Analysis)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-434",
+      "faculty_id": "fac-48",
+      "university_id": "tiu_univ",
+      "name": "بەشی ئەندازیاری پرۆگرامسازی (Software Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-435",
+      "faculty_id": "fac-48",
+      "university_id": "tiu_univ",
+      "name": "بەشی ئەندازیاری کۆمپیوتەر (Computer Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-436",
+      "faculty_id": "fac-48",
+      "university_id": "tiu_univ",
+      "name": "بەشی تەکنەلۆجیای زانیاری (Information Technology - IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-437",
+      "faculty_id": "fac-48",
+      "university_id": "tiu_univ",
+      "name": "بەشی ئەندازیاری شارستانی (Civil Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-438",
+      "faculty_id": "fac-48",
+      "university_id": "tiu_univ",
+      "name": "بەشی ئەندازیاری تەلارسازی (Architecture Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-439",
+      "faculty_id": "fac-48",
+      "university_id": "tiu_univ",
+      "name": "بەشی دیزاینی ناوەوە (Interior Design)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-440",
+      "faculty_id": "fac-48",
+      "university_id": "tiu_univ",
+      "name": "بەشی ئەندازیاری نەوت و کانزاکان (Petroleum & Mining)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-441",
+      "faculty_id": "fac-48",
+      "university_id": "tiu_univ",
+      "name": "بەشی ئەندازیاری مایکاترۆنیکس (Mechatronics Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-442",
+      "faculty_id": "fac-48",
+      "university_id": "tiu_univ",
+      "name": "بەشی کارگێڕی کار (Business & Management)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-443",
+      "faculty_id": "fac-48",
+      "university_id": "tiu_univ",
+      "name": "بەشی ژمێریاری و دارایی (Accounting & Finance)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-444",
+      "faculty_id": "fac-48",
+      "university_id": "tiu_univ",
+      "name": "بەشی بانک و دارایی (Banking & Finance)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-445",
+      "faculty_id": "fac-48",
+      "university_id": "tiu_univ",
+      "name": "بەشی پەیوەندییە نێودەوڵەتییەکان و دیپلۆماسی (IR & Diplomacy)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-446",
+      "faculty_id": "fac-48",
+      "university_id": "tiu_univ",
+      "name": "بەشی یاسا (Law)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-447",
+      "faculty_id": "fac-48",
+      "university_id": "tiu_univ",
+      "name": "بەشی پەروەردەی زمانی ئینگلیزی (ELT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-448",
+      "faculty_id": "fac-48",
+      "university_id": "tiu_univ",
+      "name": "بەشی پەروەردەی بیرکاری (Mathematics Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-449",
+      "faculty_id": "fac-48",
+      "university_id": "tiu_univ",
+      "name": "بەشی پەروەردەی فیزیا و بایۆلۆجی (Physics & Biology Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-450",
+      "faculty_id": "fac-49",
+      "university_id": "ukh_erbil",
+      "name": "School of Medicine (بەشی پزیشکی گشتی)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-451",
+      "faculty_id": "fac-49",
+      "university_id": "ukh_erbil",
+      "name": "Computer Science & AI (زانستی کۆمپیوتەر و ژیری دەستکرد)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-452",
+      "faculty_id": "fac-49",
+      "university_id": "ukh_erbil",
+      "name": "Software Engineering (ئەندازیاری پرۆگرامسازی)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-453",
+      "faculty_id": "fac-49",
+      "university_id": "ukh_erbil",
+      "name": "Civil Engineering (ئەندازیاری شارستانی)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-454",
+      "faculty_id": "fac-49",
+      "university_id": "ukh_erbil",
+      "name": "Petroleum Engineering (ئەندازیاری نەوت)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-455",
+      "faculty_id": "fac-49",
+      "university_id": "ukh_erbil",
+      "name": "Management & Business Administration (کارگێڕی کار)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-456",
+      "faculty_id": "fac-49",
+      "university_id": "ukh_erbil",
+      "name": "Accounting & Finance (ژمێریاری و دارایی)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-457",
+      "faculty_id": "fac-49",
+      "university_id": "ukh_erbil",
+      "name": "International Studies & Politics (توێژینەوە نێودەوڵەتییەکان)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-458",
+      "faculty_id": "fac-49",
+      "university_id": "ukh_erbil",
+      "name": "English Language & Translation (زمانی ئینگلیزی و وەرگێڕان)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-459",
+      "faculty_id": "fac-50",
+      "university_id": "auis_slemani",
+      "name": "Software Engineering (ئەندازیاری نەرمەکاڵا)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-460",
+      "faculty_id": "fac-50",
+      "university_id": "auis_slemani",
+      "name": "Information Technology - IT (تەکنەلۆجیای زانیاری)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-461",
+      "faculty_id": "fac-50",
+      "university_id": "auis_slemani",
+      "name": "Civil Engineering (ئەندازیاری شارستانی)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-462",
+      "faculty_id": "fac-50",
+      "university_id": "auis_slemani",
+      "name": "Mechanical Engineering (ئەندازیاری میکانیک)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-463",
+      "faculty_id": "fac-50",
+      "university_id": "auis_slemani",
+      "name": "Medical Laboratory Sciences - MLS (شیکاری پزیشکی)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-464",
+      "faculty_id": "fac-50",
+      "university_id": "auis_slemani",
+      "name": "Business Administration - Finance (دارایی)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-465",
+      "faculty_id": "fac-50",
+      "university_id": "auis_slemani",
+      "name": "Business Administration - Marketing (بازاڕگەری)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-466",
+      "faculty_id": "fac-50",
+      "university_id": "auis_slemani",
+      "name": "Business Administration - Management (کارگێڕی)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-467",
+      "faculty_id": "fac-50",
+      "university_id": "auis_slemani",
+      "name": "Business Administration - Accounting (ژمێریاری)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-468",
+      "faculty_id": "fac-50",
+      "university_id": "auis_slemani",
+      "name": "International Studies (دیپلۆماسی و پەیوەندییە نێودەوڵەتییەکان)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-469",
+      "faculty_id": "fac-50",
+      "university_id": "auis_slemani",
+      "name": "English & Journalism (ئینگلیزی و ڕۆژنامەوانی)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-470",
+      "faculty_id": "fac-51",
+      "university_id": "auk_duhok",
+      "name": "Computer Science & Cyber Security (زانستی کۆمپیوتەر و سایبەر سیکیوریتی)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-471",
+      "faculty_id": "fac-51",
+      "university_id": "auk_duhok",
+      "name": "Software Engineering (ئەندازیاری پرۆگرامسازی)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-472",
+      "faculty_id": "fac-51",
+      "university_id": "auk_duhok",
+      "name": "Architectural Engineering (ئەندازیاری تەلارسازی)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-473",
+      "faculty_id": "fac-51",
+      "university_id": "auk_duhok",
+      "name": "Civil Engineering (ئەندازیاری شارستانی)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-474",
+      "faculty_id": "fac-51",
+      "university_id": "auk_duhok",
+      "name": "Oil & Gas Engineering (ئەندازیاری نەوت و گاز)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-475",
+      "faculty_id": "fac-51",
+      "university_id": "auk_duhok",
+      "name": "Nursing & Health Sciences (پەرستاری و زانستە تەندروستییەکان)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-476",
+      "faculty_id": "fac-51",
+      "university_id": "auk_duhok",
+      "name": "Business Administration & Management (کارگێڕی کار)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-477",
+      "faculty_id": "fac-51",
+      "university_id": "auk_duhok",
+      "name": "Finance & Accounting (دارایی و ژمێریاری)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-478",
+      "faculty_id": "fac-51",
+      "university_id": "auk_duhok",
+      "name": "International Studies & Public Policy (سیاسەت و پەیوەندییە نێودەوڵەتییەکان)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-479",
+      "faculty_id": "fac-51",
+      "university_id": "auk_duhok",
+      "name": "Design & Media (دیزاین و ڕاگەیاندن)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-480",
+      "faculty_id": "fac-51",
+      "university_id": "auk_duhok",
+      "name": "پشکا دیتر (نڤیسینا ب دەست)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-481",
+      "faculty_id": "fac-52",
+      "university_id": "komar_slemani",
+      "name": "بەشی دەرمانسازی (College of Pharmacy)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-482",
+      "faculty_id": "fac-52",
+      "university_id": "komar_slemani",
+      "name": "بەشی پزیشکی ددان (College of Dentistry)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-483",
+      "faculty_id": "fac-52",
+      "university_id": "komar_slemani",
+      "name": "بەشی شیکاری تاقیگەی پزیشکی (Medical Laboratory Science - MLS)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-484",
+      "faculty_id": "fac-52",
+      "university_id": "komar_slemani",
+      "name": "بەشی پەرستاری (Nursing Department)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-485",
+      "faculty_id": "fac-52",
+      "university_id": "komar_slemani",
+      "name": "بەشی ئەندازیاری کۆمپیوتەر (Computer Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-486",
+      "faculty_id": "fac-52",
+      "university_id": "komar_slemani",
+      "name": "بەشی زانستی کۆمپیوتەر (Computer Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-487",
+      "faculty_id": "fac-52",
+      "university_id": "komar_slemani",
+      "name": "بەشی ئەندازیاری شارستانی (Civil Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-488",
+      "faculty_id": "fac-52",
+      "university_id": "komar_slemani",
+      "name": "بەشی ئەندازیاری نەوت (Petroleum Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-489",
+      "faculty_id": "fac-52",
+      "university_id": "komar_slemani",
+      "name": "بەشی ئەندازیاری ژینگە (Environmental Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-490",
+      "faculty_id": "fac-52",
+      "university_id": "komar_slemani",
+      "name": "بەشی کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-491",
+      "faculty_id": "fac-52",
+      "university_id": "komar_slemani",
+      "name": "بەشی ژمێریاری و دارایی (Accounting & Finance)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-492",
+      "faculty_id": "fac-52",
+      "university_id": "komar_slemani",
+      "name": "بەشی زمانی ئینگلیزی و وەرگێڕان (English Language & Translation)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-493",
+      "faculty_id": "fac-53",
+      "university_id": "cihan_univ",
+      "name": "بەشی ئەندازیاری پرۆگرامسازی و IT (Software Engineering & IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-494",
+      "faculty_id": "fac-53",
+      "university_id": "cihan_univ",
+      "name": "بەشی زانستی کۆمپیوتەر (Computer Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-495",
+      "faculty_id": "fac-53",
+      "university_id": "cihan_univ",
+      "name": "بەشی ئەندازیاری تەلارسازی (Architectural Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-496",
+      "faculty_id": "fac-53",
+      "university_id": "cihan_univ",
+      "name": "بەشی ئەندازیاری شارستانی (Civil Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-497",
+      "faculty_id": "fac-53",
+      "university_id": "cihan_univ",
+      "name": "بەشی مایکرۆبایۆلۆجی پزیشکی (Medical Microbiology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-498",
+      "faculty_id": "fac-53",
+      "university_id": "cihan_univ",
+      "name": "بەشی زانستە بایۆمێدیکاڵییەکان (Biomedical Sciences)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-499",
+      "faculty_id": "fac-53",
+      "university_id": "cihan_univ",
+      "name": "بەشی تەندروستی و خۆراک (Nutrition & Dietetics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-500",
+      "faculty_id": "fac-53",
+      "university_id": "cihan_univ",
+      "name": "بەشی چارەسەری سروشتی (Physiotherapy)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-501",
+      "faculty_id": "fac-53",
+      "university_id": "cihan_univ",
+      "name": "بەشی دەرمانسازی (Pharmacy)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-502",
+      "faculty_id": "fac-53",
+      "university_id": "cihan_univ",
+      "name": "بەشی یاسا (Law)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-503",
+      "faculty_id": "fac-53",
+      "university_id": "cihan_univ",
+      "name": "بەشی پەیوەندییە نێودەوڵەتییەکان و دیپلۆماسی (IR & Diplomacy)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-504",
+      "faculty_id": "fac-53",
+      "university_id": "cihan_univ",
+      "name": "بەشی کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-505",
+      "faculty_id": "fac-53",
+      "university_id": "cihan_univ",
+      "name": "بەشی ژمێریاری و سیستەمی زانیاری (Accounting & Information Systems)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-506",
+      "faculty_id": "fac-53",
+      "university_id": "cihan_univ",
+      "name": "بەشی دارایی و بانک (Finance & Banking)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-507",
+      "faculty_id": "fac-53",
+      "university_id": "cihan_univ",
+      "name": "بەشی زمانی ئینگلیزی و وەرگێڕان (English & Translation)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-508",
+      "faculty_id": "fac-53",
+      "university_id": "cihan_univ",
+      "name": "بەشی ڕاگەیاندن و میدیا (Media & Communication)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-509",
+      "faculty_id": "fac-53",
+      "university_id": "cihan_univ",
+      "name": "بەشی دیزاینی گرافیک (Graphic Design)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-510",
+      "faculty_id": "fac-53",
+      "university_id": "cihan_univ",
+      "name": "بەشی پەروەردەی وەرزش (Physical Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-511",
+      "faculty_id": "fac-54",
+      "university_id": "lfu_erbil",
+      "name": "بەشی تەکنەلۆجیای زانیاری (Information Technology - IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-512",
+      "faculty_id": "fac-54",
+      "university_id": "lfu_erbil",
+      "name": "بەشی تۆڕەکانی کۆمپیوتەر (Computer Networking)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-513",
+      "faculty_id": "fac-54",
+      "university_id": "lfu_erbil",
+      "name": "بەشی یاسا (Faculty of Law)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-514",
+      "faculty_id": "fac-54",
+      "university_id": "lfu_erbil",
+      "name": "بەشی دیپلۆماسی و پەیوەندییە نێودەوڵەتییەکان (IR & Diplomacy)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-515",
+      "faculty_id": "fac-54",
+      "university_id": "lfu_erbil",
+      "name": "بەشی کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-516",
+      "faculty_id": "fac-54",
+      "university_id": "lfu_erbil",
+      "name": "بەشی ژمێریاری و وردبینی (Accounting & Auditing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-517",
+      "faculty_id": "fac-54",
+      "university_id": "lfu_erbil",
+      "name": "بەشی بازاڕگەری و پەیوەندییە گشتییەکان (Marketing & PR)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-518",
+      "faculty_id": "fac-54",
+      "university_id": "lfu_erbil",
+      "name": "بەشی زمانی ئینگلیزی و وەرگێڕان (English Language & Translation)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-519",
+      "faculty_id": "fac-54",
+      "university_id": "lfu_erbil",
+      "name": "بەشی زمانی فەرەنسی (French Language)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-520",
+      "faculty_id": "fac-54",
+      "university_id": "lfu_erbil",
+      "name": "بەشی پەروەردە (Education)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-521",
+      "faculty_id": "fac-55",
+      "university_id": "hayat_erbil",
+      "name": "بەشی زانستی کۆمپیوتەر و IT (Computer Science & IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-522",
+      "faculty_id": "fac-55",
+      "university_id": "hayat_erbil",
+      "name": "بەشی ئەندازیاری شارستانی (Civil Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-523",
+      "faculty_id": "fac-55",
+      "university_id": "hayat_erbil",
+      "name": "بەشی ئەندازیاری نەوت (Petroleum Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-524",
+      "faculty_id": "fac-55",
+      "university_id": "hayat_erbil",
+      "name": "بەشی مایکرۆبایۆلۆجی پزیشکی (Medical Microbiology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-525",
+      "faculty_id": "fac-55",
+      "university_id": "hayat_erbil",
+      "name": "بەشی شیکاری نەخۆشییەکان (Medical Laboratory Analysis)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-526",
+      "faculty_id": "fac-55",
+      "university_id": "hayat_erbil",
+      "name": "بەشی کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-527",
+      "faculty_id": "fac-55",
+      "university_id": "hayat_erbil",
+      "name": "بەشی ژمێریاری (Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-528",
+      "faculty_id": "fac-55",
+      "university_id": "hayat_erbil",
+      "name": "بەشی زمانی ئینگلیزی (English Language)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-529",
+      "faculty_id": "fac-55",
+      "university_id": "hayat_erbil",
+      "name": "بەشی یاسا (Law)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-530",
+      "faculty_id": "fac-56",
+      "university_id": "nawroz_duhok",
+      "name": "پشکا ئەندازیارییا کۆمپیۆتەر و IT (Computer & IT Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-531",
+      "faculty_id": "fac-56",
+      "university_id": "nawroz_duhok",
+      "name": "پشکا ئەندازیارییا شارستانی و تەلارسازی (Civil & Architecture)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-532",
+      "faculty_id": "fac-56",
+      "university_id": "nawroz_duhok",
+      "name": "پشکا یاسا و زانستێن سیاسی (Law & Politics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-533",
+      "faculty_id": "fac-56",
+      "university_id": "nawroz_duhok",
+      "name": "پشکا کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-534",
+      "faculty_id": "fac-56",
+      "university_id": "nawroz_duhok",
+      "name": "پشکا ژمێریاری و دارایی (Accounting & Finance)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-535",
+      "faculty_id": "fac-56",
+      "university_id": "nawroz_duhok",
+      "name": "پشکا زمانێ ئینگلیزی و وەرگێڕان (English & Translation)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-536",
+      "faculty_id": "fac-56",
+      "university_id": "nawroz_duhok",
+      "name": "پشکا زمانێ کوردی و عەرەبی (Kurdish & Arabic)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-537",
+      "faculty_id": "fac-56",
+      "university_id": "nawroz_duhok",
+      "name": "پشکا دیتر (نڤیسینا ب دەست)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-538",
+      "faculty_id": "fac-57",
+      "university_id": "cue_erbil",
+      "name": "بەشی زانستی کۆمپیوتەر و IT (Computer Science & IT)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-539",
+      "faculty_id": "fac-57",
+      "university_id": "cue_erbil",
+      "name": "بەشی ئەندازیاری تەلارسازی (Architecture Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-540",
+      "faculty_id": "fac-57",
+      "university_id": "cue_erbil",
+      "name": "بەشی ئەندازیاری شارستانی (Civil Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-541",
+      "faculty_id": "fac-57",
+      "university_id": "cue_erbil",
+      "name": "بەشی تەکنەلۆجیای تاقیگەی پزیشکی (Medical Lab Technology)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-542",
+      "faculty_id": "fac-57",
+      "university_id": "cue_erbil",
+      "name": "بەشی دەرمانسازی (Pharmacy)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-543",
+      "faculty_id": "fac-57",
+      "university_id": "cue_erbil",
+      "name": "بەشی پەرستاری (Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-544",
+      "faculty_id": "fac-57",
+      "university_id": "cue_erbil",
+      "name": "بەشی کارگێڕی کار (Business Administration)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-545",
+      "faculty_id": "fac-57",
+      "university_id": "cue_erbil",
+      "name": "بەشی ژمێریاری (Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-546",
+      "faculty_id": "fac-57",
+      "university_id": "cue_erbil",
+      "name": "بەشی ئەدەبی ئینگلیزی و وەرگێڕان (English Literature & Translation)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-547",
+      "faculty_id": "fac-57",
+      "university_id": "cue_erbil",
+      "name": "بەشی پەیوەندییە نێودەوڵەتییەکان (International Relations)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-548",
+      "faculty_id": "fac-58",
+      "university_id": "qiu_slemani",
+      "name": "Software Engineering (ئەندازیاری پرۆگرامسازی - UTM)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-549",
+      "faculty_id": "fac-58",
+      "university_id": "qiu_slemani",
+      "name": "Computer Science (زانستی کۆمپیوتەر - UTM)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-550",
+      "faculty_id": "fac-58",
+      "university_id": "qiu_slemani",
+      "name": "Pharmacy (کۆلێژی دەرمانسازی)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-551",
+      "faculty_id": "fac-58",
+      "university_id": "qiu_slemani",
+      "name": "Dentistry (پزیشکی ددان)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-552",
+      "faculty_id": "fac-58",
+      "university_id": "qiu_slemani",
+      "name": "Medical Lab Science (شیکاری پزیشکی)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-553",
+      "faculty_id": "fac-58",
+      "university_id": "qiu_slemani",
+      "name": "Business Administration & Finance (کارگێڕی کار و دارایی)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-554",
+      "faculty_id": "fac-58",
+      "university_id": "qiu_slemani",
+      "name": "English & Communication (ئینگلیزی و پەیوەندییەکان)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-555",
+      "faculty_id": "fac-59",
+      "university_id": "other_univ",
+      "name": "بەشی تەکنەلۆجیای زانیاری و پرۆگرامسازی (IT & Software)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-556",
+      "faculty_id": "fac-59",
+      "university_id": "other_univ",
+      "name": "بەشی زانستی کۆمپیوتەر (Computer Science)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-557",
+      "faculty_id": "fac-59",
+      "university_id": "other_univ",
+      "name": "بەشی شیکاری نەخۆشییەکان و پزیشکی (Medical & Health)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-558",
+      "faculty_id": "fac-59",
+      "university_id": "other_univ",
+      "name": "بەشی پەرستاری (Nursing)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-559",
+      "faculty_id": "fac-59",
+      "university_id": "other_univ",
+      "name": "بەشی ئەندازیاری شارستانی و تەلارسازی (Civil & Architecture)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-560",
+      "faculty_id": "fac-59",
+      "university_id": "other_univ",
+      "name": "بەشی ئەندازیاری بە گشتی (Engineering)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-561",
+      "faculty_id": "fac-59",
+      "university_id": "other_univ",
+      "name": "بەشی کارگێڕی کار و ژمێریاری (Business & Accounting)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-562",
+      "faculty_id": "fac-59",
+      "university_id": "other_univ",
+      "name": "بەشی یاسا و زانستە سیاسییەکان (Law & Politics)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-563",
+      "faculty_id": "fac-59",
+      "university_id": "other_univ",
+      "name": "بەشی زمانی ئینگلیزی و وەرگێڕان (Languages & Translation)",
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "dep-564",
+      "faculty_id": "fac-59",
+      "university_id": "other_univ",
+      "name": "بەشی پەروەردە و زانستە مرۆڤایەتییەکان (Education & Humanities)",
+      "created_at": "2026-01-01T00:00:00Z"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Send, AlertTriangle, Users, BookOpen, Wrench, ShieldAlert } from 'lucide-react';
+import { Bell, Send, AlertTriangle, Users, BookOpen, Wrench, ShieldAlert, Trash2 } from 'lucide-react';
 import { AdminApi } from '../services/api';
 import DataTable from '../components/DataTable';
 import Badge from '../components/Badge';
@@ -15,7 +15,7 @@ export default function Notifications() {
   // Form State
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
-  const [type, setType] = useState('system_announcement');
+  const [type, setType] = useState('announcement');
   const [target, setTarget] = useState('all');
   const [sendModal, setSendModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -69,6 +69,16 @@ export default function Notifications() {
     }
   };
 
+  const handleDelete = async (id) => {
+    try {
+      await AdminApi.deleteNotification(id);
+      setToast({ type: 'success', message: 'ئاگادارکردنەوە بە سەرکەوتوویی سڕایەوە.' });
+      fetchNotifications(pagination.page);
+    } catch (err) {
+      setToast({ type: 'error', message: 'هەڵە لە سڕینەوەی ئاگادارکردنەوە.' });
+    }
+  };
+
   const columns = [
     {
       key: 'title',
@@ -85,6 +95,10 @@ export default function Notifications() {
       label: 'جۆر',
       render: (t) => {
         const map = {
+          announcement: { label: 'ئاگاداری گشتی', variant: 'primary' },
+          broadcast: { label: 'پەخشی بەپەلە', variant: 'purple' },
+          system: { label: 'چاکسازی سیستەم', variant: 'warning' },
+          academic: { label: 'پەیامی پەروەردەیی', variant: 'success' },
           system_announcement: { label: 'ئاگاداری سیستەم', variant: 'primary' },
           maintenance: { label: 'چاکسازی سیستەم', variant: 'warning' },
           educational: { label: 'پەیامی پەروەردەیی', variant: 'success' },
@@ -101,6 +115,19 @@ export default function Notifications() {
         <span className="text-xs text-slate-400">
           {date ? new Date(date).toLocaleString('ku-IQ') : '—'}
         </span>
+      ),
+    },
+    {
+      key: 'actions',
+      label: 'کردار',
+      render: (_, n) => (
+        <button
+          onClick={() => handleDelete(n.id)}
+          className="p-1.5 rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors"
+          title="سڕینەوە"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
       ),
     },
   ];
@@ -142,9 +169,10 @@ export default function Notifications() {
                   onChange={(e) => setType(e.target.value)}
                   className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-brand-500"
                 >
-                  <option value="system_announcement">ئاگاداری سیستەم</option>
-                  <option value="maintenance">چاکسازی سیستەم</option>
-                  <option value="educational">ڕێنمایی پەروەردەیی</option>
+                  <option value="announcement">ئاگاداری گشتی (Announcement)</option>
+                  <option value="system">چاکسازی سیستەم (System)</option>
+                  <option value="academic">ڕێنمایی پەروەردەیی (Educational)</option>
+                  <option value="broadcast">پەخشی بەپەلە (Broadcast)</option>
                 </select>
               </div>
 

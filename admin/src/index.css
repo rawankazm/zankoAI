@@ -65,6 +65,23 @@
 }
 
 /* High-contrast modern dark inputs */
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8;
+}
+
+select option {
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
 .input {
   background-color: #0f172a !important; /* slate-900 */
   border: 1px solid #334155 !important; /* slate-700 */

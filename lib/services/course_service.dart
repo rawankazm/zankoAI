@@ -1,4 +1,5 @@
 import '../core/network/api_client.dart';
+import '../data/kurdistan_universities_data.dart';
 
 class _CacheEntry<T> {
   final T data;
@@ -114,15 +115,33 @@ class CourseService {
       return List<Map<String, dynamic>>.from(_cache[cacheKey]!.data as List);
     }
 
-    final response = await _client.get<Map<String, dynamic>>('/universities');
-    final data = response.data?['data'];
-    final items = data is Map
-        ? (data['items'] as List<dynamic>? ?? [])
-        : (data as List<dynamic>? ?? []);
-    final result = items.whereType<Map<String, dynamic>>().toList();
+    try {
+      final response = await _client.get<Map<String, dynamic>>('/universities');
+      final data = response.data?['data'];
+      final items = data is Map
+          ? (data['items'] as List<dynamic>? ?? [])
+          : (data as List<dynamic>? ?? []);
+      final result = items.whereType<Map<String, dynamic>>().toList();
+      if (result.isNotEmpty) {
+        _cache[cacheKey] = _CacheEntry(result, _defaultTtl);
+        return result;
+      }
+    } catch (_) {}
 
-    _cache[cacheKey] = _CacheEntry(result, _defaultTtl);
-    return result;
+    // Resilient fallback using rich localized Kurdistan universities data
+    final fallback = KurdistanUniversitiesData.universities.map((u) => {
+      'id': u.id,
+      'name': u.nameKu,
+      'name_en': u.nameEn,
+      'name_ar': u.nameAr,
+      'city': u.cityNameKu,
+      'type': u.typeNameKu,
+      'code': u.id.toUpperCase().replaceAll('_', '-'),
+      'is_active': true,
+    }).toList();
+
+    _cache[cacheKey] = _CacheEntry(fallback, _defaultTtl);
+    return fallback;
   }
 
   /// Lists departments, optionally filtered by university.
@@ -135,19 +154,37 @@ class CourseService {
       return List<Map<String, dynamic>>.from(_cache[cacheKey]!.data as List);
     }
 
-    final response = await _client.get<Map<String, dynamic>>(
-      '/departments',
-      queryParameters: {
-        'university_id': ?universityId,
-      },
-    );
-    final data = response.data?['data'];
-    final items = data is Map
-        ? (data['items'] as List<dynamic>? ?? [])
-        : (data as List<dynamic>? ?? []);
-    final result = items.whereType<Map<String, dynamic>>().toList();
+    try {
+      final response = await _client.get<Map<String, dynamic>>(
+        '/departments',
+        queryParameters: {
+          'university_id': ?universityId,
+        },
+      );
+      final data = response.data?['data'];
+      final items = data is Map
+          ? (data['items'] as List<dynamic>? ?? [])
+          : (data as List<dynamic>? ?? []);
+      final result = items.whereType<Map<String, dynamic>>().toList();
+      if (result.isNotEmpty) {
+        _cache[cacheKey] = _CacheEntry(result, _defaultTtl);
+        return result;
+      }
+    } catch (_) {}
 
-    _cache[cacheKey] = _CacheEntry(result, _defaultTtl);
-    return result;
+    // Resilient fallback using rich localized Kurdistan departments
+    final depts = universityId != null
+        ? KurdistanUniversitiesData.getDepartmentsFor(universityId)
+        : KurdistanUniversitiesData.commonDepartments;
+
+    final fallback = depts.asMap().entries.map((e) => {
+      'id': 'dept-${universityId ?? "gen"}-${e.key}',
+      'university_id': universityId,
+      'name': e.value,
+      'is_active': true,
+    }).toList();
+
+    _cache[cacheKey] = _CacheEntry(fallback, _defaultTtl);
+    return fallback;
   }
 }

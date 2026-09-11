@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, UserCheck, UserX, Eye, BookOpen, AlertCircle } from 'lucide-react';
+import { Search, UserCheck, UserX, Eye, BookOpen, AlertCircle, Trash2 } from 'lucide-react';
 import { AdminApi } from '../services/api';
 import DataTable from '../components/DataTable';
 import Badge from '../components/Badge';
@@ -17,7 +17,7 @@ export default function Teachers() {
 
   // Modals & Action States
   const [actionTarget, setActionTarget] = useState(null);
-  const [actionType, setActionType] = useState(null); // 'suspend' | 'activate'
+  const [actionType, setActionType] = useState(null); // 'suspend' | 'activate' | 'delete'
   const [actionLoading, setActionLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
@@ -30,7 +30,7 @@ export default function Teachers() {
         q: search.trim() || undefined,
         status: statusFilter || undefined,
       });
-      setTeachers(res.users || []);
+      setTeachers(res.teachers || []);
       setPagination(res.pagination || { page: 1, limit: 20, total: 0, totalPages: 1 });
     } catch (err) {
       console.error('Failed to list teachers:', err);
@@ -47,18 +47,28 @@ export default function Teachers() {
   const handleToggleStatus = async () => {
     if (!actionTarget) return;
     setActionLoading(true);
-    const newStatus = actionType === 'suspend' ? 'suspended' : 'active';
+    const targetId = actionTarget.id;
+    const targetName = actionTarget.full_name || actionTarget.email;
+
     try {
-      await AdminApi.updateUserStatus(actionTarget.id, newStatus, 'مامۆستا لەلایەن ئەدمینەوە گۆڕدرا');
-      setToast({
-        type: 'success',
-        message: `دۆخی مامۆستا ${actionTarget.full_name || actionTarget.email} نوێکرایەوە.`,
-      });
+      if (actionType === 'delete') {
+        setTeachers(prev => prev.filter(t => t.id !== targetId));
+        await AdminApi.deleteUser(targetId);
+        setToast({ type: 'success', message: `هەژماری مامۆستا ${targetName} سڕایەوە.` });
+      } else {
+        const newStatus = actionType === 'suspend' ? 'suspended' : 'active';
+        setTeachers(prev => prev.map(t => t.id === targetId ? { ...t, status: newStatus } : t));
+        await AdminApi.updateUserStatus(targetId, newStatus, 'مامۆستا لەلایەن ئەدمینەوە گۆڕدرا');
+        setToast({
+          type: 'success',
+          message: `دۆخی مامۆستا ${targetName} گۆڕدرا بۆ ${newStatus === 'active' ? 'چالاک' : 'سڕکراو'}.`,
+        });
+      }
       setActionTarget(null);
       setActionType(null);
       fetchTeachers(pagination.page);
     } catch (err) {
-      setToast({ type: 'error', message: err.response?.data?.message || 'هەڵە لە گۆڕینی دۆخ.' });
+      setToast({ type: 'error', message: err.response?.data?.message || 'هەڵە لە ئەنجامدانی کردار.' });
     } finally {
       setActionLoading(false);
     }
@@ -134,6 +144,16 @@ export default function Teachers() {
               <UserCheck className="w-4 h-4" />
             </button>
           )}
+          <button
+            onClick={() => {
+              setActionTarget(t);
+              setActionType('delete');
+            }}
+            className="p-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/80 text-rose-400/80 hover:text-rose-300 border border-rose-800/30 transition-colors"
+            title="سڕینەوەی مامۆستا"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
         </div>
       ),
     },
@@ -185,13 +205,26 @@ export default function Teachers() {
 
       <ConfirmModal
         isOpen={Boolean(actionTarget)}
-        title={actionType === 'suspend' ? 'سڕکردنی هەژماری مامۆستا' : 'چالاککردنەوەی هەژماری مامۆستا'}
-        message={`ئایا دڵنیایت لە گۆڕینی دۆخی مامۆستا ${actionTarget?.full_name || actionTarget?.email}؟`}
-        confirmText={actionType === 'suspend' ? 'سڕکردن' : 'چالاککردنەوە'}
-        danger={actionType === 'suspend'}
+        title={
+          actionType === 'delete'
+            ? 'سڕینەوەی هەژماری مامۆستا'
+            : actionType === 'suspend'
+            ? 'سڕکردنی هەژماری مامۆستا'
+            : 'چالاککردنەوەی هەژماری مامۆستا'
+        }
+        message={
+          actionType === 'delete'
+            ? `ئایا دڵنیایت لە سڕینەوەی تەواوەتی هەژماری مامۆستا ${actionTarget?.full_name || actionTarget?.email}؟`
+            : `ئایا دڵنیایت لە گۆڕینی دۆخی مامۆستا ${actionTarget?.full_name || actionTarget?.email}؟`
+        }
+        confirmText={actionType === 'delete' ? 'سڕینەوە' : actionType === 'suspend' ? 'سڕکردن' : 'چالاککردنەوە'}
+        danger={actionType === 'suspend' || actionType === 'delete'}
         loading={actionLoading}
         onConfirm={handleToggleStatus}
-        onCancel={() => setActionTarget(null)}
+        onCancel={() => {
+          setActionTarget(null);
+          setActionType(null);
+        }}
       />
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
