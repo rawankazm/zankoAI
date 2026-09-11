@@ -104,13 +104,23 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _navigateToNext() async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+
     // 1. Check for app updates from admin config
     AppUpdateInfo? updateInfo;
     try {
       updateInfo = await AppVersionService().checkForUpdate();
     } catch (_) {}
 
-    await Future.delayed(const Duration(milliseconds: 3000));
+    // Wait for splash entrance animation and auth session restoration (with timeout fallback)
+    await Future.wait([
+      Future.delayed(const Duration(milliseconds: 2200)),
+      authService.initializationReady.timeout(
+        const Duration(milliseconds: 3500),
+        onTimeout: () => {},
+      ),
+    ]);
+
     if (!mounted) return;
 
     // 2. If update is forced or required, show ForceUpdateScreen immediately
@@ -132,10 +142,9 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
 
     final Widget nextScreen;
-    if (!onboardingDone) {
+    if (!onboardingDone && !authService.isAuthenticated) {
       nextScreen = const OnboardingScreen();
     } else {
-      final authService = Provider.of<AuthService>(context, listen: false);
       if (authService.authState is PasswordRecoveryState) {
         nextScreen = const ResetPasswordScreen();
       } else if (authService.authState is EmailUnconfirmedState) {

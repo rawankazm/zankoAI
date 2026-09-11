@@ -17,6 +17,7 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
 
   UserModel? _currentUser;
   ZankoAuthState _authState = const Unauthenticated();
+  final Completer<void> _initCompleter = Completer<void>();
 
   @override
   AuthRepository get repository => _repository;
@@ -28,7 +29,11 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
   Session? get currentSession => _repository.currentSession;
 
   @override
-  bool get isAuthenticated => _currentUser != null;
+  bool get isAuthenticated =>
+      _currentUser != null || _repository.currentSession != null;
+
+  @override
+  Future<void> get initializationReady => _initCompleter.future;
 
   @override
   ZankoAuthState get authState => _authState;
@@ -50,37 +55,78 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
   }
 
   void _init() {
-    // Listen to repository state changes
+    // 1. Listen to repository state changes
     _repoSub = _repository.authStateChanges.listen((state) {
       _authState = state;
       if (state is Authenticated) {
         _currentUser = state.user;
       } else if (state is Unauthenticated) {
-        _currentUser = null;
+        if (_currentUser?.isGuest != true) {
+          _currentUser = null;
+        }
       }
       notifyListeners();
     });
 
-    // Check if a session is already cached
-    final currentSession = _repository.currentSession;
-    if (currentSession != null) {
-      _repository
-          .fetchUserProfile(
-            currentSession.user.id,
-            currentSession.user.email,
-            currentSession.user,
-          )
-          .then((profile) {
-            if (profile != null) {
-              _currentUser = profile;
-              _authState = Authenticated(
-                user: profile,
-                session: currentSession,
-              );
-              _syncUserAndVipStatus(profile);
-              notifyListeners();
-            }
-          });
+    _performInitialRestore();
+  }
+
+  Future<void> _performInitialRestore() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final isGuest = prefs.getBool('zanko_is_guest') ?? false;
+
+      final currentSession = _repository.currentSession;
+      final authUser = _repository.currentAuthUser;
+
+      // 2. Fast local restore: Check SharedPreferences cached user model first
+      final cachedProfile = await _repository.getCachedProfile(authUser?.id);
+
+      if (cachedProfile != null) {
+        _currentUser = cachedProfile;
+        if (currentSession != null) {
+          _authState = Authenticated(user: cachedProfile, session: currentSession);
+        }
+        notifyListeners();
+      } else if (isGuest) {
+        final guestId = prefs.getString('zanko_guest_id') ??
+            'guest_${DateTime.now().millisecondsSinceEpoch}';
+        _currentUser = UserModel(
+          id: guestId,
+          name: 'مێوان',
+          email: 'guest@zanko.edu',
+          role: UserRole.student,
+          isVip: false,
+          vipStatus: 'none',
+        );
+        _authState = const Unauthenticated();
+        notifyListeners();
+      }
+
+      // 3. If there is an active session or auth user, sync remote profile
+      if (currentSession != null || authUser != null) {
+        final targetUser = currentSession?.user ?? authUser!;
+        final profile = await _repository.fetchUserProfile(
+          targetUser.id,
+          targetUser.email,
+          targetUser,
+        );
+
+        if (profile != null) {
+          _currentUser = profile;
+          if (currentSession != null) {
+            _authState = Authenticated(user: profile, session: currentSession);
+          }
+          _syncUserAndVipStatus(profile);
+          notifyListeners();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error restoring user session in SupabaseAuthService: $e');
+    } finally {
+      if (!_initCompleter.isCompleted) {
+        _initCompleter.complete();
+      }
     }
   }
 
@@ -165,6 +211,11 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
             );
           }
           _syncUserAndVipStatus(profile);
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setBool('onboarding_done', true);
+            await prefs.setBool('zanko_is_guest', false);
+          } catch (_) {}
           notifyListeners();
           return true;
         }
@@ -237,6 +288,11 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
             user: _currentUser!,
             session: res.session!,
           );
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setBool('onboarding_done', true);
+            await prefs.setBool('zanko_is_guest', false);
+          } catch (_) {}
           notifyListeners();
           return true;
         } else {
@@ -293,6 +349,11 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
             _authState = Authenticated(user: profile, session: res.session!);
           }
           _syncUserAndVipStatus(profile);
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setBool('onboarding_done', true);
+            await prefs.setBool('zanko_is_guest', false);
+          } catch (_) {}
           notifyListeners();
           return true;
         }
@@ -333,6 +394,11 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
             _authState = Authenticated(user: profile, session: res.session!);
           }
           _syncUserAndVipStatus(profile);
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setBool('onboarding_done', true);
+            await prefs.setBool('zanko_is_guest', false);
+          } catch (_) {}
           notifyListeners();
           return true;
         }
@@ -381,7 +447,13 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
 
   @override
   Future<void> loginAsGuest() async {
-    final guestId = 'guest_${DateTime.now().millisecondsSinceEpoch}';
+    final prefs = await SharedPreferences.getInstance();
+    final guestId = prefs.getString('zanko_guest_id') ??
+        'guest_${DateTime.now().millisecondsSinceEpoch}';
+    await prefs.setString('zanko_guest_id', guestId);
+    await prefs.setBool('zanko_is_guest', true);
+    await prefs.setBool('onboarding_done', true);
+
     _currentUser = UserModel(
       id: guestId,
       name: 'مێوان',
@@ -397,6 +469,13 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
   @override
   Future<void> logout() async {
     _vipWatcherTimer?.cancel();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('zanko_is_guest');
+      await prefs.remove('zanko_guest_id');
+      await prefs.remove('zanko_active_user_json');
+      await prefs.remove('zanko_active_user_id');
+    } catch (_) {}
     await _repository.signOut();
     _currentUser = null;
     _authState = const Unauthenticated();

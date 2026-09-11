@@ -15,6 +15,8 @@ import '../../services/auth_service.dart';
 import '../../services/database_service.dart';
 import '../../services/document_parser_service.dart';
 import '../../services/kurdish_tts_service.dart';
+import '../../services/ai_teacher_voice_service.dart';
+import '../../core/network/api_client.dart';
 import '../../models/note_model.dart';
 import '../../theme.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -105,6 +107,10 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   Timer? _recordTimer;
   String? _currentlySpeakingMsg;
 
+  // AI Teacher Multilingual & Voice Engine
+  final AiTeacherVoiceService _voiceService = AiTeacherVoiceService();
+  String _selectedLanguageMode = 'auto'; // 'auto', 'ku', 'ar', 'en'
+
   List<String> get _currentSuggestions {
     switch (_selectedModeIndex) {
       case 1:
@@ -159,6 +165,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   void initState() {
     super.initState();
     _loadChatHistory();
+    _loadVoicePreferences();
 
     KurdishTtsService().isSpeakingNotifier.addListener(_onTtsStateChanged);
 
@@ -169,6 +176,17 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
         _sendMessage(widget.initialPrompt!);
       }
     });
+  }
+
+  Future<void> _loadVoicePreferences() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (mounted) {
+        setState(() {
+          _selectedLanguageMode = prefs.getString('ai_teacher_lang_mode') ?? 'auto';
+        });
+      }
+    } catch (_) {}
   }
 
   void _onTtsStateChanged() {
@@ -260,6 +278,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
 
   @override
   void dispose() {
+    _voiceService.stop();
     KurdishTtsService().isSpeakingNotifier.removeListener(_onTtsStateChanged);
     KurdishTtsService().stop();
     _recordTimer?.cancel();
@@ -454,30 +473,59 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
           )
           .toList();
 
-      final modePrefix = _selectedModeIndex != 0
-          ? "[تایبەتمەندی: ${_modes[_selectedModeIndex]['tag']}]\n[ڕێنمایی زۆر گرنگ: هەرگیز نیشانەی دۆلار \$ یان \$\$ بەکارمەهێنە بۆ هاوکێشە و ژمارەکان. هاوکێشەکان بە شێوازی دەقی سادە و ڕوون بنووسە]\n"
-          : "[ڕێنمایی: بەبێ نیشانەی دۆلار \$ و بە شێوازی دەقی سادە هاوکێشەکان بنووسە]\n";
+      String cleanResponse;
+      try {
+        final backendRes = await ApiClient.instance.post<Map<String, dynamic>>(
+          '/ai-teacher/chat',
+          data: {
+            'message': text,
+            'language': _selectedLanguageMode,
+            'history': historyToSend,
+          },
+        );
+        final backendText = backendRes.data?['text'];
+        if (backendText != null && backendText.toString().trim().isNotEmpty) {
+          cleanResponse = cleanMathAndDollarSigns(backendText.toString());
+        } else {
+          throw Exception('Empty response from AI Teacher backend');
+        }
+      } catch (backendErr) {
+        debugPrint('[AiTeacherChat] Backend /ai-teacher/chat fallback: $backendErr');
+        final modePrefix = _selectedModeIndex != 0
+            ? "[تایبەتمەندی: ${_modes[_selectedModeIndex]['tag']}]\n[زمان: ${_selectedLanguageMode.toUpperCase()}]\n"
+            : "[زمان: ${_selectedLanguageMode.toUpperCase()}]\n";
 
-      final response = await aiService.askTeacher(
-        modePrefix + text,
-        historyToSend,
-        isVip: isVip,
-        isPendingVip: isPendingVip,
-      );
-
-      final cleanResponse = cleanMathAndDollarSigns(response);
+        final response = await aiService.askTeacher(
+          modePrefix + text,
+          historyToSend,
+          isVip: isVip,
+          isPendingVip: isPendingVip,
+        );
+        cleanResponse = cleanMathAndDollarSigns(response);
+      }
 
       if (mounted) {
+        final answerId = 'msg_${cleanResponse.hashCode}';
         setState(() {
           _isTyping = false;
           _messages.add({
             'role': 'assistant',
             'content': cleanResponse,
             'time': _formatTime(),
+            'id': answerId,
           });
         });
         await _saveChatHistory();
         _scrollToBottom();
+
+        // Autoplay if enabled (Prompt 37 Section 22)
+        if (_voiceService.autoReadEnabled) {
+          _voiceService.readAloud(
+            answerId: answerId,
+            text: cleanResponse,
+            language: _selectedLanguageMode,
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -1391,6 +1439,19 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 ),
               ),
 
+              // Voice Settings Action (Prompt 37 Section 21)
+              IconButton(
+                icon: HugeIcon(
+                  icon: HugeIcons.strokeRoundedVolumeHigh,
+                  color: isDark
+                      ? ZankoColors.darkTextSecondary
+                      : ZankoColors.textSecondary,
+                  size: 20,
+                ),
+                tooltip: 'ڕێکخستنی دەنگی مامۆستا',
+                onPressed: () => _showVoiceSettingsModal(context, isDark),
+              ),
+
               // Clear History Action
               IconButton(
                 icon: HugeIcon(
@@ -1530,6 +1591,10 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
               },
             ),
           ),
+          const SizedBox(height: 8),
+
+          // Multilingual Language Selector (Prompt 37 Section 3)
+          _buildLanguageSelectorBar(isDark),
         ],
       ),
     );
@@ -1921,7 +1986,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     final rawContent = msg['content'] ?? '';
     final content = !isUser ? cleanMathAndDollarSigns(rawContent) : rawContent;
     final time = msg['time'] ?? _formatTime();
-    final isSpeaking = _currentlySpeakingMsg == content;
+    final msgId = msg['id'] ?? 'msg_${content.hashCode}';
     final isLimitMsg =
         !isUser &&
         (content.contains('Free Daily Limit Reached') ||
@@ -2140,6 +2205,12 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                         if (content.isNotEmpty)
                           Text(
                             content,
+                            textDirection: _isRtlText(content)
+                                ? TextDirection.rtl
+                                : TextDirection.ltr,
+                            textAlign: _isRtlText(content)
+                                ? TextAlign.right
+                                : TextAlign.left,
                             style: TextStyle(
                               fontSize: 14.5,
                               height: 1.5,
@@ -2205,82 +2276,10 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                     ),
                   ),
 
-                  // Action Toolbar for Assistant Messages
+                  // Action Toolbar & Voice Controls for Assistant Messages (Prompt 37)
                   if (!isUser && !isLimitMsg && content.isNotEmpty) ...[
                     const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
-                      children: [
-                        _buildBubbleAction(
-                          icon: HugeIcons.strokeRoundedCopy01,
-                          label: 'کۆپی',
-                          onTap: () {
-                            Clipboard.setData(ClipboardData(text: content));
-                            HapticFeedback.lightImpact();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('دەقی وەڵامەکە کۆپی کرا! 📋'),
-                                backgroundColor: Colors.blueGrey,
-                                duration: Duration(seconds: 1),
-                              ),
-                            );
-                          },
-                        ),
-                        _buildBubbleAction(
-                          icon: HugeIcons.strokeRoundedBookmark02,
-                          label: 'تێبینی',
-                          color: ZankoColors.primary,
-                          onTap: () => _saveAsNote(content),
-                        ),
-                        _buildBubbleAction(
-                          icon: isSpeaking
-                              ? HugeIcons.strokeRoundedVolumeHigh
-                              : HugeIcons.strokeRoundedVolumeLow,
-                          label: isSpeaking ? 'وەستان' : 'دەنگ',
-                          color: isSpeaking
-                              ? const Color(0xFF10B981)
-                              : (isDark
-                                    ? Colors.white70
-                                    : const Color(0xFF4B5563)),
-                          onTap: () async {
-                            if (isSpeaking) {
-                              await KurdishTtsService().stop();
-                              if (mounted)
-                                setState(() => _currentlySpeakingMsg = null);
-                            } else {
-                              if (mounted)
-                                setState(() => _currentlySpeakingMsg = content);
-                              final lang = Provider.of<LanguageProvider>(
-                                context,
-                                listen: false,
-                              );
-                              String langCode = 'ku';
-                              if (lang.currentLanguage == AppLanguage.arabic) {
-                                langCode = 'ar';
-                              } else if (lang.currentLanguage ==
-                                  AppLanguage.english) {
-                                langCode = 'en';
-                              }
-                              await KurdishTtsService().speak(
-                                content,
-                                languageCode: langCode,
-                              );
-                            }
-                          },
-                        ),
-                        _buildBubbleAction(
-                          icon: HugeIcons.strokeRoundedAiMagic,
-                          label: 'ڕوونکردنەوەی زیاتر',
-                          color: ZankoColors.primary,
-                          onTap: () {
-                            _sendMessage(
-                              'تکایە بە شێوازێکی قووڵتر و بە نموونەی زیاتر ئەم بابەتە شی بکەرەوە.',
-                            );
-                          },
-                        ),
-                      ],
-                    ),
+                    _buildAssistantVoiceAndActionToolbar(content, msgId, isDark),
                   ],
                 ],
               ),
@@ -2288,6 +2287,537 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  /// Determines whether a given text is predominantly RTL (Kurdish/Arabic) or LTR (English)
+  bool _isRtlText(String text) {
+    if (text.isEmpty) return true;
+    final arabicKurdishRegex = RegExp(
+      r'[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]',
+    );
+    final matches = arabicKurdishRegex.allMatches(text).length;
+    return matches > (text.length * 0.15);
+  }
+
+  /// Multilingual Language Selector Bar (Prompt 37 Section 3)
+  Widget _buildLanguageSelectorBar(bool isDark) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1A1F2C) : const Color(0xFFF3F6FA),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? const Color(0xFF2B3342) : const Color(0xFFE2E8F0),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.translate_rounded,
+            size: 15,
+            color: ZankoColors.primary,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            'Language:',
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              color: isDark ? Colors.white70 : const Color(0xFF4B5563),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildLanguageChip('auto', 'Auto Detect 🌐', isDark),
+                  const SizedBox(width: 6),
+                  _buildLanguageChip('ku', 'Kurdish ☀️', isDark),
+                  const SizedBox(width: 6),
+                  _buildLanguageChip('ar', 'Arabic 🌙', isDark),
+                  const SizedBox(width: 6),
+                  _buildLanguageChip('en', 'English 🌍', isDark),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLanguageChip(String code, String label, bool isDark) {
+    final isSelected = _selectedLanguageMode == code;
+    return GestureDetector(
+      onTap: () async {
+        HapticFeedback.selectionClick();
+        setState(() => _selectedLanguageMode = code);
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('ai_teacher_lang_mode', code);
+        } catch (_) {}
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? ZankoColors.primary
+              : (isDark ? const Color(0xFF242B38) : Colors.white),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? ZankoColors.primary
+                : (isDark ? const Color(0xFF333D50) : const Color(0xFFDDE3EE)),
+            width: 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: ZankoColors.primary.withValues(alpha: 0.3),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            color: isSelected
+                ? Colors.white
+                : (isDark ? const Color(0xFFD1D5DB) : const Color(0xFF374151)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Combined Action Toolbar & Interactive Voice Player for each Assistant Answer
+  Widget _buildAssistantVoiceAndActionToolbar(
+    String content,
+    String msgId,
+    bool isDark,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ValueListenableBuilder<AiTeacherVoicePlaybackInfo>(
+          valueListenable: _voiceService.playbackNotifier,
+          builder: (context, info, _) {
+            final isThisMsgActive = info.activeAnswerId == msgId && info.isActive;
+            if (isThisMsgActive) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: _buildActiveVoicePlayerBar(info, msgId, content, isDark),
+              );
+            }
+            return const SizedBox.shrink();
+          },
+        ),
+        Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          children: [
+            _buildBubbleAction(
+              icon: HugeIcons.strokeRoundedCopy01,
+              label: 'کۆپی',
+              onTap: () {
+                Clipboard.setData(ClipboardData(text: content));
+                HapticFeedback.lightImpact();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('دەقی وەڵامەکە کۆپی کرا! 📋'),
+                    backgroundColor: Colors.blueGrey,
+                    duration: Duration(seconds: 1),
+                  ),
+                );
+              },
+            ),
+            _buildBubbleAction(
+              icon: HugeIcons.strokeRoundedBookmark02,
+              label: 'تێبینی',
+              color: ZankoColors.primary,
+              onTap: () => _saveAsNote(content),
+            ),
+            ValueListenableBuilder<AiTeacherVoicePlaybackInfo>(
+              valueListenable: _voiceService.playbackNotifier,
+              builder: (context, info, _) {
+                final isThisMsgActive = info.activeAnswerId == msgId && info.isActive;
+                if (isThisMsgActive) return const SizedBox.shrink();
+
+                return _buildBubbleAction(
+                  icon: HugeIcons.strokeRoundedVolumeHigh,
+                  label: '🔊 خوێندنەوە',
+                  color: const Color(0xFF10B981),
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    _voiceService.readAloud(
+                      answerId: msgId,
+                      text: content,
+                      language: _selectedLanguageMode,
+                    );
+                  },
+                );
+              },
+            ),
+            _buildBubbleAction(
+              icon: HugeIcons.strokeRoundedAiMagic,
+              label: 'ڕوونکردنەوەی زیاتر',
+              color: ZankoColors.primary,
+              onTap: () {
+                _sendMessage(
+                  'تکایە بە شێوازێکی قووڵتر و بە نموونەی زیاتر ئەم بابەتە شی بکەرەوە.',
+                );
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Live Interactive Audio Player Bar for Active Voice Stream (Prompt 37 Section 10 & 12)
+  Widget _buildActiveVoicePlayerBar(
+    AiTeacherVoicePlaybackInfo info,
+    String msgId,
+    String content,
+    bool isDark,
+  ) {
+    String statusLabel = '';
+    if (info.isLoading) {
+      statusLabel = 'ئامادەکردنی دەنگ... ⏳';
+    } else if (info.isPlaying) {
+      statusLabel = info.totalChunks > 1
+          ? 'خوێندنەوە (${info.currentChunkIndex + 1}/${info.totalChunks}) 🔊'
+          : 'دەخوێنرێتەوە... 🔊';
+    } else if (info.isPaused) {
+      statusLabel = info.totalChunks > 1
+          ? 'وەستێنراوە (${info.currentChunkIndex + 1}/${info.totalChunks}) ⏸'
+          : 'وەستێنراوە ⏸';
+    } else if (info.isError) {
+      statusLabel = 'کێشە لە دەنگ (دووبارە) ⚠️';
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1A2232) : const Color(0xFFEBF4FF),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: info.isError
+              ? ZankoColors.error.withValues(alpha: 0.5)
+              : ZankoColors.primary.withValues(alpha: 0.4),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Play / Pause / Loading button
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.selectionClick();
+              if (info.isError) {
+                _voiceService.retryCurrentChunk();
+              } else if (info.isPlaying) {
+                _voiceService.pause();
+              } else if (info.isPaused) {
+                _voiceService.resume();
+              } else {
+                _voiceService.readAloud(
+                  answerId: msgId,
+                  text: content,
+                  language: _selectedLanguageMode,
+                );
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: info.isError ? ZankoColors.error : ZankoColors.primary,
+                shape: BoxShape.circle,
+              ),
+              child: info.isLoading
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Icon(
+                      info.isPlaying
+                          ? Icons.pause_rounded
+                          : (info.isError ? Icons.refresh_rounded : Icons.play_arrow_rounded),
+                      size: 16,
+                      color: Colors.white,
+                    ),
+            ),
+          ),
+          const SizedBox(width: 8),
+
+          // Status & Progress Label
+          Text(
+            statusLabel,
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.bold,
+              color: info.isError
+                  ? ZankoColors.error
+                  : (isDark ? Colors.white : const Color(0xFF1E3A8A)),
+            ),
+          ),
+          const SizedBox(width: 8),
+
+          // Speed Control Chip
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.selectionClick();
+              final current = info.speed;
+              double nextSpeed = 1.0;
+              if (current < 1.1) {
+                nextSpeed = 1.25;
+              } else if (current < 1.3) {
+                nextSpeed = 1.5;
+              } else if (current < 1.6) {
+                nextSpeed = 2.0;
+              } else {
+                nextSpeed = 1.0;
+              }
+              _voiceService.setSpeed(nextSpeed);
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF263045) : Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isDark ? const Color(0xFF374561) : const Color(0xFFCBD5E1),
+                  width: 0.8,
+                ),
+              ),
+              child: Text(
+                '${info.speed.toStringAsFixed(info.speed % 1 == 0 ? 0 : 2)}x',
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white70 : const Color(0xFF334155),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+
+          // Stop Button
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.selectionClick();
+              _voiceService.stop();
+            },
+            child: Container(
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF263045) : Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isDark ? const Color(0xFF374561) : const Color(0xFFCBD5E1),
+                  width: 0.8,
+                ),
+              ),
+              child: Icon(
+                Icons.stop_rounded,
+                size: 14,
+                color: isDark ? Colors.white70 : const Color(0xFF64748B),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Voice Settings Modal Sheet (Prompt 37 Section 21)
+  void _showVoiceSettingsModal(BuildContext context, bool isDark) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          final currentSpeed = _voiceService.playbackSpeed;
+          final isAutoRead = _voiceService.autoReadEnabled;
+
+          return Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF171B26) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              border: Border.all(
+                color: isDark ? const Color(0xFF262E3D) : const Color(0xFFE2E8F0),
+              ),
+            ),
+            child: SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white24 : Colors.black12,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Icon(Icons.record_voice_over_rounded, color: ZankoColors.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        'ڕێکخستنی دەنگی مامۆستای ژیر 👨‍🏫',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : const Color(0xFF111827),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Language Mode
+                  Text(
+                    'زمانی وەڵام و دەنگ:',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white70 : const Color(0xFF4B5563),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildModalLangChip('auto', 'Auto Detect 🌐', setSheetState, isDark),
+                      _buildModalLangChip('ku', 'Kurdish ☀️', setSheetState, isDark),
+                      _buildModalLangChip('ar', 'Arabic 🌙', setSheetState, isDark),
+                      _buildModalLangChip('en', 'English 🌍', setSheetState, isDark),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Speed Control
+                  Text(
+                    'خێرایی خوێندنەوە: ${currentSpeed.toStringAsFixed(currentSpeed % 1 == 0 ? 0 : 2)}x',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white70 : const Color(0xFF4B5563),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: [0.75, 1.0, 1.25, 1.5, 2.0].map((s) {
+                      final isSelected = (currentSpeed - s).abs() < 0.05;
+                      return ChoiceChip(
+                        label: Text('${s}x'),
+                        selected: isSelected,
+                        selectedColor: ZankoColors.primary,
+                        labelStyle: TextStyle(
+                          color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                        onSelected: (_) {
+                          _voiceService.setSpeed(s);
+                          setSheetState(() {});
+                          setState(() {});
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Auto Read Toggle
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1F2637) : const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isDark ? const Color(0xFF2C364C) : const Color(0xFFE2E8F0),
+                      ),
+                    ),
+                    child: SwitchListTile.adaptive(
+                      title: Text(
+                        'خوێندنەوەی دەنگی خۆکار (Auto Read)',
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : const Color(0xFF1E293B),
+                        ),
+                      ),
+                      subtitle: Text(
+                        'وەڵامەکانی مامۆستا راستەوخۆ دەخوێنرێنەوە پاش دروستبوون',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                        ),
+                      ),
+                      value: isAutoRead,
+                      activeColor: ZankoColors.primary,
+                      onChanged: (val) {
+                        _voiceService.setAutoRead(val);
+                        setSheetState(() {});
+                        setState(() {});
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildModalLangChip(
+    String code,
+    String label,
+    void Function(void Function()) setSheetState,
+    bool isDark,
+  ) {
+    final isSelected = _selectedLanguageMode == code;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      selectedColor: ZankoColors.primary,
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      onSelected: (_) async {
+        setState(() => _selectedLanguageMode = code);
+        setSheetState(() {});
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('ai_teacher_lang_mode', code);
+        } catch (_) {}
+      },
     );
   }
 

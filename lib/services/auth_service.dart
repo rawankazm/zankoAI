@@ -8,6 +8,7 @@ abstract class AuthService extends ChangeNotifier {
   UserModel? get currentUser;
   Session? get currentSession;
   bool get isAuthenticated => currentUser != null;
+  Future<void> get initializationReady;
   ZankoAuthState get authState;
   AuthRepository get repository;
 

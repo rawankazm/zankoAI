@@ -369,8 +369,32 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {
+    final user = _supabase.auth.currentUser;
+    final userId = user?.id;
     try {
       await _supabase.auth.signOut();
+    } catch (_) {}
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('zanko_active_user_json');
+      await prefs.remove('zanko_active_user_id');
+      await prefs.remove('zanko_is_guest');
+      if (userId != null) {
+        await prefs.remove('zanko_cached_user_model_$userId');
+      }
+      final keysToRemove = prefs
+          .getKeys()
+          .where(
+            (k) =>
+                k.startsWith('zanko_user_') ||
+                k.startsWith('zanko_active_') ||
+                k.startsWith('zanko_fb_') ||
+                k.startsWith('apple_'),
+          )
+          .toList();
+      for (final k in keysToRemove) {
+        await prefs.remove(k);
+      }
     } catch (_) {}
     _authStateController.add(const Unauthenticated());
   }
@@ -470,6 +494,24 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<UserModel?> getCachedProfile([String? userId]) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = userId != null
+          ? 'zanko_cached_user_model_$userId'
+          : 'zanko_active_user_json';
+      final jsonStr = prefs.getString(key) ??
+          prefs.getString('zanko_active_user_json');
+      if (jsonStr != null && jsonStr.isNotEmpty) {
+        return UserModel.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
+      }
+    } catch (e) {
+      debugPrint('Error reading cached user profile: $e');
+    }
+    return null;
+  }
+
+  @override
   Future<UserModel?> fetchUserProfile(
     String userId, [
     String? fallbackEmail,
@@ -488,13 +530,20 @@ class SupabaseAuthRepository implements AuthRepository {
       final email = fallbackEmail ?? authUser?.email ?? 'user@zanko.edu';
       final cleanEmail = email.trim().toLowerCase();
 
-      final res = await _supabase
-          .from('profiles')
-          .select()
-          .eq('id', userId)
-          .maybeSingle();
+      // Attempt fast fetch from remote database with timeout; do not crash on offline/delay
+      Map<String, dynamic>? res;
+      try {
+        res = await _supabase
+            .from('profiles')
+            .select()
+            .eq('id', userId)
+            .maybeSingle()
+            .timeout(const Duration(seconds: 4));
+      } catch (e) {
+        debugPrint('Supabase profiles query notice/offline: $e');
+      }
 
-      // If account was marked deleted or has empty profile in DB, do not restore old cached data!
+      // If account was marked deleted, respect deletion
       final isDeleted = res != null && res['status'] == 'deleted';
       if (isDeleted) {
         return UserModel(
@@ -559,14 +608,13 @@ class SupabaseAuthRepository implements AuthRepository {
       } catch (_) {}
 
       // Priority for resolved user full name:
-      // 1. Explicit local modification on this device (user explicitly edited profile here)
+      // 1. Explicit local modification on this device
       // 2. Auth user metadata (from Supabase Auth server)
       // 3. Database public.profiles record
       // 4. Default to empty if fresh/deleted
       final String effectiveName;
       if (localName != null && localName.trim().isNotEmpty) {
         effectiveName = localName.trim();
-        // Keep server metadata in sync if local edit is fresher
         if (metaName != effectiveName) {
           try {
             _supabase.auth
@@ -614,12 +662,13 @@ class SupabaseAuthRepository implements AuthRepository {
           : (metaAvatar ??
                 (res != null ? res['avatar_url']?.toString() : null));
 
+      UserModel resolvedModel;
+
       if (res != null) {
         final dbModel = UserModel.fromMap(res);
         final effectiveVip = (localIsVip == true) ? true : dbModel.isVip;
         final effectiveExpiry = dbModel.vipExpiry ?? localVipExpiry;
 
-        // Auto-heal DB profile if out of sync with user's verified name
         if (effectiveName.isNotEmpty && res['full_name'] != effectiveName) {
           _supabase
               .from('profiles')
@@ -629,8 +678,8 @@ class SupabaseAuthRepository implements AuthRepository {
               .catchError((_) {});
         }
 
-        return dbModel.copyWith(
-          name: effectiveName,
+        resolvedModel = dbModel.copyWith(
+          name: effectiveName.isNotEmpty ? effectiveName : dbModel.name,
           isVip: effectiveVip,
           vipStatus: effectiveVip ? 'active' : dbModel.vipStatus,
           vipExpiry: effectiveExpiry,
@@ -639,25 +688,64 @@ class SupabaseAuthRepository implements AuthRepository {
           cityName: effectiveCity ?? dbModel.cityName,
           photoUrl: dbModel.photoUrl ?? effectiveAvatar,
         );
+      } else {
+        // Check if there is already a cached model saved locally
+        final cached = await getCachedProfile(userId);
+        if (cached != null) {
+          resolvedModel = cached.copyWith(
+            name: effectiveName.isNotEmpty ? effectiveName : cached.name,
+            universityName: effectiveUni ?? cached.universityName,
+            departmentName: effectiveDept ?? cached.departmentName,
+            cityName: effectiveCity ?? cached.cityName,
+            photoUrl: effectiveAvatar ?? cached.photoUrl,
+            isVip: (localIsVip == true) ? true : cached.isVip,
+          );
+        } else {
+          // Fallback user model
+          resolvedModel = UserModel(
+            id: userId,
+            name: effectiveName.isNotEmpty
+                ? effectiveName
+                : (email.contains('@') ? email.split('@').first : 'User'),
+            email: email,
+            role: UserRole.student,
+            universityName: effectiveUni,
+            departmentName: effectiveDept,
+            cityName: effectiveCity,
+            photoUrl: effectiveAvatar,
+            isVip: localIsVip == true,
+            vipStatus: localIsVip == true ? 'active' : 'none',
+            vipExpiry: localVipExpiry,
+          );
+        }
       }
 
-      // Fallback user model
-      return UserModel(
-        id: userId,
-        name: effectiveName,
-        email: email,
-        role: UserRole.student,
-        universityName: effectiveUni,
-        departmentName: effectiveDept,
-        cityName: effectiveCity,
-        photoUrl: effectiveAvatar,
-        isVip: localIsVip == true,
-        vipStatus: localIsVip == true ? 'active' : 'none',
-        vipExpiry: localVipExpiry,
-      );
+      // Save resolved model to local cache for instant offline restore
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final jsonStr = jsonEncode(resolvedModel.toMap());
+        await prefs.setString('zanko_cached_user_model_$userId', jsonStr);
+        await prefs.setString('zanko_active_user_json', jsonStr);
+        await prefs.setString('zanko_active_user_id', userId);
+      } catch (_) {}
+
+      return resolvedModel;
     } catch (e) {
       debugPrint('Error fetching user profile in repository: ' + e.toString());
-      return null;
+      // Emergency offline fallback: never return null if userId is valid!
+      final cached = await getCachedProfile(userId);
+      if (cached != null) return cached;
+
+      return UserModel(
+        id: userId,
+        name: (fallbackEmail != null && fallbackEmail.contains('@'))
+            ? fallbackEmail.split('@').first
+            : 'User',
+        email: fallbackEmail ?? 'user@zanko.edu',
+        role: UserRole.student,
+        isVip: false,
+        vipStatus: 'none',
+      );
     }
   }
 

@@ -61,4 +61,7 @@ abstract class AuthRepository {
     String? fallbackEmail,
     User? providedUser,
   ]);
+
+  /// Fetch user profile quickly from local storage cache
+  Future<UserModel?> getCachedProfile([String? userId]);
 }

@@ -9,6 +9,7 @@ import { personalRoutes } from './personal.routes.js';
 import { userRoutes } from './user.routes.js';
 import { paymentRoutes } from './payment.routes.js';
 import { aiRoutes } from '../modules/ai/ai.routes.js';
+import { aiTeacherRoutes } from '../modules/ai/ai_teacher/ai_teacher.routes.js';
 import { storageRoutes } from './storage.routes.js';
 import { usageRoutes } from './usage.routes.js';
 import { subscriptionRoutes } from './subscription.routes.js';
@@ -40,8 +41,10 @@ apiRouter.use('/admin', adminRoutes);
 // 7. Secure Payments & VIP Subscriptions (/api/payments)
 apiRouter.use('/payments', paymentRoutes);
 
-// 8. AI Services with Server-Enforced Quotas & Rate Limits (/api/ai)
+// 8. AI Services with Server-Enforced Quotas & Rate Limits (/api/ai and /api/ai-teacher)
 apiRouter.use('/ai', aiRoutes);
+apiRouter.use('/ai-teacher', aiTeacherRoutes);
+apiRouter.use('/v1/ai-teacher', aiTeacherRoutes);
 
 // 9. Secure Supabase Storage (/api/storage)
 apiRouter.use('/storage', storageRoutes);

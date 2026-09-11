@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
@@ -47,6 +48,15 @@ class _LoginScreenState extends State<LoginScreen>
 
     // Automatically animate the form fields in since role is pre-selected
     _animController.forward();
+
+    // If user is already authenticated (e.g. restored session), auto-navigate
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final auth = Provider.of<AuthService>(context, listen: false);
+      if (auth.isAuthenticated) {
+        _navigateAfterAuth();
+      }
+    });
   }
 
   @override
@@ -142,7 +152,13 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
-  void _navigateAfterAuth() {
+  void _navigateAfterAuth() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('onboarding_done', true);
+    } catch (_) {}
+
+    if (!mounted) return;
     final authService = Provider.of<AuthService>(context, listen: false);
     final user = authService.currentUser;
     final Widget target = (user != null && user.isNeedsSetup)

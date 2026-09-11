@@ -58,6 +58,12 @@ const envSchema = z.object({
     .default('2')
     .transform((val) => parseInt(val, 10)),
 
+  // TTS Provider Configurations & API Keys (Server-Side Only)
+  DEFAULT_TTS_PROVIDER: z.enum(['google', 'elevenlabs', 'fallback']).default('google'),
+  GOOGLE_TTS_API_KEY: z.string().optional(),
+  ELEVENLABS_API_KEY: z.string().optional(),
+  ELEVENLABS_VOICE_ID: z.string().default('CwhRBWXzGAHq8TQ4Fs17'),
+
   // Payment Gateways — SECURITY [C-01]: All secrets required in production; no insecure fallbacks.
   FIB_CLIENT_ID: z.string().optional(),
   FIB_CLIENT_SECRET: z.string().optional(),
