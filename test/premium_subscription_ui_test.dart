@@ -43,9 +43,7 @@ Widget _createTestApp({
         create: (_) => LanguageProvider(),
       ),
     ],
-    child: MaterialApp(
-      home: child,
-    ),
+    child: MaterialApp(home: child),
   );
 }
 
@@ -107,11 +105,7 @@ void main() {
                       'limit': 10,
                       'remaining': 6,
                     },
-                    'pdf': {
-                      'current_usage': 1,
-                      'limit': 3,
-                      'remaining': 2,
-                    },
+                    'pdf': {'current_usage': 1, 'limit': 3, 'remaining': 2},
                   },
                 },
               },
@@ -122,7 +116,9 @@ void main() {
 
         await tester.pumpWidget(
           _createTestApp(
-            child: PremiumSubscriptionScreen(clientService: subscriptionService),
+            child: PremiumSubscriptionScreen(
+              clientService: subscriptionService,
+            ),
             authService: mockAuthService,
           ),
         );
@@ -131,8 +127,14 @@ void main() {
 
         // Must display Free plan, NOT premium
         expect(find.text('پلانی ئێستات بەخۆڕاییە (Free Plan)'), findsOneWidget);
-        expect(find.text('ئابوونە بەسەرچووە ⚠️'), findsOneWidget); // subscription_expired
-        expect(find.text('تۆ خاوەنی هەژماری تایبەتی پرێمیۆمی ZankoAI یت ✨'), findsNothing);
+        expect(
+          find.text('ئابوونە بەسەرچووە ⚠️'),
+          findsOneWidget,
+        ); // subscription_expired
+        expect(
+          find.text('تۆ خاوەنی هەژماری تایبەتی پرێمیۆمی ZankoAI یت ✨'),
+          findsNothing,
+        );
 
         // Verify remaining quota indicator
         expect(find.text('ماوە: 6 پرسیار'), findsOneWidget);
@@ -147,7 +149,9 @@ void main() {
         tester.view.devicePixelRatio = 1.0;
         addTearDown(tester.view.resetPhysicalSize);
 
-        final renewalDate = DateTime.now().toUtc().add(const Duration(days: 28));
+        final renewalDate = DateTime.now().toUtc().add(
+          const Duration(days: 28),
+        );
 
         // Mock backend returning ACTIVE PREMIUM status
         when(
@@ -183,7 +187,9 @@ void main() {
 
         await tester.pumpWidget(
           _createTestApp(
-            child: PremiumSubscriptionScreen(clientService: subscriptionService),
+            child: PremiumSubscriptionScreen(
+              clientService: subscriptionService,
+            ),
             authService: mockAuthService,
           ),
         );
@@ -216,11 +222,7 @@ void main() {
           (_) async => _buildResponse(
             statusCode: 200,
             data: {
-              'data': {
-                'id': 'sub_free',
-                'plan': 'free',
-                'status': 'expired',
-              },
+              'data': {'id': 'sub_free', 'plan': 'free', 'status': 'expired'},
             },
             requestOptions: _opts('/subscription'),
           ),
@@ -228,7 +230,9 @@ void main() {
 
         await tester.pumpWidget(
           _createTestApp(
-            child: PremiumSubscriptionScreen(clientService: subscriptionService),
+            child: PremiumSubscriptionScreen(
+              clientService: subscriptionService,
+            ),
             authService: mockAuthService,
           ),
         );
@@ -259,11 +263,7 @@ void main() {
           (_) async => _buildResponse(
             statusCode: 200,
             data: {
-              'data': {
-                'id': 'sub_free',
-                'plan': 'free',
-                'status': 'expired',
-              },
+              'data': {'id': 'sub_free', 'plan': 'free', 'status': 'expired'},
             },
             requestOptions: _opts('/subscription'),
           ),
@@ -271,7 +271,9 @@ void main() {
 
         await tester.pumpWidget(
           _createTestApp(
-            child: PremiumSubscriptionScreen(clientService: subscriptionService),
+            child: PremiumSubscriptionScreen(
+              clientService: subscriptionService,
+            ),
             authService: mockAuthService,
           ),
         );
@@ -308,11 +310,7 @@ void main() {
           (_) async => _buildResponse(
             statusCode: 200,
             data: {
-              'data': {
-                'id': 'sub_free',
-                'plan': 'free',
-                'status': 'expired',
-              },
+              'data': {'id': 'sub_free', 'plan': 'free', 'status': 'expired'},
             },
             requestOptions: _opts('/subscription'),
           ),
@@ -320,7 +318,9 @@ void main() {
 
         await tester.pumpWidget(
           _createTestApp(
-            child: PremiumSubscriptionScreen(clientService: subscriptionService),
+            child: PremiumSubscriptionScreen(
+              clientService: subscriptionService,
+            ),
             authService: mockAuthService,
           ),
         );

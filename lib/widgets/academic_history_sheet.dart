@@ -105,7 +105,10 @@ class _AcademicHistorySheetState extends State<AcademicHistorySheet> {
             ),
             child: const Text(
               'سڕینەوە',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -156,7 +159,10 @@ class _AcademicHistorySheetState extends State<AcademicHistorySheet> {
             ),
             child: const Text(
               'سڕینەوە',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -251,7 +257,9 @@ class _AcademicHistorySheetState extends State<AcademicHistorySheet> {
                           fontFamily: widget.currentFontFamily,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : ZankoColors.textPrimary,
+                          color: isDark
+                              ? Colors.white
+                              : ZankoColors.textPrimary,
                         ),
                       ),
                       Text(
@@ -259,7 +267,9 @@ class _AcademicHistorySheetState extends State<AcademicHistorySheet> {
                         style: TextStyle(
                           fontFamily: widget.currentFontFamily,
                           fontSize: 11.5,
-                          color: isDark ? Colors.grey[400] : ZankoColors.textSecondary,
+                          color: isDark
+                              ? Colors.grey[400]
+                              : ZankoColors.textSecondary,
                         ),
                       ),
                     ],
@@ -303,7 +313,9 @@ class _AcademicHistorySheetState extends State<AcademicHistorySheet> {
                           boxShadow: _isSeminarTab
                               ? [
                                   BoxShadow(
-                                    color: const Color(0xFF7D2AE8).withValues(alpha: 0.3),
+                                    color: const Color(
+                                      0xFF7D2AE8,
+                                    ).withValues(alpha: 0.3),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
@@ -327,7 +339,9 @@ class _AcademicHistorySheetState extends State<AcademicHistorySheet> {
                                 fontWeight: FontWeight.bold,
                                 color: _isSeminarTab
                                     ? Colors.white
-                                    : (isDark ? Colors.grey[400] : ZankoColors.textPrimary),
+                                    : (isDark
+                                          ? Colors.grey[400]
+                                          : ZankoColors.textPrimary),
                               ),
                             ),
                           ],
@@ -350,7 +364,9 @@ class _AcademicHistorySheetState extends State<AcademicHistorySheet> {
                           boxShadow: !_isSeminarTab
                               ? [
                                   BoxShadow(
-                                    color: const Color(0xFFF97316).withValues(alpha: 0.3),
+                                    color: const Color(
+                                      0xFFF97316,
+                                    ).withValues(alpha: 0.3),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
@@ -363,7 +379,9 @@ class _AcademicHistorySheetState extends State<AcademicHistorySheet> {
                             Icon(
                               CupertinoIcons.doc_text_fill,
                               size: 15,
-                              color: !_isSeminarTab ? Colors.white : Colors.grey,
+                              color: !_isSeminarTab
+                                  ? Colors.white
+                                  : Colors.grey,
                             ),
                             const SizedBox(width: 6),
                             Text(
@@ -374,7 +392,9 @@ class _AcademicHistorySheetState extends State<AcademicHistorySheet> {
                                 fontWeight: FontWeight.bold,
                                 color: !_isSeminarTab
                                     ? Colors.white
-                                    : (isDark ? Colors.grey[400] : ZankoColors.textPrimary),
+                                    : (isDark
+                                          ? Colors.grey[400]
+                                          : ZankoColors.textPrimary),
                               ),
                             ),
                           ],
@@ -393,39 +413,39 @@ class _AcademicHistorySheetState extends State<AcademicHistorySheet> {
             child: _isLoading
                 ? const Center(child: CupertinoActivityIndicator(radius: 14))
                 : _errorMessage != null
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                CupertinoIcons.exclamationmark_triangle_fill,
-                                color: Colors.amber,
-                                size: 36,
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                'هەڵە لە وەرگرتنی مێژوو: $_errorMessage',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontFamily: widget.currentFontFamily,
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              ElevatedButton(
-                                onPressed: _fetchHistory,
-                                child: const Text('دووبارە هەوڵبدەرەوە'),
-                              ),
-                            ],
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            CupertinoIcons.exclamationmark_triangle_fill,
+                            color: Colors.amber,
+                            size: 36,
                           ),
-                        ),
-                      )
-                    : _isSeminarTab
-                        ? _buildSeminarsList(isDark)
-                        : _buildReportsList(isDark),
+                          const SizedBox(height: 10),
+                          Text(
+                            'هەڵە لە وەرگرتنی مێژوو: $_errorMessage',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: widget.currentFontFamily,
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          ElevatedButton(
+                            onPressed: _fetchHistory,
+                            child: const Text('دووبارە هەوڵبدەرەوە'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : _isSeminarTab
+                ? _buildSeminarsList(isDark)
+                : _buildReportsList(isDark),
           ),
         ],
       ),
@@ -486,7 +506,9 @@ class _AcademicHistorySheetState extends State<AcademicHistorySheet> {
                             fontFamily: widget.currentFontFamily,
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : ZankoColors.textPrimary,
+                            color: isDark
+                                ? Colors.white
+                                : ZankoColors.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -515,7 +537,9 @@ class _AcademicHistorySheetState extends State<AcademicHistorySheet> {
                               _formatDate(item.createdAt),
                               style: TextStyle(
                                 fontSize: 11,
-                                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                color: isDark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
                               ),
                             ),
                           ],
@@ -541,7 +565,10 @@ class _AcademicHistorySheetState extends State<AcademicHistorySheet> {
                     Navigator.pop(context);
                     widget.onLoadSeminar(item);
                   },
-                  icon: const Icon(CupertinoIcons.arrow_up_right_circle_fill, size: 16),
+                  icon: const Icon(
+                    CupertinoIcons.arrow_up_right_circle_fill,
+                    size: 16,
+                  ),
                   label: Text(
                     'کردنەوە و دەستکاریکردن',
                     style: TextStyle(
@@ -621,7 +648,9 @@ class _AcademicHistorySheetState extends State<AcademicHistorySheet> {
                             fontFamily: widget.currentFontFamily,
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : ZankoColors.textPrimary,
+                            color: isDark
+                                ? Colors.white
+                                : ZankoColors.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -650,7 +679,9 @@ class _AcademicHistorySheetState extends State<AcademicHistorySheet> {
                               _formatDate(item.createdAt),
                               style: TextStyle(
                                 fontSize: 11,
-                                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                color: isDark
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
                               ),
                             ),
                           ],
@@ -676,7 +707,10 @@ class _AcademicHistorySheetState extends State<AcademicHistorySheet> {
                     Navigator.pop(context);
                     widget.onLoadReport(item);
                   },
-                  icon: const Icon(CupertinoIcons.arrow_up_right_circle_fill, size: 16),
+                  icon: const Icon(
+                    CupertinoIcons.arrow_up_right_circle_fill,
+                    size: 16,
+                  ),
                   label: Text(
                     'کردنەوە و دەستکاریکردن',
                     style: TextStyle(

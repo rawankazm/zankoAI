@@ -214,7 +214,7 @@ class UserSubscriptionModel {
   factory UserSubscriptionModel.fromJson(Map<String, dynamic> json) {
     final rawPlan = (json['plan_type'] ?? json['plan'] ?? 'FREE').toString();
     final rawStatus = (json['status'] ?? 'expired').toString();
-    
+
     final rawIsActive = json.containsKey('hasActiveSubscription')
         ? json['hasActiveSubscription'] == true
         : (json['is_active'] == true || rawStatus.toLowerCase() == 'active');
@@ -222,30 +222,50 @@ class UserSubscriptionModel {
     final rawIsPremium = json.containsKey('isPremium')
         ? json['isPremium'] == true
         : json.containsKey('is_premium')
-            ? json['is_premium'] == true
-            : (rawPlan.toUpperCase().contains('PREMIUM') && rawIsActive);
+        ? json['is_premium'] == true
+        : (rawPlan.toUpperCase().contains('PREMIUM') && rawIsActive);
 
     return UserSubscriptionModel(
       hasActiveSubscription: rawIsActive,
       isPremium: rawIsPremium,
       plan: SubscriptionPlanTypeExt.fromString(rawPlan),
       status: SubscriptionStatusTypeExt.fromString(rawStatus),
-      currentPeriodStart: json['currentPeriodStart'] != null || json['current_period_start'] != null
-          ? DateTime.tryParse((json['currentPeriodStart'] ?? json['current_period_start']).toString())
+      currentPeriodStart:
+          json['currentPeriodStart'] != null ||
+              json['current_period_start'] != null
+          ? DateTime.tryParse(
+              (json['currentPeriodStart'] ?? json['current_period_start'])
+                  .toString(),
+            )
           : null,
-      currentPeriodEnd: json['currentPeriodEnd'] != null || json['current_period_end'] != null
-          ? DateTime.tryParse((json['currentPeriodEnd'] ?? json['current_period_end']).toString())
+      currentPeriodEnd:
+          json['currentPeriodEnd'] != null || json['current_period_end'] != null
+          ? DateTime.tryParse(
+              (json['currentPeriodEnd'] ?? json['current_period_end'])
+                  .toString(),
+            )
           : null,
-      cancelAtPeriodEnd: json['cancelAtPeriodEnd'] == true || json['cancel_at_period_end'] == true,
-      inGracePeriod: json['inGracePeriod'] == true || json['in_grace_period'] == true,
-      gracePeriodEnd: json['gracePeriodEnd'] != null || json['grace_period_end'] != null
-          ? DateTime.tryParse((json['gracePeriodEnd'] ?? json['grace_period_end']).toString())
+      cancelAtPeriodEnd:
+          json['cancelAtPeriodEnd'] == true ||
+          json['cancel_at_period_end'] == true,
+      inGracePeriod:
+          json['inGracePeriod'] == true || json['in_grace_period'] == true,
+      gracePeriodEnd:
+          json['gracePeriodEnd'] != null || json['grace_period_end'] != null
+          ? DateTime.tryParse(
+              (json['gracePeriodEnd'] ?? json['grace_period_end']).toString(),
+            )
           : null,
       autoRenew: json['autoRenew'] == true || json['auto_renew'] == true,
       provider: (json['provider'])?.toString(),
-      daysRemaining: ((json['daysRemaining'] ?? json['days_remaining']) as num?)?.toInt() ?? 0,
+      daysRemaining:
+          ((json['daysRemaining'] ?? json['days_remaining']) as num?)
+              ?.toInt() ??
+          0,
       usage: json['usage'] is Map<String, dynamic>
-          ? UserUsageSummaryModel.fromJson(json['usage'] as Map<String, dynamic>)
+          ? UserUsageSummaryModel.fromJson(
+              json['usage'] as Map<String, dynamic>,
+            )
           : null,
     );
   }
@@ -290,16 +310,21 @@ class FeatureUsageModel {
   });
 
   bool get isUnlimited => limit <= 0;
-  double get progressRatio => isUnlimited || limit == 0
-      ? 0.0
-      : (currentUsage / limit).clamp(0.0, 1.0);
+  double get progressRatio =>
+      isUnlimited || limit == 0 ? 0.0 : (currentUsage / limit).clamp(0.0, 1.0);
   bool get isExhausted => !isUnlimited && remaining <= 0;
 
-  factory FeatureUsageModel.fromJson(Map<String, dynamic> json, [String? featureKey]) {
+  factory FeatureUsageModel.fromJson(
+    Map<String, dynamic> json, [
+    String? featureKey,
+  ]) {
     return FeatureUsageModel(
       feature: (json['feature'] ?? featureKey ?? '').toString(),
-      periodType: (json['period_type'] ?? json['periodType'] ?? 'daily').toString(),
-      currentUsage: ((json['current_usage'] ?? json['currentUsage']) as num?)?.toInt() ?? 0,
+      periodType: (json['period_type'] ?? json['periodType'] ?? 'daily')
+          .toString(),
+      currentUsage:
+          ((json['current_usage'] ?? json['currentUsage']) as num?)?.toInt() ??
+          0,
       limit: ((json['limit'] ?? json['limit_value']) as num?)?.toInt() ?? 0,
       remaining: ((json['remaining']) as num?)?.toInt() ?? 0,
       resetAt: json['reset_at'] != null || json['resetAt'] != null
@@ -355,7 +380,9 @@ class UserUsageSummaryModel {
       isVip: json['is_vip'] == true || json['isVip'] == true,
       features: parsedMap,
       queriedAt: json['queried_at'] != null || json['queriedAt'] != null
-          ? DateTime.tryParse((json['queried_at'] ?? json['queriedAt']).toString())
+          ? DateTime.tryParse(
+              (json['queried_at'] ?? json['queriedAt']).toString(),
+            )
           : null,
     );
   }
@@ -375,14 +402,24 @@ enum PaymentProviderOption {
   fastpay('fastpay', 'FastPay', 'فاست پەی (FastPay)', 0xFFE00613),
   fib('fib', 'First Iraqi Bank', 'بانکی یەکەمی عێراقی (FIB)', 0xFF104E35),
   zaincash('zaincash', 'ZainCash', 'زەین کاش (ZainCash)', 0xFFE1007A),
-  qiCard('qi_card', 'Qi Card / Mastercard', 'کی کارت / ماستەرکارت (Qi Card)', 0xFF005BAC);
+  qiCard(
+    'qi_card',
+    'Qi Card / Mastercard',
+    'کی کارت / ماستەرکارت (Qi Card)',
+    0xFF005BAC,
+  );
 
   final String id;
   final String englishName;
   final String kurdishName;
   final int primaryColorHex;
 
-  const PaymentProviderOption(this.id, this.englishName, this.kurdishName, this.primaryColorHex);
+  const PaymentProviderOption(
+    this.id,
+    this.englishName,
+    this.kurdishName,
+    this.primaryColorHex,
+  );
 
   static PaymentProviderOption fromString(String val) {
     switch (val.toLowerCase()) {

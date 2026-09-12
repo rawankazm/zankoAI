@@ -3,6 +3,7 @@
 *.log
 *.pyc
 *.swp
+scratch/
 .DS_Store
 .atom/
 .buildpath

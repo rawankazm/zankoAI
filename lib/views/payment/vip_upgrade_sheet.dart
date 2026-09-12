@@ -116,8 +116,9 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
         );
       } else if (mounted) {
         final prefs = await SharedPreferences.getInstance();
-        final reqStatus =
-            prefs.getString('zanko_last_vip_req_status_' + user.id);
+        final reqStatus = prefs.getString(
+          'zanko_last_vip_req_status_' + user.id,
+        );
         if (reqStatus == 'rejected' && mounted) {
           _vipPollTimer?.cancel();
           Navigator.pop(context);
@@ -209,13 +210,15 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
     }
 
     // 1. Fetch authoritative config from Firestore (which zanko-admin.vercel.app updates)
-    VipFirestoreService.getPaymentConfig().then((fsData) {
-      if (fsData != null && mounted) {
-        parseData(fsData);
-      }
-    }).catchError((e) {
-      debugPrint('Firestore payment config fetch notice: $e');
-    });
+    VipFirestoreService.getPaymentConfig()
+        .then((fsData) {
+          if (fsData != null && mounted) {
+            parseData(fsData);
+          }
+        })
+        .catchError((e) {
+          debugPrint('Firestore payment config fetch notice: $e');
+        });
 
     // 2. Also check Supabase config table as fallback
     Supabase.instance.client
@@ -443,556 +446,556 @@ class _VipUpgradeSheetState extends State<VipUpgradeSheet> {
             top: 16,
             bottom: MediaQuery.of(context).viewInsets.bottom + 24,
           ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Top Bar with Drag handle & Close button
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: Container(
-                      width: 36,
-                      height: 36,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Top Bar with Drag handle & Close button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.1)
+                              : Colors.black.withValues(alpha: 0.06),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          CupertinoIcons.chevron_back,
+                          size: 20,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: 40,
+                      height: 5,
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.1)
-                            : Colors.black.withValues(alpha: 0.06),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        CupertinoIcons.chevron_back,
-                        size: 20,
-                        color: isDark ? Colors.white : Colors.black87,
+                        color: isDark ? Colors.grey[700] : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                  ),
-                  Container(
-                    width: 40,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.grey[700] : Colors.grey[300],
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.1)
-                            : Colors.black.withValues(alpha: 0.06),
-                        shape: BoxShape.circle,
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.1)
+                              : Colors.black.withValues(alpha: 0.06),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          CupertinoIcons.xmark,
+                          size: 18,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
                       ),
-                      child: Icon(
-                        CupertinoIcons.xmark,
-                        size: 18,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // ── Header Banner ─────────────────────────────────────────────
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 16,
-                ),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: isDark
-                        ? [
-                            const Color(0xFF0F172A),
-                            ZankoColors.darkCardSecondary,
-                            const Color(0xFF064E3B).withValues(alpha: 0.5),
-                          ]
-                        : [Colors.white, const Color(0xFFF0FDF4)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(
-                    color: ZankoColors.primary.withValues(alpha: 0.45),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: ZankoColors.primary.withValues(alpha: 0.2),
-                      blurRadius: 18,
-                      offset: const Offset(0, 6),
                     ),
                   ],
                 ),
-                child: Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: ZankoColors.primary.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
+                const SizedBox(height: 16),
+
+                // ── Header Banner ─────────────────────────────────────────────
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 16,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: isDark
+                          ? [
+                              const Color(0xFF0F172A),
+                              ZankoColors.darkCardSecondary,
+                              const Color(0xFF064E3B).withValues(alpha: 0.5),
+                            ]
+                          : [Colors.white, const Color(0xFFF0FDF4)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(
+                      color: ZankoColors.primary.withValues(alpha: 0.45),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: ZankoColors.primary.withValues(alpha: 0.2),
+                        blurRadius: 18,
+                        offset: const Offset(0, 6),
                       ),
-                      child: Text(
-                        '👑',
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: ZankoColors.primary.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '👑',
+                          style: TextStyle(
+                            fontSize: 32,
+                            color: ZankoColors.primary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        isVip
+                            ? 'ئەندامی نایابی VIP (چالاکە 👑)'
+                            : 'بەشداریکردنی نایابی VIP',
                         style: TextStyle(
-                          fontSize: 32,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
                           color: ZankoColors.primary,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      isVip
-                          ? 'ئەندامی نایابی VIP (چالاکە 👑)'
-                          : 'بەشداریکردنی نایابی VIP',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        color: ZankoColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'ڕاپۆرت و سێمینار بە Word و PPTX + تاقیکردنەوە و چاتی بێسنوور',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.85),
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 14),
-
-              // ── Value Pitch Card ─────────────────────────────────────────
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFF9800).withValues(alpha: 0.09),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: const Color(0xFFFF9800).withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('💡', style: TextStyle(fontSize: 18)),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'لە مەکتەبەکان بۆ تەنها یەک سێمینار یان ڕاپۆرت ١٥,٠٠٠+ د.ع لێوەردەگرن! لە Zanko AI بە ٥,٠٠٠ د.ع تەواوی مانگەکە بە دەیان سێمینار، ڕاپۆرت و پێشبینی تاقیکردنەوە بەدەستبهێنە.',
+                      const SizedBox(height: 4),
+                      Text(
+                        'ڕاپۆرت و سێمینار بە Word و PPTX + تاقیکردنەوە و چاتی بێسنوور',
+                        textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 11.5,
-                          height: 1.45,
-                          fontWeight: FontWeight.w600,
-                          color: isDark
-                              ? Colors.amber[200]
-                              : const Color(0xFF9A5B00),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 18),
-
-              // ── Plan Selection ────────────────────────────────────────────
-              Text(
-                '١. پلانی گونجاو بۆ خۆت هەڵبژێرە:',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : ZankoColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 10),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildPlanCard(
-                      id: '1_month',
-                      title: '١ مانگ',
-                      subtitle: 'سەرەتایی',
-                      price: '٥,٠٠٠',
-                      currency: 'د.ع',
-                      badge: null,
-                      isSelected: _selectedPlan == '1_month',
-                      isDark: isDark,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildPlanCard(
-                      id: '3_months',
-                      title: '٣ مانگ',
-                      subtitle: 'وەرزی تاقیکردنەوە',
-                      price: '١٢,٠٠٠',
-                      currency: 'د.ع',
-                      badge: '🔥 پێشنیارکراو',
-                      badgeColor: const Color(0xFFE11D48),
-                      discount: '٢٠٪ داشکاندن',
-                      isSelected: _selectedPlan == '3_months',
-                      isDark: isDark,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildPlanCard(
-                      id: '9_months',
-                      title: '٩ مانگ',
-                      subtitle: 'تەواوی ساڵ',
-                      price: '٤٠,٠٠٠',
-                      currency: 'د.ع',
-                      badge: '👑 باشترین بەها',
-                      badgeColor: const Color(0xFFB8860B),
-                      discount: 'پاشەکەوتی ٥,٠٠٠ د.ع',
-                      isSelected: _selectedPlan == '9_months',
-                      isDark: isDark,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 18),
-
-              // ── Payment Accounts Reference ────────────────────────────────
-              Text(
-                '٢. پارەکە بۆ یەکێک لەم ژمارانە بنێرە:',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : ZankoColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              Container(
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E222B) : Colors.grey[50],
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isDark ? Colors.white12 : Colors.grey[200]!,
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    InkWell(
-                      onTap: () =>
-                          setState(() => _showAccounts = !_showAccounts),
-                      borderRadius: BorderRadius.circular(16),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.account_balance_wallet_outlined,
-                              size: 18,
-                              color: Color(0xFFB8860B),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                _zainCashNumber.isNotEmpty
-                                    ? 'ژمارەکانی پارەدان (FastPay, FIB, ZainCash)'
-                                    : 'ژمارەکانی پارەدان (FastPay, FIB)',
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: isDark
-                                      ? Colors.white
-                                      : ZankoColors.textPrimary,
-                                ),
-                              ),
-                            ),
-                            Icon(
-                              _showAccounts
-                                  ? CupertinoIcons.chevron_up
-                                  : CupertinoIcons.chevron_down,
-                              size: 16,
-                              color: Colors.grey,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    if (_showAccounts) ...[
-                      const Divider(height: 1),
-                      Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          children: [
-                            _buildPaymentRow(
-                              title: 'FastPay',
-                              number: _fastPayNumber,
-                              color: const Color(0xFFE11D48),
-                              icon: Icons.account_balance_wallet_rounded,
-                              isDark: isDark,
-                            ),
-                            const SizedBox(height: 8),
-                            _buildPaymentRow(
-                              title: 'FIB (IBAN)',
-                              number: _fibNumber,
-                              color: const Color(0xFF0F172A),
-                              icon: Icons.account_balance_rounded,
-                              isDark: isDark,
-                            ),
-                            if (_zainCashNumber.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              _buildPaymentRow(
-                                title: 'ZainCash',
-                                number: _zainCashNumber,
-                                color: const Color(0xFF7C3AED),
-                                icon: Icons.phone_android_rounded,
-                                isDark: isDark,
-                              ),
-                            ],
-                            const SizedBox(height: 8),
-                            Text(
-                              '📌 دوای ناردنی پارەکە، لە خوارەوە لە ڕێگەی واتسئاپ یان تەلەگرام وێنەی وەسڵەکە بنێرە.',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: isDark
-                                    ? Colors.grey[400]
-                                    : Colors.grey[600],
-                                height: 1.4,
-                              ),
-                            ),
-                          ],
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.85),
+                          height: 1.4,
                         ),
                       ),
                     ],
-                  ],
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 20),
+                const SizedBox(height: 14),
 
-              // ── Step 3: Send Receipt via WhatsApp / Telegram ──────────────
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: isDark
-                        ? [const Color(0xFF1B262C), const Color(0xFF161E2E)]
-                        : [const Color(0xFFF0FDF4), const Color(0xFFF8FAFC)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                // ── Value Pitch Card ─────────────────────────────────────────
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFF9800).withValues(alpha: 0.09),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: const Color(0xFFFF9800).withValues(alpha: 0.3),
+                    ),
                   ),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: const Color(0xFF10B981).withValues(alpha: 0.4),
-                    width: 1.5,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('💡', style: TextStyle(fontSize: 18)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'لە مەکتەبەکان بۆ تەنها یەک سێمینار یان ڕاپۆرت ١٥,٠٠٠+ د.ع لێوەردەگرن! لە Zanko AI بە ٥,٠٠٠ د.ع تەواوی مانگەکە بە دەیان سێمینار، ڕاپۆرت و پێشبینی تاقیکردنەوە بەدەستبهێنە.',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            height: 1.45,
+                            fontWeight: FontWeight.w600,
+                            color: isDark
+                                ? Colors.amber[200]
+                                : const Color(0xFF9A5B00),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF10B981).withValues(alpha: 0.08),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4),
+                ),
+
+                const SizedBox(height: 18),
+
+                // ── Plan Selection ────────────────────────────────────────────
+                Text(
+                  '١. پلانی گونجاو بۆ خۆت هەڵبژێرە:',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : ZankoColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildPlanCard(
+                        id: '1_month',
+                        title: '١ مانگ',
+                        subtitle: 'سەرەتایی',
+                        price: '٥,٠٠٠',
+                        currency: 'د.ع',
+                        badge: null,
+                        isSelected: _selectedPlan == '1_month',
+                        isDark: isDark,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _buildPlanCard(
+                        id: '3_months',
+                        title: '٣ مانگ',
+                        subtitle: 'وەرزی تاقیکردنەوە',
+                        price: '١٢,٠٠٠',
+                        currency: 'د.ع',
+                        badge: '🔥 پێشنیارکراو',
+                        badgeColor: const Color(0xFFE11D48),
+                        discount: '٢٠٪ داشکاندن',
+                        isSelected: _selectedPlan == '3_months',
+                        isDark: isDark,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _buildPlanCard(
+                        id: '9_months',
+                        title: '٩ مانگ',
+                        subtitle: 'تەواوی ساڵ',
+                        price: '٤٠,٠٠٠',
+                        currency: 'د.ع',
+                        badge: '👑 باشترین بەها',
+                        badgeColor: const Color(0xFFB8860B),
+                        discount: 'پاشەکەوتی ٥,٠٠٠ د.ع',
+                        isSelected: _selectedPlan == '9_months',
+                        isDark: isDark,
+                      ),
                     ),
                   ],
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(7),
-                          decoration: BoxDecoration(
-                            color: const Color(
-                              0xFF10B981,
-                            ).withValues(alpha: 0.18),
-                            borderRadius: BorderRadius.circular(10),
+
+                const SizedBox(height: 18),
+
+                // ── Payment Accounts Reference ────────────────────────────────
+                Text(
+                  '٢. پارەکە بۆ یەکێک لەم ژمارانە بنێرە:',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : ZankoColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E222B) : Colors.grey[50],
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isDark ? Colors.white12 : Colors.grey[200]!,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      InkWell(
+                        onTap: () =>
+                            setState(() => _showAccounts = !_showAccounts),
+                        borderRadius: BorderRadius.circular(16),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
                           ),
-                          child: const Icon(
-                            CupertinoIcons.paperplane_fill,
-                            color: Color(0xFF10B981),
-                            size: 18,
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.account_balance_wallet_outlined,
+                                size: 18,
+                                color: Color(0xFFB8860B),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  _zainCashNumber.isNotEmpty
+                                      ? 'ژمارەکانی پارەدان (FastPay, FIB, ZainCash)'
+                                      : 'ژمارەکانی پارەدان (FastPay, FIB)',
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: isDark
+                                        ? Colors.white
+                                        : ZankoColors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                              Icon(
+                                _showAccounts
+                                    ? CupertinoIcons.chevron_up
+                                    : CupertinoIcons.chevron_down,
+                                size: 16,
+                                color: Colors.grey,
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            '٣. ناردنی وێنەی وەسڵ بۆ بەڕێوەبەر:',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: isDark
-                                  ? Colors.white
-                                  : ZankoColors.textPrimary,
-                            ),
+                      ),
+                      if (_showAccounts) ...[
+                        const Divider(height: 1),
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            children: [
+                              _buildPaymentRow(
+                                title: 'FastPay',
+                                number: _fastPayNumber,
+                                color: const Color(0xFFE11D48),
+                                icon: Icons.account_balance_wallet_rounded,
+                                isDark: isDark,
+                              ),
+                              const SizedBox(height: 8),
+                              _buildPaymentRow(
+                                title: 'FIB (IBAN)',
+                                number: _fibNumber,
+                                color: const Color(0xFF0F172A),
+                                icon: Icons.account_balance_rounded,
+                                isDark: isDark,
+                              ),
+                              if (_zainCashNumber.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                _buildPaymentRow(
+                                  title: 'ZainCash',
+                                  number: _zainCashNumber,
+                                  color: const Color(0xFF7C3AED),
+                                  icon: Icons.phone_android_rounded,
+                                  isDark: isDark,
+                                ),
+                              ],
+                              const SizedBox(height: 8),
+                              Text(
+                                '📌 دوای ناردنی پارەکە، لە خوارەوە لە ڕێگەی واتسئاپ یان تەلەگرام وێنەی وەسڵەکە بنێرە.',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: isDark
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // ── Step 3: Send Receipt via WhatsApp / Telegram ──────────────
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: isDark
+                          ? [const Color(0xFF1B262C), const Color(0xFF161E2E)]
+                          : [const Color(0xFFF0FDF4), const Color(0xFFF8FAFC)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.black.withValues(alpha: 0.25)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isDark ? Colors.white10 : Colors.grey[200]!,
-                        ),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.4),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.08),
+                        blurRadius: 14,
+                        offset: const Offset(0, 4),
                       ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
                         children: [
-                          const Text('🧾', style: TextStyle(fontSize: 18)),
-                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.all(7),
+                            decoration: BoxDecoration(
+                              color: const Color(
+                                0xFF10B981,
+                              ).withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              CupertinoIcons.paperplane_fill,
+                              color: Color(0xFF10B981),
+                              size: 18,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              'دوای ئەوەی پارەکەت نارد، لە ڕێگەی واتسئاپ یان تەلەگرام وێنەی وەسڵەکەت بنێرە تاوەکو ئەدمین ڕاستەوخۆ VIPەکەت بۆ چالاک بکات ⚡',
+                              '٣. ناردنی وێنەی وەسڵ بۆ بەڕێوەبەر:',
                               style: TextStyle(
-                                fontSize: 11.5,
-                                height: 1.45,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
                                 color: isDark
-                                    ? Colors.grey[300]
-                                    : Colors.grey[700],
+                                    ? Colors.white
+                                    : ZankoColors.textPrimary,
                               ),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 14),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.black.withValues(alpha: 0.25)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isDark ? Colors.white10 : Colors.grey[200]!,
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('🧾', style: TextStyle(fontSize: 18)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'دوای ئەوەی پارەکەت نارد، لە ڕێگەی واتسئاپ یان تەلەگرام وێنەی وەسڵەکەت بنێرە تاوەکو ئەدمین ڕاستەوخۆ VIPەکەت بۆ چالاک بکات ⚡',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  height: 1.45,
+                                  color: isDark
+                                      ? Colors.grey[300]
+                                      : Colors.grey[700],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
 
-                    // WhatsApp Button
-                    ElevatedButton.icon(
-                      onPressed: _launchWhatsApp,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF25D366),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                      // WhatsApp Button
+                      ElevatedButton.icon(
+                        onPressed: _launchWhatsApp,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF25D366),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 2,
                         ),
-                        elevation: 2,
-                      ),
-                      icon: const Icon(
-                        CupertinoIcons.chat_bubble_fill,
-                        size: 20,
-                      ),
-                      label: const Text(
-                        'ناردنی وێنەی وەسڵ لە واتسئاپ (WhatsApp) 💬',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
+                        icon: const Icon(
+                          CupertinoIcons.chat_bubble_fill,
+                          size: 20,
+                        ),
+                        label: const Text(
+                          'ناردنی وێنەی وەسڵ لە واتسئاپ (WhatsApp) 💬',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
+                      const SizedBox(height: 10),
 
-                    // Telegram Button
-                    ElevatedButton.icon(
-                      onPressed: _launchTelegram,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF229ED9),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                      // Telegram Button
+                      ElevatedButton.icon(
+                        onPressed: _launchTelegram,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF229ED9),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 2,
                         ),
-                        elevation: 2,
-                      ),
-                      icon: const Icon(
-                        CupertinoIcons.paperplane_fill,
-                        size: 20,
-                      ),
-                      label: const Text(
-                        'ناردنی وێنەی وەسڵ لە تەلەگرام (Telegram) ✈️',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
+                        icon: const Icon(
+                          CupertinoIcons.paperplane_fill,
+                          size: 20,
                         ),
+                        label: const Text(
+                          'ناردنی وێنەی وەسڵ لە تەلەگرام (Telegram) ✈️',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // ── VIP Perks Checklist ───────────────────────────────────────
+                Text(
+                  'سوودە تایبەتەکانی VIP:',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : ZankoColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _buildFeatureRow(
+                  CupertinoIcons.doc_richtext,
+                  'ڕاپۆرت و سێمینار بە Word و PowerPoint',
+                  'داگرتنی ڕاستەوخۆی فایلی .docx و .pptx بە فۆرماتی ئەکادیمی و سەرچاوە',
+                ),
+                _buildFeatureRow(
+                  CupertinoIcons.sparkles,
+                  'پێشبینیکەری پرسیاری تاقیکردنەوە (AI Exam)',
+                  'پێشبینی ئەو پرسیارانەی ئەگەری ٩٠٪ لە فاینەڵ دێنەوە لەگەڵ تاقیکردنەوەی تاقیکاری',
+                ),
+                _buildFeatureRow(
+                  CupertinoIcons.chat_bubble_2_fill,
+                  'گفتوگۆ و پرسیاری بێسنوور لەگەڵ مامۆستای AI',
+                  'لابردنی هەموو جۆرە سنووردارکردنێکی ڕۆژانە بۆ گفتوگۆ',
+                ),
+                _buildFeatureRow(
+                  CupertinoIcons.camera_viewfinder,
+                  'شیکارکردنی وێنەی مەلزەمە و پرسیاری ئاڵۆز',
+                  'شیکارکردنی هاوکێشە، ماتماتیک، پزیشکی و ئەندازیاری بە هەنگاو',
+                ),
+                _buildFeatureRow(
+                  CupertinoIcons.bolt_fill,
+                  'خێرایی وەڵامدانەوە و ژیریی مۆدێلی بەرز',
+                  'وەڵامدانەوەی پێشینەدار (Priority) بە بەرزترین وردبینی',
+                ),
+
+                const SizedBox(height: 14),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      CupertinoIcons.shield_lefthalf_fill,
+                      size: 14,
+                      color: Color(0xFFB8860B),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'پارێزراو و پشتڕاستکراوە لەلایەن تیمی birdev',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
                       ),
                     ),
                   ],
                 ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // ── VIP Perks Checklist ───────────────────────────────────────
-              Text(
-                'سوودە تایبەتەکانی VIP:',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : ZankoColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 10),
-              _buildFeatureRow(
-                CupertinoIcons.doc_richtext,
-                'ڕاپۆرت و سێمینار بە Word و PowerPoint',
-                'داگرتنی ڕاستەوخۆی فایلی .docx و .pptx بە فۆرماتی ئەکادیمی و سەرچاوە',
-              ),
-              _buildFeatureRow(
-                CupertinoIcons.sparkles,
-                'پێشبینیکەری پرسیاری تاقیکردنەوە (AI Exam)',
-                'پێشبینی ئەو پرسیارانەی ئەگەری ٩٠٪ لە فاینەڵ دێنەوە لەگەڵ تاقیکردنەوەی تاقیکاری',
-              ),
-              _buildFeatureRow(
-                CupertinoIcons.chat_bubble_2_fill,
-                'گفتوگۆ و پرسیاری بێسنوور لەگەڵ مامۆستای AI',
-                'لابردنی هەموو جۆرە سنووردارکردنێکی ڕۆژانە بۆ گفتوگۆ',
-              ),
-              _buildFeatureRow(
-                CupertinoIcons.camera_viewfinder,
-                'شیکارکردنی وێنەی مەلزەمە و پرسیاری ئاڵۆز',
-                'شیکارکردنی هاوکێشە، ماتماتیک، پزیشکی و ئەندازیاری بە هەنگاو',
-              ),
-              _buildFeatureRow(
-                CupertinoIcons.bolt_fill,
-                'خێرایی وەڵامدانەوە و ژیریی مۆدێلی بەرز',
-                'وەڵامدانەوەی پێشینەدار (Priority) بە بەرزترین وردبینی',
-              ),
-
-              const SizedBox(height: 14),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    CupertinoIcons.shield_lefthalf_fill,
-                    size: 14,
-                    color: Color(0xFFB8860B),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'پارێزراو و پشتڕاستکراوە لەلایەن تیمی birdev',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: isDark ? Colors.grey[400] : Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
   }
 
   // ── Plan Card Widget ───────────────────────────────────────────────────────

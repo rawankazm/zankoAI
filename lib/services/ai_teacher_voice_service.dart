@@ -157,7 +157,8 @@ class AiTeacherVoiceService {
       final prefs = await SharedPreferences.getInstance();
       _playbackSpeed = prefs.getDouble('ai_teacher_voice_speed') ?? 1.0;
       _autoReadEnabled = prefs.getBool('ai_teacher_auto_read') ?? false;
-      _elevenLabsApiKey = prefs.getString('eleven_labs_api_key') ?? _defaultElevenLabsKey;
+      _elevenLabsApiKey =
+          prefs.getString('eleven_labs_api_key') ?? _defaultElevenLabsKey;
       _updateInfo();
     } catch (_) {}
   }
@@ -236,12 +237,18 @@ class AiTeacherVoiceService {
     res = res.replaceAll(RegExp(r'\bOS\b', caseSensitive: false), 'ئۆ ئێس');
     res = res.replaceAll(RegExp(r'\bUI\b', caseSensitive: false), 'یوو ئای');
     res = res.replaceAll(RegExp(r'\bUX\b', caseSensitive: false), 'یوو ئێکس');
-    res = res.replaceAll(RegExp(r'\bAPI\b', caseSensitive: false), 'ئەی پی ئای');
+    res = res.replaceAll(
+      RegExp(r'\bAPI\b', caseSensitive: false),
+      'ئەی پی ئای',
+    );
     res = res.replaceAll(
       RegExp(r'\bHTML\b', caseSensitive: false),
       'ئێچ تی ئێم ئێڵ',
     );
-    res = res.replaceAll(RegExp(r'\bCSS\b', caseSensitive: false), 'سی ئێس ئێس');
+    res = res.replaceAll(
+      RegExp(r'\bCSS\b', caseSensitive: false),
+      'سی ئێس ئێس',
+    );
     res = res.replaceAll(
       RegExp(r'\bSQL\b', caseSensitive: false),
       'ئێس کیوو ئێڵ',
@@ -650,9 +657,7 @@ class AiTeacherVoiceService {
         return onlineBytes;
       }
     } catch (e) {
-      debugPrint(
-        '[AiTeacherVoiceService] Online audio stream fetch error: $e',
-      );
+      debugPrint('[AiTeacherVoiceService] Online audio stream fetch error: $e');
     }
 
     return null;

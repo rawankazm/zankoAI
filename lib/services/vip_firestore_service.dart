@@ -86,10 +86,36 @@ class VipFirestoreService {
   }
 
   /// Saves payment configuration locally in device storage
-  static Future<bool> savePaymentConfig(Map<String, dynamic> config) async {
+  static Future<bool> savePaymentConfig({
+    String? whatsapp,
+    String? telegram,
+    String? fib,
+    String? fastpay,
+    String? zaincash,
+    int? price1m,
+    int? price3m,
+    int? price9m,
+    Map<String, dynamic>? config,
+  }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('zanko_cached_payment_config', jsonEncode(config));
+      final Map<String, dynamic> mapToSave = {};
+      if (config != null) {
+        mapToSave.addAll(config);
+      }
+      if (whatsapp != null) mapToSave['admin_whatsapp'] = whatsapp;
+      if (telegram != null) mapToSave['admin_telegram'] = telegram;
+      if (fib != null) mapToSave['fib_number'] = fib;
+      if (fastpay != null) mapToSave['fastpay_number'] = fastpay;
+      if (zaincash != null) mapToSave['zaincash_number'] = zaincash;
+      if (price1m != null) mapToSave['price_1m'] = price1m;
+      if (price3m != null) mapToSave['price_3m'] = price3m;
+      if (price9m != null) mapToSave['price_9m'] = price9m;
+
+      await prefs.setString(
+        'zanko_cached_payment_config',
+        jsonEncode(mapToSave),
+      );
       return true;
     } catch (_) {
       return false;
@@ -121,7 +147,8 @@ class VipFirestoreService {
       await client.from('notifications').insert({
         'user_id': userId,
         'title': 'داواکاری نوێکردنەوەی VIP ($effectivePlan)',
-        'body': 'شێواز: $effectiveMethod | ناو: ${userName ?? 'خوێندکار'} | ئیمەیڵ: ${userEmail ?? ''} | ژمارە: ${senderPhone ?? '-'} | کۆد: $effectiveCode | بڕ: $effectivePrice دینار',
+        'body':
+            'شێواز: $effectiveMethod | ناو: ${userName ?? 'خوێندکار'} | ئیمەیڵ: ${userEmail ?? ''} | ژمارە: ${senderPhone ?? '-'} | کۆد: $effectiveCode | بڕ: $effectivePrice دینار',
         'type': 'system_notification',
         'is_read': true,
         'data': {
@@ -141,7 +168,8 @@ class VipFirestoreService {
       });
 
       try {
-        final uniqueOrderId = 'VIP-${DateTime.now().millisecondsSinceEpoch}-${userId.length > 4 ? userId.substring(0, 4) : userId}';
+        final uniqueOrderId =
+            'VIP-${DateTime.now().millisecondsSinceEpoch}-${userId.length > 4 ? userId.substring(0, 4) : userId}';
         await client.from('payments').insert({
           'user_id': userId,
           'order_id': uniqueOrderId,
@@ -184,7 +212,8 @@ class VipFirestoreService {
           .maybeSingle();
 
       if (res != null) {
-        final isVip = res['is_vip'] == true ||
+        final isVip =
+            res['is_vip'] == true ||
             (res['plan']?.toString().toLowerCase() == 'premium');
         return isVip;
       }

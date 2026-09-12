@@ -175,7 +175,9 @@ class NotificationService {
 
         FirebaseMessaging.onMessage.listen((RemoteMessage message) {
           final title = fixNotificationEncoding(
-            message.notification?.title ?? message.data['title'] ?? 'ZankoAI 🔔',
+            message.notification?.title ??
+                message.data['title'] ??
+                'ZankoAI 🔔',
           );
           final body = fixNotificationEncoding(
             message.notification?.body ?? message.data['body'] ?? '',

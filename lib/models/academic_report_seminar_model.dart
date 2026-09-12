@@ -35,11 +35,11 @@ class AcademicSectionModel {
   }
 
   Map<String, dynamic> toJson() => {
-        if (id != null) 'id': id,
-        'section_order': sectionOrder,
-        'title': title,
-        'content': content,
-      };
+    if (id != null) 'id': id,
+    'section_order': sectionOrder,
+    'title': title,
+    'content': content,
+  };
 }
 
 class AcademicReportRecord {
@@ -72,7 +72,8 @@ class AcademicReportRecord {
   });
 
   factory AcademicReportRecord.fromJson(Map<String, dynamic> json) {
-    final rawSections = json['report_sections'] as List<dynamic>? ??
+    final rawSections =
+        json['report_sections'] as List<dynamic>? ??
         json['sections'] as List<dynamic>? ??
         [];
     final sections = rawSections
@@ -101,19 +102,19 @@ class AcademicReportRecord {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'user_id': userId,
-        'title': title,
-        'subject': subject,
-        'language': language,
-        'topic': topic,
-        'description': description,
-        'content': content,
-        'status': status,
-        'sections': sections.map((s) => s.toJson()).toList(),
-        'created_at': createdAt.toIso8601String(),
-        'updated_at': updatedAt.toIso8601String(),
-      };
+    'id': id,
+    'user_id': userId,
+    'title': title,
+    'subject': subject,
+    'language': language,
+    'topic': topic,
+    'description': description,
+    'content': content,
+    'status': status,
+    'sections': sections.map((s) => s.toJson()).toList(),
+    'created_at': createdAt.toIso8601String(),
+    'updated_at': updatedAt.toIso8601String(),
+  };
 }
 
 class AcademicSeminarRecord {
@@ -146,7 +147,8 @@ class AcademicSeminarRecord {
   });
 
   factory AcademicSeminarRecord.fromJson(Map<String, dynamic> json) {
-    final rawSections = json['seminar_sections'] as List<dynamic>? ??
+    final rawSections =
+        json['seminar_sections'] as List<dynamic>? ??
         json['sections'] as List<dynamic>? ??
         [];
     final sections = rawSections
@@ -175,17 +177,17 @@ class AcademicSeminarRecord {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'user_id': userId,
-        'title': title,
-        'subject': subject,
-        'language': language,
-        'topic': topic,
-        'description': description,
-        'content': content,
-        'status': status,
-        'sections': sections.map((s) => s.toJson()).toList(),
-        'created_at': createdAt.toIso8601String(),
-        'updated_at': updatedAt.toIso8601String(),
-      };
+    'id': id,
+    'user_id': userId,
+    'title': title,
+    'subject': subject,
+    'language': language,
+    'topic': topic,
+    'description': description,
+    'content': content,
+    'status': status,
+    'sections': sections.map((s) => s.toJson()).toList(),
+    'created_at': createdAt.toIso8601String(),
+    'updated_at': updatedAt.toIso8601String(),
+  };
 }

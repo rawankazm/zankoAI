@@ -89,9 +89,11 @@ Key benefits:
       expect(cleaned.contains('Code reusability'), isTrue);
     });
 
-    test('4. Safe Chunking of Long Responses (Never Cut Words or Sentences)', () {
-      // Deliberately long response (> 1000 characters)
-      final longResponse = '''
+    test(
+      '4. Safe Chunking of Long Responses (Never Cut Words or Sentences)',
+      () {
+        // Deliberately long response (> 1000 characters)
+        final longResponse = '''
 فێربوونی پرۆگرامسازی پێویستی بە چەند هەنگاوێکی سەرەکی و بنیادنەر هەیە لە زانکۆ.
 سەرەتا دەبێت لە بنەماکانی لۆژیک و ئەلگۆریتم تێبگەیت چونکە ئەلگۆریتم بناغەی هەموو کۆدێکە.
 پاشان زمانێکی سەرەکی وەک پایسۆن یان سی پڵەس پڵەس هەڵدەبژێریت بۆ جێبەجێکردنی ئەو هاوکێشانە.
@@ -100,38 +102,76 @@ Key benefits:
 لە کۆتاییدا هەمیشە هەوڵبدە پرسیار لە مامۆستا بکەیت و بەردەوام بە لە شیکارکردنی پرسیاری نوێ.
 ''';
 
-      final chunks = voiceService.splitIntoSafeChunks(longResponse, maxChars: 250);
+        final chunks = voiceService.splitIntoSafeChunks(
+          longResponse,
+          maxChars: 250,
+        );
 
-      expect(chunks.isNotEmpty, isTrue);
-      expect(chunks.length, greaterThan(1));
+        expect(chunks.isNotEmpty, isTrue);
+        expect(chunks.length, greaterThan(1));
 
-      // Verify no chunk exceeds the safe boundary unreasonably
-      for (final chunk in chunks) {
-        expect(chunk.length, lessThan(350));
-        // Verify chunks don't start or end with broken words
-        expect(chunk.trim().isNotEmpty, isTrue);
-      }
+        // Verify no chunk exceeds the safe boundary unreasonably
+        for (final chunk in chunks) {
+          expect(chunk.length, lessThan(350));
+          // Verify chunks don't start or end with broken words
+          expect(chunk.trim().isNotEmpty, isTrue);
+        }
 
-      // Verify total content is fully preserved across all chunks
-      final joined = chunks.join(' ');
-      expect(joined.contains('فێربوونی پرۆگرامسازی'), isTrue);
-      expect(joined.contains('بناغەی هەموو کۆدێکە'), isTrue);
-      expect(joined.contains('لە کۆتاییدا هەمیشە هەوڵبدە'), isTrue);
-    });
+        // Verify total content is fully preserved across all chunks
+        final joined = chunks.join(' ');
+        expect(joined.contains('فێربوونی پرۆگرامسازی'), isTrue);
+        expect(joined.contains('بناغەی هەموو کۆدێکە'), isTrue);
+        expect(joined.contains('لە کۆتاییدا هەمیشە هەوڵبدە'), isTrue);
+      },
+    );
 
     test('5. Automatic Language Detection', () {
-      expect(voiceService.detectLanguage('سڵاو مامۆستا، کاتی وانەکە کەیە؟'), equals('ku'));
-      expect(voiceService.detectLanguage('مرحباً يا أستاذ، متى موعد المحاضرة القادمة؟'), equals('ar'));
-      expect(voiceService.detectLanguage('Hello Professor, could you explain Dijkstra algorithm?'), equals('en'));
+      expect(
+        voiceService.detectLanguage('سڵاو مامۆستا، کاتی وانەکە کەیە؟'),
+        equals('ku'),
+      );
+      expect(
+        voiceService.detectLanguage(
+          'مرحباً يا أستاذ، متى موعد المحاضرة القادمة؟',
+        ),
+        equals('ar'),
+      );
+      expect(
+        voiceService.detectLanguage(
+          'Hello Professor, could you explain Dijkstra algorithm?',
+        ),
+        equals('en'),
+      );
 
       // Explicit instruction overrides
-      expect(voiceService.detectLanguage('دەتوانی بە ئینگلیزی باسی بکەیت؟', preferredLang: 'en'), equals('en'));
-      expect(voiceService.detectLanguage('Explain this in Kurdish please', preferredLang: 'ku'), equals('ku'));
-      expect(voiceService.detectLanguage('Explain this in Arabic please', preferredLang: 'ar'), equals('ar'));
+      expect(
+        voiceService.detectLanguage(
+          'دەتوانی بە ئینگلیزی باسی بکەیت؟',
+          preferredLang: 'en',
+        ),
+        equals('en'),
+      );
+      expect(
+        voiceService.detectLanguage(
+          'Explain this in Kurdish please',
+          preferredLang: 'ku',
+        ),
+        equals('ku'),
+      );
+      expect(
+        voiceService.detectLanguage(
+          'Explain this in Arabic please',
+          preferredLang: 'ar',
+        ),
+        equals('ar'),
+      );
     });
 
     test('6. Playback State Transitions & Speed Clamping', () async {
-      expect(voiceService.playbackNotifier.value.state, equals(AiTeacherVoiceState.idle));
+      expect(
+        voiceService.playbackNotifier.value.state,
+        equals(AiTeacherVoiceState.idle),
+      );
 
       await voiceService.setSpeed(1.5);
       expect(voiceService.playbackSpeed, equals(1.5));

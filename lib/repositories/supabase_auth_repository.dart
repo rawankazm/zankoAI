@@ -216,14 +216,15 @@ class SupabaseAuthRepository implements AuthRepository {
             user.userMetadata?['name']?.toString();
         final avatarUrl =
             googleUser.photoUrl ?? user.userMetadata?['avatar_url'];
-        final displayName = (googleUser.displayName != null &&
+        final displayName =
+            (googleUser.displayName != null &&
                 googleUser.displayName!.trim().isNotEmpty)
             ? googleUser.displayName!.trim()
             : ((existingMetaName != null && existingMetaName.trim().isNotEmpty)
-                ? existingMetaName.trim()
-                : (user.email != null && user.email!.contains('@')
-                    ? user.email!.split('@').first
-                    : 'خوێندکار'));
+                  ? existingMetaName.trim()
+                  : (user.email != null && user.email!.contains('@')
+                        ? user.email!.split('@').first
+                        : 'خوێندکار'));
 
         try {
           final existing = await _supabase
@@ -353,14 +354,14 @@ class SupabaseAuthRepository implements AuthRepository {
             user.userMetadata?['full_name']?.toString() ??
             user.userMetadata?['name']?.toString();
         final avatarUrl = user.userMetadata?['avatar_url'];
-        final displayName = (effectiveName.isNotEmpty &&
-                effectiveName != 'Apple User')
+        final displayName =
+            (effectiveName.isNotEmpty && effectiveName != 'Apple User')
             ? effectiveName
             : ((existingMetaName != null && existingMetaName.trim().isNotEmpty)
-                ? existingMetaName.trim()
-                : (user.email != null && user.email!.contains('@')
-                    ? user.email!.split('@').first
-                    : 'خوێندکار'));
+                  ? existingMetaName.trim()
+                  : (user.email != null && user.email!.contains('@')
+                        ? user.email!.split('@').first
+                        : 'خوێندکار'));
 
         try {
           final existing = await _supabase
@@ -643,8 +644,8 @@ class SupabaseAuthRepository implements AuthRepository {
       final key = userId != null
           ? 'zanko_cached_user_model_$userId'
           : 'zanko_active_user_json';
-      final jsonStr = prefs.getString(key) ??
-          prefs.getString('zanko_active_user_json');
+      final jsonStr =
+          prefs.getString(key) ?? prefs.getString('zanko_active_user_json');
       if (jsonStr != null && jsonStr.isNotEmpty) {
         return UserModel.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
       }
@@ -786,20 +787,20 @@ class SupabaseAuthRepository implements AuthRepository {
           : ((metaUni != null && metaUni.trim().isNotEmpty)
                 ? metaUni.trim()
                 : (res != null &&
-                        res['university_name'] != null &&
-                        res['university_name'].toString().trim().isNotEmpty
-                    ? res['university_name']?.toString()
-                    : 'زانکۆی سەلاحەدین'));
+                          res['university_name'] != null &&
+                          res['university_name'].toString().trim().isNotEmpty
+                      ? res['university_name']?.toString()
+                      : 'زانکۆی سەلاحەدین'));
 
       final effectiveDept = (localDept != null && localDept.trim().isNotEmpty)
           ? localDept.trim()
           : ((metaDept != null && metaDept.trim().isNotEmpty)
                 ? metaDept.trim()
                 : (res != null &&
-                        res['department_name'] != null &&
-                        res['department_name'].toString().trim().isNotEmpty
-                    ? res['department_name']?.toString()
-                    : 'بەشی گشتی'));
+                          res['department_name'] != null &&
+                          res['department_name'].toString().trim().isNotEmpty
+                      ? res['department_name']?.toString()
+                      : 'بەشی گشتی'));
 
       final effectiveCity = (localCity != null && localCity.trim().isNotEmpty)
           ? localCity.trim()
@@ -872,21 +873,26 @@ class SupabaseAuthRepository implements AuthRepository {
 
         // Guarantee profile presence in remote Supabase profiles table for admin visibility
         if (cleanEmail.isNotEmpty && !cleanEmail.contains('guest')) {
-          _supabase.from('profiles').upsert({
-            'id': userId,
-            'full_name': effectiveName.isNotEmpty ? effectiveName : 'خوێندکار',
-            'email': cleanEmail,
-            'avatar_url': effectiveAvatar,
-            'role': 'student',
-            'status': 'active',
-            'university_name': effectiveUni,
-            'department_name': effectiveDept,
-            'plan': 'free',
-            'is_vip': false,
-            'vip_status': 'none',
-          }, onConflict: 'id').catchError((e) {
-            debugPrint('Auto profile background sync notice: $e');
-          });
+          _supabase
+              .from('profiles')
+              .upsert({
+                'id': userId,
+                'full_name': effectiveName.isNotEmpty
+                    ? effectiveName
+                    : 'خوێندکار',
+                'email': cleanEmail,
+                'avatar_url': effectiveAvatar,
+                'role': 'student',
+                'status': 'active',
+                'university_name': effectiveUni,
+                'department_name': effectiveDept,
+                'plan': 'free',
+                'is_vip': false,
+                'vip_status': 'none',
+              }, onConflict: 'id')
+              .catchError((e) {
+                debugPrint('Auto profile background sync notice: $e');
+              });
         }
       }
 

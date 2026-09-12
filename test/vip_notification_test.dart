@@ -24,48 +24,63 @@ void main() {
       expect(cleanBody, contains('پەسەندکرا'));
     });
 
-    test('2. Rejection notification text with custom reason is cleanly encoded', () {
-      const reason = 'ژمارەی حەواڵە نادروستە';
-      final notifTitle = fixNotificationEncoding('⚠️ داواکاری VIP پەسەند نەکرا');
-      final notifBody = fixNotificationEncoding(
-        'داواکاری بەشداریکردنی VIPەکەت پەسەند نەکرا. هۆکار: $reason',
-      );
+    test(
+      '2. Rejection notification text with custom reason is cleanly encoded',
+      () {
+        const reason = 'ژمارەی حەواڵە نادروستە';
+        final notifTitle = fixNotificationEncoding(
+          '⚠️ داواکاری VIP پەسەند نەکرا',
+        );
+        final notifBody = fixNotificationEncoding(
+          'داواکاری بەشداریکردنی VIPەکەت پەسەند نەکرا. هۆکار: $reason',
+        );
 
-      expect(notifTitle, contains('داواکاری VIP پەسەند نەکرا'));
-      expect(notifBody, contains('هۆکار: ژمارەی حەواڵە نادروستە'));
-    });
+        expect(notifTitle, contains('داواکاری VIP پەسەند نەکرا'));
+        expect(notifBody, contains('هۆکار: ژمارەی حەواڵە نادروستە'));
+      },
+    );
 
     test('3. Rejection notification fallback text when reason is empty', () {
       const notifTitle = '⚠️ داواکاری VIP پەسەند نەکرا';
       const fallbackReason =
           ' تکایە لە وەسڵ یان ژمارەی حەواڵەکەت دڵنیابە، یان پەیوەندی بە بەڕێوەبەرەوە بکە.';
-      final notifBody = 'داواکاری بەشداریکردنی VIPەکەت پەسەند نەکرا.$fallbackReason';
+      final notifBody =
+          'داواکاری بەشداریکردنی VIPەکەت پەسەند نەکرا.$fallbackReason';
 
       expect(notifTitle, contains('داواکاری VIP پەسەند نەکرا'));
       expect(notifBody, contains('تکایە لە وەسڵ'));
     });
 
-    test('4. SharedPreferences deduplication prevents repeated notification spam', () async {
-      final prefs = await SharedPreferences.getInstance();
-      const userId = 'student-test-uid';
+    test(
+      '4. SharedPreferences deduplication prevents repeated notification spam',
+      () async {
+        final prefs = await SharedPreferences.getInstance();
+        const userId = 'student-test-uid';
 
-      // First check: not notified yet
-      expect(prefs.getBool('zanko_vip_notif_approved_$userId') ?? false, isFalse);
+        // First check: not notified yet
+        expect(
+          prefs.getBool('zanko_vip_notif_approved_$userId') ?? false,
+          isFalse,
+        );
 
-      // Mark as notified
-      await prefs.setBool('zanko_vip_notif_approved_$userId', true);
-      expect(prefs.getBool('zanko_vip_notif_approved_$userId'), isTrue);
+        // Mark as notified
+        await prefs.setBool('zanko_vip_notif_approved_$userId', true);
+        expect(prefs.getBool('zanko_vip_notif_approved_$userId'), isTrue);
 
-      // When a new request is submitted, flag is reset to false
-      await prefs.setBool('zanko_vip_notif_approved_$userId', false);
-      expect(prefs.getBool('zanko_vip_notif_approved_$userId'), isFalse);
-    });
+        // When a new request is submitted, flag is reset to false
+        await prefs.setBool('zanko_vip_notif_approved_$userId', false);
+        expect(prefs.getBool('zanko_vip_notif_approved_$userId'), isFalse);
+      },
+    );
 
     test('5. Rejection flag deduplication works per request ID', () async {
       final prefs = await SharedPreferences.getInstance();
       const reqId = 'req-doc-12345';
 
-      expect(prefs.getBool('zanko_vip_notif_rejected_$reqId') ?? false, isFalse);
+      expect(
+        prefs.getBool('zanko_vip_notif_rejected_$reqId') ?? false,
+        isFalse,
+      );
 
       await prefs.setBool('zanko_vip_notif_rejected_$reqId', true);
       expect(prefs.getBool('zanko_vip_notif_rejected_$reqId'), isTrue);

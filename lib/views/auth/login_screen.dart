@@ -363,7 +363,8 @@ class _LoginScreenState extends State<LoginScreen>
                                     .from('notifications')
                                     .insert({
                                       'type': 'security',
-                                      'title': 'داواکاری نوێکردنەوەی IP: $email',
+                                      'title':
+                                          'داواکاری نوێکردنەوەی IP: $email',
                                       'body': noteCtrl.text.trim().isNotEmpty
                                           ? noteCtrl.text.trim()
                                           : 'داواکاری نوێکردنەوەی IP لەلایەن بەکارهێنەرەوە',

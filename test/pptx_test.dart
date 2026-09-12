@@ -279,8 +279,14 @@ void main() {
 
     expect(bytes.isNotEmpty, true);
     final archive = ZipDecoder().decodeBytes(bytes);
-    final slide1Xml = utf8.decode(archive.findFile('ppt/slides/slide1.xml')!.content as List<int>);
-    expect(slide1Xml.contains('p14:morph'), true, reason: 'Slide XML must contain morph transition');
+    final slide1Xml = utf8.decode(
+      archive.findFile('ppt/slides/slide1.xml')!.content as List<int>,
+    );
+    expect(
+      slide1Xml.contains('p14:morph'),
+      true,
+      reason: 'Slide XML must contain morph transition',
+    );
   });
 
   test('Diverse Kurdish and Arabic Slide Header Parsing Resilience', () async {
@@ -342,85 +348,149 @@ void main() {
     },
   );
 
-  test('Zero duplicate images guaranteed across all slides in any presentation', () {
-    final topics = [
-      ('پزیشکی ددان', 'Dentistry'),
-      ('کۆمپیوتەر و زیرەکی دەستکرد', 'Computer Science'),
-      ('یاسا و مافەکانی مرۆڤ', 'Law'),
-      ('ئەندازیاری شارستانی', 'Civil Engineering'),
-      ('ئابووری و دارایی نێودەوڵەتی', 'Business & Economics'),
-      ('بایۆلۆجی و بۆماوەزانی', 'Biology'),
-      ('ڕاگەیاندن و میدیا', 'Media'),
-    ];
+  test(
+    'Zero duplicate images guaranteed across all slides in any presentation',
+    () {
+      final topics = [
+        ('پزیشکی ددان', 'Dentistry'),
+        ('کۆمپیوتەر و زیرەکی دەستکرد', 'Computer Science'),
+        ('یاسا و مافەکانی مرۆڤ', 'Law'),
+        ('ئەندازیاری شارستانی', 'Civil Engineering'),
+        ('ئابووری و دارایی نێودەوڵەتی', 'Business & Economics'),
+        ('بایۆلۆجی و بۆماوەزانی', 'Biology'),
+        ('ڕاگەیاندن و میدیا', 'Media'),
+      ];
 
-    for (final t in topics) {
-      final used = <String>{};
-      final urls = <String>[];
-      for (int i = 1; i <= 8; i++) {
-        final url = PptxGeneratorService.getSlideSpecificImageUrl(
-          t.$1,
-          i,
-          department: t.$2,
-          usedUrls: used,
+      for (final t in topics) {
+        final used = <String>{};
+        final urls = <String>[];
+        for (int i = 1; i <= 8; i++) {
+          final url = PptxGeneratorService.getSlideSpecificImageUrl(
+            t.$1,
+            i,
+            department: t.$2,
+            usedUrls: used,
+          );
+          urls.add(url);
+        }
+        expect(urls.length, 8);
+        expect(
+          urls.toSet().length,
+          8,
+          reason: 'Found duplicate images in presentation for ${t.$1}',
         );
-        urls.add(url);
       }
-      expect(urls.length, 8);
-      expect(urls.toSet().length, 8, reason: 'Found duplicate images in presentation for ${t.$1}');
-    }
-  });
+    },
+  );
 
-  test('All slides including Slide 1 and Slide 9 contain images and dedicated closing slide layout', () async {
-    final slides = [
-      SlideModel(title: 'تەکنەلۆجیای زیرەک', bulletPoints: ['پێناسە', 'گرنگی']),
-      SlideModel(title: 'پاشخانی زانستی', bulletPoints: ['مێژوو', 'چەمکەکان']),
-      SlideModel(title: 'ئاستەنگەکان', bulletPoints: ['تێچوو', 'کات']),
-      SlideModel(title: 'ئامانجەکان', bulletPoints: ['کارایی', 'وردبینی']),
-      SlideModel(title: 'میتۆدۆلۆجی', bulletPoints: ['شیکاری', 'تاقیکردنەوە']),
-      SlideModel(title: 'دەرئەنجامەکان', bulletPoints: ['سەرکەوتن ٨٩٪', 'خێرایی']),
-      SlideModel(title: 'ڕاسپاردەکان', bulletPoints: ['پێشنیار', 'داهاتوو']),
-      SlideModel(title: 'دەرئەنجام و سەرچاوەکان', bulletPoints: ['پوختە', 'سەرچاوەکان']),
-      SlideModel(title: 'سوپاس بۆ ئامادەبوونتان', bulletPoints: [
-        'سوپاس بۆ ئامادەبوونتان و بەشداریتان',
-        'کاتی پرسیار و گفتوگۆی زانستی',
-      ]),
-    ];
+  test(
+    'All slides including Slide 1 and Slide 9 contain images and dedicated closing slide layout',
+    () async {
+      final slides = [
+        SlideModel(
+          title: 'تەکنەلۆجیای زیرەک',
+          bulletPoints: ['پێناسە', 'گرنگی'],
+        ),
+        SlideModel(
+          title: 'پاشخانی زانستی',
+          bulletPoints: ['مێژوو', 'چەمکەکان'],
+        ),
+        SlideModel(title: 'ئاستەنگەکان', bulletPoints: ['تێچوو', 'کات']),
+        SlideModel(title: 'ئامانجەکان', bulletPoints: ['کارایی', 'وردبینی']),
+        SlideModel(
+          title: 'میتۆدۆلۆجی',
+          bulletPoints: ['شیکاری', 'تاقیکردنەوە'],
+        ),
+        SlideModel(
+          title: 'دەرئەنجامەکان',
+          bulletPoints: ['سەرکەوتن ٨٩٪', 'خێرایی'],
+        ),
+        SlideModel(title: 'ڕاسپاردەکان', bulletPoints: ['پێشنیار', 'داهاتوو']),
+        SlideModel(
+          title: 'دەرئەنجام و سەرچاوەکان',
+          bulletPoints: ['پوختە', 'سەرچاوەکان'],
+        ),
+        SlideModel(
+          title: 'سوپاس بۆ ئامادەبوونتان',
+          bulletPoints: [
+            'سوپاس بۆ ئامادەبوونتان و بەشداریتان',
+            'کاتی پرسیار و گفتوگۆی زانستی',
+          ],
+        ),
+      ];
 
-    final bytes = await PptxGeneratorService.createPptxBytes(
-      slides,
-      presentationTitle: 'تەکنەلۆجیای زیرەک',
-      languageCode: 'ku',
-      studentName: 'ڕەوەند کامەران',
-      supervisorName: 'د. ئاراس ئەحمەد',
-      university: 'زانکۆی سەڵاحەدین - هەولێر',
-      department: 'کۆلێژی ئەندازیاری',
-    );
+      final bytes = await PptxGeneratorService.createPptxBytes(
+        slides,
+        presentationTitle: 'تەکنەلۆجیای زیرەک',
+        languageCode: 'ku',
+        studentName: 'ڕەوەند کامەران',
+        supervisorName: 'د. ئاراس ئەحمەد',
+        university: 'زانکۆی سەڵاحەدین - هەولێر',
+        department: 'کۆلێژی ئەندازیاری',
+      );
 
-    expect(bytes.isNotEmpty, true);
-    final archive = ZipDecoder().decodeBytes(bytes);
+      expect(bytes.isNotEmpty, true);
+      final archive = ZipDecoder().decodeBytes(bytes);
 
-    // Verify each of the 9 slides has an image in rels and pic in slide xml
-    for (int i = 1; i <= 9; i++) {
-      final relsFile = archive.findFile('ppt/slides/_rels/slide$i.xml.rels');
-      expect(relsFile, isNotNull, reason: 'slide$i.xml.rels must exist');
-      final relsXml = utf8.decode(relsFile!.content as List<int>);
-      expect(relsXml.contains('Id="rId2"'), true, reason: 'slide$i rels must contain rId2 image relation');
-      expect(relsXml.contains('Target="../media/image$i.jpeg"'), true, reason: 'slide$i rels must point to media/image$i.jpeg');
+      // Verify each of the 9 slides has an image in rels and pic in slide xml
+      for (int i = 1; i <= 9; i++) {
+        final relsFile = archive.findFile('ppt/slides/_rels/slide$i.xml.rels');
+        expect(relsFile, isNotNull, reason: 'slide$i.xml.rels must exist');
+        final relsXml = utf8.decode(relsFile!.content as List<int>);
+        expect(
+          relsXml.contains('Id="rId2"'),
+          true,
+          reason: 'slide$i rels must contain rId2 image relation',
+        );
+        expect(
+          relsXml.contains('Target="../media/image$i.jpeg"'),
+          true,
+          reason: 'slide$i rels must point to media/image$i.jpeg',
+        );
 
-      final slideFile = archive.findFile('ppt/slides/slide$i.xml');
-      expect(slideFile, isNotNull, reason: 'slide$i.xml must exist');
-      final slideXml = utf8.decode(slideFile!.content as List<int>);
-      expect(slideXml.contains('r:embed="rId2"'), true, reason: 'slide$i XML must embed rId2');
-      expect(slideXml.contains('<p14:morph/>'), true, reason: 'slide$i XML must have morph transition');
+        final slideFile = archive.findFile('ppt/slides/slide$i.xml');
+        expect(slideFile, isNotNull, reason: 'slide$i.xml must exist');
+        final slideXml = utf8.decode(slideFile!.content as List<int>);
+        expect(
+          slideXml.contains('r:embed="rId2"'),
+          true,
+          reason: 'slide$i XML must embed rId2',
+        );
+        expect(
+          slideXml.contains('<p14:morph/>'),
+          true,
+          reason: 'slide$i XML must have morph transition',
+        );
 
-      if (i == 1) {
-        expect(slideXml.contains('HeroImage'), true, reason: 'Slide 1 must have HeroImage frame');
-        expect(slideXml.contains('زانکۆی سەڵاحەدین'), true, reason: 'Slide 1 must have university badge');
-      } else if (i == 9) {
-        expect(slideXml.contains('ClosingPhoto'), true, reason: 'Slide 9 must have ClosingPhoto frame');
-        expect(slideXml.contains('سوپاس بۆ ئامادەبوونتان'), true, reason: 'Slide 9 must have gratitude headline');
-        expect(slideXml.contains('کاتی پرسیار و گفتوگۆ'), true, reason: 'Slide 9 must have Q&A discussion card');
+        if (i == 1) {
+          expect(
+            slideXml.contains('HeroImage'),
+            true,
+            reason: 'Slide 1 must have HeroImage frame',
+          );
+          expect(
+            slideXml.contains('زانکۆی سەڵاحەدین'),
+            true,
+            reason: 'Slide 1 must have university badge',
+          );
+        } else if (i == 9) {
+          expect(
+            slideXml.contains('ClosingPhoto'),
+            true,
+            reason: 'Slide 9 must have ClosingPhoto frame',
+          );
+          expect(
+            slideXml.contains('سوپاس بۆ ئامادەبوونتان'),
+            true,
+            reason: 'Slide 9 must have gratitude headline',
+          );
+          expect(
+            slideXml.contains('کاتی پرسیار و گفتوگۆ'),
+            true,
+            reason: 'Slide 9 must have Q&A discussion card',
+          );
+        }
       }
-    }
-  });
+    },
+  );
 }

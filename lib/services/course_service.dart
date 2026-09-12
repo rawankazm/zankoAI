@@ -34,7 +34,8 @@ class CourseService {
     String? search,
     bool forceRefresh = false,
   }) async {
-    final cacheKey = 'courses:${departmentId ?? ""}:${universityId ?? ""}:${search ?? ""}';
+    final cacheKey =
+        'courses:${departmentId ?? ""}:${universityId ?? ""}:${search ?? ""}';
     if (!forceRefresh && _cache[cacheKey]?.isValid == true) {
       return List<Map<String, dynamic>>.from(_cache[cacheKey]!.data as List);
     }
@@ -58,7 +59,10 @@ class CourseService {
   }
 
   /// Fetches single course details.
-  Future<Map<String, dynamic>> getCourse(String courseId, {bool forceRefresh = false}) async {
+  Future<Map<String, dynamic>> getCourse(
+    String courseId, {
+    bool forceRefresh = false,
+  }) async {
     final cacheKey = 'course:$courseId';
     if (!forceRefresh && _cache[cacheKey]?.isValid == true) {
       return Map<String, dynamic>.from(_cache[cacheKey]!.data as Map);
@@ -93,7 +97,10 @@ class CourseService {
   }
 
   /// Lists enrolled members of a course.
-  Future<List<Map<String, dynamic>>> getCourseMembers(String courseId, {bool forceRefresh = false}) async {
+  Future<List<Map<String, dynamic>>> getCourseMembers(
+    String courseId, {
+    bool forceRefresh = false,
+  }) async {
     final cacheKey = 'members:$courseId';
     if (!forceRefresh && _cache[cacheKey]?.isValid == true) {
       return List<Map<String, dynamic>>.from(_cache[cacheKey]!.data as List);
@@ -109,7 +116,9 @@ class CourseService {
   }
 
   /// Lists all accredited universities in the Kurdistan region.
-  Future<List<Map<String, dynamic>>> listUniversities({bool forceRefresh = false}) async {
+  Future<List<Map<String, dynamic>>> listUniversities({
+    bool forceRefresh = false,
+  }) async {
     const cacheKey = 'universities';
     if (!forceRefresh && _cache[cacheKey]?.isValid == true) {
       return List<Map<String, dynamic>>.from(_cache[cacheKey]!.data as List);
@@ -129,16 +138,20 @@ class CourseService {
     } catch (_) {}
 
     // Resilient fallback using rich localized Kurdistan universities data
-    final fallback = KurdistanUniversitiesData.universities.map((u) => {
-      'id': u.id,
-      'name': u.nameKu,
-      'name_en': u.nameEn,
-      'name_ar': u.nameAr,
-      'city': u.cityNameKu,
-      'type': u.typeNameKu,
-      'code': u.id.toUpperCase().replaceAll('_', '-'),
-      'is_active': true,
-    }).toList();
+    final fallback = KurdistanUniversitiesData.universities
+        .map(
+          (u) => {
+            'id': u.id,
+            'name': u.nameKu,
+            'name_en': u.nameEn,
+            'name_ar': u.nameAr,
+            'city': u.cityNameKu,
+            'type': u.typeNameKu,
+            'code': u.id.toUpperCase().replaceAll('_', '-'),
+            'is_active': true,
+          },
+        )
+        .toList();
 
     _cache[cacheKey] = _CacheEntry(fallback, _defaultTtl);
     return fallback;
@@ -157,9 +170,7 @@ class CourseService {
     try {
       final response = await _client.get<Map<String, dynamic>>(
         '/departments',
-        queryParameters: {
-          'university_id': ?universityId,
-        },
+        queryParameters: {'university_id': ?universityId},
       );
       final data = response.data?['data'];
       final items = data is Map
@@ -177,12 +188,18 @@ class CourseService {
         ? KurdistanUniversitiesData.getDepartmentsFor(universityId)
         : KurdistanUniversitiesData.commonDepartments;
 
-    final fallback = depts.asMap().entries.map((e) => {
-      'id': 'dept-${universityId ?? "gen"}-${e.key}',
-      'university_id': universityId,
-      'name': e.value,
-      'is_active': true,
-    }).toList();
+    final fallback = depts
+        .asMap()
+        .entries
+        .map(
+          (e) => {
+            'id': 'dept-${universityId ?? "gen"}-${e.key}',
+            'university_id': universityId,
+            'name': e.value,
+            'is_active': true,
+          },
+        )
+        .toList();
 
     _cache[cacheKey] = _CacheEntry(fallback, _defaultTtl);
     return fallback;

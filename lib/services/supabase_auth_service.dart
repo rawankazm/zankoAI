@@ -85,11 +85,15 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
       if (cachedProfile != null) {
         _currentUser = cachedProfile;
         if (currentSession != null) {
-          _authState = Authenticated(user: cachedProfile, session: currentSession);
+          _authState = Authenticated(
+            user: cachedProfile,
+            session: currentSession,
+          );
         }
         notifyListeners();
       } else if (isGuest) {
-        final guestId = prefs.getString('zanko_guest_id') ??
+        final guestId =
+            prefs.getString('zanko_guest_id') ??
             'guest_${DateTime.now().millisecondsSinceEpoch}';
         _currentUser = UserModel(
           id: guestId,
@@ -448,7 +452,8 @@ class SupabaseAuthService extends ChangeNotifier implements AuthService {
   @override
   Future<void> loginAsGuest() async {
     final prefs = await SharedPreferences.getInstance();
-    final guestId = prefs.getString('zanko_guest_id') ??
+    final guestId =
+        prefs.getString('zanko_guest_id') ??
         'guest_${DateTime.now().millisecondsSinceEpoch}';
     await prefs.setString('zanko_guest_id', guestId);
     await prefs.setBool('zanko_is_guest', true);

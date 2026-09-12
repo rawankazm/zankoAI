@@ -255,6 +255,9 @@ class _FakeAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<UserModel?> getCachedProfile([String? userId]) async => _testUser;
+
+  @override
   Future<UserModel?> fetchUserProfile(
     String userId, [
     String? fallbackEmail,

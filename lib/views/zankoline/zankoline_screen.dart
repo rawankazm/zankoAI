@@ -1127,7 +1127,8 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                         _buildAppleCityChip(
                           label: 'گەرمیان',
                           isSelected: _selectedCity == 'گەرمیان',
-                          onTap: () => setState(() => _selectedCity = 'گەرمیان'),
+                          onTap: () =>
+                              setState(() => _selectedCity = 'گەرمیان'),
                           isDark: isDark,
                         ),
                         const SizedBox(width: 8),
@@ -1160,18 +1161,20 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                   ...(_selectedCity == null
                           ? _matchedDepartments
                           : _matchedDepartments
-                                .where((d) =>
-                                    d.city.contains(_selectedCity!) ||
-                                    (_selectedCity == 'هەولێر' &&
-                                        (d.city.contains('سۆران') ||
-                                            d.city.contains('کۆیە'))) ||
-                                    (_selectedCity == 'سلێمانی' &&
-                                        (d.city.contains('ڕانیە') ||
-                                            d.city.contains('چەمچەماڵ') ||
-                                            d.city.contains('گەرمیان'))) ||
-                                    (_selectedCity == 'دهۆک' &&
-                                        (d.city.contains('زاخۆ') ||
-                                            d.city.contains('ئاکرێ'))))
+                                .where(
+                                  (d) =>
+                                      d.city.contains(_selectedCity!) ||
+                                      (_selectedCity == 'هەولێر' &&
+                                          (d.city.contains('سۆران') ||
+                                              d.city.contains('کۆیە'))) ||
+                                      (_selectedCity == 'سلێمانی' &&
+                                          (d.city.contains('ڕانیە') ||
+                                              d.city.contains('چەمچەماڵ') ||
+                                              d.city.contains('گەرمیان'))) ||
+                                      (_selectedCity == 'دهۆک' &&
+                                          (d.city.contains('زاخۆ') ||
+                                              d.city.contains('ئاکرێ'))),
+                                )
                                 .toList())
                       .map((dept) {
                         final cutoff = _isParallel

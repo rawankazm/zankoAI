@@ -101,7 +101,8 @@ class _SeminarThesisAssistantScreenState
   String? _universityLogoName;
 
   bool _isLoading = false;
-  int _researchPhase = 0; // 0 = idle, 1 = deep literature search, 2 = applying student directives, 3 = slides synthesis
+  int _researchPhase =
+      0; // 0 = idle, 1 = deep literature search, 2 = applying student directives, 3 = slides synthesis
   String _researchStatusText = '';
   bool _isExportingPptx = false;
   bool _isExportingDocx = false;
@@ -561,10 +562,10 @@ Format each topic strictly as:
       _researchStatusText = _isEnglish
           ? 'Phase 1: Conducting deep literature search & 2024-2026 empirical data retrieval...'
           : (_isArabic
-              ? 'المرحلة ١: البحث الأكاديمي الشامل واستخراج دراسات وإحصائيات ٢٠٢٤-٢٠٢٦...'
-              : (_isBadini
-                  ? 'قۆناغا ١: لێگەڕیانا هویر و ئەکادیمی یا ژێدەران و داتایێن نوو (٢٠٢٤ - ٢٠٢٦)...'
-                  : 'قۆناغی ١: گەڕانی قووڵی زانستی بەدوای سەرچاوە و ئامارە نوێیەکان (٢٠٢٤ - ٢٠٢٦)...'));
+                ? 'المرحلة ١: البحث الأكاديمي الشامل واستخراج دراسات وإحصائيات ٢٠٢٤-٢٠٢٦...'
+                : (_isBadini
+                      ? 'قۆناغا ١: لێگەڕیانا هویر و ئەکادیمی یا ژێدەران و داتایێن نوو (٢٠٢٤ - ٢٠٢٦)...'
+                      : 'قۆناغی ١: گەڕانی قووڵی زانستی بەدوای سەرچاوە و ئامارە نوێیەکان (٢٠٢٤ - ٢٠٢٦)...'));
       _generatedResult = null;
       _parsedSlides = [];
       _parsedReport = null;
@@ -573,7 +574,8 @@ Format each topic strictly as:
 
     final String langPrompt;
     if (_isEnglish) {
-      langPrompt = '''
+      langPrompt =
+          '''
 CRITICAL LANGUAGE MANDATE (100% STRICTLY IN ENGLISH):
 - The ENTIRE presentation MUST be 100% in English. Absolutely NO Kurdish or Arabic words, characters, or phrases are allowed anywhere in the entire output!
 - Translate the presentation topic "$topicTitle" into a prestigious academic English title and use it on Slide 1:
@@ -581,7 +583,8 @@ CRITICAL LANGUAGE MANDATE (100% STRICTLY IN ENGLISH):
 - All 8 slides, slide titles, paragraphs, metrics, and speaker notes MUST be strictly in English.
 ''';
     } else if (_isArabic) {
-      langPrompt = '''
+      langPrompt =
+          '''
 مهم جداً (١٠٠٪ باللغة العربية الفصحى الأكاديمية):
 - اكتب كامل الشرائح والعناوين والملاحظات باللغة العربية الفصحى فقط بدون أي كلمات كردية أو أجنبية.
 - ترجم عنوان الموضوع "$topicTitle" إلى عنوان أكاديمي فصيح واكتبه في الشريحة الأولى:
@@ -602,7 +605,8 @@ CRITICAL LANGUAGE MANDATE (100% STRICTLY IN ENGLISH):
     final supervisorName = _supervisorNameController.text.trim();
     final customNotes = _seminarNotesController.text.trim();
 
-    final academicContext = '''
+    final academicContext =
+        '''
 ACADEMIC CONTEXT & DISCIPLINARY FOCUS:
 - Academic Department / Field of Study: ${effectiveDept.isNotEmpty ? effectiveDept : 'General Academic Department'}
 - University / College: ${effectiveUniv.isNotEmpty ? effectiveUniv : 'Kurdistan & International Higher Education'}
@@ -622,7 +626,8 @@ You MUST strictly prioritize, integrate, and feature these exact requirements pr
 '''
         : '';
 
-    final modernAcademicRigorPrompt = '''
+    final modernAcademicRigorPrompt =
+        '''
 CONTEMPORARY 2024-2026 ACADEMIC RIGOR & SCHOLARLY EXCELLENCE MANDATE:
 1. STATE-OF-THE-ART & CONTEMPORARY CONTENT (ناوەرۆکی زانستیی سەردەمیانە):
    - The content MUST reflect the most recent 2024-2026 scientific breakthroughs, modern methodologies, empirical benchmarks, and current real-world case studies in this field.
@@ -643,7 +648,8 @@ CONTEMPORARY 2024-2026 ACADEMIC RIGOR & SCHOLARLY EXCELLENCE MANDATE:
 
       // ─── STAGE 1: Deep Academic Research & Literature Investigation ───────────
       // First, conduct an exhaustive scientific investigation of the topic and student requirements
-      final researchPrompt = '''
+      final researchPrompt =
+          '''
 You are a senior university research professor and domain specialist in $effectiveDept.
 Conduct an EXHAUSTIVE academic literature search and empirical investigation for the seminar topic: "$topicTitle".
 $langPrompt
@@ -662,7 +668,11 @@ INVESTIGATION MANDATE (تەواو تەواو بۆی بگەڕێ بە پێی دا�
 
       String researchDossier = '';
       try {
-        researchDossier = await aiService.askTeacher(researchPrompt, [], isVip: true);
+        researchDossier = await aiService.askTeacher(
+          researchPrompt,
+          [],
+          isVip: true,
+        );
       } catch (_) {}
 
       if (mounted) {
@@ -671,15 +681,16 @@ INVESTIGATION MANDATE (تەواو تەواو بۆی بگەڕێ بە پێی دا�
           _researchStatusText = _isEnglish
               ? 'Phase 2: Analyzing findings & strictly applying student directives...'
               : (_isArabic
-                  ? 'المرحلة ٢: تحليل البيانات وتطبيق توجيهات وطلبات الطالب بدقة كاملة...'
-                  : (_isBadini
-                      ? 'قۆناغا ٢: شیکارکرنا ژێدەران و جێبەجێکرنا هەمی داخوازیێن قوتابی...'
-                      : 'قۆناغی ٢: شیکردنەوەی داتا و جێبەجێکردنی تەواوی داواکارییەکانی قوتابی...'));
+                    ? 'المرحلة ٢: تحليل البيانات وتطبيق توجيهات وطلبات الطالب بدقة كاملة...'
+                    : (_isBadini
+                          ? 'قۆناغا ٢: شیکارکرنا ژێدەران و جێبەجێکرنا هەمی داخوازیێن قوتابی...'
+                          : 'قۆناغی ٢: شیکردنەوەی داتا و جێبەجێکردنی تەواوی داواکارییەکانی قوتابی...'));
         });
       }
 
       // ─── STAGE 2: Slide Presentation Synthesis Based on Research Dossier ──────
-      final synthesisPrompt = '''
+      final synthesisPrompt =
+          '''
 You are a master presentation designer and academic lecturer.
 Based on the following comprehensive Academic Research Dossier:
 ---
@@ -722,14 +733,18 @@ SLIDE STRUCTURE & FORMAT:
           _researchStatusText = _isEnglish
               ? 'Phase 3: Synthesizing 8 slides with 100% unique HD visual themes...'
               : (_isArabic
-                  ? 'المرحلة ٣: صياغة الشرائح الثمانية وضبط التصاميم والصور الأكاديمية الفريدة...'
-                  : (_isBadini
-                      ? 'قۆناغا ٣: تەمامکرنا ٨ سلایدێن ستاندارد ب وێنەیێن تایبەت بێ دووبارەبوون...'
-                      : 'قۆناغی ٣: تەواوکردنی ٨ سلایدی ستاندارد بە وێنەی ناوازەی HD (بێ دووبارە)...'));
+                    ? 'المرحلة ٣: صياغة الشرائح الثمانية وضبط التصاميم والصور الأكاديمية الفريدة...'
+                    : (_isBadini
+                          ? 'قۆناغا ٣: تەمامکرنا ٨ سلایدێن ستاندارد ب وێنەیێن تایبەت بێ دووبارەبوون...'
+                          : 'قۆناغی ٣: تەواوکردنی ٨ سلایدی ستاندارد بە وێنەی ناوازەی HD (بێ دووبارە)...'));
         });
       }
 
-      final response = await aiService.askTeacher(synthesisPrompt, [], isVip: true);
+      final response = await aiService.askTeacher(
+        synthesisPrompt,
+        [],
+        isVip: true,
+      );
       await _incrementUsage();
 
       final bool isInvalid =
@@ -840,10 +855,12 @@ SLIDE STRUCTURE & FORMAT:
       final isLast = i == slides.length - 1;
       if (!isLast) {
         final cleanedBullets = s.bulletPoints
-            .where((b) =>
-                !b.contains('سوپاس بۆ ئامادەبوونتان') &&
-                !b.contains('شكراً لحضوركم') &&
-                !b.toLowerCase().contains('thank you for your attendance'))
+            .where(
+              (b) =>
+                  !b.contains('سوپاس بۆ ئامادەبوونتان') &&
+                  !b.contains('شكراً لحضوركم') &&
+                  !b.toLowerCase().contains('thank you for your attendance'),
+            )
             .toList();
         if (cleanedBullets.length != s.bulletPoints.length) {
           slides[i] = SlideModel(
@@ -859,7 +876,8 @@ SLIDE STRUCTURE & FORMAT:
     }
 
     // Ensure a dedicated final slide titled "Thank you for your attendance" (سوپاس بۆ ئامادەبوونتان)
-    final hasClosingSlide = slides.isNotEmpty &&
+    final hasClosingSlide =
+        slides.isNotEmpty &&
         (slides.last.title.contains('سوپاس') ||
             slides.last.title.contains('شكراً') ||
             slides.last.title.contains('شكرا') ||
@@ -886,26 +904,27 @@ SLIDE STRUCTURE & FORMAT:
             _isEnglish
                 ? 'Thank you sincerely for your attendance and valuable attention'
                 : (_isArabic
-                    ? 'شكراً جزيلاً لحضوركم الكريم واهتمامكم القيم'
-                    : (_isBadini
-                        ? 'سوپاس بۆ ئامادەبوونا هەوە و دەمێ هەوە یێ زێڕین'
-                        : 'سوپاس بۆ ئامادەبوونتان و کاتی بەنرختان لەم پرێزێنتەیشنەدا')),
+                      ? 'شكراً جزيلاً لحضوركم الكريم واهتمامكم القيم'
+                      : (_isBadini
+                            ? 'سوپاس بۆ ئامادەبوونا هەوە و دەمێ هەوە یێ زێڕین'
+                            : 'سوپاس بۆ ئامادەبوونتان و کاتی بەنرختان لەم پرێزێنتەیشنەدا')),
             _isEnglish
                 ? 'Open Floor for Academic Inquiries & Critical Discussion'
                 : (_isArabic
-                    ? 'فتح باب الحوار والأسئلة الأكاديمية والمداخلات العلمية'
-                    : (_isBadini
-                        ? 'دەلیڤە یا ڤەکرییە بۆ پرسیار و دانوستاندنا زانستی'
-                        : 'دەرگای پرسیار، ڕاگۆڕینەوە و گفتوگۆی زانستی واڵایە')),
+                      ? 'فتح باب الحوار والأسئلة الأكاديمية والمداخلات العلمية'
+                      : (_isBadini
+                            ? 'دەلیڤە یا ڤەکرییە بۆ پرسیار و دانوستاندنا زانستی'
+                            : 'دەرگای پرسیار، ڕاگۆڕینەوە و گفتوگۆی زانستی واڵایە')),
             _isEnglish
                 ? 'Appreciation to Academic Committee, Supervisors & Faculty'
                 : (_isArabic
-                    ? 'خالص التقدير للأساتذة المشرفين ولجنة المناقشة الموقرة'
-                    : (_isBadini
-                        ? 'پێزانین بۆ مامۆستایێن سەرپەرشتیار و لێژنا بەڕێز'
-                        : 'سوپاس و پێزانین بۆ مامۆستای سەرپەرشتیار و لێژنەی بەڕێز')),
+                      ? 'خالص التقدير للأساتذة المشرفين ولجنة المناقشة الموقرة'
+                      : (_isBadini
+                            ? 'پێزانین بۆ مامۆستایێن سەرپەرشتیار و لێژنا بەڕێز'
+                            : 'سوپاس و پێزانین بۆ مامۆستای سەرپەرشتیار و لێژنەی بەڕێز')),
           ],
-          visualPrompt: 'Academic presentation conclusion with audience applause and Q&A session',
+          visualPrompt:
+              'Academic presentation conclusion with audience applause and Q&A session',
           imageUrl: closingImg,
           categoryTag: _isEnglish ? 'Conclusion & Q&A' : 'کۆتایی و گفتوگۆ',
           speakerNotes: _isEnglish
@@ -3415,8 +3434,10 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                         i == 0
                             ? (_isEnglish ? '🎓 Cover' : '🎓 بەرگ')
                             : (i == _parsedSlides.length - 1
-                                ? (_isEnglish ? '✨ Closing' : '✨ کۆتایی')
-                                : (_isEnglish ? 'Slide ${i + 1}' : 'سلایدی ${i + 1}')),
+                                  ? (_isEnglish ? '✨ Closing' : '✨ کۆتایی')
+                                  : (_isEnglish
+                                        ? 'Slide ${i + 1}'
+                                        : 'سلایدی ${i + 1}')),
                         style: TextStyle(
                           fontFamily: _currentFontFamily,
                           fontSize: 12,
@@ -3444,8 +3465,14 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
               switchInCurve: Curves.easeInOutCubicEmphasized,
               switchOutCurve: Curves.easeOutCubic,
               transitionBuilder: (child, animation) {
-                final fade = CurvedAnimation(parent: animation, curve: Curves.easeInOut);
-                final scale = Tween<double>(begin: 0.95, end: 1.0).animate(animation);
+                final fade = CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeInOut,
+                );
+                final scale = Tween<double>(
+                  begin: 0.95,
+                  end: 1.0,
+                ).animate(animation);
                 final slide = Tween<Offset>(
                   begin: const Offset(0.04, 0.0),
                   end: Offset.zero,
@@ -3455,10 +3482,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                   opacity: fade,
                   child: ScaleTransition(
                     scale: scale,
-                    child: SlideTransition(
-                      position: slide,
-                      child: child,
-                    ),
+                    child: SlideTransition(position: slide, child: child),
                   ),
                 );
               },
@@ -3468,732 +3492,799 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-              decoration: BoxDecoration(
-                color: isDark
-                    ? ZankoColors.darkBackground
-                    : const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isDark ? Colors.white12 : const Color(0xFFE2E8F0),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(20),
-                    ),
-                    child: Stack(
-                      children: [
-                        Image.network(
-                          imgUrl,
-                          height: 160,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Container(
-                                height: 160,
-                                decoration: const BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Color(0xFF0F172A),
-                                      Color(0xFF1E293B),
-                                    ],
-                                  ),
-                                ),
-                                child: const Center(
-                                  child: Icon(
-                                    CupertinoIcons.photo_fill,
-                                    color: Colors.white24,
-                                    size: 40,
-                                  ),
-                                ),
-                              ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? ZankoColors.darkBackground
+                            : const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.white12
+                              : const Color(0xFFE2E8F0),
                         ),
-                        Container(
-                          height: 160,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                Colors.black.withValues(alpha: 0.85),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: 12,
-                          right: 12,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2563EB),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              _isEnglish
-                                  ? 'Slide ${_selectedSlideIndex + 1} of ${_parsedSlides.length} • HD'
-                                  : 'سلایدی ${_selectedSlideIndex + 1} لە ${_parsedSlides.length} • HD',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 12,
-                          right: 14,
-                          left: 14,
-                          child: Text(
-                            _selectedSlideIndex == 0
-                                ? ((_activeGeneratedTitle != null &&
-                                          _activeGeneratedTitle!
-                                              .trim()
-                                              .isNotEmpty)
-                                      ? _activeGeneratedTitle!.trim()
-                                      : currentSlide.title)
-                                : currentSlide.title,
-                            style: TextStyle(
-                              fontFamily: _currentFontFamily,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              shadows: const [
-                                Shadow(color: Colors.black, blurRadius: 4),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Directionality(
-                      textDirection: _isEnglish
-                          ? TextDirection.ltr
-                          : TextDirection.rtl,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // ─── SLIDE 1 (COVER PAGE): PURE LAYOUT (LOGO, TITLE, STUDENT, SUPERVISOR) ───
-                          if (_selectedSlideIndex == 0) ...[
-                            // University Logo / Emblem Header
-                            Center(
-                              child: Column(
-                                children: [
-                                  if (_universityLogoBytes != null) ...[
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(10),
-                                      child: Image.memory(
-                                        _universityLogoBytes!,
-                                        height: 52,
-                                        width: 52,
-                                        fit: BoxFit.contain,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                  ],
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(
-                                        0xFF2563EB,
-                                      ).withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(
-                                        color: const Color(
-                                          0xFF2563EB,
-                                        ).withValues(alpha: 0.3),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      '🏛️ ${KurdistanUniversitiesData.getLocalizedUniversityName(_universityController.text.trim(), _selectedLanguage.code)}',
-                                      style: TextStyle(
-                                        fontFamily: _currentFontFamily,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: isDark
-                                            ? const Color(0xFF38BDF8)
-                                            : const Color(0xFF1D4ED8),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            const SizedBox(height: 16),
-
-                            // Main Topic Title
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: isDark
-                                    ? Colors.white.withValues(alpha: 0.04)
-                                    : Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: const Color(
-                                    0xFF2563EB,
-                                  ).withValues(alpha: 0.35),
-                                ),
-                              ),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    (_activeGeneratedTitle != null &&
-                                            _activeGeneratedTitle!
-                                                .trim()
-                                                .isNotEmpty)
-                                        ? _activeGeneratedTitle!.trim()
-                                        : currentSlide.title,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontFamily: _currentFontFamily,
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.bold,
-                                      color: isDark
-                                          ? Colors.white
-                                          : const Color(0xFF0F172A),
-                                    ),
-                                  ),
-                                  if (_reportDeptController.text
-                                      .trim()
-                                      .isNotEmpty) ...[
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      KurdistanUniversitiesData.getLocalizedDepartmentName(
-                                        _reportDeptController.text.trim(),
-                                        _selectedLanguage.code,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontFamily: _currentFontFamily,
-                                        fontSize: 12.5,
-                                        color: isDark
-                                            ? Colors.grey[400]
-                                            : const Color(0xFF64748B),
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-
-                            const SizedBox(height: 14),
-
-                            // Author (Student) & Supervisor Centered Cards
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: const Color(
-                                        0xFF0284C7,
-                                      ).withValues(alpha: 0.08),
-                                      borderRadius: BorderRadius.circular(14),
-                                      border: Border.all(
-                                        color: const Color(
-                                          0xFF0284C7,
-                                        ).withValues(alpha: 0.3),
-                                      ),
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          _isEnglish
-                                              ? '👨‍🎓 Prepared by:'
-                                              : (_isArabic
-                                                    ? '👨‍🎓 إعداد الطالب:'
-                                                    : (_isBadini
-                                                          ? '👨‍🎓 ئامادەکرن ژ لایێ:'
-                                                          : '👨‍🎓 ئامادەکردنی:')),
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            fontFamily: _currentFontFamily,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                            color: const Color(0xFF0284C7),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          _studentNameController.text
-                                                  .trim()
-                                                  .isNotEmpty
-                                              ? _studentNameController.text
-                                                    .trim()
-                                              : (_isEnglish
-                                                    ? 'Student / Team'
-                                                    : (_isArabic
-                                                          ? 'اسم الطالب / الفريق'
-                                                          : 'ناوی قوتابی / تیم')),
-                                          maxLines: 2,
-                                          textAlign: TextAlign.center,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontFamily: _currentFontFamily,
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: const Color(
-                                        0xFF10B981,
-                                      ).withValues(alpha: 0.08),
-                                      borderRadius: BorderRadius.circular(14),
-                                      border: Border.all(
-                                        color: const Color(
-                                          0xFF10B981,
-                                        ).withValues(alpha: 0.3),
-                                      ),
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          _isEnglish
-                                              ? '👨‍🏫 Supervised by:'
-                                              : (_isArabic
-                                                    ? '👨‍🏫 بإشراف الأستاذ:'
-                                                    : (_isBadini
-                                                          ? '👨‍🏫 سەرپەرشتیار:'
-                                                          : '👨‍🏫 سەرپەرشتیاری:')),
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            fontFamily: _currentFontFamily,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                            color: const Color(0xFF10B981),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          _supervisorNameController.text
-                                                  .trim()
-                                                  .isNotEmpty
-                                              ? _supervisorNameController.text
-                                                    .trim()
-                                              : (_isEnglish
-                                                    ? 'Supervisor'
-                                                    : (_isArabic
-                                                          ? 'الأستاذ المشرف'
-                                                          : 'مامۆستای سەرپەرشتیار')),
-                                          maxLines: 2,
-                                          textAlign: TextAlign.center,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontFamily: _currentFontFamily,
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            if (currentSlide.bulletPoints.isNotEmpty) ...[
-                              const SizedBox(height: 14),
-                              Text(
-                                _isEnglish
-                                    ? '📌 Slide 1 Academic Focus & Overview:'
-                                    : '📌 تەوەر و خاڵە سەرەکییەکانی ناساندن:',
-                                style: TextStyle(
-                                  fontFamily: _currentFontFamily,
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark
-                                      ? Colors.grey[300]
-                                      : const Color(0xFF1E293B),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              ...currentSlide.bulletPoints.asMap().entries.map((
-                                entry,
-                              ) {
-                                final idx = entry.key + 1;
-                                final text = entry.value;
-                                return Container(
-                                  margin: const EdgeInsets.only(bottom: 8),
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: isDark
-                                        ? Colors.white.withValues(alpha: 0.03)
-                                        : Colors.white,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: isDark
-                                          ? Colors.white10
-                                          : const Color(0xFFE2E8F0),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        width: 22,
-                                        height: 22,
-                                        decoration: BoxDecoration(
-                                          color: const Color(
-                                            0xFF2563EB,
-                                          ).withValues(alpha: 0.15),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            '$idx',
-                                            style: TextStyle(
-                                              fontFamily: _currentFontFamily,
-                                              fontSize: 10.5,
-                                              fontWeight: FontWeight.bold,
-                                              color: const Color(0xFF2563EB),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          text,
-                                          style: TextStyle(
-                                            fontFamily: _currentFontFamily,
-                                            fontSize: 13,
-                                            height: 1.45,
-                                            color: isDark
-                                                ? Colors.grey[200]
-                                                : ZankoColors.textPrimary,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }),
-                            ],
-                          ] else ...[
-                            // ─── SLIDES 2 TO 8: CONTENT BULLET POINTS & RESEARCH DATA ───
-                            if (currentSlide.visualPrompt != null &&
-                                currentSlide.visualPrompt!.isNotEmpty) ...[
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: const Color(
-                                    0xFF2563EB,
-                                  ).withValues(alpha: 0.08),
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(
-                                    color: const Color(
-                                      0xFF2563EB,
-                                    ).withValues(alpha: 0.25),
-                                  ),
-                                ),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Icon(
-                                      CupertinoIcons
-                                          .photo_fill_on_rectangle_fill,
-                                      color: Color(0xFF2563EB),
-                                      size: 18,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        _isEnglish
-                                            ? '🎯 Slide Visual Focus: ${currentSlide.visualPrompt!}'
-                                            : '🎯 تیشکۆ و وێنەی سەرەکی: ${currentSlide.visualPrompt!}',
-                                        style: TextStyle(
-                                          fontFamily: _currentFontFamily,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: isDark
-                                              ? Colors.grey[200]
-                                              : const Color(0xFF1E3A8A),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 14),
-                            ],
-
-                            ...currentSlide.bulletPoints.asMap().entries.map((
-                              entry,
-                            ) {
-                              final idx = entry.key + 1;
-                              final text = entry.value;
-                              final isMetric =
-                                  text.contains('٪') ||
-                                  text.contains('%') ||
-                                  text.contains('accuracy') ||
-                                  text.contains('کارایی') ||
-                                  text.contains('ڕێژە');
-
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: 10),
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: isMetric
-                                      ? const Color(
-                                          0xFF2563EB,
-                                        ).withValues(alpha: 0.06)
-                                      : (isDark
-                                            ? Colors.white.withValues(
-                                                alpha: 0.03,
-                                              )
-                                            : Colors.white),
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(
-                                    color: isMetric
-                                        ? const Color(
-                                            0xFF2563EB,
-                                          ).withValues(alpha: 0.25)
-                                        : (isDark
-                                              ? Colors.white10
-                                              : const Color(0xFFE2E8F0)),
-                                  ),
-                                ),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      width: 24,
-                                      height: 24,
-                                      decoration: BoxDecoration(
-                                        color: isMetric
-                                            ? const Color(0xFF2563EB)
-                                            : ZankoColors.accent.withValues(
-                                                alpha: 0.15,
-                                              ),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          '$idx',
-                                          style: TextStyle(
-                                            fontFamily: _currentFontFamily,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                            color: isMetric
-                                                ? Colors.white
-                                                : ZankoColors.accent,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: Text(
-                                        text,
-                                        style: TextStyle(
-                                          fontFamily: _currentFontFamily,
-                                          fontSize: 13.5,
-                                          height: 1.5,
-                                          fontWeight: isMetric
-                                              ? FontWeight.w600
-                                              : FontWeight.normal,
-                                          color: isDark
-                                              ? Colors.grey[200]
-                                              : ZankoColors.textPrimary,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }),
-                          ],
-                          if (_selectedSlideIndex ==
-                              _parsedSlides.length - 1) ...[
-                            const SizedBox(height: 16),
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 22,
-                                horizontal: 18,
-                              ),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: isDark
-                                      ? [
-                                          const Color(0xFF1E3A8A).withValues(alpha: 0.8),
-                                          const Color(0xFF0F172A),
-                                        ]
-                                      : [
-                                          const Color(0xFFEFF6FF),
-                                          const Color(0xFFDBEAFE),
-                                        ],
-                                ),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: const Color(0xFF2563EB),
-                                  width: 2,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF2563EB).withValues(alpha: 0.25),
-                                    blurRadius: 16,
-                                    offset: const Offset(0, 6),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                children: [
-                                  const Text(
-                                    '✨ 🎓 ✨',
-                                    style: TextStyle(fontSize: 26),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    '✨ ${PptxGeneratorService.getThankYouMessage(_selectedLanguage.code)} ✨',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontFamily: _currentFontFamily,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: isDark
-                                          ? const Color(0xFF93C5FD)
-                                          : const Color(0xFF1D4ED8),
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 5,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isDark
-                                          ? const Color(0xFF1E293B)
-                                          : Colors.white,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: const Color(0xFF38BDF8).withValues(alpha: 0.5),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      _isEnglish
-                                          ? '💬 Open Floor for Academic Inquiries & Q&A Discussion'
-                                          : (_isArabic
-                                              ? '💬 باب المناقشة والأسئلة الأكاديمية مفتوح للجميع'
-                                              : '💬 کاتی پرسیار، سەرنج و گفتوگۆی زانستی واڵایە'),
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontFamily: _currentFontFamily,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: isDark
-                                            ? const Color(0xFF38BDF8)
-                                            : const Color(0xFF0284C7),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ],
                       ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Separate Presenter Guidance Card
-            if (currentSlide.speakerNotes != null &&
-                currentSlide.speakerNotes!.isNotEmpty) ...[
-              const SizedBox(height: 14),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: ZankoColors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: ZankoColors.primary.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      CupertinoIcons.lightbulb_fill,
-                      color: ZankoColors.primary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            _isEnglish
-                                ? '💡 Presenter Advice & Delivery Tips:'
-                                : (_isArabic
-                                      ? '💡 نصائح وإرشادات للمتحدث أثناء العرض:'
-                                      : '💡 ئامۆژگاری و ڕێنمایی بۆ پێشکەشکار:'),
-                            style: TextStyle(
-                              fontFamily: _currentFontFamily,
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.bold,
-                              color: ZankoColors.primary,
+                          ClipRRect(
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(20),
+                            ),
+                            child: Stack(
+                              children: [
+                                Image.network(
+                                  imgUrl,
+                                  height: 160,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Container(
+                                        height: 160,
+                                        decoration: const BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Color(0xFF0F172A),
+                                              Color(0xFF1E293B),
+                                            ],
+                                          ),
+                                        ),
+                                        child: const Center(
+                                          child: Icon(
+                                            CupertinoIcons.photo_fill,
+                                            color: Colors.white24,
+                                            size: 40,
+                                          ),
+                                        ),
+                                      ),
+                                ),
+                                Container(
+                                  height: 160,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Colors.transparent,
+                                        Colors.black.withValues(alpha: 0.85),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 12,
+                                  right: 12,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF2563EB),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      _isEnglish
+                                          ? 'Slide ${_selectedSlideIndex + 1} of ${_parsedSlides.length} • HD'
+                                          : 'سلایدی ${_selectedSlideIndex + 1} لە ${_parsedSlides.length} • HD',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  bottom: 12,
+                                  right: 14,
+                                  left: 14,
+                                  child: Text(
+                                    _selectedSlideIndex == 0
+                                        ? ((_activeGeneratedTitle != null &&
+                                                  _activeGeneratedTitle!
+                                                      .trim()
+                                                      .isNotEmpty)
+                                              ? _activeGeneratedTitle!.trim()
+                                              : currentSlide.title)
+                                        : currentSlide.title,
+                                    style: TextStyle(
+                                      fontFamily: _currentFontFamily,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      shadows: const [
+                                        Shadow(
+                                          color: Colors.black,
+                                          blurRadius: 4,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 5),
-                          Text(
-                            currentSlide.speakerNotes!,
-                            style: TextStyle(
-                              fontFamily: _currentFontFamily,
-                              fontSize: 12.5,
-                              height: 1.55,
-                              color: isDark
-                                  ? Colors.grey[300]
-                                  : const Color(0xFF451A03),
+
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Directionality(
+                              textDirection: _isEnglish
+                                  ? TextDirection.ltr
+                                  : TextDirection.rtl,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  // ─── SLIDE 1 (COVER PAGE): PURE LAYOUT (LOGO, TITLE, STUDENT, SUPERVISOR) ───
+                                  if (_selectedSlideIndex == 0) ...[
+                                    // University Logo / Emblem Header
+                                    Center(
+                                      child: Column(
+                                        children: [
+                                          if (_universityLogoBytes != null) ...[
+                                            ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              child: Image.memory(
+                                                _universityLogoBytes!,
+                                                height: 52,
+                                                width: 52,
+                                                fit: BoxFit.contain,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 6),
+                                          ],
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 14,
+                                              vertical: 6,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: const Color(
+                                                0xFF2563EB,
+                                              ).withValues(alpha: 0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                              border: Border.all(
+                                                color: const Color(
+                                                  0xFF2563EB,
+                                                ).withValues(alpha: 0.3),
+                                              ),
+                                            ),
+                                            child: Text(
+                                              '🏛️ ${KurdistanUniversitiesData.getLocalizedUniversityName(_universityController.text.trim(), _selectedLanguage.code)}',
+                                              style: TextStyle(
+                                                fontFamily: _currentFontFamily,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: isDark
+                                                    ? const Color(0xFF38BDF8)
+                                                    : const Color(0xFF1D4ED8),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 16),
+
+                                    // Main Topic Title
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: isDark
+                                            ? Colors.white.withValues(
+                                                alpha: 0.04,
+                                              )
+                                            : Colors.white,
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                          color: const Color(
+                                            0xFF2563EB,
+                                          ).withValues(alpha: 0.35),
+                                        ),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Text(
+                                            (_activeGeneratedTitle != null &&
+                                                    _activeGeneratedTitle!
+                                                        .trim()
+                                                        .isNotEmpty)
+                                                ? _activeGeneratedTitle!.trim()
+                                                : currentSlide.title,
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              fontFamily: _currentFontFamily,
+                                              fontSize: 17,
+                                              fontWeight: FontWeight.bold,
+                                              color: isDark
+                                                  ? Colors.white
+                                                  : const Color(0xFF0F172A),
+                                            ),
+                                          ),
+                                          if (_reportDeptController.text
+                                              .trim()
+                                              .isNotEmpty) ...[
+                                            const SizedBox(height: 6),
+                                            Text(
+                                              KurdistanUniversitiesData.getLocalizedDepartmentName(
+                                                _reportDeptController.text
+                                                    .trim(),
+                                                _selectedLanguage.code,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                fontFamily: _currentFontFamily,
+                                                fontSize: 12.5,
+                                                color: isDark
+                                                    ? Colors.grey[400]
+                                                    : const Color(0xFF64748B),
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 14),
+
+                                    // Author (Student) & Supervisor Centered Cards
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(
+                                              color: const Color(
+                                                0xFF0284C7,
+                                              ).withValues(alpha: 0.08),
+                                              borderRadius:
+                                                  BorderRadius.circular(14),
+                                              border: Border.all(
+                                                color: const Color(
+                                                  0xFF0284C7,
+                                                ).withValues(alpha: 0.3),
+                                              ),
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  _isEnglish
+                                                      ? '👨‍🎓 Prepared by:'
+                                                      : (_isArabic
+                                                            ? '👨‍🎓 إعداد الطالب:'
+                                                            : (_isBadini
+                                                                  ? '👨‍🎓 ئامادەکرن ژ لایێ:'
+                                                                  : '👨‍🎓 ئامادەکردنی:')),
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                    fontFamily:
+                                                        _currentFontFamily,
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: const Color(
+                                                      0xFF0284C7,
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  _studentNameController.text
+                                                          .trim()
+                                                          .isNotEmpty
+                                                      ? _studentNameController
+                                                            .text
+                                                            .trim()
+                                                      : (_isEnglish
+                                                            ? 'Student / Team'
+                                                            : (_isArabic
+                                                                  ? 'اسم الطالب / الفريق'
+                                                                  : 'ناوی قوتابی / تیم')),
+                                                  maxLines: 2,
+                                                  textAlign: TextAlign.center,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    fontFamily:
+                                                        _currentFontFamily,
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Container(
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(
+                                              color: const Color(
+                                                0xFF10B981,
+                                              ).withValues(alpha: 0.08),
+                                              borderRadius:
+                                                  BorderRadius.circular(14),
+                                              border: Border.all(
+                                                color: const Color(
+                                                  0xFF10B981,
+                                                ).withValues(alpha: 0.3),
+                                              ),
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  _isEnglish
+                                                      ? '👨‍🏫 Supervised by:'
+                                                      : (_isArabic
+                                                            ? '👨‍🏫 بإشراف الأستاذ:'
+                                                            : (_isBadini
+                                                                  ? '👨‍🏫 سەرپەرشتیار:'
+                                                                  : '👨‍🏫 سەرپەرشتیاری:')),
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                    fontFamily:
+                                                        _currentFontFamily,
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: const Color(
+                                                      0xFF10B981,
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  _supervisorNameController.text
+                                                          .trim()
+                                                          .isNotEmpty
+                                                      ? _supervisorNameController
+                                                            .text
+                                                            .trim()
+                                                      : (_isEnglish
+                                                            ? 'Supervisor'
+                                                            : (_isArabic
+                                                                  ? 'الأستاذ المشرف'
+                                                                  : 'مامۆستای سەرپەرشتیار')),
+                                                  maxLines: 2,
+                                                  textAlign: TextAlign.center,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    fontFamily:
+                                                        _currentFontFamily,
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+
+                                    if (currentSlide
+                                        .bulletPoints
+                                        .isNotEmpty) ...[
+                                      const SizedBox(height: 14),
+                                      Text(
+                                        _isEnglish
+                                            ? '📌 Slide 1 Academic Focus & Overview:'
+                                            : '📌 تەوەر و خاڵە سەرەکییەکانی ناساندن:',
+                                        style: TextStyle(
+                                          fontFamily: _currentFontFamily,
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark
+                                              ? Colors.grey[300]
+                                              : const Color(0xFF1E293B),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      ...currentSlide.bulletPoints
+                                          .asMap()
+                                          .entries
+                                          .map((entry) {
+                                            final idx = entry.key + 1;
+                                            final text = entry.value;
+                                            return Container(
+                                              margin: const EdgeInsets.only(
+                                                bottom: 8,
+                                              ),
+                                              padding: const EdgeInsets.all(10),
+                                              decoration: BoxDecoration(
+                                                color: isDark
+                                                    ? Colors.white.withValues(
+                                                        alpha: 0.03,
+                                                      )
+                                                    : Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                border: Border.all(
+                                                  color: isDark
+                                                      ? Colors.white10
+                                                      : const Color(0xFFE2E8F0),
+                                                ),
+                                              ),
+                                              child: Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Container(
+                                                    width: 22,
+                                                    height: 22,
+                                                    decoration: BoxDecoration(
+                                                      color: const Color(
+                                                        0xFF2563EB,
+                                                      ).withValues(alpha: 0.15),
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                    child: Center(
+                                                      child: Text(
+                                                        '$idx',
+                                                        style: TextStyle(
+                                                          fontFamily:
+                                                              _currentFontFamily,
+                                                          fontSize: 10.5,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: const Color(
+                                                            0xFF2563EB,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Expanded(
+                                                    child: Text(
+                                                      text,
+                                                      style: TextStyle(
+                                                        fontFamily:
+                                                            _currentFontFamily,
+                                                        fontSize: 13,
+                                                        height: 1.45,
+                                                        color: isDark
+                                                            ? Colors.grey[200]
+                                                            : ZankoColors
+                                                                  .textPrimary,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          }),
+                                    ],
+                                  ] else ...[
+                                    // ─── SLIDES 2 TO 8: CONTENT BULLET POINTS & RESEARCH DATA ───
+                                    if (currentSlide.visualPrompt != null &&
+                                        currentSlide
+                                            .visualPrompt!
+                                            .isNotEmpty) ...[
+                                      Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: const Color(
+                                            0xFF2563EB,
+                                          ).withValues(alpha: 0.08),
+                                          borderRadius: BorderRadius.circular(
+                                            14,
+                                          ),
+                                          border: Border.all(
+                                            color: const Color(
+                                              0xFF2563EB,
+                                            ).withValues(alpha: 0.25),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Icon(
+                                              CupertinoIcons
+                                                  .photo_fill_on_rectangle_fill,
+                                              color: Color(0xFF2563EB),
+                                              size: 18,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text(
+                                                _isEnglish
+                                                    ? '🎯 Slide Visual Focus: ${currentSlide.visualPrompt!}'
+                                                    : '🎯 تیشکۆ و وێنەی سەرەکی: ${currentSlide.visualPrompt!}',
+                                                style: TextStyle(
+                                                  fontFamily:
+                                                      _currentFontFamily,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: isDark
+                                                      ? Colors.grey[200]
+                                                      : const Color(0xFF1E3A8A),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 14),
+                                    ],
+
+                                    ...currentSlide.bulletPoints
+                                        .asMap()
+                                        .entries
+                                        .map((entry) {
+                                          final idx = entry.key + 1;
+                                          final text = entry.value;
+                                          final isMetric =
+                                              text.contains('٪') ||
+                                              text.contains('%') ||
+                                              text.contains('accuracy') ||
+                                              text.contains('کارایی') ||
+                                              text.contains('ڕێژە');
+
+                                          return Container(
+                                            margin: const EdgeInsets.only(
+                                              bottom: 10,
+                                            ),
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(
+                                              color: isMetric
+                                                  ? const Color(
+                                                      0xFF2563EB,
+                                                    ).withValues(alpha: 0.06)
+                                                  : (isDark
+                                                        ? Colors.white
+                                                              .withValues(
+                                                                alpha: 0.03,
+                                                              )
+                                                        : Colors.white),
+                                              borderRadius:
+                                                  BorderRadius.circular(14),
+                                              border: Border.all(
+                                                color: isMetric
+                                                    ? const Color(
+                                                        0xFF2563EB,
+                                                      ).withValues(alpha: 0.25)
+                                                    : (isDark
+                                                          ? Colors.white10
+                                                          : const Color(
+                                                              0xFFE2E8F0,
+                                                            )),
+                                              ),
+                                            ),
+                                            child: Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Container(
+                                                  width: 24,
+                                                  height: 24,
+                                                  decoration: BoxDecoration(
+                                                    color: isMetric
+                                                        ? const Color(
+                                                            0xFF2563EB,
+                                                          )
+                                                        : ZankoColors.accent
+                                                              .withValues(
+                                                                alpha: 0.15,
+                                                              ),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: Center(
+                                                    child: Text(
+                                                      '$idx',
+                                                      style: TextStyle(
+                                                        fontFamily:
+                                                            _currentFontFamily,
+                                                        fontSize: 11,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: isMetric
+                                                            ? Colors.white
+                                                            : ZankoColors
+                                                                  .accent,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 10),
+                                                Expanded(
+                                                  child: Text(
+                                                    text,
+                                                    style: TextStyle(
+                                                      fontFamily:
+                                                          _currentFontFamily,
+                                                      fontSize: 13.5,
+                                                      height: 1.5,
+                                                      fontWeight: isMetric
+                                                          ? FontWeight.w600
+                                                          : FontWeight.normal,
+                                                      color: isDark
+                                                          ? Colors.grey[200]
+                                                          : ZankoColors
+                                                                .textPrimary,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        }),
+                                  ],
+                                  if (_selectedSlideIndex ==
+                                      _parsedSlides.length - 1) ...[
+                                    const SizedBox(height: 16),
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 22,
+                                        horizontal: 18,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: isDark
+                                              ? [
+                                                  const Color(
+                                                    0xFF1E3A8A,
+                                                  ).withValues(alpha: 0.8),
+                                                  const Color(0xFF0F172A),
+                                                ]
+                                              : [
+                                                  const Color(0xFFEFF6FF),
+                                                  const Color(0xFFDBEAFE),
+                                                ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: const Color(0xFF2563EB),
+                                          width: 2,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(
+                                              0xFF2563EB,
+                                            ).withValues(alpha: 0.25),
+                                            blurRadius: 16,
+                                            offset: const Offset(0, 6),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          const Text(
+                                            '✨ 🎓 ✨',
+                                            style: TextStyle(fontSize: 26),
+                                          ),
+                                          const SizedBox(height: 10),
+                                          Text(
+                                            '✨ ${PptxGeneratorService.getThankYouMessage(_selectedLanguage.code)} ✨',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              fontFamily: _currentFontFamily,
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                              color: isDark
+                                                  ? const Color(0xFF93C5FD)
+                                                  : const Color(0xFF1D4ED8),
+                                              letterSpacing: 0.5,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 5,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: isDark
+                                                  ? const Color(0xFF1E293B)
+                                                  : Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: const Color(
+                                                  0xFF38BDF8,
+                                                ).withValues(alpha: 0.5),
+                                              ),
+                                            ),
+                                            child: Text(
+                                              _isEnglish
+                                                  ? '💬 Open Floor for Academic Inquiries & Q&A Discussion'
+                                                  : (_isArabic
+                                                        ? '💬 باب المناقشة والأسئلة الأكاديمية مفتوح للجميع'
+                                                        : '💬 کاتی پرسیار، سەرنج و گفتوگۆی زانستی واڵایە'),
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                fontFamily: _currentFontFamily,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                                color: isDark
+                                                    ? const Color(0xFF38BDF8)
+                                                    : const Color(0xFF0284C7),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ],
+
+                    // Separate Presenter Guidance Card
+                    if (currentSlide.speakerNotes != null &&
+                        currentSlide.speakerNotes!.isNotEmpty) ...[
+                      const SizedBox(height: 14),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: ZankoColors.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: ZankoColors.primary.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              CupertinoIcons.lightbulb_fill,
+                              color: ZankoColors.primary,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _isEnglish
+                                        ? '💡 Presenter Advice & Delivery Tips:'
+                                        : (_isArabic
+                                              ? '💡 نصائح وإرشادات للمتحدث أثناء العرض:'
+                                              : '💡 ئامۆژگاری و ڕێنمایی بۆ پێشکەشکار:'),
+                                    style: TextStyle(
+                                      fontFamily: _currentFontFamily,
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: ZankoColors.primary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    currentSlide.speakerNotes!,
+                                    style: TextStyle(
+                                      fontFamily: _currentFontFamily,
+                                      fontSize: 12.5,
+                                      height: 1.55,
+                                      color: isDark
+                                          ? Colors.grey[300]
+                                          : const Color(0xFF451A03),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -4215,10 +4306,15 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                         }
                       : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.grey[100],
+                    backgroundColor: isDark
+                        ? const Color(0xFF1E293B)
+                        : Colors.grey[100],
                     foregroundColor: isDark ? Colors.white : Colors.black87,
                     elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                       side: BorderSide(
@@ -4231,8 +4327,8 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                     _isEnglish
                         ? 'Previous'
                         : (_isArabic
-                            ? 'السابق'
-                            : (_isBadini ? 'یا پێشتر' : 'پێشوو')),
+                              ? 'السابق'
+                              : (_isBadini ? 'یا پێشتر' : 'پێشوو')),
                     style: TextStyle(
                       fontFamily: _currentFontFamily,
                       fontSize: 12,
@@ -4243,7 +4339,10 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 
                 // Morph Animation Indicator Badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF2563EB).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -4264,10 +4363,10 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                         _isEnglish
                             ? 'Slide ${_selectedSlideIndex + 1} of ${_parsedSlides.length} • Morph'
                             : (_isArabic
-                                ? 'شريحة ${_selectedSlideIndex + 1} من ${_parsedSlides.length} • انتقال مۆرف'
-                                : (_isBadini
-                                    ? 'سلایدا ${_selectedSlideIndex + 1} ژ ${_parsedSlides.length} • جوڵەیا مۆرف'
-                                    : 'سلایدی ${_selectedSlideIndex + 1} لە ${_parsedSlides.length} • جوڵەی مۆرف')),
+                                  ? 'شريحة ${_selectedSlideIndex + 1} من ${_parsedSlides.length} • انتقال مۆرف'
+                                  : (_isBadini
+                                        ? 'سلایدا ${_selectedSlideIndex + 1} ژ ${_parsedSlides.length} • جوڵەیا مۆرف'
+                                        : 'سلایدی ${_selectedSlideIndex + 1} لە ${_parsedSlides.length} • جوڵەی مۆرف')),
                         style: TextStyle(
                           fontFamily: _currentFontFamily,
                           fontSize: 11.5,
@@ -4292,7 +4391,10 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                     backgroundColor: const Color(0xFF2563EB),
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -4301,8 +4403,8 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                     _isEnglish
                         ? 'Next'
                         : (_isArabic
-                            ? 'التالي'
-                            : (_isBadini ? 'یا دووڤدا' : 'داهاتوو')),
+                              ? 'التالي'
+                              : (_isBadini ? 'یا دووڤدا' : 'داهاتوو')),
                     style: TextStyle(
                       fontFamily: _currentFontFamily,
                       fontSize: 12,
@@ -6146,10 +6248,12 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
       final deptEn = (department != null && department.trim().isNotEmpty)
           ? department.trim()
           : 'Advanced Academic Studies';
-      final notesPointEn = (customNotes != null && customNotes.trim().isNotEmpty)
+      final notesPointEn =
+          (customNotes != null && customNotes.trim().isNotEmpty)
           ? '- **Mandatory Student Directive**: Rigorous integration of requested focus areas: "${customNotes.trim()}" throughout the methodology.\n'
           : '';
-      final notesDiscussionEn = (customNotes != null && customNotes.trim().isNotEmpty)
+      final notesDiscussionEn =
+          (customNotes != null && customNotes.trim().isNotEmpty)
           ? '- **Targeted Requirements Review**: Empirical evaluation directly assessing criteria specified by student notes: "${customNotes.trim()}".\n'
           : '';
 
@@ -6232,10 +6336,12 @@ $notesDiscussionEn- **Policy & Governance**: Establishing robust protocols for e
       final deptAr = (department != null && department.trim().isNotEmpty)
           ? department.trim()
           : 'التخصص الأكاديمي';
-      final notesPointAr = (customNotes != null && customNotes.trim().isNotEmpty)
+      final notesPointAr =
+          (customNotes != null && customNotes.trim().isNotEmpty)
           ? '- **توجيهات ومتطلبات الطالب**: الالتزام الدقيق بالمحاور التي حددها الطالب: "${customNotes.trim()}" وتطبيقها بدقة علمية.\n'
           : '';
-      final notesDiscussionAr = (customNotes != null && customNotes.trim().isNotEmpty)
+      final notesDiscussionAr =
+          (customNotes != null && customNotes.trim().isNotEmpty)
           ? '- **مواءمة النتائج مع توجيهات الأستاذ**: تقييم المخرجات وفق الشروط والنقاط المحددة من قبل الطالب: "${customNotes.trim()}".\n'
           : '';
 
@@ -6320,13 +6426,14 @@ $notesDiscussionAr- **الحوكمة والمعايير الأخلاقية**: ص
         : (isBad ? 'بوارێ ئەکادیمی' : 'بواری ئەکادیمی');
     final notesPointKu = (customNotes != null && customNotes.trim().isNotEmpty)
         ? (isBad
-            ? '- **داواکاری و ڕێنمایێن قوتابی**: جێبەجێکرنا هویر یا خاڵێن دەستنیشانکری: "${customNotes.trim()}" ب شێوازەکێ زانستی یێ سەردەمیانە.\n'
-            : '- **داواکاری و تێبینییەکانی قوتابی**: جێبەجێکردنی تەواوی خاڵە دیاریکراوەکانی قوتابی: "${customNotes.trim()}" بە شێوازێکی زانستیی سەردەمیانە.\n')
+              ? '- **داواکاری و ڕێنمایێن قوتابی**: جێبەجێکرنا هویر یا خاڵێن دەستنیشانکری: "${customNotes.trim()}" ب شێوازەکێ زانستی یێ سەردەمیانە.\n'
+              : '- **داواکاری و تێبینییەکانی قوتابی**: جێبەجێکردنی تەواوی خاڵە دیاریکراوەکانی قوتابی: "${customNotes.trim()}" بە شێوازێکی زانستیی سەردەمیانە.\n')
         : '';
-    final notesDiscussionKu = (customNotes != null && customNotes.trim().isNotEmpty)
+    final notesDiscussionKu =
+        (customNotes != null && customNotes.trim().isNotEmpty)
         ? (isBad
-            ? '- **شیکاریا خاڵێن جەختلێکری**: هەڵسەنگاندنا ئەنجامان ل دویڤ ئەو ڕێنمایی و تێبینیێن کو ژ لایێ قوتابی ڤە هاتبوونە دیارکرن.\n'
-            : '- **شیکاریی خاڵە جەختلێکراوەکان**: هەڵسەنگاندنی ئەنجامەکان بە پێی ئەو ڕێنمایی و تێبینییانەی کە لە لایەن قوتابییەوە دەستنیشانکرابوون.\n')
+              ? '- **شیکاریا خاڵێن جەختلێکری**: هەڵسەنگاندنا ئەنجامان ل دویڤ ئەو ڕێنمایی و تێبینیێن کو ژ لایێ قوتابی ڤە هاتبوونە دیارکرن.\n'
+              : '- **شیکاریی خاڵە جەختلێکراوەکان**: هەڵسەنگاندنی ئەنجامەکان بە پێی ئەو ڕێنمایی و تێبینییانەی کە لە لایەن قوتابییەوە دەستنیشانکرابوون.\n')
         : '';
 
     return '''
@@ -6474,10 +6581,7 @@ $notesDiscussionKu- **پاراستن و ڕەوشتی زانستی**: دانان�
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: themeColor.withOpacity(0.35),
-          width: 1.5,
-        ),
+        border: Border.all(color: themeColor.withOpacity(0.35), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: themeColor.withOpacity(isDark ? 0.2 : 0.08),
@@ -6515,10 +6619,10 @@ $notesDiscussionKu- **پاراستن و ڕەوشتی زانستی**: دانان�
                       _isEnglish
                           ? 'Deep Academic Literature Investigation'
                           : (_isArabic
-                              ? 'البحث والتحري الأكاديمي الشامل قيد التنفيذ'
-                              : (_isBadini
-                                  ? 'لێگەڕیان و پشکنینا زانستی یا هویر'
-                                  : 'گەڕانی قووڵ و پشکنینی زانستیی سەرچاوەکان')),
+                                ? 'البحث والتحري الأكاديمي الشامل قيد التنفيذ'
+                                : (_isBadini
+                                      ? 'لێگەڕیان و پشکنینا زانستی یا هویر'
+                                      : 'گەڕانی قووڵ و پشکنینی زانستیی سەرچاوەکان')),
                       style: TextStyle(
                         fontFamily: _currentFontFamily,
                         fontSize: 14.5,
@@ -6526,7 +6630,8 @@ $notesDiscussionKu- **پاراستن و ڕەوشتی زانستی**: دانان�
                         color: isDark ? Colors.white : const Color(0xFF0F172A),
                       ),
                     ),
-                    if (_activeGeneratedTitle != null && _activeGeneratedTitle!.isNotEmpty)
+                    if (_activeGeneratedTitle != null &&
+                        _activeGeneratedTitle!.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
                         child: Text(
@@ -6559,17 +6664,17 @@ $notesDiscussionKu- **پاراستن و ڕەوشتی زانستی**: دانان�
             title: _isEnglish
                 ? 'Phase 1: Exhaustive literature & empirical search (2024-2026)'
                 : (_isArabic
-                    ? 'المرحلة الأولى: فحص الدراسات الأكاديمية والمصادر الحديثة (٢٠٢٤-٢٠٢٦)'
-                    : (_isBadini
-                        ? 'قۆناغا ١: لێگەڕیانا هویر یا ژێدەرێن باوەرپێکری (٢٠٢٤-٢٠٢٦)'
-                        : 'قۆناغی ١: گەڕانی قووڵی سەرچاوە و لێکۆڵینەوە نوێیەکان (٢٠٢٤-٢٠٢٦)')),
+                      ? 'المرحلة الأولى: فحص الدراسات الأكاديمية والمصادر الحديثة (٢٠٢٤-٢٠٢٦)'
+                      : (_isBadini
+                            ? 'قۆناغا ١: لێگەڕیانا هویر یا ژێدەرێن باوەرپێکری (٢٠٢٤-٢٠٢٦)'
+                            : 'قۆناغی ١: گەڕانی قووڵی سەرچاوە و لێکۆڵینەوە نوێیەکان (٢٠٢٤-٢٠٢٦)')),
             subtitle: _isEnglish
                 ? 'Retrieving exact metrics, quantitative percentages & peer-reviewed consensus'
                 : (_isArabic
-                    ? 'استخراج الإحصائيات الدقيقة والنسب المئوية والبيانات المعتمدة'
-                    : (_isBadini
-                        ? 'دەستنیشانکرنا ڕێژەیێن سەدی، ئامار و ئەنجامێن زانستی'
-                        : 'دەرهێنانی ڕێژە سەدییەکان، ئامارەکان و بەڵگە باوەڕپێکراوەکان')),
+                      ? 'استخراج الإحصائيات الدقيقة والنسب المئوية والبيانات المعتمدة'
+                      : (_isBadini
+                            ? 'دەستنیشانکرنا ڕێژەیێن سەدی، ئامار و ئەنجامێن زانستی'
+                            : 'دەرهێنانی ڕێژە سەدییەکان، ئامارەکان و بەڵگە باوەڕپێکراوەکان')),
             icon: CupertinoIcons.search_circle_fill,
             isCompleted: _researchPhase > 1,
             isActive: _researchPhase == 1,
@@ -6582,17 +6687,17 @@ $notesDiscussionKu- **پاراستن و ڕەوشتی زانستی**: دانان�
             title: _isEnglish
                 ? 'Phase 2: Applying student directives & custom requirements'
                 : (_isArabic
-                    ? 'المرحلة الثانية: تطبيق متطلبات وتوجيهات الطالب بدقة كاملة'
-                    : (_isBadini
-                        ? 'قۆناغا ٢: بجهئینانا هەمی داخوازی و مەرجێن قوتابی'
-                        : 'قۆناغی ٢: جێبەجێکردنی تەواوی داواکاری و تێبینییەکانی قوتابی')),
+                      ? 'المرحلة الثانية: تطبيق متطلبات وتوجيهات الطالب بدقة كاملة'
+                      : (_isBadini
+                            ? 'قۆناغا ٢: بجهئینانا هەمی داخوازی و مەرجێن قوتابی'
+                            : 'قۆناغی ٢: جێبەجێکردنی تەواوی داواکاری و تێبینییەکانی قوتابی')),
             subtitle: _isEnglish
                 ? 'Tailoring core thesis and slide objectives strictly to instructions'
                 : (_isArabic
-                    ? 'تخصيص المحاور ونقاط الشرح بناءً على ملاحظات الأستاذ والطالب'
-                    : (_isBadini
-                        ? 'گونجاندنا ناڤەرۆکێ ب شێوەیەکێ دروست ل گەل داخوازیان'
-                        : 'گونجاندنی تێز و خاڵە سەرەکییەکان بە پێی مەرجەکانی قوتابی')),
+                      ? 'تخصيص المحاور ونقاط الشرح بناءً على ملاحظات الأستاذ والطالب'
+                      : (_isBadini
+                            ? 'گونجاندنا ناڤەرۆکێ ب شێوەیەکێ دروست ل گەل داخوازیان'
+                            : 'گونجاندنی تێز و خاڵە سەرەکییەکان بە پێی مەرجەکانی قوتابی')),
             icon: CupertinoIcons.doc_text_viewfinder,
             isCompleted: _researchPhase > 2,
             isActive: _researchPhase == 2,
@@ -6605,17 +6710,17 @@ $notesDiscussionKu- **پاراستن و ڕەوشتی زانستی**: دانان�
             title: _isEnglish
                 ? 'Phase 3: Synthesizing 8 slides with 100% unique HD imagery'
                 : (_isArabic
-                    ? 'المرحلة الثالثة: صياغة ٨ شرائح مع صور HD فريدة غير مكررة نهائياً'
-                    : (_isBadini
-                        ? 'قۆناغا ٣: ئامادەکرنا ٨ سلایدان ب وێنەیێن سەردەمیانە و بێ دووبارەبوون'
-                        : 'قۆناغی ٣: دروستکردنی ٨ سلایدی ستاندارد بە وێنەی ناوازەی جیاواز (بێ دووبارە)')),
+                      ? 'المرحلة الثالثة: صياغة ٨ شرائح مع صور HD فريدة غير مكررة نهائياً'
+                      : (_isBadini
+                            ? 'قۆناغا ٣: ئامادەکرنا ٨ سلایدان ب وێنەیێن سەردەمیانە و بێ دووبارەبوون'
+                            : 'قۆناغی ٣: دروستکردنی ٨ سلایدی ستاندارد بە وێنەی ناوازەی جیاواز (بێ دووبارە)')),
             subtitle: _isEnglish
                 ? 'Rich vertical balance, speaker notes & Canva/PPT ready structure'
                 : (_isArabic
-                    ? 'تنسيق متناسق، ملاحظات الإلقاء وتجهيز ملف العرض التقديمي'
-                    : (_isBadini
-                        ? 'دابەشکرنا خاڵان، تێبینیێن پێشکێشکاری و بەرهەڤکرنا فایلێ PPTX'
-                        : 'ڕێکخستنی خاڵەکان، تێبینییەکانی پێشکەشکار و دروستکردنی فایلی PPTX')),
+                      ? 'تنسيق متناسق، ملاحظات الإلقاء وتجهيز ملف العرض التقديمي'
+                      : (_isBadini
+                            ? 'دابەشکرنا خاڵان، تێبینیێن پێشکێشکاری و بەرهەڤکرنا فایلێ PPTX'
+                            : 'ڕێکخستنی خاڵەکان، تێبینییەکانی پێشکەشکار و دروستکردنی فایلی PPTX')),
             icon: CupertinoIcons.sparkles,
             isCompleted: _researchPhase > 3,
             isActive: _researchPhase == 3,
@@ -6733,8 +6838,8 @@ $notesDiscussionKu- **پاراستن و ڕەوشتی زانستی**: دانان�
                   color: isCompleted
                       ? (isDark ? Colors.white70 : Colors.black87)
                       : (isActive
-                          ? themeColor
-                          : (isDark ? Colors.white38 : Colors.grey[500])),
+                            ? themeColor
+                            : (isDark ? Colors.white38 : Colors.grey[500])),
                 ),
               ),
               const SizedBox(height: 2),
@@ -6752,5 +6857,4 @@ $notesDiscussionKu- **پاراستن و ڕەوشتی زانستی**: دانان�
       ],
     );
   }
-
 }

@@ -25,7 +25,10 @@ class PremiumSubscriptionScreen extends StatefulWidget {
   const PremiumSubscriptionScreen({super.key, this.clientService});
 
   /// Convenient static launcher that can be pushed or shown as a modal sheet
-  static Future<void> show(BuildContext context, {SubscriptionClientService? clientService}) {
+  static Future<void> show(
+    BuildContext context, {
+    SubscriptionClientService? clientService,
+  }) {
     return Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => PremiumSubscriptionScreen(clientService: clientService),
@@ -59,7 +62,8 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
   @override
   void initState() {
     super.initState();
-    _subscriptionService = widget.clientService ?? SubscriptionClientService.instance;
+    _subscriptionService =
+        widget.clientService ?? SubscriptionClientService.instance;
     _fetchAuthoritativeSubscription();
   }
 
@@ -168,7 +172,8 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
       if (!mounted) return;
       setState(() {
         _flowState = SubscriptionFlowState.paymentFailed;
-        _flowMessage = 'هەڵەیەک ڕوویدا لە دروستکردنی پارەدان: ${_extractErrorMessage(err)}';
+        _flowMessage =
+            'هەڵەیەک ڕوویدا لە دروستکردنی پارەدان: ${_extractErrorMessage(err)}';
       });
     }
   }
@@ -179,35 +184,34 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
     int attempts = 0;
     const maxAttempts = 30; // 2 minutes total (30 * 4s)
 
-    _verificationPollTimer = Timer.periodic(
-      const Duration(seconds: 4),
-      (timer) async {
-        attempts++;
-        if (!mounted || attempts > maxAttempts) {
+    _verificationPollTimer = Timer.periodic(const Duration(seconds: 4), (
+      timer,
+    ) async {
+      attempts++;
+      if (!mounted || attempts > maxAttempts) {
+        timer.cancel();
+        return;
+      }
+
+      try {
+        final sub = await _subscriptionService.getSubscription();
+        if (!mounted) return;
+
+        if (sub.canAccessPremiumFeatures) {
           timer.cancel();
-          return;
+          setState(() {
+            _subscription = sub;
+            _flowState = SubscriptionFlowState.paymentSuccessful;
+            _flowMessage =
+                'پیرۆزە! ئابوونەی پرێمیۆم بە سەرکەوتوویی لە سێرڤەرەوە پشتڕاستکرایەوە.';
+          });
+          final auth = Provider.of<AuthService>(context, listen: false);
+          auth.reloadUser();
         }
-
-        try {
-          final sub = await _subscriptionService.getSubscription();
-          if (!mounted) return;
-
-          if (sub.canAccessPremiumFeatures) {
-            timer.cancel();
-            setState(() {
-              _subscription = sub;
-              _flowState = SubscriptionFlowState.paymentSuccessful;
-              _flowMessage =
-                  'پیرۆزە! ئابوونەی پرێمیۆم بە سەرکەوتوویی لە سێرڤەرەوە پشتڕاستکرایەوە.';
-            });
-            final auth = Provider.of<AuthService>(context, listen: false);
-            auth.reloadUser();
-          }
-        } catch (_) {
-          // Ignore intermittent poll errors
-        }
-      },
-    );
+      } catch (_) {
+        // Ignore intermittent poll errors
+      }
+    });
   }
 
   /// Manual button tap to verify payment via GET /api/subscription
@@ -239,7 +243,8 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
       if (!mounted) return;
       setState(() {
         _flowState = SubscriptionFlowState.paymentPending;
-        _flowMessage = 'نەتوانرا پەیوەندی بە سێرڤەرەوە بکرێت: ${_extractErrorMessage(err)}';
+        _flowMessage =
+            'نەتوانرا پەیوەندی بە سێرڤەرەوە بکرێت: ${_extractErrorMessage(err)}';
       });
     }
   }
@@ -282,8 +287,9 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor =
-        isDark ? ZankoColors.darkBackground : const Color(0xFFF7F9FC);
+    final backgroundColor = isDark
+        ? ZankoColors.darkBackground
+        : const Color(0xFFF7F9FC);
 
     return Directionality(
       textDirection: lang.textDirection,
@@ -298,10 +304,7 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
           ),
           title: Text(
             lang.translate('plan_premium'),
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
           actions: [
@@ -333,7 +336,9 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
                                 padding: const EdgeInsets.all(14),
                                 decoration: BoxDecoration(
                                   color: Colors.red.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(ZankoRadius.card),
+                                  borderRadius: BorderRadius.circular(
+                                    ZankoRadius.card,
+                                  ),
                                   border: Border.all(
                                     color: Colors.red.withValues(alpha: 0.3),
                                   ),
@@ -342,10 +347,14 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        appIcon(HugeIcons.strokeRoundedAlertCircle,
-                                            color: Colors.red, size: 18),
+                                        appIcon(
+                                          HugeIcons.strokeRoundedAlertCircle,
+                                          color: Colors.red,
+                                          size: 18,
+                                        ),
                                         const SizedBox(width: 8),
                                         Expanded(
                                           child: Text(
@@ -364,19 +373,24 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
                                       width: double.infinity,
                                       child: ElevatedButton.icon(
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(0xFF10B981),
+                                          backgroundColor: const Color(
+                                            0xFF10B981,
+                                          ),
                                           foregroundColor: Colors.white,
                                           padding: const EdgeInsets.symmetric(
-                                              vertical: 10),
+                                            vertical: 10,
+                                          ),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
                                           ),
                                         ),
                                         icon: appIcon(
-                                            HugeIcons.strokeRoundedWallet02,
-                                            size: 16,
-                                            color: Colors.white),
+                                          HugeIcons.strokeRoundedWallet02,
+                                          size: 16,
+                                          color: Colors.white,
+                                        ),
                                         label: const Text(
                                           'داواکردنی ڕاستەوخۆ بە (FastPay / FIB / ZainCash)',
                                           style: TextStyle(
@@ -497,8 +511,10 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
             children: [
               // Plan Badge
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: isPremium
                       ? const Color(0xFFE4D27D)
@@ -536,8 +552,10 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
 
               // Status Chip
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
@@ -746,8 +764,11 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
                         borderRadius: BorderRadius.circular(ZankoRadius.button),
                       ),
                     ),
-                    icon: appIcon(HugeIcons.strokeRoundedRefresh,
-                        size: 16, color: Colors.white),
+                    icon: appIcon(
+                      HugeIcons.strokeRoundedRefresh,
+                      size: 16,
+                      color: Colors.white,
+                    ),
                     label: Text(lang.translate('verify_payment')),
                     onPressed: _manualVerifyPayment,
                   ),
@@ -759,13 +780,18 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
                       foregroundColor: bannerColor,
                       side: BorderSide(color: bannerColor),
                       padding: const EdgeInsets.symmetric(
-                          vertical: 12, horizontal: 14),
+                        vertical: 12,
+                        horizontal: 14,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(ZankoRadius.button),
                       ),
                     ),
-                    icon: appIcon(HugeIcons.strokeRoundedGlobe,
-                        size: 16, color: bannerColor),
+                    icon: appIcon(
+                      HugeIcons.strokeRoundedGlobe,
+                      size: 16,
+                      color: bannerColor,
+                    ),
                     label: const Text('کردنەوەی دەروازە'),
                     onPressed: () {
                       SubscriptionClientService.launchCheckoutUrl(
@@ -792,8 +818,11 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
                     borderRadius: BorderRadius.circular(ZankoRadius.button),
                   ),
                 ),
-                icon: appIcon(HugeIcons.strokeRoundedWallet02,
-                    size: 16, color: Colors.white),
+                icon: appIcon(
+                  HugeIcons.strokeRoundedWallet02,
+                  size: 16,
+                  color: Colors.white,
+                ),
                 label: const Text(
                   'داواکردنی ڕاستەوخۆ بە (FastPay / FIB / ZainCash)',
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
@@ -823,8 +852,8 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
         icon: HugeIcons.strokeRoundedAiMagic,
         currentUsage: usage?.getFeature('ai_chat')?.currentUsage ?? 0,
         limit: usage?.getFeature('ai_chat')?.limit ?? (isPremium ? 500 : 10),
-        remaining: usage?.getFeature('ai_chat')?.remaining ??
-            (isPremium ? 500 : 10),
+        remaining:
+            usage?.getFeature('ai_chat')?.remaining ?? (isPremium ? 500 : 10),
         period: 'daily',
         resetAt: usage?.getFeature('ai_chat')?.resetAt,
         unit: 'پرسیار',
@@ -846,7 +875,8 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
         icon: HugeIcons.strokeRoundedCamera01,
         currentUsage: usage?.getFeature('ocr')?.currentUsage ?? 0,
         limit: usage?.getFeature('ocr')?.limit ?? (isPremium ? 200 : 10),
-        remaining: usage?.getFeature('ocr')?.remaining ?? (isPremium ? 200 : 10),
+        remaining:
+            usage?.getFeature('ocr')?.remaining ?? (isPremium ? 200 : 10),
         period: 'monthly',
         resetAt: usage?.getFeature('ocr')?.resetAt,
         unit: 'لاپەڕە',
@@ -857,8 +887,8 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
         icon: HugeIcons.strokeRoundedPencilEdit02,
         currentUsage: usage?.getFeature('homework')?.currentUsage ?? 0,
         limit: usage?.getFeature('homework')?.limit ?? (isPremium ? 200 : 10),
-        remaining: usage?.getFeature('homework')?.remaining ??
-            (isPremium ? 200 : 10),
+        remaining:
+            usage?.getFeature('homework')?.remaining ?? (isPremium ? 200 : 10),
         period: 'daily',
         resetAt: usage?.getFeature('homework')?.resetAt,
         unit: 'پرسیار',
@@ -869,7 +899,8 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
         icon: HugeIcons.strokeRoundedMic01,
         currentUsage: usage?.getFeature('audio')?.currentUsage ?? 0,
         limit: usage?.getFeature('audio')?.limit ?? (isPremium ? 100 : 5),
-        remaining: usage?.getFeature('audio')?.remaining ?? (isPremium ? 100 : 5),
+        remaining:
+            usage?.getFeature('audio')?.remaining ?? (isPremium ? 100 : 5),
         period: 'monthly',
         resetAt: usage?.getFeature('audio')?.resetAt,
         unit: 'تۆمار',
@@ -880,7 +911,8 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
         icon: HugeIcons.strokeRoundedMortarboard02,
         currentUsage: usage?.getFeature('quiz')?.currentUsage ?? 0,
         limit: usage?.getFeature('quiz')?.limit ?? (isPremium ? 200 : 5),
-        remaining: usage?.getFeature('quiz')?.remaining ?? (isPremium ? 200 : 5),
+        remaining:
+            usage?.getFeature('quiz')?.remaining ?? (isPremium ? 200 : 5),
         period: 'monthly',
         resetAt: usage?.getFeature('quiz')?.resetAt,
         unit: 'تاقیکردنەوە',
@@ -915,8 +947,10 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
               ),
               const SizedBox(width: 8),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: isDark ? Colors.white10 : const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(12),
@@ -927,16 +961,18 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
                     appIcon(
                       HugeIcons.strokeRoundedClock01,
                       size: 13,
-                      color:
-                          isDark ? Colors.white60 : ZankoColors.textSecondary,
+                      color: isDark
+                          ? Colors.white60
+                          : ZankoColors.textSecondary,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       'ئەمشەو 12:00 نوێ دەبێتەوە',
                       style: TextStyle(
                         fontSize: 11,
-                        color:
-                            isDark ? Colors.white70 : ZankoColors.textSecondary,
+                        color: isDark
+                            ? Colors.white70
+                            : ZankoColors.textSecondary,
                       ),
                     ),
                   ],
@@ -1013,8 +1049,9 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
             child: LinearProgressIndicator(
               value: ratio,
               minHeight: 8,
-              backgroundColor:
-                  isDark ? Colors.white12 : const Color(0xFFE2E8F0),
+              backgroundColor: isDark
+                  ? Colors.white12
+                  : const Color(0xFFE2E8F0),
               valueColor: AlwaysStoppedAnimation<Color>(progressColor),
             ),
           ),
@@ -1105,8 +1142,8 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
         decoration: BoxDecoration(
           color: isSelected
               ? (tabKey == 'PREMIUM'
-                  ? const Color(0xFF035EC2)
-                  : (isDark ? Colors.white24 : Colors.white))
+                    ? const Color(0xFF035EC2)
+                    : (isDark ? Colors.white24 : Colors.white))
               : Colors.transparent,
           borderRadius: BorderRadius.circular(18),
         ),
@@ -1229,8 +1266,10 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
                 ],
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFE4D27D),
                   borderRadius: BorderRadius.circular(12),
@@ -1427,8 +1466,8 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
           color: isSelected
               ? ZankoColors.primary.withValues(alpha: 0.08)
               : (isDark
-                  ? Colors.white.withValues(alpha: 0.03)
-                  : const Color(0xFFF8FAFC)),
+                    ? Colors.white.withValues(alpha: 0.03)
+                    : const Color(0xFFF8FAFC)),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
@@ -1467,8 +1506,7 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
             if (badge != null) ...[
               const SizedBox(height: 6),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: const Color(0xFF10B981),
                   borderRadius: BorderRadius.circular(8),
@@ -1550,10 +1588,7 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
     );
   }
 
-  Widget _buildProviderOptionTile(
-    PaymentProviderOption provider,
-    bool isDark,
-  ) {
+  Widget _buildProviderOptionTile(PaymentProviderOption provider, bool isDark) {
     final isSelected = _selectedProvider == provider;
     final brandColor = Color(provider.primaryColorHex);
 
@@ -1570,8 +1605,8 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
           color: isSelected
               ? brandColor.withValues(alpha: 0.08)
               : (isDark
-                  ? Colors.white.withValues(alpha: 0.02)
-                  : const Color(0xFFFAFAFA)),
+                    ? Colors.white.withValues(alpha: 0.02)
+                    : const Color(0xFFFAFAFA)),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected
@@ -1614,8 +1649,9 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
                     provider.englishName,
                     style: TextStyle(
                       fontSize: 11,
-                      color:
-                          isDark ? Colors.white60 : ZankoColors.textSecondary,
+                      color: isDark
+                          ? Colors.white60
+                          : ZankoColors.textSecondary,
                     ),
                   ),
                 ],
@@ -1678,7 +1714,8 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
   // ─────────────────────────────────────────────────────────────────────────────
   Widget _buildActionButton(LanguageProvider lang, bool isDark) {
     final isPending = _flowState == SubscriptionFlowState.paymentPending;
-    final isLoading = _flowState == SubscriptionFlowState.loading ||
+    final isLoading =
+        _flowState == SubscriptionFlowState.loading ||
         _flowState == SubscriptionFlowState.verifying;
 
     if (isPending) {
@@ -1698,12 +1735,17 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
               ),
               icon: isLoading
                   ? const CupertinoActivityIndicator(color: Colors.white)
-                  : appIcon(HugeIcons.strokeRoundedCheckmarkBadge01,
-                      color: Colors.white, size: 20),
+                  : appIcon(
+                      HugeIcons.strokeRoundedCheckmarkBadge01,
+                      color: Colors.white,
+                      size: 20,
+                    ),
               label: Text(
                 lang.translate('verify_payment'),
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               onPressed: isLoading ? null : _manualVerifyPayment,
             ),
@@ -1742,8 +1784,11 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      appIcon(HugeIcons.strokeRoundedCrown,
-                          size: 20, color: Colors.white),
+                      appIcon(
+                        HugeIcons.strokeRoundedCrown,
+                        size: 20,
+                        color: Colors.white,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'نوێکردنەوە بۆ پرێمیۆم (${_selectedPlan.priceIqd == 5000 ? "٥,٠٠٠" : (_selectedPlan.priceIqd == 12000 ? "١٢,٠٠٠" : "٤٠,٠٠٠")} دینار)',
@@ -1768,14 +1813,14 @@ class _PremiumSubscriptionScreenState extends State<PremiumSubscriptionScreen> {
                 borderRadius: BorderRadius.circular(ZankoRadius.button),
               ),
             ),
-            icon: appIcon(HugeIcons.strokeRoundedWallet02,
-                size: 18, color: const Color(0xFF10B981)),
+            icon: appIcon(
+              HugeIcons.strokeRoundedWallet02,
+              size: 18,
+              color: const Color(0xFF10B981),
+            ),
             label: const Text(
               'داواکردنی ڕاستەوخۆ بە (FastPay / FIB / ZainCash)',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             ),
             onPressed: () => VipUpgradeSheet.show(context),
           ),

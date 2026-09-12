@@ -17,8 +17,10 @@ class ReportSeminarService {
 
   Dio get _dio => _customDio ?? ApiClient().dio;
 
-  static const String _localReportsCacheKey = 'local_saved_academic_reports_cache';
-  static const String _localSeminarsCacheKey = 'local_saved_academic_seminars_cache';
+  static const String _localReportsCacheKey =
+      'local_saved_academic_reports_cache';
+  static const String _localSeminarsCacheKey =
+      'local_saved_academic_seminars_cache';
 
   // ─── Reports API ──────────────────────────────────────────────────────────
 
@@ -51,12 +53,17 @@ class ReportSeminarService {
         data: payload,
       );
 
-      final data = response.data?['data'] as Map<String, dynamic>? ?? response.data ?? {};
+      final data =
+          response.data?['data'] as Map<String, dynamic>? ??
+          response.data ??
+          {};
       final record = AcademicReportRecord.fromJson(data);
       await _cacheReportLocally(record);
       return record;
     } catch (e) {
-      debugPrint('[ReportSeminarService] API createReport failed, checking offline fallback: $e');
+      debugPrint(
+        '[ReportSeminarService] API createReport failed, checking offline fallback: $e',
+      );
       // Create local fallback record
       final fallback = AcademicReportRecord(
         id: 'local_${DateTime.now().millisecondsSinceEpoch}',
@@ -115,7 +122,9 @@ class ReportSeminarService {
       }
       return records;
     } catch (e) {
-      debugPrint('[ReportSeminarService] API getReports failed, reading from local cache: $e');
+      debugPrint(
+        '[ReportSeminarService] API getReports failed, reading from local cache: $e',
+      );
       return _getLocalCachedReports();
     }
   }
@@ -126,7 +135,10 @@ class ReportSeminarService {
       final response = await _dio.get<Map<String, dynamic>>(
         '/reports/$reportId',
       );
-      final data = response.data?['data'] as Map<String, dynamic>? ?? response.data ?? {};
+      final data =
+          response.data?['data'] as Map<String, dynamic>? ??
+          response.data ??
+          {};
       return AcademicReportRecord.fromJson(data);
     } catch (e) {
       debugPrint('[ReportSeminarService] getReportById error: $e');
@@ -164,7 +176,10 @@ class ReportSeminarService {
         '/reports/$reportId',
         data: payload,
       );
-      final data = response.data?['data'] as Map<String, dynamic>? ?? response.data ?? {};
+      final data =
+          response.data?['data'] as Map<String, dynamic>? ??
+          response.data ??
+          {};
       final record = AcademicReportRecord.fromJson(data);
       await _cacheReportLocally(record);
       return record;
@@ -218,12 +233,17 @@ class ReportSeminarService {
         data: payload,
       );
 
-      final data = response.data?['data'] as Map<String, dynamic>? ?? response.data ?? {};
+      final data =
+          response.data?['data'] as Map<String, dynamic>? ??
+          response.data ??
+          {};
       final record = AcademicSeminarRecord.fromJson(data);
       await _cacheSeminarLocally(record);
       return record;
     } catch (e) {
-      debugPrint('[ReportSeminarService] API createSeminar failed, checking offline fallback: $e');
+      debugPrint(
+        '[ReportSeminarService] API createSeminar failed, checking offline fallback: $e',
+      );
       final fallback = AcademicSeminarRecord(
         id: 'local_${DateTime.now().millisecondsSinceEpoch}',
         userId: 'offline_user',
@@ -281,7 +301,9 @@ class ReportSeminarService {
       }
       return records;
     } catch (e) {
-      debugPrint('[ReportSeminarService] API getSeminars failed, reading from local cache: $e');
+      debugPrint(
+        '[ReportSeminarService] API getSeminars failed, reading from local cache: $e',
+      );
       return _getLocalCachedSeminars();
     }
   }
@@ -292,7 +314,10 @@ class ReportSeminarService {
       final response = await _dio.get<Map<String, dynamic>>(
         '/seminars/$seminarId',
       );
-      final data = response.data?['data'] as Map<String, dynamic>? ?? response.data ?? {};
+      final data =
+          response.data?['data'] as Map<String, dynamic>? ??
+          response.data ??
+          {};
       return AcademicSeminarRecord.fromJson(data);
     } catch (e) {
       debugPrint('[ReportSeminarService] getSeminarById error: $e');
@@ -330,7 +355,10 @@ class ReportSeminarService {
         '/seminars/$seminarId',
         data: payload,
       );
-      final data = response.data?['data'] as Map<String, dynamic>? ?? response.data ?? {};
+      final data =
+          response.data?['data'] as Map<String, dynamic>? ??
+          response.data ??
+          {};
       final record = AcademicSeminarRecord.fromJson(data);
       await _cacheSeminarLocally(record);
       return record;
@@ -388,7 +416,9 @@ class ReportSeminarService {
     } catch (_) {}
   }
 
-  Future<void> _updateAllReportsCache(List<AcademicReportRecord> reports) async {
+  Future<void> _updateAllReportsCache(
+    List<AcademicReportRecord> reports,
+  ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
@@ -443,7 +473,9 @@ class ReportSeminarService {
     } catch (_) {}
   }
 
-  Future<void> _updateAllSeminarsCache(List<AcademicSeminarRecord> seminars) async {
+  Future<void> _updateAllSeminarsCache(
+    List<AcademicSeminarRecord> seminars,
+  ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(

@@ -206,12 +206,20 @@ class ProfileScreen extends StatelessWidget {
                               setModalState(() => isSubmitting = true);
 
                               try {
-                                final authUser = Supabase.instance.client.auth.currentUser;
+                                final authUser =
+                                    Supabase.instance.client.auth.currentUser;
                                 final userId = authUser?.id ?? user?.id;
-                                final userName = (user != null && user.name != null && user.name.toString().isNotEmpty)
+                                final userName =
+                                    (user != null &&
+                                        user.name != null &&
+                                        user.name.toString().isNotEmpty)
                                     ? user.name.toString()
-                                    : (authUser?.userMetadata?['full_name'] ?? 'خوێندکار');
-                                final userEmail = (user != null && user.email != null && user.email.toString().isNotEmpty)
+                                    : (authUser?.userMetadata?['full_name'] ??
+                                          'خوێندکار');
+                                final userEmail =
+                                    (user != null &&
+                                        user.email != null &&
+                                        user.email.toString().isNotEmpty)
                                     ? user.email.toString()
                                     : (authUser?.email ?? '');
 
@@ -251,7 +259,9 @@ class ProfileScreen extends StatelessWidget {
                                   setModalState(() => isSubmitting = false);
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('کێشەیەک ڕوویدا لە ناردنی پێشنیارەکە: $e'),
+                                      content: Text(
+                                        'کێشەیەک ڕوویدا لە ناردنی پێشنیارەکە: $e',
+                                      ),
                                       backgroundColor: Colors.redAccent,
                                     ),
                                   );

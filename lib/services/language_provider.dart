@@ -3651,10 +3651,14 @@ class LanguageProvider extends ChangeNotifier {
       'en': 'Verify Payment 🔄',
     },
     'secure_checkout_notice': {
-      'ku': 'پارەدانی پارێزراو لە ڕێگەی دەروازەی فەرمی (هیچ زانیارییەکی کارت لە ئەپەکە پاشەکەوت ناکرێت) 🔒',
-      'badini': 'پارەدانا پاراستی ب رێیا دەرگەهێ فەرمی (چ زانیاری ناهێنە پاراستن د ئەپی دا) 🔒',
-      'ar': 'دفع آمن ومشفّر عبر البوابة الرسمية (لا يتم تخزين أي بيانات بطاقة في التطبيق) 🔒',
-      'en': 'Secure hosted checkout via official gateway (No card details stored in app) 🔒',
+      'ku':
+          'پارەدانی پارێزراو لە ڕێگەی دەروازەی فەرمی (هیچ زانیارییەکی کارت لە ئەپەکە پاشەکەوت ناکرێت) 🔒',
+      'badini':
+          'پارەدانا پاراستی ب رێیا دەرگەهێ فەرمی (چ زانیاری ناهێنە پاراستن د ئەپی دا) 🔒',
+      'ar':
+          'دفع آمن ومشفّر عبر البوابة الرسمية (لا يتم تخزين أي بيانات بطاقة في التطبيق) 🔒',
+      'en':
+          'Secure hosted checkout via official gateway (No card details stored in app) 🔒',
     },
     'feature_ai_chat': {
       'ku': 'پرسیار و گفتوگۆی ژیریی دەستکرد',

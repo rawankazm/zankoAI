@@ -75,13 +75,15 @@ class SubscriptionClientService {
           .limit(1)
           .maybeSingle();
 
-      final isVip = profile?['is_vip'] == true ||
+      final isVip =
+          profile?['is_vip'] == true ||
           profile?['plan'] == 'premium' ||
           sub?['status'] == 'active';
 
       final expiryStr = sub?['current_period_end'] ?? profile?['vip_expiry'];
-      final expiry =
-          expiryStr != null ? DateTime.tryParse(expiryStr.toString()) : null;
+      final expiry = expiryStr != null
+          ? DateTime.tryParse(expiryStr.toString())
+          : null;
 
       final isStillActive =
           isVip && (expiry == null || expiry.isAfter(DateTime.now()));
@@ -147,7 +149,8 @@ class SubscriptionClientService {
     final user = Supabase.instance.client.auth.currentUser;
     final userId = user?.id ?? 'guest';
     final userEmail = user?.email ?? '';
-    final userName = user?.userMetadata?['name']?.toString() ??
+    final userName =
+        user?.userMetadata?['name']?.toString() ??
         user?.userMetadata?['full_name']?.toString() ??
         'خوێندکار';
     final orderId = 'order_${DateTime.now().millisecondsSinceEpoch}';
@@ -157,8 +160,8 @@ class SubscriptionClientService {
     final planIdStr = plan == SubscriptionPlanType.premiumYearly
         ? '9_months'
         : (plan == SubscriptionPlanType.premiumQuarterly
-            ? '3_months'
-            : '1_month');
+              ? '3_months'
+              : '1_month');
 
     // 1. Post to Firestore vip_requests so it appears immediately on zanko-admin.vercel.app/vip
     try {
@@ -212,14 +215,15 @@ class SubscriptionClientService {
     final planTitle = plan == SubscriptionPlanType.premiumYearly
         ? 'پلانی ٩ مانگ (٤٠،٠٠٠ د.ع)'
         : (plan == SubscriptionPlanType.premiumQuarterly
-            ? 'پلانی ٣ مانگ (١٢،٠٠٠ د.ع)'
-            : 'پلانی ١ مانگ (٥،٠٠٠ د.ع)');
+              ? 'پلانی ٣ مانگ (١٢،٠٠٠ د.ع)'
+              : 'پلانی ١ مانگ (٥،٠٠٠ د.ع)');
 
     final priceFormatted = plan == SubscriptionPlanType.premiumYearly
         ? '٤٠,٠٠٠'
         : (plan == SubscriptionPlanType.premiumQuarterly ? '١٢,٠٠٠' : '٥,٠٠٠');
 
-    final msg = '''سڵاو بەڕێزم 👑
+    final msg =
+        '''سڵاو بەڕێزم 👑
 دەمەوێت بەشداری پرێمیۆم / VIP لە ZankoAI چالاک بکەم:
 
 📌 زانیاری داواکاری:
@@ -233,7 +237,8 @@ class SubscriptionClientService {
 
 (وێنەی وەسڵی پارەدانەکەم لە خوارەوە هاوپێچ کردووە 🧾👇)''';
 
-    final waUrl = 'https://wa.me/9647509987345?text=${Uri.encodeComponent(msg)}';
+    final waUrl =
+        'https://wa.me/9647509987345?text=${Uri.encodeComponent(msg)}';
 
     return SubscriptionCheckoutModel(
       checkoutId: orderId,
@@ -285,15 +290,14 @@ class SubscriptionClientService {
   static Future<bool> launchCheckoutUrl(String url) async {
     final uri = Uri.tryParse(url);
     if (uri == null) return false;
-    return await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    );
+    return await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   /// Retrieves subscription and billing history from /subscription/history
   Future<Map<String, dynamic>> getHistory() async {
-    final response = await _dio.get<Map<String, dynamic>>('/subscription/history');
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/subscription/history',
+    );
     final body = response.data ?? {};
     return body['data'] as Map<String, dynamic>? ?? body;
   }

@@ -183,7 +183,8 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       final prefs = await SharedPreferences.getInstance();
       if (mounted) {
         setState(() {
-          _selectedLanguageMode = prefs.getString('ai_teacher_lang_mode') ?? 'auto';
+          _selectedLanguageMode =
+              prefs.getString('ai_teacher_lang_mode') ?? 'auto';
         });
       }
     } catch (_) {}
@@ -490,7 +491,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
           throw Exception('Empty response from AI Teacher backend');
         }
       } catch (backendErr) {
-        debugPrint('[AiTeacherChat] Backend /ai-teacher/chat fallback: $backendErr');
+        debugPrint(
+          '[AiTeacherChat] Backend /ai-teacher/chat fallback: $backendErr',
+        );
         final modePrefix = _selectedModeIndex != 0
             ? "[تایبەتمەندی: ${_modes[_selectedModeIndex]['tag']}]\n[زمان: ${_selectedLanguageMode.toUpperCase()}]\n"
             : "[زمان: ${_selectedLanguageMode.toUpperCase()}]\n";
@@ -2279,7 +2282,11 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                   // Action Toolbar & Voice Controls for Assistant Messages (Prompt 37)
                   if (!isUser && !isLimitMsg && content.isNotEmpty) ...[
                     const SizedBox(height: 6),
-                    _buildAssistantVoiceAndActionToolbar(content, msgId, isDark),
+                    _buildAssistantVoiceAndActionToolbar(
+                      content,
+                      msgId,
+                      isDark,
+                    ),
                   ],
                 ],
               ),
@@ -2315,11 +2322,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.translate_rounded,
-            size: 15,
-            color: ZankoColors.primary,
-          ),
+          Icon(Icons.translate_rounded, size: 15, color: ZankoColors.primary),
           const SizedBox(width: 6),
           Text(
             'Language:',
@@ -2412,7 +2415,8 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
         ValueListenableBuilder<AiTeacherVoicePlaybackInfo>(
           valueListenable: _voiceService.playbackNotifier,
           builder: (context, info, _) {
-            final isThisMsgActive = info.activeAnswerId == msgId && info.isActive;
+            final isThisMsgActive =
+                info.activeAnswerId == msgId && info.isActive;
             if (isThisMsgActive) {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 6),
@@ -2450,7 +2454,8 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
             ValueListenableBuilder<AiTeacherVoicePlaybackInfo>(
               valueListenable: _voiceService.playbackNotifier,
               builder: (context, info, _) {
-                final isThisMsgActive = info.activeAnswerId == msgId && info.isActive;
+                final isThisMsgActive =
+                    info.activeAnswerId == msgId && info.isActive;
                 if (isThisMsgActive) return const SizedBox.shrink();
 
                 return _buildBubbleAction(
@@ -2557,7 +2562,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                   : Icon(
                       info.isPlaying
                           ? Icons.pause_rounded
-                          : (info.isError ? Icons.refresh_rounded : Icons.play_arrow_rounded),
+                          : (info.isError
+                                ? Icons.refresh_rounded
+                                : Icons.play_arrow_rounded),
                       size: 16,
                       color: Colors.white,
                     ),
@@ -2601,7 +2608,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 color: isDark ? const Color(0xFF263045) : Colors.white,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: isDark ? const Color(0xFF374561) : const Color(0xFFCBD5E1),
+                  color: isDark
+                      ? const Color(0xFF374561)
+                      : const Color(0xFFCBD5E1),
                   width: 0.8,
                 ),
               ),
@@ -2629,7 +2638,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 color: isDark ? const Color(0xFF263045) : Colors.white,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isDark ? const Color(0xFF374561) : const Color(0xFFCBD5E1),
+                  color: isDark
+                      ? const Color(0xFF374561)
+                      : const Color(0xFFCBD5E1),
                   width: 0.8,
                 ),
               ),
@@ -2660,9 +2671,13 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF171B26) : Colors.white,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
               border: Border.all(
-                color: isDark ? const Color(0xFF262E3D) : const Color(0xFFE2E8F0),
+                color: isDark
+                    ? const Color(0xFF262E3D)
+                    : const Color(0xFFE2E8F0),
               ),
             ),
             child: SafeArea(
@@ -2683,14 +2698,19 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      Icon(Icons.record_voice_over_rounded, color: ZankoColors.primary),
+                      Icon(
+                        Icons.record_voice_over_rounded,
+                        color: ZankoColors.primary,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'ڕێکخستنی دەنگی مامۆستای ژیر 👨‍🏫',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF111827),
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF111827),
                         ),
                       ),
                     ],
@@ -2711,10 +2731,30 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _buildModalLangChip('auto', 'Auto Detect 🌐', setSheetState, isDark),
-                      _buildModalLangChip('ku', 'Kurdish ☀️', setSheetState, isDark),
-                      _buildModalLangChip('ar', 'Arabic 🌙', setSheetState, isDark),
-                      _buildModalLangChip('en', 'English 🌍', setSheetState, isDark),
+                      _buildModalLangChip(
+                        'auto',
+                        'Auto Detect 🌐',
+                        setSheetState,
+                        isDark,
+                      ),
+                      _buildModalLangChip(
+                        'ku',
+                        'Kurdish ☀️',
+                        setSheetState,
+                        isDark,
+                      ),
+                      _buildModalLangChip(
+                        'ar',
+                        'Arabic 🌙',
+                        setSheetState,
+                        isDark,
+                      ),
+                      _buildModalLangChip(
+                        'en',
+                        'English 🌍',
+                        setSheetState,
+                        isDark,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -2738,8 +2778,12 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                         selected: isSelected,
                         selectedColor: ZankoColors.primary,
                         labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          color: isSelected
+                              ? Colors.white
+                              : (isDark ? Colors.white70 : Colors.black87),
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         ),
                         onSelected: (_) {
                           _voiceService.setSpeed(s);
@@ -2754,10 +2798,14 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                   // Auto Read Toggle
                   Container(
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1F2637) : const Color(0xFFF8FAFC),
+                      color: isDark
+                          ? const Color(0xFF1F2637)
+                          : const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isDark ? const Color(0xFF2C364C) : const Color(0xFFE2E8F0),
+                        color: isDark
+                            ? const Color(0xFF2C364C)
+                            : const Color(0xFFE2E8F0),
                       ),
                     ),
                     child: SwitchListTile.adaptive(
@@ -2766,14 +2814,18 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                         style: TextStyle(
                           fontSize: 13.5,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF1E293B),
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF1E293B),
                         ),
                       ),
                       subtitle: Text(
                         'وەڵامەکانی مامۆستا راستەوخۆ دەخوێنرێنەوە پاش دروستبوون',
                         style: TextStyle(
                           fontSize: 11,
-                          color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                          color: isDark
+                              ? Colors.white60
+                              : const Color(0xFF64748B),
                         ),
                       ),
                       value: isAutoRead,
@@ -2807,7 +2859,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       selected: isSelected,
       selectedColor: ZankoColors.primary,
       labelStyle: TextStyle(
-        color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+        color: isSelected
+            ? Colors.white
+            : (isDark ? Colors.white70 : Colors.black87),
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       onSelected: (_) async {

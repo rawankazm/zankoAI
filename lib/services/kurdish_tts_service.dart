@@ -14,7 +14,8 @@ class KurdishTtsService {
     _voiceService.playbackNotifier.addListener(_onStateChanged);
   }
 
-  bool get isSpeaking => _voiceService.isPlaying || _voiceService.playbackNotifier.value.isLoading;
+  bool get isSpeaking =>
+      _voiceService.isPlaying || _voiceService.playbackNotifier.value.isLoading;
   final ValueNotifier<bool> isSpeakingNotifier = ValueNotifier<bool>(false);
 
   VoidCallback? _onDone;

@@ -25,7 +25,8 @@ class LatencyTracker {
 
   int get count => _latenciesMs.length;
 
-  double get mean => _latenciesMs.isEmpty ? 0 : _latenciesMs.reduce((a, b) => a + b) / count;
+  double get mean =>
+      _latenciesMs.isEmpty ? 0 : _latenciesMs.reduce((a, b) => a + b) / count;
 
   int percentile(int p) {
     if (_latenciesMs.isEmpty) return 0;
@@ -38,7 +39,8 @@ class LatencyTracker {
   int get p90 => percentile(90);
   int get p95 => percentile(95);
   int get p99 => percentile(99);
-  int get max => _latenciesMs.isEmpty ? 0 : _latenciesMs.reduce((a, b) => a > b ? a : b);
+  int get max =>
+      _latenciesMs.isEmpty ? 0 : _latenciesMs.reduce((a, b) => a > b ? a : b);
 }
 
 class _MockHttpClientAdapter implements HttpClientAdapter {
@@ -78,7 +80,11 @@ void main() {
               'success': true,
               'data': [
                 {'id': 'u1', 'name': 'Salahaddin University', 'city': 'Erbil'},
-                {'id': 'u2', 'name': 'University of Sulaimani', 'city': 'Sulaymaniyah'},
+                {
+                  'id': 'u2',
+                  'name': 'University of Sulaimani',
+                  'city': 'Sulaymaniyah',
+                },
               ],
             }),
             200,
@@ -119,7 +125,10 @@ void main() {
           );
         }
         return ResponseBody.fromString(
-          jsonEncode({'success': true, 'data': {'status': 'ok'}}),
+          jsonEncode({
+            'success': true,
+            'data': {'status': 'ok'},
+          }),
           200,
           headers: {
             Headers.contentTypeHeader: [Headers.jsonContentType],
@@ -155,7 +164,9 @@ void main() {
         // 4. Repeated tab switch (verifies client-side memory cache performance: <2ms)
         final req4Start = DateTime.now();
         final cachedCourses = await courseService.listCourses();
-        final cachedLatency = DateTime.now().difference(req4Start).inMilliseconds;
+        final cachedLatency = DateTime.now()
+            .difference(req4Start)
+            .inMilliseconds;
         tracker.record(cachedLatency);
         expect(cachedCourses.length, equals(courses.length));
 
@@ -167,7 +178,8 @@ void main() {
       stopwatch.stop();
 
       totalRequests = tracker.count;
-      final throughput = totalRequests / (stopwatch.elapsedMilliseconds / 1000.0);
+      final throughput =
+          totalRequests / (stopwatch.elapsedMilliseconds / 1000.0);
 
       print('===============================================================');
       print(' [BENCHMARK] SCENARIO 1: 100 CONCURRENT USERS');
@@ -185,7 +197,12 @@ void main() {
 
       expect(completedUsers.length, equals(concurrentUsers));
       expect(totalRequests, equals(400));
-      expect(tracker.p99, lessThan(1000), reason: 'p99 latency must remain within safe SLA under 100 concurrent users');
+      expect(
+        tracker.p99,
+        lessThan(1000),
+        reason:
+            'p99 latency must remain within safe SLA under 100 concurrent users',
+      );
     });
 
     // ── Scenario 2: 500 Concurrent Requests Burst ────────────────────────────
@@ -199,7 +216,7 @@ void main() {
       var errorCount = 0;
 
       final mockDio = Dio(BaseOptions(baseUrl: 'https://api.zanko.test/api'));
-      
+
       var requestCounter = 0;
       mockDio.httpClientAdapter = _MockHttpClientAdapter((options) async {
         final currentReqNum = ++requestCounter;
@@ -210,7 +227,10 @@ void main() {
           return ResponseBody.fromString(
             jsonEncode({
               'success': false,
-              'error': {'code': 'RATE_LIMIT_EXCEEDED', 'message': 'Too many requests'},
+              'error': {
+                'code': 'RATE_LIMIT_EXCEEDED',
+                'message': 'Too many requests',
+              },
             }),
             429,
             headers: {
@@ -220,7 +240,10 @@ void main() {
         }
 
         return ResponseBody.fromString(
-          jsonEncode({'success': true, 'data': {'id': 'course_$currentReqNum'}}),
+          jsonEncode({
+            'success': true,
+            'data': {'id': 'course_$currentReqNum'},
+          }),
           200,
           headers: {
             Headers.contentTypeHeader: [Headers.jsonContentType],
@@ -233,7 +256,9 @@ void main() {
       final reqFutures = List.generate(burstSize, (index) async {
         final reqStart = DateTime.now();
         try {
-          final res = await apiClient.get<Map<String, dynamic>>('/courses/c$index');
+          final res = await apiClient.get<Map<String, dynamic>>(
+            '/courses/c$index',
+          );
           final latency = DateTime.now().difference(reqStart).inMilliseconds;
           tracker.record(latency);
 
@@ -287,10 +312,22 @@ void main() {
       print(' Max Latency:         ${tracker.max} ms');
       print('===============================================================');
 
-      expect(errorCount, equals(0), reason: 'Zero 500 internal server errors allowed under burst');
+      expect(
+        errorCount,
+        equals(0),
+        reason: 'Zero 500 internal server errors allowed under burst',
+      );
       expect(successCount + rateLimitedCount, equals(burstSize));
-      expect(rateLimitedCount, greaterThan(0), reason: 'Rate limiter must enforce limits on burst');
-      expect(tracker.p95, lessThan(2000), reason: 'p95 latency must remain bounded under 500 concurrent burst');
+      expect(
+        rateLimitedCount,
+        greaterThan(0),
+        reason: 'Rate limiter must enforce limits on burst',
+      );
+      expect(
+        tracker.p95,
+        lessThan(2000),
+        reason: 'p95 latency must remain bounded under 500 concurrent burst',
+      );
     });
 
     // ── Scenario 3: 1,000 Queued AI Background Jobs ──────────────────────────
@@ -332,7 +369,9 @@ void main() {
       // Enqueue 1,000 AI jobs with 10% intentional duplicate submissions
       for (var i = 1; i <= totalJobs; i++) {
         final isDuplicate = (i % 10 == 0);
-        final idempotencyKey = isDuplicate ? 'ai_task_idemp_${i - 1}' : 'ai_task_idemp_$i';
+        final idempotencyKey = isDuplicate
+            ? 'ai_task_idemp_${i - 1}'
+            : 'ai_task_idemp_$i';
 
         final queueType = i % 4 == 0
             ? 'pdf'
@@ -355,7 +394,11 @@ void main() {
       final workerStopwatch = Stopwatch()..start();
 
       // Process batch in parallel worker chunks
-      for (var chunkStart = 0; chunkStart < activeJobs.length; chunkStart += workerConcurrency) {
+      for (
+        var chunkStart = 0;
+        chunkStart < activeJobs.length;
+        chunkStart += workerConcurrency
+      ) {
         final chunkEnd = min(chunkStart + workerConcurrency, activeJobs.length);
         final currentChunk = activeJobs.sublist(chunkStart, chunkEnd);
 
@@ -374,7 +417,8 @@ void main() {
       stopwatch.stop();
 
       final queueThroughput = totalJobs / (enqueueTimeMs / 1000.0);
-      final workerThroughput = processedJobs.length / (workerStopwatch.elapsedMilliseconds / 1000.0);
+      final workerThroughput =
+          processedJobs.length / (workerStopwatch.elapsedMilliseconds / 1000.0);
 
       print('===============================================================');
       print(' [BENCHMARK] SCENARIO 3: 1,000 QUEUED AI JOBS SIMULATION');
@@ -384,17 +428,31 @@ void main() {
       print(' Deduplicated Jobs (Lock): $deduplicatedCount');
       print(' Total Processed by Queue: ${processedJobs.length}');
       print(' Enqueue Duration:         $enqueueTimeMs ms');
-      print(' Ingestion Rate:           ${queueThroughput.toStringAsFixed(1)} jobs/sec');
-      print(' Worker Processing Rate:   ${workerThroughput.toStringAsFixed(1)} jobs/sec');
-      print(' Worker Processing Time:   ${workerStopwatch.elapsedMilliseconds} ms');
+      print(
+        ' Ingestion Rate:           ${queueThroughput.toStringAsFixed(1)} jobs/sec',
+      );
+      print(
+        ' Worker Processing Rate:   ${workerThroughput.toStringAsFixed(1)} jobs/sec',
+      );
+      print(
+        ' Worker Processing Time:   ${workerStopwatch.elapsedMilliseconds} ms',
+      );
       print(' Final Queue Backlog:      0 pending');
       print(' Data Loss / Memory Leaks: 0');
       print('===============================================================');
 
       expect(queue.length + deduplicatedCount, equals(totalJobs));
-      expect(deduplicatedCount, equals(100), reason: 'Every 10th duplicate job must be cleanly deduplicated');
+      expect(
+        deduplicatedCount,
+        equals(100),
+        reason: 'Every 10th duplicate job must be cleanly deduplicated',
+      );
       expect(processedJobs.length, equals(900));
-      expect(queueThroughput, greaterThan(1000), reason: 'Queue ingestion rate must exceed 1,000 jobs/sec');
+      expect(
+        queueThroughput,
+        greaterThan(1000),
+        reason: 'Queue ingestion rate must exceed 1,000 jobs/sec',
+      );
     });
   });
 }

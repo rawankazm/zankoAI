@@ -52,33 +52,43 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
           .handleError((_) => <Map<String, dynamic>>[]),
       builder: (context, snapshot) {
         final allRows = snapshot.data ?? [];
-        final matchingAds = allRows.where((row) {
-          final data = row['data'] is Map ? (row['data'] as Map<String, dynamic>) : <String, dynamic>{};
-          final isAd = data['is_ad'] == true || (row['type'] == 'broadcast' && data['is_ad'] == true);
-          if (!isAd) return false;
-          if (data['is_deleted'] == true) return false;
+        final matchingAds = allRows
+            .where((row) {
+              final data = row['data'] is Map
+                  ? (row['data'] as Map<String, dynamic>)
+                  : <String, dynamic>{};
+              final isAd =
+                  data['is_ad'] == true ||
+                  (row['type'] == 'broadcast' && data['is_ad'] == true);
+              if (!isAd) return false;
+              if (data['is_deleted'] == true) return false;
 
-          final isActive = data['isActive'] == true ||
-              data['is_active'] == true ||
-              (data['isActive'] == null && data['is_active'] == null);
-          if (!isActive) return false;
+              final isActive =
+                  data['isActive'] == true ||
+                  data['is_active'] == true ||
+                  (data['isActive'] == null && data['is_active'] == null);
+              if (!isActive) return false;
 
-          final screens = data['showOnScreens'] ?? data['show_on_screens'];
-          if (screens is List && screens.isNotEmpty) {
-            final screenList = screens.map((s) => s.toString()).toList();
-            return screenList.contains(widget.screenName) ||
-                screenList.contains('all');
-          }
-          return true;
-        }).map((row) {
-          final data = row['data'] is Map ? (row['data'] as Map<String, dynamic>) : <String, dynamic>{};
-          return {
-            'id': row['id'],
-            'title': row['title'] ?? data['title'],
-            'description': row['body'] ?? data['description'],
-            ...data,
-          };
-        }).toList();
+              final screens = data['showOnScreens'] ?? data['show_on_screens'];
+              if (screens is List && screens.isNotEmpty) {
+                final screenList = screens.map((s) => s.toString()).toList();
+                return screenList.contains(widget.screenName) ||
+                    screenList.contains('all');
+              }
+              return true;
+            })
+            .map((row) {
+              final data = row['data'] is Map
+                  ? (row['data'] as Map<String, dynamic>)
+                  : <String, dynamic>{};
+              return {
+                'id': row['id'],
+                'title': row['title'] ?? data['title'],
+                'description': row['body'] ?? data['description'],
+                ...data,
+              };
+            })
+            .toList();
 
         if (matchingAds.isEmpty) {
           return const SizedBox.shrink();
@@ -88,8 +98,10 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
 
         final currentLang = langProvider.currentLanguage;
         String title = (adData['title'] ?? '').toString();
-        final titleAr = (adData['titleAr'] ?? adData['title_ar'])?.toString() ?? '';
-        final titleEn = (adData['titleEn'] ?? adData['title_en'])?.toString() ?? '';
+        final titleAr =
+            (adData['titleAr'] ?? adData['title_ar'])?.toString() ?? '';
+        final titleEn =
+            (adData['titleEn'] ?? adData['title_en'])?.toString() ?? '';
         if (currentLang == AppLanguage.arabic && titleAr.isNotEmpty) {
           title = titleAr;
         } else if (currentLang == AppLanguage.english && titleEn.isNotEmpty) {
@@ -97,17 +109,25 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
         }
 
         String description = (adData['description'] ?? '').toString();
-        final descAr = (adData['descAr'] ?? adData['desc_ar'])?.toString() ?? '';
-        final descEn = (adData['descEn'] ?? adData['desc_en'])?.toString() ?? '';
+        final descAr =
+            (adData['descAr'] ?? adData['desc_ar'])?.toString() ?? '';
+        final descEn =
+            (adData['descEn'] ?? adData['desc_en'])?.toString() ?? '';
         if (currentLang == AppLanguage.arabic && descAr.isNotEmpty) {
           description = descAr;
         } else if (currentLang == AppLanguage.english && descEn.isNotEmpty) {
           description = descEn;
         }
 
-        String buttonText = (adData['buttonTextKu'] ?? adData['button_text_ku'] ?? 'سەردان بکە').toString();
-        final btnAr = (adData['buttonTextAr'] ?? adData['button_text_ar'])?.toString() ?? '';
-        final btnEn = (adData['buttonTextEn'] ?? adData['button_text_en'])?.toString() ?? '';
+        String buttonText =
+            (adData['buttonTextKu'] ?? adData['button_text_ku'] ?? 'سەردان بکە')
+                .toString();
+        final btnAr =
+            (adData['buttonTextAr'] ?? adData['button_text_ar'])?.toString() ??
+            '';
+        final btnEn =
+            (adData['buttonTextEn'] ?? adData['button_text_en'])?.toString() ??
+            '';
         if (currentLang == AppLanguage.arabic && btnAr.isNotEmpty) {
           buttonText = btnAr;
         } else if (currentLang == AppLanguage.english && btnEn.isNotEmpty) {
@@ -115,7 +135,8 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
         }
 
         final imageUrl = (adData['imageUrl'] ?? adData['image_url']) as String?;
-        final linkUrl = (adData['linkUrl'] ?? adData['link_url'] ?? '').toString();
+        final linkUrl = (adData['linkUrl'] ?? adData['link_url'] ?? '')
+            .toString();
 
         return Container(
           margin: const EdgeInsets.symmetric(vertical: 8),

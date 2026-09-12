@@ -65,7 +65,8 @@ class FlashcardModel {
 
     return FlashcardModel(
       id: (map['id'] ?? '').toString(),
-      front: (map['question'] ?? map['front_text'] ?? map['front'] ?? '').toString(),
+      front: (map['question'] ?? map['front_text'] ?? map['front'] ?? '')
+          .toString(),
       back: (map['answer'] ?? map['back_text'] ?? map['back'] ?? '').toString(),
       deckName: (map['deck_name'] ?? map['deckName'] ?? 'General').toString(),
       courseId: map['course_id']?.toString(),

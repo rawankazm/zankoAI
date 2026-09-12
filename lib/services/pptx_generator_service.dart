@@ -101,7 +101,9 @@ class PptxGeneratorService {
     String? visualPrompt,
     Set<String>? usedUrls,
   }) {
-    final t = '$topic ${department ?? ''} ${slideTitle ?? ''} ${visualPrompt ?? ''}'.toLowerCase();
+    final t =
+        '$topic ${department ?? ''} ${slideTitle ?? ''} ${visualPrompt ?? ''}'
+            .toLowerCase();
 
     // Dedicated Closing & Gratitude Slide Images (Audience Applause, Q&A Discussion, Academic Celebration)
     final titleLower = (slideTitle ?? '').toLowerCase();
@@ -1478,10 +1480,12 @@ class PptxGeneratorService {
       final s = effectiveSlides[i];
       if (!isLast) {
         final cleanedBullets = s.bulletPoints
-            .where((b) =>
-                !b.contains('سوپاس بۆ ئامادەبوونتان') &&
-                !b.contains('شكراً لحضوركم') &&
-                !b.toLowerCase().contains('thank you for your attendance'))
+            .where(
+              (b) =>
+                  !b.contains('سوپاس بۆ ئامادەبوونتان') &&
+                  !b.contains('شكراً لحضوركم') &&
+                  !b.toLowerCase().contains('thank you for your attendance'),
+            )
             .toList();
         if (cleanedBullets.length != s.bulletPoints.length) {
           effectiveSlides[i] = SlideModel(
@@ -1497,7 +1501,8 @@ class PptxGeneratorService {
     }
 
     // Ensure a dedicated final slide titled "Thank you for your attendance" exists
-    final hasClosingSlide = effectiveSlides.isNotEmpty &&
+    final hasClosingSlide =
+        effectiveSlides.isNotEmpty &&
         (effectiveSlides.last.title.contains('سوپاس') ||
             effectiveSlides.last.title.contains('شكراً') ||
             effectiveSlides.last.title.contains('شكرا') ||
@@ -1520,28 +1525,31 @@ class PptxGeneratorService {
             languageCode == 'en'
                 ? 'Thank you sincerely for your attendance and valuable attention'
                 : (languageCode == 'ar'
-                    ? 'شكراً جزيلاً لحضوركم الكريم واهتمامكم القيم'
-                    : (languageCode == 'ku_badini' || languageCode == 'badini'
-                        ? 'سوپاس بۆ ئامادەبوونا هەوە و دەمێ هەوە یێ زێڕین'
-                        : 'سوپاس بۆ ئامادەبوونتان و کاتی بەنرختان لەم پرێزێنتەیشنەدا')),
+                      ? 'شكراً جزيلاً لحضوركم الكريم واهتمامكم القيم'
+                      : (languageCode == 'ku_badini' || languageCode == 'badini'
+                            ? 'سوپاس بۆ ئامادەبوونا هەوە و دەمێ هەوە یێ زێڕین'
+                            : 'سوپاس بۆ ئامادەبوونتان و کاتی بەنرختان لەم پرێزێنتەیشنەدا')),
             languageCode == 'en'
                 ? 'Open Floor for Academic Inquiries & Critical Discussion'
                 : (languageCode == 'ar'
-                    ? 'فتح باب الحوار والأسئلة الأكاديمية والمداخلات العلمية'
-                    : (languageCode == 'ku_badini' || languageCode == 'badini'
-                        ? 'دەلیڤە یا ڤەکرییە بۆ پرسیار و دانوستاندنا زانستی'
-                        : 'دەرگای پرسیار، ڕاگۆڕینەوە و گفتوگۆی زانستی واڵایە')),
+                      ? 'فتح باب الحوار والأسئلة الأكاديمية والمداخلات العلمية'
+                      : (languageCode == 'ku_badini' || languageCode == 'badini'
+                            ? 'دەلیڤە یا ڤەکرییە بۆ پرسیار و دانوستاندنا زانستی'
+                            : 'دەرگای پرسیار، ڕاگۆڕینەوە و گفتوگۆی زانستی واڵایە')),
             languageCode == 'en'
                 ? 'Appreciation to Academic Committee, Supervisors & Faculty'
                 : (languageCode == 'ar'
-                    ? 'خالص التقدير للأساتذة المشرفين ولجنة المناقشة الموقرة'
-                    : (languageCode == 'ku_badini' || languageCode == 'badini'
-                        ? 'پێزانین بۆ مامۆستایێن سەرپەرشتیار و لێژنا بەڕێز'
-                        : 'سوپاس و پێزانین بۆ مامۆستای سەرپەرشتیار و لێژنەی بەڕێز')),
+                      ? 'خالص التقدير للأساتذة المشرفين ولجنة المناقشة الموقرة'
+                      : (languageCode == 'ku_badini' || languageCode == 'badini'
+                            ? 'پێزانین بۆ مامۆستایێن سەرپەرشتیار و لێژنا بەڕێز'
+                            : 'سوپاس و پێزانین بۆ مامۆستای سەرپەرشتیار و لێژنەی بەڕێز')),
           ],
-          visualPrompt: 'Academic presentation conclusion with audience applause and Q&A session',
+          visualPrompt:
+              'Academic presentation conclusion with audience applause and Q&A session',
           imageUrl: closingImg,
-          categoryTag: languageCode == 'en' ? 'Conclusion & Q&A' : 'کۆتایی و گفتوگۆ',
+          categoryTag: languageCode == 'en'
+              ? 'Conclusion & Q&A'
+              : 'کۆتایی و گفتوگۆ',
           speakerNotes: languageCode == 'en'
               ? 'Express warm gratitude to the committee and audience, then open the floor for questions.'
               : 'سوپاسی ئامادەبووان و لێژنەی بەڕێز دەکرێت و دەرفەت بۆ پرسیارەکان دەکرێتەوە.',
@@ -1888,7 +1896,8 @@ class PptxGeneratorService {
       '      <p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>\n',
     );
 
-    final isClosingSlide = !isFirstSlide &&
+    final isClosingSlide =
+        !isFirstSlide &&
         (slide.title.contains('سوپاس') ||
             slide.title.contains('شكراً') ||
             slide.title.contains('شكرا') ||
@@ -1902,27 +1911,27 @@ class PptxGeneratorService {
 
     final effectiveStudent =
         (studentName != null && studentName.trim().isNotEmpty)
-            ? studentName.trim()
-            : (isEnglish
-                ? 'Student / Research Team'
-                : (isBad ? 'قوتابیێن بەشێ زانستی' : 'قوتابیانی بەش'));
+        ? studentName.trim()
+        : (isEnglish
+              ? 'Student / Research Team'
+              : (isBad ? 'قوتابیێن بەشێ زانستی' : 'قوتابیانی بەش'));
     final effectiveSupervisor =
         (supervisorName != null && supervisorName.trim().isNotEmpty)
-            ? supervisorName.trim()
-            : (isEnglish
-                ? 'Academic Supervisor'
-                : (isBad ? 'مامۆستایێ سەرپەرشتیار' : 'مامۆستای سەرپەرشتیار'));
+        ? supervisorName.trim()
+        : (isEnglish
+              ? 'Academic Supervisor'
+              : (isBad ? 'مامۆستایێ سەرپەرشتیار' : 'مامۆستای سەرپەرشتیار'));
 
     final studentLabel = isEnglish
         ? 'Prepared By:'
         : (isArabic
-            ? 'إعداد الطالب / الفريق:'
-            : (isBad ? 'ئامادەکرن ژ لایێ:' : 'ئامادەکردنی:'));
+              ? 'إعداد الطالب / الفريق:'
+              : (isBad ? 'ئامادەکرن ژ لایێ:' : 'ئامادەکردنی:'));
     final supervisorLabel = isEnglish
         ? 'Supervised By:'
         : (isArabic
-            ? 'إشراف الأستاذ المشرف:'
-            : (isBad ? 'سەرپەرشتیار:' : 'مامۆستای سەرپەرشتیار:'));
+              ? 'إشراف الأستاذ المشرف:'
+              : (isBad ? 'سەرپەرشتیار:' : 'مامۆستای سەرپەرشتیار:'));
 
     if (isFirstSlide) {
       // ═════════════════════════════════════════════════════════════════════════
@@ -1937,7 +1946,9 @@ class PptxGeneratorService {
       buffer.write(
         '          <a:xfrm><a:off x="400000" y="400000"/><a:ext cx="11392000" cy="6058000"/></a:xfrm>\n',
       );
-      buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
+      buffer.write(
+        '          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n',
+      );
       buffer.write(
         '          <a:solidFill><a:srgbClr val="0F172A"/></a:solidFill>\n',
       );
@@ -1956,7 +1967,9 @@ class PptxGeneratorService {
       buffer.write(
         '          <a:xfrm><a:off x="400000" y="400000"/><a:ext cx="11392000" cy="90000"/></a:xfrm>\n',
       );
-      buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
+      buffer.write(
+        '          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n',
+      );
       buffer.write(
         '          <a:solidFill><a:srgbClr val="2563EB"/></a:solidFill>\n',
       );
@@ -1982,7 +1995,9 @@ class PptxGeneratorService {
       buffer.write(
         '          <a:xfrm><a:off x="$photoX" y="700000"/><a:ext cx="4600000" cy="5458000"/></a:xfrm>\n',
       );
-      buffer.write('          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n');
+      buffer.write(
+        '          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n',
+      );
       buffer.write(
         '          <a:ln w="25400"><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill></a:ln>\n',
       );
@@ -2011,7 +2026,9 @@ class PptxGeneratorService {
         buffer.write(
           '          <a:xfrm><a:off x="${isRtl ? "6550000" : "1650000"}" y="780000"/><a:ext cx="4942000" cy="680000"/></a:xfrm>\n',
         );
-        buffer.write('          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n');
+        buffer.write(
+          '          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n',
+        );
         buffer.write(
           '          <a:solidFill><a:srgbClr val="1E293B"/></a:solidFill>\n',
         );
@@ -2042,7 +2059,9 @@ class PptxGeneratorService {
         buffer.write(
           '          <a:xfrm><a:off x="$infoX" y="700000"/><a:ext cx="5892000" cy="500000"/></a:xfrm>\n',
         );
-        buffer.write('          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n');
+        buffer.write(
+          '          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n',
+        );
         buffer.write(
           '          <a:solidFill><a:srgbClr val="1E293B"/></a:solidFill>\n',
         );
@@ -2077,7 +2096,9 @@ class PptxGeneratorService {
       buffer.write(
         '          <a:xfrm><a:off x="$infoX" y="$titleY"/><a:ext cx="5892000" cy="$titleHeight"/></a:xfrm>\n',
       );
-      buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
+      buffer.write(
+        '          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n',
+      );
       buffer.write('        </p:spPr>\n');
       buffer.write('        <p:txBody>\n');
       buffer.write('          <a:bodyPr anchor="ctr" rtlCol="$rtlColVal"/>\n');
@@ -2116,7 +2137,9 @@ class PptxGeneratorService {
       buffer.write(
         '          <a:xfrm><a:off x="$infoX" y="4050000"/><a:ext cx="5892000" cy="980000"/></a:xfrm>\n',
       );
-      buffer.write('          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n');
+      buffer.write(
+        '          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n',
+      );
       buffer.write(
         '          <a:solidFill><a:srgbClr val="111827"/></a:solidFill>\n',
       );
@@ -2141,7 +2164,9 @@ class PptxGeneratorService {
       buffer.write(
         '              <a:rPr lang="$langAttr" sz="1600" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
       );
-      buffer.write('              <a:t>${_escapeXml(effectiveStudent)}</a:t>\n');
+      buffer.write(
+        '              <a:t>${_escapeXml(effectiveStudent)}</a:t>\n',
+      );
       buffer.write('            </a:r>\n');
       buffer.write('          </a:p>\n');
       buffer.write('        </p:txBody>\n');
@@ -2155,7 +2180,9 @@ class PptxGeneratorService {
       buffer.write(
         '          <a:xfrm><a:off x="$infoX" y="5150000"/><a:ext cx="5892000" cy="980000"/></a:xfrm>\n',
       );
-      buffer.write('          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n');
+      buffer.write(
+        '          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n',
+      );
       buffer.write(
         '          <a:solidFill><a:srgbClr val="111827"/></a:solidFill>\n',
       );
@@ -2180,7 +2207,9 @@ class PptxGeneratorService {
       buffer.write(
         '              <a:rPr lang="$langAttr" sz="1600" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
       );
-      buffer.write('              <a:t>${_escapeXml(effectiveSupervisor)}</a:t>\n');
+      buffer.write(
+        '              <a:t>${_escapeXml(effectiveSupervisor)}</a:t>\n',
+      );
       buffer.write('            </a:r>\n');
       buffer.write('          </a:p>\n');
       buffer.write('        </p:txBody>\n');
@@ -2198,7 +2227,9 @@ class PptxGeneratorService {
       buffer.write(
         '          <a:xfrm><a:off x="400000" y="400000"/><a:ext cx="11392000" cy="6058000"/></a:xfrm>\n',
       );
-      buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
+      buffer.write(
+        '          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n',
+      );
       buffer.write(
         '          <a:solidFill><a:srgbClr val="0A0F1D"/></a:solidFill>\n',
       );
@@ -2217,7 +2248,9 @@ class PptxGeneratorService {
       buffer.write(
         '          <a:xfrm><a:off x="400000" y="400000"/><a:ext cx="11392000" cy="90000"/></a:xfrm>\n',
       );
-      buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
+      buffer.write(
+        '          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n',
+      );
       buffer.write(
         '          <a:solidFill><a:srgbClr val="2563EB"/></a:solidFill>\n',
       );
@@ -2242,7 +2275,9 @@ class PptxGeneratorService {
       buffer.write(
         '          <a:xfrm><a:off x="$photoX" y="700000"/><a:ext cx="4600000" cy="5458000"/></a:xfrm>\n',
       );
-      buffer.write('          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n');
+      buffer.write(
+        '          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n',
+      );
       buffer.write(
         '          <a:ln w="25400"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill></a:ln>\n',
       );
@@ -2253,8 +2288,8 @@ class PptxGeneratorService {
       final conclusionBadge = isEnglish
           ? '✨ Academic Presentation Conclusion ✨'
           : (isArabic
-              ? '✨ ختام العرض الأكاديمي والمناقشة ✨'
-              : '✨ کۆتایی سیمینار و پێشکەشکردنی زانستی ✨');
+                ? '✨ ختام العرض الأكاديمي والمناقشة ✨'
+                : '✨ کۆتایی سیمینار و پێشکەشکردنی زانستی ✨');
       buffer.write('      <p:sp>\n');
       buffer.write(
         '        <p:nvSpPr><p:cNvPr id="5" name="ClosingBadge"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
@@ -2263,7 +2298,9 @@ class PptxGeneratorService {
       buffer.write(
         '          <a:xfrm><a:off x="$infoX" y="700000"/><a:ext cx="5892000" cy="480000"/></a:xfrm>\n',
       );
-      buffer.write('          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n');
+      buffer.write(
+        '          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n',
+      );
       buffer.write(
         '          <a:solidFill><a:srgbClr val="1E293B"/></a:solidFill>\n',
       );
@@ -2291,8 +2328,8 @@ class PptxGeneratorService {
       final qnaSubtitle = isEnglish
           ? 'Scientific Discussion & Open Floor Q&A'
           : (isArabic
-              ? 'باب الأسئلة والمناقشة العلمية مفتوح للجميع'
-              : 'کاتی پرسیار و گفتوگۆی زانستی بۆ ئامادەبووان');
+                ? 'باب الأسئلة والمناقشة العلمية مفتوح للجميع'
+                : 'کاتی پرسیار و گفتوگۆی زانستی بۆ ئامادەبووان');
       buffer.write('      <p:sp>\n');
       buffer.write(
         '        <p:nvSpPr><p:cNvPr id="6" name="ThankYouTitle"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr/></p:nvSpPr>\n',
@@ -2301,7 +2338,9 @@ class PptxGeneratorService {
       buffer.write(
         '          <a:xfrm><a:off x="$infoX" y="1300000"/><a:ext cx="5892000" cy="1500000"/></a:xfrm>\n',
       );
-      buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
+      buffer.write(
+        '          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n',
+      );
       buffer.write('        </p:spPr>\n');
       buffer.write('        <p:txBody>\n');
       buffer.write('          <a:bodyPr anchor="ctr" rtlCol="$rtlColVal"/>\n');
@@ -2312,7 +2351,9 @@ class PptxGeneratorService {
       buffer.write(
         '              <a:rPr lang="$langAttr" sz="3400" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
       );
-      buffer.write('              <a:t>✨ ${_escapeXml(grandThankYou)} ✨</a:t>\n');
+      buffer.write(
+        '              <a:t>✨ ${_escapeXml(grandThankYou)} ✨</a:t>\n',
+      );
       buffer.write('            </a:r>\n');
       buffer.write('          </a:p>\n');
       buffer.write('          <a:p>\n');
@@ -2333,8 +2374,8 @@ class PptxGeneratorService {
       final qnaTitle = isEnglish
           ? '💬 Questions & Academic Discussion'
           : (isArabic
-              ? '💬 الحوار والمداخلات الأكاديمية'
-              : '💬 پرسیار و ڕاگۆڕینەوەی زانستی');
+                ? '💬 الحوار والمداخلات الأكاديمية'
+                : '💬 پرسیار و ڕاگۆڕینەوەی زانستی');
       buffer.write('      <p:sp>\n');
       buffer.write(
         '        <p:nvSpPr><p:cNvPr id="7" name="QnaCard"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
@@ -2343,7 +2384,9 @@ class PptxGeneratorService {
       buffer.write(
         '          <a:xfrm><a:off x="$infoX" y="2950000"/><a:ext cx="5892000" cy="1850000"/></a:xfrm>\n',
       );
-      buffer.write('          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n');
+      buffer.write(
+        '          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n',
+      );
       buffer.write(
         '          <a:solidFill><a:srgbClr val="131C31"/></a:solidFill>\n',
       );
@@ -2394,7 +2437,9 @@ class PptxGeneratorService {
       buffer.write(
         '          <a:xfrm><a:off x="$infoX" y="4950000"/><a:ext cx="5892000" cy="1180000"/></a:xfrm>\n',
       );
-      buffer.write('          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n');
+      buffer.write(
+        '          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n',
+      );
       buffer.write(
         '          <a:solidFill><a:srgbClr val="111827"/></a:solidFill>\n',
       );
@@ -2419,7 +2464,9 @@ class PptxGeneratorService {
       buffer.write(
         '              <a:rPr lang="$langAttr" sz="1400" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
       );
-      buffer.write('              <a:t>${_escapeXml(effectiveStudent)}   •   </a:t>\n');
+      buffer.write(
+        '              <a:t>${_escapeXml(effectiveStudent)}   •   </a:t>\n',
+      );
       buffer.write('            </a:r>\n');
       buffer.write('            <a:r>\n');
       buffer.write(
@@ -2431,7 +2478,9 @@ class PptxGeneratorService {
       buffer.write(
         '              <a:rPr lang="$langAttr" sz="1400" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
       );
-      buffer.write('              <a:t>${_escapeXml(effectiveSupervisor)}</a:t>\n');
+      buffer.write(
+        '              <a:t>${_escapeXml(effectiveSupervisor)}</a:t>\n',
+      );
       buffer.write('            </a:r>\n');
       buffer.write('          </a:p>\n');
       buffer.write('        </p:txBody>\n');
