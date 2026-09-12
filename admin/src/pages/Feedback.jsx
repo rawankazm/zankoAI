@@ -16,6 +16,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { AdminApi } from '../services/api';
+import { supabase } from '../services/supabase';
 import DataTable from '../components/DataTable';
 import Badge from '../components/Badge';
 import ConfirmModal from '../components/ConfirmModal';
@@ -60,6 +61,21 @@ export default function Feedback() {
 
   useEffect(() => {
     fetchFeedback();
+
+    const channel = supabase
+      .channel('admin_feedback_realtime_sync')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'notifications' },
+        () => {
+          fetchFeedback();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchFeedback]);
 
   const handleStatusChange = async (id, newStatus) => {

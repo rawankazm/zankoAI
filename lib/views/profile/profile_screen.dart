@@ -13,7 +13,6 @@ import '../../services/auth_service.dart';
 import '../../services/language_provider.dart';
 import '../../services/theme_provider.dart';
 import '../auth/login_screen.dart';
-import '../subscription/premium_subscription_screen.dart';
 import '../payment/vip_upgrade_sheet.dart';
 import '../../services/app_version_service.dart';
 import '../update/force_update_screen.dart';
@@ -207,18 +206,33 @@ class ProfileScreen extends StatelessWidget {
                               setModalState(() => isSubmitting = true);
 
                               try {
+                                final authUser = Supabase.instance.client.auth.currentUser;
+                                final userId = authUser?.id ?? user?.id;
+                                final userName = (user != null && user.name != null && user.name.toString().isNotEmpty)
+                                    ? user.name.toString()
+                                    : (authUser?.userMetadata?['full_name'] ?? 'خوێندکار');
+                                final userEmail = (user != null && user.email != null && user.email.toString().isNotEmpty)
+                                    ? user.email.toString()
+                                    : (authUser?.email ?? '');
+
                                 await Supabase.instance.client
-                                    .from('audit_logs')
+                                    .from('notifications')
                                     .insert({
-                                      'user_id': user?.id,
-                                      'action': 'USER_FEEDBACK',
-                                      'entity_type': feedbackType,
-                                      'payload': {
-                                        'message': msg,
+                                      'user_id': userId,
+                                      'type': 'system',
+                                      'title': 'ڕا و پێشنیار: $feedbackType',
+                                      'body': msg,
+                                      'data': {
+                                        'is_feedback': true,
+                                        'action': 'USER_FEEDBACK',
+                                        'category': feedbackType,
                                         'rating': rating,
-                                        'userName': user?.name ?? 'خوێندکار',
-                                        'userEmail': user?.email ?? '',
+                                        'userName': userName,
+                                        'userEmail': userEmail,
+                                        'message': msg,
+                                        'status': 'new',
                                       },
+                                      'status': 'delivered',
                                     });
 
                                 if (context.mounted) {
@@ -231,7 +245,16 @@ class ProfileScreen extends StatelessWidget {
                                   );
                                 }
                               } catch (e) {
-                                setModalState(() => isSubmitting = false);
+                                debugPrint('Feedback submission error: $e');
+                                if (context.mounted) {
+                                  setModalState(() => isSubmitting = false);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('کێشەیەک ڕوویدا لە ناردنی پێشنیارەکە: $e'),
+                                      backgroundColor: Colors.redAccent,
+                                    ),
+                                  );
+                                }
                               }
                             },
                       style: ElevatedButton.styleFrom(

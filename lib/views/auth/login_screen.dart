@@ -360,11 +360,16 @@ class _LoginScreenState extends State<LoginScreen>
                               try {
                                 final email = _emailController.text.trim();
                                 await Supabase.instance.client
-                                    .from('audit_logs')
+                                    .from('notifications')
                                     .insert({
-                                      'action': 'IP_LIMIT_APPEAL',
-                                      'entity_type': 'security_alert',
-                                      'payload': {
+                                      'type': 'security',
+                                      'title': 'داواکاری نوێکردنەوەی IP: $email',
+                                      'body': noteCtrl.text.trim().isNotEmpty
+                                          ? noteCtrl.text.trim()
+                                          : 'داواکاری نوێکردنەوەی IP لەلایەن بەکارهێنەرەوە',
+                                      'data': {
+                                        'is_appeal': true,
+                                        'action': 'IP_LIMIT_APPEAL',
                                         'email': email,
                                         'name':
                                             email.isNotEmpty &&
@@ -379,6 +384,7 @@ class _LoginScreenState extends State<LoginScreen>
                                             : 'داواکاری نوێکردنەوەی IP لەلایەن بەکارهێنەرەوە',
                                         'status': 'pending',
                                       },
+                                      'status': 'delivered',
                                     });
                                 if (ctx.mounted) Navigator.pop(ctx);
                                 if (mounted) {

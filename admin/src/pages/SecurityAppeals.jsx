@@ -11,6 +11,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { AdminApi } from '../services/api';
+import { supabase } from '../services/supabase';
 import DataTable from '../components/DataTable';
 import Badge from '../components/Badge';
 import ConfirmModal from '../components/ConfirmModal';
@@ -47,6 +48,21 @@ export default function SecurityAppeals() {
 
   useEffect(() => {
     fetchAppeals();
+
+    const channel = supabase
+      .channel('admin_appeals_realtime_sync')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'notifications' },
+        () => {
+          fetchAppeals();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchAppeals]);
 
   const handleApprove = async (appeal) => {

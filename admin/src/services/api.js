@@ -1405,33 +1405,73 @@ export const AdminApi = {
   },
 
   // ============================================================================
-  // Feedback & Suggestions (ڕا و پێشنیارەکان) - from mobile app audit_logs
+  // ============================================================================
+  // Feedback & Suggestions (ڕا و پێشنیارەکان) - from mobile app notifications & audit_logs
   // ============================================================================
   listUserFeedback: async (params = {}) => {
     await ensureAdminAuth();
     let feedbacks = [];
     try {
-      const { data, error } = await supabase
-        .from('audit_logs')
+      // 1. Primary source: public.notifications (where mobile app puts feedback)
+      const { data: notifData, error: notifError } = await supabase
+        .from('notifications')
         .select('*')
-        .eq('action', 'USER_FEEDBACK')
         .order('created_at', { ascending: false });
 
-      if (!error && data && data.length > 0) {
-        feedbacks = data.map((item) => {
-          const payload = item.payload || {};
+      if (!notifError && notifData && notifData.length > 0) {
+        const feedbackItems = notifData.filter((item) => {
+          const payload = item.data || {};
+          const title = item.title || '';
+          return (
+            payload.is_feedback === true ||
+            payload.action === 'USER_FEEDBACK' ||
+            title.includes('ڕا و پێشنیار') ||
+            title.includes('پێشنیار')
+          );
+        });
+
+        feedbacks = feedbackItems.map((item) => {
+          const payload = item.data || {};
           return {
             id: item.id,
             user_id: item.user_id,
-            userName: payload.userName || 'خوێندکار',
-            userEmail: payload.userEmail || '',
-            category: item.entity_type || payload.category || 'ڕای گشتی',
+            userName: payload.userName || payload.name || 'خوێندکار',
+            userEmail: payload.userEmail || payload.email || '',
+            category: payload.category || payload.entity_type || 'ڕای گشتی',
             rating: Number(payload.rating || 5),
-            message: payload.message || '',
+            message: payload.message || item.body || '',
             status: payload.status || 'new',
             created_at: item.created_at,
           };
         });
+      }
+
+      // 2. Fallback: check audit_logs if needed
+      if (feedbacks.length === 0) {
+        try {
+          const { data: auditData } = await supabase
+            .from('audit_logs')
+            .select('*')
+            .eq('action', 'USER_FEEDBACK')
+            .order('created_at', { ascending: false });
+
+          if (auditData && auditData.length > 0) {
+            feedbacks = auditData.map((item) => {
+              const payload = item.changes || item.payload || {};
+              return {
+                id: item.id,
+                user_id: item.actor_id || item.user_id,
+                userName: payload.userName || 'خوێندکار',
+                userEmail: payload.userEmail || '',
+                category: item.resource_type || payload.category || 'ڕای گشتی',
+                rating: Number(payload.rating || 5),
+                message: payload.message || '',
+                status: payload.status || 'new',
+                created_at: item.created_at,
+              };
+            });
+          }
+        } catch (_) {}
       }
     } catch (e) {
       console.warn('listUserFeedback Supabase notice:', e);
@@ -1445,7 +1485,14 @@ export const AdminApi = {
       } catch (_) {}
     }
 
-    if (feedbacks.length === 0 && localFeedbacks.length === 0) {
+    let combined = [...feedbacks];
+    localFeedbacks.forEach((lf) => {
+      if (!combined.some((c) => c.id === lf.id)) {
+        combined.push(lf);
+      }
+    });
+
+    if (combined.length === 0) {
       localFeedbacks = [
         {
           id: 'fb-101',
@@ -1469,29 +1516,12 @@ export const AdminApi = {
           status: 'reviewed',
           created_at: new Date(Date.now() - 3600000 * 24).toISOString(),
         },
-        {
-          id: 'fb-103',
-          user_id: 'usr-5',
-          userName: 'سارا عوسمان',
-          userEmail: 'sara.student@gmail.com',
-          category: 'ڕاپۆرتی کێشە',
-          rating: 4,
-          message: 'هەندێک جار لە کاتی ناردنی پرسیاری وێنەیی لە هێڵی لاوازدا دەوەستێت، سوپاس بۆ ماندووبوونتان.',
-          status: 'resolved',
-          created_at: new Date(Date.now() - 3600000 * 48).toISOString(),
-        },
       ];
       try {
         localStorage.setItem('zanko_admin_user_feedback_v1', JSON.stringify(localFeedbacks));
       } catch (_) {}
+      combined = [...localFeedbacks];
     }
-
-    let combined = [...feedbacks];
-    localFeedbacks.forEach((lf) => {
-      if (!combined.some((c) => c.id === lf.id)) {
-        combined.push(lf);
-      }
-    });
 
     if (params.category && params.category !== 'all') {
       combined = combined.filter((f) => f.category === params.category);
@@ -1528,15 +1558,34 @@ export const AdminApi = {
   updateFeedbackStatus: async (id, status) => {
     await ensureAdminAuth();
     try {
-      const { data: current } = await supabase.from('audit_logs').select('*').eq('id', id).maybeSingle();
+      const { data: current } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+
       if (current) {
-        const payload = current.payload || {};
+        const payload = current.data || {};
         await supabase
-          .from('audit_logs')
-          .update({ payload: { ...payload, status } })
+          .from('notifications')
+          .update({
+            data: { ...payload, status },
+          })
           .eq('id', id);
+      } else {
+        // Fallback to audit_logs if not in notifications
+        const { data: auditCurrent } = await supabase.from('audit_logs').select('*').eq('id', id).maybeSingle();
+        if (auditCurrent) {
+          const payload = auditCurrent.changes || auditCurrent.payload || {};
+          await supabase
+            .from('audit_logs')
+            .update({ changes: { ...payload, status } })
+            .eq('id', id);
+        }
       }
-    } catch (_) {}
+    } catch (e) {
+      console.warn('updateFeedbackStatus error:', e);
+    }
 
     try {
       const stored = localStorage.getItem('zanko_admin_user_feedback_v1');
@@ -1551,6 +1600,9 @@ export const AdminApi = {
 
   deleteFeedback: async (id) => {
     await ensureAdminAuth();
+    try {
+      await supabase.from('notifications').delete().eq('id', id);
+    } catch (_) {}
     try {
       await supabase.from('audit_logs').delete().eq('id', id);
     } catch (_) {}
@@ -1574,26 +1626,63 @@ export const AdminApi = {
     await ensureAdminAuth();
     let appeals = [];
     try {
-      const { data, error } = await supabase
-        .from('audit_logs')
+      // 1. Primary source: notifications table
+      const { data: notifData, error } = await supabase
+        .from('notifications')
         .select('*')
-        .eq('action', 'IP_LIMIT_APPEAL')
         .order('created_at', { ascending: false });
 
-      if (!error && data && data.length > 0) {
-        appeals = data.map((item) => {
-          const payload = item.payload || {};
+      if (!error && notifData && notifData.length > 0) {
+        const appealItems = notifData.filter((item) => {
+          const payload = item.data || {};
+          const title = item.title || '';
+          return (
+            payload.is_appeal === true ||
+            payload.action === 'IP_LIMIT_APPEAL' ||
+            item.type === 'security' ||
+            title.includes('داواکاری نوێکردنەوەی IP') ||
+            title.includes('IP')
+          );
+        });
+
+        appeals = appealItems.map((item) => {
+          const payload = item.data || {};
           return {
             id: item.id,
             user_id: item.user_id,
             email: payload.email || '',
             name: payload.name || 'خوێندکار',
-            reason: payload.reason || '',
-            userNote: payload.userNote || '',
+            reason: payload.reason || item.title || '',
+            userNote: payload.userNote || item.body || '',
             status: payload.status || 'pending',
             created_at: item.created_at,
           };
         });
+      }
+
+      // 2. Fallback: check audit_logs
+      if (appeals.length === 0) {
+        const { data: auditData } = await supabase
+          .from('audit_logs')
+          .select('*')
+          .eq('action', 'IP_LIMIT_APPEAL')
+          .order('created_at', { ascending: false });
+
+        if (auditData && auditData.length > 0) {
+          appeals = auditData.map((item) => {
+            const payload = item.changes || item.payload || {};
+            return {
+              id: item.id,
+              user_id: item.actor_id || item.user_id,
+              email: payload.email || '',
+              name: payload.name || 'خوێندکار',
+              reason: payload.reason || '',
+              userNote: payload.userNote || '',
+              status: payload.status || 'pending',
+              created_at: item.created_at,
+            };
+          });
+        }
       }
     } catch (e) {
       console.warn('listSecurityAppeals notice:', e);
@@ -1607,7 +1696,14 @@ export const AdminApi = {
       } catch (_) {}
     }
 
-    if (appeals.length === 0 && localAppeals.length === 0) {
+    let combined = [...appeals];
+    localAppeals.forEach((la) => {
+      if (!combined.some((c) => c.id === la.id)) {
+        combined.push(la);
+      }
+    });
+
+    if (combined.length === 0) {
       localAppeals = [
         {
           id: 'appeal-201',
@@ -1623,14 +1719,8 @@ export const AdminApi = {
       try {
         localStorage.setItem('zanko_admin_security_appeals_v1', JSON.stringify(localAppeals));
       } catch (_) {}
+      combined = [...localAppeals];
     }
-
-    let combined = [...appeals];
-    localAppeals.forEach((la) => {
-      if (!combined.some((c) => c.id === la.id)) {
-        combined.push(la);
-      }
-    });
 
     if (params.status && params.status !== 'all') {
       combined = combined.filter((a) => a.status === params.status);
@@ -1648,21 +1738,36 @@ export const AdminApi = {
         await supabase.from('profiles').update({ status: 'active' }).eq('email', email);
       }
 
-      await supabase.from('audit_logs').insert({
-        action: 'IP_RESET_APPROVED',
-        entity_type: 'user',
-        payload: { email, appealId, approvedBy: 'admin@zankoai.com' },
-      });
+      // Update in notifications
+      const { data: current } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('id', appealId)
+        .maybeSingle();
 
-      const { data: current } = await supabase.from('audit_logs').select('*').eq('id', appealId).maybeSingle();
       if (current) {
-        const payload = current.payload || {};
+        const payload = current.data || {};
         await supabase
-          .from('audit_logs')
-          .update({ payload: { ...payload, status: 'approved' } })
+          .from('notifications')
+          .update({
+            data: { ...payload, status: 'approved' },
+          })
           .eq('id', appealId);
       }
 
+      // Also try audit_logs update if present
+      try {
+        const { data: auditCurrent } = await supabase.from('audit_logs').select('*').eq('id', appealId).maybeSingle();
+        if (auditCurrent) {
+          const payload = auditCurrent.changes || auditCurrent.payload || {};
+          await supabase
+            .from('audit_logs')
+            .update({ changes: { ...payload, status: 'approved' } })
+            .eq('id', appealId);
+        }
+      } catch (_) {}
+
+      // Send approval notification
       if (userId) {
         await supabase.from('notifications').insert({
           user_id: userId,
@@ -1690,14 +1795,32 @@ export const AdminApi = {
   rejectIpAppeal: async (appealId) => {
     await ensureAdminAuth();
     try {
-      const { data: current } = await supabase.from('audit_logs').select('*').eq('id', appealId).maybeSingle();
+      const { data: current } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('id', appealId)
+        .maybeSingle();
+
       if (current) {
-        const payload = current.payload || {};
+        const payload = current.data || {};
         await supabase
-          .from('audit_logs')
-          .update({ payload: { ...payload, status: 'rejected' } })
+          .from('notifications')
+          .update({
+            data: { ...payload, status: 'rejected' },
+          })
           .eq('id', appealId);
       }
+
+      try {
+        const { data: auditCurrent } = await supabase.from('audit_logs').select('*').eq('id', appealId).maybeSingle();
+        if (auditCurrent) {
+          const payload = auditCurrent.changes || auditCurrent.payload || {};
+          await supabase
+            .from('audit_logs')
+            .update({ changes: { ...payload, status: 'rejected' } })
+            .eq('id', appealId);
+        }
+      } catch (_) {}
     } catch (_) {}
 
     try {
