@@ -13,6 +13,8 @@ class ZankolineDepartmentModel {
   final String city;
   final String description;
   final int parallelFeeIqd;
+  final double? explicitParallelMinMark;
+  final double? eveningMinMark;
 
   ZankolineDepartmentModel({
     required this.id,
@@ -23,6 +25,8 @@ class ZankolineDepartmentModel {
     required this.city,
     required this.description,
     required this.parallelFeeIqd,
+    this.explicitParallelMinMark,
+    this.eveningMinMark,
   });
 
   factory ZankolineDepartmentModel.fromJson(
@@ -35,6 +39,16 @@ class ZankolineDepartmentModel {
     final double minMarkVal = rawMinMark != null
         ? (rawMinMark as num).toDouble()
         : 50.0;
+
+    final rawParallel = json['parallel_min_mark'] ?? json['parallelMinMark'];
+    final double? parallelVal = rawParallel is num && rawParallel > 0
+        ? rawParallel.toDouble()
+        : null;
+
+    final rawEvening = json['evening_min_mark'] ?? json['eveningMinMark'];
+    final double? eveningVal = rawEvening is num && rawEvening > 0
+        ? rawEvening.toDouble()
+        : null;
 
     int defaultFee = 1000000;
     if (collegeName.contains('پزیشکی گشتی')) {
@@ -78,10 +92,13 @@ class ZankolineDepartmentModel {
       city: (json['city'] ?? '').toString(),
       description: (json['description'] ?? '').toString(),
       parallelFeeIqd: feeVal,
+      explicitParallelMinMark: parallelVal,
+      eveningMinMark: eveningVal,
     );
   }
 
   double get parallelMinMark =>
+      explicitParallelMinMark ??
       double.parse((minMark - 4.5).clamp(50.0, 100.0).toStringAsFixed(1));
 
   int get discountedParallelFeeIqd => (parallelFeeIqd * 0.55).round();

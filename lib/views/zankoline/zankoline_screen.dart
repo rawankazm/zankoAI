@@ -1109,6 +1109,48 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                               setState(() => _selectedCity = 'هەڵەبجە'),
                           isDark: isDark,
                         ),
+                        const SizedBox(width: 8),
+                        _buildAppleCityChip(
+                          label: 'سۆران',
+                          isSelected: _selectedCity == 'سۆران',
+                          onTap: () => setState(() => _selectedCity = 'سۆران'),
+                          isDark: isDark,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildAppleCityChip(
+                          label: 'کۆیە',
+                          isSelected: _selectedCity == 'کۆیە',
+                          onTap: () => setState(() => _selectedCity = 'کۆیە'),
+                          isDark: isDark,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildAppleCityChip(
+                          label: 'گەرمیان',
+                          isSelected: _selectedCity == 'گەرمیان',
+                          onTap: () => setState(() => _selectedCity = 'گەرمیان'),
+                          isDark: isDark,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildAppleCityChip(
+                          label: 'زاخۆ',
+                          isSelected: _selectedCity == 'زاخۆ',
+                          onTap: () => setState(() => _selectedCity = 'زاخۆ'),
+                          isDark: isDark,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildAppleCityChip(
+                          label: 'ڕانیە',
+                          isSelected: _selectedCity == 'ڕانیە',
+                          onTap: () => setState(() => _selectedCity = 'ڕانیە'),
+                          isDark: isDark,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildAppleCityChip(
+                          label: 'ئاکرێ',
+                          isSelected: _selectedCity == 'ئاکرێ',
+                          onTap: () => setState(() => _selectedCity = 'ئاکرێ'),
+                          isDark: isDark,
+                        ),
                       ],
                     ),
                   ),
@@ -1118,7 +1160,18 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                   ...(_selectedCity == null
                           ? _matchedDepartments
                           : _matchedDepartments
-                                .where((d) => d.city.contains(_selectedCity!))
+                                .where((d) =>
+                                    d.city.contains(_selectedCity!) ||
+                                    (_selectedCity == 'هەولێر' &&
+                                        (d.city.contains('سۆران') ||
+                                            d.city.contains('کۆیە'))) ||
+                                    (_selectedCity == 'سلێمانی' &&
+                                        (d.city.contains('ڕانیە') ||
+                                            d.city.contains('چەمچەماڵ') ||
+                                            d.city.contains('گەرمیان'))) ||
+                                    (_selectedCity == 'دهۆک' &&
+                                        (d.city.contains('زاخۆ') ||
+                                            d.city.contains('ئاکرێ'))))
                                 .toList())
                       .map((dept) {
                         final cutoff = _isParallel
@@ -1179,7 +1232,7 @@ class _ZankolineScreenState extends State<ZankolineScreen> {
                                         child: Text(
                                           _isParallel
                                               ? '${t('parallel_label')}: %$cutoff (${t('general_label')}: %${dept.minMark})'
-                                              : '${t('min_mark_label')}: %$cutoff',
+                                              : '${t('min_mark_label')}: %$cutoff${dept.eveningMinMark != null ? ' | ئێواران: %${dept.eveningMinMark}' : ''}',
                                           style: TextStyle(
                                             fontWeight: FontWeight.w800,
                                             fontSize: 11.5,
