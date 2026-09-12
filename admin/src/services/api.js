@@ -252,11 +252,40 @@ export const AdminApi = {
       if (res.data?.data?.users && res.data.data.users.length > 0) return res.data.data;
     } catch (_) {}
 
-    // Synchronize users from local storage and merge with real VIP requests in Supabase
+    // Synchronize users from Supabase profiles and local storage
     let allUsers = getStoredUsers();
 
     try {
       await ensureAdminAuth();
+      const { data: dbProfiles } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (dbProfiles && dbProfiles.length > 0) {
+        dbProfiles.forEach(p => {
+          const isVip = !!p.is_vip || p.plan === 'premium';
+          const existingIdx = allUsers.findIndex(u => u.id === p.id);
+          const userData = {
+            id: p.id,
+            email: p.email || `student-${p.id.substring(0, 6)}@zankoai.com`,
+            full_name: p.full_name || 'خوێندکاری ZankoAI',
+            role: p.role || 'student',
+            status: p.status || 'active',
+            plan: p.plan || (isVip ? 'premium' : 'free'),
+            is_vip: isVip,
+            university_name: p.university_name || 'زانکۆی سەلاحەدین',
+            department_name: p.department_name || 'بەشی گشتی',
+            created_at: p.created_at,
+          };
+          if (existingIdx >= 0) {
+            allUsers[existingIdx] = { ...allUsers[existingIdx], ...userData };
+          } else {
+            allUsers.unshift(userData);
+          }
+        });
+      }
+
       const { data: notifs } = await supabase
         .from('notifications')
         .select('*')
@@ -265,15 +294,17 @@ export const AdminApi = {
       if (notifs) {
         notifs.forEach(n => {
           if (n.user_id && !allUsers.some(u => u.id === n.user_id)) {
-            const isVipApproved = n.type === 'vip_approved';
+            const isVipApproved = n.type === 'vip_approved' || n.data?.status === 'approved' || n.type === 'subscription_activated';
             allUsers.push({
               id: n.user_id,
-              email: `student-${n.user_id.substring(0, 6)}@zankoai.com`,
-              full_name: n.title?.includes('VIP') ? 'داواکاری VIP' : 'خوێندکاری ZankoAI',
+              email: n.data?.user_email || `student-${n.user_id.substring(0, 6)}@zankoai.com`,
+              full_name: n.data?.user_name || (n.title?.includes('VIP') ? 'داواکاری VIP' : 'خوێندکاری ZankoAI'),
               role: 'student',
               status: 'active',
               plan: isVipApproved ? 'premium' : 'free',
               is_vip: isVipApproved,
+              university_name: 'زانکۆی سەلاحەدین',
+              department_name: 'بەشی گشتی',
               created_at: n.created_at,
             });
           }
@@ -824,7 +855,7 @@ export const AdminApi = {
 
       if (notifs) {
         notifs
-          .filter(n => n.type === 'system_notification' || n.type === 'vip_request' || n.type === 'vip_approved' || (n.title && n.title.includes('VIP')))
+          .filter(n => n.type === 'system_notification' || n.type === 'vip_request' || n.type === 'vip_approved' || n.type === 'vip' || n.data?.is_vip_request || (n.title && n.title.includes('VIP')))
           .forEach((n, idx) => {
             const body = n.body || '';
             let amount = 5000;
@@ -832,9 +863,10 @@ export const AdminApi = {
             else if (body.includes('12000') || body.includes('12,000') || body.includes('10000') || body.includes('10,000')) amount = 12000;
             else if (body.includes('5000') || body.includes('5,000')) amount = 5000;
             else if (body.includes('25000')) amount = 25000;
+            else if (n.data?.price_iqd) amount = n.data.price_iqd;
 
-            const isApproved = n.type === 'vip_approved';
-            const isRejected = n.type === 'vip_rejected';
+            const isApproved = n.data?.status === 'approved' || n.type === 'vip_approved' || n.type === 'subscription_activated';
+            const isRejected = n.data?.status === 'rejected' || n.type === 'vip_rejected' || n.type === 'payment_result';
             const studentName = n.data?.user_name || body.split('|')?.[1]?.replace('ناو:', '')?.replace('ژمارە:', '')?.trim() || 'خوێندکاری VIP';
             const studentEmail = n.data?.user_email || body.split('|')?.[2]?.replace('ئیمەیڵ:', '')?.trim() || (n.user_id ? `student-${n.user_id.substring(0, 6)}@zankoai.com` : 'user@zankoai.com');
 
@@ -877,8 +909,8 @@ export const AdminApi = {
     // 1. Mark the request notification in DB as approved
     try {
       await supabase.from('notifications').update({
-        type: 'vip_approved',
         is_read: true,
+        data: { status: 'approved', is_vip_request: true },
       }).eq('id', paymentId);
     } catch (_) {}
 
@@ -924,7 +956,7 @@ export const AdminApi = {
           user_id: userId,
           title: '🎉 پیرۆزە! هەژمارەکەت بوو بە VIP',
           body: `داواکاری بەشداریکردنی VIPەکەت لەلایەن بەڕێوەبەرەوە پەسەندکرا. هەژمارەکەت بۆ ماوەی ${days} ڕۆژ کرا بە ئەندامی تایبەتی VIP 👑. ئێستا دەتوانیت لە هەموو تایبەتمەندییە بێسنوورەکانی ZankoAI سوودمەند بیت!`,
-          type: 'vip_approved',
+          type: 'vip',
           status: 'delivered',
           is_read: false,
           created_at: new Date().toISOString(),
@@ -950,8 +982,8 @@ export const AdminApi = {
     await ensureAdminAuth();
     try {
       await supabase.from('notifications').update({
-        type: 'vip_rejected',
         is_read: true,
+        data: { status: 'rejected', is_vip_request: true },
       }).eq('id', paymentId);
     } catch (_) {}
 

@@ -30,10 +30,7 @@ class UserModel {
   bool get isPendingVip => vipStatus == 'pending';
   bool get isNeedsSetup =>
       !isGuest &&
-      (name.trim().isEmpty ||
-          name.trim().toLowerCase() == 'student' ||
-          universityName == null ||
-          universityName!.trim().isEmpty);
+      (name.trim().isEmpty || name.trim().toLowerCase() == 'student');
 
   int get vipDaysLeft {
     if (!isVip) return 0;

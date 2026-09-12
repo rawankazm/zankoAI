@@ -216,28 +216,76 @@ class SupabaseAuthRepository implements AuthRepository {
             user.userMetadata?['name']?.toString();
         final avatarUrl =
             googleUser.photoUrl ?? user.userMetadata?['avatar_url'];
-        // Only adopt Google display name if user has never set a custom name
-        if ((existingMetaName == null || existingMetaName.trim().isEmpty) &&
-            googleUser.displayName != null &&
-            googleUser.displayName!.trim().isNotEmpty) {
-          final displayName = googleUser.displayName!.trim();
-          try {
-            await _supabase
-                .from('profiles')
-                .update({
-                  'full_name': displayName,
-                  ...?avatarUrl != null ? {'avatar_url': avatarUrl} : null,
-                })
-                .eq('id', user.id);
-            await _supabase.auth.updateUser(
-              UserAttributes(
-                data: {
-                  'full_name': displayName,
-                  ...?avatarUrl != null ? {'avatar_url': avatarUrl} : null,
-                },
-              ),
-            );
-          } catch (_) {}
+        final displayName = (googleUser.displayName != null &&
+                googleUser.displayName!.trim().isNotEmpty)
+            ? googleUser.displayName!.trim()
+            : ((existingMetaName != null && existingMetaName.trim().isNotEmpty)
+                ? existingMetaName.trim()
+                : (user.email != null && user.email!.contains('@')
+                    ? user.email!.split('@').first
+                    : 'خوێندکار'));
+
+        try {
+          final existing = await _supabase
+              .from('profiles')
+              .select('id, full_name, university_name, department_name')
+              .eq('id', user.id)
+              .maybeSingle();
+
+          if (existing == null) {
+            await _supabase.from('profiles').insert({
+              'id': user.id,
+              'full_name': displayName,
+              'email': user.email ?? googleUser.email,
+              'avatar_url': avatarUrl,
+              'role': 'student',
+              'status': 'active',
+              'university_name': 'زانکۆی سەلاحەدین',
+              'department_name': 'بەشی گشتی',
+              'plan': 'free',
+              'is_vip': false,
+              'vip_status': 'none',
+              'created_at': DateTime.now().toUtc().toIso8601String(),
+              'updated_at': DateTime.now().toUtc().toIso8601String(),
+            });
+          } else {
+            final updates = <String, dynamic>{};
+            if (existing['full_name'] == null ||
+                existing['full_name'].toString().trim().isEmpty ||
+                existing['full_name'] == 'student') {
+              updates['full_name'] = displayName;
+            }
+            if (existing['university_name'] == null ||
+                existing['university_name'].toString().trim().isEmpty) {
+              updates['university_name'] = 'زانکۆی سەلاحەدین';
+            }
+            if (existing['department_name'] == null ||
+                existing['department_name'].toString().trim().isEmpty) {
+              updates['department_name'] = 'بەشی گشتی';
+            }
+            if (avatarUrl != null && existing['avatar_url'] == null) {
+              updates['avatar_url'] = avatarUrl;
+            }
+            if (updates.isNotEmpty) {
+              await _supabase
+                  .from('profiles')
+                  .update(updates)
+                  .eq('id', user.id);
+            }
+          }
+
+          await _supabase.auth.updateUser(
+            UserAttributes(
+              data: {
+                'full_name': displayName,
+                'university_name': 'زانکۆی سەلاحەدین',
+                'department_name': 'بەشی گشتی',
+                ...?avatarUrl != null ? {'avatar_url': avatarUrl} : null,
+              },
+            ),
+          );
+        } catch (e) {
+          debugPrint('Google login profile auto-registration notice: $e');
         }
       }
 
@@ -300,22 +348,81 @@ class SupabaseAuthRepository implements AuthRepository {
       );
 
       final user = response.user;
-      if (user != null &&
-          effectiveName.isNotEmpty &&
-          effectiveName != 'Apple User') {
+      if (user != null) {
         final existingMetaName =
             user.userMetadata?['full_name']?.toString() ??
             user.userMetadata?['name']?.toString();
-        if (existingMetaName == null || existingMetaName.trim().isEmpty) {
-          try {
-            await _supabase
-                .from('profiles')
-                .update({'full_name': effectiveName})
-                .eq('id', user.id);
-            await _supabase.auth.updateUser(
-              UserAttributes(data: {'full_name': effectiveName}),
-            );
-          } catch (_) {}
+        final avatarUrl = user.userMetadata?['avatar_url'];
+        final displayName = (effectiveName.isNotEmpty &&
+                effectiveName != 'Apple User')
+            ? effectiveName
+            : ((existingMetaName != null && existingMetaName.trim().isNotEmpty)
+                ? existingMetaName.trim()
+                : (user.email != null && user.email!.contains('@')
+                    ? user.email!.split('@').first
+                    : 'خوێندکار'));
+
+        try {
+          final existing = await _supabase
+              .from('profiles')
+              .select('id, full_name, university_name, department_name')
+              .eq('id', user.id)
+              .maybeSingle();
+
+          if (existing == null) {
+            await _supabase.from('profiles').insert({
+              'id': user.id,
+              'full_name': displayName,
+              'email': user.email ?? '',
+              'avatar_url': avatarUrl,
+              'role': 'student',
+              'status': 'active',
+              'university_name': 'زانکۆی سەلاحەدین',
+              'department_name': 'بەشی گشتی',
+              'plan': 'free',
+              'is_vip': false,
+              'vip_status': 'none',
+              'created_at': DateTime.now().toUtc().toIso8601String(),
+              'updated_at': DateTime.now().toUtc().toIso8601String(),
+            });
+          } else {
+            final updates = <String, dynamic>{};
+            if (existing['full_name'] == null ||
+                existing['full_name'].toString().trim().isEmpty ||
+                existing['full_name'] == 'student') {
+              updates['full_name'] = displayName;
+            }
+            if (existing['university_name'] == null ||
+                existing['university_name'].toString().trim().isEmpty) {
+              updates['university_name'] = 'زانکۆی سەلاحەدین';
+            }
+            if (existing['department_name'] == null ||
+                existing['department_name'].toString().trim().isEmpty) {
+              updates['department_name'] = 'بەشی گشتی';
+            }
+            if (avatarUrl != null && existing['avatar_url'] == null) {
+              updates['avatar_url'] = avatarUrl;
+            }
+            if (updates.isNotEmpty) {
+              await _supabase
+                  .from('profiles')
+                  .update(updates)
+                  .eq('id', user.id);
+            }
+          }
+
+          await _supabase.auth.updateUser(
+            UserAttributes(
+              data: {
+                'full_name': displayName,
+                'university_name': 'زانکۆی سەلاحەدین',
+                'department_name': 'بەشی گشتی',
+                ...?avatarUrl != null ? {'avatar_url': avatarUrl} : null,
+              },
+            ),
+          );
+        } catch (e) {
+          debugPrint('Apple login profile auto-registration notice: $e');
         }
       }
 
@@ -678,13 +785,21 @@ class SupabaseAuthRepository implements AuthRepository {
           ? localUni.trim()
           : ((metaUni != null && metaUni.trim().isNotEmpty)
                 ? metaUni.trim()
-                : (res != null ? res['university_name']?.toString() : null));
+                : (res != null &&
+                        res['university_name'] != null &&
+                        res['university_name'].toString().trim().isNotEmpty
+                    ? res['university_name']?.toString()
+                    : 'زانکۆی سەلاحەدین'));
 
       final effectiveDept = (localDept != null && localDept.trim().isNotEmpty)
           ? localDept.trim()
           : ((metaDept != null && metaDept.trim().isNotEmpty)
                 ? metaDept.trim()
-                : (res != null ? res['department_name']?.toString() : null));
+                : (res != null &&
+                        res['department_name'] != null &&
+                        res['department_name'].toString().trim().isNotEmpty
+                    ? res['department_name']?.toString()
+                    : 'بەشی گشتی'));
 
       final effectiveCity = (localCity != null && localCity.trim().isNotEmpty)
           ? localCity.trim()
@@ -753,6 +868,25 @@ class SupabaseAuthRepository implements AuthRepository {
             vipStatus: localIsVip == true ? 'active' : 'none',
             vipExpiry: localVipExpiry,
           );
+        }
+
+        // Guarantee profile presence in remote Supabase profiles table for admin visibility
+        if (cleanEmail.isNotEmpty && !cleanEmail.contains('guest')) {
+          _supabase.from('profiles').upsert({
+            'id': userId,
+            'full_name': effectiveName.isNotEmpty ? effectiveName : 'خوێندکار',
+            'email': cleanEmail,
+            'avatar_url': effectiveAvatar,
+            'role': 'student',
+            'status': 'active',
+            'university_name': effectiveUni,
+            'department_name': effectiveDept,
+            'plan': 'free',
+            'is_vip': false,
+            'vip_status': 'none',
+          }, onConflict: 'id').catchError((e) {
+            debugPrint('Auto profile background sync notice: $e');
+          });
         }
       }
 
