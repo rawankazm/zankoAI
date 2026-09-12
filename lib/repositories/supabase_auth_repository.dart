@@ -156,24 +156,36 @@ class SupabaseAuthRepository implements AuthRepository {
     }
   }
 
+  GoogleSignIn _createGoogleSignIn() {
+    final String? serverClientId = AppEnv.googleWebClientId.contains('YOUR_')
+        ? null
+        : AppEnv.googleWebClientId;
+    final String? iosClientId =
+        (!kIsWeb &&
+            Platform.isIOS &&
+            !AppEnv.googleIosClientId.contains('YOUR_'))
+        ? AppEnv.googleIosClientId
+        : null;
+
+    return GoogleSignIn(
+      clientId: iosClientId,
+      serverClientId: serverClientId,
+      scopes: ['email', 'profile'],
+    );
+  }
+
   @override
   Future<AuthResponse?> signInWithGoogle() async {
     try {
-      final String? serverClientId = AppEnv.googleWebClientId.contains('YOUR_')
-          ? null
-          : AppEnv.googleWebClientId;
-      final String? iosClientId =
-          (!kIsWeb &&
-              Platform.isIOS &&
-              !AppEnv.googleIosClientId.contains('YOUR_'))
-          ? AppEnv.googleIosClientId
-          : null;
+      final googleSignIn = _createGoogleSignIn();
 
-      final googleSignIn = GoogleSignIn(
-        clientId: iosClientId,
-        serverClientId: serverClientId,
-        scopes: ['email', 'profile'],
-      );
+      // Ensure any previously cached Google account session is cleared before
+      // prompting the user. Calling signOut() guarantees Google Play Services / iOS
+      // presents the native account selection dialog ("Choose an account"),
+      // allowing the student to pick their desired account or switch accounts.
+      try {
+        await googleSignIn.signOut();
+      } catch (_) {}
 
       final googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
@@ -374,6 +386,18 @@ class SupabaseAuthRepository implements AuthRepository {
     try {
       await _supabase.auth.signOut();
     } catch (_) {}
+
+    // Sign out & disconnect from GoogleSignIn so next login forces the account picker
+    try {
+      final googleSignIn = _createGoogleSignIn();
+      await googleSignIn.signOut();
+      try {
+        await googleSignIn.disconnect();
+      } catch (_) {}
+    } catch (e) {
+      debugPrint('Google sign-out error in signOut: $e');
+    }
+
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('zanko_active_user_json');
@@ -389,7 +413,8 @@ class SupabaseAuthRepository implements AuthRepository {
                 k.startsWith('zanko_user_') ||
                 k.startsWith('zanko_active_') ||
                 k.startsWith('zanko_fb_') ||
-                k.startsWith('apple_'),
+                k.startsWith('apple_') ||
+                k.startsWith('google_'),
           )
           .toList();
       for (final k in keysToRemove) {
@@ -416,7 +441,8 @@ class SupabaseAuthRepository implements AuthRepository {
                   k.startsWith('zanko_user_') ||
                   k.startsWith('zanko_active_') ||
                   k.startsWith('zanko_fb_') ||
-                  k.startsWith('apple_'),
+                  k.startsWith('apple_') ||
+                  k.startsWith('google_'),
             )
             .toList();
         for (final k in keysToRemove) {
@@ -480,6 +506,16 @@ class SupabaseAuthRepository implements AuthRepository {
           await _supabase.from('profiles').delete().eq('id', userId);
         } catch (_) {}
       }
+
+      // 4. Fully disconnect Google session
+      try {
+        final googleSignIn = _createGoogleSignIn();
+        await googleSignIn.signOut();
+        try {
+          await googleSignIn.disconnect();
+        } catch (_) {}
+      } catch (_) {}
+
       await signOut();
     }
   }
