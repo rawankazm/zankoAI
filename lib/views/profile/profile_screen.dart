@@ -232,6 +232,7 @@ class ProfileScreen extends StatelessWidget {
                                         'message': msg,
                                         'status': 'new',
                                       },
+                                      'is_read': true,
                                       'status': 'delivered',
                                     });
 

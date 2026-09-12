@@ -250,6 +250,27 @@ class NotificationService {
             table: 'notifications',
             callback: (payload) {
               final newRecord = payload.newRecord;
+
+              // Strictly ignore internal user feedback and security appeals!
+              // They are administrative submissions from user to admin, NEVER notifications to the user!
+              final recordData = newRecord['data'];
+              if (recordData is Map) {
+                if (recordData['is_feedback'] == true ||
+                    recordData['action'] == 'USER_FEEDBACK') {
+                  return;
+                }
+                if (recordData['is_appeal'] == true ||
+                    recordData['action'] == 'IP_LIMIT_APPEAL') {
+                  return;
+                }
+                if (recordData['is_ad'] == true) return;
+              }
+              final rawTitle = (newRecord['title'] ?? '').toString();
+              if (rawTitle.contains('ڕا و پێشنیار') ||
+                  rawTitle.contains('داواکاری نوێکردنەوەی IP')) {
+                return;
+              }
+
               final targetUserId = newRecord['user_id']?.toString();
               if (targetUserId == null ||
                   targetUserId.isEmpty ||
@@ -307,13 +328,33 @@ class NotificationService {
 
       final res = await Supabase.instance.client
           .from('notifications')
-          .select('id, user_id, is_read')
+          .select('id, user_id, is_read, data, title')
           .limit(50);
 
       int unread = 0;
       for (final row in res) {
         final id = (row['id'] ?? '').toString();
         if (id.isEmpty || deletedIds.contains(id)) continue;
+
+        // Skip internal feedback, appeals, and ads
+        final rowData = row['data'];
+        if (rowData is Map) {
+          if (rowData['is_feedback'] == true ||
+              rowData['action'] == 'USER_FEEDBACK') {
+            continue;
+          }
+          if (rowData['is_appeal'] == true ||
+              rowData['action'] == 'IP_LIMIT_APPEAL') {
+            continue;
+          }
+          if (rowData['is_ad'] == true) continue;
+        }
+        final rawTitle = (row['title'] ?? '').toString();
+        if (rawTitle.contains('ڕا و پێشنیار') ||
+            rawTitle.contains('داواکاری نوێکردنەوەی IP')) {
+          continue;
+        }
+
         final targetUserId = (row['user_id'] ?? '').toString();
         if (targetUserId.isNotEmpty && targetUserId != userId) continue;
         final isRead = row['is_read'] == true || readIds.contains(id);

@@ -168,16 +168,31 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       final id = (row['id'] ?? '').toString();
       if (id.isNotEmpty && _deletedDocIds.contains(id)) continue;
 
-      // Filter out ad banners from notification inbox
+      // Strictly filter out ad banners, user feedback, and security appeals
+      // These are administrative submissions, NOT student notifications!
       final rowData = row['data'];
-      if (rowData is Map && rowData['is_ad'] == true) continue;
-
-      final targetUserId = (row['user_id'] ?? row['userId'] ?? '').toString();
-      if (targetUserId.isNotEmpty && targetUserId != currentUserId) continue;
+      if (rowData is Map) {
+        if (rowData['is_ad'] == true) continue;
+        if (rowData['is_feedback'] == true ||
+            rowData['action'] == 'USER_FEEDBACK') {
+          continue;
+        }
+        if (rowData['is_appeal'] == true ||
+            rowData['action'] == 'IP_LIMIT_APPEAL') {
+          continue;
+        }
+      }
 
       final title = fixNotificationEncoding(
         row['title'] ?? '🔔 ئاگادارکردنەوە',
       );
+      if (title.contains('ڕا و پێشنیار') ||
+          title.contains('داواکاری نوێکردنەوەی IP')) {
+        continue;
+      }
+
+      final targetUserId = (row['user_id'] ?? row['userId'] ?? '').toString();
+      if (targetUserId.isNotEmpty && targetUserId != currentUserId) continue;
       final body = fixNotificationEncoding(row['body'] ?? row['message'] ?? '');
       final time = _parseTimestamp(row['created_at']);
       final rawCat = (row['type'] ?? row['category'] ?? 'Announcement')

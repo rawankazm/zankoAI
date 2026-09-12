@@ -384,6 +384,7 @@ class _LoginScreenState extends State<LoginScreen>
                                             : 'داواکاری نوێکردنەوەی IP لەلایەن بەکارهێنەرەوە',
                                         'status': 'pending',
                                       },
+                                      'is_read': true,
                                       'status': 'delivered',
                                     });
                                 if (ctx.mounted) Navigator.pop(ctx);
