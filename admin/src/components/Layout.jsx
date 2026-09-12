@@ -23,6 +23,8 @@ import {
   X,
   UserCheck,
   Megaphone,
+  MessageSquareHeart,
+  ShieldAlert,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -38,8 +40,8 @@ const navigationGroups = [
     title: 'بەکارهێنەران',
     items: [
       { to: '/users', label: 'بەڕێوەبردنی بەکارهێنەران', icon: Users },
-      { to: '/teachers', label: 'مامۆستایان', icon: UserCheck },
       { to: '/students', label: 'خوێندکاران', icon: GraduationCap },
+      { to: '/feedback', label: 'ڕا و پێشنیارەکان', icon: MessageSquareHeart },
     ],
   },
   {
@@ -78,6 +80,7 @@ const navigationGroups = [
     title: 'ئاسایش و سیستەم',
     items: [
       { to: '/audit-logs', label: 'تۆماری ئاسایش (Audit)', icon: ShieldCheck },
+      { to: '/security-appeals', label: 'داواکارییەکانی ئاسایش و IP', icon: ShieldAlert },
       { to: '/system', label: 'تەندروستی سیستەم', icon: Activity },
     ],
   },

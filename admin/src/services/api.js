@@ -41,11 +41,11 @@ const CRS_STORAGE_KEY = 'zanko_admin_courses_v2';
 const SEED_USERS = [
   { id: 'usr-1', email: 'rawankurdi181@gmail.com', full_name: 'ڕەوان کوردی (دامەزرێنەر)', role: 'admin', status: 'active', plan: 'premium', is_vip: true, created_at: '2026-01-01T12:00:00Z' },
   { id: 'usr-2', email: 'admin@zankoai.com', full_name: 'بەڕێوەبەری سەرەکی (Admin Master)', role: 'admin', status: 'active', plan: 'premium', is_vip: true, created_at: '2026-01-05T10:00:00Z' },
-  { id: 'usr-3', email: 'dr.ali@zankoai.com', full_name: 'د. عەلی ئەحمەد', role: 'teacher', status: 'active', plan: 'premium', is_vip: true, created_at: '2026-01-15T10:00:00Z' },
+  { id: 'usr-3', email: 'dana.cs@gmail.com', full_name: 'دانا ئەحمەد', role: 'student', status: 'active', plan: 'premium', is_vip: true, created_at: '2026-01-15T10:00:00Z' },
   { id: 'usr-4', email: 'heja.slemani@gmail.com', full_name: 'هێژا نەبەز', role: 'student', status: 'active', plan: 'premium', is_vip: true, created_at: '2026-02-01T14:30:00Z' },
   { id: 'usr-5', email: 'sara.student@gmail.com', full_name: 'سارا عوسمان', role: 'student', status: 'active', plan: 'free', is_vip: false, created_at: '2026-02-10T09:15:00Z' },
   { id: 'usr-6', email: 'lana.medical@gmail.com', full_name: 'لانا محەمەد', role: 'student', status: 'active', plan: 'premium', is_vip: true, created_at: '2026-02-12T16:20:00Z' },
-  { id: 'usr-7', email: 'shvan.teacher@gmail.com', full_name: 'م. شڤان بەرزنجی', role: 'teacher', status: 'active', plan: 'premium', is_vip: true, created_at: '2026-02-14T11:00:00Z' },
+  { id: 'usr-7', email: 'shvan.sardar@gmail.com', full_name: 'شڤان سەردار', role: 'student', status: 'active', plan: 'premium', is_vip: true, created_at: '2026-02-14T11:00:00Z' },
 ];
 
 const SEED_COURSES = [
@@ -1291,5 +1291,368 @@ export const AdminApi = {
       console.warn('toggleAdActive notice:', e);
     }
     return { id, isActive };
+  },
+
+  // ============================================================================
+  // Feedback & Suggestions (ڕا و پێشنیارەکان) - from mobile app audit_logs
+  // ============================================================================
+  listUserFeedback: async (params = {}) => {
+    await ensureAdminAuth();
+    let feedbacks = [];
+    try {
+      const { data, error } = await supabase
+        .from('audit_logs')
+        .select('*')
+        .eq('action', 'USER_FEEDBACK')
+        .order('created_at', { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        feedbacks = data.map((item) => {
+          const payload = item.payload || {};
+          return {
+            id: item.id,
+            user_id: item.user_id,
+            userName: payload.userName || 'خوێندکار',
+            userEmail: payload.userEmail || '',
+            category: item.entity_type || payload.category || 'ڕای گشتی',
+            rating: Number(payload.rating || 5),
+            message: payload.message || '',
+            status: payload.status || 'new',
+            created_at: item.created_at,
+          };
+        });
+      }
+    } catch (e) {
+      console.warn('listUserFeedback Supabase notice:', e);
+    }
+
+    const stored = localStorage.getItem('zanko_admin_user_feedback_v1');
+    let localFeedbacks = [];
+    if (stored) {
+      try {
+        localFeedbacks = JSON.parse(stored);
+      } catch (_) {}
+    }
+
+    if (feedbacks.length === 0 && localFeedbacks.length === 0) {
+      localFeedbacks = [
+        {
+          id: 'fb-101',
+          user_id: 'usr-4',
+          userName: 'هێژا نەبەز',
+          userEmail: 'heja.slemani@gmail.com',
+          category: 'داواکاری تایبەتمەندی',
+          rating: 5,
+          message: 'دەستتان خۆش بێت بۆ ئەپەکە. دەکرێت بەشی ئامادەکردنی سیمینار و داگرتنی پاوەرپۆینت لە کۆرسەکاندا بە شێوازی زیاتر دەوڵەمەند بکەن؟',
+          status: 'new',
+          created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
+        },
+        {
+          id: 'fb-102',
+          user_id: 'usr-6',
+          userName: 'لانا محەمەد',
+          userEmail: 'lana.medical@gmail.com',
+          category: 'پێشنیاری دیزاین',
+          rating: 5,
+          message: 'فۆنت و ڕەنگەکانی ئەپەکە لە مۆدی تاریکدا زۆر باشن. ئەگەر قەبارەی فۆنتی تێبینییەکان لە فلاشکارت گەورەتر بکرێت زۆر باشتر دەبێت.',
+          status: 'reviewed',
+          created_at: new Date(Date.now() - 3600000 * 24).toISOString(),
+        },
+        {
+          id: 'fb-103',
+          user_id: 'usr-5',
+          userName: 'سارا عوسمان',
+          userEmail: 'sara.student@gmail.com',
+          category: 'ڕاپۆرتی کێشە',
+          rating: 4,
+          message: 'هەندێک جار لە کاتی ناردنی پرسیاری وێنەیی لە هێڵی لاوازدا دەوەستێت، سوپاس بۆ ماندووبوونتان.',
+          status: 'resolved',
+          created_at: new Date(Date.now() - 3600000 * 48).toISOString(),
+        },
+      ];
+      try {
+        localStorage.setItem('zanko_admin_user_feedback_v1', JSON.stringify(localFeedbacks));
+      } catch (_) {}
+    }
+
+    let combined = [...feedbacks];
+    localFeedbacks.forEach((lf) => {
+      if (!combined.some((c) => c.id === lf.id)) {
+        combined.push(lf);
+      }
+    });
+
+    if (params.category && params.category !== 'all') {
+      combined = combined.filter((f) => f.category === params.category);
+    }
+    if (params.rating && params.rating !== 'all') {
+      combined = combined.filter((f) => f.rating === Number(params.rating));
+    }
+    if (params.status && params.status !== 'all') {
+      combined = combined.filter((f) => f.status === params.status);
+    }
+    if (params.q) {
+      const q = params.q.toLowerCase();
+      combined = combined.filter(
+        (f) =>
+          f.userName.toLowerCase().includes(q) ||
+          f.userEmail.toLowerCase().includes(q) ||
+          f.message.toLowerCase().includes(q)
+      );
+    }
+
+    return {
+      feedback: combined,
+      stats: {
+        total: combined.length,
+        averageRating: combined.length > 0
+          ? (combined.reduce((acc, curr) => acc + (curr.rating || 0), 0) / combined.length).toFixed(1)
+          : '5.0',
+        bugsCount: combined.filter((f) => f.category === 'ڕاپۆرتی کێشە').length,
+        featuresCount: combined.filter((f) => f.category === 'داواکاری تایبەتمەندی').length,
+      },
+    };
+  },
+
+  updateFeedbackStatus: async (id, status) => {
+    await ensureAdminAuth();
+    try {
+      const { data: current } = await supabase.from('audit_logs').select('*').eq('id', id).maybeSingle();
+      if (current) {
+        const payload = current.payload || {};
+        await supabase
+          .from('audit_logs')
+          .update({ payload: { ...payload, status } })
+          .eq('id', id);
+      }
+    } catch (_) {}
+
+    try {
+      const stored = localStorage.getItem('zanko_admin_user_feedback_v1');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const updated = parsed.map((item) => (item.id === id ? { ...item, status } : item));
+        localStorage.setItem('zanko_admin_user_feedback_v1', JSON.stringify(updated));
+      }
+    } catch (_) {}
+    return { success: true, id, status };
+  },
+
+  deleteFeedback: async (id) => {
+    await ensureAdminAuth();
+    try {
+      await supabase.from('audit_logs').delete().eq('id', id);
+    } catch (_) {}
+    try {
+      const stored = localStorage.getItem('zanko_admin_user_feedback_v1');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        localStorage.setItem(
+          'zanko_admin_user_feedback_v1',
+          JSON.stringify(parsed.filter((item) => item.id !== id))
+        );
+      }
+    } catch (_) {}
+    return { success: true, id };
+  },
+
+  // ============================================================================
+  // Security & IP Limit Appeals (داواکارییەکانی نوێکردنەوەی IP)
+  // ============================================================================
+  listSecurityAppeals: async (params = {}) => {
+    await ensureAdminAuth();
+    let appeals = [];
+    try {
+      const { data, error } = await supabase
+        .from('audit_logs')
+        .select('*')
+        .eq('action', 'IP_LIMIT_APPEAL')
+        .order('created_at', { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        appeals = data.map((item) => {
+          const payload = item.payload || {};
+          return {
+            id: item.id,
+            user_id: item.user_id,
+            email: payload.email || '',
+            name: payload.name || 'خوێندکار',
+            reason: payload.reason || '',
+            userNote: payload.userNote || '',
+            status: payload.status || 'pending',
+            created_at: item.created_at,
+          };
+        });
+      }
+    } catch (e) {
+      console.warn('listSecurityAppeals notice:', e);
+    }
+
+    const stored = localStorage.getItem('zanko_admin_security_appeals_v1');
+    let localAppeals = [];
+    if (stored) {
+      try {
+        localAppeals = JSON.parse(stored);
+      } catch (_) {}
+    }
+
+    if (appeals.length === 0 && localAppeals.length === 0) {
+      localAppeals = [
+        {
+          id: 'appeal-201',
+          user_id: 'usr-5',
+          email: 'sara.student@gmail.com',
+          name: 'سارا عوسمان',
+          reason: 'داواکاری نوێکردنەوەی IP لەبەر گۆڕینی هێڵی ئینتەرنێت',
+          userNote: 'سڵاو، هێڵی ئینتەرنێتی ماڵەوەمان گۆڕیوە و لە زانکۆش وایفای زانکۆ بەکاردێنم، بۆیە سنووری ٣ ئایپییەکە تێپەڕیوە، تکایە ڕێگەم پێبدەن.',
+          status: 'pending',
+          created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
+        },
+      ];
+      try {
+        localStorage.setItem('zanko_admin_security_appeals_v1', JSON.stringify(localAppeals));
+      } catch (_) {}
+    }
+
+    let combined = [...appeals];
+    localAppeals.forEach((la) => {
+      if (!combined.some((c) => c.id === la.id)) {
+        combined.push(la);
+      }
+    });
+
+    if (params.status && params.status !== 'all') {
+      combined = combined.filter((a) => a.status === params.status);
+    }
+
+    return combined;
+  },
+
+  approveIpAppeal: async (appealId, email, userId) => {
+    await ensureAdminAuth();
+    try {
+      if (userId) {
+        await supabase.from('profiles').update({ status: 'active' }).eq('id', userId);
+      } else if (email) {
+        await supabase.from('profiles').update({ status: 'active' }).eq('email', email);
+      }
+
+      await supabase.from('audit_logs').insert({
+        action: 'IP_RESET_APPROVED',
+        entity_type: 'user',
+        payload: { email, appealId, approvedBy: 'admin@zankoai.com' },
+      });
+
+      const { data: current } = await supabase.from('audit_logs').select('*').eq('id', appealId).maybeSingle();
+      if (current) {
+        const payload = current.payload || {};
+        await supabase
+          .from('audit_logs')
+          .update({ payload: { ...payload, status: 'approved' } })
+          .eq('id', appealId);
+      }
+
+      if (userId) {
+        await supabase.from('notifications').insert({
+          user_id: userId,
+          title: '✅ داواکاریی IP پەسەندکرا',
+          body: 'داواکارییەکەت لەلایەن بەڕێوەبەرەوە پەسەندکرا و ناونیشانی IP نوێکرایەوە. دەتوانیت ئێستا بە ئاسایی بچیتە ژوورەوە.',
+          type: 'system',
+        });
+      }
+    } catch (e) {
+      console.warn('approveIpAppeal notice:', e);
+    }
+
+    try {
+      const stored = localStorage.getItem('zanko_admin_security_appeals_v1');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const updated = parsed.map((a) => (a.id === appealId ? { ...a, status: 'approved' } : a));
+        localStorage.setItem('zanko_admin_security_appeals_v1', JSON.stringify(updated));
+      }
+    } catch (_) {}
+
+    return { success: true, appealId };
+  },
+
+  rejectIpAppeal: async (appealId) => {
+    await ensureAdminAuth();
+    try {
+      const { data: current } = await supabase.from('audit_logs').select('*').eq('id', appealId).maybeSingle();
+      if (current) {
+        const payload = current.payload || {};
+        await supabase
+          .from('audit_logs')
+          .update({ payload: { ...payload, status: 'rejected' } })
+          .eq('id', appealId);
+      }
+    } catch (_) {}
+
+    try {
+      const stored = localStorage.getItem('zanko_admin_security_appeals_v1');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const updated = parsed.map((a) => (a.id === appealId ? { ...a, status: 'rejected' } : a));
+        localStorage.setItem('zanko_admin_security_appeals_v1', JSON.stringify(updated));
+      }
+    } catch (_) {}
+
+    return { success: true, appealId };
+  },
+
+  // ============================================================================
+  // VIP Payment Approvals & Upgrades (پەسەندکردنی پارەدانی VIP)
+  // ============================================================================
+  approveVipPayment: async (paymentId, userId, planDays = 30) => {
+    await ensureAdminAuth();
+    const expiresAt = new Date(Date.now() + planDays * 86400000).toISOString();
+    try {
+      try {
+        await supabase.from('payment_transactions').update({
+          status: 'COMPLETED',
+          metadata: { approvedBy: 'admin@zankoai.com', expiresAt, planDays },
+        }).eq('id', paymentId);
+      } catch (_) {}
+
+      if (userId) {
+        await supabase.from('profiles').update({
+          is_vip: true,
+          vip_status: 'active',
+          vip_expiry: expiresAt,
+          plan: 'premium',
+        }).eq('id', userId);
+
+        try {
+          const dbPlan = planDays >= 250 ? 'PREMIUM_YEARLY' : 'PREMIUM_MONTHLY';
+          await supabase.rpc('sync_admin_approved_vip', {
+            p_user_id: userId,
+            p_plan: dbPlan,
+            p_days: planDays,
+          });
+        } catch (_) {}
+
+        await supabase.from('notifications').insert({
+          user_id: userId,
+          title: '🎉 پیرۆزە! هەژمارەکەت بوو بە VIP',
+          body: 'داواکاری بەشداریکردنی VIPەکەت لەلایەن بەڕێوەبەرەوە پەسەندکرا. ئێستا دەتوانیت لە هەموو تایبەتمەندییە بێسنوورەکانی ZankoAI سوودمەند بیت!',
+          type: 'broadcast',
+        });
+      }
+    } catch (e) {
+      console.warn('approveVipPayment notice:', e);
+    }
+    return { success: true, paymentId, expiresAt };
+  },
+
+  rejectVipPayment: async (paymentId, reason = 'زانیاری یان وەسڵی پارەدان ڕاست نەبوو') => {
+    await ensureAdminAuth();
+    try {
+      await supabase.from('payment_transactions').update({
+        status: 'FAILED',
+        metadata: { rejectedBy: 'admin@zankoai.com', reason },
+      }).eq('id', paymentId);
+    } catch (_) {}
+    return { success: true, paymentId };
   },
 };

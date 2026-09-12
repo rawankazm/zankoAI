@@ -10,7 +10,6 @@ import Unauthorized from './pages/Unauthorized';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
 import UserDetail from './pages/UserDetail';
-import Teachers from './pages/Teachers';
 import Students from './pages/Students';
 import Universities from './pages/Universities';
 import Faculties from './pages/Faculties';
@@ -27,6 +26,8 @@ import Notifications from './pages/Notifications';
 import Ads from './pages/Ads';
 import AuditLogs from './pages/AuditLogs';
 import SystemMonitoring from './pages/SystemMonitoring';
+import Feedback from './pages/Feedback';
+import SecurityAppeals from './pages/SecurityAppeals';
 
 export default function App() {
   return (
@@ -49,8 +50,9 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="users" element={<Users />} />
             <Route path="users/:id" element={<UserDetail />} />
-            <Route path="teachers" element={<Teachers />} />
+            <Route path="teachers" element={<Navigate to="/students" replace />} />
             <Route path="students" element={<Students />} />
+            <Route path="feedback" element={<Feedback />} />
             <Route path="universities" element={<Universities />} />
             <Route path="faculties" element={<Faculties />} />
             <Route path="departments" element={<Departments />} />
@@ -65,6 +67,7 @@ export default function App() {
             <Route path="ads" element={<Ads />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="audit-logs" element={<AuditLogs />} />
+            <Route path="security-appeals" element={<SecurityAppeals />} />
             <Route path="system" element={<SystemMonitoring />} />
 
             {/* Legacy /admin/* prefix compatibility */}
@@ -72,8 +75,9 @@ export default function App() {
             <Route path="admin/dashboard" element={<Navigate to="/" replace />} />
             <Route path="admin/ads" element={<Navigate to="/ads" replace />} />
             <Route path="admin/users" element={<Navigate to="/users" replace />} />
-            <Route path="admin/teachers" element={<Navigate to="/teachers" replace />} />
+            <Route path="admin/teachers" element={<Navigate to="/students" replace />} />
             <Route path="admin/students" element={<Navigate to="/students" replace />} />
+            <Route path="admin/feedback" element={<Navigate to="/feedback" replace />} />
             <Route path="admin/universities" element={<Navigate to="/universities" replace />} />
             <Route path="admin/faculties" element={<Navigate to="/faculties" replace />} />
             <Route path="admin/departments" element={<Navigate to="/departments" replace />} />
@@ -86,6 +90,7 @@ export default function App() {
             <Route path="admin/analytics" element={<Navigate to="/analytics" replace />} />
             <Route path="admin/notifications" element={<Navigate to="/notifications" replace />} />
             <Route path="admin/audit-logs" element={<Navigate to="/audit-logs" replace />} />
+            <Route path="admin/security-appeals" element={<Navigate to="/security-appeals" replace />} />
             <Route path="admin/system" element={<Navigate to="/system" replace />} />
           </Route>
 

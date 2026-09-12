@@ -155,8 +155,8 @@ export default function Dashboard() {
           <p className="text-lg font-bold text-white mt-1">{data?.users?.students || 0}</p>
         </div>
         <div className="glass-card rounded-xl p-3.5 border border-slate-800 text-center">
-          <span className="text-[11px] text-slate-400">مامۆستایان</span>
-          <p className="text-lg font-bold text-indigo-400 mt-1">{data?.users?.teachers || 0}</p>
+          <span className="text-[11px] text-slate-400">خوێندکارانی VIP</span>
+          <p className="text-lg font-bold text-amber-400 mt-1">{data?.users?.premium || data?.subscriptions?.active || 0}</p>
         </div>
         <div className="glass-card rounded-xl p-3.5 border border-slate-800 text-center">
           <span className="text-[11px] text-slate-400">ئەدمینەکان</span>

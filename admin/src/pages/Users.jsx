@@ -333,7 +333,6 @@ export default function Users() {
         >
           <option value="">هەموو ڕۆڵەکان</option>
           <option value="student">خوێندکار (Student)</option>
-          <option value="teacher">مامۆستا (Teacher)</option>
           <option value="admin">ئەدمین (Admin)</option>
         </select>
 
@@ -468,7 +467,6 @@ export default function Users() {
               className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-brand-500"
             >
               <option value="student">خوێندکار (Student)</option>
-              <option value="teacher">مامۆستا (Teacher)</option>
               <option value="admin">بەڕێوەبەر (Admin)</option>
             </select>
           </div>
@@ -526,10 +524,9 @@ export default function Users() {
                   <select
                     value={newUserRole}
                     onChange={(e) => setNewUserRole(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-brand-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-brand-500"
                   >
                     <option value="student">خوێندکار</option>
-                    <option value="teacher">مامۆستا</option>
                     <option value="admin">ئەدمین</option>
                   </select>
                 </div>

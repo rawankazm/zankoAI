@@ -185,7 +185,6 @@ export default function Notifications() {
                 >
                   <option value="all">هەموو بەکارهێنەران</option>
                   <option value="students">تەنها خوێندکاران</option>
-                  <option value="teachers">تەنها مامۆستایان</option>
                   <option value="premium">تەنها پریمیۆم (VIP)</option>
                 </select>
               </div>

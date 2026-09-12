@@ -161,8 +161,8 @@ export default function UserDetail() {
           <div className="space-y-3 text-xs">
             <div className="flex justify-between items-center text-slate-300">
               <span className="text-slate-500">ڕۆڵ:</span>
-              <Badge variant={profile.role === 'admin' ? 'warning' : profile.role === 'teacher' ? 'primary' : 'default'}>
-                {profile.role}
+              <Badge variant={profile.role === 'admin' ? 'warning' : 'default'}>
+                {profile.role === 'admin' ? 'ئەدمین' : 'خوێندکار'}
               </Badge>
             </div>
 
@@ -258,7 +258,7 @@ export default function UserDetail() {
           <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-brand-400" />
-              <span>{profile.role === 'teacher' ? 'کۆرسە وانەوتراوەکان' : 'کۆرسە بەشداربووەکان'}</span>
+              <span>کۆرسە بەشداربووەکان</span>
             </h3>
             <Badge variant="default">{courses.length} کۆرس</Badge>
           </div>

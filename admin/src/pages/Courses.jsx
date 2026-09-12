@@ -9,7 +9,6 @@ import Toast from '../components/Toast';
 export default function Courses() {
   const [courses, setCourses] = useState([]);
   const [departments, setDepartments] = useState([]);
-  const [teachers, setTeachers] = useState([]);
   const [selectedDeptFilter, setSelectedDeptFilter] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -38,14 +37,12 @@ export default function Courses() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [crsData, deptData, tchData] = await Promise.all([
+      const [crsData, deptData] = await Promise.all([
         AdminApi.listCourses(selectedDeptFilter || undefined),
         AdminApi.listDepartments(),
-        AdminApi.listTeachers({ limit: 100 }),
       ]);
       setCourses(crsData || []);
       setDepartments(deptData || []);
-      setTeachers(tchData.users || []);
     } catch (err) {
       console.error('Failed to load courses:', err);
       setToast({ type: 'error', message: 'هەڵە لە بارکردنی کۆرسەکان.' });
@@ -308,19 +305,14 @@ export default function Courses() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">مامۆستای سەرپەرشتیار:</label>
-            <select
+            <label className="block text-xs font-semibold text-slate-300 mb-1">سەرپەرشتیاری کۆرس (Coordinator):</label>
+            <input
+              type="text"
               value={form.instructor_id}
               onChange={(e) => setForm({ ...form, instructor_id: e.target.value })}
+              placeholder="تیمی ئەکادیمی ZankoAI"
               className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white focus:outline-none focus:border-brand-500"
-            >
-              <option value="">مامۆستا دیارینەکراوە (ئەدمین سەرپەرشتیار دەبێت)</option>
-              {teachers.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.full_name || t.email}
-                </option>
-              ))}
-            </select>
+            />
           </div>
         </div>
       </ConfirmModal>
