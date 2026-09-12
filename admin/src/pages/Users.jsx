@@ -177,7 +177,6 @@ export default function Users() {
       render: (role) => {
         const map = {
           student: { label: 'خوێندکار', variant: 'default' },
-          teacher: { label: 'مامۆستا', variant: 'primary' },
           admin: { label: 'ئەدمین', variant: 'warning' },
         };
         const r = map[role] || { label: role, variant: 'default' };

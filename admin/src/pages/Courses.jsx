@@ -61,7 +61,7 @@ export default function Courses() {
       title: '',
       code: '',
       department_id: departments[0]?.id || '',
-      instructor_id: teachers[0]?.id || '',
+      instructor_id: '',
       description: '',
       stage: 1,
       semester: 1,
@@ -216,7 +216,7 @@ export default function Courses() {
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight">بەڕێوەبردنی کۆرسەکان</h1>
           <p className="text-xs text-slate-400 mt-1">
-            دروستکردن، دەستکاری، دیاریکردنی مامۆستا و ئەرشیڤکردنی کۆرسە ئەکادیمییەکان
+            دروستکردن، دەستکاری، ڕێکخستنی بابەتەکان و ئەرشیڤکردنی کۆرسە ئەکادیمییەکان
           </p>
         </div>
 
@@ -347,7 +347,7 @@ export default function Courses() {
         ) : (
           <div className="space-y-4 text-xs">
             <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5">
-              <p className="text-slate-300">مامۆستا: <span className="font-semibold text-white">{courseDetail?.course?.profiles?.full_name || 'دیارینەکراوە'}</span></p>
+              <p className="text-slate-300">سەرپەرشتیار / بەڕێوەبەر: <span className="font-semibold text-white">{courseDetail?.course?.profiles?.full_name || 'دیارینەکراوە'}</span></p>
               <p className="text-slate-300">بەش: <span className="font-semibold text-white">{courseDetail?.course?.departments?.name || 'دیارینەکراوە'}</span></p>
             </div>
 

@@ -432,7 +432,7 @@ export const AdminApi = {
       await supabase.from('notifications').insert([{
         user_id: id,
         title: '🎖️ نوێکردنەوەی ڕۆڵی ئەکادیمی',
-        body: `ڕۆڵی ئەکادیمی هەژمارەکەت گۆڕدرا بۆ ${role === 'teacher' ? 'مامۆستا' : role === 'admin' ? 'ئەدمین' : 'خوێندکار'}.`,
+        body: `ڕۆڵی ئەکادیمی هەژمارەکەت گۆڕدرا بۆ ${role === 'admin' ? 'ئەدمین' : 'خوێندکار'}.`,
         type: 'system',
         status: 'delivered',
       }]);

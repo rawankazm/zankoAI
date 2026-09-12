@@ -66,7 +66,7 @@ export default function AiCostDashboard() {
 
   const topSpenders = [
     { name: 'ڕاوان ئەحمەد', email: 'rawan@zankoai.com', role: 'خوێندکار', cost: '$3.45', requests: 120 },
-    { name: 'سۆران کەریم', email: 'soran@zankoai.com', role: 'مامۆستا', cost: '$2.80', requests: 95 },
+    { name: 'سۆران کەریم', email: 'soran@zankoai.com', role: 'خوێندکاری VIP', cost: '$2.80', requests: 95 },
     { name: 'دڵنیا عومەر', email: 'dlnya@zankoai.com', role: 'خوێندکار', cost: '$2.15', requests: 84 },
     { name: 'ئاری محەمەد', email: 'ari@zankoai.com', role: 'خوێندکار', cost: '$1.90', requests: 70 },
   ];
@@ -199,7 +199,7 @@ export default function AiCostDashboard() {
                     <p className="text-[11px] text-slate-400 font-mono">{u.email}</p>
                   </td>
                   <td className="py-3 px-3">
-                    <Badge variant={u.role === 'مامۆستا' ? 'primary' : 'default'}>{u.role}</Badge>
+                    <Badge variant={u.role.includes('VIP') ? 'primary' : 'default'}>{u.role}</Badge>
                   </td>
                   <td className="py-3 px-3 font-semibold text-slate-300">{u.requests} داواکاری</td>
                   <td className="py-3 px-3 font-bold text-emerald-400 font-mono text-sm">{u.cost}</td>

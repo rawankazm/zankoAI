@@ -137,7 +137,7 @@ export default function Notifications() {
       <div>
         <h1 className="text-2xl font-bold text-white tracking-tight">بەڕێوەبردنی ئاگادارکردنەوەکان (Announcements)</h1>
         <p className="text-xs text-slate-400 mt-1">
-          ناردنی ئاگاداری گشتی بۆ هەموو خوێندکاران، مامۆستایان یان بەشداربووانی پریمیۆم لە ڕێگەی سێرڤەرەوە
+          ناردنی ئاگاداری گشتی بۆ هەموو خوێندکاران، بەکارهێنەران یان بەشداربووانی پریمیۆم لە ڕێگەی سێرڤەرەوە
         </p>
       </div>
 
