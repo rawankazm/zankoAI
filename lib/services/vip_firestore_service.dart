@@ -121,11 +121,40 @@ class VipFirestoreService {
       await client.from('notifications').insert({
         'user_id': userId,
         'title': 'داواکاری نوێکردنەوەی VIP ($effectivePlan)',
-        'body': 'شێواز: $effectiveMethod | ژمارە: ${senderPhone ?? '-'} | کۆد: $effectiveCode | بڕ: $effectivePrice دینار',
-        'type': 'system_notification',
-        'is_read': false,
+        'body': 'شێواز: $effectiveMethod | ناو: ${userName ?? 'خوێندکار'} | ئیمەیڵ: ${userEmail ?? ''} | ژمارە: ${senderPhone ?? '-'} | کۆد: $effectiveCode | بڕ: $effectivePrice دینار',
+        'type': 'vip_request',
+        'is_read': true,
+        'data': {
+          'is_vip_request': true,
+          'action': 'VIP_REQUEST',
+          'user_id': userId,
+          'user_name': userName,
+          'user_email': userEmail,
+          'plan': effectivePlan,
+          'price_iqd': effectivePrice,
+          'payment_method': effectiveMethod,
+          'transaction_code': effectiveCode,
+        },
         'created_at': DateTime.now().toIso8601String(),
       });
+
+      try {
+        await client.from('payments').insert({
+          'user_id': userId,
+          'order_id': effectiveCode,
+          'amount': effectivePrice,
+          'currency': 'IQD',
+          'provider': effectiveMethod.toLowerCase(),
+          'status': 'pending',
+          'payment_method': effectiveMethod,
+          'metadata': {
+            'plan': effectivePlan,
+            'email': userEmail,
+            'user_name': userName,
+          },
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      } catch (_) {}
       return true;
     } catch (e) {
       debugPrint('[VipFirestoreService] Supabase submit request notice: $e');

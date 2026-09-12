@@ -168,7 +168,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       final id = (row['id'] ?? '').toString();
       if (id.isNotEmpty && _deletedDocIds.contains(id)) continue;
 
-      // Strictly filter out ad banners, user feedback, and security appeals
+      // Strictly filter out ad banners, user feedback, security appeals, and VIP requests
       // These are administrative submissions, NOT student notifications!
       final rowData = row['data'];
       if (rowData is Map) {
@@ -181,13 +181,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             rowData['action'] == 'IP_LIMIT_APPEAL') {
           continue;
         }
+        if (rowData['is_vip_request'] == true ||
+            rowData['action'] == 'VIP_REQUEST') {
+          continue;
+        }
       }
 
       final title = fixNotificationEncoding(
         row['title'] ?? '🔔 ئاگادارکردنەوە',
       );
+      final rawType = (row['type'] ?? '').toString();
       if (title.contains('ڕا و پێشنیار') ||
-          title.contains('داواکاری نوێکردنەوەی IP')) {
+          title.contains('داواکاری نوێکردنەوەی IP') ||
+          title.contains('داواکاری نوێکردنەوەی VIP') ||
+          title.contains('داواکاری VIP') ||
+          rawType == 'vip_request') {
         continue;
       }
 

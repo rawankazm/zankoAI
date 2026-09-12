@@ -824,25 +824,33 @@ export const AdminApi = {
 
       if (notifs) {
         notifs
-          .filter(n => n.type === 'system_notification' || (n.title && n.title.includes('VIP')))
+          .filter(n => n.type === 'system_notification' || n.type === 'vip_request' || n.type === 'vip_approved' || (n.title && n.title.includes('VIP')))
           .forEach((n, idx) => {
             const body = n.body || '';
-            let amount = 35000;
-            if (body.includes('10000') || body.includes('10,000')) amount = 10000;
+            let amount = 5000;
+            if (body.includes('40000') || body.includes('40,000')) amount = 40000;
+            else if (body.includes('12000') || body.includes('12,000') || body.includes('10000') || body.includes('10,000')) amount = 12000;
+            else if (body.includes('5000') || body.includes('5,000')) amount = 5000;
             else if (body.includes('25000')) amount = 25000;
 
             const isApproved = n.type === 'vip_approved';
+            const isRejected = n.type === 'vip_rejected';
+            const studentName = n.data?.user_name || body.split('|')?.[1]?.replace('ناو:', '')?.replace('ژمارە:', '')?.trim() || 'خوێندکاری VIP';
+            const studentEmail = n.data?.user_email || body.split('|')?.[2]?.replace('ئیمەیڵ:', '')?.trim() || (n.user_id ? `student-${n.user_id.substring(0, 6)}@zankoai.com` : 'user@zankoai.com');
+
             payments.push({
               id: n.id,
-              order_id: `ORD-ZANKO-${n.id.substring(0, 6).toUpperCase()}`,
+              user_id: n.user_id,
+              order_id: n.data?.transaction_code || `ORD-ZANKO-${n.id.substring(0, 6).toUpperCase()}`,
               transaction_id: `TX-${Date.now()}-${idx}`,
               amount: amount,
               currency: 'IQD',
-              status: isApproved ? 'COMPLETED' : 'PENDING',
-              provider: body.includes('FastPay') ? 'fastpay' : body.includes('ZainCash') ? 'zaincash' : 'fib',
+              status: isApproved ? 'COMPLETED' : (isRejected ? 'FAILED' : 'PENDING'),
+              provider: body.includes('FastPay') ? 'fastpay' : body.includes('ZainCash') ? 'zaincash' : (body.includes('FIB') ? 'fib' : (body.includes('WhatsApp') ? 'whatsapp' : 'manual')),
               profiles: {
-                full_name: body.split('|')?.[1]?.replace('ژمارە:', '')?.trim() || 'خوێندکاری VIP',
-                email: n.user_id ? `student-${n.user_id.substring(0, 6)}@zankoai.com` : 'user@zankoai.com',
+                id: n.user_id,
+                full_name: studentName,
+                email: studentEmail,
               },
               created_at: n.created_at,
             });
@@ -854,8 +862,8 @@ export const AdminApi = {
 
     if (payments.length === 0) {
       payments.push(
-        { id: 'pay-1', order_id: 'ORD-9841', transaction_id: 'TX-FIB-48201', amount: 35000, currency: 'IQD', status: 'COMPLETED', provider: 'fib', profiles: { full_name: 'هێژا نەبەز', email: 'heja.slemani@gmail.com' }, created_at: '2026-02-01T10:05:00Z' },
-        { id: 'pay-2', order_id: 'ORD-9842', transaction_id: 'TX-FP-99412', amount: 10000, currency: 'IQD', status: 'COMPLETED', provider: 'fastpay', profiles: { full_name: 'لانا محەمەد', email: 'lana.medical@gmail.com' }, created_at: '2026-02-12T10:05:00Z' }
+        { id: 'pay-1', user_id: 'usr-1', order_id: 'ORD-9841', transaction_id: 'TX-FIB-48201', amount: 35000, currency: 'IQD', status: 'COMPLETED', provider: 'fib', profiles: { id: 'usr-1', full_name: 'هێژا نەبەز', email: 'heja.slemani@gmail.com' }, created_at: '2026-02-01T10:05:00Z' },
+        { id: 'pay-2', user_id: 'usr-2', order_id: 'ORD-9842', transaction_id: 'TX-FP-99412', amount: 10000, currency: 'IQD', status: 'COMPLETED', provider: 'fastpay', profiles: { id: 'usr-2', full_name: 'لانا محەمەد', email: 'lana.medical@gmail.com' }, created_at: '2026-02-12T10:05:00Z' }
       );
     }
 
@@ -866,7 +874,29 @@ export const AdminApi = {
     await ensureAdminAuth();
     const expiry = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
 
+    // 1. Mark the request notification in DB as approved
+    try {
+      await supabase.from('notifications').update({
+        type: 'vip_approved',
+        is_read: true,
+      }).eq('id', paymentId);
+    } catch (_) {}
+
+    // 2. Mark payments and payment_transactions as completed
+    try {
+      await supabase.from('payments').update({
+        status: 'completed',
+      }).eq('id', paymentId);
+    } catch (_) {}
+    try {
+      await supabase.from('payment_transactions').update({
+        status: 'COMPLETED',
+        metadata: { approvedBy: 'admin@zankoai.com', expiresAt: expiry, planDays: days },
+      }).eq('id', paymentId);
+    } catch (_) {}
+
     if (userId) {
+      // 3. Update profiles table to activate VIP status
       try {
         await supabase.from('profiles').update({
           is_vip: true,
@@ -878,49 +908,89 @@ export const AdminApi = {
         console.warn('approveVipPayment profile update:', e);
       }
 
-      // 1. Insert in-app notification
+      // 4. Sync subscriptions table via RPC if present
+      try {
+        const dbPlan = days >= 250 ? 'PREMIUM_YEARLY' : 'PREMIUM_MONTHLY';
+        await supabase.rpc('sync_admin_approved_vip', {
+          p_user_id: userId,
+          p_plan: dbPlan,
+          p_days: days,
+        });
+      } catch (_) {}
+
+      // 5. Send celebratory congratulations notification to student!
       try {
         await supabase.from('notifications').insert([{
           user_id: userId,
           title: '🎉 پیرۆزە! هەژمارەکەت بوو بە VIP',
-          body: `هەژمارەکەت بۆ ماوەی ${days} ڕۆژ کرا بە ئەندامی تایبەتی VIP. دەتوانیت سوود لە تەواوی خزمەتگوزارییە بێسنوورەکان وەربگریت.`,
-          type: 'system',
+          body: `داواکاری بەشداریکردنی VIPەکەت لەلایەن بەڕێوەبەرەوە پەسەندکرا. هەژمارەکەت بۆ ماوەی ${days} ڕۆژ کرا بە ئەندامی تایبەتی VIP 👑. ئێستا دەتوانیت لە هەموو تایبەتمەندییە بێسنوورەکانی ZankoAI سوودمەند بیت!`,
+          type: 'vip_approved',
           status: 'delivered',
+          is_read: false,
+          created_at: new Date().toISOString(),
         }]);
-      } catch (_) {}
+      } catch (err) {
+        console.warn('Failed to insert vip congratulations notification:', err);
+      }
 
-      // 2. Trigger instant push notification to phone screen even if app is closed
-      await triggerFcmPush({
-        title: '🎉 پیرۆزە! هەژمارەکەت بوو بە VIP',
-        body: `هەژمارەکەت بۆ ماوەی ${days} ڕۆژ کرا بە ئەندامی تایبەتی VIP ✨`,
-        userId,
-      });
+      // 6. Trigger instant push notification to student's phone screen even if app is closed
+      try {
+        await triggerFcmPush({
+          title: '🎉 پیرۆزە! هەژمارەکەت بوو بە VIP',
+          body: `داواکاری بەشداریکردنی VIPەکەت پەسەندکرا و هەژمارەکەت بۆ ماوەی ${days} ڕۆژ بوو بە VIP 👑✨`,
+          userId,
+        });
+      } catch (_) {}
     }
 
     return { success: true, paymentId, userId, days, expiry };
   },
 
-  rejectVipPayment: async (paymentId, userId, reason = 'زانیاری وەسڵی پارەدان ڕەتکرایەوە.') => {
+  rejectVipPayment: async (paymentId, userId, reason = 'زانیاری یان وەسڵی پارەدان ڕەتکرایەوە.') => {
     await ensureAdminAuth();
+    try {
+      await supabase.from('notifications').update({
+        type: 'vip_rejected',
+        is_read: true,
+      }).eq('id', paymentId);
+    } catch (_) {}
+
+    try {
+      await supabase.from('payments').update({
+        status: 'failed',
+      }).eq('id', paymentId);
+    } catch (_) {}
+
+    try {
+      await supabase.from('payment_transactions').update({
+        status: 'FAILED',
+        metadata: { rejectedBy: 'admin@zankoai.com', reason },
+      }).eq('id', paymentId);
+    } catch (_) {}
+
     if (userId) {
       try {
         await supabase.from('notifications').insert([{
           user_id: userId,
-          title: '⚠️ ڕەتکردنەوەی داواکاری VIP',
+          title: '⚠️ ئاگاداری دەربارەی داواکاری VIP',
           body: `داواکاری بەشداریکردنی VIP ڕەتکرایەوە: ${reason}`,
           type: 'system',
           status: 'delivered',
+          is_read: false,
+          created_at: new Date().toISOString(),
         }]);
       } catch (_) {}
 
-      // Trigger instant push to phone screen
-      await triggerFcmPush({
-        title: '⚠️ ئاگاداری دەربارەی VIP',
-        body: `داواکاری بەشداریکردنی VIP ڕەتکرایەوە: ${reason}`,
-        userId,
-      });
+      try {
+        await triggerFcmPush({
+          title: '⚠️ ئاگاداری دەربارەی داواکاری VIP',
+          body: `داواکاری بەشداریکردنی VIP ڕەتکرایەوە: ${reason}`,
+          userId,
+        });
+      } catch (_) {}
     }
-    return { success: true, paymentId, rejected: true };
+
+    return { success: true, paymentId };
   },
 
   // AI Management & Costs
@@ -1833,60 +1903,5 @@ export const AdminApi = {
     } catch (_) {}
 
     return { success: true, appealId };
-  },
-
-  // ============================================================================
-  // VIP Payment Approvals & Upgrades (پەسەندکردنی پارەدانی VIP)
-  // ============================================================================
-  approveVipPayment: async (paymentId, userId, planDays = 30) => {
-    await ensureAdminAuth();
-    const expiresAt = new Date(Date.now() + planDays * 86400000).toISOString();
-    try {
-      try {
-        await supabase.from('payment_transactions').update({
-          status: 'COMPLETED',
-          metadata: { approvedBy: 'admin@zankoai.com', expiresAt, planDays },
-        }).eq('id', paymentId);
-      } catch (_) {}
-
-      if (userId) {
-        await supabase.from('profiles').update({
-          is_vip: true,
-          vip_status: 'active',
-          vip_expiry: expiresAt,
-          plan: 'premium',
-        }).eq('id', userId);
-
-        try {
-          const dbPlan = planDays >= 250 ? 'PREMIUM_YEARLY' : 'PREMIUM_MONTHLY';
-          await supabase.rpc('sync_admin_approved_vip', {
-            p_user_id: userId,
-            p_plan: dbPlan,
-            p_days: planDays,
-          });
-        } catch (_) {}
-
-        await supabase.from('notifications').insert({
-          user_id: userId,
-          title: '🎉 پیرۆزە! هەژمارەکەت بوو بە VIP',
-          body: 'داواکاری بەشداریکردنی VIPەکەت لەلایەن بەڕێوەبەرەوە پەسەندکرا. ئێستا دەتوانیت لە هەموو تایبەتمەندییە بێسنوورەکانی ZankoAI سوودمەند بیت!',
-          type: 'broadcast',
-        });
-      }
-    } catch (e) {
-      console.warn('approveVipPayment notice:', e);
-    }
-    return { success: true, paymentId, expiresAt };
-  },
-
-  rejectVipPayment: async (paymentId, reason = 'زانیاری یان وەسڵی پارەدان ڕاست نەبوو') => {
-    await ensureAdminAuth();
-    try {
-      await supabase.from('payment_transactions').update({
-        status: 'FAILED',
-        metadata: { rejectedBy: 'admin@zankoai.com', reason },
-      }).eq('id', paymentId);
-    } catch (_) {}
-    return { success: true, paymentId };
   },
 };

@@ -251,7 +251,7 @@ class NotificationService {
             callback: (payload) {
               final newRecord = payload.newRecord;
 
-              // Strictly ignore internal user feedback and security appeals!
+              // Strictly ignore internal user feedback, security appeals, and VIP request submissions!
               // They are administrative submissions from user to admin, NEVER notifications to the user!
               final recordData = newRecord['data'];
               if (recordData is Map) {
@@ -263,11 +263,19 @@ class NotificationService {
                     recordData['action'] == 'IP_LIMIT_APPEAL') {
                   return;
                 }
+                if (recordData['is_vip_request'] == true ||
+                    recordData['action'] == 'VIP_REQUEST') {
+                  return;
+                }
                 if (recordData['is_ad'] == true) return;
               }
               final rawTitle = (newRecord['title'] ?? '').toString();
+              final rawType = (newRecord['type'] ?? '').toString();
               if (rawTitle.contains('ڕا و پێشنیار') ||
-                  rawTitle.contains('داواکاری نوێکردنەوەی IP')) {
+                  rawTitle.contains('داواکاری نوێکردنەوەی IP') ||
+                  rawTitle.contains('داواکاری نوێکردنەوەی VIP') ||
+                  rawTitle.contains('داواکاری VIP') ||
+                  rawType == 'vip_request') {
                 return;
               }
 
@@ -336,7 +344,7 @@ class NotificationService {
         final id = (row['id'] ?? '').toString();
         if (id.isEmpty || deletedIds.contains(id)) continue;
 
-        // Skip internal feedback, appeals, and ads
+        // Skip internal feedback, appeals, VIP requests, and ads
         final rowData = row['data'];
         if (rowData is Map) {
           if (rowData['is_feedback'] == true ||
@@ -347,11 +355,19 @@ class NotificationService {
               rowData['action'] == 'IP_LIMIT_APPEAL') {
             continue;
           }
+          if (rowData['is_vip_request'] == true ||
+              rowData['action'] == 'VIP_REQUEST') {
+            continue;
+          }
           if (rowData['is_ad'] == true) continue;
         }
         final rawTitle = (row['title'] ?? '').toString();
+        final rawType = (row['type'] ?? '').toString();
         if (rawTitle.contains('ڕا و پێشنیار') ||
-            rawTitle.contains('داواکاری نوێکردنەوەی IP')) {
+            rawTitle.contains('داواکاری نوێکردنەوەی IP') ||
+            rawTitle.contains('داواکاری نوێکردنەوەی VIP') ||
+            rawTitle.contains('داواکاری VIP') ||
+            rawType == 'vip_request') {
           continue;
         }
 
@@ -377,11 +393,17 @@ class NotificationService {
     final cleanTitle = fixNotificationEncoding(title).trim();
     final cleanBody = fixNotificationEncoding(body).trim();
 
-    // Strict validation: NEVER show empty or blank notifications!
+    // Strict validation: NEVER show empty, blank, or internal administrative submission notifications!
     if (cleanTitle.isEmpty || cleanBody.isEmpty) {
       return;
     }
     if (cleanTitle == 'ZankoAI 🔔' && cleanBody.isEmpty) {
+      return;
+    }
+    if (cleanTitle.contains('داواکاری نوێکردنەوەی VIP') ||
+        cleanTitle.contains('داواکاری VIP') ||
+        cleanTitle.contains('ڕا و پێشنیار') ||
+        cleanTitle.contains('داواکاری نوێکردنەوەی IP')) {
       return;
     }
 
