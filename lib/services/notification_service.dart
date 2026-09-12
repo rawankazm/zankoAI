@@ -1,11 +1,39 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
+/// Top-level background message handler for FCM
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp();
+  } catch (_) {}
+
+  // If the message has no notification payload (data-only push), trigger local notification
+  final title = fixNotificationEncoding(
+    message.notification?.title ?? message.data['title'] ?? 'ZankoAI 🔔',
+  );
+  final body = fixNotificationEncoding(
+    message.notification?.body ?? message.data['body'] ?? '',
+  );
+
+  if (body.isNotEmpty && message.notification == null) {
+    await NotificationService().showInstantNotification(
+      id: message.messageId.hashCode,
+      title: title,
+      body: body,
+    );
+  }
+}
 
 /// Cleanly repairs UTF-8 mojibake (e.g. "ðŸŽ‰ Ù¾ÛŒØ±Û†Ø²Û•!" -> "🎉 پیرۆزە!")
 String fixNotificationEncoding(dynamic raw) {
@@ -123,6 +151,49 @@ class NotificationService {
       await androidPlugin.requestExactAlarmsPermission();
     }
 
+    if (!kIsWeb) {
+      try {
+        final messaging = FirebaseMessaging.instance;
+        await messaging.requestPermission(
+          alert: true,
+          announcement: false,
+          badge: true,
+          carPlay: false,
+          criticalAlert: false,
+          provisional: false,
+          sound: true,
+        );
+
+        await messaging.setForegroundNotificationPresentationOptions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+
+        await messaging.subscribeToTopic('all_students');
+        await messaging.subscribeToTopic('broadcast_all');
+
+        FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+          final title = fixNotificationEncoding(
+            message.notification?.title ?? message.data['title'] ?? 'ZankoAI 🔔',
+          );
+          final body = fixNotificationEncoding(
+            message.notification?.body ?? message.data['body'] ?? '',
+          );
+          if (body.isNotEmpty) {
+            showInstantNotification(
+              id: message.messageId.hashCode,
+              title: title,
+              body: body,
+            );
+            _notificationsUpdatedController.add(null);
+          }
+        });
+      } catch (e) {
+        debugPrint('FirebaseMessaging setup notice: $e');
+      }
+    }
+
     _initialized = true;
   }
 
@@ -132,6 +203,31 @@ class NotificationService {
     String? email,
   }) async {
     await init();
+
+    if (!kIsWeb && userId.isNotEmpty) {
+      try {
+        final messaging = FirebaseMessaging.instance;
+        await messaging.subscribeToTopic('user_$userId');
+
+        if (isVip) {
+          await messaging.subscribeToTopic('vip_students');
+        } else {
+          await messaging.unsubscribeFromTopic('vip_students');
+        }
+
+        final token = await messaging.getToken();
+        if (token != null && token.isNotEmpty) {
+          try {
+            await Supabase.instance.client
+                .from('profiles')
+                .update({'push_token': token})
+                .eq('id', userId);
+          } catch (_) {}
+        }
+      } catch (e) {
+        debugPrint('syncUserToken FCM notice: $e');
+      }
+    }
   }
 
   /// Start listening to notifications from Supabase Realtime

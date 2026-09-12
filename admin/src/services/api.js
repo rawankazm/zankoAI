@@ -31,6 +31,36 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// ─── Cloudflare Worker FCM Push Dispatcher ────────────────────────────────────
+const FCM_WORKER_URL = 'https://zankoai.rawankurdi181.workers.dev/send';
+const FCM_WORKER_SECRET = 'zanko_secret_2026';
+
+export async function triggerFcmPush({ title, body, topic, token, userId }) {
+  try {
+    const resolvedTopic = token ? undefined : (userId ? `user_${userId}` : (topic || 'all_students'));
+    const response = await fetch(FCM_WORKER_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Secret-Key': FCM_WORKER_SECRET,
+      },
+      body: JSON.stringify({
+        title,
+        body,
+        topic: resolvedTopic,
+        token: token || undefined,
+        secret: FCM_WORKER_SECRET,
+      }),
+    });
+    const result = await response.json();
+    console.log('[FCM Push Dispatched]:', result);
+    return result;
+  } catch (err) {
+    console.warn('[FCM Push Warning]:', err);
+    return null;
+  }
+}
+
 // Keys for local persistence and fallback
 const USER_STORAGE_KEY = 'zanko_admin_users_v3';
 const UNI_STORAGE_KEY = 'zanko_admin_universities_v2';
@@ -832,6 +862,67 @@ export const AdminApi = {
     return { payments, pagination: { total: payments.length, page: 1, limit: 20, totalPages: 1 } };
   },
 
+  approveVipPayment: async (paymentId, userId, days = 30) => {
+    await ensureAdminAuth();
+    const expiry = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+
+    if (userId) {
+      try {
+        await supabase.from('profiles').update({
+          is_vip: true,
+          vip_status: 'active',
+          plan: 'premium',
+          vip_expiry: expiry,
+        }).eq('id', userId);
+      } catch (e) {
+        console.warn('approveVipPayment profile update:', e);
+      }
+
+      // 1. Insert in-app notification
+      try {
+        await supabase.from('notifications').insert([{
+          user_id: userId,
+          title: '🎉 پیرۆزە! هەژمارەکەت بوو بە VIP',
+          body: `هەژمارەکەت بۆ ماوەی ${days} ڕۆژ کرا بە ئەندامی تایبەتی VIP. دەتوانیت سوود لە تەواوی خزمەتگوزارییە بێسنوورەکان وەربگریت.`,
+          type: 'system',
+          status: 'delivered',
+        }]);
+      } catch (_) {}
+
+      // 2. Trigger instant push notification to phone screen even if app is closed
+      await triggerFcmPush({
+        title: '🎉 پیرۆزە! هەژمارەکەت بوو بە VIP',
+        body: `هەژمارەکەت بۆ ماوەی ${days} ڕۆژ کرا بە ئەندامی تایبەتی VIP ✨`,
+        userId,
+      });
+    }
+
+    return { success: true, paymentId, userId, days, expiry };
+  },
+
+  rejectVipPayment: async (paymentId, userId, reason = 'زانیاری وەسڵی پارەدان ڕەتکرایەوە.') => {
+    await ensureAdminAuth();
+    if (userId) {
+      try {
+        await supabase.from('notifications').insert([{
+          user_id: userId,
+          title: '⚠️ ڕەتکردنەوەی داواکاری VIP',
+          body: `داواکاری بەشداریکردنی VIP ڕەتکرایەوە: ${reason}`,
+          type: 'system',
+          status: 'delivered',
+        }]);
+      } catch (_) {}
+
+      // Trigger instant push to phone screen
+      await triggerFcmPush({
+        title: '⚠️ ئاگاداری دەربارەی VIP',
+        body: `داواکاری بەشداریکردنی VIP ڕەتکرایەوە: ${reason}`,
+        userId,
+      });
+    }
+    return { success: true, paymentId, rejected: true };
+  },
+
   // AI Management & Costs
   getAiUsage: async (params = {}) => {
     try {
@@ -1129,8 +1220,9 @@ export const AdminApi = {
         status: 'delivered',
       }]).select().single();
 
+      let resultRow = null;
       if (!error && data) {
-        return {
+        resultRow = {
           id: data.id,
           title: data.title,
           body: data.body,
@@ -1144,6 +1236,25 @@ export const AdminApi = {
       if (error) {
         console.warn('Direct notification insertion error:', error);
       }
+
+      // ─── Realtime FCM Push (wakes up mobile devices even when app is killed/closed) ───
+      try {
+        const targetRole = payload.target || payload.targetRole || 'all';
+        const fcmTopic = payload.user_id
+          ? undefined
+          : (targetRole === 'vip' ? 'vip_students' : 'all_students');
+
+        await triggerFcmPush({
+          title: payload.title,
+          body: payload.body,
+          topic: fcmTopic,
+          userId: payload.user_id,
+        });
+      } catch (pushErr) {
+        console.warn('FCM push trigger notice:', pushErr);
+      }
+
+      if (resultRow) return resultRow;
     } catch (err) {
       console.warn('Direct notification insertion notice:', err);
     }
