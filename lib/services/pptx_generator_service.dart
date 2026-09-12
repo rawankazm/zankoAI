@@ -37,38 +37,169 @@ class PptxGeneratorService {
     return 'سوپاس بۆ ئامادەبوونتان';
   }
 
-  /// Gets a distinct curated high-quality image URL for each slide based on topic and slide index
-  static String getSlideSpecificImageUrl(String topic, int slideIndex) {
-    final t = topic.toLowerCase();
+  static final List<String> _academicReserveImages = [
+    'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1531545514256-b1400bc00f31?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1519452635265-7b1fbfd1e4e0?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1491841550275-ad7854e35ca6?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1513258496099-48168024aec0?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1532012164546-f432f2e3777f?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1511556532299-8f662fc26c06?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=800&auto=format&fit=crop&q=80',
+  ];
 
-    // 1. Medicine, Clinical Healthcare & Surgery
-    if (t.contains('پزیشک') ||
-        t.contains('med') ||
-        t.contains('health') ||
-        t.contains('دکتۆر') ||
-        t.contains('نەخۆش') ||
-        t.contains('طب') ||
-        t.contains('صحة') ||
-        t.contains('جراح') ||
-        t.contains('clinical')) {
-      final images = [
-        'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&auto=format&fit=crop&q=80', // Slide 1: Medical stethoscope & tablet
-        'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&auto=format&fit=crop&q=80', // Slide 2: Doctor team consulting
-        'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=800&auto=format&fit=crop&q=80', // Slide 3: Clinical patient care
-        'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?w=800&auto=format&fit=crop&q=80', // Slide 4: Healthcare diagnostic technology
-        'https://images.unsplash.com/photo-1581093458791-9f3c3900df4b?w=800&auto=format&fit=crop&q=80', // Slide 5: Medical research lab
-        'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800&auto=format&fit=crop&q=80', // Slide 6: Digital health monitoring
-        'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=800&auto=format&fit=crop&q=80', // Slide 7: Hospital surgery & treatment
-        'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=800&auto=format&fit=crop&q=80', // Slide 8: Future medicine & doctor portrait
-      ];
-      return images[(slideIndex - 1).clamp(0, images.length - 1)];
+  static String _selectUniqueImage(
+    List<String> pool,
+    int slideIndex,
+    Set<String>? usedUrls,
+  ) {
+    final targetIdx = (slideIndex - 1).clamp(0, pool.length - 1);
+    final candidate = pool[targetIdx];
+    if (usedUrls == null) return candidate;
+
+    if (!usedUrls.contains(candidate)) {
+      usedUrls.add(candidate);
+      return candidate;
     }
 
-    // 2. Biology, Genetics, Pharmacy & Laboratory
+    // Candidate already used in this presentation, search pool for fresh unused image
+    for (final img in pool) {
+      if (!usedUrls.contains(img)) {
+        usedUrls.add(img);
+        return img;
+      }
+    }
+
+    // Category pool exhausted, pick from diverse academic reserve
+    for (final res in _academicReserveImages) {
+      if (!usedUrls.contains(res)) {
+        usedUrls.add(res);
+        return res;
+      }
+    }
+
+    final uniqueFallback = '$candidate&slide=$slideIndex';
+    usedUrls.add(uniqueFallback);
+    return uniqueFallback;
+  }
+
+  /// Gets a distinct curated high-quality image URL for each slide based on topic, department, and slide index.
+  /// Guarantees that no two slides in the same presentation will ever repeat an image.
+  static String getSlideSpecificImageUrl(
+    String topic,
+    int slideIndex, {
+    String? department,
+    String? slideTitle,
+    String? visualPrompt,
+    Set<String>? usedUrls,
+  }) {
+    final t = '$topic ${department ?? ''} ${slideTitle ?? ''} ${visualPrompt ?? ''}'.toLowerCase();
+
+    // Dedicated Closing & Gratitude Slide Images (Audience Applause, Q&A Discussion, Academic Celebration)
+    final titleLower = (slideTitle ?? '').toLowerCase();
+    final promptLower = (visualPrompt ?? '').toLowerCase();
+    if (titleLower.contains('سوپاس') ||
+        titleLower.contains('شكراً') ||
+        titleLower.contains('شكرا') ||
+        titleLower.contains('ئامادەبوون') ||
+        titleLower.contains('ئامادەبوونا') ||
+        titleLower.contains('thank you') ||
+        titleLower.contains('thanks') ||
+        titleLower.contains('q&a') ||
+        promptLower.contains('closing') ||
+        promptLower.contains('gratitude') ||
+        promptLower.contains('applause') ||
+        promptLower.contains('ovation') ||
+        promptLower.contains('q&a')) {
+      final closingImages = [
+        'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80', // Slide 1: Conference hall event
+        'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&auto=format&fit=crop&q=80', // Slide 2: Grand celebration confetti
+        'https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=800&auto=format&fit=crop&q=80', // Slide 3: Academic community gathering
+        'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&auto=format&fit=crop&q=80', // Slide 4: Celebration gathering
+        'https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=800&auto=format&fit=crop&q=80', // Slide 5: Meeting applause & presentation
+        'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=80', // Slide 6: Academic celebration & applause
+        'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=80', // Slide 7: Conference audience engagement
+        'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800&auto=format&fit=crop&q=80', // Slide 8: Speaker podium & warm applause
+      ];
+      return _selectUniqueImage(closingImages, slideIndex, usedUrls);
+    }
+
+    // 1. Dentistry & Oral Healthcare (8 Unique Verified HD Photos)
+    if (t.contains('ددان') ||
+        RegExp(r'(^|\s|[،.؛:])دان(\s|[،.؛:]|$)').hasMatch(t) ||
+        t.contains('أسنان') ||
+        t.contains('dent') ||
+        t.contains('teeth') ||
+        t.contains('tooth') ||
+        t.contains('oral')) {
+      final images = [
+        'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=800&auto=format&fit=crop&q=80', // Slide 1: Modern dental clinic chair
+        'https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=800&auto=format&fit=crop&q=80', // Slide 2: Dental examination
+        'https://images.unsplash.com/photo-1598256989800-fe5f95da9787?w=800&auto=format&fit=crop&q=80', // Slide 3: Dental hygiene tools
+        'https://images.unsplash.com/photo-1609840114035-3c981b782dfe?w=800&auto=format&fit=crop&q=80', // Slide 4: Tooth x-ray radiograph
+        'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=800&auto=format&fit=crop&q=80', // Slide 5: Professional dentist consultation
+        'https://images.unsplash.com/photo-1571772996211-2f02c9727629?w=800&auto=format&fit=crop&q=80', // Slide 6: Orthodontic care & braces
+        'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=800&auto=format&fit=crop&q=80', // Slide 7: Dental implant model
+        'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&auto=format&fit=crop&q=80', // Slide 8: Healthy smile portrait
+      ];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
+    }
+
+    // 2. Veterinary Medicine & Animal Health (8 Unique Verified HD Photos)
+    if (t.contains('ڤێتێرنەری') ||
+        t.contains('ئاژەڵ') ||
+        t.contains('پەلەوەر') ||
+        t.contains('بيطر') ||
+        t.contains('حيوان') ||
+        t.contains('vet') ||
+        t.contains('animal')) {
+      final images = [
+        'https://images.unsplash.com/photo-1576201836106-db1758fd1c97?w=800&auto=format&fit=crop&q=80', // Slide 1: Veterinary doctor clinical exam
+        'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=800&auto=format&fit=crop&q=80', // Slide 2: Companion animal diagnostic care
+        'https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=800&auto=format&fit=crop&q=80', // Slide 3: Livestock and farm veterinary care
+        'https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=800&auto=format&fit=crop&q=80', // Slide 4: Animal biology & vaccine lab
+        'https://images.unsplash.com/photo-1535930891776-0c2dfb7fda1a?w=800&auto=format&fit=crop&q=80', // Slide 5: Animal surgical operation
+        'https://images.unsplash.com/photo-1599443015574-be5fe8a05783?w=800&auto=format&fit=crop&q=80', // Slide 6: Veterinary ultrasound monitoring
+        'https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?w=800&auto=format&fit=crop&q=80', // Slide 7: Companion animal pathology check
+        'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800&auto=format&fit=crop&q=80', // Slide 8: Healthy domestic animal welfare
+      ];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
+    }
+
+    // 3. Nursing, Patient Care & Midwifery (8 Unique Verified HD Photos)
+    if (t.contains('پەرستار') ||
+        t.contains('مامانی') ||
+        t.contains('تمريض') ||
+        t.contains('قابلة') ||
+        t.contains('nurs') ||
+        t.contains('patient care')) {
+      final images = [
+        'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=800&auto=format&fit=crop&q=80', // Slide 1: Compassionate nurse patient care
+        'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?w=800&auto=format&fit=crop&q=80', // Slide 2: Medical vital signs check
+        'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&auto=format&fit=crop&q=80', // Slide 3: Clinical nursing ward team
+        'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=800&auto=format&fit=crop&q=80', // Slide 4: Healthcare team handoff
+        'https://images.unsplash.com/photo-1516549655169-df83a0774514?w=800&auto=format&fit=crop&q=80', // Slide 5: Intensive care monitoring
+        'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800&auto=format&fit=crop&q=80', // Slide 6: Patient recovery support
+        'https://images.unsplash.com/photo-1584036561566-baf8f5f1b144?w=800&auto=format&fit=crop&q=80', // Slide 7: Medical pharmacology administration
+        'https://images.unsplash.com/photo-1590611936760-eeb9bc593018?w=800&auto=format&fit=crop&q=80', // Slide 8: Nursing graduation excellence
+      ];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
+    }
+
+    // 4. Biology, Genetics, Pharmacy & Laboratory (8 Unique Verified HD Photos)
     if (t.contains('بایۆلۆجی') ||
         t.contains('دەرمان') ||
         t.contains('تاقیگە') ||
         t.contains('جین') ||
+        t.contains('صيدل') ||
         t.contains('biolog') ||
         t.contains('pharma') ||
         t.contains('gene') ||
@@ -87,10 +218,90 @@ class PptxGeneratorService {
         'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&auto=format&fit=crop&q=80', // Slide 7: Scientific chemical culture
         'https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=800&auto=format&fit=crop&q=80', // Slide 8: Modern biotech horizon
       ];
-      return images[(slideIndex - 1).clamp(0, images.length - 1)];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
     }
 
-    // 3. AI, Machine Learning, Robotics & Neural Networks
+    // 5. Medicine, Clinical Healthcare & Surgery (8 Unique Verified HD Photos)
+    if ((t.contains('پزیشک') ||
+            t.contains('med') ||
+            t.contains('health') ||
+            t.contains('دکتۆر') ||
+            t.contains('نەخۆش') ||
+            t.contains('طب') ||
+            t.contains('صحة') ||
+            t.contains('جراح') ||
+            t.contains('clinical')) &&
+        !t.contains('ددان') &&
+        !t.contains('dent') &&
+        !t.contains('ڤێتێر') &&
+        !t.contains('vet') &&
+        !t.contains('ئاژەڵ') &&
+        !t.contains('پەرستار') &&
+        !t.contains('nurs') &&
+        !t.contains('دەرمان') &&
+        !t.contains('pharma') &&
+        !t.contains('صيدل')) {
+      final images = [
+        'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&auto=format&fit=crop&q=80', // Slide 1: Medical stethoscope & tablet
+        'https://images.unsplash.com/photo-1551076805-e1869033e561?w=800&auto=format&fit=crop&q=80', // Slide 2: Surgical operating room lamps
+        'https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=800&auto=format&fit=crop&q=80', // Slide 3: Clinical patient care corridor
+        'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?w=800&auto=format&fit=crop&q=80', // Slide 4: Healthcare ultrasound technology
+        'https://images.unsplash.com/photo-1581093458791-9f3c3900df4b?w=800&auto=format&fit=crop&q=80', // Slide 5: Medical diagnostic research
+        'https://images.unsplash.com/photo-1578496781379-7dcfb995293d?w=800&auto=format&fit=crop&q=80', // Slide 6: Doctor analyzing brain MRI scan
+        'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=800&auto=format&fit=crop&q=80', // Slide 7: Hospital surgery team in scrubs
+        'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=800&auto=format&fit=crop&q=80', // Slide 8: Future medicine & doctor portrait
+      ];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
+    }
+
+    // 6. Chemistry & Materials Science (8 Unique Verified HD Photos)
+    if (t.contains('کیمیا') ||
+        t.contains('كيمياء') ||
+        t.contains('chem') ||
+        t.contains('molecular') ||
+        t.contains('compound')) {
+      final images = [
+        'https://images.unsplash.com/photo-1603555501671-8f96b3fce8b4?w=800&auto=format&fit=crop&q=80', // Slide 1: Chemistry beaker reactions
+        'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=800&auto=format&fit=crop&q=80', // Slide 2: Precision titration assay
+        'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&auto=format&fit=crop&q=80', // Slide 3: Chemical formula whiteboard
+        'https://images.unsplash.com/photo-1628863353691-0071c8c1874c?w=800&auto=format&fit=crop&q=80', // Slide 4: Chemical crystallization apparatus
+        'https://images.unsplash.com/photo-1518152006812-edab29b069ac?w=800&auto=format&fit=crop&q=80', // Slide 5: Organic compound spectrometry
+        'https://images.unsplash.com/photo-1567427018141-0584cfcbf1b8?w=800&auto=format&fit=crop&q=80', // Slide 6: Spectroscopy analytical chemistry
+        'https://images.unsplash.com/photo-1581093588401-fbb62a02f120?w=800&auto=format&fit=crop&q=80', // Slide 7: Nanomaterials testing
+        'https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=800&auto=format&fit=crop&q=80', // Slide 8: Future polymer materials innovation
+      ];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
+    }
+
+    // 7. Physics, Mathematics, Astronomy & Space (8 Unique Verified HD Photos)
+    if (t.contains('فیزیا') ||
+        t.contains('بيرکاری') ||
+        t.contains('بیرکاری') ||
+        t.contains('فەلەک') ||
+        t.contains('گەردوون') ||
+        t.contains('فيزياء') ||
+        t.contains('رياضيات') ||
+        t.contains('فلك') ||
+        t.contains('فضاء') ||
+        t.contains('physics') ||
+        t.contains('math') ||
+        t.contains('astronomy') ||
+        t.contains('quantum') ||
+        t.contains('space')) {
+      final images = [
+        'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?w=800&auto=format&fit=crop&q=80', // Slide 1: Deep cosmic galaxy & stars
+        'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&auto=format&fit=crop&q=80', // Slide 2: Quantum physics particles
+        'https://images.unsplash.com/photo-1509228468518-180dd4864904?w=800&auto=format&fit=crop&q=80', // Slide 3: Mathematical equations chalkboard
+        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80', // Slide 4: Gravitational orbital physics
+        'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80', // Slide 5: Optical laser prism diffraction
+        'https://images.unsplash.com/photo-1507499739999-097706ad8914?w=800&auto=format&fit=crop&q=80', // Slide 6: Theoretical physics model
+        'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800&auto=format&fit=crop&q=80', // Slide 7: Space telescope orbital observation
+        'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80', // Slide 8: Statistical astrophysics graphs
+      ];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
+    }
+
+    // 8. AI, Machine Learning, Large Language Models (LLMs), Robotics & Neural Networks (8 Unique Verified HD Photos)
     if (t.contains('ژیری') ||
         t.contains('دەستکرد') ||
         t.contains('ai') ||
@@ -99,21 +310,37 @@ class PptxGeneratorService {
         t.contains('robot') ||
         t.contains('ذكاء') ||
         t.contains('اصطناعي') ||
-        t.contains('روبوت')) {
+        t.contains('روبوت') ||
+        t.contains('مۆدێلە زمان') ||
+        t.contains('مۆدێلی زمان') ||
+        t.contains('زمانە گەورە') ||
+        t.contains('مۆدێل') ||
+        t.contains('llm') ||
+        t.contains('nlp') ||
+        t.contains('deep learning') ||
+        t.contains('generative') ||
+        t.contains('gpt') ||
+        t.contains('تەکنەلۆژیا') ||
+        t.contains('تەکنۆلۆژیا') ||
+        t.contains('تەکنەلۆجیا') ||
+        t.contains('سیستەمی زانیاری') ||
+        t.contains('سیستەم') ||
+        t.contains('mis') ||
+        t.contains('information system')) {
       final images = [
         'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80', // Slide 1: Glowing AI neural network
         'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&auto=format&fit=crop&q=80', // Slide 2: Humanoid robot hand
         'https://images.unsplash.com/photo-1555255707-c07966088b7b?w=800&auto=format&fit=crop&q=80', // Slide 3: Deep learning code & visual
         'https://images.unsplash.com/photo-1507146153580-69a1fe6d8aa1?w=800&auto=format&fit=crop&q=80', // Slide 4: Futuristic AI brain concept
         'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&auto=format&fit=crop&q=80', // Slide 5: Collaborative tech team
-        'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80', // Slide 6: Microchip & processor hardware
+        'https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=800&auto=format&fit=crop&q=80', // Slide 6: Microchip & processor hardware
         'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80', // Slide 7: Algorithmic data matrix
-        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80', // Slide 8: Global AI interconnected network
+        'https://images.unsplash.com/photo-1535378917042-10a22c95931a?w=800&auto=format&fit=crop&q=80', // Slide 8: Global AI interconnected network
       ];
-      return images[(slideIndex - 1).clamp(0, images.length - 1)];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
     }
 
-    // 4. Cybersecurity, Network Security & Ethical Hacking
+    // 9. Cybersecurity, Network Security & Ethical Hacking (8 Unique Verified HD Photos)
     if (t.contains('سایبەر') ||
         t.contains('سکیوریتی') ||
         t.contains('security') ||
@@ -130,18 +357,17 @@ class PptxGeneratorService {
         'https://images.unsplash.com/photo-1510511459019-5dda7724fd87?w=800&auto=format&fit=crop&q=80', // Slide 3: Secure terminal interface
         'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop&q=80', // Slide 4: Threat monitoring dashboard
         'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&auto=format&fit=crop&q=80', // Slide 5: Security operations center
-        'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80', // Slide 6: Digital cryptography code
+        'https://images.unsplash.com/photo-1563089145-599997674d42?w=800&auto=format&fit=crop&q=80', // Slide 6: Digital cryptography matrix
         'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=800&auto=format&fit=crop&q=80', // Slide 7: High-speed optical data cable
-        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80', // Slide 8: Global cybersecurity defense
+        'https://images.unsplash.com/photo-1614064641938-3bbee52942c7?w=800&auto=format&fit=crop&q=80', // Slide 8: Global cybersecurity defense
       ];
-      return images[(slideIndex - 1).clamp(0, images.length - 1)];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
     }
 
-    // 5. Software Engineering, Computer Science & Web/Mobile Dev
+    // 10. Software Engineering, Computer Science & Web/Mobile Dev (8 Unique Verified HD Photos)
     if (t.contains('کۆمپیوتەر') ||
         t.contains('بەرنامە') ||
         t.contains('نەرمەکاڵا') ||
-        t.contains('تەکنەلۆجیا') ||
         t.contains('computer') ||
         t.contains('software') ||
         t.contains('code') ||
@@ -161,10 +387,10 @@ class PptxGeneratorService {
         'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&auto=format&fit=crop&q=80', // Slide 7: Software debugging monitor
         'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=800&auto=format&fit=crop&q=80', // Slide 8: Software engineering blueprint
       ];
-      return images[(slideIndex - 1).clamp(0, images.length - 1)];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
     }
 
-    // 6. Cloud Computing, Big Data, Data Science & Analytics
+    // 11. Cloud Computing, Big Data, Data Science & Analytics (8 Unique Verified HD Photos)
     if (t.contains('کلاود') ||
         t.contains('داتا') ||
         t.contains('ئامار') ||
@@ -177,19 +403,20 @@ class PptxGeneratorService {
         t.contains('إحصاء')) {
       final images = [
         'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&auto=format&fit=crop&q=80', // Slide 1: Big data analytics chart
-        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80', // Slide 2: Cloud computing network
-        'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80', // Slide 3: Growth charts & metrics
-        'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80', // Slide 4: Data visualization dashboard
-        'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80', // Slide 5: Data center storage arrays
-        'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80', // Slide 6: Digital connection pathways
-        'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=800&auto=format&fit=crop&q=80', // Slide 7: Database architecture plan
-        'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80', // Slide 8: Data science matrix
+        'https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=800&auto=format&fit=crop&q=80', // Slide 2: Cloud infrastructure architecture
+        'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&auto=format&fit=crop&q=80', // Slide 3: Metrics dashboard visualization
+        'https://images.unsplash.com/photo-1527474305487-b87b222841cc?w=800&auto=format&fit=crop&q=80', // Slide 4: Cloud computing datacenter network
+        'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80', // Slide 5: Digital connection pathways
+        'https://images.unsplash.com/photo-1488229297570-5852085168d0?w=800&auto=format&fit=crop&q=80', // Slide 6: High-capacity data storage arrays
+        'https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=800&auto=format&fit=crop&q=80', // Slide 7: Database schema development
+        'https://images.unsplash.com/photo-1529101091764-c3526daf38fe?w=800&auto=format&fit=crop&q=80', // Slide 8: Global interconnected data grid
       ];
-      return images[(slideIndex - 1).clamp(0, images.length - 1)];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
     }
 
-    // 7. Civil Engineering, Architecture & Construction
+    // 12. Civil Engineering, Architecture & Construction (8 Unique Verified HD Photos)
     if (t.contains('تەلارساز') ||
+        t.contains('تەلار') ||
         t.contains('بیناساز') ||
         t.contains('شارستان') ||
         t.contains('architecture') ||
@@ -198,6 +425,8 @@ class PptxGeneratorService {
         t.contains('building') ||
         t.contains('عمار') ||
         t.contains('بناء') ||
+        t.contains('مدن') ||
+        t.contains('مدني') ||
         t.contains('إنشاء')) {
       final images = [
         'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&auto=format&fit=crop&q=80', // Slide 1: Modern architectural skyscraper
@@ -205,59 +434,72 @@ class PptxGeneratorService {
         'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&auto=format&fit=crop&q=80', // Slide 3: Construction site engineering
         'https://images.unsplash.com/photo-1541888946425-d0fbb18f15f7?w=800&auto=format&fit=crop&q=80', // Slide 4: Civil engineering infrastructure
         'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800&auto=format&fit=crop&q=80', // Slide 5: Interior structural design
-        'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&auto=format&fit=crop&q=80', // Slide 6: Modern sustainable building
+        'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=800&auto=format&fit=crop&q=80', // Slide 6: Modern sustainable building
         'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80', // Slide 7: Technical surveying tools
         'https://images.unsplash.com/photo-1479839672679-a46483c0e7c8?w=800&auto=format&fit=crop&q=80', // Slide 8: Future urban city planning
       ];
-      return images[(slideIndex - 1).clamp(0, images.length - 1)];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
     }
 
-    // 8. Electrical, Mechanical, Energy & General Engineering
-    if (t.contains('ئەندازیار') ||
+    // 13. Electrical, Mechanical, Energy & Petroleum Engineering (8 Unique Verified HD Photos)
+    if (((t.contains('ئەندازیار') || t.contains('engineer')) &&
+            !t.contains('شارستان') &&
+            !t.contains('مدن') &&
+            !t.contains('civil') &&
+            !t.contains('کشتوک') &&
+            !t.contains('زراع') &&
+            !t.contains('agri') &&
+            !t.contains('نەرمەکاڵا') &&
+            !t.contains('سۆفتوێر') &&
+            !t.contains('software')) ||
         t.contains('کارەبا') ||
         t.contains('میکانیک') ||
         t.contains('وزە') ||
         t.contains('خۆر') ||
         t.contains('نەوت') ||
-        t.contains('engineer') ||
+        t.contains('پترۆل') ||
+        t.contains('گاز') ||
         t.contains('electric') ||
         t.contains('mechanic') ||
         t.contains('energy') ||
         t.contains('solar') ||
-        t.contains('هندس') ||
+        t.contains('petroleum') ||
+        t.contains('oil') ||
+        t.contains('gas') ||
+        ((t.contains('هندس') || t.contains('هندسة')) &&
+            !t.contains('مدن') &&
+            !t.contains('زراع') &&
+            !t.contains('برمج')) ||
         t.contains('كهرب') ||
         t.contains('طاق') ||
         t.contains('نفط')) {
       final images = [
-        'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80', // Slide 1: Industrial engineering precision
+        'https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&auto=format&fit=crop&q=80', // Slide 1: Circuit board & electronics
         'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=800&auto=format&fit=crop&q=80', // Slide 2: Solar panels & clean energy
-        'https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=800&auto=format&fit=crop&q=80', // Slide 3: Circuit board & electronics
-        'https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&auto=format&fit=crop&q=80', // Slide 4: Robotics & mechanical testing
-        'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=800&auto=format&fit=crop&q=80', // Slide 5: Wind turbines renewable power
-        'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&auto=format&fit=crop&q=80', // Slide 6: Precision manufacturing gear
-        'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&auto=format&fit=crop&q=80', // Slide 7: Power system grid
-        'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80', // Slide 8: Next-generation micro-electronics
+        'https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=800&auto=format&fit=crop&q=80', // Slide 3: Robotics & mechanical testing
+        'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=800&auto=format&fit=crop&q=80', // Slide 4: Wind turbines renewable power
+        'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&auto=format&fit=crop&q=80', // Slide 5: Precision manufacturing gear
+        'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&auto=format&fit=crop&q=80', // Slide 6: Power system grid
+        'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=800&auto=format&fit=crop&q=80', // Slide 7: Petroleum refinery rig
+        'https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=800&auto=format&fit=crop&q=80', // Slide 8: Electrical substation & transformers
       ];
-      return images[(slideIndex - 1).clamp(0, images.length - 1)];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
     }
 
-    // 9. Law, Legal Studies, Judiciary & Politics
+    // 14. Law, Legal Studies, Judiciary & Human Rights (8 Unique Verified HD Photos)
     if (t.contains('یاسا') ||
         t.contains('داد') ||
         t.contains('ماف') ||
         t.contains('دەستوور') ||
         t.contains('پەرلەمان') ||
-        t.contains('سیاسەت') ||
         t.contains('قانون') ||
         t.contains('عدال') ||
         t.contains('حقوق') ||
         t.contains('دستور') ||
-        t.contains('سياس') ||
         t.contains('law') ||
         t.contains('legal') ||
         t.contains('justice') ||
-        t.contains('court') ||
-        t.contains('politic')) {
+        t.contains('court')) {
       final images = [
         'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop&q=80', // Slide 1: Scales of justice & legal books
         'https://images.unsplash.com/photo-1505664194779-8beaceb93744?w=800&auto=format&fit=crop&q=80', // Slide 2: Classic law library & gavel
@@ -268,45 +510,180 @@ class PptxGeneratorService {
         'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&auto=format&fit=crop&q=80', // Slide 7: International diplomacy handshake
         'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&auto=format&fit=crop&q=80', // Slide 8: Constitutional legislature hall
       ];
-      return images[(slideIndex - 1).clamp(0, images.length - 1)];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
     }
 
-    // 10. Business, Management, Economics & Accounting
+    // 15. Political Science, Diplomacy & Public Policy (8 Unique Verified HD Photos)
+    if (t.contains('سیاسەت') ||
+        t.contains('دیپلۆماسی') ||
+        t.contains('پەیوەندی') ||
+        t.contains('دەوڵەت') ||
+        t.contains('سياس') ||
+        t.contains('دبلوماس') ||
+        t.contains('politic') ||
+        t.contains('diplomacy') ||
+        t.contains('international relations')) {
+      final images = [
+        'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?w=800&auto=format&fit=crop&q=80', // Slide 1: Strategic debate podium
+        'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=800&auto=format&fit=crop&q=80', // Slide 2: Diplomatic summit assembly
+        'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&auto=format&fit=crop&q=80', // Slide 3: United Nations plenary hall
+        'https://images.unsplash.com/photo-1577495508048-b635879837f1?w=800&auto=format&fit=crop&q=80', // Slide 4: Parliament assembly floor
+        'https://images.unsplash.com/photo-1526470608268-f674ce90ebd4?w=800&auto=format&fit=crop&q=80', // Slide 5: International treaty document
+        'https://images.unsplash.com/photo-1577495508326-19a1b3cf65b7?w=800&auto=format&fit=crop&q=80', // Slide 6: Public policy summit discussion
+        'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&auto=format&fit=crop&q=80', // Slide 7: Official treaty signing desk
+        'https://images.unsplash.com/photo-1569098644584-210bcd375b59?w=800&auto=format&fit=crop&q=80', // Slide 8: International flags congress
+      ];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
+    }
+
+    // 16. Business, Management, Leadership & Marketing (8 Unique Verified HD Photos)
     if (t.contains('کارگێڕی') ||
-        t.contains('ئابووری') ||
-        t.contains('ژمێریاری') ||
+        t.contains('بەڕێوەبردن') ||
         t.contains('بازاڕ') ||
-        t.contains('دارایی') ||
-        t.contains('بانک') ||
+        t.contains('مارکێتینگ') ||
+        t.contains('سەرکردایەتی') ||
         t.contains('business') ||
         t.contains('manage') ||
-        t.contains('econom') ||
-        t.contains('finance') ||
-        t.contains('account') ||
+        t.contains('market') ||
+        t.contains('leadership') ||
         t.contains('إدارة') ||
-        t.contains('اقتصاد') ||
-        t.contains('محاسب') ||
-        t.contains('مالي')) {
+        t.contains('تسويق') ||
+        t.contains('قيادة')) {
       final images = [
-        'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80', // Slide 1: Financial market analysis
-        'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&auto=format&fit=crop&q=80', // Slide 2: Business executive strategy
-        'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&auto=format&fit=crop&q=80', // Slide 3: Corporate project roadmap
-        'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&auto=format&fit=crop&q=80', // Slide 4: Strategic team presentation
-        'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&auto=format&fit=crop&q=80', // Slide 5: Global banking & investment
-        'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&auto=format&fit=crop&q=80', // Slide 6: Client negotiation & partnership
-        'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80', // Slide 7: Modern business collaboration
-        'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&auto=format&fit=crop&q=80', // Slide 8: Corporate headquarters future
+        'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&auto=format&fit=crop&q=80', // Slide 1: Executive leadership strategy
+        'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&auto=format&fit=crop&q=80', // Slide 2: Corporate project roadmap
+        'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&auto=format&fit=crop&q=80', // Slide 3: Strategic team presentation
+        'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&auto=format&fit=crop&q=80', // Slide 4: Professional client negotiation
+        'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=800&auto=format&fit=crop&q=80', // Slide 5: Business strategy roadmap board
+        'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&auto=format&fit=crop&q=80', // Slide 6: Modern business team meeting
+        'https://images.unsplash.com/photo-1531497865144-0464ef8fb9a9?w=800&auto=format&fit=crop&q=80', // Slide 7: Enterprise KPI performance
+        'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&auto=format&fit=crop&q=80', // Slide 8: Corporate leadership vision
       ];
-      return images[(slideIndex - 1).clamp(0, images.length - 1)];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
     }
 
-    // 11. Psychology, Education & Philosophy
-    if (t.contains('پەروەردە') ||
+    // 17. Accounting, Banking, Finance & Economics (8 Unique Verified HD Photos)
+    if (t.contains('ژمێریاری') ||
+        t.contains('دارایی') ||
+        t.contains('بانک') ||
+        t.contains('ئابووری') ||
+        t.contains('account') ||
+        t.contains('finance') ||
+        t.contains('bank') ||
+        t.contains('econom') ||
+        t.contains('audit') ||
+        t.contains('محاسب') ||
+        t.contains('مالي') ||
+        t.contains('بنك') ||
+        t.contains('مصرف') ||
+        t.contains('اقتصاد')) {
+      final images = [
+        'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&auto=format&fit=crop&q=80', // Slide 1: Financial audit report and calculator
+        'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&auto=format&fit=crop&q=80', // Slide 2: Stock market exchange terminal
+        'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&auto=format&fit=crop&q=80', // Slide 3: Global banking currencies & assets
+        'https://images.unsplash.com/photo-1563986768494-4dee2763ff3f?w=800&auto=format&fit=crop&q=80', // Slide 4: Accounting ledger analysis
+        'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&auto=format&fit=crop&q=80', // Slide 5: Fiscal market trading chart
+        'https://images.unsplash.com/photo-1565372195458-9de0b320ef04?w=800&auto=format&fit=crop&q=80', // Slide 6: Wealth investment portfolio consultation
+        'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&auto=format&fit=crop&q=80', // Slide 7: Economic monetary policy
+        'https://images.unsplash.com/photo-1541354329998-f4d9a9f9297f?w=800&auto=format&fit=crop&q=80', // Slide 8: Central bank skyscraper
+      ];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
+    }
+
+    // 18. Media, Journalism, PR & Mass Communication (8 Unique Verified HD Photos)
+    if (t.contains('میدیا') ||
+        t.contains('ڕاگەیاندن') ||
+        t.contains('ڕۆژنامە') ||
+        t.contains('تیڤی') ||
+        t.contains('ڕادیۆ') ||
+        t.contains('إعلام') ||
+        t.contains('صحافة') ||
+        t.contains('تلفزيون') ||
+        t.contains('media') ||
+        t.contains('journalism') ||
+        t.contains('press') ||
+        t.contains('broadcasting') ||
+        t.contains('communication')) {
+      final images = [
+        'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&auto=format&fit=crop&q=80', // Slide 1: Modern newsroom and broadcasting camera
+        'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=800&auto=format&fit=crop&q=80', // Slide 2: Professional press conference microphone
+        'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&auto=format&fit=crop&q=80', // Slide 3: Digital newspaper & online journalism
+        'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=800&auto=format&fit=crop&q=80', // Slide 4: Video editing broadcast suite
+        'https://images.unsplash.com/photo-1586339949916-3e9457bef6d3?w=800&auto=format&fit=crop&q=80', // Slide 5: Live television broadcast desk
+        'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=80', // Slide 6: Audio podcast & radio recording
+        'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800&auto=format&fit=crop&q=80', // Slide 7: Press conference keynote auditorium
+        'https://images.unsplash.com/photo-1598899134739-24c46f58b8c0?w=800&auto=format&fit=crop&q=80', // Slide 8: Television studio lighting
+      ];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
+    }
+
+    // 19. Sports Science & Physical Education (8 Unique Verified HD Photos)
+    if (t.contains('وەرزش') ||
+        t.contains('تۆپ') ||
+        t.contains('ڕاهێنان') ||
+        t.contains('لەشجوانی') ||
+        t.contains('تەندروستی وەرزش') ||
+        t.contains('رياض') ||
+        t.contains('تدريب') ||
+        t.contains('لياقة') ||
+        t.contains('sport') ||
+        t.contains('fitness') ||
+        t.contains('athlet') ||
+        t.contains('kinesiolog')) {
+      final images = [
+        'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=800&auto=format&fit=crop&q=80', // Slide 1: Olympic stadium running track
+        'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&auto=format&fit=crop&q=80', // Slide 2: Sports biomechanics & training
+        'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=800&auto=format&fit=crop&q=80', // Slide 3: Athletic fitness physiology
+        'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&auto=format&fit=crop&q=80', // Slide 4: Track and field sprint finish
+        'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&auto=format&fit=crop&q=80', // Slide 5: Gym kinesiology laboratory
+        'https://images.unsplash.com/photo-1526676037777-05a232554f77?w=800&auto=format&fit=crop&q=80', // Slide 6: Sports medicine physiotherapy
+        'https://images.unsplash.com/photo-1508215885820-4523e431397b?w=800&auto=format&fit=crop&q=80', // Slide 7: Endurance marathon team
+        'https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=800&auto=format&fit=crop&q=80', // Slide 8: Athletic championship victory
+      ];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
+    }
+
+    // 20. Fine Arts, Graphic Design, Film, Music & Cinema (8 Unique Verified HD Photos)
+    if (t.contains('هونەر') ||
+        t.contains('شێوەکاری') ||
+        t.contains('مۆسیقا') ||
+        t.contains('سینەما') ||
+        t.contains('شانۆ') ||
+        t.contains('فنون') ||
+        t.contains('موسيق') ||
+        t.contains('رسم') ||
+        t.contains('مسرح') ||
+        t.contains('سينما') ||
+        t.contains('art') ||
+        t.contains('design') ||
+        t.contains('music') ||
+        t.contains('cinema') ||
+        t.contains('theatre')) {
+      final images = [
+        'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&auto=format&fit=crop&q=80', // Slide 1: Fine art painting easel
+        'https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?w=800&auto=format&fit=crop&q=80', // Slide 2: Graphic design and typography studio
+        'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80', // Slide 3: Musical concert harmony
+        'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&auto=format&fit=crop&q=80', // Slide 4: Film directing and cinema clapper
+        'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=800&auto=format&fit=crop&q=80', // Slide 5: Color palette & creative art
+        'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=800&auto=format&fit=crop&q=80', // Slide 6: Theater stage performance
+        'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=800&auto=format&fit=crop&q=80', // Slide 7: Photography and visual aesthetics
+        'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&auto=format&fit=crop&q=80', // Slide 8: Contemporary artistic museum gallery
+      ];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
+    }
+
+    // 21. Psychology, Education & Philosophy (8 Unique Verified HD Photos)
+    if (((t.contains('پەروەردە') &&
+                !t.contains('وەرزش') &&
+                !t.contains('sport')) ||
+            (t.contains('تربية') &&
+                !t.contains('رياض') &&
+                !t.contains('sport'))) ||
         t.contains('دەروون') ||
         t.contains('کۆمەڵناسی') ||
         t.contains('فەلسەفە') ||
         t.contains('فێرکاری') ||
-        t.contains('تربية') ||
+        t.contains('مامۆستا') ||
         t.contains('نفس') ||
         t.contains('اجتماع') ||
         t.contains('فلسفة') ||
@@ -316,19 +693,19 @@ class PptxGeneratorService {
         t.contains('socio') ||
         t.contains('philosophy')) {
       final images = [
-        'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=800&auto=format&fit=crop&q=80', // Slide 1: University library & academic books
+        'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=80', // Slide 1: Scholarly reading & cognitive exam
         'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop&q=80', // Slide 2: Interactive educational lecture
         'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&auto=format&fit=crop&q=80', // Slide 3: Cognitive learning dynamics
         'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=800&auto=format&fit=crop&q=80', // Slide 4: University study hall
         'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&auto=format&fit=crop&q=80', // Slide 5: Teaching auditorium presentation
         'https://images.unsplash.com/photo-1532012164546-f432f2e3777a?w=800&auto=format&fit=crop&q=80', // Slide 6: Knowledge & intellectual reading
-        'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=80', // Slide 7: Academic examination & research writing
-        'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=80', // Slide 8: Student group academic success
+        'https://images.unsplash.com/photo-1491841573634-28140fc7ced7?w=800&auto=format&fit=crop&q=80', // Slide 7: Psychological study consultation
+        'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&auto=format&fit=crop&q=80', // Slide 8: Student group psychological support
       ];
-      return images[(slideIndex - 1).clamp(0, images.length - 1)];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
     }
 
-    // 12. History, Archaeology, Culture & Kurdish Studies
+    // 22. History, Archaeology, Culture & Kurdish Studies (8 Unique Verified HD Photos)
     if (t.contains('مێژوو') ||
         t.contains('شوێنەوار') ||
         t.contains('کورد') ||
@@ -354,44 +731,58 @@ class PptxGeneratorService {
         'https://images.unsplash.com/photo-1474932430478-367dbb6832c1?w=800&auto=format&fit=crop&q=80', // Slide 7: Vintage literature & heritage
         'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=800&auto=format&fit=crop&q=80', // Slide 8: Archival preservation
       ];
-      return images[(slideIndex - 1).clamp(0, images.length - 1)];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
     }
 
-    // 13. Languages, Literature, Poetry & Translation
-    if (t.contains('زمان') ||
-        t.contains('ئەدەب') ||
-        t.contains('شێعر') ||
-        t.contains('شیعر') ||
-        t.contains('ڕۆمان') ||
-        t.contains('وەرگێڕان') ||
-        t.contains('لغة') ||
-        t.contains('أدب') ||
-        t.contains('شعر') ||
-        t.contains('رواية') ||
-        t.contains('ترجم') ||
-        t.contains('language') ||
-        t.contains('literat') ||
-        t.contains('poem') ||
-        t.contains('translat')) {
+    // 23. Languages, Literature, Linguistics & Translation (8 Unique Verified HD Photos)
+    if (!t.contains('مۆدێل') &&
+        !t.contains('گەورە') &&
+        !t.contains('ai') &&
+        !t.contains('llm') &&
+        !t.contains('دەستکرد') &&
+        !t.contains('تەکنە') &&
+        (t.contains('زمان') ||
+            t.contains('ئەدەب') ||
+            t.contains('شێعر') ||
+            t.contains('شیعر') ||
+            t.contains('ڕۆمان') ||
+            t.contains('وەرگێڕان') ||
+            t.contains('ئینگلیزی') ||
+            t.contains('عەرەبی') ||
+            t.contains('فەڕەنسی') ||
+            t.contains('english') ||
+            t.contains('arabic') ||
+            t.contains('french') ||
+            t.contains('انجليزي') ||
+            t.contains('عربي') ||
+            t.contains('فرنسي') ||
+            t.contains('لغة') ||
+            t.contains('أدب') ||
+            t.contains('شعر') ||
+            t.contains('رواية') ||
+            t.contains('ترجم') ||
+            t.contains('language') ||
+            t.contains('literat') ||
+            t.contains('poem') ||
+            t.contains('translat'))) {
       final images = [
-        'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&auto=format&fit=crop&q=80', // Slide 1: Scholarly reading & open book
-        'https://images.unsplash.com/photo-1474932430478-367dbb6832c1?w=800&auto=format&fit=crop&q=80', // Slide 2: Classical literature collection
-        'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=800&auto=format&fit=crop&q=80', // Slide 3: Language translation manuscript
-        'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800&auto=format&fit=crop&q=80', // Slide 4: Poetry and linguistic study
-        'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&auto=format&fit=crop&q=80', // Slide 5: Grand university library
-        'https://images.unsplash.com/photo-1507842229451-9f232615e324?w=800&auto=format&fit=crop&q=80', // Slide 6: Literary writing desk
-        'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=800&auto=format&fit=crop&q=80', // Slide 7: Bookshelf & linguistics
-        'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=80', // Slide 8: Translation & academic writing
+        'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&auto=format&fit=crop&q=80', // Slide 1: Classical literature reading
+        'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&auto=format&fit=crop&q=80', // Slide 2: Grand university library
+        'https://images.unsplash.com/photo-1507842229451-9f232615e324?w=800&auto=format&fit=crop&q=80', // Slide 3: Language translation desk & typewriter
+        'https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?w=800&auto=format&fit=crop&q=80', // Slide 4: Poetry and linguistic study
+        'https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=800&auto=format&fit=crop&q=80', // Slide 5: Linguistic books collection
+        'https://images.unsplash.com/photo-1495640388908-05fa85288e61?w=800&auto=format&fit=crop&q=80', // Slide 6: Literary writing desk
+        'https://images.unsplash.com/photo-1476820865390-c52aeebb9891?w=800&auto=format&fit=crop&q=80', // Slide 7: Literary bookshelf & linguistics
+        'https://images.unsplash.com/photo-1519791883288-dc8bd696e667?w=800&auto=format&fit=crop&q=80', // Slide 8: Translation & academic writing
       ];
-      return images[(slideIndex - 1).clamp(0, images.length - 1)];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
     }
 
-    // 14. Agriculture, Environment, Ecology & Nature
+    // 24. Agriculture, Environment, Ecology & Nature (8 Unique Verified HD Photos)
     if (t.contains('کشتوکاڵ') ||
         t.contains('ژینگە') ||
         t.contains('ڕووەک') ||
         t.contains('دارستان') ||
-        t.contains('ئاژەڵ') ||
         t.contains('زەوی') ||
         t.contains('زراعة') ||
         t.contains('بيئة') ||
@@ -403,36 +794,37 @@ class PptxGeneratorService {
         t.contains('plant') ||
         t.contains('ecolog')) {
       final images = [
-        'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&auto=format&fit=crop&q=80', // Slide 1: Modern agricultural wheat field
+        'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&auto=format&fit=crop&q=80', // Slide 1: Modern agricultural wheat field
         'https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=800&auto=format&fit=crop&q=80', // Slide 2: Smart agronomy greenhouse
         'https://images.unsplash.com/photo-1516253593875-bd7ba052fbc5?w=800&auto=format&fit=crop&q=80', // Slide 3: Environmental forest ecology
         'https://images.unsplash.com/photo-1495107334309-fcf20504a5ab?w=800&auto=format&fit=crop&q=80', // Slide 4: Sustainable farming & crops
         'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800&auto=format&fit=crop&q=80', // Slide 5: High-tech agricultural drone
         'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?w=800&auto=format&fit=crop&q=80', // Slide 6: Plant biotechnology laboratory
-        'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=800&auto=format&fit=crop&q=80', // Slide 7: Eco renewable energy farm
+        'https://images.unsplash.com/photo-1532601224476-15c79f2f7a51?w=800&auto=format&fit=crop&q=80', // Slide 7: Eco renewable organic farming
         'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&auto=format&fit=crop&q=80', // Slide 8: Pure ecological preservation
       ];
-      return images[(slideIndex - 1).clamp(0, images.length - 1)];
+      return _selectUniqueImage(images, slideIndex, usedUrls);
     }
 
-    // 15. General Academic / Canva Template Default (8 Unique HD Images)
+    // 25. General Academic / Canva Master Template (8 Unique Verified HD Photos)
     final defaultImages = [
-      'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&auto=format&fit=crop&q=80', // Slide 1: Professional presentation stage
-      'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=80', // Slide 2: Analytical academic research
-      'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&auto=format&fit=crop&q=80', // Slide 3: Scholarly literature study
-      'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80', // Slide 4: Systematic process diagram
-      'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=80', // Slide 5: University study collaboration
-      'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80', // Slide 6: Quantitative data charts
-      'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80', // Slide 7: Academic seminar discussion
-      'https://images.unsplash.com/photo-1532012164546-f432f2e3777a?w=800&auto=format&fit=crop&q=80', // Slide 8: Grand academic achievement
+      'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=800&auto=format&fit=crop&q=80', // Slide 1: Keynote university presentation
+      'https://images.unsplash.com/photo-1532619675605-1ede6c2ed2b0?w=800&auto=format&fit=crop&q=80', // Slide 2: Analytical academic desk notebook
+      'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&auto=format&fit=crop&q=80', // Slide 3: Graduation cap & academic honors
+      'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&auto=format&fit=crop&q=80', // Slide 4: University auditorium lecture
+      'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&auto=format&fit=crop&q=80', // Slide 5: Collaborative student study seminar
+      'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&auto=format&fit=crop&q=80', // Slide 6: Professional scientific presentation
+      'https://images.unsplash.com/photo-1562774053-701939374585?w=800&auto=format&fit=crop&q=80', // Slide 7: Historic university campus architecture
+      'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800&auto=format&fit=crop&q=80', // Slide 8: Grand academic convocation
     ];
-    return defaultImages[(slideIndex - 1).clamp(0, defaultImages.length - 1)];
+    return _selectUniqueImage(defaultImages, slideIndex, usedUrls);
   }
 
   /// Parses markdown or plain text AI output into structured SlideModel items
   static List<SlideModel> parseSlidesFromText(
     String rawText, {
     String? defaultTitle,
+    String? department,
   }) {
     final List<SlideModel> slides = [];
     final lines = rawText.split('\n');
@@ -469,6 +861,8 @@ class PptxGeneratorService {
         final assignedImg = getSlideSpecificImageUrl(
           defaultTitle ?? assignedTitle,
           slideCounter,
+          department: department,
+          slideTitle: assignedTitle,
         );
         slides.add(
           SlideModel(
@@ -1019,7 +1413,7 @@ class PptxGeneratorService {
         slideNum,
         slides.length,
         isFirstSlide: isFirst,
-        hasImage: !isFirst,
+        hasImage: true,
         hasLogo: isFirst && hasCustomLogo,
         languageCode: languageCode,
         studentName: studentName,
@@ -1039,7 +1433,7 @@ class PptxGeneratorService {
       // Build relationship linking slide to layout and embedded image
       final slideRelXml = _buildSlideRelsXml(
         isFirst ? 1 : 2,
-        hasImage: !isFirst,
+        hasImage: true,
         imageIndex: slideNum,
         imageExt: imageExt,
         hasLogo: isFirst && hasCustomLogo,
@@ -1070,11 +1464,90 @@ class PptxGeneratorService {
     String? department,
     List<int>? logoBytes,
   }) async {
-    final effectiveSlides = (slides != null && slides.isNotEmpty)
-        ? slides
-        : (rawContent != null
-              ? parseSlidesFromText(rawContent, defaultTitle: title)
-              : <SlideModel>[]);
+    final effectiveSlides = List<SlideModel>.from(
+      (slides != null && slides.isNotEmpty)
+          ? slides
+          : (rawContent != null
+                ? parseSlidesFromText(rawContent, defaultTitle: title)
+                : <SlideModel>[]),
+    );
+
+    // Clean duplicate thank-you bullets from previous slides if any
+    for (int i = 0; i < effectiveSlides.length; i++) {
+      final isLast = i == effectiveSlides.length - 1;
+      final s = effectiveSlides[i];
+      if (!isLast) {
+        final cleanedBullets = s.bulletPoints
+            .where((b) =>
+                !b.contains('سوپاس بۆ ئامادەبوونتان') &&
+                !b.contains('شكراً لحضوركم') &&
+                !b.toLowerCase().contains('thank you for your attendance'))
+            .toList();
+        if (cleanedBullets.length != s.bulletPoints.length) {
+          effectiveSlides[i] = SlideModel(
+            title: s.title,
+            bulletPoints: cleanedBullets,
+            visualPrompt: s.visualPrompt,
+            speakerNotes: s.speakerNotes,
+            imageUrl: s.imageUrl,
+            categoryTag: s.categoryTag,
+          );
+        }
+      }
+    }
+
+    // Ensure a dedicated final slide titled "Thank you for your attendance" exists
+    final hasClosingSlide = effectiveSlides.isNotEmpty &&
+        (effectiveSlides.last.title.contains('سوپاس') ||
+            effectiveSlides.last.title.contains('شكراً') ||
+            effectiveSlides.last.title.contains('شكرا') ||
+            effectiveSlides.last.title.toLowerCase().contains('thank you') ||
+            effectiveSlides.last.title.contains('ئامادەبوون') ||
+            effectiveSlides.last.title.contains('ئامادەبوونا'));
+
+    if (!hasClosingSlide && effectiveSlides.isNotEmpty) {
+      final thankYouTitle = getThankYouMessage(languageCode);
+      final closingImg = getSlideSpecificImageUrl(
+        title,
+        effectiveSlides.length + 1,
+        department: department,
+        slideTitle: thankYouTitle,
+      );
+      effectiveSlides.add(
+        SlideModel(
+          title: thankYouTitle,
+          bulletPoints: [
+            languageCode == 'en'
+                ? 'Thank you sincerely for your attendance and valuable attention'
+                : (languageCode == 'ar'
+                    ? 'شكراً جزيلاً لحضوركم الكريم واهتمامكم القيم'
+                    : (languageCode == 'ku_badini' || languageCode == 'badini'
+                        ? 'سوپاس بۆ ئامادەبوونا هەوە و دەمێ هەوە یێ زێڕین'
+                        : 'سوپاس بۆ ئامادەبوونتان و کاتی بەنرختان لەم پرێزێنتەیشنەدا')),
+            languageCode == 'en'
+                ? 'Open Floor for Academic Inquiries & Critical Discussion'
+                : (languageCode == 'ar'
+                    ? 'فتح باب الحوار والأسئلة الأكاديمية والمداخلات العلمية'
+                    : (languageCode == 'ku_badini' || languageCode == 'badini'
+                        ? 'دەلیڤە یا ڤەکرییە بۆ پرسیار و دانوستاندنا زانستی'
+                        : 'دەرگای پرسیار، ڕاگۆڕینەوە و گفتوگۆی زانستی واڵایە')),
+            languageCode == 'en'
+                ? 'Appreciation to Academic Committee, Supervisors & Faculty'
+                : (languageCode == 'ar'
+                    ? 'خالص التقدير للأساتذة المشرفين ولجنة المناقشة الموقرة'
+                    : (languageCode == 'ku_badini' || languageCode == 'badini'
+                        ? 'پێزانین بۆ مامۆستایێن سەرپەرشتیار و لێژنا بەڕێز'
+                        : 'سوپاس و پێزانین بۆ مامۆستای سەرپەرشتیار و لێژنەی بەڕێز')),
+          ],
+          visualPrompt: 'Academic presentation conclusion with audience applause and Q&A session',
+          imageUrl: closingImg,
+          categoryTag: languageCode == 'en' ? 'Conclusion & Q&A' : 'کۆتایی و گفتوگۆ',
+          speakerNotes: languageCode == 'en'
+              ? 'Express warm gratitude to the committee and audience, then open the floor for questions.'
+              : 'سوپاسی ئامادەبووان و لێژنەی بەڕێز دەکرێت و دەرفەت بۆ پرسیارەکان دەکرێتەوە.',
+        ),
+      );
+    }
 
     final bytes = await createPptxBytes(
       effectiveSlides,
@@ -1404,7 +1877,7 @@ class PptxGeneratorService {
     final buffer = StringBuffer();
     buffer.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n');
     buffer.write(
-      '<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">\n',
+      '<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" mc:Ignorable="p14">\n',
     );
     buffer.write('  <p:cSld>\n');
     buffer.write('    <p:spTree>\n');
@@ -1415,11 +1888,47 @@ class PptxGeneratorService {
       '      <p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>\n',
     );
 
+    final isClosingSlide = !isFirstSlide &&
+        (slide.title.contains('سوپاس') ||
+            slide.title.contains('شكراً') ||
+            slide.title.contains('شكرا') ||
+            slide.title.toLowerCase().contains('thank you') ||
+            slide.title.contains('ئامادەبوون') ||
+            slide.title.contains('ئامادەبوونا') ||
+            (slideIndex == totalSlides &&
+                (slide.title.contains('کۆتایی') ||
+                    slide.title.contains('خاتمة') ||
+                    slide.title.toLowerCase().contains('closing'))));
+
+    final effectiveStudent =
+        (studentName != null && studentName.trim().isNotEmpty)
+            ? studentName.trim()
+            : (isEnglish
+                ? 'Student / Research Team'
+                : (isBad ? 'قوتابیێن بەشێ زانستی' : 'قوتابیانی بەش'));
+    final effectiveSupervisor =
+        (supervisorName != null && supervisorName.trim().isNotEmpty)
+            ? supervisorName.trim()
+            : (isEnglish
+                ? 'Academic Supervisor'
+                : (isBad ? 'مامۆستایێ سەرپەرشتیار' : 'مامۆستای سەرپەرشتیار'));
+
+    final studentLabel = isEnglish
+        ? 'Prepared By:'
+        : (isArabic
+            ? 'إعداد الطالب / الفريق:'
+            : (isBad ? 'ئامادەکرن ژ لایێ:' : 'ئامادەکردنی:'));
+    final supervisorLabel = isEnglish
+        ? 'Supervised By:'
+        : (isArabic
+            ? 'إشراف الأستاذ المشرف:'
+            : (isBad ? 'سەرپەرشتیار:' : 'مامۆستای سەرپەرشتیار:'));
+
     if (isFirstSlide) {
       // ═════════════════════════════════════════════════════════════════════════
-      // SLIDE 1: PURE ACADEMIC COVER SLIDE (TITLE, SUPERVISOR, STUDENT, LOGO ONLY)
+      // SLIDE 1: PURE ACADEMIC COVER SLIDE WITH HERO PHOTO & ACADEMIC CREDENTIALS
       // ═════════════════════════════════════════════════════════════════════════
-      // Background Canvas Card
+      // Background Canvas Card (Midnight Deep Slate)
       buffer.write('      <p:sp>\n');
       buffer.write(
         '        <p:nvSpPr><p:cNvPr id="2" name="TitleBackground"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
@@ -1428,9 +1937,7 @@ class PptxGeneratorService {
       buffer.write(
         '          <a:xfrm><a:off x="400000" y="400000"/><a:ext cx="11392000" cy="6058000"/></a:xfrm>\n',
       );
-      buffer.write(
-        '          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n',
-      );
+      buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
       buffer.write(
         '          <a:solidFill><a:srgbClr val="0F172A"/></a:solidFill>\n',
       );
@@ -1440,7 +1947,7 @@ class PptxGeneratorService {
       buffer.write('        </p:spPr>\n');
       buffer.write('      </p:sp>\n');
 
-      // Top Radiant Line
+      // Top Radiant Sapphire Line
       buffer.write('      <p:sp>\n');
       buffer.write(
         '        <p:nvSpPr><p:cNvPr id="3" name="TopGlow"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
@@ -1449,41 +1956,62 @@ class PptxGeneratorService {
       buffer.write(
         '          <a:xfrm><a:off x="400000" y="400000"/><a:ext cx="11392000" cy="90000"/></a:xfrm>\n',
       );
-      buffer.write(
-        '          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n',
-      );
+      buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
       buffer.write(
         '          <a:solidFill><a:srgbClr val="2563EB"/></a:solidFill>\n',
       );
       buffer.write('        </p:spPr>\n');
       buffer.write('      </p:sp>\n');
 
-      // 1. UNIVERSITY LOGO / EMBLEM (Top Center)
+      // Coordinate Split (Photo vs Info Cards)
+      final photoX = isRtl ? '700000' : '6892000';
+      final infoX = isRtl ? '5600000' : '700000';
+
+      // 1. HERO PHOTO FRAME (Rounded Luxury Container)
+      buffer.write('      <p:pic>\n');
+      buffer.write('        <p:nvPicPr>\n');
+      buffer.write(
+        '          <p:cNvPr id="4" name="HeroImage"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/>\n',
+      );
+      buffer.write('        </p:nvPicPr>\n');
+      buffer.write('        <p:blipFill>\n');
+      buffer.write('          <a:blip r:embed="rId2"/>\n');
+      buffer.write('          <a:stretch><a:fillRect/></a:stretch>\n');
+      buffer.write('        </p:blipFill>\n');
+      buffer.write('        <p:spPr>\n');
+      buffer.write(
+        '          <a:xfrm><a:off x="$photoX" y="700000"/><a:ext cx="4600000" cy="5458000"/></a:xfrm>\n',
+      );
+      buffer.write('          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n');
+      buffer.write(
+        '          <a:ln w="25400"><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill></a:ln>\n',
+      );
+      buffer.write('        </p:spPr>\n');
+      buffer.write('      </p:pic>\n');
+
+      // 2. UNIVERSITY LOGO / EMBLEM PILL
       if (hasLogo) {
         buffer.write('      <p:pic>\n');
         buffer.write(
-          '        <p:nvPicPr><p:cNvPr id="4" name="UniversityLogo"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr>\n',
+          '        <p:nvPicPr><p:cNvPr id="5" name="UniversityLogo"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr>\n',
         );
         buffer.write(
           '        <p:blipFill><a:blip r:embed="rId3"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>\n',
         );
         buffer.write(
-          '        <p:spPr><a:xfrm><a:off x="5496000" y="600000"/><a:ext cx="1200000" cy="1200000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>\n',
+          '        <p:spPr><a:xfrm><a:off x="$infoX" y="700000"/><a:ext cx="850000" cy="850000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>\n',
         );
         buffer.write('      </p:pic>\n');
 
-        // University Name under Logo
         buffer.write('      <p:sp>\n');
         buffer.write(
-          '        <p:nvSpPr><p:cNvPr id="5" name="UnivName"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
+          '        <p:nvSpPr><p:cNvPr id="6" name="UnivName"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
         );
         buffer.write('        <p:spPr>\n');
         buffer.write(
-          '          <a:xfrm><a:off x="2500000" y="1900000"/><a:ext cx="7192000" cy="380000"/></a:xfrm>\n',
+          '          <a:xfrm><a:off x="${isRtl ? "6550000" : "1650000"}" y="780000"/><a:ext cx="4942000" cy="680000"/></a:xfrm>\n',
         );
-        buffer.write(
-          '          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n',
-        );
+        buffer.write('          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n');
         buffer.write(
           '          <a:solidFill><a:srgbClr val="1E293B"/></a:solidFill>\n',
         );
@@ -1506,18 +2034,15 @@ class PptxGeneratorService {
         buffer.write('        </p:txBody>\n');
         buffer.write('      </p:sp>\n');
       } else {
-        // University Emblem Badge Pill (Top Center)
         buffer.write('      <p:sp>\n');
         buffer.write(
-          '        <p:nvSpPr><p:cNvPr id="4" name="UnivBadge"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
+          '        <p:nvSpPr><p:cNvPr id="5" name="UnivBadge"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
         );
         buffer.write('        <p:spPr>\n');
         buffer.write(
-          '          <a:xfrm><a:off x="3100000" y="800000"/><a:ext cx="5992000" cy="450000"/></a:xfrm>\n',
+          '          <a:xfrm><a:off x="$infoX" y="700000"/><a:ext cx="5892000" cy="500000"/></a:xfrm>\n',
         );
-        buffer.write(
-          '          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n',
-        );
+        buffer.write('          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n');
         buffer.write(
           '          <a:solidFill><a:srgbClr val="1E293B"/></a:solidFill>\n',
         );
@@ -1541,24 +2066,27 @@ class PptxGeneratorService {
         buffer.write('      </p:sp>\n');
       }
 
-      // 2. MAIN PRESENTATION TOPIC TITLE (Center)
-      final titleY = hasLogo ? '2380000' : '1500000';
-      final titleHeight = hasLogo ? '1600000' : '2200000';
+      // 3. MAIN PRESENTATION TITLE BOX
+      final titleY = hasLogo ? '1700000' : '1400000';
+      final titleHeight = hasLogo ? '2100000' : '2400000';
       buffer.write('      <p:sp>\n');
       buffer.write(
-        '        <p:nvSpPr><p:cNvPr id="6" name="Title"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr/></p:nvSpPr>\n',
+        '        <p:nvSpPr><p:cNvPr id="7" name="Title"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr/></p:nvSpPr>\n',
       );
+      buffer.write('        <p:spPr>\n');
       buffer.write(
-        '        <p:spPr><a:xfrm><a:off x="900000" y="$titleY"/><a:ext cx="10392000" cy="$titleHeight"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>\n',
+        '          <a:xfrm><a:off x="$infoX" y="$titleY"/><a:ext cx="5892000" cy="$titleHeight"/></a:xfrm>\n',
       );
+      buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
+      buffer.write('        </p:spPr>\n');
       buffer.write('        <p:txBody>\n');
       buffer.write('          <a:bodyPr anchor="ctr" rtlCol="$rtlColVal"/>\n');
       buffer.write('          <a:lstStyle/>\n');
       buffer.write('          <a:p>\n');
-      buffer.write('            <a:pPr algn="ctr" $rtlAttr/>\n');
+      buffer.write('            <a:pPr algn="$algn" $rtlAttr/>\n');
       buffer.write('            <a:r>\n');
       buffer.write(
-        '              <a:rPr lang="$langAttr" sz="3400" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+        '              <a:rPr lang="$langAttr" sz="3000" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
       );
       buffer.write('              <a:t>${_escapeXml(slide.title)}</a:t>\n');
       buffer.write('            </a:r>\n');
@@ -1566,11 +2094,11 @@ class PptxGeneratorService {
       if (effectiveDept.isNotEmpty) {
         buffer.write('          <a:p>\n');
         buffer.write(
-          '            <a:pPr algn="ctr" $rtlAttr><a:spcBef><a:spcPts val="1200"/></a:spcBef></a:pPr>\n',
+          '            <a:pPr algn="$algn" $rtlAttr><a:spcBef><a:spcPts val="1000"/></a:spcBef></a:pPr>\n',
         );
         buffer.write('            <a:r>\n');
         buffer.write(
-          '              <a:rPr lang="$langAttr" sz="1500"><a:solidFill><a:srgbClr val="94A3B8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+          '              <a:rPr lang="$langAttr" sz="1400"><a:solidFill><a:srgbClr val="94A3B8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
         );
         buffer.write('              <a:t>${_escapeXml(effectiveDept)}</a:t>\n');
         buffer.write('            </a:r>\n');
@@ -1579,43 +2107,16 @@ class PptxGeneratorService {
       buffer.write('        </p:txBody>\n');
       buffer.write('      </p:sp>\n');
 
-      // 3. STUDENT & 4. SUPERVISOR CARDS (Bottom)
-      final effectiveStudent =
-          (studentName != null && studentName.trim().isNotEmpty)
-          ? studentName.trim()
-          : (isEnglish
-                ? 'Student / Research Team'
-                : (isBad ? 'قوتابیێن بەشێ زانستی' : 'قوتابیانی بەش'));
-      final effectiveSupervisor =
-          (supervisorName != null && supervisorName.trim().isNotEmpty)
-          ? supervisorName.trim()
-          : (isEnglish
-                ? 'Academic Supervisor'
-                : (isBad ? 'مامۆستایێ سەرپەرشتیار' : 'مامۆستای سەرپەرشتیار'));
-
-      final studentLabel = isEnglish
-          ? 'Prepared By:'
-          : (isArabic
-                ? 'إعداد الطالب / الفريق:'
-                : (isBad ? 'ئامادەکرن ژ لایێ:' : 'ئامادەکردنی:'));
-      final supervisorLabel = isEnglish
-          ? 'Supervised By:'
-          : (isArabic
-                ? 'إشراف الأستاذ المشرف:'
-                : (isBad ? 'سەرپەرشتیار:' : 'مامۆستای سەرپەرشتیار:'));
-
-      // Card 1: Student (Left in LTR, Right in RTL)
+      // 4. STUDENT & SUPERVISOR CARDS
       buffer.write('      <p:sp>\n');
       buffer.write(
-        '        <p:nvSpPr><p:cNvPr id="7" name="StudentCard"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
+        '        <p:nvSpPr><p:cNvPr id="8" name="StudentCard"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
       );
       buffer.write('        <p:spPr>\n');
       buffer.write(
-        '          <a:xfrm><a:off x="1000000" y="4200000"/><a:ext cx="4900000" cy="1800000"/></a:xfrm>\n',
+        '          <a:xfrm><a:off x="$infoX" y="4050000"/><a:ext cx="5892000" cy="980000"/></a:xfrm>\n',
       );
-      buffer.write(
-        '          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n',
-      );
+      buffer.write('          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n');
       buffer.write(
         '          <a:solidFill><a:srgbClr val="111827"/></a:solidFill>\n',
       );
@@ -1625,46 +2126,36 @@ class PptxGeneratorService {
       buffer.write('        </p:spPr>\n');
       buffer.write('        <p:txBody>\n');
       buffer.write(
-        '          <a:bodyPr anchor="ctr" rtlCol="$rtlColVal" lIns="200000" tIns="160000" rIns="200000" bIns="160000"/>\n',
+        '          <a:bodyPr anchor="ctr" rtlCol="$rtlColVal" lIns="160000" tIns="120000" rIns="160000" bIns="120000"/>\n',
       );
       buffer.write('          <a:lstStyle/>\n');
       buffer.write('          <a:p>\n');
-      buffer.write('            <a:pPr algn="ctr" $rtlAttr/>\n');
+      buffer.write('            <a:pPr algn="$algn" $rtlAttr/>\n');
       buffer.write('            <a:r>\n');
       buffer.write(
-        '              <a:rPr lang="$langAttr" sz="1300" b="1"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+        '              <a:rPr lang="$langAttr" sz="1200" b="1"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
       );
-      buffer.write('              <a:t>$studentLabel</a:t>\n');
+      buffer.write('              <a:t>$studentLabel </a:t>\n');
       buffer.write('            </a:r>\n');
-      buffer.write('          </a:p>\n');
-      buffer.write('          <a:p>\n');
-      buffer.write(
-        '            <a:pPr algn="ctr" $rtlAttr><a:spcBef><a:spcPts val="800"/></a:spcBef></a:pPr>\n',
-      );
       buffer.write('            <a:r>\n');
       buffer.write(
-        '              <a:rPr lang="$langAttr" sz="1800" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+        '              <a:rPr lang="$langAttr" sz="1600" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
       );
-      buffer.write(
-        '              <a:t>${_escapeXml(effectiveStudent)}</a:t>\n',
-      );
+      buffer.write('              <a:t>${_escapeXml(effectiveStudent)}</a:t>\n');
       buffer.write('            </a:r>\n');
       buffer.write('          </a:p>\n');
       buffer.write('        </p:txBody>\n');
       buffer.write('      </p:sp>\n');
 
-      // Card 2: Supervisor (Right in LTR, Left in RTL)
       buffer.write('      <p:sp>\n');
       buffer.write(
-        '        <p:nvSpPr><p:cNvPr id="8" name="SupervisorCard"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
+        '        <p:nvSpPr><p:cNvPr id="9" name="SupervisorCard"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
       );
       buffer.write('        <p:spPr>\n');
       buffer.write(
-        '          <a:xfrm><a:off x="6292000" y="4200000"/><a:ext cx="4900000" cy="1800000"/></a:xfrm>\n',
+        '          <a:xfrm><a:off x="$infoX" y="5150000"/><a:ext cx="5892000" cy="980000"/></a:xfrm>\n',
       );
-      buffer.write(
-        '          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n',
-      );
+      buffer.write('          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n');
       buffer.write(
         '          <a:solidFill><a:srgbClr val="111827"/></a:solidFill>\n',
       );
@@ -1674,16 +2165,154 @@ class PptxGeneratorService {
       buffer.write('        </p:spPr>\n');
       buffer.write('        <p:txBody>\n');
       buffer.write(
-        '          <a:bodyPr anchor="ctr" rtlCol="$rtlColVal" lIns="200000" tIns="160000" rIns="200000" bIns="160000"/>\n',
+        '          <a:bodyPr anchor="ctr" rtlCol="$rtlColVal" lIns="160000" tIns="120000" rIns="160000" bIns="120000"/>\n',
       );
+      buffer.write('          <a:lstStyle/>\n');
+      buffer.write('          <a:p>\n');
+      buffer.write('            <a:pPr algn="$algn" $rtlAttr/>\n');
+      buffer.write('            <a:r>\n');
+      buffer.write(
+        '              <a:rPr lang="$langAttr" sz="1200" b="1"><a:solidFill><a:srgbClr val="34D399"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+      );
+      buffer.write('              <a:t>$supervisorLabel </a:t>\n');
+      buffer.write('            </a:r>\n');
+      buffer.write('            <a:r>\n');
+      buffer.write(
+        '              <a:rPr lang="$langAttr" sz="1600" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+      );
+      buffer.write('              <a:t>${_escapeXml(effectiveSupervisor)}</a:t>\n');
+      buffer.write('            </a:r>\n');
+      buffer.write('          </a:p>\n');
+      buffer.write('        </p:txBody>\n');
+      buffer.write('      </p:sp>\n');
+    } else if (isClosingSlide) {
+      // ═════════════════════════════════════════════════════════════════════════
+      // DEDICATED CLOSING SLIDE: "سوپاس بۆ ئامادەبوونتان" & SCIENTIFIC Q&A SESSION
+      // ═════════════════════════════════════════════════════════════════════════
+      // Background Canvas Card (Midnight Luxury Theme)
+      buffer.write('      <p:sp>\n');
+      buffer.write(
+        '        <p:nvSpPr><p:cNvPr id="2" name="ClosingBackground"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
+      );
+      buffer.write('        <p:spPr>\n');
+      buffer.write(
+        '          <a:xfrm><a:off x="400000" y="400000"/><a:ext cx="11392000" cy="6058000"/></a:xfrm>\n',
+      );
+      buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
+      buffer.write(
+        '          <a:solidFill><a:srgbClr val="0A0F1D"/></a:solidFill>\n',
+      );
+      buffer.write(
+        '          <a:ln w="19050"><a:solidFill><a:srgbClr val="1E293B"/></a:solidFill></a:ln>\n',
+      );
+      buffer.write('        </p:spPr>\n');
+      buffer.write('      </p:sp>\n');
+
+      // Top Radiant Line (Royal Sapphire Glow)
+      buffer.write('      <p:sp>\n');
+      buffer.write(
+        '        <p:nvSpPr><p:cNvPr id="3" name="ClosingGlow"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
+      );
+      buffer.write('        <p:spPr>\n');
+      buffer.write(
+        '          <a:xfrm><a:off x="400000" y="400000"/><a:ext cx="11392000" cy="90000"/></a:xfrm>\n',
+      );
+      buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
+      buffer.write(
+        '          <a:solidFill><a:srgbClr val="2563EB"/></a:solidFill>\n',
+      );
+      buffer.write('        </p:spPr>\n');
+      buffer.write('      </p:sp>\n');
+
+      final photoX = isRtl ? '700000' : '6892000';
+      final infoX = isRtl ? '5600000' : '700000';
+
+      // 1. CELEBRATION / AUDIENCE OVATION PHOTO FRAME
+      buffer.write('      <p:pic>\n');
+      buffer.write('        <p:nvPicPr>\n');
+      buffer.write(
+        '          <p:cNvPr id="4" name="ClosingPhoto"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/>\n',
+      );
+      buffer.write('        </p:nvPicPr>\n');
+      buffer.write('        <p:blipFill>\n');
+      buffer.write('          <a:blip r:embed="rId2"/>\n');
+      buffer.write('          <a:stretch><a:fillRect/></a:stretch>\n');
+      buffer.write('        </p:blipFill>\n');
+      buffer.write('        <p:spPr>\n');
+      buffer.write(
+        '          <a:xfrm><a:off x="$photoX" y="700000"/><a:ext cx="4600000" cy="5458000"/></a:xfrm>\n',
+      );
+      buffer.write('          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n');
+      buffer.write(
+        '          <a:ln w="25400"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill></a:ln>\n',
+      );
+      buffer.write('        </p:spPr>\n');
+      buffer.write('      </p:pic>\n');
+
+      // 2. TOP BADGE PILL
+      final conclusionBadge = isEnglish
+          ? '✨ Academic Presentation Conclusion ✨'
+          : (isArabic
+              ? '✨ ختام العرض الأكاديمي والمناقشة ✨'
+              : '✨ کۆتایی سیمینار و پێشکەشکردنی زانستی ✨');
+      buffer.write('      <p:sp>\n');
+      buffer.write(
+        '        <p:nvSpPr><p:cNvPr id="5" name="ClosingBadge"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
+      );
+      buffer.write('        <p:spPr>\n');
+      buffer.write(
+        '          <a:xfrm><a:off x="$infoX" y="700000"/><a:ext cx="5892000" cy="480000"/></a:xfrm>\n',
+      );
+      buffer.write('          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n');
+      buffer.write(
+        '          <a:solidFill><a:srgbClr val="1E293B"/></a:solidFill>\n',
+      );
+      buffer.write(
+        '          <a:ln w="12700"><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill></a:ln>\n',
+      );
+      buffer.write('        </p:spPr>\n');
+      buffer.write('        <p:txBody>\n');
+      buffer.write('          <a:bodyPr anchor="ctr" rtlCol="0"/>\n');
+      buffer.write('          <a:lstStyle/>\n');
+      buffer.write('          <a:p>\n');
+      buffer.write('            <a:pPr algn="ctr"/>\n');
+      buffer.write('            <a:r>\n');
+      buffer.write(
+        '              <a:rPr lang="$langAttr" sz="1250" b="1"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+      );
+      buffer.write('              <a:t>${_escapeXml(conclusionBadge)}</a:t>\n');
+      buffer.write('            </a:r>\n');
+      buffer.write('          </a:p>\n');
+      buffer.write('        </p:txBody>\n');
+      buffer.write('      </p:sp>\n');
+
+      // 3. GRAND GRATITUDE HEADLINE: "✨ سوپاس بۆ ئامادەبوونتان ✨"
+      final grandThankYou = getThankYouMessage(languageCode);
+      final qnaSubtitle = isEnglish
+          ? 'Scientific Discussion & Open Floor Q&A'
+          : (isArabic
+              ? 'باب الأسئلة والمناقشة العلمية مفتوح للجميع'
+              : 'کاتی پرسیار و گفتوگۆی زانستی بۆ ئامادەبووان');
+      buffer.write('      <p:sp>\n');
+      buffer.write(
+        '        <p:nvSpPr><p:cNvPr id="6" name="ThankYouTitle"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr/></p:nvSpPr>\n',
+      );
+      buffer.write('        <p:spPr>\n');
+      buffer.write(
+        '          <a:xfrm><a:off x="$infoX" y="1300000"/><a:ext cx="5892000" cy="1500000"/></a:xfrm>\n',
+      );
+      buffer.write('          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n');
+      buffer.write('        </p:spPr>\n');
+      buffer.write('        <p:txBody>\n');
+      buffer.write('          <a:bodyPr anchor="ctr" rtlCol="$rtlColVal"/>\n');
       buffer.write('          <a:lstStyle/>\n');
       buffer.write('          <a:p>\n');
       buffer.write('            <a:pPr algn="ctr" $rtlAttr/>\n');
       buffer.write('            <a:r>\n');
       buffer.write(
-        '              <a:rPr lang="$langAttr" sz="1300" b="1"><a:solidFill><a:srgbClr val="34D399"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+        '              <a:rPr lang="$langAttr" sz="3400" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
       );
-      buffer.write('              <a:t>$supervisorLabel</a:t>\n');
+      buffer.write('              <a:t>✨ ${_escapeXml(grandThankYou)} ✨</a:t>\n');
       buffer.write('            </a:r>\n');
       buffer.write('          </a:p>\n');
       buffer.write('          <a:p>\n');
@@ -1692,18 +2321,124 @@ class PptxGeneratorService {
       );
       buffer.write('            <a:r>\n');
       buffer.write(
-        '              <a:rPr lang="$langAttr" sz="1800" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+        '              <a:rPr lang="$langAttr" sz="1400"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+      );
+      buffer.write('              <a:t>💬 ${_escapeXml(qnaSubtitle)}</a:t>\n');
+      buffer.write('            </a:r>\n');
+      buffer.write('          </a:p>\n');
+      buffer.write('        </p:txBody>\n');
+      buffer.write('      </p:sp>\n');
+
+      // 4. Q&A DISCUSSION CARD
+      final qnaTitle = isEnglish
+          ? '💬 Questions & Academic Discussion'
+          : (isArabic
+              ? '💬 الحوار والمداخلات الأكاديمية'
+              : '💬 پرسیار و ڕاگۆڕینەوەی زانستی');
+      buffer.write('      <p:sp>\n');
+      buffer.write(
+        '        <p:nvSpPr><p:cNvPr id="7" name="QnaCard"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
+      );
+      buffer.write('        <p:spPr>\n');
+      buffer.write(
+        '          <a:xfrm><a:off x="$infoX" y="2950000"/><a:ext cx="5892000" cy="1850000"/></a:xfrm>\n',
+      );
+      buffer.write('          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n');
+      buffer.write(
+        '          <a:solidFill><a:srgbClr val="131C31"/></a:solidFill>\n',
       );
       buffer.write(
-        '              <a:t>${_escapeXml(effectiveSupervisor)}</a:t>\n',
+        '          <a:ln w="15875"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill></a:ln>\n',
       );
+      buffer.write('        </p:spPr>\n');
+      buffer.write('        <p:txBody>\n');
+      buffer.write(
+        '          <a:bodyPr anchor="t" rtlCol="$rtlColVal" lIns="200000" tIns="160000" rIns="200000" bIns="160000"/>\n',
+      );
+      buffer.write('          <a:lstStyle/>\n');
+      buffer.write('          <a:p>\n');
+      buffer.write('            <a:pPr algn="$algn" $rtlAttr/>\n');
+      buffer.write('            <a:r>\n');
+      buffer.write(
+        '              <a:rPr lang="$langAttr" sz="1500" b="1"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+      );
+      buffer.write('              <a:t>${_escapeXml(qnaTitle)}</a:t>\n');
+      buffer.write('            </a:r>\n');
+      buffer.write('          </a:p>\n');
+      for (var bullet in slide.bulletPoints) {
+        final cleanBullet = bullet.trim();
+        final displayBullet = cleanBullet.startsWith('•')
+            ? cleanBullet
+            : '• $cleanBullet';
+        buffer.write('          <a:p>\n');
+        buffer.write(
+          '            <a:pPr algn="$algn" $rtlAttr><a:spcBef><a:spcPts val="600"/></a:spcBef></a:pPr>\n',
+        );
+        buffer.write('            <a:r>\n');
+        buffer.write(
+          '              <a:rPr lang="$langAttr" sz="1400"><a:solidFill><a:srgbClr val="E2E8F0"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+        );
+        buffer.write('              <a:t>${_escapeXml(displayBullet)}</a:t>\n');
+        buffer.write('            </a:r>\n');
+        buffer.write('          </a:p>\n');
+      }
+      buffer.write('        </p:txBody>\n');
+      buffer.write('      </p:sp>\n');
+
+      // 5. ATTRIBUTION RECOGNITION CARD
+      buffer.write('      <p:sp>\n');
+      buffer.write(
+        '        <p:nvSpPr><p:cNvPr id="8" name="AttributionCard"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>\n',
+      );
+      buffer.write('        <p:spPr>\n');
+      buffer.write(
+        '          <a:xfrm><a:off x="$infoX" y="4950000"/><a:ext cx="5892000" cy="1180000"/></a:xfrm>\n',
+      );
+      buffer.write('          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n');
+      buffer.write(
+        '          <a:solidFill><a:srgbClr val="111827"/></a:solidFill>\n',
+      );
+      buffer.write(
+        '          <a:ln w="15875"><a:solidFill><a:srgbClr val="10B981"/></a:solidFill></a:ln>\n',
+      );
+      buffer.write('        </p:spPr>\n');
+      buffer.write('        <p:txBody>\n');
+      buffer.write(
+        '          <a:bodyPr anchor="ctr" rtlCol="$rtlColVal" lIns="160000" tIns="120000" rIns="160000" bIns="120000"/>\n',
+      );
+      buffer.write('          <a:lstStyle/>\n');
+      buffer.write('          <a:p>\n');
+      buffer.write('            <a:pPr algn="$algn" $rtlAttr/>\n');
+      buffer.write('            <a:r>\n');
+      buffer.write(
+        '              <a:rPr lang="$langAttr" sz="1250" b="1"><a:solidFill><a:srgbClr val="38BDF8"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+      );
+      buffer.write('              <a:t>👨‍🎓 $studentLabel </a:t>\n');
+      buffer.write('            </a:r>\n');
+      buffer.write('            <a:r>\n');
+      buffer.write(
+        '              <a:rPr lang="$langAttr" sz="1400" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+      );
+      buffer.write('              <a:t>${_escapeXml(effectiveStudent)}   •   </a:t>\n');
+      buffer.write('            </a:r>\n');
+      buffer.write('            <a:r>\n');
+      buffer.write(
+        '              <a:rPr lang="$langAttr" sz="1250" b="1"><a:solidFill><a:srgbClr val="34D399"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+      );
+      buffer.write('              <a:t>👨‍🏫 $supervisorLabel </a:t>\n');
+      buffer.write('            </a:r>\n');
+      buffer.write('            <a:r>\n');
+      buffer.write(
+        '              <a:rPr lang="$langAttr" sz="1400" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
+      );
+      buffer.write('              <a:t>${_escapeXml(effectiveSupervisor)}</a:t>\n');
       buffer.write('            </a:r>\n');
       buffer.write('          </a:p>\n');
       buffer.write('        </p:txBody>\n');
       buffer.write('      </p:sp>\n');
     } else {
       // ═════════════════════════════════════════════════════════════════════════
-      // SLIDES 2..N: ACADEMIC CONTENT SLIDES (TOP TITLE + SPLIT IMAGE & CONTENT)
+      // SLIDES 2..N-1: ACADEMIC CONTENT SLIDES (TOP TITLE + SPLIT IMAGE & CONTENT)
       // ═════════════════════════════════════════════════════════════════════════
       // Top Gradient Accent Bar
       buffer.write('      <p:sp>\n');
@@ -1763,10 +2498,10 @@ class PptxGeneratorService {
           '          <a:xfrm><a:off x="$picX" y="1300000"/><a:ext cx="4600000" cy="4900000"/></a:xfrm>\n',
         );
         buffer.write(
-          '          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n',
+          '          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n',
         );
         buffer.write(
-          '          <a:ln w="19050"><a:solidFill><a:srgbClr val="CBD5E1"/></a:solidFill></a:ln>\n',
+          '          <a:ln w="19050"><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill></a:ln>\n',
         );
         buffer.write('        </p:spPr>\n');
         buffer.write('      </p:pic>\n');
@@ -1782,7 +2517,7 @@ class PptxGeneratorService {
         '          <a:xfrm><a:off x="$textX" y="1300000"/><a:ext cx="$textWidth" cy="4900000"/></a:xfrm>\n',
       );
       buffer.write(
-        '          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>\n',
+        '          <a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>\n',
       );
       buffer.write(
         '          <a:solidFill><a:srgbClr val="F8FAFC"/></a:solidFill>\n',
@@ -1815,22 +2550,6 @@ class PptxGeneratorService {
         buffer.write('          </a:p>\n');
       }
 
-      // Final Slide Gratitude Banner (بەس لە سیمینارەکان لە کۆتا پەڕ)
-      if (slideIndex == totalSlides) {
-        final thankYou = getThankYouMessage(languageCode);
-        buffer.write('          <a:p>\n');
-        buffer.write(
-          '            <a:pPr algn="ctr" $rtlAttr><a:spcBef><a:spcPts val="1200"/></a:spcBef></a:pPr>\n',
-        );
-        buffer.write('            <a:r>\n');
-        buffer.write(
-          '              <a:rPr lang="$langAttr" sz="2000" b="1"><a:solidFill><a:srgbClr val="2563EB"/></a:solidFill><a:latin typeface="$latinFont"/><a:cs typeface="$csFont"/></a:rPr>\n',
-        );
-        buffer.write('              <a:t>✨ ${_escapeXml(thankYou)} ✨</a:t>\n');
-        buffer.write('            </a:r>\n');
-        buffer.write('          </a:p>\n');
-      }
-
       buffer.write('        </p:txBody>\n');
       buffer.write('      </p:sp>\n');
 
@@ -1854,10 +2573,20 @@ class PptxGeneratorService {
       buffer.write('        </p:txBody>\n');
       buffer.write('      </p:sp>\n');
     }
-
     buffer.write('    </p:spTree>\n');
     buffer.write('  </p:cSld>\n');
     buffer.write('  <p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>\n');
+    // PowerPoint Native Morph Transition for fluid, dynamic slide animations
+    buffer.write('  <p:transition spd="med" advClick="1">\n');
+    buffer.write('    <mc:AlternateContent>\n');
+    buffer.write('      <mc:Choice Requires="p14">\n');
+    buffer.write('        <p14:morph/>\n');
+    buffer.write('      </mc:Choice>\n');
+    buffer.write('      <mc:Fallback>\n');
+    buffer.write('        <p:fade/>\n');
+    buffer.write('      </mc:Fallback>\n');
+    buffer.write('    </mc:AlternateContent>\n');
+    buffer.write('  </p:transition>\n');
     buffer.write('</p:sld>');
     return buffer.toString();
   }

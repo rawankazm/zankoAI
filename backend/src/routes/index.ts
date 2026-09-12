@@ -15,6 +15,7 @@ import { usageRoutes } from './usage.routes.js';
 import { subscriptionRoutes } from './subscription.routes.js';
 import { notificationRoutes } from './notification.routes.js';
 import { deviceRoutes } from './device.routes.js';
+import { reportsRouter, seminarsRouter } from '../modules/academic/reports_seminars/reports_seminars.routes.js';
 
 const apiRouter = Router();
 
@@ -58,6 +59,12 @@ apiRouter.use('/subscription', subscriptionRoutes);
 // 12. Production Push Notifications (/api/notifications) & Multi-Device Registration (/api/devices)
 apiRouter.use('/notifications', notificationRoutes);
 apiRouter.use('/devices', deviceRoutes);
+
+// 13. Reports & Seminars System (/api/reports, /api/seminars)
+apiRouter.use('/reports', reportsRouter);
+apiRouter.use('/v1/reports', reportsRouter);
+apiRouter.use('/seminars', seminarsRouter);
+apiRouter.use('/v1/seminars', seminarsRouter);
 
 export { apiRouter };
 

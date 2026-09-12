@@ -377,12 +377,12 @@ class ZankoAiService extends ChangeNotifier implements AiService {
               ],
             },
           ],
-          'generationConfig': {'maxOutputTokens': 800, 'temperature': 0.7},
+          'generationConfig': {'maxOutputTokens': 4096, 'temperature': 0.7},
         };
 
         request.add(utf8.encode(jsonEncode(bodyMap)));
         final response = await request.close().timeout(
-          const Duration(seconds: 25),
+          const Duration(seconds: 50),
         );
         final respStr = await response.transform(utf8.decoder).join();
 

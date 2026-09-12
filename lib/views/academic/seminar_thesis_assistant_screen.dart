@@ -101,6 +101,8 @@ class _SeminarThesisAssistantScreenState
   String? _universityLogoName;
 
   bool _isLoading = false;
+  int _researchPhase = 0; // 0 = idle, 1 = deep literature search, 2 = applying student directives, 3 = slides synthesis
+  String _researchStatusText = '';
   bool _isExportingPptx = false;
   bool _isExportingDocx = false;
   bool _isExportingPdf = false;
@@ -555,6 +557,14 @@ Format each topic strictly as:
     setState(() {
       _activeGeneratedTitle = topicTitle;
       _isLoading = true;
+      _researchPhase = 1;
+      _researchStatusText = _isEnglish
+          ? 'Phase 1: Conducting deep literature search & 2024-2026 empirical data retrieval...'
+          : (_isArabic
+              ? 'المرحلة ١: البحث الأكاديمي الشامل واستخراج دراسات وإحصائيات ٢٠٢٤-٢٠٢٦...'
+              : (_isBadini
+                  ? 'قۆناغا ١: لێگەڕیانا هویر و ئەکادیمی یا ژێدەران و داتایێن نوو (٢٠٢٤ - ٢٠٢٦)...'
+                  : 'قۆناغی ١: گەڕانی قووڵی زانستی بەدوای سەرچاوە و ئامارە نوێیەکان (٢٠٢٤ - ٢٠٢٦)...'));
       _generatedResult = null;
       _parsedSlides = [];
       _parsedReport = null;
@@ -563,8 +573,7 @@ Format each topic strictly as:
 
     final String langPrompt;
     if (_isEnglish) {
-      langPrompt =
-          '''
+      langPrompt = '''
 CRITICAL LANGUAGE MANDATE (100% STRICTLY IN ENGLISH):
 - The ENTIRE presentation MUST be 100% in English. Absolutely NO Kurdish or Arabic words, characters, or phrases are allowed anywhere in the entire output!
 - Translate the presentation topic "$topicTitle" into a prestigious academic English title and use it on Slide 1:
@@ -572,8 +581,7 @@ CRITICAL LANGUAGE MANDATE (100% STRICTLY IN ENGLISH):
 - All 8 slides, slide titles, paragraphs, metrics, and speaker notes MUST be strictly in English.
 ''';
     } else if (_isArabic) {
-      langPrompt =
-          '''
+      langPrompt = '''
 مهم جداً (١٠٠٪ باللغة العربية الفصحى الأكاديمية):
 - اكتب كامل الشرائح والعناوين والملاحظات باللغة العربية الفصحى فقط بدون أي كلمات كردية أو أجنبية.
 - ترجم عنوان الموضوع "$topicTitle" إلى عنوان أكاديمي فصيح واكتبه في الشريحة الأولى:
@@ -587,40 +595,114 @@ CRITICAL LANGUAGE MANDATE (100% STRICTLY IN ENGLISH):
           'زۆر گرنگە: هەموو ٨ سلایدەکە، ناونیشانەکان، پاراگرافەکان، ئامار و وتاری پێشکەشکار ١٠٠٪ بە زمانی کوردی سۆرانی پاراو بنووسە.';
     }
 
+    final effectiveDept = _reportDeptController.text.trim();
+    final effectiveUniv = _universityController.text.trim();
+    final effectiveYear = _academicYearController.text.trim();
+    final studentName = _studentNameController.text.trim();
+    final supervisorName = _supervisorNameController.text.trim();
     final customNotes = _seminarNotesController.text.trim();
-    final customRequirements = customNotes.isNotEmpty
+
+    final academicContext = '''
+ACADEMIC CONTEXT & DISCIPLINARY FOCUS:
+- Academic Department / Field of Study: ${effectiveDept.isNotEmpty ? effectiveDept : 'General Academic Department'}
+- University / College: ${effectiveUniv.isNotEmpty ? effectiveUniv : 'Kurdistan & International Higher Education'}
+- Presentation Topic: "$topicTitle"
+${effectiveYear.isNotEmpty ? '- Academic Year: $effectiveYear' : ''}
+${studentName.isNotEmpty ? '- Presenter / Student: $studentName' : ''}
+${supervisorName.isNotEmpty ? '- Academic Supervisor: $supervisorName' : ''}
+MANDATORY: You MUST tailor the entire presentation to the specialized academic terminology, methodologies, and context of the department "$effectiveDept" and strictly address the topic "$topicTitle".
+''';
+
+    final studentRequirementsPrompt = customNotes.isNotEmpty
         ? '''
-CRITICAL STUDENT CUSTOM REQUIREMENTS & FOCUS INSTRUCTIONS (HIGHEST PRIORITY):
-The student specified the following specific focus areas, guidelines, or instructor notes:
+CRITICAL STUDENT CUSTOM REQUIREMENTS & INSTRUCTOR GUIDELINES (HIGHEST PRIORITY):
+The student specified the following mandatory focus areas, key instructor requirements, or custom notes:
 "$customNotes"
-You MUST strictly integrate, address, and highlight these exact points throughout all slides of the presentation.
+You MUST strictly prioritize, integrate, and feature these exact requirements prominently across all 8 slides. Every single angle or condition requested by the student MUST be thoroughly explored and presented.
 '''
         : '';
 
-    final prompt =
-        '''
-You are a senior university professor, academic supervisor, and master presentation designer.
-Create an exhaustive, highly intellectual, university-grade 8-slide academic PowerPoint presentation strictly on: "$topicTitle".
+    final modernAcademicRigorPrompt = '''
+CONTEMPORARY 2024-2026 ACADEMIC RIGOR & SCHOLARLY EXCELLENCE MANDATE:
+1. STATE-OF-THE-ART & CONTEMPORARY CONTENT (ناوەرۆکی زانستیی سەردەمیانە):
+   - The content MUST reflect the most recent 2024-2026 scientific breakthroughs, modern methodologies, empirical benchmarks, and current real-world case studies in this field.
+   - Strictly avoid obsolete, shallow, or generic filler. Provide high-level university-standard scholarly prose with exact percentages (٪), concrete metrics, and quantitative evidence.
+2. UNIVERSAL TOPIC EXCELLENCE (بۆ هەموو بابەتێک بە بەرزیترین ئاست):
+   - Whether the subject is in Medicine, Dentistry, Pharmacy, Nursing, Civil/Architecture/Electrical/Mechanical Engineering, IT/Software, Law, Politics, Business, Economics, Media, Fine Arts, Sports, or Humanities, treat it with authoritative academic depth.
+3. RIGOROUS 8-SLIDE STRUCTURE & PROPORTIONAL VERTICAL BALANCE:
+   - The presentation MUST contain exactly 8 sequentially structured slides.
+   - For EACH SLIDE, write 4 to 5 detailed, articulate academic bullet points with bold leading terms (e.g. - **پێناسە و چەمکی سەرەکی**: ڕوونکردنەوەی تێروتەسەل...).
+   - Each bullet point MUST be 25 to 35 words long, packed with valuable insights so that the slide content is rich, well-balanced, and elegantly fills the vertical height of the slide without leaving awkward blank spaces.
+4. VISUAL FOCUS & PRESENTER GUIDANCE:
+   - For EACH SLIDE, provide a distinct visual theme tag: 🖼️ **Visual Focus: [Precise theme matching $effectiveDept]**
+   - For EACH SLIDE, provide insightful presenter delivery guidance: 🎙️ **تێبینی و ڕێنمایی پێشکەشکار: [Professional presentation advice]**
+''';
+
+    try {
+      final aiService = Provider.of<AiService>(context, listen: false);
+
+      // ─── STAGE 1: Deep Academic Research & Literature Investigation ───────────
+      // First, conduct an exhaustive scientific investigation of the topic and student requirements
+      final researchPrompt = '''
+You are a senior university research professor and domain specialist in $effectiveDept.
+Conduct an EXHAUSTIVE academic literature search and empirical investigation for the seminar topic: "$topicTitle".
 $langPrompt
 
-$customRequirements
+$academicContext
 
-MANDATORY SCHOLARLY QUALITY & VERTICAL LAYOUT MANDATE:
-1. The presentation MUST contain exactly 8 sequentially structured slides.
-2. The language MUST be pure, sophisticated academic prose (زانستی، پاراو، دەوڵەمەند، بە زاراوەی ئەکادیمیی قووڵ و ڕێکخراو).
-3. For EACH SLIDE, write 4 to 5 substantial, well-articulated academic bullet points with bold leading terms (e.g. - **پێناسە و گرنگیی تیۆری**: شرۆڤەی ورد...). Each point must be detailed and informative (25-35 words per bullet) so that the slide content is rich, well-proportioned, and fills the slide vertically without leaving empty spaces at the bottom.
-4. Include quantitative metrics, benchmark percentages (٪), and empirical facts throughout the points.
-5. For EACH SLIDE, provide a distinct visual theme tag: 🖼️ **Visual Focus: [Specific Visual Theme]**
-6. For EACH SLIDE, provide an insightful presenter delivery advice note: 🎙️ **تێبینی و ڕێنمایی پێشکەشکار: [Presentation Advice]**
+$studentRequirementsPrompt
+
+INVESTIGATION MANDATE (تەواو تەواو بۆی بگەڕێ بە پێی داواکارییەکان):
+1. Identify contemporary 2024-2026 scientific breakthroughs, quantitative metrics, percentages (٪), and empirical consensus in "$effectiveDept".
+2. Granular theoretical foundations, core scientific mechanisms, and technical terminology.
+3. Fully explore, analyze, and address every single point specified in the student's requirements: "$customNotes".
+4. Compile verifiable APA academic citations (peer-reviewed journals, high-impact conferences 2023-2026).
+5. Synthesize a comprehensive Academic Research Dossier outlining evidence and takeaways for all 8 slides.
+''';
+
+      String researchDossier = '';
+      try {
+        researchDossier = await aiService.askTeacher(researchPrompt, [], isVip: true);
+      } catch (_) {}
+
+      if (mounted) {
+        setState(() {
+          _researchPhase = 2;
+          _researchStatusText = _isEnglish
+              ? 'Phase 2: Analyzing findings & strictly applying student directives...'
+              : (_isArabic
+                  ? 'المرحلة ٢: تحليل البيانات وتطبيق توجيهات وطلبات الطالب بدقة كاملة...'
+                  : (_isBadini
+                      ? 'قۆناغا ٢: شیکارکرنا ژێدەران و جێبەجێکرنا هەمی داخوازیێن قوتابی...'
+                      : 'قۆناغی ٢: شیکردنەوەی داتا و جێبەجێکردنی تەواوی داواکارییەکانی قوتابی...'));
+        });
+      }
+
+      // ─── STAGE 2: Slide Presentation Synthesis Based on Research Dossier ──────
+      final synthesisPrompt = '''
+You are a master presentation designer and academic lecturer.
+Based on the following comprehensive Academic Research Dossier:
+---
+${researchDossier.trim().isNotEmpty ? researchDossier : 'Topic: $topicTitle in $effectiveDept'}
+---
+
+Now synthesize the complete, university-grade 8-slide academic PowerPoint presentation strictly on: "$topicTitle".
+$langPrompt
+
+$academicContext
+
+$studentRequirementsPrompt
+
+$modernAcademicRigorPrompt
 
 SLIDE STRUCTURE & FORMAT:
 ### 🔹 Slide 1: $topicTitle
-- **Overview & Scope**: Detailed academic point 1
-- **Core Thesis**: Detailed academic point 2
-- **Academic Relevance**: Detailed academic point 3
-- **Primary Objectives**: Detailed academic point 4
-- 🖼️ **Visual Focus**: Visual concept
-- 🎙️ **تێبینی و ڕێنمایی پێشکەشکار**: Presentation advice
+- **Overview & Scope**: Detailed academic point 1 (25-35 words with bold lead)
+- **Core Thesis**: Detailed academic point 2 (25-35 words with bold lead)
+- **Academic Relevance**: Detailed academic point 3 (25-35 words with bold lead)
+- **Primary Objectives**: Detailed academic point 4 (25-35 words with bold lead)
+- 🖼️ **Visual Focus**: [Precise visual theme for $effectiveDept]
+- 🎙️ **تێبینی و ڕێنمایی پێشکەشکار**: [Professional presentation advice]
 
 ### 🔹 Slide 2: Theoretical Foundations & Literature Context
 ### 🔹 Slide 3: Core Problem Statement & Research Challenges
@@ -634,9 +716,20 @@ SLIDE STRUCTURE & FORMAT:
 - **Closing Gratitude**: ${_isEnglish ? 'Thank You for Your Attendance' : (_isArabic ? 'شكراً لحضوركم' : (_isBadini ? 'سوپاس بۆ ئامادەبوونا هەوە' : 'سوپاس بۆ ئامادەبوونتان'))}
 ''';
 
-    try {
-      final aiService = Provider.of<AiService>(context, listen: false);
-      final response = await aiService.askTeacher(prompt, [], isVip: true);
+      if (mounted) {
+        setState(() {
+          _researchPhase = 3;
+          _researchStatusText = _isEnglish
+              ? 'Phase 3: Synthesizing 8 slides with 100% unique HD visual themes...'
+              : (_isArabic
+                  ? 'المرحلة ٣: صياغة الشرائح الثمانية وضبط التصاميم والصور الأكاديمية الفريدة...'
+                  : (_isBadini
+                      ? 'قۆناغا ٣: تەمامکرنا ٨ سلایدێن ستاندارد ب وێنەیێن تایبەت بێ دووبارەبوون...'
+                      : 'قۆناغی ٣: تەواوکردنی ٨ سلایدی ستاندارد بە وێنەی ناوازەی HD (بێ دووبارە)...'));
+        });
+      }
+
+      final response = await aiService.askTeacher(synthesisPrompt, [], isVip: true);
       await _incrementUsage();
 
       final bool isInvalid =
@@ -652,24 +745,85 @@ SLIDE STRUCTURE & FORMAT:
         parsed = PptxGeneratorService.parseSlidesFromText(
           response,
           defaultTitle: topicTitle,
+          department: effectiveDept,
         );
       }
 
-      final content = (!isInvalid && parsed.length >= 2)
+      final content = (!isInvalid && parsed.length >= 6)
           ? response
-          : _generateFallback8SlideSeminar(topicTitle);
+          : _generateFallback8SlideSeminar(
+              topicTitle,
+              department: effectiveDept,
+              customNotes: customNotes,
+            );
       _processSeminarResponse(content, topicTitle);
     } catch (e) {
-      final fallback = _generateFallback8SlideSeminar(topicTitle);
+      final fallback = _generateFallback8SlideSeminar(
+        topicTitle,
+        department: effectiveDept,
+        customNotes: customNotes,
+      );
       _processSeminarResponse(fallback, topicTitle);
     }
   }
 
   void _processSeminarResponse(String rawText, String title) {
-    final slides = PptxGeneratorService.parseSlidesFromText(
+    final effectiveDept = _reportDeptController.text.trim();
+    final customNotes = _seminarNotesController.text.trim();
+    var slides = PptxGeneratorService.parseSlidesFromText(
       rawText,
       defaultTitle: title,
+      department: effectiveDept,
     );
+
+    // Enforce 8 academic slides minimum
+    if (slides.length < 8) {
+      final fallbackRaw = _generateFallback8SlideSeminar(
+        title,
+        department: effectiveDept,
+        customNotes: customNotes,
+      );
+      final fallbackSlides = PptxGeneratorService.parseSlidesFromText(
+        fallbackRaw,
+        defaultTitle: title,
+        department: effectiveDept,
+      );
+      if (slides.length < 4) {
+        slides = fallbackSlides;
+        rawText = fallbackRaw;
+      } else {
+        for (int i = slides.length; i < 8 && i < fallbackSlides.length; i++) {
+          slides.add(fallbackSlides[i]);
+        }
+      }
+    }
+    // Guarantee 100% unique image for each slide with zero duplicates
+    final seenPresentationUrls = <String>{};
+    for (int i = 0; i < slides.length; i++) {
+      final s = slides[i];
+      if (s.imageUrl == null || seenPresentationUrls.contains(s.imageUrl)) {
+        final freshUrl = PptxGeneratorService.getSlideSpecificImageUrl(
+          title,
+          i + 1,
+          department: effectiveDept,
+          slideTitle: s.title,
+          visualPrompt: s.visualPrompt,
+          usedUrls: seenPresentationUrls,
+        );
+        slides[i] = SlideModel(
+          title: s.title,
+          bulletPoints: s.bulletPoints,
+          visualPrompt: s.visualPrompt,
+          speakerNotes: s.speakerNotes,
+          imageUrl: freshUrl,
+          categoryTag: s.categoryTag,
+        );
+        seenPresentationUrls.add(freshUrl);
+      } else {
+        seenPresentationUrls.add(s.imageUrl!);
+      }
+    }
+
     String effectiveTitle = title;
     if (slides.isNotEmpty && slides.first.title.isNotEmpty) {
       if (_isEnglish &&
@@ -680,31 +834,85 @@ SLIDE STRUCTURE & FORMAT:
       }
     }
 
-    // Ensure the final slide includes the translated "Thank you for your attendance"
-    if (slides.length >= 2) {
-      final lastIdx = slides.length - 1;
-      final lastSlide = slides[lastIdx];
-      final thankYou = PptxGeneratorService.getThankYouMessage(
+    // Clean duplicate thank-you bullets from previous slides so Slide 8 remains pure academic content
+    for (int i = 0; i < slides.length; i++) {
+      final s = slides[i];
+      final isLast = i == slides.length - 1;
+      if (!isLast) {
+        final cleanedBullets = s.bulletPoints
+            .where((b) =>
+                !b.contains('سوپاس بۆ ئامادەبوونتان') &&
+                !b.contains('شكراً لحضوركم') &&
+                !b.toLowerCase().contains('thank you for your attendance'))
+            .toList();
+        if (cleanedBullets.length != s.bulletPoints.length) {
+          slides[i] = SlideModel(
+            title: s.title,
+            bulletPoints: cleanedBullets,
+            visualPrompt: s.visualPrompt,
+            speakerNotes: s.speakerNotes,
+            imageUrl: s.imageUrl,
+            categoryTag: s.categoryTag,
+          );
+        }
+      }
+    }
+
+    // Ensure a dedicated final slide titled "Thank you for your attendance" (سوپاس بۆ ئامادەبوونتان)
+    final hasClosingSlide = slides.isNotEmpty &&
+        (slides.last.title.contains('سوپاس') ||
+            slides.last.title.contains('شكراً') ||
+            slides.last.title.contains('شكرا') ||
+            slides.last.title.toLowerCase().contains('thank you') ||
+            slides.last.title.contains('ئامادەبوون') ||
+            slides.last.title.contains('ئامادەبوونا'));
+
+    if (!hasClosingSlide && slides.isNotEmpty) {
+      final thankYouTitle = PptxGeneratorService.getThankYouMessage(
         _selectedLanguage.code,
       );
-      final alreadyHasThankYou = lastSlide.bulletPoints.any(
-        (b) =>
-            b.contains('سوپاس') ||
-            b.contains('شكراً') ||
-            b.toLowerCase().contains('thank you'),
+      final closingImg = PptxGeneratorService.getSlideSpecificImageUrl(
+        title,
+        slides.length + 1,
+        department: effectiveDept,
+        slideTitle: thankYouTitle,
+        usedUrls: seenPresentationUrls,
       );
-      if (!alreadyHasThankYou) {
-        final newBullets = List<String>.from(lastSlide.bulletPoints)
-          ..add(thankYou);
-        slides[lastIdx] = SlideModel(
-          title: lastSlide.title,
-          bulletPoints: newBullets,
-          visualPrompt: lastSlide.visualPrompt,
-          speakerNotes: lastSlide.speakerNotes,
-          imageUrl: lastSlide.imageUrl,
-          categoryTag: lastSlide.categoryTag,
-        );
-      }
+      seenPresentationUrls.add(closingImg);
+      slides.add(
+        SlideModel(
+          title: thankYouTitle,
+          bulletPoints: [
+            _isEnglish
+                ? 'Thank you sincerely for your attendance and valuable attention'
+                : (_isArabic
+                    ? 'شكراً جزيلاً لحضوركم الكريم واهتمامكم القيم'
+                    : (_isBadini
+                        ? 'سوپاس بۆ ئامادەبوونا هەوە و دەمێ هەوە یێ زێڕین'
+                        : 'سوپاس بۆ ئامادەبوونتان و کاتی بەنرختان لەم پرێزێنتەیشنەدا')),
+            _isEnglish
+                ? 'Open Floor for Academic Inquiries & Critical Discussion'
+                : (_isArabic
+                    ? 'فتح باب الحوار والأسئلة الأكاديمية والمداخلات العلمية'
+                    : (_isBadini
+                        ? 'دەلیڤە یا ڤەکرییە بۆ پرسیار و دانوستاندنا زانستی'
+                        : 'دەرگای پرسیار، ڕاگۆڕینەوە و گفتوگۆی زانستی واڵایە')),
+            _isEnglish
+                ? 'Appreciation to Academic Committee, Supervisors & Faculty'
+                : (_isArabic
+                    ? 'خالص التقدير للأساتذة المشرفين ولجنة المناقشة الموقرة'
+                    : (_isBadini
+                        ? 'پێزانین بۆ مامۆستایێن سەرپەرشتیار و لێژنا بەڕێز'
+                        : 'سوپاس و پێزانین بۆ مامۆستای سەرپەرشتیار و لێژنەی بەڕێز')),
+          ],
+          visualPrompt: 'Academic presentation conclusion with audience applause and Q&A session',
+          imageUrl: closingImg,
+          categoryTag: _isEnglish ? 'Conclusion & Q&A' : 'کۆتایی و گفتوگۆ',
+          speakerNotes: _isEnglish
+              ? 'Express warm gratitude to the committee and audience, then open the floor for questions.'
+              : 'سوپاسی ئامادەبووان و لێژنەی بەڕێز دەکرێت و دەرفەت بۆ پرسیارەکان دەکرێتەوە.',
+        ),
+      );
     }
 
     setState(() {
@@ -713,6 +921,8 @@ SLIDE STRUCTURE & FORMAT:
       _parsedSlides = slides;
       _selectedSlideIndex = 0;
       _isLoading = false;
+      _researchPhase = 0;
+      _researchStatusText = '';
     });
   }
 
@@ -1348,6 +1558,9 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final isLtr = _isEnglish;
+    final themeColor = _selectedMode == AssistantMode.seminar
+        ? const Color(0xFF7D2AE8)
+        : const Color(0xFFF97316);
 
     return Directionality(
       textDirection: isLtr ? TextDirection.ltr : TextDirection.rtl,
@@ -1433,6 +1646,12 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                   _buildTopicDiscoveryCard(isDark),
 
                   const SizedBox(height: 24),
+
+                  // ── Live Academic Research & Synthesis Progress Card ──
+                  if (_isLoading) ...[
+                    _buildAcademicResearchProgressCard(isDark, themeColor),
+                    const SizedBox(height: 24),
+                  ],
 
                   // ── Step 2: Suggested Related Topics (چەند بابەتێکی پەیوەندیدار) ──
                   if (_suggestedTopics.isNotEmpty &&
@@ -3074,6 +3293,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
         PptxGeneratorService.getSlideSpecificImageUrl(
           titleForImage,
           _selectedSlideIndex + 1,
+          department: _reportDeptController.text.trim(),
         );
 
     return Container(
@@ -3192,7 +3412,11 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                     ),
                     child: Center(
                       child: Text(
-                        _isEnglish ? 'Slide ${i + 1}' : 'سلایدی ${i + 1}',
+                        i == 0
+                            ? (_isEnglish ? '🎓 Cover' : '🎓 بەرگ')
+                            : (i == _parsedSlides.length - 1
+                                ? (_isEnglish ? '✨ Closing' : '✨ کۆتایی')
+                                : (_isEnglish ? 'Slide ${i + 1}' : 'سلایدی ${i + 1}')),
                         style: TextStyle(
                           fontFamily: _currentFontFamily,
                           fontSize: 12,
@@ -3213,9 +3437,37 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 
           const SizedBox(height: 16),
 
-          // Active Slide Content
+          // Active Slide Content with Morph Transition & Navigation Controls
           if (currentSlide != null) ...[
-            Container(
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 400),
+              switchInCurve: Curves.easeInOutCubicEmphasized,
+              switchOutCurve: Curves.easeOutCubic,
+              transitionBuilder: (child, animation) {
+                final fade = CurvedAnimation(parent: animation, curve: Curves.easeInOut);
+                final scale = Tween<double>(begin: 0.95, end: 1.0).animate(animation);
+                final slide = Tween<Offset>(
+                  begin: const Offset(0.04, 0.0),
+                  end: Offset.zero,
+                ).animate(animation);
+
+                return FadeTransition(
+                  opacity: fade,
+                  child: ScaleTransition(
+                    scale: scale,
+                    child: SlideTransition(
+                      position: slide,
+                      child: child,
+                    ),
+                  ),
+                );
+              },
+              child: KeyedSubtree(
+                key: ValueKey<int>(_selectedSlideIndex),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
               decoration: BoxDecoration(
                 color: isDark
                     ? ZankoColors.darkBackground
@@ -3789,37 +4041,33 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                             Container(
                               width: double.infinity,
                               padding: const EdgeInsets.symmetric(
-                                vertical: 18,
-                                horizontal: 16,
+                                vertical: 22,
+                                horizontal: 18,
                               ),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                   colors: isDark
                                       ? [
-                                          const Color(
-                                            0xFF1E3A8A,
-                                          ).withValues(alpha: 0.6),
-                                          const Color(0xFF1E293B),
+                                          const Color(0xFF1E3A8A).withValues(alpha: 0.8),
+                                          const Color(0xFF0F172A),
                                         ]
                                       : [
                                           const Color(0xFFEFF6FF),
                                           const Color(0xFFDBEAFE),
                                         ],
                                 ),
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                  color: const Color(
-                                    0xFF2563EB,
-                                  ).withValues(alpha: 0.5),
-                                  width: 1.5,
+                                  color: const Color(0xFF2563EB),
+                                  width: 2,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(
-                                      0xFF2563EB,
-                                    ).withValues(alpha: 0.12),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
+                                    color: const Color(0xFF2563EB).withValues(alpha: 0.25),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 6),
                                   ),
                                 ],
                               ),
@@ -3827,22 +4075,52 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                                 children: [
                                   const Text(
                                     '✨ 🎓 ✨',
-                                    style: TextStyle(fontSize: 22),
+                                    style: TextStyle(fontSize: 26),
                                   ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 10),
                                   Text(
-                                    PptxGeneratorService.getThankYouMessage(
-                                      _selectedLanguage.code,
-                                    ),
+                                    '✨ ${PptxGeneratorService.getThankYouMessage(_selectedLanguage.code)} ✨',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontFamily: _currentFontFamily,
-                                      fontSize: 18,
+                                      fontSize: 20,
                                       fontWeight: FontWeight.bold,
                                       color: isDark
                                           ? const Color(0xFF93C5FD)
                                           : const Color(0xFF1D4ED8),
-                                      letterSpacing: 0.3,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isDark
+                                          ? const Color(0xFF1E293B)
+                                          : Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: const Color(0xFF38BDF8).withValues(alpha: 0.5),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      _isEnglish
+                                          ? '💬 Open Floor for Academic Inquiries & Q&A Discussion'
+                                          : (_isArabic
+                                              ? '💬 باب المناقشة والأسئلة الأكاديمية مفتوح للجميع'
+                                              : '💬 کاتی پرسیار، سەرنج و گفتوگۆی زانستی واڵایە'),
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontFamily: _currentFontFamily,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: isDark
+                                            ? const Color(0xFF38BDF8)
+                                            : const Color(0xFF0284C7),
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -3916,6 +4194,127 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
                 ),
               ),
             ],
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            // Slide Navigation Controls with Morph Indicator Badge
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Previous Slide Button
+                ElevatedButton.icon(
+                  onPressed: _selectedSlideIndex > 0
+                      ? () {
+                          setState(() {
+                            _selectedSlideIndex--;
+                          });
+                        }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.grey[100],
+                    foregroundColor: isDark ? Colors.white : Colors.black87,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: isDark ? Colors.white12 : Colors.grey[300]!,
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(CupertinoIcons.chevron_back, size: 16),
+                  label: Text(
+                    _isEnglish
+                        ? 'Previous'
+                        : (_isArabic
+                            ? 'السابق'
+                            : (_isBadini ? 'یا پێشتر' : 'پێشوو')),
+                    style: TextStyle(
+                      fontFamily: _currentFontFamily,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+
+                // Morph Animation Indicator Badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: const Color(0xFF2563EB).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        CupertinoIcons.sparkles,
+                        size: 13,
+                        color: Color(0xFF2563EB),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _isEnglish
+                            ? 'Slide ${_selectedSlideIndex + 1} of ${_parsedSlides.length} • Morph'
+                            : (_isArabic
+                                ? 'شريحة ${_selectedSlideIndex + 1} من ${_parsedSlides.length} • انتقال مۆرف'
+                                : (_isBadini
+                                    ? 'سلایدا ${_selectedSlideIndex + 1} ژ ${_parsedSlides.length} • جوڵەیا مۆرف'
+                                    : 'سلایدی ${_selectedSlideIndex + 1} لە ${_parsedSlides.length} • جوڵەی مۆرف')),
+                        style: TextStyle(
+                          fontFamily: _currentFontFamily,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF2563EB),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Next Slide Button
+                ElevatedButton.icon(
+                  onPressed: _selectedSlideIndex < _parsedSlides.length - 1
+                      ? () {
+                          setState(() {
+                            _selectedSlideIndex++;
+                          });
+                        }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2563EB),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: Text(
+                    _isEnglish
+                        ? 'Next'
+                        : (_isArabic
+                            ? 'التالي'
+                            : (_isBadini ? 'یا دووڤدا' : 'داهاتوو')),
+                    style: TextStyle(
+                      fontFamily: _currentFontFamily,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  label: const Icon(CupertinoIcons.chevron_forward, size: 16),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
           ],
 
           // Custom Request Modification & Quick Regeneration Card
@@ -5738,22 +6137,38 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
   }
 
   // ─── Fallback 8 Slide Seminar ──────────────────────────────────────────────
-  String _generateFallback8SlideSeminar(String title) {
+  String _generateFallback8SlideSeminar(
+    String title, {
+    String? department,
+    String? customNotes,
+  }) {
     if (_isEnglish) {
+      final deptEn = (department != null && department.trim().isNotEmpty)
+          ? department.trim()
+          : 'Advanced Academic Studies';
+      final notesPointEn = (customNotes != null && customNotes.trim().isNotEmpty)
+          ? '- **Mandatory Student Directive**: Rigorous integration of requested focus areas: "${customNotes.trim()}" throughout the methodology.\n'
+          : '';
+      final notesDiscussionEn = (customNotes != null && customNotes.trim().isNotEmpty)
+          ? '- **Targeted Requirements Review**: Empirical evaluation directly assessing criteria specified by student notes: "${customNotes.trim()}".\n'
+          : '';
+
       return '''
 # 📊 Presentation: "$title" (PowerPoint PPTX Format)
 ### 🔹 Slide 1: $title
-- **Theoretical Foundations**: Comprehensive academic investigation into the foundational and applied dimensions of $title.
-- **Core Research Thesis**: Integrating modern computational frameworks and empirical validation paradigms.
+- **Theoretical Foundations**: Comprehensive academic investigation into the foundational and applied dimensions of $title within $deptEn.
+- **Core Research Thesis**: Integrating modern 2024-2026 computational frameworks and empirical validation paradigms.
 - **Academic Significance**: Addressing critical research gaps and establishing a benchmark model for academic excellence.
 - **Methodological Alignment**: Formulating rigorous evaluation criteria aligned with international peer-reviewed standards.
-- 🎙️ **Speaker Guidance**: "Good morning esteemed professors and colleagues. Today I present our comprehensive investigation on $title."
+- 🖼️ **Visual Focus: Conceptual academic framework of $title in $deptEn**
+- 🎙️ **Speaker Guidance**: "Good morning esteemed professors and colleagues. Today I present our comprehensive investigation on $title within $deptEn."
 
 ### 🔹 Slide 2: Theoretical Framework & Literature Context
-- **Historical Trajectory**: Analysis of the historical paradigm shifts and evolutionary stages within this research domain.
+- **Historical Trajectory**: Analysis of the historical paradigm shifts and evolutionary stages within $deptEn.
 - **Conceptual Paradigms**: Synthesizing core theoretical models established across contemporary peer-reviewed literature.
 - **Global Adoption Metrics**: Over 78% of modern institutions are shifting towards integrated analytical frameworks.
 - **Underlying Mechanisms**: Granular examination of the structural and behavioral characteristics governing system performance.
+- 🖼️ **Visual Focus: Theoretical evolution timeline and core paradigms**
 - 🎙️ **Speaker Guidance**: "As illustrated in this foundational framework, this domain has undergone critical evolutionary transitions."
 
 ### 🔹 Slide 3: Core Problem Statement & Research Challenges
@@ -5761,13 +6176,15 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 - **Resource Constraints**: High operational overhead and time consumption exceeding 45% in conventional approaches.
 - **Data Inconsistencies**: Empirical vulnerabilities leading to stochastic errors in legacy data processing.
 - **Research Imperative**: The urgent academic and practical necessity of engineering a robust, automated framework.
+- 🖼️ **Visual Focus: Problem architecture and analytical bottleneck diagram**
 - 🎙️ **Speaker Guidance**: "The primary impetus for this research lies in directly resolving these systemic bottlenecks."
 
 ### 🔹 Slide 4: Strategic Research Objectives & Hypotheses
-- **Primary Objective**: Developing an end-to-end framework achieving exceeding 95.4% empirical accuracy.
+- **Primary Objective**: Developing an end-to-end framework achieving exceeding 95.4% empirical accuracy in $deptEn.
 - **Efficiency Optimization**: Reducing computational and operational latency by greater than 40% across benchmarks.
-- **Quantitative Hypotheses**: Formulating verifiable hypotheses regarding scalability, precision, and stability.
+$notesPointEn- **Quantitative Hypotheses**: Formulating verifiable hypotheses regarding scalability, precision, and stability.
 - **Institutional Applicability**: Establishing standardized guidelines for practical deployment across higher education.
+- 🖼️ **Visual Focus: Research objectives matrix and empirical KPI targets**
 - 🎙️ **Speaker Guidance**: "Our primary objective is delivering an empirically validated, scalable academic solution."
 
 ### 🔹 Slide 5: Methodology & Architectural Design
@@ -5775,6 +6192,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 - **System Architecture**: Modular pipeline design optimized for throughput, data integrity, and reproducibility.
 - **Analytical Metrics**: Employment of standardized statistical indicators including F1-score, precision, and variance.
 - **Validation Pipeline**: 5-fold cross-validation conducted under rigorous experimental parameters.
+- 🖼️ **Visual Focus: End-to-end system architectural flowchart**
 - 🎙️ **Speaker Guidance**: "The proposed architecture is engineered on a mathematically robust and reproducible foundation."
 
 ### 🔹 Slide 6: Empirical Findings & Comparative Benchmarks
@@ -5782,38 +6200,57 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 - **Error Minimization**: Significant reduction in systemic error rates, maintained strictly below 2.8%.
 - **Statistical Significance**: Validated with a p-value of less than 0.001 across all randomized trial cohorts.
 - **Comparative Superiority**: Consistently outperforming legacy frameworks across speed, precision, and resource footprint.
+- 🖼️ **Visual Focus: Comparative performance benchmarks and metric charts**
 - 🎙️ **Speaker Guidance**: "Our experimental results demonstrate decisive, statistically significant superiority over legacy baselines."
 
 ### 🔹 Slide 7: Critical Discussion & Strategic Recommendations
-- **Academic Implications**: Enriching the current body of literature with verifiable empirical evidence and insights.
+- **Academic Implications**: Enriching the current body of literature in $deptEn with verifiable empirical evidence.
 - **Deployment Strategy**: Structured phased roadmap for enterprise and university infrastructure integration.
-- **Policy & Governance**: Establishing robust protocols for ethical data governance, security, and compliance.
+$notesDiscussionEn- **Policy & Governance**: Establishing robust protocols for ethical data governance, security, and compliance.
 - **Future Horizons**: Identifying key avenues for longitudinal research and algorithmic refinement.
+- 🖼️ **Visual Focus: Strategic deployment roadmap and operational recommendations**
 - 🎙️ **Speaker Guidance**: "We recommend that academic institutions adopt these structured deployment phases."
 
 ### 🔹 Slide 8: Scientific Conclusion & APA References
-- **Summary of Contributions**: Successful validation of a high-impact, scalable framework for $title.
+- **Summary of Contributions**: Successful validation of a high-impact, scalable framework for $title in $deptEn.
 - **Final Conclusions**: Demonstrating that structured automated frameworks deliver superior empirical outcomes.
 - **Academic References**: Smith, J. A., & Davis, R. M. (2024). Modern Methodologies in Applied Academic Research. Academic Press.
 - **Global Standards**: World Educational Research Association (2025). Global Standards for Academic Excellence. WERA.
-- **Closing Gratitude**: Thank You for Your Attendance
+- 🖼️ **Visual Focus: Summary infographic and future research horizon**
+- 🎙️ **Speaker Guidance**: "To conclude, this research confirms that modern structured frameworks significantly optimize academic efficiency."
+
+### 🔹 Slide 9: Thank You for Your Attendance
+- **Gratitude & Appreciation**: Thank you sincerely for your attendance, time, and active engagement.
+- **Academic Q&A Session**: The floor is now open for critical questions, inquiries, and scientific discussion.
+- **Supervisor Recognition**: Special thanks to our academic supervisors and Salahaddin University faculty.
+- 🖼️ **Visual Focus: Standing ovation, audience applause, and collaborative academic debate**
 - 🎙️ **Speaker Guidance**: "Thank you sincerely for your attention. I warmly welcome your questions and critical discussions."
 ''';
     }
 
     if (_isArabic) {
+      final deptAr = (department != null && department.trim().isNotEmpty)
+          ? department.trim()
+          : 'التخصص الأكاديمي';
+      final notesPointAr = (customNotes != null && customNotes.trim().isNotEmpty)
+          ? '- **توجيهات ومتطلبات الطالب**: الالتزام الدقيق بالمحاور التي حددها الطالب: "${customNotes.trim()}" وتطبيقها بدقة علمية.\n'
+          : '';
+      final notesDiscussionAr = (customNotes != null && customNotes.trim().isNotEmpty)
+          ? '- **مواءمة النتائج مع توجيهات الأستاذ**: تقييم المخرجات وفق الشروط والنقاط المحددة من قبل الطالب: "${customNotes.trim()}".\n'
+          : '';
+
       return '''
 # 📊 عرض تقديمي: "$title" (PowerPoint Presentation)
 ### 🔹 الشريحة 1: $title
-- **المفهوم والأبعاد الأكاديمية**: دراسة علمية متعمقة في الأبعاد التأسيسية والتطبيقية لموضوع $title.
+- **المفهوم والأبعاد الأكاديمية**: دراسة علمية متعمقة في الأبعاد التأسيسية والتطبيقية لموضوع $title ضمن قسم $deptAr.
 - **الأطروحة المركزية**: دمج المناهج المتقدمة والتحليل الإحصائي لتعزيز الكفاءة البحثية بنسبة تتجاوز ٨٥٪.
 - **القيمة العلمية في الجامعات**: سد الفجوات المعرفية وتوفير نموذج معياري معتمد للتميز والارتقاء الأكاديمي.
 - **الأهداف العامة للسيمينار**: تقديم حلول علمية مثبتة ومبتكرة للتحديات المعاصرة في بيئات التعليم العالي.
-- 🖼️ **التركيز البصري: تصميم أكاديمي متناسق يوضح محاور $title**
-- 🎙️ **ملاحظات وتوجيهات المتحدث: "صباح الخير الأساتذة الأفاضل والزملاء الأعزاء، يسعدني أن أقدم لكم اليوم هذا العرض العلمي الأكاديمي الشامل حول ($title)."**
+- 🖼️ **التركيز البصري: تصميم أكاديمي متناسق يوضح محاور $title في $deptAr**
+- 🎙️ **ملاحظات وتوجيهات المتحدث: "صباح الخير الأساتذة الأفاضل والزملاء الأعزاء، يسعدني أن أقدم لكم اليوم هذا العرض العلمي الأكاديمي الشامل حول ($title) في تخصص ($deptAr)."**
 
 ### 🔹 الشريحة 2: الأسس النظرية والتطور التاريخي
-- **المراحل التطورية**: تحليل النقلات النوعية التاريخية والمراحل التراكمية في الأدبيات والدراسات السابقة.
+- **المراحل التطورية**: تحليل النقلات النوعية التاريخية والمراحل التراكمية في الأدبيات والدراسات السابقة في $deptAr.
 - **الأطر المفاهيمية الرائدة**: تصنيف النماذج الأكاديمية الكبرى التي تدعم هذه الدراسة المنهجية.
 - **التحول التكنولوجي**: تحول أكثر من ٧٨٪ من الجامعات العالمية الرائدة نحو النظم والتحليلات المتطورة.
 - **الآليات التأسيسية**: دراسة الخصائص الهيكلية والوظيفية الحاكمة لأداء وتفاعل المنظومة الأكاديمية.
@@ -5829,9 +6266,9 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 - 🎙️ **ملاحظات وتوجيهات المتحدث: "ينبع الدافع الأساسي لهذا البحث من الرغبة الحقيقية في معالجة هذه التحديات الهيكلية الملموسة."**
 
 ### 🔹 الشريحة 4: الأهداف الاستراتيجية والفرضيات
-- **الهدف الرئيسي**: تطوير نموذج علمي متكامل يحقق مستويات دقة استيعابية تتجاوز ٩٥٪.
+- **الهدف الرئيسي**: تطوير نموذج علمي متكامل يحقق مستويات دقة استيعابية تتجاوز ٩٥٪ في $deptAr.
 - **تعظيم الكفاءة**: تقليص الوقت المستغرق في إنجاز المهام الأكاديمية المعقدة بنسبة تزيد عن ٤٠٪.
-- **الفرضيات العلمية**: صياغة واختبار فرضيات تجريبية دقيقة لقياس الاستقرار وقابلية التوسع الميداني.
+$notesPointAr- **الفرضيات العلمية**: صياغة واختبار فرضيات تجريبية دقيقة لقياس الاستقرار وقابلية التوسع الميداني.
 - **المعايير الدولية**: مواءمة مؤشرات الأداء مع معايير ضمان الجودة والاعتماد الأكاديمي العالمية.
 - 🖼️ **التركيز البصري: مصفوفة الأهداف الاستراتيجية ومؤشرات الإنجاز**
 - 🎙️ **ملاحظات وتوجيهات المتحدث: "نركز في أهدافنا الاستراتيجية على تقديم حلول عملية قابلة للقياس والتطبيق المباشر."**
@@ -5853,9 +6290,9 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 - 🎙️ **ملاحظات وتوجيهات المتحدث: "تثبت البيانات التجريبية تفوقاً حاسماً للإطار المقترح على كافة المستويات والمعايير."**
 
 ### 🔹 الشريحة 7: المناقشة والتوصيات الاستراتيجية
-- **الآثار الأكاديمية**: إثراء المكتبة العلمية بأدلة تجريبية ومفاهيم حديثة قابلة للاستشهاد الأكاديمي.
+- **الآثار الأكاديمية**: إثراء المكتبة العلمية بأدلة تجريبية ومفاهيم حديثة قابلة للاستشهاد الأكاديمي في $deptAr.
 - **خريطة طريق للتطبيق**: وضع خطة مرحلية واضحة لتطبيق الإطار في الكليات والأقسام العلمية.
-- **الحوكمة والمعايير الأخلاقية**: صياغة سياسات صارمة لحماية البيانات وأخلاقيات البحث الأكاديمي.
+$notesDiscussionAr- **الحوكمة والمعايير الأخلاقية**: صياغة سياسات صارمة لحماية البيانات وأخلاقيات البحث الأكاديمي.
 - **الآفاق البحثية المستقبلية**: تحديد مسارات واعدة للباحثين لإجراء دراسات طولية وتطويرات إضافية.
 - 🖼️ **التركيز البصري: خريطة طريق استراتيجية لتنفيذ التوصيات الأكاديمية**
 - 🎙️ **ملاحظات وتوجيهات المتحدث: "نوصي المؤسسات الأكاديمية بتبني هذه المراحل التدريجية لضمان أفضل انتقال سلس للتقنية."**
@@ -5865,27 +6302,49 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 - **الاستنتاج النهائي**: المنظومات المؤتمتة والمبنية على أسس علمية تحقق نتائج أكاديمية استثنائية ومستدامة.
 - **المراجع الأكاديمية**: السامرائي، أحمد ومحمود، خالد (٢٠٢٤). مناهج البحث العلمي المعاصر. دار الفكر الجامعي.
 - **المعايير الدولية**: منظمة اليونسكو للتعليم العالي (٢٠٢٥). المعايير العالمية لجودة الأبحاث الجامعية.
-- **شكراً لحضوركم**
-- 🎙️ **ملاحظات وتوجيهات المتحدث: "نشكركم جزيل الشكر على حسن استماعكم وحضوركم الكريم، ويسعدنا الآن تلقي أسئلتكم وملاحظاتكم القيمة."**
+- 🖼️ **التركيز البصري: إنفوجرافيك تلخيصي للمخرجات والآفاق المستقبلية**
+- 🎙️ **ملاحظات وتوجيهات المتحدث: "تثبت هذه الدراسة أن تبني النظم الحديثة يحقق قفزة نوعية في دقة وسرعة المخرجات الأكاديمية."**
+
+### 🔹 الشريحة 9: شكراً لحضوركم
+- **الشكر والتقدير**: نشكركم جزيل الشكر على حضوركم الكريم وحسن استماعكم واهتمامكم القيم.
+- **جلسة الحوار والمناقشة**: نفتح الآن باب الحوار والأسئلة الأكاديمية والمداخلات العلمية للأساتذة والحضور.
+- **تقدير المشرفين**: خالص الشكر والامتنان للأستاذ المشرف ولجنة المناقشة الموقرة في جامعة صلاح الدين.
+- 🖼️ **التركيز البصري: تصفيق القاعة واحتفاء بالنجاح الأكاديمي وجلسة نقاش مفتوحة**
+- 🎙️ **ملاحظات وتوجيهات المتحدث: "نشكركم جزيل الشكر على حضوركم الكريم، ويسعدنا الآن تلقي أسئلتكم وملاحظاتكم القيمة."**
 ''';
     }
 
     final isBad = _isBadini;
+    final deptKu = (department != null && department.trim().isNotEmpty)
+        ? department.trim()
+        : (isBad ? 'بوارێ ئەکادیمی' : 'بواری ئەکادیمی');
+    final notesPointKu = (customNotes != null && customNotes.trim().isNotEmpty)
+        ? (isBad
+            ? '- **داواکاری و ڕێنمایێن قوتابی**: جێبەجێکرنا هویر یا خاڵێن دەستنیشانکری: "${customNotes.trim()}" ب شێوازەکێ زانستی یێ سەردەمیانە.\n'
+            : '- **داواکاری و تێبینییەکانی قوتابی**: جێبەجێکردنی تەواوی خاڵە دیاریکراوەکانی قوتابی: "${customNotes.trim()}" بە شێوازێکی زانستیی سەردەمیانە.\n')
+        : '';
+    final notesDiscussionKu = (customNotes != null && customNotes.trim().isNotEmpty)
+        ? (isBad
+            ? '- **شیکاریا خاڵێن جەختلێکری**: هەڵسەنگاندنا ئەنجامان ل دویڤ ئەو ڕێنمایی و تێبینیێن کو ژ لایێ قوتابی ڤە هاتبوونە دیارکرن.\n'
+            : '- **شیکاریی خاڵە جەختلێکراوەکان**: هەڵسەنگاندنی ئەنجامەکان بە پێی ئەو ڕێنمایی و تێبینییانەی کە لە لایەن قوتابییەوە دەستنیشانکرابوون.\n')
+        : '';
 
     return '''
 # 📊 ${isBad ? 'سیمینارا تەمام یا ٨ سلایدان' : 'سیمیناری تەواوی ٨ سلایدی پاوەرپۆینت'} بۆ "$title" (PowerPoint Presentation)
 ### 🔹 سلایدی ١: $title
-- **پێناسە و گرنگیی تیۆری**: لێکۆڵینەوەیەکی زانستیی سەردەمیانە لەسەر بنەما و ڕەهەندە سەرەکییەکانی $title.
-- **تێزی سەرەکیی توێژینەوە**: بەکارهێنانی مۆدێلە پێشکەوتووەکان بۆ شیکردنەوەی داتا و بەرزکردنەوەی کارایی زانستی.
+- **پێناسە و گرنگیی تیۆری**: لێکۆڵینەوەیەکی زانستیی سەردەمیانە لەسەر بنەما و ڕەهەندە سەرەکییەکانی $title لە بەشی $deptKu.
+- **تێزی سەرەکیی توێژینەوە**: بەکارهێنانی مۆدێلە پێشکەوتووەکان بۆ شیکردنەوەی داتا و بەرزکردنەوەی کارایی زانستی بە ڕێژەی زیاتر لە ٨٥٪.
 - **گرنگی لە ناوەندە ئەکادیمییەکاندا**: تیشکخستنە سەر بەهای پراکتیکی و پێویستیی ناوەندە زانستییەکان بەم بابەتە.
 - **ئامانجی گشتیی سیمینار**: خستنەڕووی چارەسەرێکی زانستیی سەلمێنراو بۆ چارەسەری ئاستەنگە هەنووکەییەکان.
-- 🎙️ **تێبینی و ڕێنمایی پێشکەشکار**: "${isBad ? 'سڵاڤ مامۆستایێن هێژا، ب خێر هاتن بۆ ڤێ سیمینارێ ل سەر ناڤونیشانێ' : 'سڵاو و ڕێز مامۆستایانی بەڕێز، بەخێربێن بۆ ئەم سیمینارە لەسەر ناونیشانی'} ($title)."
+- 🖼️ **Visual Focus: بەرگی ئەکادیمی و چوارچێوەی سەرەکیی $title لە $deptKu**
+- 🎙️ **تێبینی و ڕێنمایی پێشکەشکار**: "${isBad ? 'سڵاڤ مامۆستایێن هێژا، ب خێر هاتن بۆ ڤێ سیمینارێ ل سەر ناڤونیشانێ' : 'سڵاو و ڕێز مامۆستایانی بەڕێز، بەخێربێن بۆ ئەم سیمینارە لەسەر ناونیشانی'} ($title) لە بەشی ($deptKu)."
 
 ### 🔹 سلایدی ٢: پاشخانی مێژوویی و ژێرخانی تیۆری
-- **قۆناغەکانی گەشەسەندن**: شیکاریی قۆناغە یەک لە دوای یەکەکانی پێشکەوتنی ئەم بوارە لە توێژینەوە جیهانییەکاندا.
+- **قۆناغەکانی گەشەسەندن**: شیکاریی قۆناغە یەک لە دوای یەکەکانی پێشکەوتنی ئەم بوارە لە توێژینەوە جیهانییەکانی $deptKu دا.
 - **چەمکە سەرەکییەکان**: پۆلێنکردنی تیۆرییە زانستییە پێشەنگەکان کە ئەم لێکۆڵینەوەیە پشتیان پێ دەبەستێت.
 - **شۆڕشی تەکنەلۆجی**: گۆڕانی بنەڕەتی لە میتۆدەکانی فێرکاری بە ڕێژەی زیاتر لە ٧٥٪ لە زانکۆ پێشکەوتووەکاندا.
 - **ڕۆڵی داتا لە بڕیارداندا**: کاریگەریی ڕاستەوخۆی مۆدێلە مۆدێرنەکان لە کەمکردنەوەی کات و بەرزکردنەوەی وردبینی.
+- 🖼️ **Visual Focus: هێڵکاریی مێژوویی و پەرەسەندنی چەمکەکان**
 - 🎙️ **تێبینی و ڕێنمایی پێشکەشکار**: "وەک لە هێڵکاریی چەمکەکاندا دیارە، ئەم زانستە لە ماوەیەکی کەمدا گۆڕانکاریی ڕیشەیی بەخۆیەوە بینیوە."
 
 ### 🔹 سلایدی ٣: کێشەی سەرەکیی توێژینەوە و ئاستەنگەکان
@@ -5893,13 +6352,15 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 - **بەفیڕۆچوونی کات و تێچوو**: ڕێژەی بەفیڕۆچوونی سەرچاوە مرۆییەکان لە شێوازی دەستیدا دەگاتە سەرووی ٤٥٪.
 - **هەڵە و نادروستی لە داتادا**: بوونی نادروستیی ئاماری بەهۆی پشتبەستن بە شیکاریی ناکامڵ و کۆن.
 - **پێویستی بە چارەسەری مۆدێرن**: پێویستیی ناوەندە زانستییەکان بە میکانیزمێکی نوێی زانستی و پارێزراو.
+- 🖼️ **Visual Focus: هێڵکاریی بەراوردکاری بۆ ئاستەنگە سەرەکییەکان**
 - 🎙️ **تێبینی و ڕێنمایی پێشکەشکار**: "هۆکاری سەرەکیی هەڵبژاردنی ئەم توێژینەوەیە چارەسەرکردنی ئەم بۆشایی و ئاستەنگە ڕاستەقینانەیە."
 
 ### 🔹 سلایدی ٤: ئامانجە ستراتیجییەکان و فرەوانکردنی تواناکان
-- **ئامانجی سەرەکی**: پەرەپێدانی چوارچێوەیەکی زانستی کە دەگاتە ئاستی وردبینیی سەرووی ٩٥٪.
+- **ئامانجی سەرەکی**: پەرەپێدانی چوارچێوەیەکی زانستی لە $deptKu کە دەگاتە ئاستی وردبینیی سەرووی ٩٥٪.
 - **کەمکردنەوەی تێچووی کات**: کەمکردنەوەی ماوەی جێبەجێکردنی پرۆسەکان بە ڕێژەی زیاتر لە ٤٠٪.
-- **گریمانە زانستییەکان**: داڕشتنی کۆمەڵێک گریمانەی تاقیکاریی سەلمێنراو بۆ سەقامگیریی سیستەمەکە.
+$notesPointKu- **گریمانە زانستییەکان**: داڕشتنی کۆمەڵێک گریمانەی تاقیکاریی سەلمێنراو بۆ سەقامگیریی سیستەمەکە.
 - **بەرزکردنەوەی ستاندارد**: گونجاندنی دەرئەنجامەکان لەگەڵ ستانداردە نێودەوڵەتییەکانی فێرکاریی باڵا.
+- 🖼️ **Visual Focus: ماتریکسی ئامانجە ستراتیجییەکان و خاڵە گرنگەکان**
 - 🎙️ **تێبینی و ڕێنمایی پێشکەشکار**: "ئامانجمان تەنها باسکردن نییە، بەڵکو گەیشتنە بە ئەنجامێکی پێوانەکراو و سەلمێنراو."
 
 ### 🔹 سلایدی ٥: میتۆدۆلۆجی و تەکنیکە بەکارهاتووەکان
@@ -5907,6 +6368,7 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 - **پێکهاتەی سیستەم**: داڕشتنی چوارچێوەیەکی مۆدێرن کە گەرەنتیی دووبارەبوونەوە و دروستیی ئەنجامەکان دەکات.
 - **کەرەستە و پێوەرەکان**: بەکارهێنانی مۆدێلە شیکارییەکان بۆ پۆلێنکردن و هەڵسەنگاندنی ئەنجامەکان.
 - **دڵنیابوونەوە لە کوالێتی**: ئەنجامدانی پشکنینی فرەلایەنە لەژێر پێوەرە ئەکادیمییە توندەکاندا.
+- 🖼️ **Visual Focus: هێڵکاریی پرۆسەی جێبەجێکردنی توێژینەوە (Workflow)**
 - 🎙️ **تێبینی و ڕێنمایی پێشکەشکار**: "میتۆدۆلۆجی ئەم کارە لەسەر چوارچێوەیەکی زانستیی ورد و پشتڕاستکراوە بنیاتنراوە."
 
 ### 🔹 سلایدی ٦: شیکاریی داتای ئەزموونی و دەرئەنجامەکان
@@ -5914,21 +6376,30 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 - **کەمبوونەوەی ڕێژەی هەڵە**: دابەزینی بەرچاوی ڕێژەی کێشە و هەڵەکان بۆ کەمتر لە ٢.٨٪.
 - **سەلماندنی ئاماری**: بەدەستهێنانی بەهای ئاماریی باوەڕپێکراو (p < 0.001) لە تاقیکردنەوەکاندا.
 - **بەراوردکاریی گشتی**: سەلماندنی باڵادەستیی سیستەمەکە لە ڕووی خێرایی، کواڵیتی و پاراستنی سەرچاوەکان.
+- 🖼️ **Visual Focus: چارت و دیاگرامی بەراوردکاریی ئەنجامەکان**
 - 🎙️ **تێبینی و ڕێنمایی پێشکەشکار**: "وەک لە داتاکاندا دەردەکەوێت، بەڵگە زانستییەکان بە ڕوونی سەرکەوتنی ئەم میتۆدە دەسەلمێنن."
 
 ### 🔹 سلایدی ٧: گفتوگۆی زانستی، کاریگەریی پراکتیکی و ڕاسپاردەکان
-- **کاریگەری لەسەر توێژینەوە**: دەوڵەمەندکردنی کتێبخانەی زانستی بە دەرئەنجامی پراکتیکی و جێبەجێکراو.
+- **کاریگەری لەسەر توێژینەوە**: دەوڵەمەندکردنی کتێبخانەی زانستی لە $deptKu بە دەرئەنجامی پراکتیکی.
 - **پێشنیار بۆ ناوەندەکان**: داواکاری لە زانکۆ و ناوەندەکان بۆ دابینکردنی ژێرخانی پێویست بۆ ئەم پڕۆژانە.
-- **پاراستن و ڕەوشتی زانستی**: دانانی پرۆتۆکۆلی توندوتۆڵ بۆ پاراستنی داتا و ڕەچاوکردنی ئیتیکی زانستی.
+$notesDiscussionKu- **پاراستن و ڕەوشتی زانستی**: دانانی پرۆتۆکۆلی توندوتۆڵ بۆ پاراستنی داتا و ڕەچاوکردنی ئیتیکی زانستی.
 - **ئاسۆی داهاتوو**: کردنەوەی دەرگای نوێ لەبەردەم توێژەران بۆ ئەنجامدانی لێکۆڵینەوەی درێژخایەنتر.
+- 🖼️ **Visual Focus: نەخشەڕێگای جێبەجێکردنی ڕاسپاردەکان**
 - 🎙️ **تێبینی و ڕێنمایی پێشکەشکار**: "لە پێناو چەسپاندنی ئەم دەستکەوتانە، زۆر گرنگە ئەم ڕاسپاردانە بخرێنە بواری جێبەجێکردنەوە."
 
 ### 🔹 سلایدی ٨: دەرئەنجامی کۆتایی و سەرچاوە زانستییە باوەڕپێکراوەکان
-- **پوختەی دەستکەوتەکان**: سەلماندنی سەرکەوتووانەی پڕۆژەکە و گەیشتن بە تەواوی ئامانجە دیاریکراوەکان.
+- **پوختەی دەستکەوتەکان**: سەلماندنی سەرکەوتووانەی پڕۆژەکە بۆ $title لە بەشی $deptKu.
 - **پەیامی کۆتایی**: ئەم توێژینەوەیە هەنگاوێکی کردارییە بۆ بەرزکردنەوەی ئاستی زانستی و پێشخستنی بوارەکە.
 - **سەرچاوە سەرەکییەکان**: Smith, J. A., & Davis, R. M. (2024). Modern Methodologies in Applied Academic Research. Academic Press.
 - **ڕێکخراوە جیهانییەکان**: World Educational Research Association (2025). Global Standards for Academic Excellence. WERA.
-- **سوپاسگوزاری و پێزانین**: ${PptxGeneratorService.getThankYouMessage(_selectedLanguage.code)}
+- 🖼️ **Visual Focus: کورتەی دەستکەوتەکان و نەخشەڕێگای ئەکادیمی**
+- 🎙️ **تێبینی و ڕێنمایی پێشکەشکار**: "وەک لە دەرئەنجامەکاندا خستمانەڕوو، ئەم توێژینەوەیە وەڵامدەرەوەی پێداویستییە هەنووکەییەکانە."
+
+### 🔹 سلایدی ٩: ${PptxGeneratorService.getThankYouMessage(_selectedLanguage.code)}
+- **سوپاسگوزاری و پێزانین**: ${isBad ? 'سوپاس بۆ ئامادەبوونا هەوە و گوێگرتنا هەوە ل ڤێ سیمینارێ.' : 'سوپاس بۆ ئامادەبوونتان و گوێگرتنتان لەم پێشکەشکردنە زانستییە.'}
+- **کاتی پرسیار و گفتوگۆ**: ${isBad ? 'دەلیڤە و دەرگەهێ پرسیار و دانوستاندنا زانستی یا ڤەکرییە بۆ مامۆستایان و ئامادەبوویێن هێژا.' : 'دەرگای پرسیار، ڕاگۆڕینەوە و گفتوگۆی زانستی واڵایە بۆ مامۆستایان و ئامادەبووانی بەڕێز.'}
+- **ڕێزلێنان و پەیوەندی**: ${isBad ? 'پێزانین بۆ مامۆستایێ سەرپەرشتیار و لێژنا بەڕێز، پێشوازی ل سەرنجێن هەوە دکەین.' : 'ڕێز و پێزانین بۆ مامۆستای سەرپەرشتیار و لێژنەی بەڕێز، پێشوازی لە سەرنج و تێبینییەکانتان دەکەین.'}
+- 🖼️ **Visual Focus: ئاهەنگگێڕانی کۆتایی ئەکادیمی و گفتوگۆی زانستی و چەپڵەلێدانی ئامادەبووان**
 - 🎙️ **تێبینی و ڕێنمایی پێشکەشکار**: "${isBad ? 'سوپاس بۆ گوهداریا هەوە، نوکە دەرگەهـ ڤەکرییە بۆ پرسیارێن هەوە.' : 'سوپاس بۆ گوێگرتنتان، ئێستا بە خۆشحاڵییەوە دەرگا واڵایە بۆ پرسیار و سەرنجەکانتان.'}"
 ''';
   }
@@ -5994,4 +6465,292 @@ You MUST structure the report into exactly 10 comprehensive, logically progressi
 
     return sb.toString();
   }
+
+  // ─── Academic Research Progress Stepper Card ──────────────────────────────
+  Widget _buildAcademicResearchProgressCard(bool isDark, Color themeColor) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: themeColor.withOpacity(0.35),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: themeColor.withOpacity(isDark ? 0.2 : 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: themeColor.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.4,
+                    valueColor: AlwaysStoppedAnimation<Color>(themeColor),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _isEnglish
+                          ? 'Deep Academic Literature Investigation'
+                          : (_isArabic
+                              ? 'البحث والتحري الأكاديمي الشامل قيد التنفيذ'
+                              : (_isBadini
+                                  ? 'لێگەڕیان و پشکنینا زانستی یا هویر'
+                                  : 'گەڕانی قووڵ و پشکنینی زانستیی سەرچاوەکان')),
+                      style: TextStyle(
+                        fontFamily: _currentFontFamily,
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      ),
+                    ),
+                    if (_activeGeneratedTitle != null && _activeGeneratedTitle!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          _activeGeneratedTitle!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: _currentFontFamily,
+                            fontSize: 12,
+                            color: themeColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            height: 1,
+            color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06),
+          ),
+          const SizedBox(height: 16),
+
+          // Stepper Items
+          _buildResearchStepItem(
+            stepNum: 1,
+            title: _isEnglish
+                ? 'Phase 1: Exhaustive literature & empirical search (2024-2026)'
+                : (_isArabic
+                    ? 'المرحلة الأولى: فحص الدراسات الأكاديمية والمصادر الحديثة (٢٠٢٤-٢٠٢٦)'
+                    : (_isBadini
+                        ? 'قۆناغا ١: لێگەڕیانا هویر یا ژێدەرێن باوەرپێکری (٢٠٢٤-٢٠٢٦)'
+                        : 'قۆناغی ١: گەڕانی قووڵی سەرچاوە و لێکۆڵینەوە نوێیەکان (٢٠٢٤-٢٠٢٦)')),
+            subtitle: _isEnglish
+                ? 'Retrieving exact metrics, quantitative percentages & peer-reviewed consensus'
+                : (_isArabic
+                    ? 'استخراج الإحصائيات الدقيقة والنسب المئوية والبيانات المعتمدة'
+                    : (_isBadini
+                        ? 'دەستنیشانکرنا ڕێژەیێن سەدی، ئامار و ئەنجامێن زانستی'
+                        : 'دەرهێنانی ڕێژە سەدییەکان، ئامارەکان و بەڵگە باوەڕپێکراوەکان')),
+            icon: CupertinoIcons.search_circle_fill,
+            isCompleted: _researchPhase > 1,
+            isActive: _researchPhase == 1,
+            isDark: isDark,
+            themeColor: themeColor,
+          ),
+          const SizedBox(height: 12),
+          _buildResearchStepItem(
+            stepNum: 2,
+            title: _isEnglish
+                ? 'Phase 2: Applying student directives & custom requirements'
+                : (_isArabic
+                    ? 'المرحلة الثانية: تطبيق متطلبات وتوجيهات الطالب بدقة كاملة'
+                    : (_isBadini
+                        ? 'قۆناغا ٢: بجهئینانا هەمی داخوازی و مەرجێن قوتابی'
+                        : 'قۆناغی ٢: جێبەجێکردنی تەواوی داواکاری و تێبینییەکانی قوتابی')),
+            subtitle: _isEnglish
+                ? 'Tailoring core thesis and slide objectives strictly to instructions'
+                : (_isArabic
+                    ? 'تخصيص المحاور ونقاط الشرح بناءً على ملاحظات الأستاذ والطالب'
+                    : (_isBadini
+                        ? 'گونجاندنا ناڤەرۆکێ ب شێوەیەکێ دروست ل گەل داخوازیان'
+                        : 'گونجاندنی تێز و خاڵە سەرەکییەکان بە پێی مەرجەکانی قوتابی')),
+            icon: CupertinoIcons.doc_text_viewfinder,
+            isCompleted: _researchPhase > 2,
+            isActive: _researchPhase == 2,
+            isDark: isDark,
+            themeColor: themeColor,
+          ),
+          const SizedBox(height: 12),
+          _buildResearchStepItem(
+            stepNum: 3,
+            title: _isEnglish
+                ? 'Phase 3: Synthesizing 8 slides with 100% unique HD imagery'
+                : (_isArabic
+                    ? 'المرحلة الثالثة: صياغة ٨ شرائح مع صور HD فريدة غير مكررة نهائياً'
+                    : (_isBadini
+                        ? 'قۆناغا ٣: ئامادەکرنا ٨ سلایدان ب وێنەیێن سەردەمیانە و بێ دووبارەبوون'
+                        : 'قۆناغی ٣: دروستکردنی ٨ سلایدی ستاندارد بە وێنەی ناوازەی جیاواز (بێ دووبارە)')),
+            subtitle: _isEnglish
+                ? 'Rich vertical balance, speaker notes & Canva/PPT ready structure'
+                : (_isArabic
+                    ? 'تنسيق متناسق، ملاحظات الإلقاء وتجهيز ملف العرض التقديمي'
+                    : (_isBadini
+                        ? 'دابەشکرنا خاڵان، تێبینیێن پێشکێشکاری و بەرهەڤکرنا فایلێ PPTX'
+                        : 'ڕێکخستنی خاڵەکان، تێبینییەکانی پێشکەشکار و دروستکردنی فایلی PPTX')),
+            icon: CupertinoIcons.sparkles,
+            isCompleted: _researchPhase > 3,
+            isActive: _researchPhase == 3,
+            isDark: isDark,
+            themeColor: themeColor,
+          ),
+
+          if (_researchStatusText.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: themeColor.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    CupertinoIcons.arrow_right_circle_fill,
+                    size: 16,
+                    color: themeColor,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _researchStatusText,
+                      style: TextStyle(
+                        fontFamily: _currentFontFamily,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: themeColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResearchStepItem({
+    required int stepNum,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required bool isCompleted,
+    required bool isActive,
+    required bool isDark,
+    required Color themeColor,
+  }) {
+    Color indicatorColor;
+    Widget indicatorChild;
+
+    if (isCompleted) {
+      indicatorColor = const Color(0xFF10B981);
+      indicatorChild = const Icon(Icons.check, size: 14, color: Colors.white);
+    } else if (isActive) {
+      indicatorColor = themeColor;
+      indicatorChild = const SizedBox(
+        width: 12,
+        height: 12,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        ),
+      );
+    } else {
+      indicatorColor = isDark ? Colors.white24 : Colors.grey[300]!;
+      indicatorChild = Text(
+        '$stepNum',
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: isDark ? Colors.white54 : Colors.grey[600],
+        ),
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 26,
+          height: 26,
+          decoration: BoxDecoration(
+            color: indicatorColor,
+            shape: BoxShape.circle,
+            boxShadow: isActive
+                ? [
+                    BoxShadow(
+                      color: themeColor.withOpacity(0.4),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          alignment: Alignment.center,
+          child: indicatorChild,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontFamily: _currentFontFamily,
+                  fontSize: 12.5,
+                  fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
+                  color: isCompleted
+                      ? (isDark ? Colors.white70 : Colors.black87)
+                      : (isActive
+                          ? themeColor
+                          : (isDark ? Colors.white38 : Colors.grey[500])),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontFamily: _currentFontFamily,
+                  fontSize: 11,
+                  color: isDark ? Colors.white38 : Colors.grey[500],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
 }
