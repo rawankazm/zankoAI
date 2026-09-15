@@ -8,6 +8,25 @@ import {
 } from './validators/chat.validator.js';
 import { z } from 'zod';
 
+export const solveImageSchema = z.object({
+  imageBase64: z.string().min(1),
+  mimeType: z.string().default('image/jpeg'),
+  prompt: z.string().optional(),
+});
+
+export const generateQuizSchema = z.object({
+  topic: z.string().min(1),
+  courseName: z.string().default(''),
+  questionCount: z.number().int().min(1).max(50).default(5),
+  difficulty: z.string().default('medium'),
+});
+
+export const generateFlashcardsSchema = z.object({
+  topic: z.string().min(1),
+  courseName: z.string().default(''),
+  cardCount: z.number().int().min(1).max(50).default(10),
+});
+
 export const chatHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const rawMessage = req.body.message ?? req.body.prompt;

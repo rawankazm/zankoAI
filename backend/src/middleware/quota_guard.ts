@@ -7,7 +7,7 @@ export const quotaGuard = (featureName: string = 'ai_chat') => {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
 
-    const { id: userId, isVip } = req.user;
+    const { id: userId, isVip } = req.user as any;
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
     const quotaKey = `quota:${featureName}:${userId}:${today}`;
 

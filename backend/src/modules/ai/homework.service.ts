@@ -4,7 +4,7 @@
 
 import { supabaseAdmin } from '../../config/supabase.js';
 import { logger } from '../../config/logger.js';
-import { BadRequestError, ApiError } from '../../utils/apiError.js';
+import { BadRequestError, AppError } from '../../utils/apiError.js';
 import {
   checkAbuseAndInjection,
   validateHomeworkImage,
@@ -89,15 +89,15 @@ export class HomeworkService {
       } else if (quotaResult) {
         usageInfo = quotaResult;
         if (quotaResult.allowed === false) {
-          throw new ApiError(
+          throw new AppError(
+            'Homework quota exceeded',
             429,
-            `بەشی ڕۆژانەی شیکارکردنی پرسیار (Homework) تەواو بووە (${quotaResult.current_usage}/${quotaResult.limit}). تکایە هەژمارەکەت نوێبکەرەوە.`,
             'QUOTA_EXCEEDED'
           );
         }
       }
     } catch (err: any) {
-      if (err instanceof ApiError) throw err;
+      if (err instanceof AppError) throw err;
       logger.warn('[HomeworkService] Non-blocking quota check error:', err);
     }
 

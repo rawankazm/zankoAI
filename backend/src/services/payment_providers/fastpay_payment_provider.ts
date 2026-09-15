@@ -95,7 +95,7 @@ export class FastPayPaymentProvider implements PaymentProvider {
     }
 
     // HMAC-SHA256 signature validation
-    const storePassword = env.FASTPAY_STORE_PASSWORD || 'zanko_fastpay_secret_2026';
+    const storePassword = env.FASTPAY_PASSWORD || 'zanko_fastpay_secret_2026';
     const computedSignature = crypto
       .createHmac('sha256', storePassword)
       .update(orderId + ';' + transactionId + ';' + (bodyObj.status || ''))

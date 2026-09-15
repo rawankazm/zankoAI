@@ -153,20 +153,20 @@ YOUR CORE PEDAGOGICAL INSTRUCTIONS:
         answer: cleanMathAndDollarSigns(String(parsed.answer || 'شیکار بە سەرکەوتوویی ئەنجامدرا.')),
         explanation: cleanMathAndDollarSigns(String(parsed.explanation || 'شیکاری ڕوونکراوە بۆ ئەم پرسیارە.')),
         stepByStepReasoning: steps.length > 0
-          ? steps.map((s) => ({
+          ? steps.map((s: any) => ({
               ...s,
               title: cleanMathAndDollarSigns(s.title),
               content: cleanMathAndDollarSigns(s.content),
             }))
           : this.getDefaultSteps(params),
         mistakesIdentified: Array.isArray(parsed.mistakesIdentified)
-          ? parsed.mistakesIdentified.map((m) => cleanMathAndDollarSigns(String(m)))
+          ? parsed.mistakesIdentified.map((m: any) => cleanMathAndDollarSigns(String(m)))
           : ['هەڵەی باو لە تێکەڵکردنی یاساکان یان یەکەکانی پێوانە.'],
         hints: Array.isArray(parsed.hints)
-          ? parsed.hints.map((h) => cleanMathAndDollarSigns(String(h)))
+          ? parsed.hints.map((h: any) => cleanMathAndDollarSigns(String(h)))
           : ['سەرەتا داتاکانی پرسیارەکە بە جیا بنووسەوە.', 'یاسای گونجاو دیاریبکە پێش دەستپێکردنی ژماردن.'],
         relatedConcepts: Array.isArray(parsed.relatedConcepts)
-          ? parsed.relatedConcepts.map((c) => cleanMathAndDollarSigns(String(c)))
+          ? parsed.relatedConcepts.map((c: any) => cleanMathAndDollarSigns(String(c)))
           : [params.subject, params.course || 'چەمکە بنەڕەتییەکان'],
       };
     } catch (err) {

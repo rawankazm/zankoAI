@@ -37,7 +37,7 @@ export class OcrService {
    */
   static async submitJob(
     userId: string,
-    file: Express.Multer.File,
+    file: any,
     ocrType: OcrType = 'auto',
     processingType: OcrProcessingType = 'all',
     idempotencyKey?: string
@@ -198,14 +198,19 @@ export class OcrService {
       throw new NotFoundError(`OCR job with ID '${jobId}' was not found.`);
     }
 
-    const job = jobRow as OcrJob;
+    const job = jobRow as any;
 
     // Strict ownership enforcement
-    if (job.user_id !== userId) {
-      SecurityLogger.log('FORBIDDEN_ACCESS', 'WARN', 'BLOCKED', {
+    if ((job.user_id || job.userId) !== userId) {
+      SecurityLogger.log({
+        eventType: 'FORBIDDEN_ACCESS',
+        severity: 'WARN',
+        status: 'BLOCKED',
         userId,
-        targetJobId: jobId,
-        jobOwnerId: job.user_id,
+        details: {
+          targetJobId: jobId,
+          jobOwnerId: job.user_id || job.userId,
+        },
       });
       throw new ForbiddenError('You do not have permission to view this OCR job.');
     }
@@ -260,26 +265,32 @@ export class OcrService {
       throw new NotFoundError(`OCR job with ID '${jobId}' was not found.`);
     }
 
-    const job = jobRow as OcrJob;
+    const job = jobRow as any;
 
     // Strict ownership check
-    if (job.user_id !== userId) {
-      SecurityLogger.log('FORBIDDEN_DELETE_ACCESS', 'WARN', 'BLOCKED', {
+    if ((job.user_id || job.userId) !== userId) {
+      SecurityLogger.log({
+        eventType: 'FORBIDDEN_ACCESS',
+        severity: 'WARN',
+        status: 'BLOCKED',
         userId,
-        targetJobId: jobId,
-        jobOwnerId: job.user_id,
+        details: {
+          targetJobId: jobId,
+          jobOwnerId: job.user_id || job.userId,
+        },
       });
       throw new ForbiddenError('You do not have permission to delete this OCR job.');
     }
 
     // 1. Delete image from Storage bucket
-    if (job.storage_path) {
+    const storagePath = job.storage_path || job.storagePath;
+    if (storagePath) {
       const { error: storageError } = await supabaseAdmin.storage
         .from('ocr-images')
-        .remove([job.storage_path]);
+        .remove([storagePath]);
 
       if (storageError) {
-        logger.warn(`[OcrService] Could not remove storage file ${job.storage_path}: ${storageError.message}`);
+        logger.warn(`[OcrService] Could not remove storage file ${storagePath}: ${storageError.message}`);
       }
     }
 
@@ -294,8 +305,11 @@ export class OcrService {
     }
 
     // 3. Clear Redis idempotency entry if present
-    const redisKey = `ocr:idempotency:${userId}:${job.idempotency_key}`;
-    await redis.del(redisKey);
+    const idemKey = job.idempotency_key || job.idempotencyKey;
+    if (idemKey) {
+      const redisKey = `ocr:idempotency:${userId}:${idemKey}`;
+      await redis.del(redisKey);
+    }
 
     logger.info(`[OcrService] Job ${jobId} and storage file deleted by user ${userId}`);
 
@@ -325,19 +339,19 @@ export class OcrService {
 
   // ─── Response Builder Helper ────────────────────────────────────────────────
 
-  private static buildResponseDto(job: OcrJob, result?: any): OcrJobStatusResponse {
+  private static buildResponseDto(job: any, result?: any): OcrJobStatusResponse {
     return {
       jobId: job.id,
       status: job.status,
-      originalFilename: job.original_filename,
-      fileSizeBytes: job.file_size_bytes,
-      imageWidth: job.image_width,
-      imageHeight: job.image_height,
-      ocrType: job.ocr_type,
-      processingType: job.processing_type,
-      createdAt: job.created_at,
-      updatedAt: job.updated_at,
-      errorMessage: job.error_message,
+      originalFilename: job.originalFilename || job.original_filename,
+      fileSizeBytes: job.fileSizeBytes || job.file_size_bytes,
+      imageWidth: job.imageWidth || job.image_width,
+      imageHeight: job.imageHeight || job.image_height,
+      ocrType: job.ocrType || job.ocr_type,
+      processingType: job.processingType || job.processing_type,
+      createdAt: job.createdAt || job.created_at,
+      updatedAt: job.updatedAt || job.updated_at,
+      errorMessage: job.errorMessage || job.error_message,
       ...(result ? { result } : {}),
     };
   }

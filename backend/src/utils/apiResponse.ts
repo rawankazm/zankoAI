@@ -16,6 +16,10 @@ export class ResponseFormatter {
     return this.success(res, data, message, 201);
   }
 
+  static notFound(res: Response, message = 'Resource not found'): Response {
+    return this.error(res, message, 404, 'NOT_FOUND');
+  }
+
   static error(res: Response, message: string, statusCode = 500, code = 'INTERNAL_ERROR', details?: any): Response {
     const body: ApiResponse = {
       success: false,

@@ -9,7 +9,7 @@ export const requireRole = (allowedRoles: Array<'student' | 'teacher' | 'admin'>
       });
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    if (!req.user.role || !allowedRoles.includes(req.user.role as any)) {
       return res.status(403).json({
         success: false,
         error: `Forbidden: Access restricted to roles: ${allowedRoles.join(', ')}`,

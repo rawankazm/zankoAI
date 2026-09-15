@@ -33,5 +33,5 @@ export interface TTSProvider {
   readonly name: string;
   isLanguageSupported(language: string): boolean;
   synthesizeSpeech(input: TTSInput): Promise<TTSResult>;
-  getAvailableVoices(language: string): Promise<TTSVoice[]> | TTSVoice[];
+  getAvailableVoices(language: string): TTSVoice[];
 }

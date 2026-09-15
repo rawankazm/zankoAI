@@ -43,7 +43,7 @@ mkdir -p /var/www/certbot
 
 # ─── 2. Pull / Build Images with Cache ───
 echo "🔨 Building and compiling production Docker containers..."
-docker compose -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" build --parallel
+docker compose -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" build
 
 # ─── 3. Launch Services with Healthcheck Orchestration ───
 echo "🚀 Launching services (redis, api, worker, nginx)..."

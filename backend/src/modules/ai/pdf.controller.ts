@@ -14,7 +14,7 @@ export const pdfUpload = multer({
     fileSize: 30 * 1024 * 1024, // 30 MB hard cap
     files: 1,
   },
-  fileFilter: (_req, file, cb) => {
+  fileFilter: (_req: any, file: any, cb: any) => {
     // Pre-filter by MIME before uploadGuard does the thorough magic bytes check
     if (file.mimetype !== 'application/pdf') {
       return cb(new Error(`Invalid file type: '${file.mimetype}'. Only application/pdf is allowed.`));
@@ -36,7 +36,7 @@ export const submitPdfJobHandler = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const file = (req as any).file as Express.Multer.File | undefined;
+    const file = (req as any).file;
 
     if (!file) {
       res.status(400).json({

@@ -16,21 +16,23 @@ export type SecurityEventType =
   | 'MALICIOUS_UPLOAD_BLOCKED'
   | 'SSRF_ATTEMPT_BLOCKED'
   | 'ADMIN_ACTION'
-  | 'SUSPICIOUS_PAYLOAD';
+  | 'QUOTA_EXCEEDED'
+  | 'SUSPICIOUS_PAYLOAD'
+  | (string & {});
 
-export type SecuritySeverity = 'INFO' | 'WARN' | 'CRITICAL';
+export type SecuritySeverity = 'INFO' | 'WARN' | 'CRITICAL' | string;
 
 export interface SecurityAuditEntry {
   timestamp: string;
   eventType: SecurityEventType;
   severity: SecuritySeverity;
-  ip: string;
+  ip?: string;
   userAgent?: string;
   userId?: string;
   userRole?: string;
   resource?: string;
   action?: string;
-  status: 'BLOCKED' | 'DENIED' | 'ALLOWED' | 'SUCCESS';
+  status: 'BLOCKED' | 'DENIED' | 'ALLOWED' | 'SUCCESS' | string;
   details?: Record<string, any>;
 }
 
@@ -38,13 +40,35 @@ export class SecurityLogger {
   /**
    * Log a structured security audit event
    */
-  static log(entry: Omit<SecurityAuditEntry, 'timestamp'>): void {
-    const sanitizedDetails = entry.details ? redactSensitiveData(entry.details) : undefined;
-    const auditRecord: SecurityAuditEntry = {
-      timestamp: new Date().toISOString(),
-      ...entry,
-      details: sanitizedDetails,
-    };
+  static log(
+    entryOrType: Omit<SecurityAuditEntry, 'timestamp'> | string,
+    severity?: SecuritySeverity,
+    status?: 'BLOCKED' | 'DENIED' | 'ALLOWED' | 'SUCCESS' | string,
+    details?: Record<string, any>
+  ): void {
+    let auditRecord: SecurityAuditEntry;
+
+    if (typeof entryOrType === 'string') {
+      const sanitizedDetails = details ? redactSensitiveData(details) : undefined;
+      auditRecord = {
+        timestamp: new Date().toISOString(),
+        eventType: entryOrType as any,
+        severity: (severity as any) || 'INFO',
+        status: (status as any) || 'BLOCKED',
+        ip: details?.ip || 'internal',
+        userId: details?.userId,
+        resource: details?.resource || 'system',
+        details: sanitizedDetails,
+      };
+    } else {
+      const sanitizedDetails = entryOrType.details ? redactSensitiveData(entryOrType.details) : undefined;
+      auditRecord = {
+        timestamp: new Date().toISOString(),
+        ...entryOrType,
+        ip: entryOrType.ip || 'internal',
+        details: sanitizedDetails,
+      };
+    }
 
     const logMessage = `[SECURITY_AUDIT] [${auditRecord.severity}] ${auditRecord.eventType} - ${auditRecord.status} from ${auditRecord.ip} (${auditRecord.userId || 'anon'}) on ${auditRecord.resource || 'unknown'}`;
 

@@ -5,7 +5,7 @@ import { QueueName, QueueHealthMetrics, WorkerHealthReport } from '../types/work
 import { logger } from '../config/logger.js';
 
 export class WorkerHealthService {
-  private static readonly QUEUE_NAMES: QueueName[] = ['pdf', 'ocr', 'audio', 'ai', 'notifications'];
+  private static readonly QUEUE_NAMES: QueueName[] = ['pdf', 'ocr', 'audio', 'ai', 'notifications', 'subscription-maintenance'];
 
   /**
    * Generates a complete health report for all background workers and queues.
@@ -19,6 +19,7 @@ export class WorkerHealthService {
       audio: { waiting: 0, active: 0, completed: 0, failed: 0, delayed: 0, paused: false },
       ai: { waiting: 0, active: 0, completed: 0, failed: 0, delayed: 0, paused: false },
       notifications: { waiting: 0, active: 0, completed: 0, failed: 0, delayed: 0, paused: false },
+      'subscription-maintenance': { waiting: 0, active: 0, completed: 0, failed: 0, delayed: 0, paused: false },
     };
 
     let deadLetterCount = 0;

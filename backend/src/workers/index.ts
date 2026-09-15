@@ -15,7 +15,10 @@ import { QueueName } from '../types/worker.types.js';
 import { processSubscriptionMaintenanceJob } from '../jobs/subscription_maintenance.js';
 import { scheduleRecurringSubscriptionMaintenance } from '../queues/unified_queues.js';
 
-logger.info('Starting ZankoAI Background Worker in ' + env.NODE_ENV + ' mode...');
+// Low-memory protection: limit concurrency to 1 by default on resource-constrained hosts
+const workerConcurrency = parseInt(process.env.WORKER_CONCURRENCY || '1', 10);
+
+logger.info('Starting ZankoAI Background Worker in ' + env.NODE_ENV + ' mode (concurrency: ' + workerConcurrency + ')...');
 
 /**
  * Executes a worker task with full lifecycle instrumentation:
@@ -121,7 +124,7 @@ export const pdfWorker = new Worker(
   },
   {
     connection: redisConnectionOptions,
-    concurrency: 2,
+    concurrency: workerConcurrency,
     limiter: {
       max: 10,
       duration: 60000,
@@ -153,7 +156,7 @@ export const pdfAiLegacyWorker = new Worker(
   },
   {
     connection: redisConnectionOptions,
-    concurrency: 2,
+    concurrency: workerConcurrency,
     limiter: { max: 10, duration: 60000 },
   }
 );
@@ -175,7 +178,7 @@ export const ocrWorker = new Worker(
   },
   {
     connection: redisConnectionOptions,
-    concurrency: 3,
+    concurrency: workerConcurrency,
     limiter: {
       max: 20,
       duration: 60000,
@@ -207,7 +210,7 @@ export const ocrLegacyWorker = new Worker(
   },
   {
     connection: redisConnectionOptions,
-    concurrency: 3,
+    concurrency: workerConcurrency,
     limiter: { max: 20, duration: 60000 },
   }
 );
@@ -229,7 +232,7 @@ export const audioWorker = new Worker(
   },
   {
     connection: redisConnectionOptions,
-    concurrency: 2,
+    concurrency: workerConcurrency,
     limiter: {
       max: 10,
       duration: 60000,
@@ -261,7 +264,7 @@ export const audioLegacyWorker = new Worker(
   },
   {
     connection: redisConnectionOptions,
-    concurrency: 2,
+    concurrency: workerConcurrency,
     limiter: { max: 10, duration: 60000 },
   }
 );
@@ -295,7 +298,7 @@ export const aiWorker = new Worker(
   },
   {
     connection: redisConnectionOptions,
-    concurrency: 4,
+    concurrency: workerConcurrency,
     limiter: {
       max: 30,
       duration: 60000,
@@ -385,7 +388,7 @@ export const fileWorker = new Worker(
     logger.info('[Worker:file-processing] Processing legacy job ' + job.id);
     return { status: 'completed' };
   },
-  { connection: redisConnectionOptions, concurrency: 4 }
+  { connection: redisConnectionOptions, concurrency: workerConcurrency }
 );
 
 // Initialize recurring subscription maintenance schedule

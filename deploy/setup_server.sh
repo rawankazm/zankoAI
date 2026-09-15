@@ -42,6 +42,10 @@ apt-get install -y \
   certbot \
   python3-certbot-nginx
 
+# Stop and disable host Nginx so containerized Nginx can bind 80/443
+systemctl stop nginx 2>/dev/null || true
+systemctl disable nginx 2>/dev/null || true
+
 # ─── 2. Create Non-Root Deployment User ───
 echo "👤 Creating non-root deployment user '${DEPLOY_USER}'..."
 if id "${DEPLOY_USER}" &>/dev/null; then
@@ -87,7 +91,9 @@ PermitRootLogin prohibit-password
 EOF
 
 # Test and reload ssh
-sshd -t && systemctl reload ssh || systemctl reload sshd
+mkdir -p /run/sshd
+sshd -t
+systemctl reload ssh 2>/dev/null || systemctl restart ssh 2>/dev/null || true
 
 # ─── 4. Configure UFW Firewall (Strict Isolation) ───
 echo "🛡️ Configuring UFW firewall rules..."

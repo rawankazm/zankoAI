@@ -8,6 +8,7 @@ import { logger } from '../config/logger.js';
 import { NotificationService } from './notification.service.js';
 import { UsageService } from './usage.service.js';
 import { PaymentService } from './payment.service.js';
+import { PaymentProviderRegistry } from './payment_providers/index.js';
 import {
   SubscriptionPlanType,
   SubscriptionStatusType,
@@ -190,7 +191,12 @@ export class SubscriptionService {
       inGracePeriod: false,
       gracePeriodEnd: sub.grace_period_end || null,
       autoRenew: sub.auto_renew ?? false,
-   /**
+      daysRemaining,
+      provider: sub.provider,
+    };
+  }
+
+  /**
    * 2. Activation Lifecycle Method
    * Grants Premium/VIP upon verified payment or administrator grant.
    *
@@ -872,12 +878,11 @@ export class SubscriptionService {
     } else {
       const payment = await PaymentService.createCheckout({
         userId: params.userId,
-        userEmail: params.userEmail,
         plan: params.plan,
         providerName: params.providerName,
         returnUrl: params.returnUrl,
         cancelUrl: params.cancelUrl,
-      });
+      } as any);
 
       checkout = {
         checkoutId: payment.orderId || payment.transactionId || 'chk_' + Date.now(),
@@ -885,8 +890,8 @@ export class SubscriptionService {
         qrPayload: payment.qrPayload,
         provider: params.providerName,
         plan: params.plan,
-        amount: payment.amount ?? PaymentService.getPlanPriceIqd(params.plan),
-        currency: payment.currency || 'IQD',
+        amount: (payment as any).amount ?? PaymentService.getPlanPriceIqd(params.plan),
+        currency: (payment as any).currency || 'IQD',
       };
     }
 
@@ -917,15 +922,15 @@ export class SubscriptionService {
   ): Promise<{ handled: boolean; duplicate: boolean; eventType: string }> {
     const provider = PaymentProviderRegistry.get(providerName);
 
-    const event = await provider.handleWebhook(headers, rawBody);
-    const idempotencyKey = event.idempotencyKey;
+    const event: any = await provider.handleWebhook(headers, rawBody);
+    const idempotencyKey = event.idempotencyKey || event.providerEventId || event.orderId || ('wh_' + Date.now());
 
     const redisKey = this.WEBHOOK_IDEMPOTENCY_PREFIX + idempotencyKey;
     const isNewRedisLock = await redis.set(redisKey, 'processing', 'EX', 86400, 'NX');
 
     if (!isNewRedisLock) {
       logger.warn('Duplicate webhook detected in Redis cache for key: ' + idempotencyKey);
-      return { handled: true, duplicate: true, eventType: event.eventType };
+      return { handled: true, duplicate: true, eventType: event.eventType || 'unknown' };
     }
 
     const { data: existingEvent } = await supabaseAdmin
@@ -936,7 +941,7 @@ export class SubscriptionService {
 
     if (existingEvent) {
       logger.warn('Duplicate webhook already recorded in database: ' + idempotencyKey);
-      return { handled: true, duplicate: true, eventType: event.eventType };
+      return { handled: true, duplicate: true, eventType: event.eventType || 'unknown' };
     }
 
     let subscriptionId: string | undefined;
@@ -950,7 +955,7 @@ export class SubscriptionService {
           userId: event.userId,
           plan: event.plan || 'PREMIUM_MONTHLY',
           provider: providerName,
-          providerSubscriptionId: event.providerSubscriptionId,
+          providerSubscriptionId: event.providerSubscriptionId || event.transactionId,
           providerCustomerId: event.providerCustomerId,
           idempotencyKey,
         });
@@ -969,7 +974,7 @@ export class SubscriptionService {
       }
     }
 
-    return { handled: true, duplicate: false, eventType: event.eventType };
+    return { handled: true, duplicate: false, eventType: event.eventType || 'unknown' };
   }
 
   /**
@@ -990,14 +995,20 @@ export class SubscriptionService {
     }
 
     const provider = PaymentProviderRegistry.get(sub.provider);
-    const verification = await provider.getSubscription(sub.provider_subscription_id);
+    const verification: any = typeof (provider as any).getSubscription === 'function'
+      ? await (provider as any).getSubscription(sub.provider_subscription_id)
+      : await provider.verifyPayment(sub.provider_subscription_id);
 
-    if (verification.verified && verification.status === 'active') {
+    if (verification && (verification.verified || verification.valid) && verification.status === 'active') {
+      const periodEnd = verification.currentPeriodEnd
+        ? (verification.currentPeriodEnd instanceof Date ? verification.currentPeriodEnd.toISOString() : new Date(verification.currentPeriodEnd).toISOString())
+        : new Date(Date.now() + 30 * 86400000).toISOString();
+
       await supabaseAdmin
         .from('subscriptions')
         .update({
           status: 'active',
-          current_period_end: verification.currentPeriodEnd.toISOString(),
+          current_period_end: periodEnd,
           updated_at: new Date().toISOString(),
         })
         .eq('id', sub.id);

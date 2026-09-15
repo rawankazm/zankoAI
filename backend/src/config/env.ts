@@ -65,6 +65,7 @@ const envSchema = z.object({
   ELEVENLABS_VOICE_ID: z.string().default('CwhRBWXzGAHq8TQ4Fs17'),
 
   // Payment Gateways — SECURITY [C-01]: All secrets required in production; no insecure fallbacks.
+  FIB_BASE_URL: z.string().default('https://api.fib.iq'),
   FIB_CLIENT_ID: z.string().optional(),
   FIB_CLIENT_SECRET: z.string().optional(),
   FASTPAY_MERCHANT_ID: z.string().optional(),

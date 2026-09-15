@@ -425,15 +425,17 @@ export class AiCostGuardService {
     };
 
     // 1. Insert into Supabase ai_requests table asynchronously
-    supabaseAdmin
-      .from('ai_requests')
-      .insert(recordToInsert)
-      .then(({ error }) => {
+    Promise.resolve(
+      supabaseAdmin
+        .from('ai_requests')
+        .insert(recordToInsert)
+    )
+      .then(({ error }: any) => {
         if (error) {
           logger.warn('[AiCostGuard] Failed to record ai_requests entry', { error: error.message });
         }
       })
-      .catch((err) => {
+      .catch((err: any) => {
         logger.warn('[AiCostGuard] Unexpected error saving ai_requests entry', { error: err.message });
       });
 

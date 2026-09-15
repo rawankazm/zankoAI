@@ -63,12 +63,17 @@ export class UsageService {
       const result = data as QuotaCheckResult;
 
       if (!result.allowed) {
-        SecurityLogger.log('QUOTA_EXCEEDED', 'INFO', 'BLOCKED', {
+        SecurityLogger.log({
+          eventType: 'QUOTA_EXCEEDED',
+          severity: 'INFO',
+          status: 'BLOCKED',
           userId,
-          feature,
-          plan: result.plan,
-          currentUsage: result.current_usage,
-          limit: result.limit,
+          details: {
+            feature,
+            plan: result.plan,
+            currentUsage: result.current_usage,
+            limit: result.limit,
+          },
         });
       }
 
@@ -104,6 +109,22 @@ export class UsageService {
     } catch (err: any) {
       logger.error(`Exception in getUserUsageStatus: ${err.message}`);
       return this.fallbackSummary(userId);
+    }
+  }
+
+  /**
+   * Helper for auth controller to retrieve today's chat usage
+   */
+  static async getUserUsageToday(userId: string): Promise<{ used: number; limit: number }> {
+    try {
+      const summary = await this.getUserUsageStatus(userId);
+      const chatUsage = summary?.features?.ai_chat;
+      return {
+        used: chatUsage?.current_usage || 0,
+        limit: chatUsage?.limit || 10,
+      };
+    } catch {
+      return { used: 0, limit: 10 };
     }
   }
 

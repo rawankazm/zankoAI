@@ -43,7 +43,7 @@ export class PdfService {
    */
   static async submitJob(
     userId: string,
-    file: Express.Multer.File,
+    file: any,
     processingType: PdfProcessingType,
     idempotencyKey?: string
   ): Promise<PdfJobStatusResponse> {

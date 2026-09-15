@@ -10,7 +10,7 @@ export const ocrUpload = multer({
     fileSize: 10 * 1024 * 1024, // 10 MB hard limit
     files: 1,
   },
-  fileFilter: (_req, file, cb) => {
+  fileFilter: (_req: any, file: any, cb: any) => {
     const allowed = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowed.includes(file.mimetype)) {
       return cb(
@@ -33,7 +33,7 @@ export const submitOcrJobHandler = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const file = (req as any).file as Express.Multer.File | undefined;
+    const file = (req as any).file;
 
     if (!file) {
       res.status(400).json({

@@ -121,7 +121,7 @@ export class TTSOrchestratorService {
 
     let result: TTSResult | null = null;
     let lastError: Error | null = null;
-    let successfulProvider = preferredProvider;
+    let successfulProvider: string = preferredProvider;
 
     const startTime = Date.now();
 

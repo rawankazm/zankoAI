@@ -100,7 +100,7 @@ export const authenticateUser = async (req: Request, res: Response, next: NextFu
     }
 
     // Account Status Guard: Banned or Suspended accounts are immediately blocked
-    if (profile.status === 'banned' || profile.status === 'suspended') {
+    if ((profile.status as any) === 'banned' || profile.status === 'suspended') {
       SecurityLogger.fromRequest(req, 'ACCOUNT_SUSPENDED', 'WARN', 'DENIED', {
         userId: user.id,
         accountStatus: profile.status,
@@ -112,20 +112,22 @@ export const authenticateUser = async (req: Request, res: Response, next: NextFu
 
     // Server-side Subscription & VIP validation: Verify expiration against server clock
     if (profile.vip_status === 'active' || profile.is_vip) {
-      if (profile.vip_expires_at) {
-        const expiry = new Date(profile.vip_expires_at);
+      if ((profile as any).vip_expires_at) {
+        const expiry = new Date((profile as any).vip_expires_at);
         if (expiry < new Date()) {
           // Subscription has expired - downgrade status in memory and async sync to DB
           profile.is_vip = false;
           profile.vip_status = 'expired';
           profile.plan = 'free';
 
-          supabaseAdmin
-            .from('profiles')
-            .update({ is_vip: false, vip_status: 'expired', plan: 'free', updated_at: new Date().toISOString() })
-            .eq('id', user.id)
-            .then(() => logger.info(`Auto-downgraded expired VIP for user: ${user.id}`))
-            .catch((err) => logger.warn(`Failed to auto-downgrade VIP in DB: ${err.message}`));
+          Promise.resolve(
+            supabaseAdmin
+              .from('profiles')
+              .update({ is_vip: false, vip_status: 'expired', plan: 'free', updated_at: new Date().toISOString() })
+              .eq('id', user.id)
+          )
+            .then(() => { logger.info(`Auto-downgraded expired VIP for user: ${user.id}`); })
+            .catch((err: any) => { logger.warn(`Failed to auto-downgrade VIP in DB: ${err?.message || err}`); });
         }
       }
     }
