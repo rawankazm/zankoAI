@@ -29,9 +29,12 @@ export const createScopedClient = (accessToken: string): SupabaseClient => {
 };
 
 export const checkSupabaseHealth = async (): Promise<boolean> => {
+  // If running self-hosted headless mode, return true immediately
+  if (!env.SUPABASE_URL || env.SUPABASE_URL.includes('localhost') || env.SUPABASE_URL.includes('placeholder')) {
+    return true;
+  }
   try {
     const { error } = await supabaseAdmin.from('profiles').select('id').limit(1);
-    // If table doesn't exist yet or query succeeds, connection is alive
     if (error && error.code !== 'PGRST116' && error.code !== 'PGRST204') {
       logger.warn(' Supabase database health check returned error:', error.message);
       return false;

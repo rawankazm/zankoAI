@@ -7,33 +7,33 @@ import { closeAllQueues } from './queues/unified_queues.js';
 
 const startServer = async () => {
   try {
-    logger.info('🔍 Running startup environment & infrastructure checks...');
-
-    // Asynchronous infrastructure connectivity checks (non-blocking for resilient start)
-    const [supabaseReady, redisReady] = await Promise.all([
-      checkSupabaseHealth(),
-      checkRedisHealth(),
-    ]);
-
-    if (!supabaseReady) {
-      logger.warn('⚠️ Supabase database check returned non-ready during startup. API will proceed with retry policies.');
-    } else {
-      logger.info('✅ Supabase connection verified.');
-    }
-
-    if (!redisReady) {
-      logger.warn('⚠️ Redis check returned non-ready during startup. API will proceed with memory fallbacks.');
-    } else {
-      logger.info('✅ Redis connection verified.');
-    }
-
-    // Start HTTP Server
+    // Start HTTP Server immediately so Docker liveness probe succeeds
     const server = app.listen(env.PORT, () => {
       logger.info(
         `🚀 ZankoAI DigitalOcean Backend is running on port ${env.PORT} in [${env.NODE_ENV}] mode`
       );
       logger.info(`🔗 Liveness Probe:   GET http://localhost:${env.PORT}/api/health`);
       logger.info(`🔗 Readiness Probe:  GET http://localhost:${env.PORT}/api/ready`);
+    });
+
+    // Run asynchronous infrastructure checks in background (resilient non-blocking start)
+    Promise.all([
+      checkSupabaseHealth(),
+      checkRedisHealth(),
+    ]).then(([supabaseReady, redisReady]) => {
+      if (!supabaseReady) {
+        logger.warn('⚠️ Supabase database check returned non-ready. Running in self-hosted mode.');
+      } else {
+        logger.info('✅ Database/Auth connection verified.');
+      }
+
+      if (!redisReady) {
+        logger.warn('⚠️ Redis check returned non-ready. API will proceed with memory fallbacks.');
+      } else {
+        logger.info('✅ Redis connection verified.');
+      }
+    }).catch((err) => {
+      logger.warn('Startup infrastructure check encountered error:', err);
     });
 
     // ─── Graceful Shutdown Handler ───
