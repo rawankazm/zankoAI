@@ -58,5 +58,6 @@ chmod +x scripts/migrate_and_seed.sh
 ./scripts/migrate_and_seed.sh
 
 echo "=== [5/5] Deployment Verification ==="
+docker compose -f docker-compose.prod.yml restart postgrest api worker nginx
 docker compose -f docker-compose.prod.yml ps
 echo "ZankoAI Production Backend Successfully Deployed!"

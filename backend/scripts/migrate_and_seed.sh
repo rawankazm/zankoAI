@@ -90,8 +90,27 @@ done
 
 echo "✔ Migrations complete: $APPLIED_COUNT applied, $SKIPPED_COUNT already up to date."
 
-# Signal PostgREST to reload its schema cache
-docker exec -i "$POSTGRES_CONTAINER" psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "NOTIFY pgrst, 'reload schema';" >/dev/null 2>&1 || true
+# Configure PostgREST roles & table permissions
+docker exec -i "$POSTGRES_CONTAINER" psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" <<-EOSQL
+  DO \$\$ BEGIN
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'anon') THEN CREATE ROLE anon NOLOGIN; END IF;
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'authenticated') THEN CREATE ROLE authenticated NOLOGIN; END IF;
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'service_role') THEN CREATE ROLE service_role NOLOGIN; END IF;
+  END \$\$;
+
+  GRANT anon, authenticated, service_role TO postgres;
+  GRANT USAGE ON SCHEMA public, auth TO anon, authenticated, service_role, postgres;
+  GRANT ALL ON ALL TABLES IN SCHEMA public, auth TO anon, authenticated, service_role, postgres;
+  GRANT ALL ON ALL SEQUENCES IN SCHEMA public, auth TO anon, authenticated, service_role, postgres;
+  GRANT ALL ON ALL ROUTINES IN SCHEMA public, auth TO anon, authenticated, service_role, postgres;
+
+  ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated, service_role, postgres;
+  ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated, service_role, postgres;
+  ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON ROUTINES TO anon, authenticated, service_role, postgres;
+
+  NOTIFY pgrst, 'reload schema';
+EOSQL
+
 
 # ── 4. Seed Test User & Validate Query Resolution ────────────────────────────
 echo "[4/4] Seeding test user & validating query resolution for authenticated req.user.id..."
