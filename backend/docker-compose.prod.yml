@@ -3,8 +3,6 @@
 # Self-Hosted PostgreSQL 16, Redis 7, Express 4 REST API, & BullMQ Queue Worker
 # ==============================================================================
 
-version: '3.8'
-
 services:
   # ─── 1. Public Nginx Reverse Proxy (Front-Facing, SSL/TLS Termination) ───
   nginx:
@@ -83,7 +81,7 @@ services:
       --appendfsync everysec
       --requirepass ${REDIS_PASSWORD:-zanko_production_vault_redis_password_2026}
       --maxmemory 128mb
-      --maxmemory-policy allkeys-lru
+      --maxmemory-policy noeviction
     volumes:
       - redis_data:/data
     healthcheck:

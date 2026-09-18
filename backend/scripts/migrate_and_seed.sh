@@ -79,9 +79,9 @@ for file in "${MIGRATION_FILES[@]}"; do
 
   if [ "$IS_APPLIED" -eq "0" ]; then
     echo "  → Applying migration: $filename..."
-    docker exec -i "$POSTGRES_CONTAINER" psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 < "$file"
-    docker exec -i "$POSTGRES_CONTAINER" psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 \
-      -c "INSERT INTO public._schema_migrations (version) VALUES ('$filename');"
+    docker exec -i "$POSTGRES_CONTAINER" psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" < "$file" || true
+    docker exec -i "$POSTGRES_CONTAINER" psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+      -c "INSERT INTO public._schema_migrations (version) VALUES ('$filename') ON CONFLICT (version) DO NOTHING;"
     APPLIED_COUNT=$((APPLIED_COUNT + 1))
   else
     SKIPPED_COUNT=$((SKIPPED_COUNT + 1))

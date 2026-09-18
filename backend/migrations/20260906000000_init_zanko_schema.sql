@@ -377,14 +377,21 @@ ALTER TABLE public.vouchers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
 -- Public Academic Catalog
+DROP POLICY IF EXISTS "Public can view universities" ON public.universities;
 CREATE POLICY "Public can view universities" ON public.universities FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public can view faculties" ON public.faculties;
 CREATE POLICY "Public can view faculties" ON public.faculties FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public can view departments" ON public.departments;
 CREATE POLICY "Public can view departments" ON public.departments FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public can view courses" ON public.courses;
 CREATE POLICY "Public can view courses" ON public.courses FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public can view subscription plans" ON public.subscription_plans;
 CREATE POLICY "Public can view subscription plans" ON public.subscription_plans FOR SELECT USING (true);
 
 -- User Profiles
+DROP POLICY IF EXISTS "Profiles are publicly viewable" ON public.users;
 CREATE POLICY "Profiles are publicly viewable" ON public.users FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Users can update own profile" ON public.users;
 CREATE POLICY "Users can update own profile" ON public.users FOR UPDATE 
 USING (auth.uid() = id)
 WITH CHECK (
@@ -394,27 +401,40 @@ WITH CHECK (
 );
 
 -- Notes RLS
+DROP POLICY IF EXISTS "Users can select own notes" ON public.notes;
 CREATE POLICY "Users can select own notes" ON public.notes FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own notes" ON public.notes;
 CREATE POLICY "Users can insert own notes" ON public.notes FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own notes" ON public.notes;
 CREATE POLICY "Users can update own notes" ON public.notes FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own notes" ON public.notes;
 CREATE POLICY "Users can delete own notes" ON public.notes FOR DELETE USING (auth.uid() = user_id);
 
 -- Flashcards RLS
+DROP POLICY IF EXISTS "Users can select own decks" ON public.flashcard_decks;
 CREATE POLICY "Users can select own decks" ON public.flashcard_decks FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own decks" ON public.flashcard_decks;
 CREATE POLICY "Users can insert own decks" ON public.flashcard_decks FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own decks" ON public.flashcard_decks;
 CREATE POLICY "Users can delete own decks" ON public.flashcard_decks FOR DELETE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can manage cards in own decks" ON public.flashcards;
 CREATE POLICY "Users can manage cards in own decks" ON public.flashcards FOR ALL 
 USING (deck_id IN (SELECT id FROM public.flashcard_decks WHERE user_id = auth.uid()));
 
 -- Schedules & Reminders RLS
+DROP POLICY IF EXISTS "Users can manage own schedules" ON public.schedules;
 CREATE POLICY "Users can manage own schedules" ON public.schedules FOR ALL USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can manage own reminders" ON public.reminders;
 CREATE POLICY "Users can manage own reminders" ON public.reminders FOR ALL USING (auth.uid() = user_id);
 
 -- Payments RLS
+DROP POLICY IF EXISTS "Users can view own transactions" ON public.payment_transactions;
 CREATE POLICY "Users can view own transactions" ON public.payment_transactions FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own transactions" ON public.payment_transactions;
 CREATE POLICY "Users can insert own transactions" ON public.payment_transactions FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Notifications RLS
+DROP POLICY IF EXISTS "Users can view own notifications or global" ON public.notifications;
 CREATE POLICY "Users can view own notifications or global" ON public.notifications FOR SELECT 
 USING (user_id IS NULL OR user_id = auth.uid());
