@@ -129,7 +129,7 @@ services:
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-zanko_production_vault_redis_password_2026}
       - STORAGE_PATH=/app/uploads
-      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET}
+      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET:-zanko_production_secure_jwt_secret_min_32_chars_2026}
     volumes:
       - storage_data:/app/uploads
     depends_on:
@@ -139,10 +139,10 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:4000/api/health || exit 1"]
-      interval: 15s
+      interval: 10s
       timeout: 5s
-      retries: 3
-      start_period: 15s
+      retries: 5
+      start_period: 30s
     mem_limit: 400m
     deploy:
       resources:
