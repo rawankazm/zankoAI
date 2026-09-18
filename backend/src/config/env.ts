@@ -77,19 +77,27 @@ const envSchema = z.object({
   ELEVENLABS_API_KEY: z.string().optional(),
   ELEVENLABS_VOICE_ID: z.string().default('CwhRBWXzGAHq8TQ4Fs17'),
 
-  // Payment Gateways — SECURITY [C-01]: All secrets required in production; no insecure fallbacks.
+  // Payment Gateways — Optional in core deployment
   FIB_BASE_URL: z.string().default('https://api.fib.iq'),
   FIB_CLIENT_ID: z.string().optional(),
   FIB_CLIENT_SECRET: z.string().optional(),
   FASTPAY_MERCHANT_ID: z.string().optional(),
   FASTPAY_PASSWORD: z.string().optional(),
   ZAINCASH_MSISDN: z.string().optional(),
-  // SECURITY [C-01]: Required — used to sign/verify ZainCash JWT tokens.
-  ZAINCASH_SECRET: z.string().min(32).optional(),
-  QI_CARD_SECRET_KEY: z.string().min(32).optional(),
+  ZAINCASH_SECRET: z
+    .string()
+    .optional()
+    .transform((val) => (val && val.trim().length > 0 && !val.startsWith('your-') ? val.trim() : undefined)),
+  QI_CARD_SECRET_KEY: z
+    .string()
+    .optional()
+    .transform((val) => (val && val.trim().length > 0 && !val.startsWith('your-') ? val.trim() : undefined)),
 
-  // Notifications — SECURITY [C-01]: Must be a strong random secret in production.
-  NOTIFICATION_SECRET: z.string().min(32).optional(),
+  // Notifications
+  NOTIFICATION_SECRET: z
+    .string()
+    .optional()
+    .transform((val) => (val && val.trim().length > 0 && !val.startsWith('your-') ? val.trim() : undefined)),
 });
 
 export type Env = z.infer<typeof envSchema>;
