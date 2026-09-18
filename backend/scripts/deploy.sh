@@ -49,8 +49,8 @@ for i in $(seq 1 15); do
   sleep 2
 done
 
-# Bring up API, Worker, Nginx
-docker compose -f docker-compose.prod.yml up -d --build api worker nginx
+# Bring up API, Worker, Nginx, PostgREST
+docker compose -f docker-compose.prod.yml up -d --build postgrest api worker nginx
 
 echo "=== [4/5] Running Migrations & Seeding ==="
 chmod +x scripts/migrate_and_seed.sh

@@ -103,6 +103,34 @@ services:
     networks:
       - zanko_network
 
+  # ─── 3b. PostgREST REST API Layer (Self-Hosted Supabase REST Engine) ──────
+  postgrest:
+    image: postgrest/postgrest:v12.2.0
+    container_name: zanko_postgrest
+    restart: unless-stopped
+    environment:
+      PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD:-postgres_secure_zanko_2026}@postgres:5432/zanko_db
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: postgres
+      PGRST_JWT_SECRET: ${SUPABASE_JWT_SECRET:-zanko_production_secure_jwt_secret_min_32_chars_2026}
+    expose:
+      - "3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    mem_limit: 64m
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+    networks:
+      - zanko_network
+
   # ─── 4. Internal Node.js Express 4 API Service (Private, 400MB RAM) ───────
   api:
     build:
@@ -127,6 +155,9 @@ services:
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-zanko_production_vault_redis_password_2026}
       - STORAGE_PATH=/app/uploads
+      - SUPABASE_URL=${SUPABASE_URL:-http://postgrest:3000}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiZXhwIjoyNTI0NjA4MDAwfQ._yGDnGXilGQzpkjZy4aNQjD5gPb8JqY9m3an0j7PQog}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoicG9zdGdyZXMiLCJpc3MiOiJzdXBhYmFzZSIsImV4cCI6MjUyNDYwODAwMH0.S3ubvgdtgcamzqf-d0xJITu8C6wIriT56ekZxowJ-VU}
       - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET:-zanko_production_secure_jwt_secret_min_32_chars_2026}
     volumes:
       - storage_data:/app/uploads
@@ -135,6 +166,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      postgrest:
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:4000/api/health || exit 1"]
       interval: 10s
@@ -176,6 +209,10 @@ services:
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-zanko_production_vault_redis_password_2026}
       - STORAGE_PATH=/app/uploads
+      - SUPABASE_URL=${SUPABASE_URL:-http://postgrest:3000}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiZXhwIjoyNTI0NjA4MDAwfQ._yGDnGXilGQzpkjZy4aNQjD5gPb8JqY9m3an0j7PQog}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoicG9zdGdyZXMiLCJpc3MiOiJzdXBhYmFzZSIsImV4cCI6MjUyNDYwODAwMH0.S3ubvgdtgcamzqf-d0xJITu8C6wIriT56ekZxowJ-VU}
+      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET:-zanko_production_secure_jwt_secret_min_32_chars_2026}
       - WORKER_CONCURRENCY=1
     volumes:
       - storage_data:/app/uploads
@@ -184,6 +221,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      postgrest:
+        condition: service_started
     mem_limit: 450m
     deploy:
       resources:
