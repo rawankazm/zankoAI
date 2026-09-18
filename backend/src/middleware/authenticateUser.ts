@@ -52,7 +52,7 @@ export const authenticateUser = async (req: Request, res: Response, next: NextFu
     }
 
     // Authoritative Local JWT Verification via SUPABASE_JWT_SECRET (zero remote dependency)
-    let user: { id: string; email?: string; app_metadata?: any; user_metadata?: any };
+    let user: { id: string; email?: string; app_metadata?: any; user_metadata?: any; created_at?: string; updated_at?: string; [key: string]: any };
     const jwtSecret = process.env.SUPABASE_JWT_SECRET;
 
     if (jwtSecret) {
@@ -66,6 +66,8 @@ export const authenticateUser = async (req: Request, res: Response, next: NextFu
           email: decoded.email,
           app_metadata: decoded.app_metadata || {},
           user_metadata: decoded.user_metadata || {},
+          created_at: decoded.created_at || new Date().toISOString(),
+          updated_at: decoded.updated_at || new Date().toISOString(),
         };
       } catch (jwtErr: any) {
         if (jwtErr instanceof UnauthorizedError) throw jwtErr;
@@ -121,8 +123,8 @@ export const authenticateUser = async (req: Request, res: Response, next: NextFu
         vip_status: 'none',
         score: 0,
         rank_title: 'Newbie',
-        created_at: user.created_at,
-        updated_at: user.updated_at || user.created_at,
+        created_at: user.created_at || new Date().toISOString(),
+        updated_at: user.updated_at || user.created_at || new Date().toISOString(),
       };
     }
 
