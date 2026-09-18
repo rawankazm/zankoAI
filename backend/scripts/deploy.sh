@@ -50,7 +50,7 @@ for i in $(seq 1 15); do
 done
 
 # Bring up API, Worker, Nginx, PostgREST
-docker compose -f docker-compose.prod.yml up -d --build postgrest api worker nginx
+docker compose -f docker-compose.prod.yml up -d --build --force-recreate postgrest api worker nginx
 docker compose -f docker-compose.prod.yml restart nginx
 
 echo "=== [4/5] Running Migrations & Seeding ==="

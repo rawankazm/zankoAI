@@ -90,6 +90,9 @@ done
 
 echo "✔ Migrations complete: $APPLIED_COUNT applied, $SKIPPED_COUNT already up to date."
 
+# Signal PostgREST to reload its schema cache
+docker exec -i "$POSTGRES_CONTAINER" psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "NOTIFY pgrst, 'reload schema';" >/dev/null 2>&1 || true
+
 # ── 4. Seed Test User & Validate Query Resolution ────────────────────────────
 echo "[4/4] Seeding test user & validating query resolution for authenticated req.user.id..."
 
