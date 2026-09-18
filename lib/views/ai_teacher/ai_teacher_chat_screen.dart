@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -24,6 +26,8 @@ import '../../widgets/apple_ui_components.dart';
 import '../../widgets/ad_banner_widget.dart';
 import '../payment/vip_upgrade_sheet.dart';
 import '../../utils/math_text_cleaner.dart';
+import '../navigation_shell.dart';
+import 'ai_teacher_drawer.dart';
 
 class AiTeacherChatScreen extends StatefulWidget {
   final String? initialPrompt;
@@ -36,6 +40,7 @@ class AiTeacherChatScreen extends StatefulWidget {
 
 class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   final TextEditingController _controller = TextEditingController();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final ScrollController _scrollController = ScrollController();
   final List<Map<String, String>> _messages = [];
   bool _isTyping = false;
@@ -43,16 +48,34 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   // Active Teaching Mode
   int _selectedModeIndex = 0;
   final List<Map<String, dynamic>> _modes = [
-    {'title': 'گشتی 🧑‍🏫', 'tag': 'General Academic'},
+    {'title': 'گشتی', 'tag': 'General Academic'},
     {
-      'title': 'هاوکێشە و یاساکان 📐',
+      'title': 'هاوکێشە و یاساکان',
       'tag': 'Step-by-Step Math & Formula Solver',
     },
-    {'title': 'کۆد و IT 💻', 'tag': 'Coding & Computer Science'},
-    {'title': 'پزیشکی و دەرمان 🏥', 'tag': 'Medicine & Health'},
-    {'title': 'کورتکردنەوە 📝', 'tag': 'Summarize & Simplify'},
-    {'title': 'تاقیکردنەوە ⚡', 'tag': 'Exam Preparation & Prediction'},
+    {'title': 'کۆد و IT', 'tag': 'Coding & Computer Science'},
+    {'title': 'پزیشکی و دەرمان', 'tag': 'Medicine & Health'},
+    {'title': 'کورتکردنەوە', 'tag': 'Summarize & Simplify'},
+    {'title': 'تاقیکردنەوە', 'tag': 'Exam Preparation & Prediction'},
   ];
+
+  String _getModeTitle(int index, LanguageProvider lang) {
+    switch (index) {
+      case 1:
+        return lang.translate('mode_math_title');
+      case 2:
+        return lang.translate('mode_code_title');
+      case 3:
+        return lang.translate('mode_medical_title');
+      case 4:
+        return lang.translate('mode_summarize_title');
+      case 5:
+        return lang.translate('mode_exam_title');
+      case 0:
+      default:
+        return lang.translate('mode_general_title');
+    }
+  }
 
   // Quick Math & Formula Symbols
   static const List<String> _mathSymbols = [
@@ -111,7 +134,105 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   final AiTeacherVoiceService _voiceService = AiTeacherVoiceService();
   String _selectedLanguageMode = 'auto'; // 'auto', 'ku', 'ar', 'en'
 
-  List<String> get _currentSuggestions {
+  List<String> _getSuggestions(LanguageProvider lang) {
+    if (lang.isEnglish) {
+      switch (_selectedModeIndex) {
+        case 1:
+          return [
+            'Solve quadratic equation (ax² + bx + c = 0)',
+            'Find derivatives (dy/dx)',
+            'Definite & indefinite integrals (∫)',
+            "Newton's laws & physics concepts",
+            'Limits & matrices solver',
+            'Balance chemical equations',
+            'Trigonometric functions analysis',
+          ];
+        case 2:
+          return [
+            'Explain OOP principles & concepts',
+            'Differences between SQL and NoSQL',
+            'How does Flutter work internally?',
+            'Analyze and fix this code error',
+          ];
+        case 3:
+          return [
+            'Heart anatomy and physiology',
+            'Differences between bacteria and viruses',
+            'Pharmacokinetics fundamentals',
+            'Symptoms and causes of anemia',
+          ];
+        case 4:
+          return [
+            'Summarize my lecture material',
+            'Extract key concepts and points',
+            'Summarize this excerpt',
+            'Explain in simple terms',
+          ];
+        case 5:
+          return [
+            'Predict 5 expected exam questions',
+            'Quick quiz on this topic',
+            '3-day exam study schedule',
+            'Essential final exam definitions',
+          ];
+        default:
+          return [
+            'Explain this topic to me',
+            'What is the summary of this lesson?',
+            'Study tips for final exams',
+            'Analyze this scientific question',
+          ];
+      }
+    } else if (lang.isArabic) {
+      switch (_selectedModeIndex) {
+        case 1:
+          return [
+            'حل المعادلة التربيعية (ax² + bx + c = 0)',
+            'إيجاد المشتقات (dy/dx)',
+            'التكامل المحدد وغير المحدد (∫)',
+            'قوانين نيوتن في الفيزياء',
+            'المصفوفات والنهايات',
+            'موازنة المعادلات الكيميائية',
+            'شرح الدوال المثلثية',
+          ];
+        case 2:
+          return [
+            'شرح مفهوم OOP ومبادئه',
+            'الفرق بين SQL و NoSQL',
+            'كيف يعمل فلاتر؟',
+            'تحليل وحل هذا الخطأ البرمجي',
+          ];
+        case 3:
+          return [
+            'تشريح ووظائف القلب',
+            'الفرق بين البكتيريا والفيروسات',
+            'مفهوم Pharmacokinetics',
+            'أعراض فقر الدم (Anemia)',
+          ];
+        case 4:
+          return [
+            'لخص لي هذه المحاضرة',
+            'استخراج النقاط الرئيسية',
+            'ملخص هذه الفقرة',
+            'اشرح بأسلوب مبسط',
+          ];
+        case 5:
+          return [
+            'توقع ٥ أسئلة للامتحان',
+            'اختبار سريع حول هذا الموضوع',
+            'خطة دراسية لمدة ٣ أيام',
+            'أهم تعريفات الامتحان النهائي',
+          ];
+        default:
+          return [
+            'اشرح لي هذا الموضوع',
+            'ما هو ملخص هذا الدرس؟',
+            'إرشادات لدراسة الامتحان',
+            'تحليل مسألة علمية',
+          ];
+      }
+    }
+
     switch (_selectedModeIndex) {
       case 1:
         return [
@@ -279,6 +400,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
 
   @override
   void dispose() {
+    NavigationShell.hideBottomNav.value = false;
     _voiceService.stop();
     KurdishTtsService().isSpeakingNotifier.removeListener(_onTtsStateChanged);
     KurdishTtsService().stop();
@@ -432,6 +554,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   }
 
   void _scrollToBottom() {
+    if (NavigationShell.hideBottomNav.value) {
+      NavigationShell.hideBottomNav.value = false;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
@@ -474,13 +599,17 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
           )
           .toList();
 
+      final effectiveLang = _selectedLanguageMode == 'auto'
+          ? lang.languageCode
+          : _selectedLanguageMode;
+
       String cleanResponse;
       try {
         final backendRes = await ApiClient.instance.post<Map<String, dynamic>>(
           '/ai-teacher/chat',
           data: {
             'message': text,
-            'language': _selectedLanguageMode,
+            'language': effectiveLang,
             'history': historyToSend,
           },
         );
@@ -495,8 +624,16 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
           '[AiTeacherChat] Backend /ai-teacher/chat fallback: $backendErr',
         );
         final modePrefix = _selectedModeIndex != 0
-            ? "[تایبەتمەندی: ${_modes[_selectedModeIndex]['tag']}]\n[زمان: ${_selectedLanguageMode.toUpperCase()}]\n"
-            : "[زمان: ${_selectedLanguageMode.toUpperCase()}]\n";
+            ? (lang.isEnglish
+                ? "[Mode: ${_modes[_selectedModeIndex]['tag']}]\n[Language: ${effectiveLang.toUpperCase()}]\n"
+                : (lang.isArabic
+                    ? "[الوضع: ${_modes[_selectedModeIndex]['tag']}]\n[اللغة: ${effectiveLang.toUpperCase()}]\n"
+                    : "[تایبەتمەندی: ${_modes[_selectedModeIndex]['tag']}]\n[زمان: ${effectiveLang.toUpperCase()}]\n"))
+            : (lang.isEnglish
+                ? "[Language: ${effectiveLang.toUpperCase()}]\n"
+                : (lang.isArabic
+                    ? "[اللغة: ${effectiveLang.toUpperCase()}]\n"
+                    : "[زمان: ${effectiveLang.toUpperCase()}]\n"));
 
         final response = await aiService.askTeacher(
           modePrefix + text,
@@ -575,6 +712,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   void _showImagePreviewAndNoteSheet(Uint8List bytes, String imageName) {
     final noteController = TextEditingController(text: _controller.text.trim());
     final isMathMode = _selectedModeIndex == 1;
+    final lang = Provider.of<LanguageProvider>(context, listen: false);
 
     showModalBottomSheet(
       context: context,
@@ -635,8 +773,16 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                             children: [
                               Text(
                                 isMathMode
-                                    ? 'شیکاری هاوکێشەی ناو وێنە 📐'
-                                    : 'ناردنی وێنە لەگەڵ تێبینی 📷',
+                                    ? (lang.isEnglish
+                                        ? 'Formula Analysis in Image 📐'
+                                        : (lang.isArabic
+                                            ? 'تحليل المعادلة في الصورة 📐'
+                                            : 'شیکاری هاوکێشەی ناو وێنە 📐'))
+                                    : (lang.isEnglish
+                                        ? 'Send Image with Note 📷'
+                                        : (lang.isArabic
+                                            ? 'إرسال صورة مع ملاحظة 📷'
+                                            : 'ناردنی وێنە لەگەڵ تێبینی 📷')),
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
@@ -719,33 +865,89 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                       height: 32,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
-                        children: [
-                          _buildQuickPromptChip(
-                            '📐 شیکاری هەنگاو بە هەنگاو',
-                            noteController,
-                            setSheetState,
-                          ),
-                          _buildQuickPromptChip(
-                            '🎯 تەنها وەڵامی کۆتایی',
-                            noteController,
-                            setSheetState,
-                          ),
-                          _buildQuickPromptChip(
-                            '🌐 وەرگێڕان بۆ کوردی',
-                            noteController,
-                            setSheetState,
-                          ),
-                          _buildQuickPromptChip(
-                            '💡 ڕوونکردنەوەی سادە',
-                            noteController,
-                            setSheetState,
-                          ),
-                          _buildQuickPromptChip(
-                            '📝 کورتکردنەوەی ناوەڕۆک',
-                            noteController,
-                            setSheetState,
-                          ),
-                        ],
+                        children: lang.isEnglish
+                            ? [
+                                _buildQuickPromptChip(
+                                  '📐 Step-by-step solution',
+                                  noteController,
+                                  setSheetState,
+                                ),
+                                _buildQuickPromptChip(
+                                  '🎯 Final answer only',
+                                  noteController,
+                                  setSheetState,
+                                ),
+                                _buildQuickPromptChip(
+                                  '🌐 Translate to English',
+                                  noteController,
+                                  setSheetState,
+                                ),
+                                _buildQuickPromptChip(
+                                  '💡 Simple explanation',
+                                  noteController,
+                                  setSheetState,
+                                ),
+                                _buildQuickPromptChip(
+                                  '📝 Summarize content',
+                                  noteController,
+                                  setSheetState,
+                                ),
+                              ]
+                            : (lang.isArabic
+                                ? [
+                                    _buildQuickPromptChip(
+                                      '📐 حل خطوة بخطوة',
+                                      noteController,
+                                      setSheetState,
+                                    ),
+                                    _buildQuickPromptChip(
+                                      '🎯 الإجابة النهائية فقط',
+                                      noteController,
+                                      setSheetState,
+                                    ),
+                                    _buildQuickPromptChip(
+                                      '🌐 ترجمة إلى العربية',
+                                      noteController,
+                                      setSheetState,
+                                    ),
+                                    _buildQuickPromptChip(
+                                      '💡 شرح مبسط',
+                                      noteController,
+                                      setSheetState,
+                                    ),
+                                    _buildQuickPromptChip(
+                                      '📝 تلخيص المحتوى',
+                                      noteController,
+                                      setSheetState,
+                                    ),
+                                  ]
+                                : [
+                                    _buildQuickPromptChip(
+                                      '📐 شیکاری هەنگاو بە هەنگاو',
+                                      noteController,
+                                      setSheetState,
+                                    ),
+                                    _buildQuickPromptChip(
+                                      '🎯 تەنها وەڵامی کۆتایی',
+                                      noteController,
+                                      setSheetState,
+                                    ),
+                                    _buildQuickPromptChip(
+                                      '🌐 وەرگێڕان بۆ کوردی',
+                                      noteController,
+                                      setSheetState,
+                                    ),
+                                    _buildQuickPromptChip(
+                                      '💡 ڕوونکردنەوەی سادە',
+                                      noteController,
+                                      setSheetState,
+                                    ),
+                                    _buildQuickPromptChip(
+                                      '📝 کورتکردنەوەی ناوەڕۆک',
+                                      noteController,
+                                      setSheetState,
+                                    ),
+                                  ]),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -771,10 +973,13 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                           color: Colors.white,
                           fontSize: 14,
                         ),
-                        decoration: const InputDecoration(
-                          hintText:
-                              'تێبینی یان پرسیارەکەت لەسەر ئەم وێنەیە بنووسە... (ئارەزوومەندانە)',
-                          hintStyle: TextStyle(
+                        decoration: InputDecoration(
+                          hintText: lang.isEnglish
+                              ? 'Write your note or question about this image... (optional)'
+                              : (lang.isArabic
+                                  ? 'اكتب ملاحظتك أو سؤالك حول هذه الصورة... (اختياري)'
+                                  : 'تێبینی یان پرسیارەکەت لەسەر ئەم وێنەیە بنووسە... (ئارەزوومەندانە)'),
+                          hintStyle: const TextStyle(
                             color: Colors.white38,
                             fontSize: 13,
                           ),
@@ -797,9 +1002,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                 borderRadius: BorderRadius.circular(14),
                               ),
                             ),
-                            child: const Text(
-                              'پەشیمانبوونەوە',
-                              style: TextStyle(
+                            child: Text(
+                              lang.translate('cancel'),
+                              style: const TextStyle(
                                 color: Colors.white60,
                                 fontSize: 14,
                               ),
@@ -821,9 +1026,13 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                               size: 17,
                               color: Colors.black,
                             ),
-                            label: const Text(
-                              'ناردن بۆ مامۆستا 🚀',
-                              style: TextStyle(
+                            label: Text(
+                              lang.isEnglish
+                                  ? 'Send to Tutor 🚀'
+                                  : (lang.isArabic
+                                      ? 'إرسال إلى المعلم 🚀'
+                                      : 'ناردن بۆ مامۆستا 🚀'),
+                              style: const TextStyle(
                                 color: Colors.black,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
@@ -900,9 +1109,18 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   ) async {
     final timestamp = _formatTime();
     final isMathMode = _selectedModeIndex == 1;
+    final lang = Provider.of<LanguageProvider>(context, listen: false);
     final modeTag = isMathMode
-        ? "📐 [شیکاری هاوکێشە و یاسا]"
-        : "📷 [وێنەی پرسیار/وانە]";
+        ? (lang.isEnglish
+            ? "📐 [Math & Formula Solver]"
+            : (lang.isArabic
+                ? "📐 [حل المعادلات والقوانين]"
+                : "📐 [شیکاری هاوکێشە و یاسا]"))
+        : (lang.isEnglish
+            ? "📷 [Question/Lecture Image]"
+            : (lang.isArabic
+                ? "📷 [صورة السؤال/الدرس]"
+                : "📷 [وێنەی پرسیار/وانە]"));
     final base64Image = base64Encode(bytes);
 
     setState(() {
@@ -954,8 +1172,11 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
           _isTyping = false;
           _messages.add({
             'role': 'assistant',
-            'content':
-                '⚠️ ببورە، کێشەیەک لە پەیوەندی بە سێرڤەر ڕوویدا لە کاتی شیکارکردنی وێنەکە.',
+            'content': lang.isEnglish
+                ? '⚠️ Connection issue while analyzing image. Please retry.'
+                : (lang.isArabic
+                    ? '⚠️ عذراً، حدث خطأ في الاتصال بالخادم أثناء تحليل الصورة.'
+                    : '⚠️ ببورە، کێشەیەک لە پەیوەندی بە سێرڤەر ڕوویدا لە کاتی شیکارکردنی وێنەکە.'),
             'time': _formatTime(),
           });
         });
@@ -969,14 +1190,19 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     try {
       final parsed = await DocumentParserService.pickAndExtractDocument();
 
-      if (parsed == null) return;
+      if (parsed == null || !mounted) return;
 
+      final lang = Provider.of<LanguageProvider>(context, listen: false);
       final extractedText = parsed.content;
       if (extractedText.trim().isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('نەتوانرا دەقی ئەم فایلە دەربهێنرێت.'),
+            SnackBar(
+              content: Text(lang.isEnglish
+                  ? 'Could not extract text from this file.'
+                  : (lang.isArabic
+                      ? 'تعذر استخراج النص من هذا الملف.'
+                      : 'نەتوانرا دەقی ئەم فایلە دەربهێنرێت.')),
             ),
           );
         }
@@ -986,20 +1212,24 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       final safeText = extractedText.length > 5000
           ? extractedText.substring(0, 5000)
           : extractedText;
-      final promptToSend =
-          "📄 [فایلی وانە: ${parsed.fileName} - ${parsed.typeDisplayName}]\nتکایە ئەم فایلەی خوارەوە بە کورتی و زانستی شی بکەرەوە و خاڵە سەرەکییەکانی دیاری بکە:\n\n$safeText";
+      final promptToSend = lang.isEnglish
+          ? "📄 [Lecture File: ${parsed.fileName} - ${parsed.typeDisplayName}]\nPlease analyze this document concisely and scientifically, highlighting key points:\n\n$safeText"
+          : (lang.isArabic
+              ? "📄 [ملف المحاضرة: ${parsed.fileName} - ${parsed.typeDisplayName}]\nيرجى تحليل هذا الملف علمياً وباختصار وتحديد أهم النقاط الرئيسية:\n\n$safeText"
+              : "📄 [فایلی وانە: ${parsed.fileName} - ${parsed.typeDisplayName}]\nتکایە ئەم فایلەی خوارەوە بە کورتی و زانستی شی بکەرەوە و خاڵە سەرەکییەکانی دیاری بکە:\n\n$safeText");
 
       _sendMessage(promptToSend);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('هەڵە لە خوێندنەوەی فایل: $e')));
+        ).showSnackBar(SnackBar(content: Text('Error reading file: $e')));
       }
     }
   }
 
   void _showAttachmentOptions() {
+    final lang = Provider.of<LanguageProvider>(context, listen: false);
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF1E222A),
@@ -1020,9 +1250,13 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'هاوپێچکردنی پرسیار یان وانە 📎',
-              style: TextStyle(
+            Text(
+              lang.isEnglish
+                  ? 'Attach Question or Lecture 📎'
+                  : (lang.isArabic
+                      ? 'إرفاق سؤال أو محاضرة 📎'
+                      : 'هاوپێچکردنی پرسیار یان وانە 📎'),
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -1035,7 +1269,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                   child: _buildAttachmentOption(
                     icon: HugeIcons.strokeRoundedCamera01,
                     color: ZankoColors.primary,
-                    label: 'کامێرای هاوکێشە',
+                    label: lang.isEnglish
+                        ? 'Formula Camera'
+                        : (lang.isArabic ? 'كاميرا المعادلات' : 'کامێرای هاوکێشە'),
                     onTap: () {
                       Navigator.pop(ctx);
                       _pickAndSolveImage(source: ImageSource.camera);
@@ -1047,7 +1283,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                   child: _buildAttachmentOption(
                     icon: HugeIcons.strokeRoundedImage01,
                     color: ZankoColors.primary,
-                    label: 'وێنەی گەلەری',
+                    label: lang.isEnglish
+                        ? 'Gallery Photo'
+                        : (lang.isArabic ? 'صورة من المعرض' : 'وێنەی گەلەری'),
                     onTap: () {
                       Navigator.pop(ctx);
                       _pickAndSolveImage();
@@ -1059,7 +1297,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                   child: _buildAttachmentOption(
                     icon: HugeIcons.strokeRoundedFile02,
                     color: ZankoColors.primary,
-                    label: 'فایلی PDF/وانە',
+                    label: lang.isEnglish
+                        ? 'PDF / Lecture'
+                        : (lang.isArabic ? 'ملف PDF / محاضرة' : 'فایلی PDF/وانە'),
                     onTap: () {
                       Navigator.pop(ctx);
                       _pickAndSolvePdf();
@@ -1116,11 +1356,15 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   Future<void> _saveAsNote(String content) async {
     try {
       final db = Provider.of<DatabaseService>(context, listen: false);
+      final lang = Provider.of<LanguageProvider>(context, listen: false);
+      final defaultTitle = lang.isEnglish
+          ? 'Teacher Note'
+          : (lang.isArabic ? 'ملاحظة المعلم' : 'تێبینی مامۆستا');
       final firstLine = content
           .split('\n')
           .firstWhere(
             (l) => l.trim().isNotEmpty,
-            orElse: () => 'تێبینی مامۆستا',
+            orElse: () => defaultTitle,
           );
       final cleanTitle = firstLine
           .replaceAll('#', '')
@@ -1133,74 +1377,46 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
       await db.addNote(
         NoteModel(
           id: 'note_${DateTime.now().millisecondsSinceEpoch}',
-          title: title.isNotEmpty ? title : 'تێبینی وانەی ZankoAI',
+          title: title.isNotEmpty
+              ? title
+              : (lang.isEnglish
+                  ? 'ZankoAI Lecture Note'
+                  : 'تێبینی وانەی ZankoAI'),
           content: content,
           createdAt: DateTime.now(),
           isAiFormatted: true,
-          courseName: _modes[_selectedModeIndex]['title'],
+          courseName: _getModeTitle(_selectedModeIndex, lang),
         ),
       );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              '✅ بە سەرکەوتوویی لە بەشی تێبینییەکان پاشەکەوت کرا! 📑',
+              lang.isEnglish
+                  ? '✅ Saved successfully to Notes! 📑'
+                  : (lang.isArabic
+                      ? '✅ تم الحفظ بنجاح في الملاحظات! 📑'
+                      : '✅ بە سەرکەوتوویی لە بەشی تێبینییەکان پاشەکەوت کرا! 📑'),
             ),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('هەڵە لە پاشەکەوتکردنی تێبینی: $e')),
+          SnackBar(content: Text('Error saving note: $e')),
         );
       }
     }
   }
 
-  Widget _buildNeumorphicButton({
-    required dynamic icon,
-    required VoidCallback onTap,
-    Color? iconColor,
-    double size = 44.0,
-  }) {
-    final effectiveColor = iconColor ?? ZankoColors.primary;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: const Color(0xFF1E222B),
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.06),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.6),
-              blurRadius: 10,
-              offset: const Offset(3, 4),
-            ),
-            BoxShadow(
-              color: Colors.white.withValues(alpha: 0.04),
-              blurRadius: 4,
-              offset: const Offset(-2, -2),
-            ),
-          ],
-        ),
-        child: Center(child: appIcon(icon, color: effectiveColor, size: 20)),
-      ),
-    );
-  }
 
   void _confirmClearChat() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final lang = Provider.of<LanguageProvider>(context, listen: false);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -1215,7 +1431,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
             ),
             const SizedBox(width: 8),
             Text(
-              'پاککردنەوەی گفتوگۆ',
+              lang.translate('clear_chat_title'),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -1225,7 +1441,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
           ],
         ),
         content: Text(
-          'دڵنیایت لە پاککردنەوەی هەموو پەیامەکان و دەستپێکردنەوە لەسەرەتاوە؟',
+          lang.translate('clear_chat_desc'),
           style: TextStyle(
             fontSize: 13.5,
             color: isDark
@@ -1236,9 +1452,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text(
-              'پاشگەزبوونەوە',
-              style: TextStyle(color: Colors.grey),
+            child: Text(
+              lang.translate('clear_chat_cancel'),
+              style: const TextStyle(color: Colors.grey),
             ),
           ),
           ElevatedButton(
@@ -1253,7 +1469,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('سڕینەوە'),
+            child: Text(lang.translate('clear_chat_confirm')),
           ),
         ],
       ),
@@ -1264,341 +1480,225 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final canPop = Navigator.canPop(context);
     final lang = Provider.of<LanguageProvider>(context);
-    final authService = Provider.of<AuthService>(context);
-    final isVip = authService.currentUser?.isVip ?? false;
 
-    return Container(
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 6,
-        bottom: 12,
-        left: 16,
-        right: 16,
-      ),
-      decoration: BoxDecoration(
-        color: isDark ? ZankoColors.darkCard : Colors.white,
-        border: Border(
-          bottom: BorderSide(
-            color: isDark ? ZankoColors.darkBorder : ZankoColors.border,
-            width: 1,
-          ),
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
+        child: Row(
+          children: [
+            if (canPop) ...[
+              _buildHeaderIconButton(
+                isDark: isDark,
+                icon: HugeIcons.strokeRoundedArrowLeft01,
+                tooltip: 'Back',
+                onTap: () => Navigator.pop(context),
+                iconColor: ZankoColors.primary,
+              ),
+              const SizedBox(width: 8),
+            ],
+
+            // 1. Left: Standalone Menu Pill Button
+            _buildHeaderIconButton(
+              isDark: isDark,
+              icon: HugeIcons.strokeRoundedMenu01,
+              tooltip: lang.translate('ai_drawer_menu_btn'),
+              onTap: () {
+                HapticFeedback.lightImpact();
+                _scaffoldKey.currentState?.openDrawer();
+              },
+            ),
+
+            const SizedBox(width: 10),
+
+            // 2. Center: Standalone AI Tutor Dropdown Capsule
+            _buildCenterTutorCapsule(context, isDark, lang),
+
+            const SizedBox(width: 10),
+
+            // 3. Right: Standalone Trash / Clear Button
+            _buildHeaderIconButton(
+              isDark: isDark,
+              icon: HugeIcons.strokeRoundedDelete02,
+              tooltip: lang.translate('clear_chat_title'),
+              onTap: _confirmClearChat,
+              iconColor: isDark
+                  ? const Color(0xFF94A3B8)
+                  : const Color(0xFF64748B),
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              if (canPop) ...[
-                _buildNeumorphicButton(
-                  icon: HugeIcons.strokeRoundedArrowLeft01,
-                  onTap: () => Navigator.pop(context),
-                  iconColor: ZankoColors.primary,
-                ),
-                const SizedBox(width: 10),
-              ],
+    );
+  }
 
-              // Teacher Avatar with cute mascot & pulse
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [
-                          ZankoColors.gradientStart,
-                          ZankoColors.gradientEnd,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.35),
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: ZankoColors.primary.withValues(alpha: 0.35),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: const Center(
-                      child: CuteAiBotIcon(
-                        size: 24,
-                        color: Colors.white,
-                        strokeWidth: 2.1,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF10B981),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isDark ? ZankoColors.darkCard : Colors.white,
-                          width: 2,
-                        ),
-                      ),
-                    ),
+  Widget _buildCenterTutorCapsule(
+    BuildContext context,
+    bool isDark,
+    LanguageProvider lang,
+  ) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          _scaffoldKey.currentState?.openDrawer();
+        },
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(21),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: Container(
+              height: 42,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? const Color(0xFF1E2430).withValues(alpha: 0.75)
+                    : Colors.white.withValues(alpha: 0.85),
+                borderRadius: BorderRadius.circular(21),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.14)
+                      : Colors.white.withValues(alpha: 0.90),
+                  width: 1.1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: (isDark ? Colors.black : const Color(0xFF0F172A))
+                        .withValues(alpha: isDark ? 0.30 : 0.06),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Pulsing Live Indicator
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFF10B981),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF10B981)
+                              .withValues(alpha: 0.55),
+                          blurRadius: 6,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+
+                  // Title & Active Mode
+                  Flexible(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Flexible(
-                          child: Text(
-                            lang.translate('ai_tutor'),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.2,
-                              color: isDark
-                                  ? Colors.white
-                                  : const Color(0xFF17191F),
-                            ),
+                        Text(
+                          lang.translate('ai_tutor'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF0F172A),
+                            letterSpacing: -0.2,
+                            height: 1.1,
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: ZankoColors.primary.withValues(
-                              alpha: isDark ? 0.20 : 0.12,
-                            ),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: ZankoColors.primary.withValues(alpha: 0.3),
-                              width: 0.8,
-                            ),
-                          ),
-                          child: Text(
-                            '⚡ Gemini 3.7',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: ZankoColors.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        const SizedBox(height: 1),
+                        Text(
+                          _getModeTitle(_selectedModeIndex, lang),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: ZankoColors.primary,
+                            height: 1.1,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF10B981),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          isVip
-                              ? 'VIP 👑 (نامەی بێسنوور)'
-                              : 'ئامادەیە بۆ وەڵامدانەوە',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: isVip
-                                ? const Color(0xFF10B981)
-                                : (isDark
-                                      ? ZankoColors.darkTextSecondary
-                                      : ZankoColors.textSecondary),
-                            fontWeight: isVip
-                                ? FontWeight.bold
-                                : FontWeight.w500,
-                          ),
-                        ),
-                      ],
+                  ),
+
+                  const SizedBox(width: 6),
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedArrowDown01,
+                    color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                    size: 13,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeaderIconButton({
+    required bool isDark,
+    required dynamic icon,
+    required String tooltip,
+    required VoidCallback onTap,
+    Color? iconColor,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: Tooltip(
+        message: tooltip,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(15),
+          splashColor: ZankoColors.primary.withValues(alpha: 0.12),
+          highlightColor: ZankoColors.primary.withValues(alpha: 0.06),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+              child: Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0xFF1E2430).withValues(alpha: 0.75)
+                      : Colors.white.withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.14)
+                        : Colors.white.withValues(alpha: 0.90),
+                    width: 1.1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (isDark ? Colors.black : const Color(0xFF0F172A))
+                          .withValues(alpha: isDark ? 0.30 : 0.06),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
-              ),
-
-              // Voice Settings Action (Prompt 37 Section 21)
-              IconButton(
-                icon: HugeIcon(
-                  icon: HugeIcons.strokeRoundedVolumeHigh,
-                  color: isDark
-                      ? ZankoColors.darkTextSecondary
-                      : ZankoColors.textSecondary,
-                  size: 20,
-                ),
-                tooltip: 'ڕێکخستنی دەنگی مامۆستا',
-                onPressed: () => _showVoiceSettingsModal(context, isDark),
-              ),
-
-              // Clear History Action
-              IconButton(
-                icon: HugeIcon(
-                  icon: HugeIcons.strokeRoundedDelete02,
-                  color: isDark
-                      ? ZankoColors.darkTextSecondary
-                      : ZankoColors.textSecondary,
-                  size: 20,
-                ),
-                tooltip: 'پاککردنەوەی گفتوگۆ',
-                onPressed: _confirmClearChat,
-              ),
-
-              // VIP Upgrade Button
-              if (!isVip)
-                GestureDetector(
-                  onTap: () => VipUpgradeSheet.show(context),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(
-                            0xFFF59E0B,
-                          ).withValues(alpha: 0.35),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('👑', style: TextStyle(fontSize: 12)),
-                        SizedBox(width: 3),
-                        Text(
-                          'VIP',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
+                child: Center(
+                  child: HugeIcon(
+                    icon: icon,
+                    color: iconColor ??
+                        (isDark ? Colors.white : const Color(0xFF1F293B)),
+                    size: 20,
                   ),
                 ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Teaching Mode Horizontal Carousel
-          SizedBox(
-            height: 36,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _modes.length,
-              itemBuilder: (context, index) {
-                final isSelected = _selectedModeIndex == index;
-                final mode = _modes[index];
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: GestureDetector(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      setState(() => _selectedModeIndex = index);
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 7,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: isSelected
-                            ? LinearGradient(
-                                colors: [
-                                  ZankoColors.gradientStart,
-                                  ZankoColors.gradientEnd,
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              )
-                            : null,
-                        color: isSelected
-                            ? null
-                            : (isDark
-                                  ? const Color(0xFF1E232F)
-                                  : const Color(0xFFF1F4F9)),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isSelected
-                              ? ZankoColors.primary
-                              : (isDark
-                                    ? const Color(0xFF2C3446)
-                                    : const Color(0xFFE2E7F0)),
-                          width: 1,
-                        ),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: ZankoColors.primary.withValues(
-                                    alpha: 0.35,
-                                  ),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: Center(
-                        child: Text(
-                          mode['title'],
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.w600,
-                            color: isSelected
-                                ? Colors.white
-                                : (isDark
-                                      ? const Color(0xFFD1D5DB)
-                                      : const Color(0xFF4B5563)),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
+              ),
             ),
           ),
-          const SizedBox(height: 8),
-
-          // Multilingual Language Selector (Prompt 37 Section 3)
-          _buildLanguageSelectorBar(isDark),
-        ],
+        ),
       ),
     );
   }
@@ -1664,7 +1764,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
           ),
           const SizedBox(height: 14),
           Text(
-            'سڵاو! من مامۆستای تایبەتی AI تۆم 🧑‍🏫',
+            lang.translate('hero_welcome_title'),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 18,
@@ -1675,7 +1775,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            'پرسیار لە هەر وانە و هاوکێشەیەک بکە، دەنگ تۆمار بکە، یان وێنەی پرسیار و مەلزەمەکانت هاوپێچ بکە.',
+            lang.translate('hero_welcome_desc'),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12.5,
@@ -1693,8 +1793,8 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
               Expanded(
                 child: _buildHeroQuickCard(
                   icon: HugeIcons.strokeRoundedAnalytics01,
-                  title: 'شیکاری هاوکێشە',
-                  subtitle: 'فیزیا و ماتماتیک',
+                  title: lang.translate('hero_card_math'),
+                  subtitle: lang.translate('hero_card_math_sub'),
                   isDark: isDark,
                   onTap: () {
                     setState(() => _selectedModeIndex = 1);
@@ -1706,8 +1806,8 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
               Expanded(
                 child: _buildHeroQuickCard(
                   icon: HugeIcons.strokeRoundedBook02,
-                  title: 'پوختەی مەلزەمە',
-                  subtitle: 'دەرکێشانی گرنگترین',
+                  title: lang.translate('hero_card_summary'),
+                  subtitle: lang.translate('hero_card_summary_sub'),
                   isDark: isDark,
                   onTap: () {
                     setState(() => _selectedModeIndex = 4);
@@ -1723,13 +1823,17 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
               Expanded(
                 child: _buildHeroQuickCard(
                   icon: HugeIcons.strokeRoundedSourceCode,
-                  title: 'کۆد و IT',
-                  subtitle: 'شیکاری و هەڵەکان',
+                  title: lang.translate('hero_card_code'),
+                  subtitle: lang.translate('hero_card_code_sub'),
                   isDark: isDark,
                   onTap: () {
                     setState(() => _selectedModeIndex = 2);
                     _sendMessage(
-                      'تکایە ئەم چەمکەی کۆدە بە نموونەوە شی بکەرەوە:',
+                      lang.isEnglish
+                          ? 'Please explain this coding concept with examples:'
+                          : (lang.isArabic
+                              ? 'يرجى شرح هذا المفهوم البرمجي مع أمثلة:'
+                              : 'تکایە ئەم چەمکەی کۆدە بە نموونەوە شی بکەرەوە:'),
                     );
                   },
                 ),
@@ -1738,13 +1842,17 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
               Expanded(
                 child: _buildHeroQuickCard(
                   icon: HugeIcons.strokeRoundedFlash,
-                  title: 'پێشبینی فاینەڵ',
-                  subtitle: 'کویزی تاقیکردنەوە',
+                  title: lang.translate('hero_card_exam'),
+                  subtitle: lang.translate('hero_card_exam_sub'),
                   isDark: isDark,
                   onTap: () {
                     setState(() => _selectedModeIndex = 5);
                     _sendMessage(
-                      '٥ پرسیاری گرنگ و چاوەڕوانکراوی تاقیکردنەوە پێشبینی بکە',
+                      lang.isEnglish
+                          ? 'Predict 5 important and expected exam questions'
+                          : (lang.isArabic
+                              ? 'توقع ٥ أسئلة مهمة ومتوقعة للامتحان'
+                              : '٥ پرسیاری گرنگ و چاوەڕوانکراوی تاقیکردنەوە پێشبینی بکە'),
                     );
                   },
                 ),
@@ -1808,9 +1916,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 12.5,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF17191F),
+                        color: isDark ? Colors.white : const Color(0xFF141720),
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -1835,8 +1943,9 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     );
   }
 
-  Widget _buildDateHeader() {
+  Widget _buildDateHeader([LanguageProvider? langProvider]) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final lang = langProvider ?? Provider.of<LanguageProvider>(context, listen: false);
     return Container(
       margin: const EdgeInsets.only(top: 4, bottom: 12),
       child: Center(
@@ -1847,7 +1956,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
-            'ئەمڕۆ / Today',
+            lang.translate('chat_today'),
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w500,
@@ -1860,6 +1969,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   }
 
   void _showEmojiPicker() {
+    final lang = Provider.of<LanguageProvider>(context, listen: false);
     final emojis = [
       '📚',
       '🎓',
@@ -1900,9 +2010,11 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'ئیمۆجییەکان',
-                style: TextStyle(
+              Text(
+                lang.isEnglish
+                    ? 'Emojis'
+                    : (lang.isArabic ? 'الرموز التعبيرية' : 'ئیمۆجییەکان'),
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -1985,6 +2097,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
   }
 
   Widget _buildMessageBubble(Map<String, String> msg, bool isUser) {
+    final lang = Provider.of<LanguageProvider>(context, listen: false);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final rawContent = msg['content'] ?? '';
     final content = !isUser ? cleanMathAndDollarSigns(rawContent) : rawContent;
@@ -2006,37 +2119,6 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
             : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Assistant Avatar Icon
-          if (!isUser) ...[
-            Container(
-              width: 32,
-              height: 32,
-              margin: const EdgeInsets.only(top: 2, right: 8),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [ZankoColors.gradientStart, ZankoColors.gradientEnd],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: ZankoColors.primary.withValues(alpha: 0.25),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: const Center(
-                child: CuteAiBotIcon(
-                  size: 18,
-                  color: Colors.white,
-                  strokeWidth: 2.0,
-                ),
-              ),
-            ),
-          ],
-
           Flexible(
             child: Container(
               constraints: BoxConstraints(
@@ -2115,7 +2197,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                           GestureDetector(
                             onTap: () => _showFullScreenImage(
                               imageBase64,
-                              imageName ?? 'وێنە',
+                              imageName ?? (lang.isEnglish ? 'Image' : 'وێنە'),
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(14),
@@ -2149,19 +2231,21 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                             8,
                                           ),
                                         ),
-                                        child: const Row(
+                                        child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            HugeIcon(
+                                            const HugeIcon(
                                               icon: HugeIcons
                                                   .strokeRoundedMaximize01,
                                               size: 12,
                                               color: Colors.white,
                                             ),
-                                            SizedBox(width: 4),
+                                            const SizedBox(width: 4),
                                             Text(
-                                              'گەورەکردن',
-                                              style: TextStyle(
+                                              Provider.of<LanguageProvider>(context, listen: false).isEnglish
+                                                  ? 'Expand'
+                                                  : 'گەورەکردن',
+                                              style: const TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 10,
                                                 fontWeight: FontWeight.bold,
@@ -2255,9 +2339,13 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                 '👑',
                                 style: TextStyle(fontSize: 15),
                               ),
-                              label: const Text(
-                                'بەرزکردنەوە بۆ VIP — پەیامی بێسنوور',
-                                style: TextStyle(
+                              label: Text(
+                                lang.isEnglish
+                                    ? 'Upgrade to VIP — Unlimited Messages'
+                                    : (lang.isArabic
+                                        ? 'ترقية إلى VIP — رسائل غير محدودة'
+                                        : 'بەرزکردنەوە بۆ VIP — پەیامی بێسنوور'),
+                                style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -2307,101 +2395,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     return matches > (text.length * 0.15);
   }
 
-  /// Multilingual Language Selector Bar (Prompt 37 Section 3)
-  Widget _buildLanguageSelectorBar(bool isDark) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1F2C) : const Color(0xFFF3F6FA),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? const Color(0xFF2B3342) : const Color(0xFFE2E8F0),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.translate_rounded, size: 15, color: ZankoColors.primary),
-          const SizedBox(width: 6),
-          Text(
-            'Language:',
-            style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white70 : const Color(0xFF4B5563),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildLanguageChip('auto', 'Auto Detect 🌐', isDark),
-                  const SizedBox(width: 6),
-                  _buildLanguageChip('ku', 'Kurdish ☀️', isDark),
-                  const SizedBox(width: 6),
-                  _buildLanguageChip('ar', 'Arabic 🌙', isDark),
-                  const SizedBox(width: 6),
-                  _buildLanguageChip('en', 'English 🌍', isDark),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildLanguageChip(String code, String label, bool isDark) {
-    final isSelected = _selectedLanguageMode == code;
-    return GestureDetector(
-      onTap: () async {
-        HapticFeedback.selectionClick();
-        setState(() => _selectedLanguageMode = code);
-        try {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('ai_teacher_lang_mode', code);
-        } catch (_) {}
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? ZankoColors.primary
-              : (isDark ? const Color(0xFF242B38) : Colors.white),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected
-                ? ZankoColors.primary
-                : (isDark ? const Color(0xFF333D50) : const Color(0xFFDDE3EE)),
-            width: 1,
-          ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: ZankoColors.primary.withValues(alpha: 0.3),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            color: isSelected
-                ? Colors.white
-                : (isDark ? const Color(0xFFD1D5DB) : const Color(0xFF374151)),
-          ),
-        ),
-      ),
-    );
-  }
 
   /// Combined Action Toolbar & Interactive Voice Player for each Assistant Answer
   Widget _buildAssistantVoiceAndActionToolbar(
@@ -2409,6 +2403,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     String msgId,
     bool isDark,
   ) {
+    final lang = Provider.of<LanguageProvider>(context, listen: false);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2432,22 +2427,22 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
           children: [
             _buildBubbleAction(
               icon: HugeIcons.strokeRoundedCopy01,
-              label: 'کۆپی',
+              label: lang.translate('btn_copy'),
               onTap: () {
                 Clipboard.setData(ClipboardData(text: content));
                 HapticFeedback.lightImpact();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('دەقی وەڵامەکە کۆپی کرا! 📋'),
+                  SnackBar(
+                    content: Text(lang.translate('copied_toast')),
                     backgroundColor: Colors.blueGrey,
-                    duration: Duration(seconds: 1),
+                    duration: const Duration(seconds: 1),
                   ),
                 );
               },
             ),
             _buildBubbleAction(
               icon: HugeIcons.strokeRoundedBookmark02,
-              label: 'تێبینی',
+              label: lang.translate('btn_note'),
               color: ZankoColors.primary,
               onTap: () => _saveAsNote(content),
             ),
@@ -2460,7 +2455,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
 
                 return _buildBubbleAction(
                   icon: HugeIcons.strokeRoundedVolumeHigh,
-                  label: '🔊 خوێندنەوە',
+                  label: '🔊 ${lang.translate('btn_read_aloud')}',
                   color: const Color(0xFF10B981),
                   onTap: () {
                     HapticFeedback.selectionClick();
@@ -2475,12 +2470,15 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
             ),
             _buildBubbleAction(
               icon: HugeIcons.strokeRoundedAiMagic,
-              label: 'ڕوونکردنەوەی زیاتر',
+              label: lang.translate('btn_explain_more'),
               color: ZankoColors.primary,
               onTap: () {
-                _sendMessage(
-                  'تکایە بە شێوازێکی قووڵتر و بە نموونەی زیاتر ئەم بابەتە شی بکەرەوە.',
-                );
+                final prompt = lang.isEnglish
+                    ? 'Please explain this topic in more detail with more examples.'
+                    : (lang.isArabic
+                        ? 'يرجى توضيح هذا الموضوع بمزيد من التفصيل وبمزيد من الأمثلة.'
+                        : 'تکایە بە شێوازێکی قووڵتر و بە نموونەی زیاتر ئەم بابەتە شی بکەرەوە.');
+                _sendMessage(prompt);
               },
             ),
           ],
@@ -2496,19 +2494,36 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     String content,
     bool isDark,
   ) {
+    final lang = Provider.of<LanguageProvider>(context, listen: false);
     String statusLabel = '';
     if (info.isLoading) {
-      statusLabel = 'ئامادەکردنی دەنگ... ⏳';
+      statusLabel = lang.isEnglish
+          ? 'Preparing audio... ⏳'
+          : (lang.isArabic ? 'جاري تحضير الصوت... ⏳' : 'ئامادەکردنی دەنگ... ⏳');
     } else if (info.isPlaying) {
       statusLabel = info.totalChunks > 1
-          ? 'خوێندنەوە (${info.currentChunkIndex + 1}/${info.totalChunks}) 🔊'
-          : 'دەخوێنرێتەوە... 🔊';
+          ? (lang.isEnglish
+              ? 'Reading (${info.currentChunkIndex + 1}/${info.totalChunks}) 🔊'
+              : (lang.isArabic
+                  ? 'قراءة (${info.currentChunkIndex + 1}/${info.totalChunks}) 🔊'
+                  : 'خوێندنەوە (${info.currentChunkIndex + 1}/${info.totalChunks}) 🔊'))
+          : (lang.isEnglish
+              ? 'Reading aloud... 🔊'
+              : (lang.isArabic ? 'جاري القراءة... 🔊' : 'دەخوێنرێتەوە... 🔊'));
     } else if (info.isPaused) {
       statusLabel = info.totalChunks > 1
-          ? 'وەستێنراوە (${info.currentChunkIndex + 1}/${info.totalChunks}) ⏸'
-          : 'وەستێنراوە ⏸';
+          ? (lang.isEnglish
+              ? 'Paused (${info.currentChunkIndex + 1}/${info.totalChunks}) ⏸'
+              : (lang.isArabic
+                  ? 'متوقف (${info.currentChunkIndex + 1}/${info.totalChunks}) ⏸'
+                  : 'وەستێنراوە (${info.currentChunkIndex + 1}/${info.totalChunks}) ⏸'))
+          : (lang.isEnglish
+              ? 'Paused ⏸'
+              : (lang.isArabic ? 'متوقف ⏸' : 'وەستێنراوە ⏸'));
     } else if (info.isError) {
-      statusLabel = 'کێشە لە دەنگ (دووبارە) ⚠️';
+      statusLabel = lang.isEnglish
+          ? 'Audio issue (retry) ⚠️'
+          : (lang.isArabic ? 'خطأ في الصوت (إعادة) ⚠️' : 'کێشە لە دەنگ (دووبارە) ⚠️');
     }
 
     return Container(
@@ -2656,258 +2671,99 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
     );
   }
 
-  /// Voice Settings Modal Sheet (Prompt 37 Section 21)
-  void _showVoiceSettingsModal(BuildContext context, bool isDark) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheetState) {
-          final currentSpeed = _voiceService.playbackSpeed;
-          final isAutoRead = _voiceService.autoReadEnabled;
-
-          return Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF171B26) : Colors.white,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(24),
-              ),
-              border: Border.all(
-                color: isDark
-                    ? const Color(0xFF262E3D)
-                    : const Color(0xFFE2E8F0),
-              ),
-            ),
-            child: SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.white24 : Colors.black12,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.record_voice_over_rounded,
-                        color: ZankoColors.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'ڕێکخستنی دەنگی مامۆستای ژیر 👨‍🏫',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: isDark
-                              ? Colors.white
-                              : const Color(0xFF111827),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Language Mode
-                  Text(
-                    'زمانی وەڵام و دەنگ:',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white70 : const Color(0xFF4B5563),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _buildModalLangChip(
-                        'auto',
-                        'Auto Detect 🌐',
-                        setSheetState,
-                        isDark,
-                      ),
-                      _buildModalLangChip(
-                        'ku',
-                        'Kurdish ☀️',
-                        setSheetState,
-                        isDark,
-                      ),
-                      _buildModalLangChip(
-                        'ar',
-                        'Arabic 🌙',
-                        setSheetState,
-                        isDark,
-                      ),
-                      _buildModalLangChip(
-                        'en',
-                        'English 🌍',
-                        setSheetState,
-                        isDark,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Speed Control
-                  Text(
-                    'خێرایی خوێندنەوە: ${currentSpeed.toStringAsFixed(currentSpeed % 1 == 0 ? 0 : 2)}x',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white70 : const Color(0xFF4B5563),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: [0.75, 1.0, 1.25, 1.5, 2.0].map((s) {
-                      final isSelected = (currentSpeed - s).abs() < 0.05;
-                      return ChoiceChip(
-                        label: Text('${s}x'),
-                        selected: isSelected,
-                        selectedColor: ZankoColors.primary,
-                        labelStyle: TextStyle(
-                          color: isSelected
-                              ? Colors.white
-                              : (isDark ? Colors.white70 : Colors.black87),
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                        onSelected: (_) {
-                          _voiceService.setSpeed(s);
-                          setSheetState(() {});
-                          setState(() {});
-                        },
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Auto Read Toggle
-                  Container(
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? const Color(0xFF1F2637)
-                          : const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isDark
-                            ? const Color(0xFF2C364C)
-                            : const Color(0xFFE2E8F0),
-                      ),
-                    ),
-                    child: SwitchListTile.adaptive(
-                      title: Text(
-                        'خوێندنەوەی دەنگی خۆکار (Auto Read)',
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.bold,
-                          color: isDark
-                              ? Colors.white
-                              : const Color(0xFF1E293B),
-                        ),
-                      ),
-                      subtitle: Text(
-                        'وەڵامەکانی مامۆستا راستەوخۆ دەخوێنرێنەوە پاش دروستبوون',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: isDark
-                              ? Colors.white60
-                              : const Color(0xFF64748B),
-                        ),
-                      ),
-                      value: isAutoRead,
-                      activeColor: ZankoColors.primary,
-                      onChanged: (val) {
-                        _voiceService.setAutoRead(val);
-                        setSheetState(() {});
-                        setState(() {});
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildModalLangChip(
-    String code,
-    String label,
-    void Function(void Function()) setSheetState,
-    bool isDark,
-  ) {
-    final isSelected = _selectedLanguageMode == code;
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      selectedColor: ZankoColors.primary,
-      labelStyle: TextStyle(
-        color: isSelected
-            ? Colors.white
-            : (isDark ? Colors.white70 : Colors.black87),
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-      ),
-      onSelected: (_) async {
-        setState(() => _selectedLanguageMode = code);
-        setSheetState(() {});
-        try {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('ai_teacher_lang_mode', code);
-        } catch (_) {}
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final lang = Provider.of<LanguageProvider>(context);
     final hasText = _controller.text.trim().isNotEmpty;
-    final suggestions = _currentSuggestions;
+    final suggestions = _getSuggestions(lang);
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: isDark
           ? ZankoColors.darkBackground
           : ZankoColors.background,
+      onDrawerChanged: (isOpened) {
+        NavigationShell.hideBottomNav.value = isOpened;
+      },
+      drawerEnableOpenDragGesture: true,
+      drawer: AiTeacherDrawer(
+        currentModeIndex: _selectedModeIndex,
+        currentLangMode: _selectedLanguageMode,
+        onResult: ({required int modeIndex, String? action, String? langMode}) {
+          if (mounted) {
+            setState(() {
+              _selectedModeIndex = modeIndex;
+              if (langMode != null) _selectedLanguageMode = langMode;
+            });
+          }
+          if (action == 'camera') {
+            _pickAndSolveImage(source: ImageSource.camera);
+          } else if (action == 'pdf') {
+            _pickAndSolvePdf();
+          }
+        },
+      ),
       body: SafeArea(
         top: false,
-        child: Column(
+        child: Stack(
           children: [
-            // Custom Header with Mode Selector
-            _buildHeader(context),
-
-            // Ad Banner for AI Teacher
-            const AdBannerWidget(screenName: 'ai_teacher'),
-
-            // Messages List with Hero State
-            Expanded(
-              child: ListView(
-                controller: _scrollController,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                children: [
-                  if (_messages.length <= 1)
-                    _buildWelcomeHero(context, isDark, lang),
-                  _buildDateHeader(),
+            Column(
+              children: [
+                // Messages List with Hero State
+                Expanded(
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (notification) {
+                      if (notification is UserScrollNotification) {
+                        if (notification.direction == ScrollDirection.reverse) {
+                          // User scrolling chats up towards top of screen
+                          if (!NavigationShell.hideBottomNav.value) {
+                            NavigationShell.hideBottomNav.value = true;
+                          }
+                        } else if (notification.direction == ScrollDirection.forward) {
+                          // User scrolling down towards bottom
+                          if (notification.metrics.pixels > 30) {
+                            if (NavigationShell.hideBottomNav.value) {
+                              NavigationShell.hideBottomNav.value = false;
+                            }
+                          } else {
+                            // At top of chats -> keep hidden
+                            if (!NavigationShell.hideBottomNav.value) {
+                              NavigationShell.hideBottomNav.value = true;
+                            }
+                          }
+                        }
+                      } else if (notification is ScrollUpdateNotification) {
+                        final metrics = notification.metrics;
+                        if (metrics.pixels <= 20) {
+                          // At top of chats -> hide bottom nav
+                          if (!NavigationShell.hideBottomNav.value) {
+                            NavigationShell.hideBottomNav.value = true;
+                          }
+                        } else if (metrics.pixels >= metrics.maxScrollExtent - 20) {
+                          // At bottom of chats -> show bottom nav
+                          if (NavigationShell.hideBottomNav.value) {
+                            NavigationShell.hideBottomNav.value = false;
+                          }
+                        }
+                      }
+                      return false;
+                    },
+                    child: ListView(
+                      controller: _scrollController,
+                    padding: EdgeInsets.only(
+                      top: MediaQuery.of(context).padding.top + 64,
+                      bottom: 8,
+                      left: 16,
+                      right: 16,
+                    ),
+                    children: [
+                      // Ad Banner for AI Teacher
+                      const AdBannerWidget(screenName: 'ai_teacher'),
+                      if (_messages.length <= 1)
+                        _buildWelcomeHero(context, isDark, lang),
+                  _buildDateHeader(lang),
                   ..._messages.map((msg) {
                     final isUser = msg['role'] == 'user';
                     return _buildMessageBubble(msg, isUser);
@@ -2978,7 +2834,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                'مامۆستا وەڵامت دەداتەوە... ⚡',
+                                lang.translate('tutor_answering_status'),
                                 style: TextStyle(
                                   fontSize: 12.5,
                                   color: ZankoColors.primary,
@@ -2993,6 +2849,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                 ],
               ),
             ),
+          ),
 
             // Mode-specific suggestions pills
             SizedBox(
@@ -3038,21 +2895,21 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              HugeIcon(
-                                icon: HugeIcons.strokeRoundedSparkles,
-                                color: ZankoColors.primary,
-                                size: 13,
-                              ),
-                              const SizedBox(width: 6),
                               Text(
                                 suggestions[index],
                                 style: TextStyle(
                                   fontSize: 12,
-                                  fontWeight: FontWeight.w600,
                                   color: isDark
                                       ? Colors.white
-                                      : const Color(0xFF1E2430),
+                                      : const Color(0xFF1E293B),
+                                  fontWeight: FontWeight.w600,
                                 ),
+                              ),
+                              const SizedBox(width: 6),
+                              HugeIcon(
+                                icon: HugeIcons.strokeRoundedAiMagic,
+                                color: ZankoColors.primary,
+                                size: 13,
                               ),
                             ],
                           ),
@@ -3064,30 +2921,42 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
               ),
             ),
 
-            // Voice Transcribing Indicator
+            const SizedBox(height: 6),
+
+            // Voice transcribing indicator
             if (_isTranscribingVoice)
               Container(
-                margin: const EdgeInsets.only(top: 6, bottom: 4),
-                padding: const EdgeInsets.symmetric(
+                margin: const EdgeInsets.symmetric(
                   horizontal: 16,
+                  vertical: 4,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: ZankoColors.primary.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: ZankoColors.primary.withValues(alpha: 0.4),
-                    width: 1.2,
-                  ),
+                  color: const Color(0xFF7C3AED),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF7C3AED).withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    CupertinoActivityIndicator(color: Colors.white),
-                    SizedBox(width: 10),
+                    const CupertinoActivityIndicator(color: Colors.white),
+                    const SizedBox(width: 10),
                     Text(
-                      'دەنگەکەت دەکرێتە دەق... ⚡',
-                      style: TextStyle(
+                      lang.isEnglish
+                          ? 'Converting voice to text... ⚡'
+                          : (lang.isArabic
+                              ? 'جاري تحويل الصوت إلى نص... ⚡'
+                              : 'دەنگەکەت دەکرێتە دەق... ⚡'),
+                      style: const TextStyle(
                         fontSize: 12.5,
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -3127,7 +2996,11 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'شیکاری هەنگاو بە هەنگاو: وێنەی هاوکێشە یان یاساکە بگرە 📐',
+                        lang.isEnglish
+                            ? 'Step-by-step solver: Snap a photo of the formula or law 📐'
+                            : (lang.isArabic
+                                ? 'حل خطوة بخطوة: التقط صورة للمعادلة أو القانون 📐'
+                                : 'شیکاری هەنگاو بە هەنگاو: وێنەی هاوکێشە یان یاساکە بگرە 📐'),
                         style: TextStyle(
                           color: isDark
                               ? Colors.white
@@ -3150,18 +3023,20 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                           color: ZankoColors.primary,
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            HugeIcon(
+                            const HugeIcon(
                               icon: HugeIcons.strokeRoundedCamera01,
                               color: Colors.white,
                               size: 14,
                             ),
-                            SizedBox(width: 4),
+                            const SizedBox(width: 4),
                             Text(
-                              'کامێرا',
-                              style: TextStyle(
+                              lang.isEnglish
+                                  ? 'Camera'
+                                  : (lang.isArabic ? 'كاميرا' : 'کامێرا'),
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.bold,
@@ -3186,7 +3061,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
               padding: const EdgeInsets.only(
                 left: 14,
                 right: 14,
-                bottom: 14,
+                bottom: 12,
                 top: 4,
               ),
               child: Row(
@@ -3203,14 +3078,14 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF161A24) : Colors.white,
-                        borderRadius: BorderRadius.circular(28),
+                        color: isDark ? const Color(0xFF181C26) : Colors.white,
+                        borderRadius: BorderRadius.circular(24),
                         border: Border.all(
                           color: _isRecording
-                              ? Colors.redAccent.withValues(alpha: 0.6)
+                              ? Colors.redAccent
                               : (hasText
                                     ? ZankoColors.primary.withValues(
-                                        alpha: 0.45,
+                                        alpha: 0.6,
                                       )
                                     : (isDark
                                           ? const Color(0xFF262C38)
@@ -3242,7 +3117,7 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                     color: Colors.redAccent,
                                     size: 22,
                                   ),
-                                  tooltip: 'هەڵوەشاندنەوە / Cancel',
+                                  tooltip: lang.translate('cancel'),
                                   onPressed: _cancelVoiceRecording,
                                 ),
                                 const SizedBox(width: 4),
@@ -3266,7 +3141,11 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
-                                    'دەنگ تۆمار دەکرێت... قسە بکە 🎙️',
+                                    lang.isEnglish
+                                        ? 'Recording audio... Speak now 🎙️'
+                                        : (lang.isArabic
+                                            ? 'جاري تسجيل الصوت... تحدث الآن 🎙️'
+                                            : 'دەنگ تۆمار دەکرێت... قسە بکە 🎙️'),
                                     style: TextStyle(
                                       color: isDark
                                           ? Colors.white70
@@ -3298,7 +3177,11 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
                                       size: 18,
                                     ),
                                   ),
-                                  tooltip: 'هاوپێچکردنی فایل یان وێنە',
+                                  tooltip: lang.isEnglish
+                                      ? 'Attach file or image'
+                                      : (lang.isArabic
+                                          ? 'إرفاق ملف أو صورة'
+                                          : 'هاوپێچکردنی فایل یان وێنە'),
                                   onPressed: _showAttachmentOptions,
                                 ),
                                 IconButton(
@@ -3472,8 +3355,18 @@ class _AiTeacherChatScreenState extends State<AiTeacherChatScreen> {
             ),
           ],
         ),
-      ),
-    );
+
+        // Floating Frosted Liquid Glassmorphic Top Bar
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: _buildHeader(context),
+        ),
+      ],
+    ),
+  ),
+);
   }
 
   Widget _buildMathSymbolBar() {

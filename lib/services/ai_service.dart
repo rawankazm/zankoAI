@@ -137,16 +137,18 @@ abstract class AiService extends ChangeNotifier {
         final targetIdx = letterMap[cLower]!;
         if (targetIdx < options.length) {
           final optText = options[targetIdx];
-          if (uLower == optText.toLowerCase() || uClean == stripPrefix(optText))
+          if (uLower == optText.toLowerCase() || uClean == stripPrefix(optText)) {
             return true;
+          }
         }
       }
       if (letterMap.containsKey(uLower)) {
         final targetIdx = letterMap[uLower]!;
         if (targetIdx < options.length) {
           final optText = options[targetIdx];
-          if (cLower == optText.toLowerCase() || cClean == stripPrefix(optText))
+          if (cLower == optText.toLowerCase() || cClean == stripPrefix(optText)) {
             return true;
+          }
         }
       }
     }
@@ -304,9 +306,9 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   // High-performance multimodal Gemini models (Official Google Gemini production models)
   static const List<String> _validFastModels = [
-    'gemini-3.5-flash-lite',
-    'gemini-3.5-flash',
-    'gemini-3.6-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-1.5-pro',
   ];
 
   String? _lastWorkingKey;
@@ -519,6 +521,12 @@ class ZankoAiService extends ChangeNotifier implements AiService {
       RegExp(r'[!?,.؛،\s]'),
       '',
     );
+    final isEn = userPrompt.contains('[Language: EN]') ||
+        (userPrompt.contains('[Mode:') && userPrompt.contains('EN')) ||
+        RegExp(r'^[a-zA-Z0-9\s\?\!\.,\-_:\[\]]+$').hasMatch(strippedForGreetingCheck);
+    final isAr = userPrompt.contains('[Language: AR]') ||
+        userPrompt.contains('[اللغة: AR]');
+
     const greetingMatches = [
       'سڵاو',
       'سلاو',
@@ -547,6 +555,8 @@ class ZankoAiService extends ChangeNotifier implements AiService {
       'هلا',
     ];
     if (greetingMatches.contains(cleanPrompt)) {
+      if (isEn) return "Hello! How can I help you with your studies today?";
+      if (isAr) return "مرحباً! كيف يمكنني مساعدتك في دراستك اليوم؟";
       return "سڵاو! چۆن دەتوانم یارمەتیت بدەم؟";
     }
 
@@ -556,31 +566,64 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     );
     if (!allowed) {
       if (isPendingVip) {
+        if (isEn) {
+          return "⏳ **Your VIP request is awaiting admin approval**\n\n"
+              "Your 10 free daily messages have been reached. The admin will activate your subscription shortly for unlimited messaging! 👑";
+        }
+        if (isAr) {
+          return "⏳ **طلب VIP قيد انتظار موافقة المسؤول**\n\n"
+              "لقد استهلكت 10 رسائل مجانية اليوم. سيتم تفعيل حسابك قريباً لرسائل غير محدودة! 👑";
+        }
         return "⏳ **داواکاری VIPەکەت لە چاوەڕوانی پەسەندکردنەوەی ئەدمینە**\n\n"
             "سنووری ١٠ پەیامی بەخۆڕاییت بۆ ئەمڕۆ تەواو بووە. ئەدمین بەم زووانە داواکارییەکەت پەسەند دەکات و دواتر نامەی بێسنوور دەبێتەوە! 👑";
+      }
+      if (isEn) {
+        return "⭐ **You have reached your daily limit of 10 free messages**\n\n"
+            "Upgrade your account to **VIP** for unlimited questions and answers!";
+      }
+      if (isAr) {
+        return "⭐ **لقد وصلت إلى الحد اليومي المجاني (10 رسائل)**\n\n"
+            "قم بالترقية إلى **VIP** للحصول على رسائل غير محدودة!";
       }
       return "⭐ **گەیشتیتە سنووری ١٠ پەیامی بەخۆڕایی بۆ ئەمڕۆ**\n\n"
           "بۆ نامەی بێسنوور ئەپەکەت بۆ **VIP** بەرز بکەرەوە!";
     }
 
     // 2. Build multi-turn context
+    final userLabel = isEn ? 'Student' : (isAr ? 'الطالب' : 'خوێندکار');
+    final tutorLabel = isEn ? 'Tutor' : (isAr ? 'المعلم' : 'مامۆستا');
     String historyStr = "";
     for (var msg in chatHistory.take(8)) {
       historyStr +=
-          "${msg['role'] == 'user' ? 'خوێندکار' : 'مامۆستا'}: ${msg['content']}\n";
+          "${msg['role'] == 'user' ? userLabel : tutorLabel}: ${msg['content']}\n";
     }
     final prompt = historyStr.isEmpty
         ? userPrompt
-        : "$historyStrخوێندکار: $userPrompt\nمامۆستا:";
+        : "$historyStr$userLabel: $userPrompt\n$tutorLabel:";
 
-    const systemInstruction =
-        "تۆ مامۆستای ژیری زانکۆیت لە ئەپڵیکەیشنی ZankoAI (Academic AI Tutor). ڕێنمایی زۆر گرنگ دەربارەی شێوازی وەڵامدانەوە:\n"
-        "١. ئەگەر پەیامی خوێندکار تەنها سڵاو یان چاکوچۆنی بوو (وەک 'سڵاو' یان 'چۆنی'): تەنها بڵێ: 'سڵاو! چۆن دەتوانم لە وانەکانتدا یارمەتیت بدەم؟'.\n"
-        "٢. ئەگەر خوێندکار هەم سڵاوی کردبوو و هەم پرسیارەکەی نووسیبوو لە هەمان پەیامدا (وەک: 'سڵاو مامۆستا، یاسای نیوتن چییە؟' یان 'سڵاو چۆنی، داتابەیس چییە؟'): پێویستە لە هەمان وەڵامدا و لە یەک چات وەڵامی هەردووکیان بدەیتەوە؛ سەرەتا بە ڕێز و گەرمی وەڵامی سڵاو و چاکوچۆنییەکەی بدەرەوە (بۆ نموونە: 'سڵاو و ڕێز! زۆر بەخێربێیت خوێندکاری ئازیز، هیوادارم هەمیشە باش و سەرکەوتوو بیت 🌸')، و دەستبەجێ بە دوایدا وەڵامی تەواو و زانستی پرسیارەکەی بدەرەوە بە خاڵبەندی و ڕوونکردنەوەی ورد بەبێ ئەوەی هیچ کام لە سڵاو یان پرسیارەکەی پشتگوێ بخەیت.\n"
-        "٣. ئەگەر پەیامەکە تەنها پرسیار بوو بێ سڵاوکردن: ڕاستەوخۆ دەستبکە بە شیکار و وەڵامە ئەکادیمییەکە بەبێ پێشەکی و وتەی زیادە.\n"
-        "٤. شیکارییەکان زۆر ڕێکخراو و بە شێوازی ئەکادیمی (خاڵبەندی، هاوکێشەی بیرکاری، نموونەی ژیانی ڕۆژانە) بنووسە.\n"
-        "٥. بە هەمان زمان و دیالێکتی پرسیارەکە (سۆرانی، بادینی، عەرەبی، ئینگلیزی) وەڵام بدەرەوە.\n"
-        "٦. یاسای بیرکاری و سیمبولی دۆلار: هەرگیز و بە هیچ جۆرێک نیشانەی دۆلار (\$ یان \$\$) لە وەڵامەکانتدا بەکارمەهێنە بۆ هاوکێشە یان نووسین. هاوکێشەکان بە شێوازی دەقی سادە و ڕوون بنووسە (وەک: d/dx(x^n) = n · x^(n-1) یان 3x² یان 6x) بەبێ هیچ نیشانەیەکی \$.";
+    final systemInstruction = isEn
+        ? "You are an expert university AI tutor in the ZankoAI application. Important response guidelines:\n"
+          "1. If the message is only a greeting: respond with 'Hello! How can I help you with your studies today?'.\n"
+          "2. If the student greets and asks a question: greet warmly first and then provide a thorough, structured academic answer.\n"
+          "3. If the message is a direct question without greeting: start immediately with the academic answer without unnecessary preamble.\n"
+          "4. Structure answers academically using headings, bullet points, and real-world examples.\n"
+          "5. Respond STRICTLY in fluent, professional English.\n"
+          "6. Mathematical equations: NEVER use dollar signs (\$ or \$\$) in your answers. Write formulas in clean plain text (e.g., d/dx(x^n) = n * x^(n-1) or 3x²)."
+        : (isAr
+            ? "أنت معلم جامعي ذكي في تطبيق ZankoAI. إرشادات الإجابة الهامة:\n"
+              "١. إذا كانت الرسالة تحية فقط: أجب 'مرحباً! كيف يمكنني مساعدتك في دراستك اليوم؟'.\n"
+              "٢. إذا احتوت الرسالة على تحية وسؤال: رحب باحترام أولاً ثم قدم إجابة علمية مفصلة.\n"
+              "٣. إذا كانت الرسالة سؤالاً مباشراً: ابدأ بالشرح الأكاديمي مباشرة دون مقدمات.\n"
+              "٤. نسق الإجابة بطريقة أكاديمية منظمة باستخدام النقاط والأمثلة العملية.\n"
+              "٥. أجب دائماً باللغة العربية الفصحى.\n"
+              "٦. المعادلات الرياضية: لا تستخدم علامات الدولار (\$) إطلاقاً. اكتب المعادلات بنص عادي واضح."
+            : "تۆ مامۆستای ژیری زانکۆیت لە ئەپڵیکەیشنی ZankoAI (Academic AI Tutor). ڕێنمایی زۆر گرنگ دەربارەی شێوازی وەڵامدانەوە:\n"
+              "١. ئەگەر پەیامی خوێندکار تەنها سڵاو یان چاکوچۆنی بوو (وەک 'سڵاو' یان 'چۆنی'): تەنها بڵێ: 'سڵاو! چۆن دەتوانم لە وانەکانتدا یارمەتیت بدەم؟'.\n"
+              "٢. ئەگەر خوێندکار هەم سڵاوی کردبوو و هەم پرسیارەکەی نووسیبوو لە هەمان پەیامدا: پێویستە لە هەمان وەڵامدا و لە یەک چات وەڵامی هەردووکیان بدەیتەوە...\n"
+              "٣. ئەگەر پەیامەکە تەنها پرسیار بوو بێ سڵاوکردن: ڕاستەوخۆ دەستبکە بە شیکار و وەڵامە ئەکادیمییەکە بەبێ پێشەکی و وتەی زیادە.\n"
+              "٤. شیکارییەکان زۆر ڕێکخراو و بە شێوازی ئەکادیمی (خاڵبەندی، هاوکێشەی بیرکاری، نموونەی ژیانی ڕۆژانە) بنووسە.\n"
+              "٥. بە هەمان زمان و دیالێکتی پرسیارەکە (سۆرانی، بادینی، عەرەبی، ئینگلیزی) وەڵام بدەرەوە.\n"
+              "٦. یاسای بیرکاری و سیمبولی دۆلار: هەرگیز و بە هیچ جۆرێک نیشانەی دۆلار (\$ یان \$\$) لە وەڵامەکانتدا بەکارمەهێنە بۆ هاوکێشە یان نووسین.");
 
     // 3. Production: Route through Trusted Server-Side AI Gateway (if configured with real host)
     final isPlaceholderBackend = AppEnv.backendBaseUrl.contains(
@@ -673,19 +716,27 @@ class ZankoAiService extends ChangeNotifier implements AiService {
       caseSensitive: false,
     ).hasMatch(stripped);
 
+    final qLower = query.toLowerCase().trim();
+    final isEnglish = query.contains('[Language: EN]') ||
+        (query.contains('[Mode:') && query.contains('EN')) ||
+        RegExp(r'^[a-zA-Z0-9\s\?\!\.,\-_:\[\]]+$').hasMatch(stripped) ||
+        (qLower.contains('explain') ||
+            qLower.contains('what is') ||
+            qLower.contains('how to') ||
+            qLower.contains('difference'));
+    final isArabic = query.contains('[Language: AR]') ||
+        query.contains('[اللغة: AR]');
+
     if (hasGreeting &&
         !rawContent.contains('سڵاو خوێندکاری ئازیز') &&
-        !rawContent.contains('سڵاو و ڕێز')) {
-      final qLower = query.toLowerCase().trim();
-      final isEnglish =
-          RegExp(r'^[a-zA-Z0-9\s\?\!\.,\-_]+$').hasMatch(query) ||
-          (qLower.contains('explain') ||
-              qLower.contains('what is') ||
-              qLower.contains('how to') ||
-              qLower.contains('difference'));
+        !rawContent.contains('سڵاو و ڕێز') &&
+        !rawContent.contains('Hello dear student') &&
+        !rawContent.contains('أهلاً بك عزيزي الطالب')) {
       final greetingPrefix = isEnglish
-          ? "Hello and welcome! I am glad to assist you 🌸\n\n"
-          : "سڵاو و ڕێز! زۆر بەخێربێیت خوێندکاری ئازیز، هیوادارم هەمیشە باش و سەرکەوتوو بیت 🌸\n\n";
+          ? "Hello and welcome! I am glad to assist you with your studies 🌸\n\n"
+          : (isArabic
+              ? "أهلاً وسهلاً بك عزيزي الطالب! يسعدني مساعدتك في دراستك 🌸\n\n"
+              : "سڵاو و ڕێز! زۆر بەخێربێیت خوێندکاری ئازیز، هیوادارم هەمیشە باش و سەرکەوتوو بیت 🌸\n\n");
       return "$greetingPrefix$rawContent";
     }
 
@@ -694,12 +745,16 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   String _buildAcademicContent(String query) {
     final qLower = query.toLowerCase().trim();
-    final isEnglish =
-        RegExp(r'^[a-zA-Z0-9\s\?\!\.,\-_]+$').hasMatch(query) ||
+    final stripped = query.replaceAll(RegExp(r'\[.*?\]'), '').trim();
+    final isEnglish = query.contains('[Language: EN]') ||
+        (query.contains('[Mode:') && query.contains('EN')) ||
+        RegExp(r'^[a-zA-Z0-9\s\?\!\.,\-_:\[\]]+$').hasMatch(stripped) ||
         (qLower.contains('explain') ||
             qLower.contains('what is') ||
             qLower.contains('how to') ||
             qLower.contains('difference'));
+    final isArabic = query.contains('[Language: AR]') ||
+        query.contains('[اللغة: AR]');
 
     // 0. Translation & Vocabulary (Kurdish to English / English to Kurdish)
     if (qLower.contains('وەرگێڕان') ||
@@ -945,11 +1000,67 @@ class StudentCard extends StatelessWidget {
 
     // General Contextual Response Fallback
     final cleanTopic = query
+        .replaceAll(RegExp(r'\[.*?\]'), '')
         .replaceAll('خوێندکار:', '')
         .replaceAll('مامۆستا:', '')
+        .replaceAll('Student:', '')
+        .replaceAll('Tutor:', '')
+        .replaceAll('الطالب:', '')
+        .replaceAll('المعلم:', '')
         .trim();
+
+    if (isEnglish) {
+      return """
+# ZankoAI Scientific Academic Response
+
+Hello dear student! Regarding your question about **«$cleanTopic»**:
+
+---
+
+## 📌 Summary & Key Definitions:
+* **Core Concept**: This topic represents an essential academic principle focused on understanding fundamental concepts and applying them in your lessons.
+* **Scientific Importance**: Helps students bridge theoretical foundations with practical problem-solving applications.
+
+---
+
+## ⚡ Key Highlights & Principles:
+1. **Step-by-Step Analysis**: Deconstructing the subject into structured components for clear comprehension and exam readiness.
+2. **Key Terminology & Laws**: Mastering the precise definitions, laws, and foundational principles.
+3. **Worked Practice Examples**: Reviewing solved exercises and real-world patterns is the proven approach to securing high marks.
+
+---
+
+💡 **ZankoAI Tutor Tip**: You can directly save this answer to your **Notes** using the bookmark button next to this response for future review! 🎓
+""";
+    }
+
+    if (isArabic) {
+      return """
+# إجابة علمية من معلم ZankoAI
+
+أهلاً بك عزيزي الطالب! بخصوص سؤالك حول **«$cleanTopic»**:
+
+---
+
+## 📌 ملخص وتعريف أساسي:
+* **المفهوم الرئيسي**: هذا الموضوع يمثل أحد المبادئ الأكاديمية الهامة لفهم الأساسيات وتطبيقها في دروسك.
+* **الأهمية العلمية**: يساعد الطالب على ربط الجانب النظري بالتطبيق العملي وحل المسائل بدقة.
+
+---
+
+## ⚡ النقاط الأساسية:
+١. **تحليل خطوة بخطوة**: تقسيم الموضوع إلى نقاط واضحة لسهولة الاستيعاب والمراجعة للامتحان.
+٢. **مراجعة دقيقة**: التركيز على المصطلحات الأكاديمية والقوانين ذات الصلة.
+٣. **حل الأمثلة**: التدرب على الأسئلة ونماذج الامتحانات هو أفضل وسيلة للحصول على درجات عالية.
+
+---
+
+💡 **نصيحة المعلم**: يمكنك حفظ هذه الإجابة في **الملاحظات (Notes)** بالضغط على زر الحفظ بجانب الرد للرجوع إليها لاحقاً! 🎓
+""";
+    }
+
     return """
-# 🧑‍🏫 وەڵامی زانستی مامۆستا ZankoAI
+# وەڵامی زانستی مامۆستا ZankoAI
 
 سڵاو خوێندکاری ئازیز! سەبارەت بە پرسیارەکەت دەربارەی **«$cleanTopic»**:
 
@@ -1056,10 +1167,9 @@ class StudentCard extends StatelessWidget {
   }
 
   static const List<String> _validVisionModels = [
-    'gemini-3.6-flash',
-    'gemini-3.1-flash-image',
-    'gemini-3.8-flash',
-    'gemini-3.7-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-1.5-pro',
   ];
 
   Future<String> _callGeminiMultimodal(
@@ -1704,16 +1814,18 @@ $pdfContext
         final targetIdx = letterMap[cLower]!;
         if (targetIdx < options.length) {
           final optText = options[targetIdx];
-          if (uLower == optText.toLowerCase() || uClean == stripPrefix(optText))
+          if (uLower == optText.toLowerCase() || uClean == stripPrefix(optText)) {
             return true;
+          }
         }
       }
       if (letterMap.containsKey(uLower)) {
         final targetIdx = letterMap[uLower]!;
         if (targetIdx < options.length) {
           final optText = options[targetIdx];
-          if (cLower == optText.toLowerCase() || cClean == stripPrefix(optText))
+          if (cLower == optText.toLowerCase() || cClean == stripPrefix(optText)) {
             return true;
+          }
         }
       }
     }

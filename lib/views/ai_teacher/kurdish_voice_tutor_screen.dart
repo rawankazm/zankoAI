@@ -536,8 +536,9 @@ class _KurdishVoiceTutorScreenState extends State<KurdishVoiceTutorScreen> {
   void _playSectionAt(int index) {
     if (_voiceExplanationData == null) return;
     final sections = _voiceExplanationData!['sections'] as List<dynamic>?;
-    if (sections == null || sections.isEmpty || index >= sections.length)
+    if (sections == null || sections.isEmpty || index >= sections.length) {
       return;
+    }
 
     // Smoothly scroll active chip into view
     if (_chipsScrollController.hasClients) {
