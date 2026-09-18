@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 import { supabaseAdmin } from '../config/supabase.js';
 import { redis } from '../config/redis.js';
 import { UnauthorizedError, ForbiddenError } from '../utils/apiError.js';
@@ -50,17 +51,43 @@ export const authenticateUser = async (req: Request, res: Response, next: NextFu
       // If Redis connection fails, proceed with Supabase Auth validation
     }
 
-    // Authoritative Token Verification with Supabase Auth engine
-    const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(token);
+    // Authoritative Local JWT Verification via SUPABASE_JWT_SECRET (zero remote dependency)
+    let user: { id: string; email?: string; app_metadata?: any; user_metadata?: any };
+    const jwtSecret = process.env.SUPABASE_JWT_SECRET;
 
-    if (authError || !authData.user) {
-      SecurityLogger.fromRequest(req, 'AUTH_FAILURE', 'WARN', 'DENIED', {
-        reason: authError?.message || 'User not found in Supabase Auth',
-      });
-      throw new UnauthorizedError('Invalid or expired authentication token');
+    if (jwtSecret) {
+      try {
+        const decoded = jwt.verify(token, jwtSecret, { algorithms: ['HS256'] }) as any;
+        if (!decoded || !decoded.sub) {
+          throw new UnauthorizedError('Invalid token payload: missing sub claim');
+        }
+        user = {
+          id: decoded.sub,
+          email: decoded.email,
+          app_metadata: decoded.app_metadata || {},
+          user_metadata: decoded.user_metadata || {},
+        };
+      } catch (jwtErr: any) {
+        if (jwtErr instanceof UnauthorizedError) throw jwtErr;
+        SecurityLogger.fromRequest(req, 'AUTH_FAILURE', 'WARN', 'DENIED', {
+          reason: jwtErr?.message || 'JWT signature verification failed',
+        });
+        throw new UnauthorizedError(
+          jwtErr.name === 'TokenExpiredError'
+            ? 'Authentication token has expired'
+            : 'Invalid authentication token or signature tampering detected'
+        );
+      }
+    } else {
+      const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(token);
+      if (authError || !authData.user) {
+        SecurityLogger.fromRequest(req, 'AUTH_FAILURE', 'WARN', 'DENIED', {
+          reason: authError?.message || 'User not found in Supabase Auth',
+        });
+        throw new UnauthorizedError('Invalid or expired authentication token');
+      }
+      user = authData.user;
     }
-
-    const user = authData.user;
 
     // Fetch authoritative user profile directly from PostgreSQL public.profiles
     const { data: profileData, error: profileError } = await supabaseAdmin

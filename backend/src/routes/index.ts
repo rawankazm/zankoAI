@@ -16,6 +16,7 @@ import { subscriptionRoutes } from './subscription.routes.js';
 import { notificationRoutes } from './notification.routes.js';
 import { deviceRoutes } from './device.routes.js';
 import { reportsRouter, seminarsRouter } from '../modules/academic/reports_seminars/reports_seminars.routes.js';
+import { fileRoutes } from './files.routes.js';
 
 const apiRouter = Router();
 
@@ -47,8 +48,10 @@ apiRouter.use('/ai', aiRoutes);
 apiRouter.use('/ai-teacher', aiTeacherRoutes);
 apiRouter.use('/v1/ai-teacher', aiTeacherRoutes);
 
-// 9. Secure Supabase Storage (/api/storage)
+// 9. Secure Supabase Storage (/api/storage) & Self-Hosted Local Asset Storage (/api/v1/files)
 apiRouter.use('/storage', storageRoutes);
+apiRouter.use('/v1/files', fileRoutes);
+apiRouter.use('/files', fileRoutes);
 
 // 10. Centralized Usage Limits & Quotas (/api/usage)
 apiRouter.use('/usage', usageRoutes);

@@ -33,6 +33,9 @@ COPY --from=builder /app/dist ./dist
 # Install curl for robust Docker container healthchecks
 RUN apk add --no-cache curl
 
+# Create persistent storage directories with non-root ownership
+RUN mkdir -p /app/uploads/pdfs /app/uploads/ocr /app/uploads/exports && chown -R node:node /app/uploads
+
 # Run as non-root user for security
 USER node
 

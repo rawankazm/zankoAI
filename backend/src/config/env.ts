@@ -19,6 +19,20 @@ const envSchema = z.object({
   // SECURITY [C-01]: SUPABASE_JWT_SECRET must be set explicitly — no insecure default.
   SUPABASE_JWT_SECRET: z.string().min(32).default('REPLACE_ME_SUPABASE_JWT_SECRET_32_CHARS_MIN'),
 
+  // PostgreSQL Configuration (Self-Hosted)
+  DATABASE_URL: z.string().optional(),
+  POSTGRES_HOST: z.string().default('postgres'),
+  POSTGRES_PORT: z
+    .string()
+    .default('5432')
+    .transform((val) => parseInt(val, 10)),
+  POSTGRES_DB: z.string().default('zanko_db'),
+  POSTGRES_USER: z.string().default('postgres'),
+  POSTGRES_PASSWORD: z.string().default('postgres_secure_zanko_2026'),
+
+  // Storage Configuration (Self-Hosted Local Volume)
+  STORAGE_PATH: z.string().default('/app/uploads'),
+
   // Redis Configuration
   REDIS_HOST: z.string().default('127.0.0.1'),
   REDIS_PORT: z
