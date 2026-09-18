@@ -13,7 +13,7 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().default('https://zankoai.com'),
 
   // Supabase Credentials (Headless Auth & Self-Hosted PostgREST Engine)
-  SUPABASE_URL: z.string().default('http://postgrest:3000'),
+  SUPABASE_URL: z.string().default('http://nginx'),
   SUPABASE_ANON_KEY: z.string().min(1).default('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiZXhwIjoyNTI0NjA4MDAwfQ._yGDnGXilGQzpkjZy4aNQjD5gPb8JqY9m3an0j7PQog'),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).default('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoicG9zdGdyZXMiLCJpc3MiOiJzdXBhYmFzZSIsImV4cCI6MjUyNDYwODAwMH0.S3ubvgdtgcamzqf-d0xJITu8C6wIriT56ekZxowJ-VU'),
   SUPABASE_JWT_SECRET: z.string().min(32).default('zanko_production_secure_jwt_secret_min_32_chars_2026'),

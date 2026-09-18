@@ -155,7 +155,7 @@ services:
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-zanko_production_vault_redis_password_2026}
       - STORAGE_PATH=/app/uploads
-      - SUPABASE_URL=http://postgrest:3000
+      - SUPABASE_URL=http://nginx
       - SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiZXhwIjoyNTI0NjA4MDAwfQ._yGDnGXilGQzpkjZy4aNQjD5gPb8JqY9m3an0j7PQog
       - SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoicG9zdGdyZXMiLCJpc3MiOiJzdXBhYmFzZSIsImV4cCI6MjUyNDYwODAwMH0.S3ubvgdtgcamzqf-d0xJITu8C6wIriT56ekZxowJ-VU
       - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET:-zanko_production_secure_jwt_secret_min_32_chars_2026}
@@ -209,7 +209,7 @@ services:
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-zanko_production_vault_redis_password_2026}
       - STORAGE_PATH=/app/uploads
-      - SUPABASE_URL=http://postgrest:3000
+      - SUPABASE_URL=http://nginx
       - SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiZXhwIjoyNTI0NjA4MDAwfQ._yGDnGXilGQzpkjZy4aNQjD5gPb8JqY9m3an0j7PQog
       - SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoicG9zdGdyZXMiLCJpc3MiOiJzdXBhYmFzZSIsImV4cCI6MjUyNDYwODAwMH0.S3ubvgdtgcamzqf-d0xJITu8C6wIriT56ekZxowJ-VU
       - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET:-zanko_production_secure_jwt_secret_min_32_chars_2026}

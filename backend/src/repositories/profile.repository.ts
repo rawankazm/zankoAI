@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '../config/supabase.js';
 import { UserProfile, UserRole, UserStatus } from '../types/user.types.js';
+import { logger } from '../config/logger.js';
 
 export class ProfileRepository {
   static async findById(id: string): Promise<UserProfile | null> {
@@ -9,7 +10,11 @@ export class ProfileRepository {
       .eq('id', id)
       .maybeSingle();
 
-    if (error || !data) return null;
+    if (error) {
+      logger.error('ProfileRepository.findById error: ' + error.message);
+      return null;
+    }
+    if (!data) return null;
     return data as UserProfile;
   }
 
