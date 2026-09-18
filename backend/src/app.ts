@@ -81,11 +81,11 @@ export const createApp = (): Express => {
     next();
   });
 
-  // ─── 5. Global Rate Limiting ───
-  app.use(rateLimiter());
-
-  // ─── 6. Health & Liveness Probes ───
+  // ─── 5. Health & Liveness Probes (Always Exempt from Rate Limiting) ───
   app.use('/', healthRoutes);
+
+  // ─── 6. Global Rate Limiting ───
+  app.use(rateLimiter());
 
   // ─── 7. Mount API Router ───
   app.use(env.API_PREFIX, apiRouter);
