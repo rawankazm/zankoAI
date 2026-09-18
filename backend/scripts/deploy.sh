@@ -51,6 +51,7 @@ done
 
 # Bring up API, Worker, Nginx, PostgREST
 docker compose -f docker-compose.prod.yml up -d --build postgrest api worker nginx
+docker compose -f docker-compose.prod.yml restart nginx
 
 echo "=== [4/5] Running Migrations & Seeding ==="
 chmod +x scripts/migrate_and_seed.sh
