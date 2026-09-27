@@ -5,6 +5,7 @@ class ScheduleModel {
   final String location; // e.g. "هۆڵی ٣، بەشی کۆمپیوتەر"
   final String dayName; // e.g. "شەممە", "یەکشەممە"
   final String teacherName;
+  final String stage; // e.g. "قۆناغی ١", "قۆناغی ٢", "قۆناغی ٣", "قۆناغی ٤"
 
   ScheduleModel({
     required this.id,
@@ -13,6 +14,7 @@ class ScheduleModel {
     required this.location,
     required this.dayName,
     required this.teacherName,
+    this.stage = '',
   });
 
   Map<String, dynamic> toMap() {
@@ -23,6 +25,7 @@ class ScheduleModel {
       'location': location,
       'dayName': dayName,
       'teacherName': teacherName,
+      'stage': stage,
     };
   }
 
@@ -34,6 +37,7 @@ class ScheduleModel {
       location: map['location'] ?? '',
       dayName: map['dayName'] ?? '',
       teacherName: map['teacherName'] ?? '',
+      stage: map['stage'] ?? '',
     );
   }
 }

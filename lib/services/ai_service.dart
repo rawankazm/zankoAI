@@ -1,8 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:dio/dio.dart';
@@ -75,6 +74,10 @@ abstract class AiService extends ChangeNotifier {
     required String pdfText,
     String? pdfName,
     String targetLanguage = 'ku',
+  });
+  Future<Map<String, dynamic>> extractScheduleFromImage(
+    Uint8List imageBytes, {
+    String mimeType = 'image/jpeg',
   });
 
   /// Helper to robustly check if a user answer matches the correct answer
@@ -306,9 +309,12 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   // High-performance multimodal Gemini models (Official Google Gemini production models)
   static const List<String> _validFastModels = [
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
-    'gemini-1.5-pro',
+    'gemini-3.1-flash-lite',
+    'gemini-3-flash-preview',
+    'gemini-flash-latest',
+    'gemini-3.8-flash',
+    'gemini-3.5-flash',
+    'gemini-3.1-flash-lite-preview',
   ];
 
   String? _lastWorkingKey;
@@ -346,8 +352,12 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     String prompt,
     String systemInstruction,
   ) async {
-    final client = HttpClient();
-    client.connectionTimeout = const Duration(seconds: 10);
+    final dio = Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 40),
+      ),
+    );
 
     final modelsToTry = _lastWorkingModel != null
         ? [
@@ -358,12 +368,8 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
     for (final m in modelsToTry.take(3)) {
       try {
-        final uri = Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=$key',
-        );
-        final request = await client.postUrl(uri);
-        request.headers.set('content-type', 'application/json');
-        request.headers.set('x-goog-api-key', key);
+        final uri =
+            'https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=$key';
 
         final bodyMap = {
           if (systemInstruction.isNotEmpty)
@@ -382,18 +388,27 @@ class ZankoAiService extends ChangeNotifier implements AiService {
           'generationConfig': {'maxOutputTokens': 4096, 'temperature': 0.7},
         };
 
-        request.add(utf8.encode(jsonEncode(bodyMap)));
-        final response = await request.close().timeout(
-          const Duration(seconds: 50),
+        final response = await dio.post<dynamic>(
+          uri,
+          data: bodyMap,
+          options: Options(
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': key,
+            },
+            validateStatus: (status) => true,
+          ),
         );
-        final respStr = await response.transform(utf8.decoder).join();
 
-        if (response.statusCode == 200) {
-          final data = jsonDecode(respStr);
+        if (response.statusCode == 200 && response.data != null) {
+          final dynamic raw = response.data;
+          final Map<String, dynamic> data = raw is Map<String, dynamic>
+              ? raw
+              : (raw is String ? jsonDecode(raw) : <String, dynamic>{});
           final candidates = data['candidates'] as List?;
           if (candidates != null && candidates.isNotEmpty) {
             final contentMap = candidates[0]['content'];
-            final parts = contentMap['parts'] as List?;
+            final parts = contentMap?['parts'] as List?;
             if (parts != null && parts.isNotEmpty) {
               final buffer = StringBuffer();
               for (final p in parts) {
@@ -405,13 +420,12 @@ class ZankoAiService extends ChangeNotifier implements AiService {
               if (fullText.isNotEmpty) {
                 _lastWorkingKey = key;
                 _lastWorkingModel = m;
-                client.close();
                 return fullText;
               }
             }
           }
-        } else if (response.statusCode >= 400) {
-          debugPrint('❌ [Gemini Error ${response.statusCode}]: $respStr');
+        } else if (response.statusCode != null && response.statusCode! >= 400) {
+          debugPrint('❌ [Gemini Error ${response.statusCode}]: ${response.data}');
           _markKeyCooldown(key);
         }
       } catch (e) {
@@ -422,7 +436,6 @@ class ZankoAiService extends ChangeNotifier implements AiService {
       }
     }
 
-    client.close();
     return "";
   }
 
@@ -1089,9 +1102,14 @@ Hello dear student! Regarding your question about **«$cleanTopic»**:
     String prompt,
     String systemPrompt, {
     String mimeType = 'image/jpeg',
+    bool isJson = false,
   }) async {
-    final client = HttpClient();
-    client.connectionTimeout = const Duration(seconds: 45);
+    final dio = Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 45),
+        receiveTimeout: const Duration(seconds: 60),
+      ),
+    );
 
     final modelsToTry = _lastWorkingModel != null
         ? [
@@ -1104,12 +1122,8 @@ Hello dear student! Regarding your question about **«$cleanTopic»**:
 
     for (final m in modelsToTry) {
       try {
-        final uri = Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=$key',
-        );
-        final request = await client.postUrl(uri);
-        request.headers.set('content-type', 'application/json');
-        request.headers.set('x-goog-api-key', key);
+        final uri =
+            'https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent';
 
         final bodyMap = {
           if (systemPrompt.isNotEmpty)
@@ -1128,73 +1142,73 @@ Hello dear student! Regarding your question about **«$cleanTopic»**:
               ],
             },
           ],
+          if (isJson)
+            'generationConfig': {
+              'responseMimeType': 'application/json',
+            },
         };
 
-        request.add(utf8.encode(jsonEncode(bodyMap)));
-        final response = await request.close().timeout(
-          const Duration(seconds: 60),
+        final response = await dio.post<dynamic>(
+          uri,
+          data: bodyMap,
+          options: Options(
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': key,
+            },
+            validateStatus: (status) => true,
+          ),
         );
-        final respStr = await response.transform(utf8.decoder).join();
 
-        if (response.statusCode == 200) {
-          final data = jsonDecode(respStr);
+        if (response.statusCode == 200 && response.data != null) {
+          final dynamic raw = response.data;
+          final Map<String, dynamic> data = raw is Map<String, dynamic>
+              ? raw
+              : (raw is String ? jsonDecode(raw) : <String, dynamic>{});
           final candidates = data['candidates'] as List?;
           if (candidates != null && candidates.isNotEmpty) {
             final contentMap = candidates[0]['content'];
-            final parts = contentMap['parts'] as List?;
+            final parts = contentMap?['parts'] as List?;
             if (parts != null && parts.isNotEmpty) {
               final text = parts[0]['text'];
               if (text != null && text.toString().isNotEmpty) {
                 _lastWorkingKey = key;
                 _lastWorkingModel = m;
-                client.close();
                 return text.toString();
               }
             }
           }
         } else if (response.statusCode == 429) {
-          client.close();
-          return "⚠️ **سنووری کاتیی داواکارییەکانی سێرڤەر تەواو بووە**. تکایە کەمێکی تر هەوڵ بدەرەوە.";
-        } else if (response.statusCode == 403) {
-          client.close();
-          return "⚠️ **سێرڤەری زیرەکی دەستکرد لە کاردایە بەڵام ڕێگەپێدان ڕەتکرایەوە**. تکایە دواتر هەوڵ بدەرەوە.";
+          debugPrint('⚠️ Gemini rate limited on $m');
+          _markKeyCooldown(key);
+        } else {
+          debugPrint('⚠️ Gemini multimodal returned ${response.statusCode}: ${response.data}');
         }
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('❌ [Gemini Multimodal Exception on $m]: $e');
+      }
     }
 
-    client.close();
     return "";
   }
 
   static const List<String> _validVisionModels = [
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
-    'gemini-1.5-pro',
+    'gemini-3.1-flash-lite',
+    'gemini-3-flash-preview',
+    'gemini-flash-latest',
+    'gemini-3.8-flash',
+    'gemini-3.5-flash',
+    'gemini-3.1-flash-lite-preview',
   ];
 
   Future<String> _callGeminiMultimodal(
     Uint8List mediaBytes,
     String prompt, {
     String mimeType = 'image/jpeg',
+    String? systemInstruction,
+    bool isJson = false,
   }) async {
-    final keysToTry = <String>[
-      if (_lastWorkingKey != null && _isValidApiKey(_lastWorkingKey))
-        _lastWorkingKey!.trim(),
-      if (_apiKey != null &&
-          _isValidApiKey(_apiKey) &&
-          _apiKey != _lastWorkingKey)
-        _apiKey!.trim(),
-      if (_defaultApiKey.trim().isNotEmpty &&
-          _isValidApiKey(_defaultApiKey) &&
-          _defaultApiKey != _apiKey &&
-          _defaultApiKey != _lastWorkingKey)
-        _defaultApiKey.trim(),
-      if (_embeddedApiKey.trim().isNotEmpty &&
-          _isValidApiKey(_embeddedApiKey) &&
-          _embeddedApiKey != _apiKey &&
-          _embeddedApiKey != _lastWorkingKey)
-        _embeddedApiKey.trim(),
-    ];
+    final keysToTry = _getActiveKeys();
 
     final isAudio = mimeType.startsWith('audio');
     String actualMime = mimeType;
@@ -1255,11 +1269,13 @@ Hello dear student! Regarding your question about **«$cleanTopic»**:
       }
     }
 
-    final systemPrompt = isAudio
+    final defaultSystemPrompt = isAudio
         ? "You are an advanced AI Speech-to-Text transcriber. Listen to the audio and transcribe every spoken word accurately in the exact language spoken (Kurdish Sorani, Kurdish Badini, Arabic, or English). Output ONLY the transcribed words without any preamble or notes."
         : "تۆ مامۆستایەکی زۆر زیرەک و شارەزای هەموو بوارە ئەکادیمییەکان، بڕوانامەکان، بەڵگەنامەکان، بیرکاری و زانستەکانی بە ناوی ZankoAI. "
               "ئەم وێنەیە بە تەواوی و بە وردی شیکار بکە. ئەگەر بەکارهێنەر پرسیار یان تێبینییەکی تایبەتی هەبوو لەسەر وێنەکە (وەک ناوی کەس، پرسیارێکی دیاریکراو، یان داواکارییەک وەک وەرگێڕان)، وەڵامی ورد و ڕاستەوخۆ دەربارەی وێنەکە بدەرەوە بە هەمان زمانی پرسیارەکە (کوردی سۆرانی، کوردی بادینی، عەرەبی، یان ئینگلیزی). "
               "هەرگیز نیشانەی دۆلار (\$ یان \$\$) بۆ هاوکێشە بیرکارییەکان بەکارمەهێنە، بەڵکو بە دەقی ئاسایی و ڕوونی بێ \$ بنووسە.";
+
+    final systemPrompt = systemInstruction ?? defaultSystemPrompt;
 
     final defaultPrompt = isAudio
         ? "Transcribe the spoken words in this audio exactly in Kurdish (Sorani/Badini), Arabic, or English."
@@ -1272,26 +1288,13 @@ Hello dear student! Regarding your question about **«$cleanTopic»**:
     for (final keyToUse in keysToTry) {
       if (keyToUse.isEmpty) continue;
 
-      // If key is in new AQ. format, use direct HTTP with x-goog-api-key header first
-      if (keyToUse.startsWith('AQ.')) {
-        final httpResult = await _callGeminiMultimodalHttp(
-          keyToUse,
-          mediaBytes,
-          effectivePrompt,
-          systemPrompt,
-          mimeType: actualMime,
-        );
-        if (httpResult.isNotEmpty) {
-          return httpResult;
-        }
-      }
-
       final httpResult = await _callGeminiMultimodalHttp(
         keyToUse,
         mediaBytes,
         effectivePrompt,
         systemPrompt,
         mimeType: actualMime,
+        isJson: isJson,
       );
       if (httpResult.isNotEmpty) {
         return httpResult;
@@ -1299,6 +1302,8 @@ Hello dear student! Regarding your question about **«$cleanTopic»**:
     }
 
     if (isAudio) return "";
+
+    if (isJson) return "";
 
     // If query has specific academic instructions (like translation or math), provide fallback response
     if (effectivePrompt != defaultPrompt && effectivePrompt.length > 5) {
@@ -3048,4 +3053,85 @@ $jsonExample
       ],
     };
   }
+
+  @override
+  Future<Map<String, dynamic>> extractScheduleFromImage(
+    Uint8List imageBytes, {
+    String mimeType = 'image/jpeg',
+  }) async {
+    const prompt = """
+You are an expert academic timetable and course schedule parser for ZankoAI.
+Analyze this schedule image (it may be a university timetable, lecture calendar, school table, photo, screenshot, or document in Kurdish, Arabic, or English).
+University schedules often contain multiple stages (e.g. Stage 1 / Year 1 / قۆناغی ١, Stage 2 / قۆناغی ٢, Stage 3 / قۆناغی ٣, Stage 4 / قۆناغی ٤) or groups in separate columns or rows.
+
+Your tasks:
+1. Extract EVERY class / lecture into structured data:
+- "dayName": MUST be strictly one of these exact Kurdish day names: "شەممە", "یەکشەممە", "دووشەممە", "سێشەممە", "چوارشەممە", "پێنجشەممە", "هەینی".
+- "courseName": The subject name (e.g. "بیرکاری", "Computer Science", "داتابەیس").
+- "time": Formatted time range like "08:30 - 10:00" or single time.
+- "location": Room/Hall/Lab if available, or "" if not found.
+- "teacherName": Instructor/Professor name if available, or "" if not found.
+- "stage": Academic stage/year for this lecture (e.g. "قۆناغی ١", "قۆناغی ٢", "قۆناغی ٣", "قۆناغی ٤" or "Stage 1", "Stage 2", "Stage 3", "Stage 4", "قۆناغی یەکەم", "قۆناغی دووەم"). Standardize into "قۆناغی ١", "قۆناغی ٢", "قۆناغی ٣", "قۆناغی ٤" whenever possible. If unknown or not separated, set "".
+
+2. "availableStages": List of all distinct stages detected in the timetable (e.g. ["قۆناغی ١", "قۆناغی ٢", "قۆناغی ٣", "قۆناغی ٤"]).
+
+3. "summary": Provide a friendly, comprehensive, conversational Kurdish (Sorani) explanation of what lessons the student has on each day of the week ("لە هەر ڕۆژێکی هەفتەدا چ وانەیەکمان هەیە"). Mention every day with classes, its lessons and times, and mention any off days clearly.
+
+Return ONLY a valid JSON object:
+{
+  "summary": "پوختەی هەفتانەی وانەکان بە زمانی کوردی...",
+  "availableStages": ["قۆناغی ١", "قۆناغی ٢", "قۆناغی ٣", "قۆناغی ٤"],
+  "lectures": [
+    {
+      "dayName": "شەممە",
+      "courseName": "ناوی وانە",
+      "time": "08:30 - 10:00",
+      "location": "هۆڵی ١",
+      "teacherName": "د. کامەران",
+      "stage": "قۆناغی ١"
+    }
+  ]
 }
+""";
+
+    try {
+      final rawResponse = await _callGeminiMultimodal(
+        imageBytes,
+        prompt,
+        mimeType: mimeType,
+        systemInstruction:
+            "You are an expert academic timetable parser for ZankoAI. Always return strictly valid JSON matching the requested schema.",
+        isJson: true,
+      );
+
+      String clean = rawResponse.trim();
+      if (clean.startsWith('```json')) clean = clean.substring(7);
+      if (clean.startsWith('```')) clean = clean.substring(3);
+      if (clean.endsWith('```')) clean = clean.substring(0, clean.length - 3);
+      clean = clean.trim();
+
+      final start = clean.indexOf('{');
+      final end = clean.lastIndexOf('}') + 1;
+      if (start != -1 && end > start) {
+        final jsonSub = clean.substring(start, end);
+        try {
+          final decoded = jsonDecode(jsonSub) as Map<String, dynamic>;
+          return decoded;
+        } catch (_) {
+          // Lenient fallback for trailing commas or minor JSON syntax quirks
+          final sanitized = jsonSub.replaceAll(RegExp(r',\s*\}'), '}').replaceAll(RegExp(r',\s*\]'), ']');
+          final decoded = jsonDecode(sanitized) as Map<String, dynamic>;
+          return decoded;
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ [extractScheduleFromImage Error]: $e');
+    }
+
+    return {
+      "summary": "",
+      "lectures": <dynamic>[],
+    };
+  }
+}
+
