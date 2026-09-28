@@ -291,11 +291,11 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
                 ),
                 decoration: BoxDecoration(
                   color: const Color(
-                    0xFF3B82F6,
+                    0xFF8B5CF6,
                   ).withValues(alpha: isDark ? 0.15 : 0.08),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: const Color(0xFF3B82F6).withValues(alpha: 0.4),
+                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.4),
                     width: 1.5,
                   ),
                 ),
@@ -304,7 +304,7 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF3B82F6).withValues(alpha: 0.2),
+                        color: const Color(0xFF8B5CF6).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: const Text('🌴', style: TextStyle(fontSize: 24)),
@@ -334,7 +334,7 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
                     ),
                     const Icon(
                       CupertinoIcons.play_circle_fill,
-                      color: Color(0xFF3B82F6),
+                      color: Color(0xFF8B5CF6),
                       size: 28,
                     ),
                   ],
@@ -391,7 +391,7 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
               ),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFEF4444),
+              backgroundColor: ZankoColors.primary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -421,10 +421,10 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
         : 0.0;
 
     final modeColor = _mode == _PomodoroMode.focus
-        ? const Color(0xFFEF4444)
+        ? ZankoColors.primary
         : (_mode == _PomodoroMode.shortBreak
               ? const Color(0xFF10B981)
-              : const Color(0xFF3B82F6));
+              : const Color(0xFF8B5CF6));
 
     return Directionality(
       textDirection: lang.textDirection,
@@ -439,12 +439,12 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
             icon: const Icon(CupertinoIcons.back),
             onPressed: () => Navigator.pop(context),
           ),
-          title: const Row(
+          title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(CupertinoIcons.timer, color: Color(0xFFEF4444), size: 24),
-              SizedBox(width: 8),
-              Text(
+              Icon(CupertinoIcons.timer, color: ZankoColors.primary, size: 24),
+              const SizedBox(width: 8),
+              const Text(
                 'کاتژمێری تەرکیز (Pomodoro)',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
@@ -687,7 +687,7 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
                       '🍅 خولەکانی ئەمرۆ',
                       '$_completedSessionsToday دانیشتن',
                       CupertinoIcons.checkmark_seal_fill,
-                      const Color(0xFFEF4444),
+                      ZankoColors.primary,
                       isDark,
                     ),
                   ),
@@ -756,9 +756,14 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
     final subtitleColor = isDark
         ? const Color(0xFFCBD5E1)
         : const Color(0xFF475569);
-    final brightColor = (color == const Color(0xFFEF4444))
-        ? (isDark ? const Color(0xFFFF6B6B) : const Color(0xFFDC2626))
-        : (isDark ? const Color(0xFF34D399) : const Color(0xFF059669));
+    final Color brightColor;
+    if (color == ZankoColors.primary) {
+      brightColor = isDark ? const Color(0xFF60A5FA) : ZankoColors.primary;
+    } else if (color == const Color(0xFF10B981)) {
+      brightColor = isDark ? const Color(0xFF34D399) : const Color(0xFF059669);
+    } else {
+      brightColor = color;
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),

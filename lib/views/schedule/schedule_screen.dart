@@ -870,18 +870,53 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         }
         final rawStg = (item['stage'] ?? '').toString().trim();
         final resolvedStage = _normalizeStage(rawStg, cName);
+        final timeStr = (item['time'] ?? '08:30 - 10:00').toString().trim();
+        final locStr = (item['location'] ?? '').toString().trim();
+        final teacherStr = (item['teacherName'] ?? '').toString().trim();
 
-        parsedLectures.add(
-          ScheduleModel(
-            id: const Uuid().v4(),
-            courseName: cName,
-            time: (item['time'] ?? '08:30 - 10:00').toString().trim(),
-            location: (item['location'] ?? '').toString().trim(),
-            dayName: resolvedDay,
-            teacherName: (item['teacherName'] ?? '').toString().trim(),
-            stage: resolvedStage,
-          ),
-        );
+        // Check if multiple courses were bundled into a single courseName string
+        List<String> subCourses = [];
+        if (cName.contains('\n')) {
+          subCourses = cName
+              .split('\n')
+              .map((s) => s.trim())
+              .where((s) => s.length > 2)
+              .toList();
+        } else if (cName.contains(' / ')) {
+          subCourses = cName
+              .split(' / ')
+              .map((s) => s.trim())
+              .where((s) => s.length > 2)
+              .toList();
+        }
+
+        if (subCourses.length > 1) {
+          for (final sub in subCourses) {
+            parsedLectures.add(
+              ScheduleModel(
+                id: const Uuid().v4(),
+                courseName: sub,
+                time: timeStr,
+                location: locStr,
+                dayName: resolvedDay,
+                teacherName: teacherStr,
+                stage: resolvedStage,
+              ),
+            );
+          }
+        } else {
+          parsedLectures.add(
+            ScheduleModel(
+              id: const Uuid().v4(),
+              courseName: cName,
+              time: timeStr,
+              location: locStr,
+              dayName: resolvedDay,
+              teacherName: teacherStr,
+              stage: resolvedStage,
+            ),
+          );
+        }
       }
     }
 
@@ -1819,16 +1854,31 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final cleanTarget = targetKurdishDay.trim();
     if (cleanItem == cleanTarget.toLowerCase()) return true;
 
+    String norm(String s) => s
+        .toLowerCase()
+        .replaceAll('أ', 'ا')
+        .replaceAll('إ', 'ا')
+        .replaceAll('آ', 'ا')
+        .replaceAll('ة', 'ە')
+        .replaceAll('ي', 'ی')
+        .replaceAll('ك', 'ک')
+        .replaceAll(' ', '');
+
+    final nItem = norm(cleanItem);
+    final nTarget = norm(cleanTarget);
+    if (nItem == nTarget) return true;
+
     const kurdishToEnglish = {
-      'شەممە': 'saturday',
-      'یەکشەممە': 'sunday',
-      'دووشەممە': 'monday',
-      'سێشەممە': 'tuesday',
-      'چوارشەممە': 'wednesday',
-      'پێنجشەممە': 'thursday',
-      'هەینی': 'friday',
+      'شەممە': ['saturday', 'sat'],
+      'یەکشەممە': ['sunday', 'sun'],
+      'دووشەممە': ['monday', 'mon'],
+      'سێشەممە': ['tuesday', 'tue'],
+      'چوارشەممە': ['wednesday', 'wed'],
+      'پێنجشەممە': ['thursday', 'thu'],
+      'هەینی': ['friday', 'fri'],
     };
-    if (kurdishToEnglish[cleanTarget] == cleanItem) return true;
+    final enList = kurdishToEnglish[cleanTarget] ?? [];
+    if (enList.contains(cleanItem)) return true;
 
     const kurdishToBadini = {
       'شەممە': 'شەمبی',
@@ -1839,7 +1889,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       'پێنجشەممە': 'پێنجشەمبی',
       'هەینی': 'ئەینی',
     };
-    if (kurdishToBadini[cleanTarget] == cleanItem) return true;
+    if (norm(kurdishToBadini[cleanTarget] ?? '') == nItem) return true;
 
     const kurdishToArabic = {
       'شەممە': 'السبت',
@@ -1850,7 +1900,51 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       'پێنجشەممە': 'الخميس',
       'هەینی': 'الجمعة',
     };
-    if (kurdishToArabic[cleanTarget] == cleanItem) return true;
+    if (norm(kurdishToArabic[cleanTarget] ?? '') == nItem) return true;
+
+    // Check partial Kurdish root
+    if (cleanTarget == 'شەممە' &&
+        (nItem == 'شەمبە' || nItem == 'شەمبی' || nItem.startsWith('شەم'))) {
+      return true;
+    }
+    if (cleanTarget == 'یەکشەممە' &&
+        (nItem.contains('یەکشەم') ||
+            nItem.contains('ئێکەشەم') ||
+            nItem.contains('ئێک شەم') ||
+            nItem.contains('احد'))) {
+      return true;
+    }
+    if (cleanTarget == 'دووشەممە' &&
+        (nItem.contains('دووشەم') ||
+            nItem.contains('دوو شەم') ||
+            nItem.contains('اثنین') ||
+            nItem.contains('اثنين'))) {
+      return true;
+    }
+    if (cleanTarget == 'سێشەممە' &&
+        (nItem.contains('سێشەم') ||
+            nItem.contains('سێ شەم') ||
+            nItem.contains('ثلاث'))) {
+      return true;
+    }
+    if (cleanTarget == 'چوارشەممە' &&
+        (nItem.contains('چوارشەم') ||
+            nItem.contains('چارشەم') ||
+            nItem.contains('اربع'))) {
+      return true;
+    }
+    if (cleanTarget == 'پێنجشەممە' &&
+        (nItem.contains('پێنجشەم') ||
+            nItem.contains('پێنج شەم') ||
+            nItem.contains('خمیس'))) {
+      return true;
+    }
+    if (cleanTarget == 'هەینی' &&
+        (nItem.contains('هەینی') ||
+            nItem.contains('ئەینی') ||
+            nItem.contains('جمع'))) {
+      return true;
+    }
 
     return false;
   }
