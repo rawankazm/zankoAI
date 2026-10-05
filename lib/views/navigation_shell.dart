@@ -85,14 +85,15 @@ class _NavigationShellState extends State<NavigationShell> {
           bottomNavigationBar: ValueListenableBuilder<bool>(
             valueListenable: NavigationShell.hideBottomNav,
             builder: (context, hide, child) {
+              final navHeight = 90.0 + MediaQuery.of(context).padding.bottom;
               return AnimatedContainer(
                 duration: const Duration(milliseconds: 240),
                 curve: Curves.easeInOutCubic,
-                height: hide ? 0.0 : 100.0,
+                height: hide ? 0.0 : navHeight,
                 child: OverflowBox(
                   minHeight: 0.0,
-                  maxHeight: 100.0,
-                  alignment: Alignment.topCenter,
+                  maxHeight: navHeight,
+                  alignment: Alignment.bottomCenter,
                   child: AnimatedSlide(
                     duration: const Duration(milliseconds: 240),
                     curve: Curves.easeInOutCubic,

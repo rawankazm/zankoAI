@@ -18,7 +18,6 @@ import '../focus/pomodoro_timer_screen.dart';
 import '../notifications/notifications_screen.dart';
 import '../pdf/pdf_chat_screen.dart';
 import '../profile/profile_screen.dart';
-import '../gpa/gpa_tracker_screen.dart';
 import '../quiz/ai_exam_generator_screen.dart';
 import '../schedule/schedule_screen.dart';
 import '../courses/course_detail_screen.dart';
@@ -523,16 +522,6 @@ class _HomeQuickToolsSection extends StatelessWidget {
         'onTap': () => Navigator.push(
           context,
           CupertinoPageRoute(builder: (_) => const PdfChatScreen()),
-        ),
-      },
-      {
-        'title': lang.translate('nav_gpa'),
-        'subtitle': lang.translate('gpa_sub'),
-        'icon': HugeIcons.strokeRoundedAnalytics01,
-        'gradient': [const Color(0xFFD97706), const Color(0xFFF59E0B)],
-        'onTap': () => Navigator.push(
-          context,
-          CupertinoPageRoute(builder: (_) => const GpaTrackerScreen()),
         ),
       },
       {

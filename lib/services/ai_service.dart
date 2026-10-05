@@ -309,12 +309,13 @@ class ZankoAiService extends ChangeNotifier implements AiService {
 
   // High-performance multimodal Gemini models (Official Google Gemini production models)
   static const List<String> _validFastModels = [
+    'gemini-3.5-flash-lite',
     'gemini-3.1-flash-lite',
-    'gemini-3-flash-preview',
-    'gemini-flash-latest',
+    'gemini-flash-lite-latest',
+    'gemini-3.6-flash',
     'gemini-3.8-flash',
     'gemini-3.5-flash',
-    'gemini-3.1-flash-lite-preview',
+    'gemini-flash-latest',
   ];
 
   String? _lastWorkingKey;
@@ -342,20 +343,22 @@ class ZankoAiService extends ChangeNotifier implements AiService {
         errStr.contains('blocked') ||
         errStr.contains('400') ||
         errStr.contains('401') ||
-        errStr.contains('403') ||
-        errStr.contains('resource_exhausted') ||
-        errStr.contains('quota');
+        errStr.contains('403');
   }
 
   Future<String> _callGeminiHttp(
     String key,
     String prompt,
-    String systemInstruction,
-  ) async {
+    String systemInstruction, {
+    bool isJson = false,
+  }) async {
     final dio = Dio(
       BaseOptions(
-        connectTimeout: const Duration(seconds: 15),
-        receiveTimeout: const Duration(seconds: 40),
+        connectTimeout: const Duration(seconds: 12),
+        receiveTimeout: const Duration(seconds: 25),
+        headers: {
+          if (!kIsWeb) 'Connection': 'close',
+        },
       ),
     );
 
@@ -366,28 +369,32 @@ class ZankoAiService extends ChangeNotifier implements AiService {
           ]
         : _validFastModels;
 
-    for (final m in modelsToTry.take(3)) {
+    for (final m in modelsToTry.take(5)) {
+      final uri =
+          'https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=$key';
+
+      final bodyMap = {
+        if (systemInstruction.isNotEmpty)
+          'system_instruction': {
+            'parts': [
+              {'text': systemInstruction},
+            ],
+          },
+        'contents': [
+          {
+            'parts': [
+              {'text': prompt},
+            ],
+          },
+        ],
+        'generationConfig': {
+          'maxOutputTokens': 4096,
+          'temperature': 0.7,
+          if (isJson) 'responseMimeType': 'application/json',
+        },
+      };
+
       try {
-        final uri =
-            'https://generativelanguage.googleapis.com/v1beta/models/$m:generateContent?key=$key';
-
-        final bodyMap = {
-          if (systemInstruction.isNotEmpty)
-            'system_instruction': {
-              'parts': [
-                {'text': systemInstruction},
-              ],
-            },
-          'contents': [
-            {
-              'parts': [
-                {'text': prompt},
-              ],
-            },
-          ],
-          'generationConfig': {'maxOutputTokens': 4096, 'temperature': 0.7},
-        };
-
         final response = await dio.post<dynamic>(
           uri,
           data: bodyMap,
@@ -395,6 +402,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
             headers: {
               'Content-Type': 'application/json',
               'x-goog-api-key': key,
+              if (!kIsWeb) 'Connection': 'close',
             },
             validateStatus: (status) => true,
           ),
@@ -425,11 +433,51 @@ class ZankoAiService extends ChangeNotifier implements AiService {
             }
           }
         } else if (response.statusCode != null && response.statusCode! >= 400) {
-          debugPrint('❌ [Gemini Error ${response.statusCode}]: ${response.data}');
-          _markKeyCooldown(key);
+          debugPrint('❌ [Gemini Error ${response.statusCode} on $m]: ${response.data}');
+          if (response.statusCode == 401 || response.statusCode == 403) {
+            _markKeyCooldown(key);
+            break;
+          }
         }
       } catch (e) {
-        debugPrint('❌ [Gemini Exception]: $e');
+        debugPrint('❌ [Gemini Exception on $m]: $e');
+        if (!kIsWeb) {
+          try {
+            final client = HttpClient();
+            client.connectionTimeout = const Duration(seconds: 15);
+            final req = await client.postUrl(Uri.parse(uri));
+            req.headers.contentType = ContentType.json;
+            req.headers.set('Connection', 'close');
+            req.write(jsonEncode(bodyMap));
+            final res = await req.close();
+            final resBody = await utf8.decodeStream(res);
+            client.close();
+            if (res.statusCode == 200) {
+              final Map<String, dynamic> data = jsonDecode(resBody);
+              final candidates = data['candidates'] as List?;
+              if (candidates != null && candidates.isNotEmpty) {
+                final contentMap = candidates[0]['content'];
+                final parts = contentMap?['parts'] as List?;
+                if (parts != null && parts.isNotEmpty) {
+                  final buffer = StringBuffer();
+                  for (final p in parts) {
+                    if (p is Map && p.containsKey('text') && p['text'] != null) {
+                      buffer.write(p['text'].toString());
+                    }
+                  }
+                  final fullText = buffer.toString().trim();
+                  if (fullText.isNotEmpty) {
+                    _lastWorkingKey = key;
+                    _lastWorkingModel = m;
+                    return fullText;
+                  }
+                }
+              }
+            }
+          } catch (ioErr) {
+            debugPrint('⚠️ [HttpClient fallback on $m failed]: $ioErr');
+          }
+        }
         if (_isKeyAuthError(e)) {
           _markKeyCooldown(key);
         }
@@ -473,6 +521,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
   Future<String> _callGemini(
     String prompt, {
     String systemInstruction = "",
+    bool isJson = false,
   }) async {
     final keysToTry = _getActiveKeys();
 
@@ -483,6 +532,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
         keyToUse,
         prompt,
         systemInstruction,
+        isJson: isJson,
       );
       if (httpFallback.isNotEmpty) {
         return httpFallback;
@@ -602,41 +652,46 @@ class ZankoAiService extends ChangeNotifier implements AiService {
           "بۆ نامەی بێسنوور ئەپەکەت بۆ **VIP** بەرز بکەرەوە!";
     }
 
-    // 2. Build multi-turn context
+    // 2. Build context
+    final isJsonRequest = userPrompt.contains('JSON') || userPrompt.contains('json');
     final userLabel = isEn ? 'Student' : (isAr ? 'الطالب' : 'خوێندکار');
     final tutorLabel = isEn ? 'Tutor' : (isAr ? 'المعلم' : 'مامۆستا');
     String historyStr = "";
-    for (var msg in chatHistory.take(8)) {
-      historyStr +=
-          "${msg['role'] == 'user' ? userLabel : tutorLabel}: ${msg['content']}\n";
+    if (!isJsonRequest) {
+      for (var msg in chatHistory.take(8)) {
+        historyStr +=
+            "${msg['role'] == 'user' ? userLabel : tutorLabel}: ${msg['content']}\n";
+      }
     }
     final prompt = historyStr.isEmpty
         ? userPrompt
         : "$historyStr$userLabel: $userPrompt\n$tutorLabel:";
 
-    final systemInstruction = isEn
-        ? "You are an expert university AI tutor in the ZankoAI application. Important response guidelines:\n"
-          "1. If the message is only a greeting: respond with 'Hello! How can I help you with your studies today?'.\n"
-          "2. If the student greets and asks a question: greet warmly first and then provide a thorough, structured academic answer.\n"
-          "3. If the message is a direct question without greeting: start immediately with the academic answer without unnecessary preamble.\n"
-          "4. Structure answers academically using headings, bullet points, and real-world examples.\n"
-          "5. Respond STRICTLY in fluent, professional English.\n"
-          "6. Mathematical equations: NEVER use dollar signs (\$ or \$\$) in your answers. Write formulas in clean plain text (e.g., d/dx(x^n) = n * x^(n-1) or 3x²)."
-        : (isAr
-            ? "أنت معلم جامعي ذكي في تطبيق ZankoAI. إرشادات الإجابة الهامة:\n"
-              "١. إذا كانت الرسالة تحية فقط: أجب 'مرحباً! كيف يمكنني مساعدتك في دراستك اليوم؟'.\n"
-              "٢. إذا احتوت الرسالة على تحية وسؤال: رحب باحترام أولاً ثم قدم إجابة علمية مفصلة.\n"
-              "٣. إذا كانت الرسالة سؤالاً مباشراً: ابدأ بالشرح الأكاديمي مباشرة دون مقدمات.\n"
-              "٤. نسق الإجابة بطريقة أكاديمية منظمة باستخدام النقاط والأمثلة العملية.\n"
-              "٥. أجب دائماً باللغة العربية الفصحى.\n"
-              "٦. المعادلات الرياضية: لا تستخدم علامات الدولار (\$) إطلاقاً. اكتب المعادلات بنص عادي واضح."
-            : "تۆ مامۆستای ژیری زانکۆیت لە ئەپڵیکەیشنی ZankoAI (Academic AI Tutor). ڕێنمایی زۆر گرنگ دەربارەی شێوازی وەڵامدانەوە:\n"
-              "١. ئەگەر پەیامی خوێندکار تەنها سڵاو یان چاکوچۆنی بوو (وەک 'سڵاو' یان 'چۆنی'): تەنها بڵێ: 'سڵاو! چۆن دەتوانم لە وانەکانتدا یارمەتیت بدەم؟'.\n"
-              "٢. ئەگەر خوێندکار هەم سڵاوی کردبوو و هەم پرسیارەکەی نووسیبوو لە هەمان پەیامدا: پێویستە لە هەمان وەڵامدا و لە یەک چات وەڵامی هەردووکیان بدەیتەوە...\n"
-              "٣. ئەگەر پەیامەکە تەنها پرسیار بوو بێ سڵاوکردن: ڕاستەوخۆ دەستبکە بە شیکار و وەڵامە ئەکادیمییەکە بەبێ پێشەکی و وتەی زیادە.\n"
-              "٤. شیکارییەکان زۆر ڕێکخراو و بە شێوازی ئەکادیمی (خاڵبەندی، هاوکێشەی بیرکاری، نموونەی ژیانی ڕۆژانە) بنووسە.\n"
-              "٥. بە هەمان زمان و دیالێکتی پرسیارەکە (سۆرانی، بادینی، عەرەبی، ئینگلیزی) وەڵام بدەرەوە.\n"
-              "٦. یاسای بیرکاری و سیمبولی دۆلار: هەرگیز و بە هیچ جۆرێک نیشانەی دۆلار (\$ یان \$\$) لە وەڵامەکانتدا بەکارمەهێنە بۆ هاوکێشە یان نووسین.");
+    final systemInstruction = isJsonRequest
+        ? "You are an expert academic dictionary system. Output strictly valid JSON matching the requested fields without any conversational greetings, markdown formatting, or preamble."
+        : (isEn
+            ? "You are an expert university AI tutor in the ZankoAI application. Important response guidelines:\n"
+              "1. If the message is only a greeting: respond with 'Hello! How can I help you with your studies today?'.\n"
+              "2. If the student greets and asks a question: greet warmly first and then provide a thorough, structured academic answer.\n"
+              "3. If the message is a direct question without greeting: start immediately with the academic answer without unnecessary preamble.\n"
+              "4. Structure answers academically using headings, bullet points, and real-world examples.\n"
+              "5. Respond STRICTLY in fluent, professional English.\n"
+              "6. Mathematical equations: NEVER use dollar signs (\$ or \$\$) in your answers. Write formulas in clean plain text (e.g., d/dx(x^n) = n * x^(n-1) or 3x²)."
+            : (isAr
+                ? "أنت معلم جامعي ذكي في تطبيق ZankoAI. إرشادات الإجابة الهامة:\n"
+                  "١. إذا كانت الرسالة تحية فقط: أجب 'مرحباً! كيف يمكنني مساعدتك في دراستك اليوم؟'.\n"
+                  "٢. إذا احتوت الرسالة على تحية وسؤال: رحب باحترام أولاً ثم قدم إجابة علمية مفصلة.\n"
+                  "٣. إذا كانت الرسالة سؤالاً مباشراً: ابدأ بالشرح الأكاديمي مباشرة دون مقدمات.\n"
+                  "٤. نسق الإجابة بطريقة أكاديمية منظمة باستخدام النقاط والأمثلة العملية.\n"
+                  "٥. أجب دائماً باللغة العربية الفصحى.\n"
+                  "٦. المعادلات الرياضية: لا تستخدم علامات الدولار (\$) إطلاقاً. اكتب المعادلات بنص عادي واضح."
+                : "تۆ مامۆستای ژیری زانکۆیت لە ئەپڵیکەیشنی ZankoAI (Academic AI Tutor). ڕێنمایی زۆر گرنگ دەربارەی شێوازی وەڵامدانەوە:\n"
+                  "١. ئەگەر پەیامی خوێندکار تەنها سڵاو یان چاکوچۆنی بوو (وەک 'سڵاو' یان 'چۆنی'): تەنها بڵێ: 'سڵاو! چۆن دەتوانم لە وانەکانتدا یارمەتیت بدەم؟'.\n"
+                  "٢. ئەگەر خوێندکار هەم سڵاوی کردبوو و هەم پرسیارەکەی نووسیبوو لە هەمان پەیامدا: پێویستە لە هەمان وەڵامدا و لە یەک چات وەڵامی هەردووکیان بدەیتەوە...\n"
+                  "٣. ئەگەر پەیامەکە تەنها پرسیار بوو بێ سڵاوکردن: ڕاستەوخۆ دەستبکە بە شیکار و وەڵامە ئەکادیمییەکە بەبێ پێشەکی و وتەی زیادە.\n"
+                  "٤. شیکارییەکان زۆر ڕێکخراو و بە شێوازی ئەکادیمی (خاڵبەندی، هاوکێشەی بیرکاری، نموونەی ژیانی ڕۆژانە) بنووسە.\n"
+                  "٥. بە هەمان زمان و دیالێکتی پرسیارەکە (سۆرانی، بادینی، عەرەبی، ئینگلیزی) وەڵام بدەرەوە.\n"
+                  "٦. یاسای بیرکاری و سیمبولی دۆلار: هەرگیز و بە هیچ جۆرێک نیشانەی دۆلار (\$ یان \$\$) لە وەڵامەکانتدا بەکارمەهێنە بۆ هاوکێشە یان نووسین."));
 
     // 3. Production: Route through Trusted Server-Side AI Gateway (if configured with real host)
     final isPlaceholderBackend = AppEnv.backendBaseUrl.contains(
@@ -678,6 +733,7 @@ class ZankoAiService extends ChangeNotifier implements AiService {
       final aiRes = await _callGemini(
         prompt,
         systemInstruction: systemInstruction,
+        isJson: isJsonRequest,
       );
       if (aiRes.trim().isNotEmpty) {
         return cleanMathAndDollarSigns(aiRes);
@@ -695,6 +751,19 @@ class ZankoAiService extends ChangeNotifier implements AiService {
     String query, {
     String systemInstruction = "",
   }) {
+    if (query.contains('JSON') || query.contains('json')) {
+      final termMatch = RegExp(r'["“]([^"”]+)["”]').firstMatch(query);
+      final term = termMatch?.group(1) ?? 'ئەکادیمی';
+      return jsonEncode({
+        "term": term,
+        "kuName": term,
+        "category": "زانست 🔬",
+        "kuDesc": "ئەم زاراوەیە یەکێکە لە چەمکە سەرەکییە ئەکادیمی و زانستییەکان کە لە توێژینەوە و خوێندنی زانکۆییدا بەکاردێت.",
+        "enDesc": "An academic and scientific concept commonly referenced in university studies.",
+        "example": "This term is widely used in academic literature and research."
+      });
+    }
+
     final stripped = query.replaceAll(RegExp(r'\[.*?\]'), '').trim();
     final cleanQ = stripped.toLowerCase().replaceAll(RegExp(r'[!?,.؛،\s]'), '');
     const greetingMatches = [
@@ -1180,7 +1249,6 @@ Hello dear student! Regarding your question about **«$cleanTopic»**:
           }
         } else if (response.statusCode == 429) {
           debugPrint('⚠️ Gemini rate limited on $m');
-          _markKeyCooldown(key);
         } else {
           debugPrint('⚠️ Gemini multimodal returned ${response.statusCode}: ${response.data}');
         }
@@ -1193,12 +1261,13 @@ Hello dear student! Regarding your question about **«$cleanTopic»**:
   }
 
   static const List<String> _validVisionModels = [
+    'gemini-3.5-flash-lite',
     'gemini-3.1-flash-lite',
-    'gemini-3-flash-preview',
-    'gemini-flash-latest',
+    'gemini-flash-lite-latest',
+    'gemini-3.6-flash',
     'gemini-3.8-flash',
     'gemini-3.5-flash',
-    'gemini-3.1-flash-lite-preview',
+    'gemini-flash-latest',
   ];
 
   Future<String> _callGeminiMultimodal(

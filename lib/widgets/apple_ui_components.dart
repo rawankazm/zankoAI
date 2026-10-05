@@ -1318,24 +1318,39 @@ class GlassBottomNavigation extends StatefulWidget {
 }
 
 class _GlassBottomNavigationState extends State<GlassBottomNavigation>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _positionAnimation;
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 320),
+      duration: const Duration(milliseconds: 520),
     );
-    _positionAnimation =
-        Tween<double>(
-          begin: widget.currentIndex.toDouble(),
-          end: widget.currentIndex.toDouble(),
-        ).animate(
-          CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
-        );
+    _positionAnimation = Tween<double>(
+      begin: widget.currentIndex.toDouble(),
+      end: widget.currentIndex.toDouble(),
+    ).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
+    );
+
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 450),
+    );
+    _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeOutQuad),
+    );
+
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _pulseController.forward(from: 0.0);
+      }
+    });
   }
 
   @override
@@ -1344,6 +1359,7 @@ class _GlassBottomNavigationState extends State<GlassBottomNavigation>
     if (widget.currentIndex != oldWidget.currentIndex) {
       final start = _positionAnimation.value;
       final end = widget.currentIndex.toDouble();
+      _pulseController.reset();
       _positionAnimation = Tween<double>(begin: start, end: end).animate(
         CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
       );
@@ -1354,6 +1370,7 @@ class _GlassBottomNavigationState extends State<GlassBottomNavigation>
   @override
   void dispose() {
     _controller.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -1364,21 +1381,22 @@ class _GlassBottomNavigationState extends State<GlassBottomNavigation>
     final langProvider = Provider.of<LanguageProvider>(context);
 
     final barColor = isDark ? ZankoColors.darkCard : ZankoColors.card;
-    final borderColor = isDark ? ZankoColors.darkBorder : ZankoColors.border;
+    final borderColor =
+        isDark ? ZankoColors.darkBorder : const Color(0xFFE2E8F0);
     final inactiveColor = isDark
         ? ZankoColors.darkTextSecondary
         : ZankoColors.textSecondary;
 
-    const double barHeight = 64.0;
-    const double barTop = 20.0;
-    const double scoopDepth = 28.0;
-    const double scoopWidth = 66.0;
-    const double circleSize = 46.0;
-    const double circleCenterY = 22.0;
+    const double barHeight = 54.0;
+    const double barTop = 14.0;
+    const double scoopDepth = 22.0;
+    const double scoopWidth = 62.0;
+    const double circleSize = 44.0;
+    const double circleCenterY = 15.0;
     const double horizontalInset = 16.0;
 
     return Container(
-      margin: const EdgeInsets.only(left: 14, right: 14, bottom: 16),
+      margin: const EdgeInsets.only(left: 16, right: 16, bottom: 20),
       height: barHeight + barTop,
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -1394,15 +1412,29 @@ class _GlassBottomNavigationState extends State<GlassBottomNavigation>
           }
 
           return AnimatedBuilder(
-            animation: _positionAnimation,
+            animation: Listenable.merge([_controller, _pulseController]),
             builder: (context, child) {
               final currentPos = _positionAnimation.value;
               final activeX = getTabCenterX(currentPos);
 
+              // Dynamic Hop Arc & Squash/Stretch Physics
+              final t = Curves.easeInOutCubic.transform(_controller.value);
+              final hop = math.sin(t * math.pi);
+              final hopY = -5.0 * hop;
+              final stretchX = 1.0 + (hop * 0.10);
+              final stretchY = 1.0 - (hop * 0.06);
+
+              // Landing Aura Pulse (only visible while actively pulsing)
+              final isPulsing = _pulseController.isAnimating;
+              final pulseVal = _pulseAnimation.value;
+              final pulseScale = 1.0 + (pulseVal * 0.38);
+              final pulseOpacity =
+                  isPulsing ? (1.0 - pulseVal).clamp(0.0, 1.0) : 0.0;
+
               return Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  // 1. Organic Curved Notch Background
+                  // 1. Organic Curved Notch Background with Continuous Tangents
                   Positioned.fill(
                     child: CustomPaint(
                       painter: _CurvedNotchPainter(
@@ -1412,12 +1444,12 @@ class _GlassBottomNavigationState extends State<GlassBottomNavigation>
                         barTop: barTop,
                         scoopWidth: scoopWidth,
                         scoopDepth: scoopDepth,
-                        cornerRadius: 26.0,
+                        cornerRadius: 24.0,
                       ),
                     ),
                   ),
 
-                  // 2. Tab Navigation Items (fixed columns with fading icons & highlighting text)
+                  // 2. Tab Navigation Items with Reactive Motion
                   Positioned(
                     left: horizontalInset,
                     right: horizontalInset,
@@ -1432,12 +1464,14 @@ class _GlassBottomNavigationState extends State<GlassBottomNavigation>
 
                         final labelColor = Color.lerp(
                           inactiveColor,
-                          ZankoColors.primary,
+                          isDark
+                              ? const Color(0xFF38BDF8)
+                              : const Color(0xFF0A63D8),
                           activeRatio,
                         )!;
 
                         final fontWeight = activeRatio > 0.55
-                            ? FontWeight.w800
+                            ? FontWeight.w700
                             : FontWeight.w500;
 
                         return Expanded(
@@ -1451,32 +1485,52 @@ class _GlassBottomNavigationState extends State<GlassBottomNavigation>
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 SizedBox(
-                                  height: 24,
+                                  height: 22,
                                   child: Center(
-                                    child: Opacity(
-                                      opacity: inactiveOpacity,
-                                      child: _buildNavIcon(
-                                        tabIndex,
-                                        isSelected: false,
-                                        isDark: isDark,
+                                    child: Transform.translate(
+                                      offset: Offset(
+                                        0,
+                                        (1.0 - inactiveOpacity) * 4.0,
+                                      ),
+                                      child: Opacity(
+                                        opacity: inactiveOpacity,
+                                        child: _buildNavIcon(
+                                          tabIndex,
+                                          color: inactiveColor,
+                                          isSelected: false,
+                                          isDark: isDark,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Transform.translate(
+                                  offset: Offset(0, -2.0 * activeRatio),
+                                  child: Transform.scale(
+                                    scale: 1.0 + (activeRatio * 0.08),
+                                    child: Text(
+                                      _getNavLabel(tabIndex, langProvider),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontFamily:
+                                            langProvider.fontFamily ??
+                                            'DroidKufi',
+                                        fontFamilyFallback: const [
+                                          'DroidKufi',
+                                          'Plus Jakarta Sans',
+                                        ],
+                                        fontSize: 10.5,
+                                        fontWeight: fontWeight,
+                                        color: labelColor,
+                                        height: 1.15,
                                       ),
                                     ),
                                   ),
                                 ),
                                 const SizedBox(height: 5),
-                                Text(
-                                  _getNavLabel(tabIndex, langProvider),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontFamily: 'DroidKufi',
-                                    fontSize: 10.5,
-                                    fontWeight: fontWeight,
-                                    color: labelColor,
-                                  ),
-                                ),
-                                const SizedBox(height: 9),
                               ],
                             ),
                           ),
@@ -1485,73 +1539,122 @@ class _GlassBottomNavigationState extends State<GlassBottomNavigation>
                     ),
                   ),
 
-                  // 3. Gliding Elevated Floating Circle with Active Icon
+                  // 3. Gliding Elevated Floating Circle with Hopping Arc & 3D Spring
                   Positioned(
                     left: activeX - (circleSize / 2.0),
-                    top: circleCenterY - (circleSize / 2.0),
+                    top: (circleCenterY - (circleSize / 2.0)) + hopY,
                     width: circleSize,
                     height: circleSize,
-                    child: GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        widget.onTap(widget.currentIndex);
-                      },
-                      behavior: HitTestBehavior.opaque,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [
-                              ZankoColors.gradientStart,
-                              ZankoColors.gradientEnd,
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          border: Border.all(
-                            color: Colors.white.withValues(
-                              alpha: isDark ? 0.30 : 0.45,
-                            ),
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: ZankoColors.primary.withValues(
-                                alpha: isDark ? 0.50 : 0.38,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      clipBehavior: Clip.none,
+                      children: [
+                        // Landing Ripple Aura Wave
+                        if (pulseOpacity > 0.02)
+                          Transform.scale(
+                            scale: pulseScale,
+                            child: Opacity(
+                              opacity: pulseOpacity * 0.45,
+                              child: Container(
+                                width: circleSize,
+                                height: circleSize,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: const Color(0xFF168DFF),
+                                    width: 1.5,
+                                  ),
+                                ),
                               ),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
                             ),
-                            BoxShadow(
-                              color: Colors.black.withValues(
-                                alpha: isDark ? 0.30 : 0.10,
+                          ),
+
+                        // Physical Morphing & Hopping Circle
+                        Transform.scale(
+                          scaleX: stretchX,
+                          scaleY: stretchY,
+                          child: GestureDetector(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              widget.onTap(widget.currentIndex);
+                            },
+                            behavior: HitTestBehavior.opaque,
+                            child: Container(
+                              width: circleSize,
+                              height: circleSize,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF168DFF),
+                                    Color(0xFF0A63D8),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                border: Border.all(
+                                  color: Colors.white.withValues(
+                                    alpha: isDark ? 0.35 : 0.60,
+                                  ),
+                                  width: 1.8,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF0A63D8).withValues(
+                                      alpha: isDark ? 0.50 : 0.38,
+                                    ),
+                                    blurRadius: 14,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                  BoxShadow(
+                                    color: Colors.black.withValues(
+                                      alpha: isDark ? 0.30 : 0.10,
+                                    ),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                               ),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
+                              child: Center(
+                                child: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 350),
+                                  transitionBuilder: (child, anim) {
+                                    final curved = CurvedAnimation(
+                                      parent: anim,
+                                      curve: Curves.easeOutBack,
+                                    );
+                                    return ScaleTransition(
+                                      scale: Tween<double>(
+                                        begin: 0.55,
+                                        end: 1.0,
+                                      ).animate(curved),
+                                      child: FadeTransition(
+                                        opacity: anim,
+                                        child: RotationTransition(
+                                          turns: Tween<double>(
+                                            begin: -0.06,
+                                            end: 0.0,
+                                          ).animate(curved),
+                                          child: child,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: KeyedSubtree(
+                                    key: ValueKey<int>(widget.currentIndex),
+                                    child: _buildNavIcon(
+                                      widget.currentIndex,
+                                      color: Colors.white,
+                                      isSelected: true,
+                                      isDark: isDark,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
-                          ],
+                          ),
                         ),
-                        child: Center(
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 200),
-                            transitionBuilder: (child, anim) => ScaleTransition(
-                              scale: anim,
-                              child: FadeTransition(
-                                opacity: anim,
-                                child: child,
-                              ),
-                            ),
-                            child: KeyedSubtree(
-                              key: ValueKey<int>(widget.currentIndex),
-                              child: _buildNavIcon(
-                                widget.currentIndex,
-                                isSelected: true,
-                                isDark: isDark,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                      ],
                     ),
                   ),
                 ],
@@ -1565,44 +1668,41 @@ class _GlassBottomNavigationState extends State<GlassBottomNavigation>
 
   Widget _buildNavIcon(
     int index, {
+    required Color color,
     required bool isSelected,
     required bool isDark,
   }) {
-    final color = isSelected
-        ? Colors.white
-        : (isDark ? ZankoColors.darkTextSecondary : ZankoColors.textSecondary);
-
     switch (index) {
       case 0:
         return HugeIcon(
           icon: HugeIcons.strokeRoundedHome01,
           color: color,
-          size: isSelected ? 24 : 22,
+          size: isSelected ? 22 : 20,
         );
       case 1:
         return HugeIcon(
           icon: HugeIcons.strokeRoundedBook02,
           color: color,
-          size: isSelected ? 24 : 22,
+          size: isSelected ? 22 : 20,
         );
       case 2:
         return CuteAiBotIcon(
-          size: isSelected ? 25 : 22,
+          size: isSelected ? 23 : 20,
           color: color,
-          strokeWidth: isSelected ? 2.2 : 1.9,
+          strokeWidth: isSelected ? 2.1 : 1.8,
         );
       case 3:
         return HugeIcon(
           icon: HugeIcons.strokeRoundedMortarboard02,
           color: color,
-          size: isSelected ? 24 : 22,
+          size: isSelected ? 22 : 20,
         );
       case 4:
       default:
         return HugeIcon(
           icon: HugeIcons.strokeRoundedUser,
           color: color,
-          size: isSelected ? 24 : 22,
+          size: isSelected ? 22 : 20,
         );
     }
   }
@@ -1624,24 +1724,24 @@ class _GlassBottomNavigationState extends State<GlassBottomNavigation>
   }
 }
 
-// ─── Curved Notch Custom Painter (Organic Fluid Scoop) ──────────────────────
+// ─── Organic Curved Notch Painter with Continuous Tangent Béziers ───────────
 class _CurvedNotchPainter extends CustomPainter {
   final double activeX;
   final Color backgroundColor;
   final Color borderColor;
+  final double barTop;
   final double scoopWidth;
   final double scoopDepth;
-  final double barTop;
   final double cornerRadius;
 
-  _CurvedNotchPainter({
+  const _CurvedNotchPainter({
     required this.activeX,
     required this.backgroundColor,
     required this.borderColor,
+    this.barTop = 16.0,
     this.scoopWidth = 66.0,
-    this.scoopDepth = 28.0,
-    this.barTop = 20.0,
-    this.cornerRadius = 26.0,
+    this.scoopDepth = 24.0,
+    this.cornerRadius = 24.0,
   });
 
   @override
@@ -1655,28 +1755,29 @@ class _CurvedNotchPainter extends CustomPainter {
     path.moveTo(r, barTop);
 
     final x0 = activeX - halfScoop;
-    final x4 = activeX + halfScoop;
+    final x1 = activeX + halfScoop;
 
     final startX = math.max(r, x0);
-    final endX = math.min(w - r, x4);
+    final endX = math.min(w - r, x1);
 
     if (startX > r) {
       path.lineTo(startX, barTop);
     }
 
-    // Smooth organic S-curve scoop dipping down and back up
+    // Mathematical smooth continuous S-curve with zero-slope entry and exit tangents
+    final controlW = (endX - startX) * 0.22;
     path.cubicTo(
-      activeX - (activeX - startX) * 0.50,
+      startX + controlW,
       barTop,
-      activeX - (activeX - startX) * 0.50,
+      activeX - controlW * 1.3,
       barTop + scoopDepth,
       activeX,
       barTop + scoopDepth,
     );
     path.cubicTo(
-      activeX + (endX - activeX) * 0.50,
+      activeX + controlW * 1.3,
       barTop + scoopDepth,
-      activeX + (endX - activeX) * 0.50,
+      endX - controlW,
       barTop,
       endX,
       barTop,
@@ -1686,36 +1787,35 @@ class _CurvedNotchPainter extends CustomPainter {
       path.lineTo(w - r, barTop);
     }
 
-    // Top-right rounded corner
+    // Rounded rectangle perimeter
     path.arcToPoint(Offset(w, barTop + r), radius: Radius.circular(r));
-    // Right vertical edge
     path.lineTo(w, h - r);
-    // Bottom-right rounded corner
     path.arcToPoint(Offset(w - r, h), radius: Radius.circular(r));
-    // Bottom edge
     path.lineTo(r, h);
-    // Bottom-left rounded corner
     path.arcToPoint(Offset(0, h - r), radius: Radius.circular(r));
-    // Left vertical edge
     path.lineTo(0, barTop + r);
-    // Top-left rounded corner
     path.arcToPoint(Offset(r, barTop), radius: Radius.circular(r));
     path.close();
 
-    // 1. Ambient drop shadow
-    canvas.drawShadow(path, Colors.black.withValues(alpha: 0.12), 14, true);
+    // Ambient drop shadow
+    canvas.drawShadow(
+      path,
+      Colors.black.withValues(alpha: 0.08),
+      14,
+      true,
+    );
 
-    // 2. Fill background
+    // Background fill
     final fillPaint = Paint()
       ..color = backgroundColor
       ..style = PaintingStyle.fill;
     canvas.drawPath(path, fillPaint);
 
-    // 3. Border stroke
+    // Border stroke
     final borderPaint = Paint()
       ..color = borderColor
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
+      ..strokeWidth = 1.0;
     canvas.drawPath(path, borderPaint);
   }
 
