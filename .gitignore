@@ -40,3 +40,8 @@ web-build/
 .env.*
 !.env.example
 !.env.production.example
+
+# Impeccable AI Skills
+.github/skills/
+.github/hooks/
+.github/agents/
